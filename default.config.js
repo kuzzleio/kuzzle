@@ -49,6 +49,7 @@ module.exports = {
     requestsBufferSize: 50000,
     requestsBufferWarningThreshold: 5000,
     subscriptionConditionsCount: 16,
+    subscriptionMinterms: 0,
     subscriptionRooms: 1000000
   },
 
@@ -223,7 +224,7 @@ module.exports = {
       backend: 'elasticsearch',
       client: {
         host: 'http://localhost:9200',
-        apiVersion: '5.x'
+        apiVersion: '5.4'
       },
       defaults: {
         onUpdateConflictRetries: 0,

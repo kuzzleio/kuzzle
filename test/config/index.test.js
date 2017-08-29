@@ -97,7 +97,10 @@ describe('lib/config/index.js', () => {
     });
 
     it('should throw on 0-valued limits except for special cases', () => {
-      const canBeZero = ['subscriptionRooms'];
+      const canBeZero = [
+        'subscriptionMinterms',
+        'subscriptionRooms'
+      ];
 
       for (const limit of Object.keys(defaultConfig.limits)) {
         const config = getcfg({

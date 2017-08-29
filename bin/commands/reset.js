@@ -26,15 +26,12 @@ const
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   fs = require('fs'),
-  clc = require('cli-color');
+  ColorOutput = require('./colorOutput');
 
 function commandReset (options) {
   const
     kuzzle = new (require('../../lib/api/kuzzle'))(),
-    error = string => options.parent.noColors ? string : clc.red(string),
-    warn = string => options.parent.noColors ? string : clc.yellow(string),
-    notice = string => options.parent.noColors ? string : clc.cyanBright(string),
-    ok = string => options.parent.noColors ? string: clc.green.bold(string);
+    cout = new ColorOutput(options);
 
   let
     userIsSure = false,
@@ -47,7 +44,7 @@ function commandReset (options) {
       fixturesContent = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
     }
     catch (e) {
-      console.log(error(`[✖] The file ${params.fixtures} cannot be opened. Abort.`));
+      console.log(cout.error(`[✖] The file ${params.fixtures} cannot be opened. Abort.`));
       process.exit(1);
     }
   }
@@ -57,13 +54,13 @@ function commandReset (options) {
       mappingsContent = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
     }
     catch (e) {
-      console.log(error(`[✖] The file ${params.mappings} cannot be opened. Abort.`));
+      console.log(cout.error(`[✖] The file ${params.mappings} cannot be opened. Abort.`));
       process.exit(1);
     }
   }
 
-  console.log(warn('[ℹ] You are about to reset Kuzzle configuration and users'));
-  console.log(warn('[ℹ] This operation cannot be undone.\n'));
+  console.log(cout.warn('[ℹ] You are about to reset Kuzzle configuration and users'));
+  console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
 
   if (!params.noint) {
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
@@ -73,7 +70,7 @@ function commandReset (options) {
   }
 
   if (userIsSure) {
-    console.log(notice('[ℹ] Processing...\n'));
+    console.log(cout.notice('[ℹ] Processing...\n'));
     return kuzzle.cli.doAction('cleanDb', {}, {debug: options.parent.debug})
       .then(() => {
         return kuzzle.cli.doAction('data', {
@@ -84,7 +81,7 @@ function commandReset (options) {
         }, {debug: options.parent.debug});
       })
       .then(() => {
-        console.log(ok('[✔] Kuzzle has been successfully reset'));
+        console.log(cout.ok('[✔] Kuzzle has been successfully reset'));
         process.exit(0);
       })
       .catch(err => {
@@ -93,7 +90,7 @@ function commandReset (options) {
       });
   }
 
-  console.log(notice('[ℹ] Aborted'));
+  console.log(cout.notice('[ℹ] Aborted'));
 }
 
 module.exports = commandReset;

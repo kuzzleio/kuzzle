@@ -80,7 +80,8 @@ class KuzzleMock extends Kuzzle {
       mExecute: sinon.stub(),
       processRequest: sinon.stub().returns(Bluebird.resolve()),
       checkRights: sinon.stub(),
-      getEventName: sinon.spy()
+      getEventName: sinon.spy(),
+      executePluginRequest: sinon.stub()
     };
 
     this.gc = {
@@ -160,6 +161,7 @@ class KuzzleMock extends Kuzzle {
 
     this.passport = {
       use: sinon.stub(),
+      unuse: sinon.stub(),
       authenticate: sinon.stub().returns(Bluebird.resolve({})),
       injectAuthenticateOptions: sinon.stub()
     };
@@ -172,7 +174,9 @@ class KuzzleMock extends Kuzzle {
       trigger: sinon.spy((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
-      registeredStrategies: []
+      strategies: {},
+      registerStrategy: sinon.stub(),
+      unregisterStrategy: sinon.stub()
     };
 
     this.repositories = {

@@ -69,7 +69,7 @@ describe('DSL.keyword.equals', () => {
 
           should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
           should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([subfilter]);
+          should(dsl.storage.foPairs.index.collection.equals.fields.foo.string.bar).eql([subfilter]);
         });
     });
 
@@ -83,12 +83,17 @@ describe('DSL.keyword.equals', () => {
           return dsl.register('index', 'collection', {equals: {foo: 'qux'}});
         })
         .then(subscription => {
-          let quxSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          const quxSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          const equals = dsl.storage.foPairs.index.collection.equals;
 
-          should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).match([quxSubfilter]);
+          should(equals)
+            .be.an.instanceof(FieldOperand);
+          should(equals.keys.array)
+            .eql(['foo']);
+          should(equals.fields.foo.string.bar)
+            .eql([barSubfilter]);
+          should(equals.fields.foo.string.qux)
+            .eql([quxSubfilter]);
         });
     });
 
@@ -99,15 +104,20 @@ describe('DSL.keyword.equals', () => {
         .then(subscription => {
           barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
 
-          return dsl.register('index', 'collection', {and: [{equals: {foo: 'qux'}}, {equals: {foo: 'bar'}}]});
+          return dsl.register('index', 'collection', {and: [{equals: {baz: 'qux'}}, {equals: {foo: 'bar'}}]});
         })
         .then(subscription => {
-          let multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          const multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          const equals = dsl.storage.foPairs.index.collection.equals;
 
-          should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter, multiSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).match([multiSubfilter]);
+          should(equals)
+            .be.an.instanceof(FieldOperand);
+          should(equals.keys.array)
+            .eql(['baz', 'foo']);
+          should(equals.fields.foo.string.bar)
+            .eql([barSubfilter, multiSubfilter]);
+          should(equals.fields.baz.string.qux)
+            .eql([multiSubfilter]);
         });
     });
   });
@@ -218,7 +228,7 @@ describe('DSL.keyword.equals', () => {
         .then(subscription => {
           idToRemove = subscription.id;
 
-          return dsl.register('index', 'collection', {and: [{equals: {foo: 'qux'}}, {equals: {foo: 'bar'}}]});
+          return dsl.register('index', 'collection', {and: [{equals: {baz: 'qux'}}, {equals: {foo: 'bar'}}]});
         })
         .then(subscription => {
           multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
@@ -226,10 +236,16 @@ describe('DSL.keyword.equals', () => {
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([multiSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).match([multiSubfilter]);
+          const equals = dsl.storage.foPairs.index.collection.equals;
+
+          should(equals)
+            .be.an.instanceof(FieldOperand);
+          should(equals.keys.array)
+            .eql(['baz', 'foo']);
+          should(equals.fields.foo.string.bar)
+            .eql([multiSubfilter]);
+          should(equals.fields.baz.string.qux)
+            .eql([multiSubfilter]);
         });
     });
 
@@ -242,24 +258,32 @@ describe('DSL.keyword.equals', () => {
         .then(subscription => {
           barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
 
-          return dsl.register('index', 'collection', {and: [{equals: {foo: 'qux'}}, {equals: {foo: 'bar'}}]});
+          return dsl.register('index', 'collection', {and: [{equals: {baz: 'qux'}}, {equals: {foo: 'bar'}}]});
         })
         .then(subscription => {
           idToRemove = subscription.id;
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('qux')).be.undefined();
+          const equals = dsl.storage.foPairs.index.collection.equals;
+
+          should(equals)
+            .be.an.instanceof(FieldOperand);
+          should(equals.keys.array)
+            .eql(['foo']);
+          should(equals.fields.foo.string.bar)
+            .eql([barSubfilter]);
+          should(equals.fields.foo.string.qux)
+            .be.undefined();
         });
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
       let
         idToRemove,
-        barSubfilter;
+        barSubfilter,
+        equals;
+
 
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
@@ -268,16 +292,25 @@ describe('DSL.keyword.equals', () => {
           return dsl.register('index', 'collection', {equals: {baz: 'qux'}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['baz', 'foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.baz.get('qux')).be.an.Array().and.not.empty();
+          equals = dsl.storage.foPairs.index.collection.equals;
+
+          should(equals.keys.array)
+            .eql(['baz', 'foo']);
+          should(equals.fields.baz.string.qux)
+            .be.an.Array()
+            .and.not.be.empty();
           idToRemove = subscription.id;
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.equals.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).match([barSubfilter]);
-          should(dsl.storage.foPairs.index.collection.equals.fields.baz).be.undefined();
+          should(equals)
+            .be.an.instanceof(FieldOperand);
+          should(equals.keys.array)
+            .eql(['foo']);
+          should(equals.fields.foo.string.bar)
+            .eql([barSubfilter]);
+          should(equals.fields.baz)
+            .be.undefined();
         });
     });
   });

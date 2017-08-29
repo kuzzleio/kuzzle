@@ -1,12 +1,12 @@
 'use strict';
 
-var
+const
   should = require('should'),
   FieldOperand = require('../../../../lib/api/dsl/storage/objects/fieldOperand'),
   DSL = require('../../../../lib/api/dsl');
 
 describe('DSL.keyword.everything', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -30,8 +30,12 @@ describe('DSL.keyword.everything', () => {
     it('should register an empty filter correctly', () => {
       return dsl.register('index', 'collection', {})
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.everything).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.everything.fields.all).match([dsl.storage.filters[subscription.id].subfilters[0]]);
+          const storeEntry = dsl.storage.foPairs.index.collection.everything;
+
+          should(storeEntry)
+            .be.instanceof(FieldOperand);
+          should(storeEntry.fields.all)
+            .eql([dsl.storage.filters[subscription.id].subfilters[0]]);
         });
     });
   });
@@ -40,7 +44,7 @@ describe('DSL.keyword.everything', () => {
     it('should match as long as a document is in the right index and collection', () => {
       return dsl.register('index', 'collection', {})
         .then(subscription => {
-          var result = dsl.test('index', 'collection', {foo: 'bar'});
+          const result = dsl.test('index', 'collection', {foo: 'bar'});
 
           should(result).be.an.Array().and.not.empty();
           should(result[0]).be.eql(subscription.id);

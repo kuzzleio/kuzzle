@@ -207,9 +207,7 @@ describe('Test plugins manager run', () => {
 
     return should(pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
-      .then(() => pluginMock.verify())).be.rejectedWith(PluginImplementationError, {
-        message: new PluginImplementationError('foobar').message
-      });
+      .then(() => pluginMock.verify())).be.rejectedWith(PluginImplementationError, {message: new PluginImplementationError('foobar').message});
   });
 
   it('should log a warning in case a pipe plugin exceeds the warning delay', () => {

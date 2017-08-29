@@ -192,6 +192,31 @@ describe('Test: hotelClerk.addSubscription', () => {
     return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
   });
 
+  it('should reject the subscription if the number of minterms exeeeds the configured limit', () => {
+    kuzzle.config.limits.subscriptionMinterms = 8;
+
+    const normalized = [];
+    for (let i = 0; i < 9; i++) {
+      normalized.push([]);
+    }
+
+    kuzzle.dsl.normalize.returns(Bluebird.resolve({
+      normalized,
+      index: 'index',
+      collection: 'collection',
+      id: 'foobar',
+    }));
+
+    return hotelClerk.addSubscription(request)
+      .then(() => {throw new Error('should not happen');})
+      .catch(error => {
+        should(error)
+          .be.an.instanceof(SizeLimitError);
+        should(error.message)
+          .eql('Unable to subscribe: maximum of minterms exceeded (max 8, received 9)');
+      });
+  });
+
   it('should refuse a subscription if the rooms limit has been reached', () => {
     hotelClerk.roomsCount = kuzzle.config.limits.subscriptionRooms;
 

@@ -107,9 +107,10 @@ describe('notify methods', () => {
             result: content
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
+          should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
           should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:document', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['core:notify:dispatch', {notification, connectionId: undefined}]);
+          should(kuzzle.pluginsManager.trigger.getCall(2).args).match(['notify:dispatch', notification]);
           cb();
         }
         catch (e) {
@@ -205,9 +206,10 @@ describe('notify methods', () => {
             result: content
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
+          should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
           should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:user', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['core:notify:dispatch'], {notification, connectionId: undefined});
+          should(kuzzle.pluginsManager.trigger.getCall(2).args).match(['notify:dispatch', notification]);
           cb();
         }
         catch (e) {
@@ -271,9 +273,11 @@ describe('notify methods', () => {
             info: 'This is an automated server notification'
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:server', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledWith('notify:server', notification)
+            .be.calledWithMatch('core:notify:dispatch', {notification, connectionId: 'foobar'})
+            .be.calledWith('notify:dispatch', notification);
           cb();
         }
         catch (e) {

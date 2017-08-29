@@ -22,20 +22,17 @@
 /* eslint-disable no-console */
 
 const
-  clc = require('cli-color'),
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
   rc = require('rc'),
-  params = rc('kuzzle');
+  params = rc('kuzzle'),
+  ColorOutput = require('./colorOutput');
 
-let
-  clcQuestion = clc.whiteBright,
-  clcOk = clc.green.bold,
-  clcError = clc.red,
-  clcWarn = clc.yellow;
+/** @type ColorOutput */
+let cout;
 
 function getUserName () {
-  const username = readlineSync.question(clcQuestion('\n[❓] First administrator account name\n'));
+  const username = readlineSync.question(cout.question('\n[❓] First administrator account name\n'));
 
   if (username.length === 0) {
     return getUserName();
@@ -45,16 +42,16 @@ function getUserName () {
 }
 
 function getPassword () {
-  const password = readlineSync.question(clcQuestion('\n[❓] First administrator account password\n'),
+  const password = readlineSync.question(cout.question('\n[❓] First administrator account password\n'),
     {hideEchoBack: true}
   );
 
-  const confirmation = readlineSync.question(clcQuestion('Please confirm your password\n'),
+  const confirmation = readlineSync.question(cout.question('Please confirm your password\n'),
     {hideEchoBack: true}
   );
 
   if (password !== confirmation) {
-    console.log(clcError('[✖] Passwords do not match.'));
+    console.log(cout.error('[✖] Passwords do not match.'));
     return getPassword();
   }
 
@@ -62,7 +59,7 @@ function getPassword () {
 }
 
 function shouldWeResetRoles () {
-  return Bluebird.resolve(readlineSync.keyInYN(clcQuestion('[❓] Restrict rights of the default and anonymous roles?')));
+  return Bluebird.resolve(readlineSync.keyInYN(cout.question('[❓] Restrict rights of the default and anonymous roles?')));
 }
 
 function confirm (username, resetRoles) {
@@ -73,7 +70,7 @@ function confirm (username, resetRoles) {
   }
 
   msg += '.\nConfirm? ';
-  return Bluebird.resolve(readlineSync.keyInYN(clcQuestion(msg)));
+  return Bluebird.resolve(readlineSync.keyInYN(cout.question(msg)));
 }
 
 function commandCreateFirstAdmin (options) {
@@ -83,11 +80,9 @@ function commandCreateFirstAdmin (options) {
     password,
     resetRoles;
 
-  process.stdin.setEncoding('utf8');
+  cout = new ColorOutput(options);
 
-  if (options.parent.noColors) {
-    clcError = clcOk = clcQuestion = clcWarn = string => string;
-  }
+  process.stdin.setEncoding('utf8');
 
   return kuzzle.cli.doAction('adminExists', {})
     .then(adminExists => {
@@ -113,7 +108,7 @@ function commandCreateFirstAdmin (options) {
     })
     .then(response => {
       if (!response) {
-        console.log(clcWarn('Aborting'));
+        console.log(cout.warn('Aborting'));
         process.exit(0);
       }
 
@@ -134,18 +129,18 @@ function commandCreateFirstAdmin (options) {
       }, {pid: params.pid, debug: options.parent.debug});
     })
     .then(() => {
-      console.log(clcOk(`[✔] "${username}" administrator account created`));
+      console.log(cout.ok(`[✔] "${username}" administrator account created`));
 
       if (resetRoles) {
-        console.log(clcOk('[✔] Rights restriction applied to the following roles: '));
-        console.log(clcOk('   - default'));
-        console.log(clcOk('   - anonymous'));
+        console.log(cout.ok('[✔] Rights restriction applied to the following roles: '));
+        console.log(cout.ok('   - default'));
+        console.log(cout.ok('   - anonymous'));
       }
 
       process.exit(0);
     })
     .catch(err => {
-      console.error(clcError(err.message));
+      console.error(cout.error(err.message));
       process.exit(1);
     });
 }

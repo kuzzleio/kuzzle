@@ -4,7 +4,6 @@ const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
-  Promise = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
@@ -65,8 +64,8 @@ describe('Plugin Context', () => {
       should(repository.update).be.a.Function();
     });
 
-    it('should throw when trying to instante a Request object without providing a request object', () => {
-      should(function () { new context.constructors.Request({}); }).throw(PluginImplementationError);
+    it('should throw when trying to instantiate a Request object without providing any data', () => {
+      should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
     });
 
     it('should replicate the right request information', () => {
@@ -100,6 +99,14 @@ describe('Plugin Context', () => {
       should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
       should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
       should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
+    });
+
+    it('should allow building a request without providing another one', () => {
+      const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
+
+      should(rq).be.instanceOf(Request);
+      should(rq.input.action).be.eql('bar');
+      should(rq.input.controller).be.eql('foo');
     });
 
     it('should expose all error objects as capitalized constructors', () => {
@@ -136,33 +143,40 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger']);
+      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger', 'strategies']);
     });
 
-    it('should expose a correctly constructed validation accessor', () => {
+    it('should expose a data validation accessor', () => {
       const validation = context.accessors.validation;
 
       should(validation.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
       should(validation.validate).be.eql(kuzzle.validation.validationPromise.bind(kuzzle.validation));
     });
 
-    it('should expose a correctly execute accessor', () => {
+    it('should expose an API execution accessor', () => {
       const execute = context.accessors.execute;
 
       should(execute).be.a.Function();
     });
 
-    it('should expose correctly a trigger accessor', () => {
+    it('should expose an event trigger accessor', () => {
       const trigger = context.accessors.trigger;
 
       should(trigger).be.a.Function();
     });
 
-    it('should expose a correctly constructed storage accessor', () => {
+    it('should expose a private storage accessor', () => {
       const storage = context.accessors.storage;
 
       should(storage.bootstrap).be.a.Function();
       should(storage.createCollection).be.a.Function();
+    });
+
+    it('should expose an authentication strategies management accessor', () => {
+      const strategies = context.accessors.strategies;
+
+      should(strategies.add).be.a.Function();
+      should(strategies.remove).be.a.Function();
     });
   });
 
@@ -177,9 +191,9 @@ describe('Plugin Context', () => {
       const trigger = kuzzle.pluginsManager.trigger;
       const eventName = 'backHome';
       const payload = {
-        question: 'who\'s is this motorcycle?',
+        question: 'whose motorcycle is this?',
         answer: 'it\'s a chopper, baby.',
-        anotherQuestion: 'who\'s is this chopper, then?',
+        anotherQuestion: 'whose chopper is this, then?',
         anotherAnswer: 'it\'s Zed\'s',
         yetAnotherQuestion: 'who\'s Zed?',
         yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
@@ -191,40 +205,40 @@ describe('Plugin Context', () => {
   });
 
   describe('#execute', () => {
-    let execute;
-
-    beforeEach(() => {
-      execute = PluginContext.__get__('execute');
-    });
-
     it('should call the callback with a result if everything went well', done => {
       const
         request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
         callback = sinon.spy((err, res) => {
-          should(callback).be.calledOnce();
-          should(err).be.null();
-          should(res).match(request);
-
-          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
-
-          done();
+          try {
+            should(callback).be.calledOnce();
+            should(err).be.null();
+            should(res).match(request);
+            should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+            done();
+          }
+          catch(e) {
+            done(e);
+          }
         });
 
-      kuzzle.funnel.processRequest.returns(Promise.resolve(request));
+      kuzzle.funnel.executePluginRequest.yields(null, request);
 
-      execute.bind(kuzzle)(request, callback);
+      should(context.accessors.execute(request, callback)).not.be.a.Promise();
     });
 
     it('should resolve a Promise with a result if everything went well', () => {
       const request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
 
-      kuzzle.funnel.processRequest.returns(Promise.resolve(request));
+      kuzzle.funnel.executePluginRequest.yields(null, request);
 
-      return execute.bind(kuzzle)(request)
+      const ret = context.accessors.execute(request);
+
+      should(ret).be.a.Promise();
+
+      return ret
         .then(res => {
           should(res).match(request);
-
-          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
+          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
         });
     });
 
@@ -234,24 +248,21 @@ describe('Plugin Context', () => {
         error = new Error('error'),
         callback = sinon.spy(
           (err, res) => {
-            should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
-
-            should(callback).be.calledOnce();
-            should(err).match(error);
-            should(res).match({});
-
-            return Promise.resolve().then(() => {
-              // allows handleErrorDump to be called
-              should(kuzzle.funnel.handleErrorDump).be.calledOnce();
-              should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
-
+            try {
+              should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+              should(callback).be.calledOnce();
+              should(err).match(error);
+              should(res).be.undefined();
               done();
-            });
+            }
+            catch(e) {
+              done(e);
+            }
           });
 
-      kuzzle.funnel.processRequest.returns(Promise.reject(error));
+      kuzzle.funnel.executePluginRequest.yields(error);
 
-      execute.bind(kuzzle)(request, callback);
+      context.accessors.execute(request, callback);
     });
 
     it('should reject a Promise with an error if something went wrong', () => {
@@ -259,20 +270,125 @@ describe('Plugin Context', () => {
         request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
         error = new Error('error');
 
-      kuzzle.funnel.processRequest.returns(Promise.reject(error));
+      kuzzle.funnel.executePluginRequest.yields(error);
 
-      return execute.bind(kuzzle)(request)
-        .catch((err) => {
-          should(kuzzle.funnel.processRequest.firstCall.args[0]).be.eql(request);
-
+      return context.accessors.execute(request)
+        .catch(err => {
+          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
           should(err).match(error);
+        });
+    });
 
-          return Promise.resolve().then(() => {
-            // allows handleErrorDump to be called
-            should(kuzzle.funnel.handleErrorDump).be.calledOnce();
-            should(kuzzle.funnel.handleErrorDump.firstCall.args[0]).match(error);
+    it('should resolve to an error if no Request object is provided', done => {
+      const
+        callback = sinon.spy(
+          (err, res) => {
+            try {
+              should(kuzzle.funnel.executePluginRequest.called).be.false();
+              should(callback).be.calledOnce();
+              should(err).be.instanceOf(PluginImplementationError);
+              should(err.message).startWith('Invalid argument: a Request object must be supplied');
+              should(res).be.undefined();
+              done();
+            }
+            catch(e) {
+              done(e);
+            }
+          });
+
+      context.accessors.execute({}, callback);
+    });
+
+    it('should reject if no Request object is provided', () => {
+      return should(context.accessors.execute({})).be.rejectedWith(
+        /Invalid argument: a Request object must be supplied/
+      );
+    });
+
+    it('should resolve to an error if an improper overloadProtect flag is supplied', done => {
+      const
+        request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+        callback = sinon.spy(
+          (err, res) => {
+            try {
+              should(kuzzle.funnel.executePluginRequest.called).be.false();
+              should(callback).be.calledOnce();
+              should(err).be.instanceOf(PluginImplementationError);
+              should(err.message).startWith('Invalid argument: the overload protection flag must be a boolean');
+              should(res).be.undefined();
+              done();
+            }
+            catch(e) {
+              done(e);
+            }
+          });
+
+      context.accessors.execute(request, 'foobar', callback);
+    });
+
+    it('should reject if an invalid overloadProtect flag is provided', () => {
+      const request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'});
+
+      return should(context.accessors.execute(request, 'foobar')).be.rejectedWith(
+        /Invalid argument: the overload protection flag must be a boolean/
+      );
+    });
+  });
+
+  describe('#strategies', () => {
+    it('should allow to add a strategy and link it to its owner plugin', () => {
+      const 
+        mockedStrategy = {},
+        result = context.accessors.strategies.add('foo', mockedStrategy);
+
+      should(result).be.a.Promise();
+      
+      return result
+        .then(() => {
+          should(kuzzle.pluginsManager.registerStrategy).calledWith('pluginName', 'foo', mockedStrategy);
+          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyAdded', {
+            pluginName: 'pluginName',
+            name: 'foo',
+            strategy: mockedStrategy
           });
         });
+    });
+
+    it('should reject the promise if the strategy registration throws', () => {
+      const error = new Error('foobar');
+      kuzzle.pluginsManager.registerStrategy.throws(error);
+
+      const result = context.accessors.strategies.add('foo', {});
+
+      should(result).be.a.Promise();
+
+      return should(result).be.rejectedWith(error);
+    });
+
+    it('should allow to remove a strategy', () => {
+      const result = context.accessors.strategies.remove('foo');
+
+      should(result).be.a.Promise();
+      
+      return result
+        .then(() => {
+          should(kuzzle.pluginsManager.unregisterStrategy).calledWith('pluginName', 'foo');
+          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyRemoved', {
+            pluginName: 'pluginName',
+            name: 'foo'
+          });
+        });
+    });
+
+    it('should reject the promise if the strategy removal throws', () => {
+      const error = new Error('foobar');
+      kuzzle.pluginsManager.unregisterStrategy.throws(error);
+
+      const result = context.accessors.strategies.remove('foo');
+
+      should(result).be.a.Promise();
+
+      return should(result).be.rejectedWith(error);
     });
   });
 });
