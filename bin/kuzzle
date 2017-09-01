@@ -50,8 +50,6 @@ program
 program
   .command('reset')
   .description('delete Kuzzle configuration and users from database')
-  .option('--fixtures <fixtures>', 'import fixtures from file')
-  .option('--mappings <mappings>', 'load and apply mappings from file')
   .option('--noint', 'non interactive mode')
   .action(require('./commands/reset'));
 
