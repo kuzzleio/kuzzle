@@ -85,6 +85,8 @@ function commandStart (options) {
 
           kuzzle.indexCache.add(index, collection);
           console.log(cout.ok(`[✔] Mappings for ${index}/${collection} successfully applied`));
+
+          return null;
         });
     })
     .then(() => {
@@ -100,6 +102,8 @@ function commandStart (options) {
           console.log(cout.error(`[✖] The file ${params.fixtures} cannot be parsed. Abort.`));
           process.exit(1);
         }
+
+        console.log(cout.notice(`[ℹ] Loading fixtures from ${params.fixtures} into storage layer`));
 
         for (const index of Object.keys(fixtures)) {
           for (const collection of Object.keys(fixtures[index])) {
