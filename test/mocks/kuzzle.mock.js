@@ -74,6 +74,7 @@ class KuzzleMock extends Kuzzle {
       pluginsControllers: {
       },
       init: sinon.spy(),
+      loadPluginControllers: sinon.spy(),
       getRequestSlot: sinon.stub().returns(true),
       handleErrorDump: sinon.spy(),
       execute: sinon.spy(),
