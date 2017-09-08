@@ -34,7 +34,6 @@ describe('Tests: api/cli/index.js', () => {
       should(cli.actions.clearCache).be.instanceOf(Action);
       should(cli.actions.cleanDb).be.instanceOf(Action);
       should(cli.actions.createFirstAdmin).be.instanceOf(Action);
-      should(cli.actions.data).be.instanceOf(Action);
       should(cli.actions.dump).be.instanceOf(Action);
       should(cli.doAction).be.a.Function();
     });
