@@ -39,6 +39,7 @@
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^7.4.3",
+    "koncorde": "https://github.com/kuzzleio/koncorde",
     "kuzzle-common-objects": "^3.0.6",
     "lodash": "4.17.4",
     "moment": "2.18.1",
