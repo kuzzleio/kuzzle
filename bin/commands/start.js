@@ -26,7 +26,6 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   Request = require('kuzzle-common-objects').Request,
-  Bluebird = require('bluebird'),
   ColorOutput = require('./colorOutput');
 
 function commandStart (options) {
@@ -39,9 +38,10 @@ function commandStart (options) {
   kuzzle.start(params)
     // fixtures && mapping
     .then(() => {
+      const requests = [];
+
       if (params.mappings) {
         let mappings;
-        const promises = [];
 
         try {
           mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
@@ -51,23 +51,49 @@ function commandStart (options) {
           process.exit(1);
         }
 
-        Object.keys(mappings).forEach(index => {
-          Object.keys(mappings[index]).forEach(collection => {
-            promises.push(kuzzle.services.list.storageEngine.updateMapping(new Request({
+        console.log(cout.notice(`[ℹ] Loading mappings from ${params.mappings} into storage layer`));
+
+        for (const index of Object.keys(mappings)) {
+          for (const collection of Object.keys(mappings[index])) {
+            requests.push(new Request({
               index,
               collection,
               body: mappings[index][collection]
-            })));
-          });
-        });
-
-        return Bluebird.all(promises);
+            }));
+          }
+        }
       }
+
+      return requests;
+    })
+    .each(rq => {
+      const 
+        index = rq.input.resource.index,
+        indexRequest = new Request({index});
+
+      return kuzzle.services.list.storageEngine.indexExists(indexRequest)
+        .then(exist => {
+          if (!exist) {
+            console.log(cout.notice(`[ℹ] Creating index: ${index}`));
+            return kuzzle.services.list.storageEngine.createIndex(indexRequest);
+          }
+        })
+        .then(() => kuzzle.services.list.storageEngine.updateMapping(rq))
+        .then(() => kuzzle.services.list.storageEngine.refreshIndex(indexRequest))
+        .then(() => {
+          const collection = rq.input.resource.collection;
+
+          kuzzle.indexCache.add(index, collection);
+          console.log(cout.ok(`[✔] Mappings for ${index}/${collection} successfully applied`));
+
+          return null;
+        });
     })
     .then(() => {
+      const requests = [];
+
       if (params.fixtures) {
         let fixtures;
-        const promises = [];
 
         try {
           fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
@@ -77,20 +103,26 @@ function commandStart (options) {
           process.exit(1);
         }
 
-        Object.keys(fixtures).forEach(index => {
-          Object.keys(fixtures[index]).forEach(collection => {
-            promises.push(kuzzle.services.list.storageEngine.import(new Request({
+        console.log(cout.notice(`[ℹ] Loading fixtures from ${params.fixtures} into storage layer`));
+
+        for (const index of Object.keys(fixtures)) {
+          for (const collection of Object.keys(fixtures[index])) {
+            requests.push(new Request({
               index,
               collection,
               body: {
                 bulkData: fixtures[index][collection]
               }
-            })));
-          });
-        });
-
-        return Bluebird.all(promises);
+            }));
+          }
+        }
       }
+
+      return requests;
+    })
+    .each(rq => {
+      return kuzzle.services.list.storageEngine.import(rq)
+        .then(res => console.log(cout.ok(`[✔] Fixtures for ${rq.input.resource.index}/${rq.input.resource.collection} successfully loaded: ${res.items.length} documents created`)));
     })
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));

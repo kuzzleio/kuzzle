@@ -24,6 +24,7 @@ describe('funnelController.init', () => {
     kuzzle.pluginsManager.getPluginControllers = sinon.stub().returns({foo: 'bar'});
 
     funnel.init();
+    funnel.loadPluginControllers();
 
     should(Object.keys(funnel.controllers).length).be.eql(10);
     should(funnel.controllers.auth).be.instanceOf(AuthController);

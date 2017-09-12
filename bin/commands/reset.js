@@ -25,7 +25,6 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
-  fs = require('fs'),
   ColorOutput = require('./colorOutput');
 
 function commandReset (options) {
@@ -33,53 +32,22 @@ function commandReset (options) {
     kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options);
 
-  let
-    userIsSure = false,
-    fixturesContent,
-    mappingsContent;
-
-  // check, if files are provided, if they exists
-  if (params.fixtures) {
-    try {
-      fixturesContent = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
-    }
-    catch (e) {
-      console.log(cout.error(`[✖] The file ${params.fixtures} cannot be opened. Abort.`));
-      process.exit(1);
-    }
-  }
-
-  if (params.mappings) {
-    try {
-      mappingsContent = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
-    }
-    catch (e) {
-      console.log(cout.error(`[✖] The file ${params.mappings} cannot be opened. Abort.`));
-      process.exit(1);
-    }
-  }
+  let userIsSure = false;
 
   console.log(cout.warn('[ℹ] You are about to reset Kuzzle configuration and users'));
   console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
 
   if (!params.noint) {
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
-  } else {
-    // not intteractive mode
+  } 
+  else {
+    // non-interactive mode
     userIsSure = true;
   }
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
     return kuzzle.cli.doAction('cleanDb', {}, {debug: options.parent.debug})
-      .then(() => {
-        return kuzzle.cli.doAction('data', {
-          body: {
-            fixtures: fixturesContent,
-            mappings: mappingsContent
-          }
-        }, {debug: options.parent.debug});
-      })
       .then(() => {
         console.log(cout.ok('[✔] Kuzzle has been successfully reset'));
         process.exit(0);
