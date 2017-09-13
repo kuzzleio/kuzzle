@@ -47,18 +47,18 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should register a new room and customer', () => {
-    kuzzle.dsl.normalize
+    kuzzle.realtime.normalize
       .onFirstCall().returns(Bluebird.resolve({id: 'foobar'}))
       .onSecondCall().returns(Bluebird.resolve({id: 'barfoo'}));
 
-    kuzzle.dsl.store
+    kuzzle.realtime.store
       .onFirstCall().returns({id: 'foobar'})
       .onSecondCall().returns({id: 'barfoo'});
 
     return hotelClerk.addSubscription(request)
       .then(response => {
-        should(kuzzle.dsl.normalize).calledOnce();
-        should(kuzzle.dsl.store).calledOnce();
+        should(kuzzle.realtime.normalize).calledOnce();
+        should(kuzzle.realtime.store).calledOnce();
         should(response.roomId).be.eql('foobar');
         should(response).have.property('channel');
 
@@ -81,8 +81,8 @@ describe('Test: hotelClerk.addSubscription', () => {
         return hotelClerk.addSubscription(request);
       })
       .then(response => {
-        should(kuzzle.dsl.normalize.callCount).be.eql(2);
-        should(kuzzle.dsl.store.callCount).be.eql(2);
+        should(kuzzle.realtime.normalize.callCount).be.eql(2);
+        should(kuzzle.realtime.store.callCount).be.eql(2);
         should(response.roomId).be.eql('barfoo');
         should(hotelClerk.roomsCount).be.eql(2);
       });
@@ -103,8 +103,8 @@ describe('Test: hotelClerk.addSubscription', () => {
       });
   });
 
-  it('should reject when the DSL throws an error', () => {
-    kuzzle.dsl.normalize.returns(Bluebird.reject(new Error('test')));
+  it('should reject when Koncorde throws an error', () => {
+    kuzzle.realtime.normalize.returns(Bluebird.reject(new Error('test')));
 
     return should(hotelClerk.addSubscription(request)).be.rejected();
   });
@@ -200,7 +200,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       normalized.push([]);
     }
 
-    kuzzle.dsl.normalize.returns(Bluebird.resolve({
+    kuzzle.realtime.normalize.returns(Bluebird.resolve({
       normalized,
       index: 'index',
       collection: 'collection',

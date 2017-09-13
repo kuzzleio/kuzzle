@@ -1,6 +1,3 @@
-// Allow the "import ... from" ES6 syntax used in the DSL
-require('reify');
-
 const
   should = require('should'),
   sinon = require('sinon'),
@@ -69,7 +66,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
     
     should(response).be.exactly(unsubscribeRequest.input.body.roomId);
 
-    should(kuzzle.dsl.remove).be.calledOnce();
+    should(kuzzle.realtime.remove).be.calledOnce();
 
     should(kuzzle.notifier.notifyUser.called).be.false();
 
@@ -92,7 +89,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
     should(response)
       .be.exactly(unsubscribeRequest.input.body.roomId);
 
-    should(kuzzle.dsl.remove)
+    should(kuzzle.realtime.remove)
       .be.calledOnce()
       .be.calledWith(unsubscribeRequest.input.body.roomId);
 
@@ -104,12 +101,12 @@ describe('Test: hotelClerk.removeSubscription', () => {
   });
 
   it('should send a notification to other users connected on that room', () => {
-    kuzzle.dsl.remove = sinon.spy();
+    kuzzle.realtime.remove = sinon.spy();
 
     hotelClerk.rooms.foo.customers.add('another connection');
     hotelClerk.removeSubscription(unsubscribeRequest, context);
 
-    should(kuzzle.dsl.remove.called).be.false();
+    should(kuzzle.realtime.remove.called).be.false();
     should(kuzzle.notifier.notifyUser).be.calledOnce();
     should(hotelClerk.roomsCount).be.eql(2);
 

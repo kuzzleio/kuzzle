@@ -29,7 +29,7 @@ class KuzzleMock extends Kuzzle {
       }
     };
 
-    this.dsl = {
+    this.realtime = {
       test: sinon.stub().returns([]),
       register: sinon.stub().returns(Bluebird.resolve()),
       remove: sinon.stub().returns(Bluebird.resolve()),

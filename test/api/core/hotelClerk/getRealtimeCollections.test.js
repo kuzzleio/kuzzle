@@ -10,7 +10,7 @@ describe('Test: hotelClerk.getRealtimeCollections', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.dsl.storage = {
+    kuzzle.realtime.storage = {
       filtersIndex: {}
     };
 
@@ -24,7 +24,7 @@ describe('Test: hotelClerk.getRealtimeCollections', () => {
   });
 
   it('should return an array of unique collection names', () => {
-    kuzzle.dsl.storage.filtersIndex = {
+    kuzzle.realtime.storage.filtersIndex = {
       index: {
         foo: true,
         bar: true,

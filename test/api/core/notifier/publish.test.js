@@ -32,7 +32,7 @@ describe('Test: notifier.publish', () => {
   });
 
   it('should publish messages', (done) => {
-    kuzzle.dsl.test.returns(rooms);
+    kuzzle.realtime.test.returns(rooms);
 
     const request = new Request(rawRequest);
     should(notifier.publish(request, 'foo', 'bar')).match({published: true});
@@ -57,7 +57,7 @@ describe('Test: notifier.publish', () => {
   });
 
   it('should cache the document in case of a create document rawRequest', (done) => {
-    kuzzle.dsl.test.returns(rooms);
+    kuzzle.realtime.test.returns(rooms);
 
     rawRequest.controller = 'document';
     rawRequest.action = 'create';
@@ -84,7 +84,7 @@ describe('Test: notifier.publish', () => {
   });
 
   it('should cache the document in case of a createOrReplace document rawRequest', (done) => {
-    kuzzle.dsl.test.returns(rooms);
+    kuzzle.realtime.test.returns(rooms);
 
     rawRequest.controller = 'document';
     rawRequest.action = 'createOrReplace';
@@ -111,7 +111,7 @@ describe('Test: notifier.publish', () => {
   });
 
   it('should cache the document in case of a replace document rawRequest', (done) => {
-    kuzzle.dsl.test.returns(rooms);
+    kuzzle.realtime.test.returns(rooms);
 
     rawRequest.controller = 'document';
     rawRequest.action = 'replace';
@@ -140,7 +140,7 @@ describe('Test: notifier.publish', () => {
   it('should do nothing if there is no room to notify', (done) => {
     let result;
 
-    kuzzle.dsl.test.returns([]);
+    kuzzle.realtime.test.returns([]);
 
     result = notifier.publish(new Request(rawRequest), 'foo', 'bar');
 
