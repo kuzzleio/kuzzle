@@ -759,21 +759,19 @@ describe('InternalEngine', () => {
   });
 
   describe('#getMapping', () => {
-    it('should forward the request to elasticseach', () => {
-      const data = {foo: 'bar'};
+    beforeEach(() => {
+      kuzzle.internalEngine.esWrapper.getMapping = sinon.stub().resolves({foo: 'bar'});
+    });
+
+    it('should forward the request to elasticseach  wrapper', () => {
+      const data = {index: 'foo', type: 'bar'};
 
       return kuzzle.internalEngine.getMapping(data)
-        .then(() => {
-          try {
-            should(kuzzle.internalEngine.client.indices.getMapping)
-              .be.calledOnce()
-              .be.calledWithExactly(data);
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
+        .then(res => {
+          should(kuzzle.internalEngine.esWrapper.getMapping)
+            .be.calledOnce()
+            .be.calledWithExactly(data);
+          should(res).match({foo: 'bar'});
         });
     });
   });
