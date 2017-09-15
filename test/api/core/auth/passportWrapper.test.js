@@ -1,91 +1,123 @@
-var
+const
   should = require('should'),
-  passport = require('passport'),
-  util = require('util'),
-  Kuzzle = require('../../../../lib/api/kuzzle'),
+  Kuzzle = require('../../../mocks/kuzzle.mock'),
+  sinon = require('sinon'),
+  mockrequire = require('mock-require'),
   ForbiddenError = require('kuzzle-common-objects').errors.ForbiddenError,
-  PassportResponse = require('../../../../lib/api/core/auth/passportResponse'),
-  PassportWrapper = require('../../../../lib/api/core/auth/passportWrapper'),
-  MockupStrategy;
+  PassportResponse = require('../../../../lib/api/core/auth/passportResponse');
 
 /**
  * @param name
  * @param verify
  * @constructor
  */
-MockupStrategy = function(name, verify) {
-  passport.Strategy.call(this);
-  this.name = name;
-  this._verify = verify;
-};
-util.inherits(MockupStrategy, passport.Strategy);
-
-MockupStrategy.prototype.authenticate = function(req) {
-  var
-    self = this,
-    username;
-
-  if (req.body && req.body.username) {
-    username = req.body.username;
-  }
-  function verified(err, user, info) {
-    if (err) { return self.error(err); }
-    if (!user) { return self.fail(info); }
-    self.success(user, info);
-    self.redirect(user);
+/*
+class MockupStrategy extends passport.Strategy {
+  constructor(name, verify) {
+    super();
+    this.name = name;
+    this._verify = verify;
   }
 
-  try {
-    this._verify(username, verified);
-  } catch (ex) {
-    return self.error(ex);
+  authenticate (req) {
+    let username;
+
+    if (req.body && req.body.username) {
+      username = req.body.username;
+    }
+
+    const verified = (err, user, info) => {
+      if (err) { 
+        return this.error(err); 
+      }
+
+      if (!user) { 
+        return this.fail(info); 
+      }
+
+      this.success(user, info);
+      this.redirect(user);
+    };
+
+    try {
+      this._verify(username, verified);
+    } catch (ex) {
+      return this.error(ex);
+    }
   }
-
-};
-
+}
+*/
 describe('Test the passport Wrapper', () => {
-  var
-    kuzzle,
-    passportWrapper;
+  let 
+    PassportWrapper,
+    passportWrapper,
+    passportMock;
 
-  before(() => {
-    kuzzle = new Kuzzle();
-    passportWrapper = new PassportWrapper(kuzzle);
+  beforeEach(() => {
+    passportMock = {
+      use: sinon.stub(),
+      unuse: sinon.stub(),
+      authenticate: sinon.stub(),
+      _strategy: sinon.stub().returns(true)
+    };
 
-    passport.use(new MockupStrategy('mockup', (username, callback) => {
+    mockrequire('passport', passportMock);
+    PassportWrapper = mockrequire.reRequire('../../../../lib/api/core/auth/passportWrapper');
+
+    passportWrapper = new PassportWrapper(new Kuzzle());
+/*
+    passportWrapper.use(new MockupStrategy('mockup', (username, callback) => {
       callback(null, {
         _id: username,
         name: 'Johnny Cash'
       });
     }));
 
-    passport.use(new MockupStrategy('null', (username, callback) => {
+    passportWrapper.use(new MockupStrategy('null', (username, callback) => {
       callback(null, false, {message: 'Empty User'});
     }));
 
-    passport.use(new MockupStrategy('error', (username, callback) => {
+    passportWrapper.use(new MockupStrategy('error', (username, callback) => {
       callback(new ForbiddenError('Bad Credentials'));
     }));
+*/
+  });
+/*
+  it('should register and unregister strategies correctly', () => {
+    const mock = new MockupStrategy('foobar', () => {});
+
+
+    passportWrapper.use('foobar', mock);
+
+    should(passportWrapper.options.foobar).be.an.Object().and.be.empty();
 
   });
-
+*/
   it('should reject in case of unknown strategy', () => {
-    return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'nostrategy')).be.rejectedWith('Unknown authentication strategy "nostrategy"');
+    passportMock._strategy.returns(false);
+
+    return should(passportWrapper.authenticate('foo', 'bar'))
+      .be.rejectedWith('Unknown authentication strategy "bar"');
   });
 
-  it('should resolve to the user if good credentials', () => {
-    return passportWrapper.authenticate({body: {username: 'jdoe'}}, 'mockup')
-      .then(userObject => {
-        should(userObject._id).be.equal('jdoe');
-      });
+  it('should resolve to the user if credentials are verified', () => {
+    const user = {username: 'jdoe'};
+
+    passportMock.authenticate.yields(null, user);
+
+    return should(passportWrapper.authenticate('foo', 'bar')).be.fulfilledWith(user);
   });
 
-  it('should reject if user is null', () => {
-    return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'null')).be.rejectedWith('Empty User');
+  it('should reject if passport does not return a user', () => {
+    passportMock.authenticate.yields(null, null, new Error('foobar'));
+
+    return should(passportWrapper.authenticate('foo', 'bar')).be.rejectedWith('foobar');
   });
 
-  it('should reject in case of authenticate error', () => {
-    return should(passportWrapper.authenticate({body: {username: 'jdoe'}}, 'error')).be.rejectedWith(/^Bad Credentials/);
+  it('should reject in case of an authentication error', () => {
+    passportMock.authenticate.yields(new Error('foobar'));
+
+    return should(passportWrapper.authenticate('foo', 'bar')).be.rejectedWith(/^foobar/);
   });
 
   it('should return a PassportResponse if the strategy calls a HTTP redirection', () => {
