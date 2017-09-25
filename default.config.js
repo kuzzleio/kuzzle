@@ -55,13 +55,9 @@ module.exports = {
 
   plugins: {
     common: {
-      workerPrefix: 'kpw:',
       pipeWarnTime: 40,
       pipeTimeout: 250,
       initTimeout: 10000,
-    },
-    'kuzzle-plugin-logger': {
-      threads: 1
     }
   },
 
@@ -236,7 +232,6 @@ module.exports = {
       cleanInterval: 86400000,
       maxDelete: 1000
     }
-
   },
 
   stats: {
