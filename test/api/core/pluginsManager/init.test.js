@@ -12,9 +12,16 @@ describe('PluginsManager', () => {
     PluginsManager,
     pluginsManager,
     fsStub,
-    kuzzle;
+    kuzzle,
+    pluginStub;
 
   beforeEach(() => {
+    pluginStub = function () {
+      return {
+        init: sinon.stub()
+      };
+    };
+
     fsStub = {
       readdirSync: sinon.stub().returns([]),
       accessSync: sinon.stub(),
@@ -88,12 +95,28 @@ describe('PluginsManager', () => {
       fsStub.statSync.returns({
         isDirectory: () => true
       });
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: instanceName});
       mockrequire('/kuzzle/plugins/enabled/another-plugin/package.json', { name: instanceName.toUpperCase()});
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(/A plugin named kuzzle-plugin-test already exists/);
+    });
+
+    it('should throw if a plugin does not expose a "init" method', () => {
+      const instanceName = 'kuzzle-plugin-test';
+      pluginsManager = new PluginsManager(kuzzle);
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {
+        return {};
+      });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: instanceName});
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
+      should(() => pluginsManager.init()).throw(/No "init" method is exposed by plugin kuzzle-plugin-test/);
     });
 
     it('should return a well-formed plugin instance if a valid requireable plugin is enabled', () => {
@@ -103,7 +126,7 @@ describe('PluginsManager', () => {
       fsStub.statSync.returns({
         isDirectory: () => true
       });
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -130,7 +153,7 @@ describe('PluginsManager', () => {
         isDirectory: () => true
       });
 
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
@@ -154,7 +177,7 @@ describe('PluginsManager', () => {
         isDirectory: () => true
       });
 
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -184,7 +207,7 @@ describe('PluginsManager', () => {
         isDirectory: () => true
       });
 
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
@@ -209,7 +232,7 @@ describe('PluginsManager', () => {
         isDirectory: () => true
       });
 
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {});
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', manifest);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
@@ -246,7 +269,7 @@ describe('PluginsManager', () => {
         isDirectory: () => true
       });
 
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', undefined);
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', () => {});
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/package.json', { name: 'kuzzle-plugin-test' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
