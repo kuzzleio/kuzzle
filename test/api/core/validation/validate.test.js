@@ -152,13 +152,13 @@ describe('Test: validation.validate', () => {
     });
 
     it('should trigger all validation if specification enables them', () => {
-      var
+      const
         recurseFieldValidationStub = sandbox.stub().returns(true),
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
         testStub = sandbox.stub().returns([filterId, 'anotherFilter']),
-        dsl = {test: testStub},
+        koncorde = {test: testStub},
         id = 'anId',
         verbose = false,
         documentBody = {},
@@ -182,7 +182,7 @@ describe('Test: validation.validate', () => {
 
       validation.specification = specification;
       validation.recurseFieldValidation = recurseFieldValidationStub;
-      validation.dsl = dsl;
+      validation.koncorde = koncorde;
 
       return validation.validationPromise(request, verbose)
         .then((result) => {
@@ -202,13 +202,13 @@ describe('Test: validation.validate', () => {
     });
 
     it('should trigger all validation if specification enables them', () => {
-      var
+      const
         recurseFieldValidationStub = sandbox.stub().returns(true),
         controllerName = 'write',
         actionName = 'update',
         filterId = 'someFilter',
         testStub = sandbox.stub().returns(Promise.resolve([filterId, 'anotherFilter'])),
-        dsl = {test: testStub},
+        koncorde = {test: testStub},
         id = 'anId',
         verbose = false,
         documentBody = {foo: 'barbar'},
@@ -231,7 +231,7 @@ describe('Test: validation.validate', () => {
       };
 
       validation.recurseFieldValidation = recurseFieldValidationStub;
-      validation.dsl = dsl;
+      validation.koncorde = koncorde;
 
       return validation.validationPromise(request, verbose)
         .then((result) => {
@@ -246,13 +246,13 @@ describe('Test: validation.validate', () => {
     });
 
     it('should throw when field validation fails', () => {
-      var
+      const
         error = new Error('Mocked error'),
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
         testStub = sandbox.stub().returns(Promise.resolve([filterId, 'anotherFilter'])),
-        dsl = {
+        koncorde = {
           test: testStub
         },
         id = 'anId',
@@ -277,7 +277,7 @@ describe('Test: validation.validate', () => {
         }
       };
       sandbox.stub(validation, 'recurseFieldValidation').throws(error);
-      validation.dsl = dsl;
+      validation.koncorde = koncorde;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
       return should(validation.validationPromise(request, verbose))
@@ -285,13 +285,13 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return an unvalid status when validator validation fails', () => {
-      var
+      const
         recurseFieldValidationStub = sandbox.stub().returns(true),
         controllerName = 'aController',
         actionName = 'anAction',
         filterId = 'someFilter',
         testStub = sandbox.stub().returns(Promise.resolve(['anotherFilter'])),
-        dsl = {
+        koncorde = {
           test: testStub
         },
         id = 'anId',
@@ -316,7 +316,7 @@ describe('Test: validation.validate', () => {
         }
       };
       validation.recurseFieldValidation = recurseFieldValidationStub;
-      validation.dsl = dsl;
+      validation.koncorde = koncorde;
       Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
 
       return should(validation.validationPromise(request, verbose))

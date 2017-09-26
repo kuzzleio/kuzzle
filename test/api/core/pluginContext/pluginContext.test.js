@@ -39,7 +39,7 @@ describe('Plugin Context', () => {
 
     it('should expose the right constructors', () => {
       let repository;
-      const Dsl = require('../../../../lib/api/dsl');
+      const Koncorde = require('koncorde');
 
       should(context.constructors).be.an.Object().and.not.be.empty();
       should(context.constructors.Dsl).be.a.Function();
@@ -49,7 +49,7 @@ describe('Plugin Context', () => {
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
 
-      should(new context.constructors.Dsl).be.instanceOf(Dsl);
+      should(new context.constructors.Dsl).be.instanceOf(Koncorde);
       should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
 
       repository = new context.constructors.Repository(someCollection);

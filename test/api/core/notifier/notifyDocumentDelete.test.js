@@ -64,7 +64,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
         }
       };
 
-    kuzzle.dsl.test.returns(['foo', 'bar']);
+    kuzzle.realtime.test.returns(['foo', 'bar']);
     kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({_id: 'foobar', _source: stillAlive._source, _meta: stillAlive._meta}));
 
     return notifier.notifyDocumentDelete(request, ['foobar'])
