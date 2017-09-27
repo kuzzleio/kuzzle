@@ -59,7 +59,6 @@ describe('lib/api/controllers/cliController', () => {
       should(cli.actions.createFirstAdmin).be.exactly(createFirstAdminStub);
       should(cli.actions.cleanDb).be.exactly(cleanDbStub);
       should(cli.actions.clearCache).be.exactly(clearCacheStub);
-      should(cli.actions.data).be.exactly(dataStub);
       should(cli.actions.dump).be.exactly(dumpStub);
 
       should(kuzzle.services.list.broker.listen)
@@ -101,10 +100,10 @@ describe('lib/api/controllers/cliController', () => {
     });
 
     it('should send the response to the broker', () => {
-      const rawRequest = {data: {requestId: 'test', action: 'data'}, options: {}};
+      const rawRequest = {data: {requestId: 'test', action: 'dump'}, options: {}};
 
       cli.init();
-      cli.actions.data.returns(Promise.resolve('ok'));
+      cli.actions.dump.returns(Promise.resolve('ok'));
 
       return cli.onListenCB(rawRequest)
         .then(() => {
@@ -117,11 +116,11 @@ describe('lib/api/controllers/cliController', () => {
 
     it('should send the error gotten from the controller back to the broker', () => {
       const
-        rawRequest = {data: {requestId: 'test', action: 'data'}, options: {}},
+        rawRequest = {data: {requestId: 'test', action: 'dump'}, options: {}},
         error = new BadRequestError('test');
 
       cli.init();
-      cli.actions.data.returns(Promise.reject(error));
+      cli.actions.dump.returns(Promise.reject(error));
 
       return cli.onListenCB(rawRequest)
         .then(() => {

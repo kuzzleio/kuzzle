@@ -66,8 +66,6 @@
   // (see http://kuzzle.io/guide/#plugins)
   "plugins": {
     // [Common]
-    //   * workerPrefix:
-    //       Process name prefix for plugin workers
     //   * pipeWarnTime:
     //        Warning time threshold (in milliseconds)
     //        on a pipe plugin action
@@ -78,16 +76,17 @@
     //        Maximum execution time (in milliseconds)
     //        of a plugin initialization
     "common": {
-      "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
       "pipeTimeout": 250,
       "initTimeout": 2000
     },
 
-    // The following blocks configure plugins
-    "kuzzle-plugin-logger": {
-      threads: 1
-    }
+    // Custom plugin configurations must be described here.
+    // Example:
+    // 
+    // "plugin-name": {
+    //   "<configuration property name>": "<value>"
+    // }
   },
 
   // Queue names used by Kuzzle internal communications
@@ -316,9 +315,7 @@
         "enabled": true
       }
     }
-
   },
-
 
   // Services are the external components Kuzzle relies on.
   "services": {

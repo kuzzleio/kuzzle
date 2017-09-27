@@ -1,7 +1,5 @@
 'use strict';
 
-require('reify');
-
 const
   should = require('should'),
   Bluebird = require('bluebird'),
@@ -34,7 +32,7 @@ describe('Test: validation initialization', () => {
     should(validation.kuzzle).be.eql(kuzzle);
     should(validation.types).be.an.Object();
     should(validation.specification).be.an.Object();
-    should(validation.dsl).be.an.Object();
+    should(validation.koncorde).be.an.Object();
     should(validation.rawConfiguration).be.an.Object();
     should(Array.isArray(validation.typeAllowsChildren)).be.true();
   });
@@ -982,7 +980,7 @@ describe('Test: validation initialization', () => {
           }
         };
 
-      validation.dsl = {
+      validation.koncorde = {
         register: registerStub,
         validate: validateStub
       };
@@ -1012,7 +1010,7 @@ describe('Test: validation initialization', () => {
           }
         };
 
-      validation.dsl = {
+      validation.koncorde = {
         register: registerStub,
         validate: validateStub
       };

@@ -1,4 +1,4 @@
-var
+const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
@@ -12,7 +12,6 @@ describe('Tests: cliController action client', () => {
   });
 
   describe('#constructor', () => {
-
     it('should populate proper properties', () => {
       var action = new Action();
 
@@ -23,7 +22,7 @@ describe('Tests: cliController action client', () => {
     });
 
     it('should override methods with given ones', () => {
-      var
+      const
         prepareData = () => true,
         onListenCB = () => true,
         onError = () => true,
@@ -42,14 +41,13 @@ describe('Tests: cliController action client', () => {
       should(action.onError).be.exactly(onError);
       should(action.timeOutCB).be.exactly(timeOutCB);
     });
-
   });
 
-  describe('#prepareDate', () => {
-    var action = new Action();
+  describe('#prepareData', () => {
+    const action = new Action();
 
-    it('should return imput', () => {
-      var data = {foo: 'bar'};
+    it('should return input', () => {
+      const data = {foo: 'bar'};
 
       should(action.prepareData(data)).be.exactly(data);
     });
@@ -57,9 +55,8 @@ describe('Tests: cliController action client', () => {
   });
 
   describe('#onError', () => {
-
     it('should reject the deferred promise', () => {
-      var
+      const
         action = new Action(),
         error = new Error('test');
 
@@ -69,13 +66,11 @@ describe('Tests: cliController action client', () => {
       should(action.deferred.reject).be.calledOnce();
       should(action.deferred.reject).be.calledWithExactly(error);
     });
-
   });
 
   describe('#onSuccess', () => {
-
     it('should resolve the deferred promise', () => {
-      var
+      const
         action = new Action(),
         data = {foo: 'bar'};
 
@@ -90,7 +85,7 @@ describe('Tests: cliController action client', () => {
   });
 
   describe('#onListenCB', () => {
-    var action, reset;
+    let action, reset;
 
     beforeEach(() => {
       reset = Action.__set__({
@@ -107,7 +102,7 @@ describe('Tests: cliController action client', () => {
     });
 
     it('should resolve the deferred promise if some valid input was received', () => {
-      var data = {
+      const data = {
         data: {
           requestId: 'test'
         },
@@ -122,7 +117,7 @@ describe('Tests: cliController action client', () => {
     });
 
     it('should reject the deferred promise if some error was received', () => {
-      var
+      const
         error = new Error('error'),
         data = {
           data: {
@@ -149,7 +144,7 @@ describe('Tests: cliController action client', () => {
         setTimeout: sinon.spy(),
         'Function.prototype.bind': sinon.spy(Function.prototype.bind)
       })(() => {
-        var
+        const
           action = new Action(),
           bindSpy = Action.__get__('Function.prototype.bind'),
           setTimeoutSpy = Action.__get__('setTimeout');
@@ -181,7 +176,7 @@ describe('Tests: cliController action client', () => {
           exit: sinon.spy()
         }
       })(() => {
-        var
+        const
           action = new Action(),
           consoleSpy = Action.__get__('console.log'),
           processSpy = Action.__get__('process.exit');

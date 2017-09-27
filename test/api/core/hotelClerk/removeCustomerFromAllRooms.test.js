@@ -63,7 +63,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   it('should clean up customers, rooms object', () => {
     hotelClerk.removeCustomerFromAllRooms(context);
 
-    should(kuzzle.dsl.remove).be.calledOnce();
+    should(kuzzle.realtime.remove).be.calledOnce();
     should(kuzzle.notifier.notifyUser).be.calledOnce();
 
     should(kuzzle.notifier.notifyUser.args[0][1]).be.instanceOf(Request);
@@ -97,13 +97,13 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
   it('should log an error if a problem occurs while unsubscribing', function () {
     const error = new Error('Mocked error');
-    kuzzle.dsl.remove = sinon.stub().throws(error);
+    kuzzle.realtime.remove = sinon.stub().throws(error);
 
     hotelClerk.removeCustomerFromAllRooms(context);
 
     should(kuzzle.pluginsManager.trigger).be.calledWith('log:error', error);
 
-    // the room should be removed from the hotel clerk even if the dsl fails
+    // the room should be removed from the hotel clerk even if Koncorde fails
     should(hotelClerk.roomsCount).be.eql(1);
     should(hotelClerk.rooms.bar).be.undefined();
   });

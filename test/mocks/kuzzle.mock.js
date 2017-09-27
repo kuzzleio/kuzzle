@@ -29,7 +29,7 @@ class KuzzleMock extends Kuzzle {
       }
     };
 
-    this.dsl = {
+    this.realtime = {
       test: sinon.stub().returns([]),
       register: sinon.stub().returns(Bluebird.resolve()),
       remove: sinon.stub().returns(Bluebird.resolve()),
@@ -74,6 +74,7 @@ class KuzzleMock extends Kuzzle {
       pluginsControllers: {
       },
       init: sinon.spy(),
+      loadPluginControllers: sinon.spy(),
       getRequestSlot: sinon.stub().returns(true),
       handleErrorDump: sinon.spy(),
       execute: sinon.spy(),

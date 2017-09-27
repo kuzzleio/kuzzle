@@ -12,7 +12,8 @@ const
   {
     UnauthorizedError,
     BadRequestError,
-    InternalError: KuzzleInternalError
+    InternalError: KuzzleInternalError,
+    PluginImplementationError
   } = require('kuzzle-common-objects').errors;
 
 describe('Test the auth controller', () => {
@@ -167,6 +168,15 @@ describe('Test the auth controller', () => {
         .then(response => {
           should(response).match(req.context.user);
         });
+    });
+
+    it('should a PluginImplementationError if a plugin throws a non-KuzzleError error', () => {
+      const req = new Request({body: {}}, {token: {userId: 'admin'}, user: {_id: 'admin'}});
+
+      kuzzle.pluginsManager.listStrategies.returns(['foo']);
+      kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject('bar'));
+
+      return should(authController.getCurrentUser(req)).be.rejectedWith(PluginImplementationError);
     });
   });
 
@@ -353,6 +363,26 @@ describe('Test the auth controller', () => {
             should(methodStub.secondCall.args[3]).be.eql('someStrategy');
           });
       });
+
+      it('should throw a PluginImplementationError if a non-KuzzleError is received', () => {
+        request = new Request({
+          controller: 'security',
+          action: 'createCredentials',
+          strategy: 'someStrategy',
+          body: {
+            some: 'credentials'
+          }
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        return should(authController.createMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+      });
     });
 
     describe('#updateMyCredentials', () => {
@@ -392,6 +422,25 @@ describe('Test the auth controller', () => {
             should(methodStub.secondCall.args[3]).be.eql('someStrategy');
           });
       });
+
+      it('should throw a PluginImplementationError if a non-KuzzleError is thrown', () => {
+        request = new Request({
+          controller: 'security',
+          action: 'createCredentials',
+          strategy: 'someStrategy',
+          body: {
+            some: 'credentials'
+          }
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        return should(authController.updateMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+      });
     });
 
     describe('#credentialsExist', () => {
@@ -420,6 +469,22 @@ describe('Test the auth controller', () => {
             should(methodStub.firstCall.args[1]).be.eql('someUserId');
             should(methodStub.firstCall.args[2]).be.eql('someStrategy');
           });
+      });
+
+      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
+        request = new Request({
+          controller: 'security',
+          action: 'hasCredentials',
+          strategy: 'someStrategy'
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        return should(authController.credentialsExist(request)).be.rejectedWith(PluginImplementationError);
       });
     });
 
@@ -454,6 +519,26 @@ describe('Test the auth controller', () => {
             should(methodStub.firstCall.args[3]).be.eql('someStrategy');
           });
       });
+
+      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
+        request = new Request({
+          controller: 'security',
+          action: 'validateCredentials',
+          strategy: 'someStrategy',
+          body: {
+            some: 'credentials'
+          }
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        return should(authController.validateMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+      });
     });
 
     describe('#deleteMyCredentials', () => {
@@ -482,6 +567,23 @@ describe('Test the auth controller', () => {
             should(methodStub.firstCall.args[1]).be.eql('someUserId');
             should(methodStub.firstCall.args[2]).be.eql('someStrategy');
           });
+      });
+
+      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
+        request = new Request({
+          controller: 'security',
+          action: 'deleteCredentials',
+          strategy: 'someStrategy'
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        return should(authController.deleteMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });
     });
 
@@ -540,6 +642,24 @@ describe('Test the auth controller', () => {
             should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]).be.eql('getInfo');
             should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
           });
+      });
+
+      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
+        request = new Request({
+          controller: 'security',
+          action: 'getCredentials',
+          strategy: 'someStrategy'
+        }, {
+          user: {
+            _id: 'someUserId'
+          }
+        });
+        
+        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(true);
+        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        return should(authController.getMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });
     });
   });
