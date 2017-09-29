@@ -106,6 +106,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.indexCache = {
+      indexes: {},
       add: sinon.stub(),
       exists: sinon.stub(),
       init: sinon.stub().returns(Bluebird.resolve()),
@@ -172,7 +173,7 @@ class KuzzleMock extends Kuzzle {
       plugins: {},
       run: sinon.stub().returns(Bluebird.resolve()),
       getPluginsDescription: sinon.stub().returns({}),
-      trigger: sinon.spy((...args) => Bluebird.resolve(args[1])),
+      trigger: sinon.stub().callsFake((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
       strategies: {},

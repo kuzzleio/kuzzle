@@ -1,261 +1,162 @@
 'use strict';
 
 const
-  OneHour = 3600000,
-  OneDay = OneHour * 24,
   sinon = require('sinon'),
   should = require('should'),
-  rewire = require('rewire'),
-  Promise = require('bluebird'),
-  GarbageCollector = rewire('../../lib/services/garbageCollector'),
+  mockrequire = require('mock-require'),
+  Bluebird = require('bluebird'),
   KuzzleMock = require('../mocks/kuzzle.mock');
+
+// constants
+const
+  oneHour = 3600000,
+  oneDay = oneHour * 24;
 
 describe('Test: GarbageCollector service', () => {
   let
-    sandbox = sinon.sandbox.create();
+    GarbageCollector,
+    gc,
+    kuzzle,
+    clock;
+  const sandbox = sinon.sandbox.create();
+
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+
+    // since the GarbageCollector module is a singleton,
+    // we need to re-require it before each test
+    GarbageCollector = mockrequire.reRequire('../../lib/services/garbageCollector');
+
+    // Timer methods must be overridden for all tests to prevent
+    // a timer to stay on the event loop because of a test,
+    // forcing mocha to run indefinitely
+    clock = sandbox.useFakeTimers();
+
+    gc = new GarbageCollector(kuzzle);
+  });
+
+  afterEach(() => {
+    clock.restore();
+    sandbox.restore();
+  });
 
   describe('#init', () => {
-    it('should run the garbage collector and resolve a promise directly', () => {
-      let
-        kuzzle = new KuzzleMock(),
-        gc = new GarbageCollector(kuzzle);
-
+    it('should run the garbage collector (delayed) and resolve a promise directly', () => {
       sandbox.stub(gc, 'run');
 
-      should(gc.init())
-        .be.fulfilled();
-
-      should(gc.run)
-        .be.calledOnce();
+      return gc.init()
+        .then(() => {
+          clock.tick(oneHour);
+          should(gc.run).be.calledOnce();
+        });
     });
   });
 
   describe('#run', () => {
-    describe('when kuzzle is overloaded', () => {
-      let
-        gc,
-        kuzzle,
-        clearTimeoutSpy,
-        setTimeoutStub;
+    it('if kuzzle is overloaded, it should delay the process in one hour', () => {
+      kuzzle.pluginsManager.trigger.onCall(0).returns(Bluebird.reject(new Error('foobar')));
+      kuzzle.funnel.overloaded = true;
 
-      beforeEach(done => {
-        kuzzle = new KuzzleMock();
-        clearTimeoutSpy = sandbox.spy();
-        setTimeoutStub = sandbox.stub().returns('banana');
-
-        GarbageCollector.__with__({
-          clearTimeout: clearTimeoutSpy,
-          setTimeout: setTimeoutStub,
-        })(() => {
-          gc = new GarbageCollector(kuzzle);
-
-          kuzzle.funnel.overloaded = true;
-
-          done();
-        });
-      });
-
-      afterEach(() => {
-        sandbox.restore();
-      });
-
-      it('should do nothing and delay running to one hour', () => {
-        gc.timer = null;
-
-        gc.run();
-
-        should(clearTimeoutSpy.callCount)
-          .be.exactly(0);
-
-        should(setTimeoutStub)
-          .be.calledOnce();
-
-        should(setTimeoutStub.getCall(0).args[1])
-          .be.exactly(OneHour);
-
-        should(gc.timer)
-          .be.exactly('banana');
-      });
-      it('should clear previous timeout if any', () => {
-        gc.timer = 'foobar';
-
-        gc.run();
-
-        should(clearTimeoutSpy)
-          .be.calledOnce()
-          .be.calledWithExactly('foobar');
-
-        should(gc.timer)
-          .be.exactly('banana');
-      });
-    });
-
-    describe('when kuzzle is not overloaded', () => {
-      let
-        gc,
-        kuzzle,
-        clearTimeoutSpy,
-        setTimeoutStub;
-
-      beforeEach(done => {
-        kuzzle = new KuzzleMock();
-        clearTimeoutSpy = sandbox.spy();
-        setTimeoutStub = sandbox.stub().returns('banana');
-
-        GarbageCollector.__with__({
-          clearTimeout: clearTimeoutSpy,
-          setTimeout: setTimeoutStub,
-        })(() => {
-          gc = new GarbageCollector(kuzzle);
+      return gc.run()
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger).not.be.called();
 
           kuzzle.funnel.overloaded = false;
+          clock.tick(oneDay);
 
-          done();
+          should(kuzzle.pluginsManager.trigger).called();
         });
-      });
+    });
 
-      afterEach(() => {
-        sandbox.restore();
-      });
+    it('should list all indexes and all collections, and execute a deleteByQueryFromTrash on each collections', () => {
+      kuzzle.services.list.storageEngine.deleteByQueryFromTrash
+        .onFirstCall().resolves({ids: ['document1-1-1', 'document1-1-2']})
+        .onSecondCall().resolves({ids: ['document2-1-1']})
+        .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});
 
-      it('should list all indexes and all collections, and execute a deleteByQueryFromTrash on each collections', done => {
-        kuzzle.services.list.storageEngine.listIndexes
-          .returns(Promise.resolve({indexes: ['index1', kuzzle.internalEngine.index, 'index2']}));
+      kuzzle.indexCache.indexes = {
+        foo: ['bar'],
+        bar: ['baz'],
+        baz: ['qux']
+      };
 
-        kuzzle.services.list.storageEngine.listCollections
-          .onFirstCall().returns(Promise.resolve({collections: {stored: ['collection1-1'] }}))
-          .onSecondCall().returns(Promise.resolve({collections: {stored: ['collection2-1', 'collection2-2'] }}));
+      return gc.run()
+        .then(ids => {
+          should(ids)
+            .be.eql({ids: [
+              'document1-1-1',
+              'document1-1-2',
+              'document2-1-1',
+              'document2-2-1',
+              'document2-2-2',
+              'document2-2-3'
+            ]});
+        });
+    });
 
-        kuzzle.services.list.storageEngine.deleteByQueryFromTrash
-          .onFirstCall().returns(Promise.resolve({ids: ['document1-1-1', 'document1-1-2']}))
-          .onSecondCall().returns(Promise.resolve({ids: ['document2-1-1']}))
-          .onThirdCall().returns(Promise.resolve({ids: ['document2-2-1','document2-2-2', 'document2-2-3']}));
+    it('should discard errors', () => {
+      const error = new Error('mocked error');
 
-        gc.run()
-          .then(ids => {
-            should(kuzzle.services.list.storageEngine.listIndexes)
-              .be.calledOnce();
+      kuzzle.services.list.storageEngine.deleteByQueryFromTrash
+        .onFirstCall().rejects(error)
+        .onSecondCall().resolves({ids: ['document2-1-1']})
+        .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});
 
-            should(kuzzle.services.list.storageEngine.listCollections)
-              .be.calledTwice();
+      kuzzle.indexCache.indexes = {
+        foo: ['bar'],
+        bar: ['baz'],
+        baz: ['qux']
+      };
 
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].input.resource.index)
-              .be.exactly('index1');
+      return gc.run()
+        .then(ids => {
+          should(kuzzle.pluginsManager.trigger).be.calledWith('log:error', error);
 
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(1).args[0].input.resource.index)
-              .be.exactly('index2');
+          should(ids)
+            .be.eql({ids: [
+              'document2-1-1',
+              'document2-2-1',
+              'document2-2-2',
+              'document2-2-3'
+            ]});
+        });
+    });
 
-            should(ids)
-              .be.eql({ids: [
-                'document1-1-1',
-                'document1-1-2',
-                'document2-1-1',
-                'document2-2-1',
-                'document2-2-2',
-                'document2-2-3'
-              ]});
+    it('should trigger a pipe event before starting and after finishing', () => {
+      return gc.run()
+        .then(() => {
+          should(kuzzle.pluginsManager.trigger).be.calledWith('gc:start');
+          should(kuzzle.pluginsManager.trigger).be.calledWith('gc:end', {ids: []});
+        });
+    });
 
-            done();
-          })
-          .catch(error => {
-            done(error);
-          });
-      });
+    it('should delay the next pass to one day by default', () => {
+      kuzzle.config.services.garbageCollector.cleanInterval = undefined;
 
-      it('should be not blocked when errors occurs', done => {
-        let
-          deleteByQueryFromTrashError = new Error('mocked error');
+      return gc.run()
+        .then(() => {
+          kuzzle.pluginsManager.trigger.resetHistory();
 
-        kuzzle.services.list.storageEngine.listIndexes
-          .returns(Promise.resolve({indexes: ['index1', kuzzle.internalEngine.index, 'index2']}));
+          for (let i = 0; i < 23; i++) {
+            clock.tick(oneHour);
+            should(kuzzle.pluginsManager.trigger).not.be.called();
+          }
 
-        kuzzle.services.list.storageEngine.listCollections
-          .onFirstCall().returns(Promise.resolve({collections: {stored: ['collection1-1'] }}))
-          .onSecondCall().returns(Promise.resolve({collections: {stored: ['collection2-1', 'collection2-2'] }}));
+          clock.tick(oneHour);
+          should(kuzzle.pluginsManager.trigger).be.called();
+        });
+    });
 
-        kuzzle.services.list.storageEngine.deleteByQueryFromTrash
-          .onFirstCall().returns(Promise.reject(deleteByQueryFromTrashError))
-          .onSecondCall().returns(Promise.resolve({ids: ['document2-1-1']}))
-          .onThirdCall().returns(Promise.resolve({ids: ['document2-2-1','document2-2-2', 'document2-2-3']}));
+    it('should delay next gc pass to user defined setting', () => {
+      kuzzle.config.services.garbageCollector.cleanInterval = oneHour;
 
-        gc.run()
-          .then(ids => {
-            should(kuzzle.services.list.storageEngine.listIndexes)
-              .be.calledOnce();
+      return gc.run()
+        .then(() => {
+          kuzzle.pluginsManager.trigger.resetHistory();
 
-            should(kuzzle.services.list.storageEngine.listCollections)
-              .be.calledTwice();
-
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(0).args[0].input.resource.index)
-              .be.exactly('index1');
-
-            should(kuzzle.services.list.storageEngine.listCollections.getCall(1).args[0].input.resource.index)
-              .be.exactly('index2');
-
-            should(kuzzle.pluginsManager.trigger)
-              .be.calledWith('log:error', deleteByQueryFromTrashError);
-
-            should(ids)
-              .be.eql({ids: [
-                'document2-1-1',
-                'document2-2-1',
-                'document2-2-2',
-                'document2-2-3'
-              ]});
-
-            done();
-          });
-      });
-
-      it('should trigger a piped event before starting and after finishing', () => {
-        gc.run()
-          .then(() => {
-            should(kuzzle.pluginsManager.trigger)
-              .be.calledWith('gc:start');
-
-            should(kuzzle.pluginsManager.trigger)
-              .be.calledWith('gc:end', {ids: []});
-          });
-      });
-
-      it('should delay next gc pass to one day by default', () => {
-        gc.timer = 'foobar';
-        kuzzle.config.services.garbageCollector.cleanInterval = undefined;
-
-        gc.run();
-
-        should(clearTimeoutSpy)
-          .be.calledOnce()
-          .be.calledWithExactly('foobar');
-
-        should(setTimeoutStub)
-          .be.calledOnce();
-        
-        should(setTimeoutStub.getCall(0).args[1])
-          .be.exactly(OneDay);
-
-        should(gc.timer)
-          .be.exactly('banana');
-      });
-
-      it('should delay next gc pass to user defined setting', () => {
-        gc.timer = null;
-        kuzzle.config.services.garbageCollector.cleanInterval = 100;
-
-        gc.run();
-
-        should(clearTimeoutSpy.callCount)
-          .be.exactly(0);
-
-        should(setTimeoutStub)
-          .be.calledOnce();
-
-        should(setTimeoutStub.getCall(0).args[1])
-          .be.exactly(100);
-
-        should(gc.timer)
-          .be.exactly('banana');
-      });
+          clock.tick(oneHour);
+          should(kuzzle.pluginsManager.trigger).be.called();
+        });
     });
   });
 });
