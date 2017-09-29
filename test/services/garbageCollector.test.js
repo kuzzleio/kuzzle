@@ -68,7 +68,7 @@ describe('Test: GarbageCollector service', () => {
         });
     });
 
-    it('should list all indexes and all collections, and execute a deleteByQueryFromTrash on each collections', () => {
+    it('should clean all collections in all indexes', () => {
       kuzzle.services.list.storageEngine.deleteByQueryFromTrash
         .onFirstCall().resolves({ids: ['document1-1-1', 'document1-1-2']})
         .onSecondCall().resolves({ids: ['document2-1-1']})
@@ -90,6 +90,32 @@ describe('Test: GarbageCollector service', () => {
               'document2-2-1',
               'document2-2-2',
               'document2-2-3'
+            ]});
+        });
+    });
+
+    it('should skip collections if kuzzle becomes overloaded during the process', () => {
+      kuzzle.services.list.storageEngine.deleteByQueryFromTrash
+        .onFirstCall().resolves({ids: ['document1-1-1', 'document1-1-2']})
+        .onSecondCall().callsFake(() => {
+          kuzzle.funnel.overloaded = true;
+          return Bluebird.resolve({ids: ['document2-1-1']});
+        })
+        .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});
+
+      kuzzle.indexCache.indexes = {
+        foo: ['bar'],
+        bar: ['baz'],
+        baz: ['qux']
+      };
+
+      return gc.run()
+        .then(ids => {
+          should(ids)
+            .be.eql({ids: [
+              'document1-1-1',
+              'document1-1-2',
+              'document2-1-1'
             ]});
         });
     });
