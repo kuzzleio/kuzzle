@@ -116,7 +116,7 @@ defineSupportCode(function ({Given, Then}) {
         }
 
         if (response.result.count !== parseInt(number)) {
-          return callback(new Error('No correct value for count. Expected ' + number + ', got ' + response.result.count));
+          return callback(new Error('No correct value for count. Expected ' + number + ', got ' + JSON.stringify(response.result.count)));
         }
 
         callback();
