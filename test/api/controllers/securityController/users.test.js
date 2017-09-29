@@ -348,12 +348,12 @@ describe('Test: security controller - users', () => {
 
     it('should throw an error and rollback if credentials don\'t create properly', done => {
       const
-        validateStub = sandbox.stub().returns(Bluebird.resolve()),
-        existsStub = sandbox.stub().returns(Bluebird.resolve(false)),
-        createStub = sandbox.stub().returns(Bluebird.reject(new Error('some error'))),
-        deleteStub = sandbox.stub().returns(Bluebird.resolve());
+        validateStub = sandbox.stub().resolves(),
+        existsStub = sandbox.stub().resolves(false),
+        createStub = sandbox.stub().rejects(new Error('some error')),
+        deleteStub = sandbox.stub().resolves();
 
-      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().resolves(null);
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
 
@@ -376,10 +376,10 @@ describe('Test: security controller - users', () => {
 
     it('should intercept errors during deletion of a recovery phase', done => {
       const
-        validateStub = sandbox.stub().returns(Bluebird.resolve()),
-        existsStub = sandbox.stub().returns(Bluebird.resolve(false)),
-        createStub = sandbox.stub().returns(Bluebird.reject(new Error('some error'))),
-        deleteStub = sandbox.stub().returns(Bluebird.reject(new Error('some error')));
+        validateStub = sandbox.stub().resolves(),
+        existsStub = sandbox.stub().resolves(false),
+        createStub = sandbox.stub().rejects(new Error('some error')),
+        deleteStub = sandbox.stub().rejects(new Error('some error'));
 
       kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
@@ -405,14 +405,14 @@ describe('Test: security controller - users', () => {
     it('should not create credentials if user creation fails', done => {
       const
         error = new Error('foobar'),
-        validateStub = sandbox.stub().returns(Bluebird.resolve()),
-        existsStub = sandbox.stub().returns(Bluebird.resolve(false)),
-        createStub = sandbox.stub().returns(Bluebird.resolve());
+        validateStub = sandbox.stub().resolves(),
+        existsStub = sandbox.stub().resolves(false),
+        createStub = sandbox.stub().resolves();
 
-      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().resolves(null);
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
-      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.reject(error));
+      kuzzle.repositories.user.persist = sandbox.stub().rejects(error);
 
       kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'validate').returns(validateStub);
       kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'exists').returns(existsStub);
