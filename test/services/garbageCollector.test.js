@@ -46,7 +46,7 @@ describe('Test: GarbageCollector service', () => {
 
       return gc.init()
         .then(() => {
-          clock.tick(oneHour);
+          clock.tick(oneDay);
           should(gc.run).be.calledOnce();
         });
     });
