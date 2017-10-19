@@ -66,16 +66,16 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
         should(kuzzle.services.list.internalCache.search)
           .calledOnce()
-          .calledWith(notifier.cacheKeyPrefix + request.input.resource._id);
+          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
 
         should(kuzzle.services.list.internalCache.remove)
           .calledOnce()
-          .calledWith(notifier.cacheKeyPrefix + request.input.resource._id);
+          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
 
 
         should(kuzzle.services.list.internalCache.add)
           .calledOnce()
-          .calledWith(notifier.cacheKeyPrefix + request.input.resource._id);
+          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
       });
   });
 });
