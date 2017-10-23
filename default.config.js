@@ -55,6 +55,7 @@ module.exports = {
 
   plugins: {
     common: {
+      bootstrapLockTimeout: 5000,
       pipeWarnTime: 40,
       pipeTimeout: 250,
       initTimeout: 10000,
@@ -214,6 +215,9 @@ module.exports = {
       aliases: ['broker'],
       socket: './run/broker.sock',
       retryInterval: 1000
+    },
+    internalEngine: {
+      bootstrapLockTimeout: 5000
     },
     db: {
       aliases: ['storageEngine'],

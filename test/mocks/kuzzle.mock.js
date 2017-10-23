@@ -131,6 +131,7 @@ class KuzzleMock extends Kuzzle {
       createOrReplace: sinon.stub().resolves(),
       delete: sinon.stub().resolves(),
       deleteIndex: sinon.stub().resolves(),
+      exists: sinon.stub().resolves(),
       expire: sinon.stub().resolves(),
       get: sinon.stub().resolves(foo),
       mget: sinon.stub().resolves({hits: [foo]}),
