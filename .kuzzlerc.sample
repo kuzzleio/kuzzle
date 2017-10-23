@@ -453,25 +453,6 @@
         "scrollTTL": "15s"
       }
     }
-    // 2. using a Elasticsearch cluster:
-    //   * hosts:
-    //         Array of nodes of the cluster.
-    //         Each item can be a string representing the hostname,
-    //         or an object with any options allowed by ES client
-    //         (see https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/host-reference.html)
-    //"db": {
-    //  "backend": "elasticsearch",
-    //  "aliases": ["storageEngine"],
-    //  "hosts": [
-    //    "http://elastic1:9200",
-    //    {"host": "elastic2", port: 9300}
-    //  ],
-    //  "apiVersion": "5.0",
-    //  "defaults": {
-    //    // Time to live of a paginated search
-    //    "scrollTTL": "15s"
-    //  }
-    //}
   },
 
   // Configuration of the Kuzzle's internal statistics module
