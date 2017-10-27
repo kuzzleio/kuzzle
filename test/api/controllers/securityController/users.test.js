@@ -229,6 +229,19 @@ describe('Test: security controller - users', () => {
           should(response._id).be.exactly('test');
         });
     });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.user.delete = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+
+      return securityController.deleteUser(new Request({_id: 'test', refresh: 'wait_for'}))
+        .then(() => {
+          const options = kuzzle.repositories.user.delete.firstCall.args[1];
+          should(options).match({
+            refresh: 'wait_for'
+          });
+        });
+
+    });
   });
 
   describe('#createUser', () => {
@@ -295,6 +308,28 @@ describe('Test: security controller - users', () => {
       return should(() => {
         securityController.createUser(new Request({body: {content: {profileIds: 'notAnArray'}}}));
       }).throw(BadRequestError);
+    });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Bluebird.resolve());
+
+      return securityController.createUser(new Request({
+        _id: 'test',
+        body: {
+          content: {name: 'John Doe', profileIds: ['anonymous']}
+        },
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.user.persist.firstCall.args[1];
+          should(options).match({
+            database: {
+              refresh: 'wait_for'
+            }
+          });
+        });
     });
   });
 
@@ -467,6 +502,25 @@ describe('Test: security controller - users', () => {
         securityController.createRestrictedUser(new Request({body: {content: {profileIds: ['foo']}}}));
       }).throw(BadRequestError);
     });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.user.hydrate = sandbox.stub().returns(Bluebird.resolve());
+
+      return securityController.createRestrictedUser(new Request({
+        body: {content: {_id: 'test', name: 'John Doe'}},
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.user.persist.firstCall.args[1];
+          should(options).match({
+            database: {
+              refresh: 'wait_for'
+            }
+          });
+        });
+    });
   });
 
   describe('#updateUser', () => {
@@ -519,6 +573,22 @@ describe('Test: security controller - users', () => {
         })).throw(NotFoundError);
       });
     });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'anonymous', _source: {}, _meta: {}}));
+
+      return securityController.updateUser(new Request({_id: 'test', body: {foo: 'bar'}, refresh: 'wait_for'}))
+        .then(() => {
+          const options = kuzzle.repositories.user.persist.firstCall.args[1];
+          should(options).match({
+            database: {
+              refresh: 'wait_for'
+            }
+          });
+        });
+
+    });
   });
 
   describe('#replaceUser', () => {
@@ -550,6 +620,26 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
 
       return should(securityController.replaceUser(new Request({_id: 'i.dont.exist', body: {profileIds: ['anonymous']}}))).be.rejectedWith(NotFoundError);
+    });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.user.persist = sandbox.stub().returns(Bluebird.resolve({_id: 'test', profileIds: ['anonymous'], foo: 'bar'}));
+      kuzzle.repositories.user.load = userId => Bluebird.resolve({_id: userId, _source: {}, _meta: {}});
+
+      return securityController.replaceUser(new Request({
+        _id: 'test',
+        body: {profileIds: ['anonymous'], foo: 'bar'},
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.user.persist.firstCall.args[1];
+
+          should(options).match({
+            database: {
+              refresh: 'wait_for'
+            }
+          });
+        });
     });
   });
 
