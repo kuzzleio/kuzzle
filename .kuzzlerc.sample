@@ -253,7 +253,7 @@
       "host": "localhost",
       "port": 7331,
       "pingInterval": 60000,
-      "pingTimeout": 50,
+      "pingTimeout": 500,
       "resendClientListDelay": 1000,
       "retryInterval": 1000
     },
@@ -440,7 +440,7 @@
       "aliases": ["broker"],
       "host": "localhost",
       "pingInterval": 60000,
-      "pingTimeout": 50,
+      "pingTimeout": 500,
       "port": 7911,
       "retryInterval": 1000
     },

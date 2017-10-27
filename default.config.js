@@ -227,7 +227,6 @@ module.exports = {
         scrollTTL: '15s'
       }
     },
-
     garbageCollector: {
       cleanInterval: 86400000,
       maxDelete: 1000

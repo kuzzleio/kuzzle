@@ -608,7 +608,7 @@ describe('Test: Internal broker', () => {
             should(client._pingRequestTimeoutId)
               .be.not.equal(null, 'ping response timeout should be registered');
 
-            clock.tick(51);
+            clock.tick(501);
 
             should(client.retryConnection)
               .be.calledOnce();
