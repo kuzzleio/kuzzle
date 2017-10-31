@@ -253,7 +253,7 @@
       "host": "localhost",
       "port": 7331,
       "pingInterval": 60000,
-      "pingTimeout": 50,
+      "pingTimeout": 500,
       "resendClientListDelay": 1000,
       "retryInterval": 1000
     },
@@ -407,6 +407,19 @@
       }
     },
 
+    // [garbageCollector]
+    // The document garbage collector service: permanently delete
+    // documents in the trashcan area
+    //
+    //   * cleanInterval:
+    //      Delay between each garbage collection, in milliseconds
+    //    * maxDelete:
+    //      Maximum number of documents to delete **per data collection**
+    "garbageCollector": {
+      "cleanInterval": 86400000,
+      "maxDelete": 1000
+    },
+
     // [internalBroker]
     // The internalBroker is used for internal Kuzzle communication,
     // notably to transport messages between the CLI and the server.
@@ -427,7 +440,7 @@
       "aliases": ["broker"],
       "host": "localhost",
       "pingInterval": 60000,
-      "pingTimeout": 50,
+      "pingTimeout": 500,
       "port": 7911,
       "retryInterval": 1000
     },
@@ -453,25 +466,6 @@
         "scrollTTL": "15s"
       }
     }
-    // 2. using a Elasticsearch cluster:
-    //   * hosts:
-    //         Array of nodes of the cluster.
-    //         Each item can be a string representing the hostname,
-    //         or an object with any options allowed by ES client
-    //         (see https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/host-reference.html)
-    //"db": {
-    //  "backend": "elasticsearch",
-    //  "aliases": ["storageEngine"],
-    //  "hosts": [
-    //    "http://elastic1:9200",
-    //    {"host": "elastic2", port: 9300}
-    //  ],
-    //  "apiVersion": "5.0",
-    //  "defaults": {
-    //    // Time to live of a paginated search
-    //    "scrollTTL": "15s"
-    //  }
-    //}
   },
 
   // Configuration of the Kuzzle's internal statistics module

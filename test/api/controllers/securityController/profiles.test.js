@@ -89,6 +89,24 @@ describe('Test: security controller - profiles', () => {
       return should(securityController.createOrReplaceProfile(new Request({_id: 'test', body: {policies: ['role1']}})))
         .be.rejectedWith(error);
     });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}, _meta: {}}));
+
+      return securityController.createOrReplaceProfile(new Request({
+        _id: 'test',
+        body: {
+          policies: [{roleId: 'role1'}]
+        },
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          should(kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1])
+            .match({
+              refresh: 'wait_for'
+            });
+        });
+    });
   });
 
   describe('#createProfile', () => {
@@ -111,6 +129,26 @@ describe('Test: security controller - profiles', () => {
       return should(() => {
         securityController.createOrReplaceProfile(new Request({_id: 'badTest', body: {roleId: 'test', policies: 'not-an-array-roleIds'}}));
       }).throw(BadRequestError);
+    });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.resolve({_id: 'test', _source: {}, _meta: {}}));
+
+      return securityController.createProfile(new Request({
+        _id: 'test',
+        body: {
+          policies: [{roleId:'role1'}]
+        },
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1];
+
+          should(options)
+            .match({
+              refresh: 'wait_for'
+            });
+        });
     });
   });
 
@@ -311,6 +349,27 @@ describe('Test: security controller - profiles', () => {
       return should(() => {
         securityController.updateProfile(new Request({body: {}}));
       }).throw(BadRequestError);
+    });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Promise.resolve({}));
+      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+
+      return securityController.updateProfile(new Request({
+        _id: 'test',
+        body: {
+          foo: 'bar'
+        },
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1];
+
+          should(options)
+            .match({
+              refresh: 'wait_for'
+            });
+        });
     });
   });
 

@@ -17,23 +17,23 @@ class KuzzleMock extends Kuzzle {
     this.config.server.entryPoints.proxy = true;
 
     this.cliController = {
-      init: sinon.stub().returns(Bluebird.resolve()),
+      init: sinon.stub().resolves(),
       actions: {
-        adminExists: sinon.stub().returns(Bluebird.resolve()),
-        createFirstAdmin: sinon.stub().returns(Bluebird.resolve()),
-        cleanAndPrepare: sinon.stub().returns(Bluebird.resolve()),
-        cleanDb: sinon.stub().returns(Bluebird.resolve()),
-        managePlugins: sinon.stub().returns(Bluebird.resolve()),
-        data: sinon.stub().returns(Bluebird.resolve()),
-        dump: sinon.stub().returns(Bluebird.resolve())
+        adminExists: sinon.stub().resolves(),
+        createFirstAdmin: sinon.stub().resolves(),
+        cleanAndPrepare: sinon.stub().resolves(),
+        cleanDb: sinon.stub().resolves(),
+        managePlugins: sinon.stub().resolves(),
+        data: sinon.stub().resolves(),
+        dump: sinon.stub().usingPromise(Bluebird).resolves()
       }
     };
 
     this.realtime = {
       test: sinon.stub().returns([]),
-      register: sinon.stub().returns(Bluebird.resolve()),
-      remove: sinon.stub().returns(Bluebird.resolve()),
-      normalize: sinon.stub().returns(Bluebird.resolve({id: 'foobar'})),
+      register: sinon.stub().resolves(),
+      remove: sinon.stub().resolves(),
+      normalize: sinon.stub().resolves({id: 'foobar'}),
       store: sinon.stub().returns({id: 'foobar'})
     };
 
@@ -43,14 +43,14 @@ class KuzzleMock extends Kuzzle {
       entryPoints: [
         {
           dispatch: sinon.spy(),
-          init: sinon.stub().returns(Bluebird.resolve()),
+          init: sinon.stub().resolves(),
           joinChannel: sinon.spy(),
           leaveChannel: sinon.spy(),
           send: sinon.spy()
         },
         {
           dispatch: sinon.spy(),
-          init: sinon.stub().returns(Bluebird.resolve()),
+          init: sinon.stub().resolves(),
           joinChannel: sinon.spy(),
           leaveChannel: sinon.spy(),
           send: sinon.spy()
@@ -79,7 +79,7 @@ class KuzzleMock extends Kuzzle {
       handleErrorDump: sinon.spy(),
       execute: sinon.spy(),
       mExecute: sinon.stub(),
-      processRequest: sinon.stub().returns(Bluebird.resolve()),
+      processRequest: sinon.stub().resolves(),
       checkRights: sinon.stub(),
       getEventName: sinon.spy(),
       executePluginRequest: sinon.stub()
@@ -98,51 +98,52 @@ class KuzzleMock extends Kuzzle {
     this.hotelClerk = {
       getRealtimeCollections: sinon.stub(),
       removeCustomerFromAllRooms: sinon.stub(),
-      addSubscription: sinon.stub().returns(Bluebird.resolve(foo)),
-      join: sinon.stub().returns(Bluebird.resolve(foo)),
-      removeSubscription: sinon.stub().returns(Bluebird.resolve(foo)),
-      countSubscription: sinon.stub().returns(Bluebird.resolve(foo)),
-      listSubscriptions: sinon.stub().returns(Bluebird.resolve(foo)),
+      addSubscription: sinon.stub().resolves(foo),
+      join: sinon.stub().resolves(foo),
+      removeSubscription: sinon.stub().resolves(foo),
+      countSubscription: sinon.stub().resolves(foo),
+      listSubscriptions: sinon.stub().resolves(foo),
     };
 
     this.indexCache = {
+      indexes: {},
       add: sinon.stub(),
       exists: sinon.stub(),
-      init: sinon.stub().returns(Bluebird.resolve()),
-      initInternal: sinon.stub().returns(Bluebird.resolve()),
+      init: sinon.stub().resolves(),
+      initInternal: sinon.stub().resolves(),
       remove: sinon.stub(),
       reset: sinon.stub()
     };
 
     this.internalEngine = {
       bootstrap: {
-        adminExists: sinon.stub().returns(Bluebird.resolve(true)),
-        all: sinon.stub().returns(Bluebird.resolve()),
-        createCollections: sinon.stub().returns(Bluebird.resolve()),
-        createRolesCollection: sinon.stub().returns(Bluebird.resolve()),
-        createProfilesCollection: sinon.stub().returns(Bluebird.resolve()),
-        createUsersCollection: sinon.stub().returns(Bluebird.resolve()),
-        createPluginsCollection: sinon.stub().returns(Bluebird.resolve()),
-        delete: sinon.stub().returns(Bluebird.resolve())
+        adminExists: sinon.stub().resolves(true),
+        all: sinon.stub().resolves(),
+        createCollections: sinon.stub().resolves(),
+        createRolesCollection: sinon.stub().resolves(),
+        createProfilesCollection: sinon.stub().resolves(),
+        createUsersCollection: sinon.stub().resolves(),
+        createPluginsCollection: sinon.stub().resolves(),
+        delete: sinon.stub().resolves()
       },
-      create: sinon.stub().returns(Bluebird.resolve()),
-      createInternalIndex: sinon.stub().returns(Bluebird.resolve()),
-      createOrReplace: sinon.stub().returns(Bluebird.resolve()),
-      delete: sinon.stub().returns(Bluebird.resolve()),
-      deleteIndex: sinon.stub().returns(Bluebird.resolve()),
-      expire: sinon.stub().returns(Bluebird.resolve()),
-      get: sinon.stub().returns(Bluebird.resolve(foo)),
-      mget: sinon.stub().returns(Bluebird.resolve({hits: [foo]})),
+      create: sinon.stub().resolves(),
+      createInternalIndex: sinon.stub().resolves(),
+      createOrReplace: sinon.stub().resolves(),
+      delete: sinon.stub().resolves(),
+      deleteIndex: sinon.stub().resolves(),
+      expire: sinon.stub().resolves(),
+      get: sinon.stub().resolves(foo),
+      mget: sinon.stub().resolves({hits: [foo]}),
       index: 'internalIndex',
-      init: sinon.stub().returns(Bluebird.resolve()),
+      init: sinon.stub().resolves(),
       listCollections: sinon.stub(),
       listIndexes: sinon.stub(),
-      persist: sinon.stub().returns(Bluebird.resolve()),
-      refresh: sinon.stub().returns(Bluebird.resolve()),
-      replace: sinon.stub().returns(Bluebird.resolve()),
-      search: sinon.stub().returns(Bluebird.resolve()),
-      update: sinon.stub().returns(Bluebird.resolve()),
-      updateMapping: sinon.stub().returns(Bluebird.resolve(foo)),
+      persist: sinon.stub().resolves(),
+      refresh: sinon.stub().resolves(),
+      replace: sinon.stub().resolves(),
+      search: sinon.stub().resolves(),
+      update: sinon.stub().resolves(),
+      updateMapping: sinon.stub().resolves(foo),
       getMapping: sinon.stub()
     };
 
@@ -157,22 +158,22 @@ class KuzzleMock extends Kuzzle {
       notifyDocumentDelete: sinon.spy(),
       notifyDocumentReplace: sinon.spy(),
       notifyDocumentUpdate: sinon.spy(),
-      publish: sinon.stub().returns(Bluebird.resolve(foo))
+      publish: sinon.stub().resolves(foo)
     };
 
     this.passport = {
       use: sinon.stub(),
       unuse: sinon.stub(),
-      authenticate: sinon.stub().returns(Bluebird.resolve({})),
+      authenticate: sinon.stub().resolves({}),
       injectAuthenticateOptions: sinon.stub()
     };
 
     this.pluginsManager = {
-      init: sinon.stub().returns(Bluebird.resolve()),
+      init: sinon.stub().resolves(),
       plugins: {},
-      run: sinon.stub().returns(Bluebird.resolve()),
+      run: sinon.stub().resolves(),
       getPluginsDescription: sinon.stub().returns({}),
-      trigger: sinon.spy((...args) => Bluebird.resolve(args[1])),
+      trigger: sinon.stub().callsFake((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
       strategies: {},
@@ -181,44 +182,44 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.repositories = {
-      init: sinon.stub().returns(Bluebird.resolve()),
+      init: sinon.stub().resolves(),
       profile: {
-        load: sinon.stub().returns(Bluebird.resolve()),
-        loadProfiles: sinon.stub().returns(Bluebird.resolve()),
-        searchProfiles: sinon.stub().returns(Bluebird.resolve())
+        load: sinon.stub().resolves(),
+        loadProfiles: sinon.stub().resolves(),
+        searchProfiles: sinon.stub().resolves()
       },
       role: {
-        getRoleFromRequest: sinon.spy(function () {return Bluebird.resolve(arguments[0]);}),
-        loadRole: sinon.stub().returns(Bluebird.resolve()),
-        loadRoles: sinon.stub().returns(Bluebird.resolve()),
-        validateAndSaveRole: sinon.spy(function () {return Bluebird.resolve(arguments[0]);})
+        getRoleFromRequest: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+        loadRole: sinon.stub().resolves(),
+        loadRoles: sinon.stub().resolves(),
+        validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0]))
       },
       user: {
-        load: sinon.stub().returns(Bluebird.resolve(foo)),
-        search: sinon.stub().returns(Bluebird.resolve()),
-        scroll: sinon.stub().returns(Bluebird.resolve()),
+        load: sinon.stub().resolves(foo),
+        search: sinon.stub().resolves(),
+        scroll: sinon.stub().resolves(),
         ObjectConstructor: sinon.stub().returns({}),
-        hydrate: sinon.stub().returns(Bluebird.resolve()),
-        persist: sinon.stub().returns(Bluebird.resolve({})),
+        hydrate: sinon.stub().resolves(),
+        persist: sinon.stub().resolves({}),
         anonymous: sinon.stub().returns({_id: '-1'}),
-        delete: sinon.stub().returns(Bluebird.resolve())
+        delete: sinon.stub().usingPromise(Bluebird).resolves()
       },
       token: {
         anonymous: sinon.stub().returns({_id: 'anonymous'}),
-        verifyToken: sinon.stub().returns(Bluebird.resolve()),
-        generateToken: sinon.stub().returns(Bluebird.resolve({})),
-        expire: sinon.stub().returns(Bluebird.resolve()),
-        deleteByUserId: sinon.stub().returns(Bluebird.resolve())
+        verifyToken: sinon.stub().resolves(),
+        generateToken: sinon.stub().resolves({}),
+        expire: sinon.stub().resolves(),
+        deleteByUserId: sinon.stub().resolves()
       }
     };
 
     this.rootPath = '/kuzzle';
 
     this.router = {
-      execute: sinon.stub().returns(Bluebird.resolve(foo)),
+      execute: sinon.stub().resolves(foo),
       isConnectionAlive: sinon.stub().returns(true),
       init: sinon.spy(),
-      newConnection: sinon.stub().returns(Bluebird.resolve(foo)),
+      newConnection: sinon.stub().resolves(foo),
       removeConnection: sinon.spy(),
       http: {
         route: sinon.stub()
@@ -226,70 +227,68 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.services = {
-      init: sinon.stub().returns(Bluebird.resolve()),
+      init: sinon.stub().resolves(),
       list: {
         broker: {
-          getInfos: sinon.stub().returns(Bluebird.resolve()),
+          getInfos: sinon.stub().resolves(),
           listen: sinon.spy(),
-          send: sinon.stub().returns(Bluebird.resolve())
+          send: sinon.stub().resolves()
         },
         gc: {
           init: sinon.spy(),
-          run: sinon.stub().returns(Bluebird.resolve({ids: []}))
+          run: sinon.stub().resolves({ids: []})
         },
         internalCache: {
-          add: sinon.stub().returns(Bluebird.resolve()),
-          del: sinon.stub().returns(Bluebird.resolve()),
-          exists: sinon.stub().returns(Bluebird.resolve()),
-          expire: sinon.stub().returns(Bluebird.resolve()),
-          flushdb: sinon.stub().returns(Bluebird.resolve()),
-          get: sinon.stub().returns(Bluebird.resolve(null)),
-          getInfos: sinon.stub().returns(Bluebird.resolve()),
-          persist: sinon.stub().returns(Bluebird.resolve()),
-          pexpire: sinon.stub().returns(Bluebird.resolve()),
-          psetex: sinon.stub().returns(Bluebird.resolve()),
-          remove: sinon.stub().returns(Bluebird.resolve()),
-          search: sinon.stub().returns(Bluebird.resolve()),
-          searchKeys: sinon.stub().returns(Bluebird.resolve([])),
-          set: sinon.stub().returns(Bluebird.resolve()),
-          setnx: sinon.stub().returns(Bluebird.resolve()),
-          volatileSet: sinon.stub().returns(Bluebird.resolve())
+          add: sinon.stub().resolves(),
+          del: sinon.stub().resolves(),
+          exists: sinon.stub().resolves(),
+          expire: sinon.stub().resolves(),
+          flushdb: sinon.stub().resolves(),
+          get: sinon.stub().resolves(null),
+          getInfos: sinon.stub().resolves(),
+          persist: sinon.stub().resolves(),
+          pexpire: sinon.stub().resolves(),
+          psetex: sinon.stub().resolves(),
+          remove: sinon.stub().resolves(),
+          search: sinon.stub().resolves(),
+          searchKeys: sinon.stub().resolves([]),
+          set: sinon.stub().resolves(),
+          setnx: sinon.stub().resolves(),
+          volatileSet: sinon.stub().resolves()
         },
         memoryStorage: {
-          flushdb: sinon.stub().returns(Bluebird.resolve()),
-          getInfos: sinon.stub().returns(Bluebird.resolve())
+          flushdb: sinon.stub().resolves(),
+          getInfos: sinon.stub().resolves()
         },
         storageEngine: {
-          get: sinon.stub().returns(Bluebird.resolve({
-            _source: {foo}
-          })),
+          get: sinon.stub().resolves({_source: {foo}}),
           mget: sinon.stub(),
-          getInfos: sinon.stub().returns(Bluebird.resolve()),
-          getMapping: sinon.stub().returns(Bluebird.resolve(foo)),
-          listIndexes: sinon.stub().returns(Bluebird.resolve({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']})),
-          collectionExists: sinon.stub().returns(Bluebird.resolve()),
-          count: sinon.stub().returns(Bluebird.resolve(42)),
-          create: sinon.stub().returns(Bluebird.resolve(foo)),
-          createCollection: sinon.stub().returns(Bluebird.resolve(foo)),
-          createIndex: sinon.stub().returns(Bluebird.resolve(foo)),
-          createOrReplace: sinon.stub().returns(Bluebird.resolve(foo)),
-          delete: sinon.stub().returns(Bluebird.resolve(foo)),
-          deleteByQuery: sinon.stub().returns(Bluebird.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
-          deleteByQueryFromTrash: sinon.stub().returns(Bluebird.resolve(Object.assign({}, foo, {ids: 'responseIds'}))),
-          deleteIndex: sinon.stub().returns(Bluebird.resolve(foo)),
-          deleteIndexes: sinon.stub().returns(Bluebird.resolve({deleted: ['a', 'e', 'i']})),
-          getAutoRefresh: sinon.stub().returns(Bluebird.resolve(false)),
-          import: sinon.stub().returns(Bluebird.resolve(foo)),
-          indexExists: sinon.stub().returns(Bluebird.resolve()),
-          listCollections: sinon.stub().returns(Bluebird.resolve()),
-          refreshIndex: sinon.stub().returns(Bluebird.resolve(foo)),
-          replace: sinon.stub().returns(Bluebird.resolve(foo)),
-          search: sinon.stub().returns(Bluebird.resolve(foo)),
-          scroll: sinon.stub().returns(Bluebird.resolve(foo)),
-          setAutoRefresh: sinon.stub().returns(Bluebird.resolve(true)),
-          truncateCollection: sinon.stub().returns(Bluebird.resolve(foo)),
-          update: sinon.stub().returns(Bluebird.resolve(foo)),
-          updateMapping: sinon.stub().returns(Bluebird.resolve(foo))
+          getInfos: sinon.stub().resolves(),
+          getMapping: sinon.stub().resolves(foo),
+          listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
+          collectionExists: sinon.stub().resolves(),
+          count: sinon.stub().resolves(42),
+          create: sinon.stub().resolves(foo),
+          createCollection: sinon.stub().resolves(foo),
+          createIndex: sinon.stub().resolves(foo),
+          createOrReplace: sinon.stub().resolves(foo),
+          delete: sinon.stub().resolves(foo),
+          deleteByQuery: sinon.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
+          deleteByQueryFromTrash: sinon.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
+          deleteIndex: sinon.stub().resolves(foo),
+          deleteIndexes: sinon.stub().resolves({deleted: ['a', 'e', 'i']}),
+          getAutoRefresh: sinon.stub().resolves(false),
+          import: sinon.stub().resolves(foo),
+          indexExists: sinon.stub().resolves(),
+          listCollections: sinon.stub().resolves(),
+          refreshIndex: sinon.stub().resolves(foo),
+          replace: sinon.stub().resolves(foo),
+          search: sinon.stub().resolves(foo),
+          scroll: sinon.stub().resolves(foo),
+          setAutoRefresh: sinon.stub().resolves(true),
+          truncateCollection: sinon.stub().resolves(foo),
+          update: sinon.stub().resolves(foo),
+          updateMapping: sinon.stub().resolves(foo)
         }
       }
     };
@@ -298,9 +297,9 @@ class KuzzleMock extends Kuzzle {
       completedRequest: sinon.spy(),
       newConnection: sinon.stub(),
       failedRequest: sinon.spy(),
-      getAllStats: sinon.stub().returns(Bluebird.resolve(foo)),
-      getLastStats: sinon.stub().returns(Bluebird.resolve(foo)),
-      getStats: sinon.stub().returns(Bluebird.resolve(foo)),
+      getAllStats: sinon.stub().resolves(foo),
+      getLastStats: sinon.stub().resolves(foo),
+      getStats: sinon.stub().resolves(foo),
       init: sinon.spy(),
       dropConnection: sinon.stub(),
       startRequest: sinon.spy()
@@ -308,14 +307,14 @@ class KuzzleMock extends Kuzzle {
 
     this.tokenManager = {
       add: sinon.stub(),
-      expire: sinon.stub().returns(Bluebird.resolve())
+      expire: sinon.stub().resolves()
     };
 
     this.validation = {
       init: sinon.spy(),
-      curateSpecification: sinon.spy(function () {return Bluebird.resolve();}),
-      validate: sinon.spy(function () {return Bluebird.resolve(arguments[0]);}),
-      validationPromise: sinon.spy(function () {return Bluebird.resolve(arguments[0]);}),
+      curateSpecification: sinon.stub().resolves(),
+      validate: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+      validationPromise: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
       addType: sinon.spy()
     };
 

@@ -154,4 +154,5 @@ describe('funnelController.executePluginRequest', () => {
 
     should(funnel.executePluginRequest(rq, true, callback)).be.eql(0);
   });
+
 });
