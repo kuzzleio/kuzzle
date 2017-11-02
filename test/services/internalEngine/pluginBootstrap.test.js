@@ -1,9 +1,10 @@
 const
-  rewire = require('rewire'),
-  sandbox = require('sinon').sandbox.create(),
+  Bluebird = require('bluebird'),
+  mockrequire = require('mock-require'),
+  sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Bootstrap = rewire('../../../lib/services/internalEngine/pluginBootstrap');
+  Bootstrap = require('../../../lib/services/internalEngine/pluginBootstrap');
 
 describe('services/internalEngine/pluginBootstrap.js', () => {
   let
@@ -11,28 +12,17 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
     bootstrap,
     engine;
 
-  before(() => {
+  beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    Bootstrap.__set__({
-      console: {error: sandbox.spy()}
-    });
+    engine = kuzzle.internalEngine;
+    engine.index = '%someIndex';
 
-    engine = {
-      updateMapping: sandbox.stub().returns(Promise.resolve()),
-      createInternalIndex: sandbox.stub(),
-      refresh: sandbox.stub().returns(Promise.resolve()),
-      index: '%someIndex'
-    };
-  });
-
-  beforeEach(() => {
-    sandbox.reset();
-    bootstrap = new Bootstrap(kuzzle, engine);
+    bootstrap = new Bootstrap('pluginName', kuzzle, engine);
   });
 
   describe('#constructor', () => {
-    it('should set the engine to kuzzle internal engine', () => {
+    it('should set the engine', () => {
       should(bootstrap.db).be.exactly(engine);
     });
   });
@@ -69,24 +59,39 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
         });
     });
 
-    it('should print errors to the console', done => {
-      const error = new Error('error message');
+    it('should throw if locked for too long', () => {
+      mockrequire('bluebird', Object.assign(Bluebird, {delay: sinon.stub().returns(Bluebird.resolve())}));
+      mockrequire.reRequire('../../../lib/services/internalEngine/pluginBootstrap');
 
-      engine.createInternalIndex.returns(Promise.reject(error));
+      bootstrap.lock = sinon.stub().returns(Bluebird.resolve(true));
+      kuzzle.internalEngine.exists.returns(Bluebird.resolve(true));
 
-      bootstrap.all()
-        .catch(err => {
-          const spy = Bootstrap.__get__('console.error');
-
-          should(err).be.exactly(error);
-
-          should(spy)
-            .be.calledOnce()
-            .be.calledWithExactly(error, error.stack);
-
-          done();
+      return bootstrap.all()
+        .then(() => { throw new Error('should not happen'); })
+        .catch(error => {
+          should(error.message).match(/^Plugin pluginName bootstrap - lock wait timeout exceeded/);
+        })
+        .finally(() => {
+          mockrequire.stop('bluebird');
+          mockrequire.reRequire('../../../lib/services/internalEngine/pluginBootstrap');
         });
+    });
 
+  });
+
+  describe('#lock', () => {
+    it('should create a new lock if some old one is found', () => {
+      kuzzle.internalEngine.create.returns(Bluebird.reject());
+      kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {timestamp: 0}}));
+
+      return bootstrap.lock()
+        .then(isLocked => {
+          should(isLocked).be.false();
+
+          should(kuzzle.internalEngine.createOrReplace)
+            .be.calledOnce()
+            .be.calledWith('config', 'bootstrap-lock-39aa3b1a81948e4c');
+        });
     });
   });
 });
