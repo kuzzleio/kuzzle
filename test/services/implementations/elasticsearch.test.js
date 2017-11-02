@@ -11,7 +11,6 @@ const
     BadRequestError,
     NotFoundError,
     KuzzleError,
-    ExternalServiceError,
     PreconditionError
   } = require('kuzzle-common-objects').errors,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
@@ -651,7 +650,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should handle the onUpdateConflictRetries default configuration', () => {
       const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
-      
+
       elasticsearch.config.defaults.onUpdateConflictRetries = 42;
       elasticsearch.client.update.returns(Bluebird.resolve({}));
       elasticsearch.kuzzle.indexCache.exists.returns(true);
@@ -1232,47 +1231,18 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#getMapping', () => {
-    it('should allow users to retrieve a mapping', () => {
-      const
-        indiceResult = {},
-        mappings = {
-          'unit-tests-elasticsearch': {properties: {}}
-        };
+    beforeEach(() => {
+      elasticsearch.esWrapper.getMapping = sinon.stub().resolves({foo: 'bar'});
+    });
 
-      indiceResult[index] = {mappings};
-
-      elasticsearch.client.indices.getMapping.returns(Bluebird.resolve(indiceResult));
-
+    it('should forward the request to elasticseach wrapper', () => {
       return elasticsearch.getMapping(request)
-        .then(result => {
-          should(result[index]).not.be.undefined();
-          should(result[index].mappings).not.be.undefined();
+        .then(res => {
+          should(elasticsearch.esWrapper.getMapping)
+            .be.calledOnce()
+            .be.calledWithExactly({ index: 'test', type: 'unit-tests-elasticsearch'});
+          should(res).match({foo: 'bar'});
         });
-    });
-
-    it('should return a rejected promise if there is no mapping found', () => {
-      const
-        mappings = {
-          [index]: {
-            mappings: {
-              [collection]: {}
-            }
-          }
-        };
-
-      request.input.resource.collection = 'foobar';
-      request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
-
-      elasticsearch.client.indices.getMapping.returns(Bluebird.resolve(mappings));
-
-      return should(elasticsearch.getMapping(request)).be.rejected();
-    });
-
-    it('should reject the getMapping promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.indices.getMapping.returns(Bluebird.reject(error));
-
-      return should(elasticsearch.getMapping(request)).be.rejectedWith(error);
     });
   });
 
@@ -1634,7 +1604,7 @@ describe('Test: ElasticSearch service', () => {
     it('should format the error', () => {
       const
         error = new Error('test'),
-        spy = sandbox.spy(elasticsearch, 'formatESError');
+        spy = sandbox.spy(elasticsearch.esWrapper, 'formatESError');
 
       elasticsearch.client.indices.exists.returns(Bluebird.reject(error));
 
@@ -1676,7 +1646,7 @@ describe('Test: ElasticSearch service', () => {
     it('should format errors', () => {
       const
         error = new Error('test'),
-        spy = sinon.spy(elasticsearch, 'formatESError');
+        spy = sinon.spy(elasticsearch.esWrapper, 'formatESError');
 
       elasticsearch.client.indices.existsType.returns(Bluebird.reject(error));
 
@@ -1690,30 +1660,5 @@ describe('Test: ElasticSearch service', () => {
             .be.calledWith(error);
         });
     });
-  });
-
-  describe('#formatESError', () => {
-    it('should convert any unknown error to a ExternalServiceError instance', () => {
-      const
-        error = new Error('test');
-
-      error.displayName = 'foobar';
-
-      const formatted = elasticsearch.formatESError(error);
-
-      should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.message).be.eql('test');
-    });
-  });
-
-  it('should handle version conflict errors', () => {
-    const error = new Error('[version_conflict_engine_exception] [data][AVrbg0eg90VMe4Z_dG8j]: version conflict, current version [153] is different than the one provided [152], with { index_uuid="iDrU6CfZSO6CghM1t6dl0A" & shard="2" & index="userglobaldata" }');
-
-    error.displayName = 'Conflict';
-
-    const formatted = elasticsearch.formatESError(error);
-
-    should(formatted).be.instanceOf(ExternalServiceError);
-    should(formatted.message).be.eql('Unable to modify document "AVrbg0eg90VMe4Z_dG8j": cluster sync failed (too many simultaneous changes applied)');
   });
 });

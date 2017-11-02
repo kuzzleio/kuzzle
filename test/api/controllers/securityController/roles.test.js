@@ -19,11 +19,12 @@ describe('Test: security controller - roles', () => {
     securityController;
 
   before(() => {
-    kuzzle = new KuzzleMock();
-    securityController = new SecurityController(kuzzle);
   });
 
   beforeEach(() => {
+    kuzzle = new KuzzleMock();
+    securityController = new SecurityController(kuzzle);
+
     request = new Request({controller: 'security'});
     kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve({}));
     kuzzle.internalEngine.getMapping = sinon.stub().returns(Promise.resolve({internalIndex: {mappings: {roles: {properties: {}}}}}));
@@ -84,14 +85,28 @@ describe('Test: security controller - roles', () => {
       return should(securityController.createOrReplaceRole(new Request({_id: 'alreadyExists', body: {indexes: {}}})))
         .be.rejectedWith(new Error('Mocked error'));
     });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.role.validateAndSaveRole = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+
+      return securityController.createOrReplaceRole(new Request({
+        _id: 'test',
+        body: {
+          controllers: {}
+        },
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.role.validateAndSaveRole.firstCall.args[1];
+
+          should(options).match({
+            refresh: 'wait_for'
+          });
+        });
+    });
   });
 
   describe('#createRole', () => {
-    it('should reject when a role already exists with the id', () => {
-      return should(securityController.createRole(new Request({_id: 'alreadyExists', body: {controllers: {}}})))
-        .be.rejectedWith(new Error('Mocked error'));
-    });
-
     it('should resolve to an object on a createRole call', () => {
       kuzzle.repositories.role.validateAndSaveRole = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       return should(securityController.createRole(new Request({_id: 'test', body: {controllers: {}}})))
@@ -180,7 +195,7 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#updateRole', () => {
-    it('should return a valid response', done => {
+    it('should return a valid response', () => {
       kuzzle.repositories.role.loadRole = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
       kuzzle.repositories.role.roles = [];
 
@@ -192,14 +207,11 @@ describe('Test: security controller - roles', () => {
         return Promise.resolve(role);
       };
 
-      securityController.updateRole(new Request({_id: 'test', body: {foo: 'bar'}}))
+      return securityController.updateRole(new Request({_id: 'test', body: {foo: 'bar'}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
-
-          done();
-        })
-        .catch(err => { done(err); });
+        });
     });
 
     it('should throw an error if no id is given', () => {
@@ -210,7 +222,28 @@ describe('Test: security controller - roles', () => {
 
     it('should reject the promise if the role cannot be found in the database', () => {
       kuzzle.repositories.role.loadRole = sandbox.stub().returns(Promise.resolve(null));
-      return should(securityController.updateRole(new Request({_id: 'badId',body: {}}))).be.rejected();
+      return should(securityController.updateRole(new Request({_id: 'badId', body: {}, context: {action: 'updateRole'}}))).be.rejected();
+    });
+
+    it('should forward refresh option', () => {
+      kuzzle.repositories.role.loadRole = sandbox.stub().returns(Promise.resolve({_id: 'test'}));
+      kuzzle.repositories.role.roles = [];
+
+      kuzzle.repositories.role.validateAndSaveRole = sinon.stub().returnsArg(0);
+
+      return securityController.updateRole(new Request({
+        _id: 'test',
+        body: {
+          foo: 'bar'
+        },
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.role.validateAndSaveRole.firstCall.args[1];
+          should(options).match({
+            refresh: 'wait_for'
+          });
+        });
     });
   });
 
@@ -231,6 +264,26 @@ describe('Test: security controller - roles', () => {
     it('should reject the promise if attempting to delete one of the core roles', () => {
       kuzzle.repositories.role.deleteRole = sandbox.stub().returns(Promise.reject(new Error('admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.')));
       return should(securityController.deleteRole(new Request({_id: 'admin',body: {}}))).be.rejected();
+    });
+
+    it('should forward refresh option', () => {
+      const role = {my: 'role'};
+
+      kuzzle.repositories.role.getRoleFromRequest = sandbox.stub().returns(role);
+      kuzzle.repositories.role.deleteRole = sandbox.stub().returns(Promise.resolve());
+
+      return securityController.deleteRole(new Request({
+        _id: 'test',
+        body: {},
+        refresh: 'wait_for'
+      }))
+        .then(() => {
+          const options = kuzzle.repositories.role.deleteRole.firstCall.args[1];
+
+          should(options).match({
+            refresh: 'wait_for'
+          });
+        });
     });
   });
 

@@ -3,19 +3,20 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   DocumentController = require('../../../lib/api/controllers/documentController'),
   FunnelController = require('../../../lib/api/controllers/funnelController'),
-  foo = {foo: 'bar'},
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
-  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  PartialError = require('kuzzle-common-objects').errors.PartialError;
+  {
+    InternalError: KuzzleInternalError,
+    ServiceUnavailableError,
+    NotFoundError,
+    PartialError
+  } = require('kuzzle-common-objects').errors;
 
 describe('Test: document controller', () => {
+  const foo = {foo: 'bar'};
   let
     documentController,
     funnelController,
@@ -29,10 +30,6 @@ describe('Test: document controller', () => {
     documentController = new DocumentController(kuzzle);
     funnelController = new FunnelController(kuzzle);
     request = new Request({controller: 'document', index: '%test', collection: 'unit-test-documentController'});
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#search', () => {
@@ -71,7 +68,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.search.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.search.returns(Bluebird.reject(new Error('foobar')));
 
       return should(documentController.search(request)).be.rejectedWith('foobar');
     });
@@ -93,7 +90,7 @@ describe('Test: document controller', () => {
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
-      kuzzle.services.list.storageEngine.scroll.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.scroll.returns(Bluebird.reject(new Error('foobar')));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');
     });
@@ -117,7 +114,7 @@ describe('Test: document controller', () => {
     it('should return false if the document doesn\'t exist', () => {
       request.input.resource._id = 'ghost';
 
-      engine.get.returns(Promise.reject(new NotFoundError('foobar')));
+      engine.get.returns(Bluebird.reject(new NotFoundError('foobar')));
 
       return documentController.exists(request)
         .then(response => {
@@ -127,7 +124,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject with an error in case of error', () => {
-      engine.get.returns(Promise.reject(new Error('foobar')));
+      engine.get.returns(Bluebird.reject(new Error('foobar')));
 
       return should(documentController.exists(request)).be.rejected();
     });
@@ -147,7 +144,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.get.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.get.returns(Bluebird.reject(new Error('foobar')));
       return should(documentController.get(request)).be.rejected();
     });
   });
@@ -155,7 +152,7 @@ describe('Test: document controller', () => {
   describe('#mGet', () => {
     it('should fulfill with an array of documents', () => {
       request.input.body = {ids: ['anId', 'anotherId']};
-      kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: request.input.body.ids}));
+      kuzzle.services.list.storageEngine.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
 
 
       return documentController.mGet(request)
@@ -178,7 +175,7 @@ describe('Test: document controller', () => {
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.body = {ids: ['anId', 'anotherId']};
-      kuzzle.services.list.storageEngine.mget.returns(Promise.resolve({hits: request.input.body.ids}));
+      kuzzle.services.list.storageEngine.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
 
       return should(() => {
         request.input.action = 'mGet';
@@ -202,7 +199,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.count.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.count.returns(Bluebird.reject(new Error('foobar')));
       return should(documentController.count(request)).be.rejected();
     });
   });
@@ -236,10 +233,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(foo);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -263,7 +260,7 @@ describe('Test: document controller', () => {
     });
 
     it('mCreate should set a partial error if one of the action fails', () => {
-      kuzzle.funnel.mExecute.yields(null, {error: new InternalError('some error')});
+      kuzzle.funnel.mExecute.yields(null, {error: new KuzzleInternalError('some error')});
       kuzzle.funnel.mExecute
         .onFirstCall().yields(null, {result: 'created'});
 
@@ -311,10 +308,10 @@ describe('Test: document controller', () => {
 
     it('mCreate should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
-      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
+      kuzzle.funnel.processRequest.returns(Bluebird.resolve({result: 'updated'}));
 
       let callCount = 0;
-      kuzzle.funnel.getRequestSlot = req => {
+      kuzzle.funnel.getRequestSlot = (fn, req) => {
         if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
@@ -355,10 +352,10 @@ describe('Test: document controller', () => {
 
     it('mCreateOrReplace should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
-      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
+      kuzzle.funnel.processRequest.returns(Bluebird.resolve({result: 'updated'}));
 
       let callCount = 0;
-      kuzzle.funnel.getRequestSlot = req => {
+      kuzzle.funnel.getRequestSlot = (fn, req) => {
         if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
@@ -415,10 +412,10 @@ describe('Test: document controller', () => {
 
     it('mUpdate should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
-      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
+      kuzzle.funnel.processRequest.returns(Bluebird.resolve({result: 'updated'}));
 
       let callCount = 0;
-      kuzzle.funnel.getRequestSlot = req => {
+      kuzzle.funnel.getRequestSlot = (fn, req) => {
         if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
@@ -476,10 +473,10 @@ describe('Test: document controller', () => {
 
     it('mReplace should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
-      kuzzle.funnel.processRequest.returns(Promise.resolve({result: 'updated'}));
+      kuzzle.funnel.processRequest.returns(Bluebird.resolve({result: 'updated'}));
 
       let callCount = 0;
-      kuzzle.funnel.getRequestSlot = req => {
+      kuzzle.funnel.getRequestSlot = (fn, req) => {
         if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
@@ -553,10 +550,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(foo);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -567,7 +564,7 @@ describe('Test: document controller', () => {
       request.input.resource._id = 'test-document';
       request.input.body = {};
 
-      engine.createOrReplace.returns(Promise.resolve(Object.assign({}, foo, {created: true})));
+      engine.createOrReplace.returns(Bluebird.resolve(Object.assign({}, foo, {created: true})));
 
       return documentController.createOrReplace(request)
         .then(response => {
@@ -586,10 +583,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match({foo: foo.foo, created: true});
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -621,10 +618,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(foo);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -659,10 +656,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(foo);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
 
         });
@@ -695,10 +692,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(foo);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -727,7 +724,7 @@ describe('Test: document controller', () => {
         .onFirstCall().yields(null, new Request({_id: 'documentId'}))
         .onSecondCall().yields(null, (() => {
           const req = new Request({_id: 'anotherDocumentId'});
-          req.setError(new InternalError('some error'));
+          req.setError(new KuzzleInternalError('some error'));
           return req;
         })());
 
@@ -753,10 +750,10 @@ describe('Test: document controller', () => {
 
     it('should return a rejected promise if Kuzzle is overloaded', () => {
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
-      kuzzle.funnel.processRequest = req => Promise.resolve(req);
+      kuzzle.funnel.processRequest = req => Bluebird.resolve(req);
 
       let callCount = 0;
-      kuzzle.funnel.getRequestSlot = req => {
+      kuzzle.funnel.getRequestSlot = (fn, req) => {
         if (callCount++ > 0) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
@@ -810,10 +807,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(foo);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -832,7 +829,7 @@ describe('Test: document controller', () => {
       request.input.body = {};
 
       kuzzle.validation = {
-        validationPromise: sinon.stub().returns(Promise.resolve(expected))
+        validationPromise: sinon.stub().returns(Bluebird.resolve(expected))
       };
 
       return documentController.validate(request)
@@ -842,10 +839,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(expected);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -871,7 +868,7 @@ describe('Test: document controller', () => {
       request.input.resource._id = 'document-id';
       request.input.body = {};
 
-      kuzzle.validation.validationPromise = sinon.stub().returns(Promise.resolve(expected));
+      kuzzle.validation.validationPromise = sinon.stub().returns(Bluebird.resolve(expected));
 
       return documentController.validate(request)
         .then(response => {
@@ -880,10 +877,10 @@ describe('Test: document controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(expected);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });

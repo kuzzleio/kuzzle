@@ -365,14 +365,14 @@ describe('services/internalEngine/bootstrap.js', () => {
     it('should take an existing seed from the db', () => {
       kuzzle.internalEngine.create
         .withArgs('config', 'security.jwt.secret')
-        .returns(Bluebird.reject(new Error('test')));
+        .rejects(new Error('test'));
       kuzzle.internalEngine.get
         .withArgs('config', 'security.jwt.secret')
-        .returns(Bluebird.resolve({
+        .resolves({
           _source: {
             seed: '42'
           }
-        }));
+        });
 
       return bootstrap.all()
         .then(() => {

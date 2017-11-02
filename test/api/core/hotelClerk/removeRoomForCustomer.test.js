@@ -30,7 +30,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
 
     hotelClerk.roomsCount = 1;
 
-    hotelClerk._removeRoomFromDsl = sinon.spy();
+    hotelClerk._removeRoomFromRealtimeEngine = sinon.spy();
 
     requestContext = new RequestContext({
       connectionId: 'connectionId',
@@ -58,7 +58,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     const response = hotelClerk._removeRoomForCustomer(requestContext, 'roomId', false);
     should(hotelClerk.customers).be.empty();
 
-    should(hotelClerk._removeRoomFromDsl)
+    should(hotelClerk._removeRoomFromRealtimeEngine)
       .be.calledOnce()
       .be.calledWith('roomId');
 

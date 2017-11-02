@@ -41,9 +41,6 @@ describe('funnelController.execute', () => {
     sinon.stub(funnel, '_playCachedRequests');
   });
 
-  afterEach(() => {
-  });
-
   after(() => {
     if (clock) {
       clock.restore();
@@ -58,8 +55,7 @@ describe('funnelController.execute', () => {
           // 102 is the default status of a request, it should be 200 when coming out from the execute
           should(res.status).be.exactly(102);
           should(res).be.instanceOf(Request);
-          should(funnel.processRequest)
-            .be.calledOnce();
+          should(funnel.processRequest).be.calledOnce();
           should(funnel.processRequest.calledOnce).be.true();
           done();
         } catch (error) {
@@ -133,7 +129,7 @@ describe('funnelController.execute', () => {
       should(funnel.requestsCacheQueue.length).be.eql(1);
       should(funnel.requestsCacheQueue.shift())
         .eql(request.id);
-      should(funnel.requestsCacheById[request.id]).eql(new (FunnelController.__get__('CacheItem'))(request, callback));
+      should(funnel.requestsCacheById[request.id]).eql(new (FunnelController.__get__('CacheItem'))('execute', request, callback));
       should(funnel._playCachedRequests)
         .be.calledOnce();
     });

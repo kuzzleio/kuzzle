@@ -56,14 +56,25 @@ describe('Test: notifier.notifyDocumentReplace', () => {
           });
 
         should(internalCache.search.callCount).be.eql(2);
-        should(internalCache.search.getCall(0)).calledWith(notifier.cacheKeyPrefix + request.id);
-        should(internalCache.search.getCall(1)).calledWith(notifier.cacheKeyPrefix + request.input.resource._id);
+        should(internalCache.search.getCall(0)).calledWith(
+          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.id}`
+        );
+
+        should(internalCache.search.getCall(1)).calledWith(
+          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`
+        );
 
         should(internalCache.remove).calledOnce();
-        should(internalCache.remove).calledWith(notifier.cacheKeyPrefix + request.input.resource._id, ['bar']);
+        should(internalCache.remove).calledWith(
+          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`, 
+          ['bar']
+        );
 
         should(internalCache.add).calledOnce();
-        should(internalCache.add).calledWith(notifier.cacheKeyPrefix + request.input.resource._id, ['foo']);
+        should(internalCache.add).calledWith(
+          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`, 
+          ['foo']
+        );
       });
   });
 });

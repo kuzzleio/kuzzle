@@ -49,18 +49,15 @@ module.exports = {
     requestsBufferSize: 50000,
     requestsBufferWarningThreshold: 5000,
     subscriptionConditionsCount: 16,
+    subscriptionMinterms: 0,
     subscriptionRooms: 1000000
   },
 
   plugins: {
     common: {
-      workerPrefix: 'kpw:',
       pipeWarnTime: 40,
       pipeTimeout: 250,
       initTimeout: 10000,
-    },
-    'kuzzle-plugin-logger': {
-      threads: 1
     }
   },
 
@@ -223,19 +220,17 @@ module.exports = {
       backend: 'elasticsearch',
       client: {
         host: 'http://localhost:9200',
-        apiVersion: '5.x'
+        apiVersion: '5.4'
       },
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       }
     },
-
     garbageCollector: {
       cleanInterval: 86400000,
       maxDelete: 1000
     }
-
   },
 
   stats: {

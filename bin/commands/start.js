@@ -26,88 +26,117 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   Request = require('kuzzle-common-objects').Request,
-  Bluebird = require('bluebird'),
-  clc = require('cli-color');
+  ColorOutput = require('./colorOutput');
 
 function commandStart (options) {
   const
     kuzzle = new (require('../../lib/api/kuzzle'))(),
-    error = string => options.parent.noColors ? string : clc.red(string),
-    warn = string => options.parent.noColors ? string : clc.yellow(string),
-    notice = string => options.parent.noColors ? string : clc.cyanBright(string),
-    kuz = string => options.parent.noColors ? string : clc.greenBright.bold(string);
+    cout = new ColorOutput(options);
 
-  console.log(kuz('[ℹ] Starting Kuzzle server'));
+  console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
     // fixtures && mapping
     .then(() => {
-      if (params.fixtures) {
-        let fixtures;
-        const promises = [];
+      const requests = [];
 
-        try {
-          fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
-        }
-        catch (e) {
-          console.log(error(`[✖] The file ${params.fixtures} cannot be opened. Abort.`));
-          process.exit(1);
-        }
-
-        Object.keys(fixtures).forEach(index => {
-          Object.keys(fixtures[index]).forEach(collection => {
-            promises.push(kuzzle.services.list.storageEngine.import(new Request({
-              index,
-              collection,
-              body: {
-                bulkData: fixtures[index][collection]
-              }
-            })));
-          });
-        });
-
-        return Bluebird.all(promises);
-      }
-    })
-    .then(() => {
       if (params.mappings) {
         let mappings;
-        const promises = [];
 
         try {
           mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
         }
         catch (e) {
-          console.log(error(`[✖] The file ${params.mappings} cannot be opened. Abort.`));
+          console.log(cout.error(`[✖] The file ${params.mappings} cannot be parsed. Abort.`));
           process.exit(1);
         }
 
-        Object.keys(mappings).forEach(index => {
-          Object.keys(mappings[index]).forEach(collection => {
-            promises.push(kuzzle.services.list.storageEngine.updateMapping(new Request({
+        console.log(cout.notice(`[ℹ] Loading mappings from ${params.mappings} into storage layer`));
+
+        for (const index of Object.keys(mappings)) {
+          for (const collection of Object.keys(mappings[index])) {
+            requests.push(new Request({
               index,
               collection,
               body: mappings[index][collection]
-            })));
-          });
-        });
-
-        return Bluebird.all(promises);
+            }));
+          }
+        }
       }
+
+      return requests;
+    })
+    .each(rq => {
+      const 
+        index = rq.input.resource.index,
+        indexRequest = new Request({index});
+
+      return kuzzle.services.list.storageEngine.indexExists(indexRequest)
+        .then(exist => {
+          if (!exist) {
+            console.log(cout.notice(`[ℹ] Creating index: ${index}`));
+            return kuzzle.services.list.storageEngine.createIndex(indexRequest);
+          }
+        })
+        .then(() => kuzzle.services.list.storageEngine.updateMapping(rq))
+        .then(() => kuzzle.services.list.storageEngine.refreshIndex(indexRequest))
+        .then(() => {
+          const collection = rq.input.resource.collection;
+
+          kuzzle.indexCache.add(index, collection);
+          console.log(cout.ok(`[✔] Mappings for ${index}/${collection} successfully applied`));
+
+          return null;
+        });
     })
     .then(() => {
-      console.log(kuz('[✔] Kuzzle server ready'));
+      const requests = [];
+
+      if (params.fixtures) {
+        let fixtures;
+
+        try {
+          fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
+        }
+        catch (e) {
+          console.log(cout.error(`[✖] The file ${params.fixtures} cannot be parsed. Abort.`));
+          process.exit(1);
+        }
+
+        console.log(cout.notice(`[ℹ] Loading fixtures from ${params.fixtures} into storage layer`));
+
+        for (const index of Object.keys(fixtures)) {
+          for (const collection of Object.keys(fixtures[index])) {
+            requests.push(new Request({
+              index,
+              collection,
+              body: {
+                bulkData: fixtures[index][collection]
+              }
+            }));
+          }
+        }
+      }
+
+      return requests;
+    })
+    .each(rq => {
+      return kuzzle.services.list.storageEngine.import(rq)
+        .then(res => console.log(cout.ok(`[✔] Fixtures for ${rq.input.resource.index}/${rq.input.resource.collection} successfully loaded: ${res.items.length} documents created`)));
+    })
+    .then(() => {
+      console.log(cout.kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
           if (!res) {
-            console.log(warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
-            console.log(notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
-            console.log(notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
+            console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
+            console.log(cout.notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
+            console.log(cout.notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
           }
         });
     })
     .catch(err => {
-      console.error(error(`[x] [ERROR] ${err.stack}`));
+      console.error(cout.error(`[x] [ERROR] ${err.stack}`));
       process.exit(1);
     });
 }

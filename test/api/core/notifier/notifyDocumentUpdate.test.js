@@ -36,7 +36,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
   });
 
   it('should notify subscribers when an updated document entered their scope', () => {
-    kuzzle.dsl.test.returns(['foo']);
+    kuzzle.realtime.test.returns(['foo']);
     kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({
       _id: request.input.resource._id,
       _source: {foo: 'bar'},
@@ -49,7 +49,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       .then(() => {
         should(kuzzle.services.list.storageEngine.get).calledOnce();
 
-        should(kuzzle.dsl.test)
+        should(kuzzle.realtime.test)
           .calledOnce()
           .calledWith('foo', 'bar', {foo: 'bar'}, request.input.resource._id);
 
@@ -66,16 +66,16 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
         should(kuzzle.services.list.internalCache.search)
           .calledOnce()
-          .calledWith(notifier.cacheKeyPrefix + request.input.resource._id);
+          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
 
         should(kuzzle.services.list.internalCache.remove)
           .calledOnce()
-          .calledWith(notifier.cacheKeyPrefix + request.input.resource._id);
+          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
 
 
         should(kuzzle.services.list.internalCache.add)
           .calledOnce()
-          .calledWith(notifier.cacheKeyPrefix + request.input.resource._id);
+          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
       });
   });
 });

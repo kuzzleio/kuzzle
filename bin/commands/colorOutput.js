@@ -19,28 +19,17 @@
  * limitations under the License.
  */
 
-'use strict';
+const clc = require('cli-color');
 
-const
-  SortedArray = require('sorted-array'),
-  strcmp = require('../../util/stringCompare');
-
-/**
- * Stores a field-operand pair.
- *
- * This allows V8 to convert this object to a pure
- * C++ class, with direct access to its members,
- * instead of a dictionary with b-search access time
- *
- * @class FieldOperand
- * @returns {FieldOperand}
- */
-class FieldOperand {
-  constructor() {
-    this.keys = new SortedArray([], strcmp);
-    this.fields = {};
-    this.custom = {};
+class ColorOutput {
+  constructor (opts) {
+    this.error = string => opts.parent.noColors ? string : clc.red(string);
+    this.warn = string => opts.parent.noColors ? string : clc.yellow(string);
+    this.notice = string => opts.parent.noColors ? string : clc.cyanBright(string);
+    this.ok = string => opts.parent.noColors ? string: clc.green.bold(string);
+    this.question = string => opts.parent.noColors ? string : clc.whiteBright(string);
+    this.kuz = string => opts.parent.noColors ? string : clc.greenBright.bold(string);
   }
 }
 
-module.exports = FieldOperand;
+module.exports = ColorOutput;

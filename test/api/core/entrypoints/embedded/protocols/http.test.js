@@ -3,6 +3,7 @@ const
   HttpProtocol = require('../../../../../../lib/api/core/entrypoints/embedded/protocols/http'),
   KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
+  KuzzleError = require('kuzzle-common-objects').errors.KuzzleError,
   should = require('should'),
   sinon = require('sinon');
 
@@ -221,14 +222,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(request.removeAllListeners).be.calledTwice();
         should(protocol._replyWithError)
           .be.calledWithMatch(/^[0-9a-z-]+$/,
-          {
-            url: request.url,
-            method: request.method
-          },
-          response,
-          {
-            message: 'Error: maximum HTTP file size exceeded'
-          });
+            {
+              url: request.url,
+              method: request.method
+            },
+            response,
+            {
+              message: 'Error: maximum HTTP file size exceeded'
+            });
       });
     });
 
@@ -371,21 +372,26 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     });
 
     it('should log the access and reply with error', () => {
-      const error = new Error('test');
-      error.status = 'status';
+      const 
+        error = new KuzzleError('test'),
+        connectionId = 'connectionId',
+        payload = {requestId: 'foobar'};
+      error.status = 123;
 
-      protocol._replyWithError('connectionId', 'payload', response, error);
+      const rq = new Request(payload, {connectionId, error});
+      protocol._replyWithError(connectionId, payload, response, error);
 
       should(entrypoint.logAccess)
         .be.calledOnce()
-        .be.calledWithMatch('connectionId', 'payload', error, {
-          raw: true,
-          content: JSON.stringify(error)
-        });
+        .be.calledWithMatch(rq, {});
+
+      should(entrypoint.logAccess.firstCall.args[0].context.connectionId).be.eql(connectionId);
+      should(entrypoint.logAccess.firstCall.args[0].status).be.eql(123);
+      should(entrypoint.logAccess.firstCall.args[0].error).be.eql(error);
 
       should(response.writeHead)
         .be.calledOnce()
-        .be.calledWith('status', {
+        .be.calledWith(123, {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods' : 'GET,POST,PUT,DELETE,OPTIONS',
@@ -399,7 +405,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       entrypoint.clients.connectionId = {};
 
-      protocol._replyWithError('connectionId', 'payload', response, error);
+      protocol._replyWithError('connectionId', {}, response, error);
 
       should(entrypoint.clients)
         .be.empty();

@@ -3,15 +3,17 @@
 const
   rewire = require('rewire'),
   should = require('should'),
-  Promise = require('bluebird'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  Bluebird = require('bluebird'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
-  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  PartialError = require('kuzzle-common-objects').errors.PartialError,
   Request = require('kuzzle-common-objects').Request,
-  SecurityController = rewire('../../../../lib/api/controllers/securityController');
+  SecurityController = rewire('../../../../lib/api/controllers/securityController'),
+  {
+    BadRequestError,
+    ServiceUnavailableError,
+    InternalError: KuzzleInternalError,
+    PartialError
+  } = require('kuzzle-common-objects').errors;
 
 describe('/api/controllers/security', () => {
   let
@@ -64,10 +66,10 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
-      kuzzle.funnel.processRequest = req => Promise.resolve(req);
+      kuzzle.funnel.processRequest = req => Bluebird.resolve(req);
 
       let callCount = 0;
-      kuzzle.funnel.getRequestSlot = req => {
+      kuzzle.funnel.getRequestSlot = (executor, req) => {
         if (callCount++ === 1) {
           req.setError(new ServiceUnavailableError('overloaded'));
           return false;
@@ -154,7 +156,7 @@ describe('/api/controllers/security', () => {
             .be.an.Array()
             .and.have.length(1);
           should(request.error.errors[0])
-            .match(new InternalError(error));
+            .match(new KuzzleInternalError(error));
         });
     });
   });

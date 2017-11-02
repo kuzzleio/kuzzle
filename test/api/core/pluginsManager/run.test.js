@@ -129,6 +129,14 @@ describe('Test plugins manager run', () => {
       });
   });
 
+  it('should throw if a hook target does not exist', () => {
+    plugin.object.hooks = {
+      'foo:bar': 'foo'
+    };
+
+    return should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+  });
+
   it('should attach pipes event', () => {
     plugin.object.pipes = {
       'foo:bar': 'foo',
@@ -182,6 +190,14 @@ describe('Test plugins manager run', () => {
       .then(() => pluginMock.verify());
   });
 
+  it('should throw if a pipe target does not exist', () => {
+    plugin.object.pipes = {
+      'foo:bar': 'foo'
+    };
+
+    return should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+  });
+
   it('should attach pipes event and reject if an attached function return an error', () => {
     plugin.object.pipes = {
       'foo:bar': 'foo'
@@ -207,9 +223,7 @@ describe('Test plugins manager run', () => {
 
     return should(pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
-      .then(() => pluginMock.verify())).be.rejectedWith(PluginImplementationError, {
-        message: new PluginImplementationError('foobar').message
-      });
+      .then(() => pluginMock.verify())).be.rejectedWith(PluginImplementationError, {message: new PluginImplementationError('foobar').message});
   });
 
   it('should log a warning in case a pipe plugin exceeds the warning delay', () => {

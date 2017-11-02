@@ -42,6 +42,10 @@
     //      Maximum number of conditions a subscription filter can contain
     //      NB: A condition is either a "simple" operator (anything but and, or and bool)
     //      or a boolean condition that contains only simple operators.
+    // * subscriptionMinterms
+    //      Maximum number of minterms (AND) clauses after the filters are
+    //      transformed in their Canonical Disjunctive Normal Form (CDNF).
+    //      Set to 0 for no limit.
     // * subscriptionRooms
     //      Maximum number of different subscription rooms 
     //      (i.e. different index+collection+filters subscription configurations)
@@ -54,6 +58,7 @@
     "requestsBufferWarningThreshold": 5000,
     "requestsHistorySize": 50,
     "subscriptionConditionsCount": 16,
+    "subscriptionMinterms": 0,
     "subscriptionRooms": 1000000
   },
 
@@ -61,8 +66,6 @@
   // (see http://kuzzle.io/guide/#plugins)
   "plugins": {
     // [Common]
-    //   * workerPrefix:
-    //       Process name prefix for plugin workers
     //   * pipeWarnTime:
     //        Warning time threshold (in milliseconds)
     //        on a pipe plugin action
@@ -73,16 +76,17 @@
     //        Maximum execution time (in milliseconds)
     //        of a plugin initialization
     "common": {
-      "workerPrefix": "kpw:",
       "pipeWarnTime": 40,
       "pipeTimeout": 250,
       "initTimeout": 2000
     },
 
-    // The following blocks configure plugins
-    "kuzzle-plugin-logger": {
-      threads: 1
-    }
+    // Custom plugin configurations must be described here.
+    // Example:
+    // 
+    // "plugin-name": {
+    //   "<configuration property name>": "<value>"
+    // }
   },
 
   // Queue names used by Kuzzle internal communications
@@ -249,7 +253,7 @@
       "host": "localhost",
       "port": 7331,
       "pingInterval": 60000,
-      "pingTimeout": 50,
+      "pingTimeout": 500,
       "resendClientListDelay": 1000,
       "retryInterval": 1000
     },
@@ -311,9 +315,7 @@
         "enabled": true
       }
     }
-
   },
-
 
   // Services are the external components Kuzzle relies on.
   "services": {
@@ -405,6 +407,19 @@
       }
     },
 
+    // [garbageCollector]
+    // The document garbage collector service: permanently delete
+    // documents in the trashcan area
+    //
+    //   * cleanInterval:
+    //      Delay between each garbage collection, in milliseconds
+    //    * maxDelete:
+    //      Maximum number of documents to delete **per data collection**
+    "garbageCollector": {
+      "cleanInterval": 86400000,
+      "maxDelete": 1000
+    },
+
     // [internalBroker]
     // The internalBroker is used for internal Kuzzle communication,
     // notably to transport messages between the CLI and the server.
@@ -425,7 +440,7 @@
       "aliases": ["broker"],
       "host": "localhost",
       "pingInterval": 60000,
-      "pingTimeout": 50,
+      "pingTimeout": 500,
       "port": 7911,
       "retryInterval": 1000
     },
@@ -441,7 +456,7 @@
       "aliases": ["storageEngine"],
       "client": {
         "host": "http://localhost:9200",
-        "apiVersion": "5.x"
+        "apiVersion": "5.4"
       },
       "defaults": {
         // Number of retries to attempt on an update conflict
@@ -451,25 +466,6 @@
         "scrollTTL": "15s"
       }
     }
-    // 2. using a Elasticsearch cluster:
-    //   * hosts:
-    //         Array of nodes of the cluster.
-    //         Each item can be a string representing the hostname,
-    //         or an object with any options allowed by ES client
-    //         (see https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/host-reference.html)
-    //"db": {
-    //  "backend": "elasticsearch",
-    //  "aliases": ["storageEngine"],
-    //  "hosts": [
-    //    "http://elastic1:9200",
-    //    {"host": "elastic2", port: 9300}
-    //  ],
-    //  "apiVersion": "5.0",
-    //  "defaults": {
-    //    // Time to live of a paginated search
-    //    "scrollTTL": "15s"
-    //  }
-    //}
   },
 
   // Configuration of the Kuzzle's internal statistics module

@@ -550,7 +550,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         connection = {
           protocol: 'HTTP/1.0',
           headers: {
-            authorization: 'Zm9vOmJhcg=='   // base64('foo:bar')
+            authorization: 'Zm9vOmJhcg==' // base64('foo:bar')
           },
           ips: ['1.1.1.1']
         },

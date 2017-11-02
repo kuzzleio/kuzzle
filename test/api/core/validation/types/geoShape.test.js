@@ -21,8 +21,8 @@ describe('Test: validation/types/geoShape', () => {
     recursiveShapeValidation;
 
   before(() => {
-    mockrequire('node-units', {convert: convertDistanceStub});
-    mockrequire.reRequire('../../../../../lib/api/dsl/util/convertDistance');
+    mockrequire('koncorde', {convertDistance: convertDistanceStub});
+    mockrequire.reRequire('koncorde');
     GeoShapeType = rewire('../../../../../lib/api/core/validation/types/geoShape');
 
     isPoint = GeoShapeType.__get__('isPoint');

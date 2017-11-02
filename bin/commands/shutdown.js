@@ -21,25 +21,23 @@
 
 /* eslint-disable no-console */
 
-const
-  clc = require('cli-color');
+const ColorOutput = require('./colorOutput');
 
 function commandShutdown(options) {
   const
     kuzzle = new (require('../../lib/api/kuzzle'))(),
-    notice = string => options.parent.noColors ? string : clc.cyanBright(string),
-    error = string => options.parent.noColors ? string : clc.red(string);
+    cout = new ColorOutput(options);
 
-  console.log(notice('[ℹ] Shutting down...'));
+  console.log(cout.notice('[ℹ] Shutting down...'));
 
   return kuzzle.cli.doAction('shutdown', {})
     .then(() => {
-      console.log(notice('[✔] Done!'));
+      console.log(cout.notice('[✔] Done!'));
       process.exit(0);
     })
     .catch(err => {
       console.dir(err, {showHidden: true, colors: true});
-      console.error(error(`[✖] ${err}`));
+      console.error(cout.error(`[✖] ${err}`));
       process.exit(1);
     });
 }

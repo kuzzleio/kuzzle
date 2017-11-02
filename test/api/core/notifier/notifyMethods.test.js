@@ -107,9 +107,20 @@ describe('notify methods', () => {
             result: content
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:document', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
+          should(kuzzle.pluginsManager.trigger.getCall(0).args).match([
+            'core:notify:document',
+            {
+              rooms: ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'],
+              scope: 'out',
+              state: 'pending',
+              action: 'action',
+              content,
+              request: request.serialize()
+            }
+          ]);
+          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:document', notification]);
+          should(kuzzle.pluginsManager.trigger.getCall(2).args).match(['notify:dispatch', notification]);
           cb();
         }
         catch (e) {
@@ -132,7 +143,6 @@ describe('notify methods', () => {
       async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.dispatch.called).be.false();
-          should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
         catch(e) {
@@ -149,7 +159,6 @@ describe('notify methods', () => {
       async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.dispatch.called).be.false();
-          should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
         catch(e) {
@@ -164,7 +173,6 @@ describe('notify methods', () => {
       async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.dispatch.called).be.false();
-          should(kuzzle.pluginsManager.trigger.called).be.false();
           cb();
         }
         catch(e) {
@@ -205,9 +213,18 @@ describe('notify methods', () => {
             result: content
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:user', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
+          should(kuzzle.pluginsManager.trigger.getCall(0).args).match([
+            'core:notify:user',
+            {
+              room: 'matchingSome',
+              scope: 'out',
+              content,
+              request: request.serialize()
+            }
+          ]);
+          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:user', notification]);
+          should(kuzzle.pluginsManager.trigger.getCall(2).args).match(['notify:dispatch', notification]);
           cb();
         }
         catch (e) {
@@ -272,8 +289,9 @@ describe('notify methods', () => {
           });
 
           should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match(['notify:server', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledWith('notify:server', notification)
+            .be.calledWith('notify:dispatch', notification);
           cb();
         }
         catch (e) {
