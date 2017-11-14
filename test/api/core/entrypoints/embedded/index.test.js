@@ -3,7 +3,8 @@
 const
   Bluebird = require('bluebird'),
   {
-    InternalError: KuzzleInternalError
+    InternalError: KuzzleInternalError,
+    ServiceUnavailableError
   } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   mockrequire = require('mock-require'),
@@ -123,7 +124,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       });
     });
 
-    it('should try to return an error if one recieved without any response', (done) => {
+    it('should try to return an error if one received without any response', (done) => {
       const error = new KuzzleInternalError('test');
       kuzzle.funnel.execute = (request, cb) => cb(error, request);
 
@@ -131,6 +132,19 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       entrypoint.execute(request, response => {
         should(response.content.error)
           .be.eql(error);
+
+        done();
+      });
+    });
+
+    it('should refuse incoming requests if shutting down', (done) => {
+      entrypoint.dispatch('shutdown');
+
+      const request = new Request({});
+      entrypoint.execute(request, response => {
+        should(response.status).eql(503);
+        should(response.content.error)
+          .be.an.instanceof(ServiceUnavailableError);
 
         done();
       });
