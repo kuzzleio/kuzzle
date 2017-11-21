@@ -39,12 +39,8 @@ services:
     image: redis:3.2
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.1
+    image: kuzzleio/elasticsearch:5.4.1
     environment:
       - cluster.name=kuzzle
-      # disable xpack
-      - xpack.security.enabled=false
-      - xpack.monitoring.enabled=false
-      - xpack.graph.enabled=false
-      - xpack.watcher.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 
