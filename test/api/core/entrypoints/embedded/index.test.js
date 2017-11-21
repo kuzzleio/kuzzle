@@ -455,6 +455,30 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
       });
     });
+
+    it('should log and reject if an error occured', () => {
+      mockrequire('fs', {
+        existsSync: sinon.stub().returns(true),
+        readdirSync: sinon.stub().returns(['protocol']),
+        statSync: sinon.stub().returns({isDirectory: () => true})
+      });
+
+      mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
+      const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
+
+      const requireStub = sinon.stub().returns(function () {
+        this.init = sinon.stub().throws(Error('test'));
+      });
+
+      return Rewired.__with__({
+        require: requireStub
+      })(() => {
+        const ep = new Rewired(kuzzle);
+
+        should(ep.loadMoreProtocols())
+          .be.rejectedWith('test');
+      });
+    });
   });
 
   describe('#newConnection', () => {
