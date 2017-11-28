@@ -64,49 +64,97 @@ describe('Plugin Context', () => {
       should(repository.update).be.a.Function();
     });
 
-    it('should throw when trying to instantiate a Request object without providing any data', () => {
-      should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
-    });
+    describe('#Request', () => {
 
-    it('should replicate the right request information', () => {
-      let
-        request = new Request({
-          action: 'action',
-          controller: 'controller',
-          foobar: 'foobar',
-          _id: '_id',
-          index: 'index',
-          collection: 'collection',
-          result: 'result',
-          error: new Error('error'),
-          status: 666,
-          jwt: 'jwt'
-        }, {
-          protocol: 'protocol',
-          connectionId: 'connectionId'
-        }),
-        pluginRequest = new context.constructors.Request(request, {});
+      it('should throw when trying to instantiate a Request object without providing any data', () => {
+        should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
+      });
 
-      should(pluginRequest.context.protocol).be.eql(request.context.protocol);
-      should(pluginRequest.context.connectionId).be.eql(request.context.connectionId);
-      should(pluginRequest.result).be.null();
-      should(pluginRequest.error).be.null();
-      should(pluginRequest.status).be.eql(102);
-      should(pluginRequest.input.action).be.null();
-      should(pluginRequest.input.controller).be.null();
-      should(pluginRequest.input.jwt).be.eql(request.input.jwt);
-      should(pluginRequest.input.args.foobar).be.eql(request.input.args.foobar);
-      should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
-      should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
-      should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
-    });
+      it('should replicate the right request information', () => {
+        let
+          request = new Request({
+            action: 'action',
+            controller: 'controller',
+            foobar: 'foobar',
+            _id: '_id',
+            index: 'index',
+            collection: 'collection',
+            result: 'result',
+            error: new Error('error'),
+            status: 666,
+            jwt: 'jwt'
+          }, {
+            protocol: 'protocol',
+            connectionId: 'connectionId'
+          }),
+          pluginRequest = new context.constructors.Request(request, {});
 
-    it('should allow building a request without providing another one', () => {
-      const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
+        should(pluginRequest.context.protocol).be.eql(request.context.protocol);
+        should(pluginRequest.context.connectionId).be.eql(request.context.connectionId);
+        should(pluginRequest.result).be.null();
+        should(pluginRequest.error).be.null();
+        should(pluginRequest.status).be.eql(102);
+        should(pluginRequest.input.action).be.null();
+        should(pluginRequest.input.controller).be.null();
+        should(pluginRequest.input.jwt).be.eql(request.input.jwt);
+        should(pluginRequest.input.args.foobar).be.eql(request.input.args.foobar);
+        should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
+        should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
+        should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
+      });
 
-      should(rq).be.instanceOf(Request);
-      should(rq.input.action).be.eql('bar');
-      should(rq.input.controller).be.eql('foo');
+      it('should override origin request data with provided ones', () => {
+        let
+          request = new Request({
+            action: 'action',
+            controller: 'controller',
+            foo: 'foo',
+            bar: 'bar',
+            _id: '_id',
+            index: 'index',
+            collection: 'collection',
+            result: 'result',
+            error: new Error('error'),
+            status: 666,
+            jwt: 'jwt'
+          }, {
+            protocol: 'protocol',
+            connectionId: 'connectionId'
+          }),
+          pluginRequest = new context.constructors.Request(request, {
+            action: 'pluginAction',
+            controller: 'pluginController',
+            foo: false,
+            from: 0,
+            size: 99,
+            collection: 'pluginCollection',
+            jwt: null,
+          });
+
+        should(pluginRequest.context.protocol).be.eql('protocol');
+        should(pluginRequest.context.connectionId).be.eql('connectionId');
+        should(pluginRequest.result).be.null();
+        should(pluginRequest.error).be.null();
+        should(pluginRequest.status).be.eql(102);
+        should(pluginRequest.input.action).be.eql('pluginAction');
+        should(pluginRequest.input.controller).be.eql('pluginController');
+        should(pluginRequest.input.jwt).be.null();
+        should(pluginRequest.input.args.foo).be.eql(false);
+        should(pluginRequest.input.args.bar).be.eql('bar');
+        should(pluginRequest.input.args.from).be.eql(0);
+        should(pluginRequest.input.args.size).be.eql(99);
+        should(pluginRequest.input.resource._id).be.eql('_id');
+        should(pluginRequest.input.resource.index).be.eql('index');
+        should(pluginRequest.input.resource.collection).be.eql('pluginCollection');
+      });
+
+      it('should allow building a request without providing another one', () => {
+        const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
+
+        should(rq).be.instanceOf(Request);
+        should(rq.input.action).be.eql('bar');
+        should(rq.input.controller).be.eql('foo');
+      });
     });
 
     it('should expose all error objects as capitalized constructors', () => {
