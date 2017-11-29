@@ -1,5 +1,5 @@
 const
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
@@ -91,7 +91,7 @@ describe('Test: collection controller', () => {
 
   describe('#getSpecifications', () => {
     it('should call internalEngine with the right id', () => {
-      kuzzle.internalEngine.get = sandbox.stub().returns(Promise.resolve({_source: {foo: 'bar'}}));
+      kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve({_source: {foo: 'bar'}}));
 
       return collectionController.getSpecifications(request)
         .then(response => {
@@ -99,10 +99,10 @@ describe('Test: collection controller', () => {
             should(kuzzle.internalEngine.get).be.calledOnce();
             should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
             should(response).match(foo);
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -120,7 +120,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({
+      kuzzle.internalEngine.search = sandbox.stub().returns(Bluebird.resolve({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
@@ -149,7 +149,7 @@ describe('Test: collection controller', () => {
             should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -162,7 +162,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Bluebird.resolve({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
@@ -178,13 +178,13 @@ describe('Test: collection controller', () => {
             should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should handle the optional scroll argument', () => {
-      kuzzle.internalEngine.scroll = sandbox.stub().returns(Promise.resolve({
+      kuzzle.internalEngine.scroll = sandbox.stub().returns(Bluebird.resolve({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
@@ -200,7 +200,7 @@ describe('Test: collection controller', () => {
             should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -225,8 +225,8 @@ describe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Promise.resolve({isValid: true}));
-      kuzzle.validation.curateSpecification = sandbox.stub().returns(Promise.resolve());
+      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Bluebird.resolve({isValid: true}));
+      kuzzle.validation.curateSpecification = sandbox.stub().returns(Bluebird.resolve());
 
       return collectionController.updateSpecifications(request)
         .then(response => {
@@ -237,10 +237,10 @@ describe('Test: collection controller', () => {
             should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
             should(response).match(request.input.body);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -263,7 +263,7 @@ describe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Promise.resolve({
+      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Bluebird.resolve({
         isValid: false,
         errors: ['bad bad is a bad type !']
       }));
@@ -282,10 +282,10 @@ describe('Test: collection controller', () => {
             should(error.message).be.exactly('Some errors with provided specifications.');
             should(error.details).match([ 'bad bad is a bad type !' ]);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch (er) {
-            return Promise.reject(er);
+            return Bluebird.reject(er);
           }
         });
     });
@@ -309,7 +309,7 @@ describe('Test: collection controller', () => {
       };
 
       CollectionController.__set__({
-        createSpecificationList: sandbox.stub().returns(Promise.resolve({
+        createSpecificationList: sandbox.stub().returns(Bluebird.resolve({
           _id: 'indexcollection',
           _source: {
             validation: 'validation',
@@ -317,14 +317,14 @@ describe('Test: collection controller', () => {
             collection: 'collection'
           }
         })),
-        validateSpecificationList: sandbox.stub().returns(Promise.resolve({valid: true}))
+        validateSpecificationList: sandbox.stub().returns(Bluebird.resolve({valid: true}))
       });
 
       return collectionController.validateSpecifications(request)
         .then(response => {
           should(response).match({valid: true});
 
-          return Promise.resolve();
+          return Bluebird.resolve();
         });
     });
 
@@ -351,7 +351,7 @@ describe('Test: collection controller', () => {
       };
 
       CollectionController.__set__({
-        createSpecificationList: sandbox.stub().returns(Promise.resolve({
+        createSpecificationList: sandbox.stub().returns(Bluebird.resolve({
           _id: 'indexcollection',
           _source: {
             validation: 'validation',
@@ -359,7 +359,7 @@ describe('Test: collection controller', () => {
             collection: 'collection'
           }
         })),
-        validateSpecificationList: sandbox.stub().returns(Promise.resolve(errorResponse))
+        validateSpecificationList: sandbox.stub().returns(Bluebird.resolve(errorResponse))
       });
 
       return collectionController.validateSpecifications(request)
@@ -371,7 +371,7 @@ describe('Test: collection controller', () => {
 
   describe('#deleteSpecifications', () => {
     it('should call the right functions and respond with the right response if the validation specification exists', () => {
-      kuzzle.internalEngine.delete = sandbox.stub().returns(Promise.resolve());
+      kuzzle.internalEngine.delete = sandbox.stub().returns(Bluebird.resolve());
 
       kuzzle.validation.specification = {};
       kuzzle.validation.specification[index] = {};
@@ -384,10 +384,10 @@ describe('Test: collection controller', () => {
             should(kuzzle.internalEngine.delete).be.calledOnce();
             should(response).match({acknowledged: true});
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -402,10 +402,10 @@ describe('Test: collection controller', () => {
             should(kuzzle.internalEngine.delete).not.be.called();
             should(response).match({acknowledged: true});
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch (error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -413,7 +413,7 @@ describe('Test: collection controller', () => {
 
   describe('#list', () => {
     beforeEach(() => {
-      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['foo']}}));
+      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({collections: {stored: ['foo']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
@@ -465,7 +465,7 @@ describe('Test: collection controller', () => {
 
     it('should return a portion of the collection list if from and size are specified', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
-      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
+      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -484,7 +484,7 @@ describe('Test: collection controller', () => {
 
     it('should return a portion of the collection list if from is specified', () => {
       request = new Request({index: 'index', type: 'all', from: 8});
-      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
+      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -502,7 +502,7 @@ describe('Test: collection controller', () => {
 
     it('should return a portion of the collection list if size is specified', () => {
       request = new Request({index: 'index', type: 'all', size: 2});
-      kuzzle.services.list.storageEngine.listCollections.returns(Promise.resolve({
+      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({
         collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
       }));
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
@@ -522,13 +522,13 @@ describe('Test: collection controller', () => {
 
 
     it('should reject an error if getting stored collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'stored'});
       return should(collectionController.list(request)).be.rejected();
     });
 
     it('should reject an error if getting all collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.returns(Promise.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'all'});
       return should(collectionController.list(request)).be.rejected();
     });
@@ -536,7 +536,7 @@ describe('Test: collection controller', () => {
 
   describe('#exists', () => {
     it('should call the storageEngine', () => {
-      kuzzle.services.list.storageEngine.collectionExists.returns(Promise.resolve(foo));
+      kuzzle.services.list.storageEngine.collectionExists.returns(Bluebird.resolve(foo));
       return collectionController.exists(request)
         .then(response => {
           should(response).match(foo);
@@ -567,10 +567,10 @@ describe('Test: collection controller', () => {
             should(response).be.instanceof(Object);
             should(response).match(foo);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });

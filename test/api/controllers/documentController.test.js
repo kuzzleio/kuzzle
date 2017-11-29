@@ -68,7 +68,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.search.returns(Bluebird.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.search.rejects(new Error('foobar'));
 
       return should(documentController.search(request)).be.rejectedWith('foobar');
     });
@@ -90,7 +90,7 @@ describe('Test: document controller', () => {
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
-      kuzzle.services.list.storageEngine.scroll.returns(Bluebird.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.scroll.rejects(new Error('foobar'));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');
     });
@@ -114,7 +114,7 @@ describe('Test: document controller', () => {
     it('should return false if the document doesn\'t exist', () => {
       request.input.resource._id = 'ghost';
 
-      engine.get.returns(Bluebird.reject(new NotFoundError('foobar')));
+      engine.get.rejects(new NotFoundError('foobar'));
 
       return documentController.exists(request)
         .then(response => {
@@ -124,7 +124,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject with an error in case of error', () => {
-      engine.get.returns(Bluebird.reject(new Error('foobar')));
+      engine.get.rejects(new Error('foobar'));
 
       return should(documentController.exists(request)).be.rejected();
     });
@@ -144,7 +144,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.get.returns(Bluebird.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.get.rejects(new Error('foobar'));
       return should(documentController.get(request)).be.rejected();
     });
   });
@@ -199,7 +199,7 @@ describe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.count.returns(Bluebird.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.count.rejects(new Error('foobar'));
       return should(documentController.count(request)).be.rejected();
     });
   });

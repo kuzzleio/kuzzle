@@ -1,7 +1,7 @@
-var
+const
   _ = require('lodash'),
   should = require('should'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   rewire = require('rewire'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
@@ -160,8 +160,8 @@ describe('Test: statistics core component', () => {
     request.input.args.startTime = lastFrame - 1000;
     request.input.args.stopTime = new Date(new Date().getTime() + 100000);
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Promise.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
-    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Promise.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Bluebird.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Bluebird.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
 
     return stats.getStats(request)
       .then(response => {
@@ -191,8 +191,8 @@ describe('Test: statistics core component', () => {
     stats.lastFrame = lastFrame;
     request.input.args.stopTime = lastFrame + 1000;
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Promise.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
-    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Promise.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Bluebird.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Bluebird.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
 
     return stats.getStats(request)
       .then(response => {
@@ -212,7 +212,7 @@ describe('Test: statistics core component', () => {
 
   it('should get the last frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
-    sandbox.stub(kuzzle.services.list.internalCache, 'get').returns(Promise.resolve(JSON.stringify(fakeStats)));
+    sandbox.stub(kuzzle.services.list.internalCache, 'get').returns(Bluebird.resolve(JSON.stringify(fakeStats)));
 
     stats.getLastStats()
       .then(response => {
@@ -241,8 +241,8 @@ describe('Test: statistics core component', () => {
   it('should return all saved statistics', () => {
     stats.lastFrame = lastFrame;
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Promise.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
-    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Promise.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'searchKeys').returns(Bluebird.resolve(['stats/' + lastFrame, 'stats/'.concat(lastFrame + 100)]));
+    sandbox.stub(kuzzle.services.list.internalCache, 'mget').returns(Bluebird.resolve([JSON.stringify(fakeStats), JSON.stringify(fakeStats)]));
 
     return stats.getAllStats()
       .then(response => {
@@ -263,7 +263,7 @@ describe('Test: statistics core component', () => {
   it('should write statistics frames in cache', () => {
     var
       writeStats = Statistics.__get__('writeStats'),
-      spy = sandbox.stub(kuzzle.services.list.internalCache, 'volatileSet').returns(Promise.resolve());
+      spy = sandbox.stub(kuzzle.services.list.internalCache, 'volatileSet').returns(Bluebird.resolve());
 
     stats.currentStats = _.extend({}, fakeStats);
 
@@ -278,7 +278,8 @@ describe('Test: statistics core component', () => {
   it('should reject the promise if the cache returns an error', () => {
     stats.lastFrame = Date.now();
 
-    sandbox.stub(kuzzle.services.list.internalCache, 'get').returns(Promise.reject(new Error()));
+    sandbox.stub(kuzzle.services.list.internalCache, 'get')
+      .rejects(new Error());
 
     return should(stats.getLastStats(request)).be.rejected();
   });

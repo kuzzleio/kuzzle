@@ -67,7 +67,8 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should return null if the profile does not exist', () => {
-      kuzzle.internalEngine.get.returns(Bluebird.reject(new NotFoundError('Not found')));
+      kuzzle.internalEngine.get
+        .rejects(new NotFoundError('Not found'));
 
       return profileRepository.loadProfile('idontexist')
         .then(result => {

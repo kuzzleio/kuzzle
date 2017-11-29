@@ -120,7 +120,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should reject if authentication fails', () => {
-      kuzzle.passport.authenticate.returns(Bluebird.reject(new Error('error')));
+      kuzzle.passport.authenticate.rejects(new Error('error'));
 
       return should(authController.login(request)).be.rejected();
     });
@@ -154,7 +154,7 @@ describe('Test the auth controller', () => {
     it('should emit an error if the token cannot be expired', () => {
       const error = new Error('Mocked error');
 
-      kuzzle.repositories.token.expire.returns(Bluebird.reject(error));
+      kuzzle.repositories.token.expire.rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(KuzzleInternalError);
     });
@@ -209,7 +209,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should return a valid response if the token is not valid', () => {
-      kuzzle.repositories.token.verifyToken.returns(Bluebird.reject(new UnauthorizedError('foobar')));
+      kuzzle.repositories.token.verifyToken.rejects(new UnauthorizedError('foobar'));
 
       return authController.checkToken(request)
         .then(response => {
@@ -223,7 +223,7 @@ describe('Test the auth controller', () => {
 
     it('should return a rejected promise if an error occurs', () => {
       const error = new KuzzleInternalError('Foobar');
-      kuzzle.repositories.token.verifyToken.returns(Bluebird.reject(error));
+      kuzzle.repositories.token.verifyToken.rejects(error);
 
       return should(authController.checkToken(request)).be.rejectedWith(error);
     });

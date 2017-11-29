@@ -132,7 +132,7 @@ describe('/lib/api/kuzzle.js', () => {
     it('does not really test anything but increases coverage', () => {
       const error = new Error('error');
 
-      kuzzle.internalEngine.init.returns(Bluebird.reject(error));
+      kuzzle.internalEngine.init.rejects(error);
 
       return should(kuzzle.start()).be.rejectedWith(error);
     });

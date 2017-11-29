@@ -98,7 +98,7 @@ describe('Test: ElasticSearch Wrapper', () => {
 
     it('should reject the getMapping promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
-      client.indices.getMapping.returns(Bluebird.reject(error));
+      client.indices.getMapping.rejects(error);
 
       return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(error);
     });

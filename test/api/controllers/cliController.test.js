@@ -1,4 +1,5 @@
 const
+  Bluebird = require('bluebird'),
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
@@ -120,7 +121,7 @@ describe('lib/api/controllers/cliController', () => {
         error = new BadRequestError('test');
 
       cli.init();
-      cli.actions.dump.returns(Promise.reject(error));
+      cli.actions.dump.rejects(error);
 
       return cli.onListenCB(rawRequest)
         .then(() => {

@@ -107,7 +107,8 @@ describe('Test: repositories/tokenRepository', () => {
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {
       const token = jwt.sign({_id: 'auser'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
 
-      sandbox.stub(tokenRepository, 'loadFromCache').returns(Bluebird.reject(new KuzzleInternalError('Error')));
+      sandbox.stub(tokenRepository, 'loadFromCache')
+        .rejects(new KuzzleInternalError('Error'));
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(KuzzleInternalError);
     });
@@ -174,7 +175,7 @@ describe('Test: repositories/tokenRepository', () => {
         user
       });
 
-      kuzzle.services.list.internalCache.volatileSet.returns(Promise.reject(new Error('error')));
+      kuzzle.services.list.internalCache.volatileSet.rejects(new Error('error'));
 
       return should(tokenRepository.generateToken(user, request))
         .be.rejectedWith(KuzzleInternalError, {message: 'Unable to generate token for unknown user'});

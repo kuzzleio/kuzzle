@@ -81,7 +81,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
 
   describe('#lock', () => {
     it('should create a new lock if some old one is found', () => {
-      kuzzle.internalEngine.create.returns(Bluebird.reject());
+      kuzzle.internalEngine.create.rejects();
       kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {timestamp: 0}}));
 
       return bootstrap.lock()
