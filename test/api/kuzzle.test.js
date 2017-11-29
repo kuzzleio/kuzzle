@@ -1,6 +1,5 @@
 const
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),

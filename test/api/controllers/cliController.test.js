@@ -1,5 +1,4 @@
 const
-  Bluebird = require('bluebird'),
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
