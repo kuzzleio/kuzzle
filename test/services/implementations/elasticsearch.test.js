@@ -209,7 +209,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a search fails', done => {
-      elasticsearch.client.search.returns(Bluebird.reject(new Error('Mocked error')));
+      elasticsearch.client.search.rejects(new Error('Mocked error'));
 
       elasticsearch.search(request)
         .then(() => done('should have been rejected'))
@@ -240,7 +240,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a scroll fails', () => {
-      elasticsearch.client.scroll.returns(Bluebird.reject(new Error('error')));
+      elasticsearch.client.scroll.rejects(new Error('error'));
 
       request.input.args.scrollId = 'foobar';
       return should(elasticsearch.scroll(request)).be.rejectedWith(Error, {message: 'error'});
@@ -301,7 +301,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.create.returns(Bluebird.resolve({}));
       error.displayName = 'NotFound';
 
-      elasticsearch.client.get.returns(Bluebird.reject(error));
+      elasticsearch.client.get.rejects(error);
       request.input.resource._id = '42';
 
       return elasticsearch.create(request)
@@ -318,7 +318,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the create promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked create error');
-      elasticsearch.client.get.returns(Bluebird.reject(new Error('Mocked get error')));
+      elasticsearch.client.get.rejects(new Error('Mocked get error'));
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = 'foobar';
@@ -330,7 +330,7 @@ describe('Test: ElasticSearch service', () => {
       const error = new Error('Mocked index error');
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: false}}}));
-      elasticsearch.client.index.returns(Bluebird.reject(error));
+      elasticsearch.client.index.rejects(error);
       request.input.resource._id = '42';
 
       return should(elasticsearch.create(request)).be.rejectedWith(error);
@@ -377,7 +377,7 @@ describe('Test: ElasticSearch service', () => {
       const error = new Error('Mocked error');
 
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.index.returns(Bluebird.reject(error));
+      elasticsearch.client.index.rejects(error);
 
       request.input.resource._id = createdDocumentId;
       return should(elasticsearch.createOrReplace(request)).be.rejectedWith(error);
@@ -420,7 +420,7 @@ describe('Test: ElasticSearch service', () => {
       const error = new Error('Mocked error');
 
       elasticsearch.client.exists.returns(Bluebird.resolve(true));
-      elasticsearch.client.index.returns(Bluebird.reject(error));
+      elasticsearch.client.index.rejects(error);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
@@ -517,7 +517,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#mget', () => {
     it('should return a rejected promise if getting a single document fails', done => {
-      elasticsearch.client.mget.returns(Bluebird.reject(new Error('Mocked error')));
+      elasticsearch.client.mget.rejects(new Error('Mocked error'));
 
       elasticsearch.mget(request)
         .catch(() => {
@@ -542,7 +542,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if getting some multiple documents fails', done => {
-      elasticsearch.client.mget.returns(Bluebird.reject(new Error('Mocked error')));
+      elasticsearch.client.mget.rejects(new Error('Mocked error'));
 
       request.input.body = {};
 
@@ -587,7 +587,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should return a rejected promise if the count fails', () => {
       const error = new Error('Mocked error');
-      elasticsearch.client.count.returns(Bluebird.reject(error));
+      elasticsearch.client.count.rejects(error);
 
       request.input.body = {query: {foo: 'bar'}};
 
@@ -695,7 +695,7 @@ describe('Test: ElasticSearch service', () => {
       };
 
       esError.body.error['resource.id'] = 'bar';
-      elasticsearch.client.update.returns(Bluebird.reject(esError));
+      elasticsearch.client.update.rejects(esError);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       elasticsearch.update(request)
@@ -722,8 +722,7 @@ describe('Test: ElasticSearch service', () => {
       };
 
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.update.returns(Bluebird.reject(esError));
-
+      elasticsearch.client.update.rejects(esError);
 
       elasticsearch.update(request)
         .catch((error) => {
@@ -743,7 +742,7 @@ describe('Test: ElasticSearch service', () => {
       const
         esError = new Error('banana error');
 
-      elasticsearch.client.update.returns(Bluebird.reject(esError));
+      elasticsearch.client.update.rejects(esError);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       return should(elasticsearch.update(request)).be.rejected();
@@ -767,7 +766,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a delete fails', () => {
-      elasticsearch.client.update.returns(Bluebird.reject(new Error('Mocked error')));
+      elasticsearch.client.update.rejects(new Error('Mocked error'));
 
       return should(elasticsearch.delete(request)).be.rejected();
     });
@@ -849,7 +848,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
       const error = new KuzzleError('Mocked error');
-      elasticsearch.client.bulk.returns(Bluebird.reject(error));
+      elasticsearch.client.bulk.rejects(error);
 
       request.input.body.query = {some: 'query'};
 
@@ -932,7 +931,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the promise if the delete by query fails because of a bulk failure', () => {
       const error = new KuzzleError('Mocked error');
-      elasticsearch.client.bulk.returns(Bluebird.reject(error));
+      elasticsearch.client.bulk.rejects(error);
 
       request.input.body.query = {some: 'query'};
 
@@ -1097,7 +1096,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      elasticsearch.client.bulk.returns(Bluebird.reject(error));
+      elasticsearch.client.bulk.rejects(error);
 
       return should(elasticsearch.import(request)).be.rejectedWith(error);
     });
@@ -1215,7 +1214,7 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      elasticsearch.client.indices.putMapping.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.putMapping.rejects(error);
 
       elasticsearch.updateMapping(request)
         .catch((err) => {
@@ -1317,7 +1316,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the listCollections promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
-      elasticsearch.client.indices.getMapping.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.getMapping.rejects(error);
 
       request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
       request.input.body = null;
@@ -1336,7 +1335,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the createCollection promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
-      elasticsearch.client.indices.putMapping.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.putMapping.rejects(error);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       return should(elasticsearch.createCollection(request)).be.rejectedWith(error);
@@ -1388,7 +1387,7 @@ describe('Test: ElasticSearch service', () => {
       indexes[kuzzle.config.internalIndex] = [];
 
       elasticsearch.client.indices.getMapping.returns(Bluebird.resolve(indexes));
-      elasticsearch.client.indices.delete.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.delete.rejects(error);
 
       return should(elasticsearch.deleteIndexes(request)).be.rejectedWith(error);
     });
@@ -1406,7 +1405,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the createIndex promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
-      elasticsearch.client.indices.create.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.create.rejects(error);
 
       return should(elasticsearch.createIndex(request)).be.rejectedWith(error);
     });
@@ -1429,7 +1428,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject the deleteIndex promise if elasticsearch throws an error', () => {
-      elasticsearch.client.indices.delete.returns(Bluebird.reject(new Error()));
+      elasticsearch.client.indices.delete.rejects(new Error());
 
       return should(elasticsearch.deleteIndex(request)).be.rejected();
     });
@@ -1450,7 +1449,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the listIndexes promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
-      elasticsearch.client.indices.getMapping.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.getMapping.rejects(error);
 
       return should(elasticsearch.listIndexes(request)).be.rejectedWith(error);
     });
@@ -1565,7 +1564,7 @@ describe('Test: ElasticSearch service', () => {
         error = new Error('Mocked error'),
         pluginSpy = kuzzle.pluginsManager.trigger;
 
-      elasticsearch.client.indices.refresh.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.refresh.rejects(error);
       elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
@@ -1606,7 +1605,7 @@ describe('Test: ElasticSearch service', () => {
         error = new Error('test'),
         spy = sandbox.spy(elasticsearch.esWrapper, 'formatESError');
 
-      elasticsearch.client.indices.exists.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.exists.rejects(error);
 
       return elasticsearch.indexExists(request)
         .then(() => {
@@ -1648,7 +1647,7 @@ describe('Test: ElasticSearch service', () => {
         error = new Error('test'),
         spy = sinon.spy(elasticsearch.esWrapper, 'formatESError');
 
-      elasticsearch.client.indices.existsType.returns(Bluebird.reject(error));
+      elasticsearch.client.indices.existsType.rejects(error);
 
       return elasticsearch.collectionExists(request)
         .then(() => {

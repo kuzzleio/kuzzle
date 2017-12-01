@@ -104,7 +104,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject when Koncorde throws an error', () => {
-    kuzzle.realtime.normalize.returns(Bluebird.reject(new Error('test')));
+    kuzzle.realtime.normalize.rejects(new Error('test'));
 
     return should(hotelClerk.addSubscription(request)).be.rejected();
   });
@@ -213,7 +213,7 @@ describe('Test: hotelClerk.addSubscription', () => {
         should(error)
           .be.an.instanceof(SizeLimitError);
         should(error.message)
-          .eql('Unable to subscribe: maximum of minterms exceeded (max 8, received 9)');
+          .eql('Unable to subscribe: maximum number of minterms exceeded (max 8, received 9)');
       });
   });
 

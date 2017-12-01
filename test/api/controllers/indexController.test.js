@@ -211,7 +211,7 @@ describe('Test: index controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.listIndexes.returns(Bluebird.reject(new Error('foobar')));
+      kuzzle.services.list.storageEngine.listIndexes.rejects(new Error('foobar'));
       return should(indexController.list(request)).be.rejected();
     });
   });

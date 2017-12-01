@@ -2,11 +2,11 @@
 
 const
   Bluebird = require('bluebird'),
-  rewire = require('rewire'),
+  mockrequire = require('mock-require'),
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Bootstrap = rewire('../../../lib/services/internalEngine/bootstrap');
+  Bootstrap = require('../../../lib/services/internalEngine/bootstrap');
 
 describe('services/internalEngine/bootstrap.js', () => {
   let
@@ -15,10 +15,6 @@ describe('services/internalEngine/bootstrap.js', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-
-    Bootstrap.__set__({
-      console: {error: sinon.spy()}
-    });
 
     bootstrap = new Bootstrap(kuzzle);
   });
@@ -396,4 +392,21 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
   });
 
+  describe('#_waitTillUnlocked', () => {
+    it('should throw if locked for too long', () => {
+      bootstrap.db.exists.returns(Bluebird.resolve(true));
+      mockrequire('bluebird', Object.assign(require('bluebird'), {delay: () => Bluebird.resolve()}));
+      mockrequire.reRequire('../../../lib/services/internalEngine/bootstrap');
+
+      return bootstrap._waitTillUnlocked()
+        .then(() => { throw new Error('should not happen'); })
+        .catch(error => {
+          should(error.message).match('Internal engine bootstrap - lock wait timeout exceeded');
+        })
+        .finally(() => {
+          mockrequire.stop('bluebird');
+          mockrequire.reRequire('../../../lib/services/internalEngine/bootstrap');
+        });
+    });
+  });
 });

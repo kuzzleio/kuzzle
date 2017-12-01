@@ -120,7 +120,7 @@ describe('Tests: api/cli/index.js', () => {
           }
         };
 
-      kuzzle.internalEngine.init.returns(Bluebird.reject(error));
+      kuzzle.internalEngine.init.rejects(error);
 
       return should(cli.doAction.call(context, 'action', 'data', {debug: true})).be.rejectedWith(error);
     });

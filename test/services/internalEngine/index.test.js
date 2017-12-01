@@ -7,6 +7,7 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  Bluebird = require('bluebird'),
   ms = require('ms');
 
 describe('InternalEngine', () => {
@@ -48,7 +49,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { 'some': 'filters' };
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
+      kuzzle.internalEngine.client.search.returns(Bluebird.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
@@ -70,10 +71,10 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -83,7 +84,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = { query: {'some': 'filters' }};
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
+      kuzzle.internalEngine.client.search.returns(Bluebird.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
@@ -105,10 +106,10 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -116,7 +117,7 @@ describe('InternalEngine', () => {
     it('should perform a search on an empty filter if the filters argument is missing', () => {
       const collection = 'collection';
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({hits: {hits: ['foo', 'bar'], total: 123}}));
+      kuzzle.internalEngine.client.search.returns(Bluebird.resolve({hits: {hits: ['foo', 'bar'], total: 123}}));
 
       return kuzzle.internalEngine.search(collection)
         .then(result => {
@@ -135,7 +136,7 @@ describe('InternalEngine', () => {
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -145,7 +146,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = {};
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({
+      kuzzle.internalEngine.client.search.returns(Bluebird.resolve({
         hits: {
           total: 123,
           hits: ['foo', 'bar']
@@ -174,10 +175,10 @@ describe('InternalEngine', () => {
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
             should(result.scrollId).be.eql('foobar');
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -187,7 +188,7 @@ describe('InternalEngine', () => {
         collection = 'collection',
         query = {};
 
-      kuzzle.internalEngine.client.search.returns(Promise.resolve({
+      kuzzle.internalEngine.client.search.returns(Bluebird.resolve({
         hits: {
           total: 123,
           hits: ['foo', 'bar']
@@ -220,17 +221,17 @@ describe('InternalEngine', () => {
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
             should(result.scrollId).be.eql('foobar');
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should rejects the promise if the search fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.search.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.search.rejects(error);
 
       return should(kuzzle.internalEngine.search('foo')).be.rejectedWith(error);
     });
@@ -241,7 +242,7 @@ describe('InternalEngine', () => {
       const
         collection = 'collection';
 
-      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+      kuzzle.internalEngine.client.scroll.returns(Bluebird.resolve({
         hits: {
           total: 123,
           hits: ['foo', 'bar']
@@ -249,7 +250,7 @@ describe('InternalEngine', () => {
         _scroll_id: 'foobar'
       }));
 
-      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(1));
+      kuzzle.services.list.internalCache.exists.returns(Bluebird.resolve(1));
 
       return kuzzle.internalEngine.scroll(collection, 'foobar', '45s')
         .then(result => {
@@ -269,10 +270,10 @@ describe('InternalEngine', () => {
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
             should(result.scrollId).be.eql('foobar');
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -281,7 +282,7 @@ describe('InternalEngine', () => {
       const
         collection = 'collection';
 
-      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+      kuzzle.internalEngine.client.scroll.returns(Bluebird.resolve({
         hits: {
           hits: ['foo', 'bar'],
           total: 123
@@ -289,7 +290,7 @@ describe('InternalEngine', () => {
         _scroll_id: 'foobar'
       }));
 
-      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(1));
+      kuzzle.services.list.internalCache.exists.returns(Bluebird.resolve(1));
 
       return kuzzle.internalEngine.scroll(collection, 'foobar')
         .then(result => {
@@ -309,10 +310,10 @@ describe('InternalEngine', () => {
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
             should(result.scrollId).be.eql('foobar');
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -321,7 +322,7 @@ describe('InternalEngine', () => {
       const
         collection = 'collection';
 
-      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+      kuzzle.internalEngine.client.scroll.returns(Bluebird.resolve({
         hits: {
           hits: ['foo', 'bar'],
           total: 123
@@ -329,7 +330,7 @@ describe('InternalEngine', () => {
         _scroll_id: 'foobar'
       }));
 
-      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(1));
+      kuzzle.services.list.internalCache.exists.returns(Bluebird.resolve(1));
 
       return kuzzle.internalEngine.scroll(collection, 'foobar', 'foo')
         .then(result => {
@@ -349,10 +350,10 @@ describe('InternalEngine', () => {
             should(result.total).be.eql(123);
             should(result.hits).be.an.Array().and.match(['foo', 'bar']);
             should(result.scrollId).be.eql('foobar');
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -361,7 +362,7 @@ describe('InternalEngine', () => {
       const
         collection = 'collection';
 
-      kuzzle.internalEngine.client.scroll.returns(Promise.resolve({
+      kuzzle.internalEngine.client.scroll.returns(Bluebird.resolve({
         hits: {
           total: 123,
           hits: ['foo', 'bar']
@@ -369,7 +370,7 @@ describe('InternalEngine', () => {
         _scroll_id: 'foobar'
       }));
 
-      kuzzle.services.list.internalCache.exists.returns(Promise.resolve(0));
+      kuzzle.services.list.internalCache.exists.returns(Bluebird.resolve(0));
 
       return should(kuzzle.internalEngine.scroll(collection, 'foobar')).be.rejectedWith(NotFoundError, {message: 'Non-existing or expired scroll identifier'});
     });
@@ -381,7 +382,7 @@ describe('InternalEngine', () => {
         collection = 'foo',
         id = 'bar';
 
-      kuzzle.internalEngine.client.get.returns(Promise.resolve({foo: 'bar'}));
+      kuzzle.internalEngine.client.get.returns(Bluebird.resolve({foo: 'bar'}));
 
       return kuzzle.internalEngine.get(collection, id)
         .then(result => {
@@ -395,17 +396,17 @@ describe('InternalEngine', () => {
               });
 
             should(result).be.an.Object().and.match({'foo': 'bar'});
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should reject the promise if getting the document fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.get.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.get.rejects(error);
       return should(kuzzle.internalEngine.get('foo', 'bar')).be.rejectedWith(error);
     });
   });
@@ -416,7 +417,7 @@ describe('InternalEngine', () => {
         collection = 'foo',
         ids = ['bar', 'qux'];
 
-      kuzzle.internalEngine.client.mget.returns(Promise.resolve({docs: ['foo', 'bar']}));
+      kuzzle.internalEngine.client.mget.returns(Bluebird.resolve({docs: ['foo', 'bar']}));
 
       return kuzzle.internalEngine.mget(collection, ids)
         .then(result => {
@@ -433,17 +434,17 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result).not.have.property('docs');
             should(result).match({hits: ['foo', 'bar']});
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should reject the promise if getting the document fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.mget.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.mget.rejects(error);
       return should(kuzzle.internalEngine.mget('foo', ['bar'])).be.rejectedWith(error);
     });
   });
@@ -455,7 +456,7 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.create.returns(Promise.resolve({id}));
+      kuzzle.internalEngine.client.create.returns(Bluebird.resolve({id}));
 
       return kuzzle.internalEngine.create(collection, id, content)
         .then(result => {
@@ -472,17 +473,17 @@ describe('InternalEngine', () => {
             should(result).be.an.Object().and.not.be.empty();
             should(result).match({id, _source: content});
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.create.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.create.rejects(error);
       return should(kuzzle.internalEngine.create('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -494,7 +495,7 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.index.returns(Promise.resolve({id}));
+      kuzzle.internalEngine.client.index.returns(Bluebird.resolve({id}));
 
       return kuzzle.internalEngine.createOrReplace(collection, id, content)
         .then(result => {
@@ -510,17 +511,17 @@ describe('InternalEngine', () => {
 
             should(result).be.an.Object().and.not.be.empty();
             should(result).match({id, _source: content});
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.index.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.index.rejects(error);
       return should(kuzzle.internalEngine.createOrReplace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -532,7 +533,7 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.update.returns(Promise.resolve({id}));
+      kuzzle.internalEngine.client.update.returns(Bluebird.resolve({id}));
 
       return kuzzle.internalEngine.update(collection, id, content)
         .then(result => {
@@ -551,17 +552,17 @@ describe('InternalEngine', () => {
 
             should(result).be.an.Object().and.not.be.empty();
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.update.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.update.rejects(error);
       return should(kuzzle.internalEngine.update('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -573,8 +574,8 @@ describe('InternalEngine', () => {
         id = 'bar',
         content = {'foo': 'bar'};
 
-      kuzzle.internalEngine.client.index.returns(Promise.resolve({id}));
-      kuzzle.internalEngine.client.exists.returns(Promise.resolve(true));
+      kuzzle.internalEngine.client.index.returns(Bluebird.resolve({id}));
+      kuzzle.internalEngine.client.exists.returns(Bluebird.resolve(true));
 
       return kuzzle.internalEngine.replace(collection, id, content)
         .then(result => {
@@ -590,23 +591,23 @@ describe('InternalEngine', () => {
 
             should(result).be.an.Object().and.not.be.empty();
             should(result).match({id, _source: content});
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should rejects the promise if the document does not exist', () => {
-      kuzzle.internalEngine.client.exists.returns(Promise.resolve(false));
+      kuzzle.internalEngine.client.exists.returns(Bluebird.resolve(false));
       return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(NotFoundError);
     });
 
     it('should rejects the promise if the replace action fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.exists.returns(Promise.resolve(true));
-      kuzzle.internalEngine.client.index.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.exists.returns(Bluebird.resolve(true));
+      kuzzle.internalEngine.client.index.rejects(error);
       return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
     });
   });
@@ -617,7 +618,7 @@ describe('InternalEngine', () => {
         collection = 'foo',
         id = 'bar';
 
-      kuzzle.internalEngine.client.delete.returns(Promise.resolve());
+      kuzzle.internalEngine.client.delete.returns(Bluebird.resolve());
 
       return kuzzle.internalEngine.delete(collection, id)
         .then(() => {
@@ -630,17 +631,17 @@ describe('InternalEngine', () => {
                 id
               });
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should reject the promise if deleting the document fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.delete.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.delete.rejects(error);
       return should(kuzzle.internalEngine.delete('foo', 'bar')).be.rejectedWith(error);
     });
   });
@@ -649,7 +650,7 @@ describe('InternalEngine', () => {
     it('should forward the request to elasticsearch', () => {
       const
         createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(false));
+        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(false));
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
@@ -659,10 +660,10 @@ describe('InternalEngine', () => {
             should(createStub).be.calledOnce();
             should(createStub).be.calledWith({index: kuzzle.internalEngine.index});
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -670,7 +671,7 @@ describe('InternalEngine', () => {
     it('should not try to create an existing index', () => {
       const
         createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(true));
+        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(true));
 
       return kuzzle.internalEngine.createInternalIndex()
         .then(() => {
@@ -679,18 +680,18 @@ describe('InternalEngine', () => {
             should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
             should(createStub).have.callCount(0);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
 
     it('should reject the promise if creating the internal index fails', () => {
       const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.indices.exists.returns(Promise.resolve(false));
-      kuzzle.internalEngine.client.indices.create.returns(Promise.reject(error));
+      kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(false));
+      kuzzle.internalEngine.client.indices.create.rejects(error);
 
       return should(kuzzle.internalEngine.createInternalIndex()).be.rejectedWith(error);
     });
@@ -698,7 +699,7 @@ describe('InternalEngine', () => {
 
   describe('#listIndexes', () => {
     it('should forward the request to elasticsearch', () => {
-      kuzzle.internalEngine.client.indices.getMapping.returns(Promise.resolve({
+      kuzzle.internalEngine.client.indices.getMapping.returns(Bluebird.resolve({
         index1: {mappings: {foo: 'bar'}},
         index2: {mappings: {foo: 'bar'}}
       }));
@@ -715,10 +716,10 @@ describe('InternalEngine', () => {
             should(result).match(['index1', 'index2']);
 
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
 
         });
@@ -728,7 +729,7 @@ describe('InternalEngine', () => {
 
   describe('#listCollections', () => {
     it('should forward the request to elasticsearch', () => {
-      kuzzle.internalEngine.client.indices.getMapping.returns(Promise.resolve({
+      kuzzle.internalEngine.client.indices.getMapping.returns(Bluebird.resolve({
         index1: {mappings: {foo: 'bar', baz: 'qux'}},
         index2: {mappings: {foo: 'bar'}}
       }));
@@ -747,10 +748,10 @@ describe('InternalEngine', () => {
 
             should(result).match(['foo', 'baz']);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
 
         });
@@ -786,10 +787,10 @@ describe('InternalEngine', () => {
               .be.calledWithMatch({
                 index: kuzzle.internalEngine.index
               });
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -812,10 +813,10 @@ describe('InternalEngine', () => {
                 body: mapping
               });
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -832,10 +833,10 @@ describe('InternalEngine', () => {
                 index: kuzzle.internalEngine.index
               });
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });

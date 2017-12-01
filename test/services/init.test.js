@@ -78,7 +78,7 @@ describe('Test: lib/services/', () => {
       const error = new Error('test');
       error.status = 404;
 
-      kuzzle.internalEngine.get.onCall(0).returns(Bluebird.reject(error));
+      kuzzle.internalEngine.get.onCall(0).rejects(error);
       kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {foo: 'bar'}}));
 
       return services.init()
@@ -103,7 +103,7 @@ describe('Test: lib/services/', () => {
 
     it('should return a rejected promise if something wrong occurred while fetching the configuration from the db', () => {
       const error = new Error('test');
-      kuzzle.internalEngine.get.returns(Bluebird.reject(error));
+      kuzzle.internalEngine.get.rejects(error);
 
       return should(services.init()).be.rejectedWith(error);
     });

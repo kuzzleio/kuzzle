@@ -1,6 +1,6 @@
-var
+const
   should = require('should'),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   Kuzzle = require('../../../../../lib/api/kuzzle'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
@@ -21,19 +21,19 @@ describe('Test: security/userTest', () => {
 
     profile = new Profile();
     profile._id = 'profile';
-    profile.isActionAllowed = sinon.stub().returns(Promise.resolve(true));
+    profile.isActionAllowed = sinon.stub().returns(Bluebird.resolve(true));
 
     profile2 = new Profile();
     profile2._id = 'profile2';
-    profile2.isActionAllowed = sinon.stub().returns(Promise.resolve(false));
+    profile2.isActionAllowed = sinon.stub().returns(Bluebird.resolve(false));
 
     user = new User();
     user.profileIds = ['profile', 'profile2'];
 
     kuzzle.repositories = {
       profile: {
-        loadProfile: sinon.stub().returns(Promise.resolve(profile)),
-        loadProfiles: sinon.stub().returns(Promise.resolve([profile, profile2]))
+        loadProfile: sinon.stub().returns(Bluebird.resolve(profile)),
+        loadProfiles: sinon.stub().returns(Bluebird.resolve([profile, profile2]))
       }
     };
   });
@@ -65,9 +65,9 @@ describe('Test: security/userTest', () => {
         }
       };
 
-    sandbox.stub(user, 'getProfiles').returns(Promise.resolve([profile, profile2]));
-    sandbox.stub(profile, 'getRights').returns(Promise.resolve(profileRights));
-    sandbox.stub(profile2, 'getRights').returns(Promise.resolve(profileRights2));
+    sandbox.stub(user, 'getProfiles').returns(Bluebird.resolve([profile, profile2]));
+    sandbox.stub(profile, 'getRights').returns(Bluebird.resolve(profileRights));
+    sandbox.stub(profile2, 'getRights').returns(Bluebird.resolve(profileRights2));
 
     return user.getRights(kuzzle)
       .then(rights => {
@@ -141,7 +141,8 @@ describe('Test: security/userTest', () => {
   });
 
   it('should rejects if the loadProfiles throws an error', () => {
-    sandbox.stub(user, 'getProfiles').returns(Promise.reject(new Error('error')));
+    sandbox.stub(user, 'getProfiles')
+      .rejects(new Error('error'));
     return should(user.isActionAllowed(new Request({}), kuzzle)).be.rejectedWith('error');
   });
 });

@@ -150,7 +150,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine is KO', () => {
-      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.reject(new Error()));
+      kuzzle.services.list.storageEngine.getInfos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -164,7 +164,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if memoryStorage is KO', () => {
-      kuzzle.services.list.memoryStorage.getInfos.returns(Bluebird.reject(new Error()));
+      kuzzle.services.list.memoryStorage.getInfos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -178,7 +178,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if internalCache is KO', () => {
-      kuzzle.services.list.internalCache.getInfos.returns(Bluebird.reject(new Error()));
+      kuzzle.services.list.internalCache.getInfos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -264,7 +264,7 @@ describe('Test: server controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.broker.getInfos.returns(Bluebird.reject(new Error('foobar')));
+      kuzzle.services.list.broker.getInfos.rejects(new Error('foobar'));
       return should(serverController.info()).be.rejected();
     });
   });
