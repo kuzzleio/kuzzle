@@ -203,13 +203,11 @@ describe('funnelController.execute', () => {
       const cb = sinon.stub();
       kuzzle.router.isConnectionAlive.returns(false);
 
-      funnel.pendingRequests[request.id] = true;
       funnel.checkRights.throws(new Error('funnel.checkRights should not have been called'));
 
       should(funnel.execute(request, cb)).be.eql(0);
       should(funnel.checkRights.called).be.false();
       should(cb.called).be.false();
-      should(funnel.pendingRequests[request.id]).be.undefined();
     });
   });
 
