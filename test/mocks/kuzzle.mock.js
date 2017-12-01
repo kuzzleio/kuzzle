@@ -131,6 +131,7 @@ class KuzzleMock extends Kuzzle {
       createOrReplace: sinon.stub().resolves(),
       delete: sinon.stub().resolves(),
       deleteIndex: sinon.stub().resolves(),
+      exists: sinon.stub().resolves(),
       expire: sinon.stub().resolves(),
       get: sinon.stub().resolves(foo),
       mget: sinon.stub().resolves({hits: [foo]}),
@@ -141,6 +142,7 @@ class KuzzleMock extends Kuzzle {
       persist: sinon.stub().resolves(),
       refresh: sinon.stub().resolves(),
       replace: sinon.stub().resolves(),
+      scroll: sinon.stub().resolves(),
       search: sinon.stub().resolves(),
       update: sinon.stub().resolves(),
       updateMapping: sinon.stub().resolves(foo),
@@ -185,13 +187,17 @@ class KuzzleMock extends Kuzzle {
       init: sinon.stub().resolves(),
       profile: {
         load: sinon.stub().resolves(),
+        loadMultiFromDatabase: sinon.stub().resolves(),
         loadProfiles: sinon.stub().resolves(),
         searchProfiles: sinon.stub().resolves()
       },
       role: {
+        deleteRole: sinon.stub().resolves(),
         getRoleFromRequest: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+        loadMultiFromDatabase: sinon.stub().resolves(),
         loadRole: sinon.stub().resolves(),
         loadRoles: sinon.stub().resolves(),
+        searchRole: sinon.stub().resolves(),
         validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0]))
       },
       user: {

@@ -138,7 +138,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject an error in case of error', () => {
       const error = new Error('Mocked error');
-      kuzzle.repositories.user.search = sandbox.stub().returns(Bluebird.reject(error));
+      kuzzle.repositories.user.search.rejects(error);
 
       return should(securityController.searchUsers(new Request({body: {hydrate: false}})))
         .be.rejectedWith(error);
@@ -205,8 +205,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject an error in case of error', () => {
       const error = new Error('Mocked error');
-
-      kuzzle.repositories.user.delete = sandbox.stub().returns(Bluebird.reject(error));
+      kuzzle.repositories.user.delete.rejects(error);
 
       return should(securityController.deleteUser(new Request({_id: 'test'}))).be.rejectedWith(error);
     });
@@ -364,7 +363,7 @@ describe('Test: security controller - users', () => {
 
       kuzzle.pluginsManager.getStrategyMethod
         .withArgs('someStrategy', 'validate')
-        .returns(sinon.stub().returns(Bluebird.reject(new Error('error'))));
+        .rejects(new Error('error'));
 
       return should(securityController.createUser(request)).be.rejectedWith(BadRequestError);
     });

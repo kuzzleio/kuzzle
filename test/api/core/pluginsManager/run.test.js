@@ -243,8 +243,10 @@ describe('Test plugins manager run', () => {
     return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
       .then(() => {
-        should(fooStub.calledOnce).be.true();
-        should(spy.calledWithMatch('log:warn', /Pipe .*? exceeded [0-9]*ms to execute\./)).be.true();
+        should(fooStub)
+          .be.calledOnce();
+        should(spy)
+          .be.calledWithMatch('log:warn', /Plugin pipe .*? exceeded [0-9]*ms to execute\./);
       });
   });
 

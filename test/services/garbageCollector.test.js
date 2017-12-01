@@ -54,7 +54,6 @@ describe('Test: GarbageCollector service', () => {
 
   describe('#run', () => {
     it('if kuzzle is overloaded, it should delay the process in one hour', () => {
-      kuzzle.pluginsManager.trigger.onCall(0).returns(Bluebird.reject(new Error('foobar')));
       kuzzle.funnel.overloaded = true;
 
       return gc.run()

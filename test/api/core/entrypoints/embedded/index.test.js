@@ -3,7 +3,8 @@
 const
   Bluebird = require('bluebird'),
   {
-    InternalError: KuzzleInternalError
+    InternalError: KuzzleInternalError,
+    ServiceUnavailableError
   } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   mockrequire = require('mock-require'),
@@ -123,7 +124,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       });
     });
 
-    it('should try to return an error if one recieved without any response', (done) => {
+    it('should try to return an error if one received without any response', (done) => {
       const error = new KuzzleInternalError('test');
       kuzzle.funnel.execute = (request, cb) => cb(error, request);
 
@@ -134,7 +135,19 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
         done();
       });
+    });
 
+    it('should refuse incoming requests if shutting down', (done) => {
+      entrypoint.dispatch('shutdown');
+
+      const request = new Request({});
+      entrypoint.execute(request, response => {
+        should(response.status).eql(503);
+        should(response.content.error)
+          .be.an.instanceof(ServiceUnavailableError);
+
+        done();
+      });
     });
   });
 
@@ -440,6 +453,30 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         should(requireStub)
           .be.calledTwice();
 
+      });
+    });
+
+    it('should log and reject if an error occured', () => {
+      mockrequire('fs', {
+        existsSync: sinon.stub().returns(true),
+        readdirSync: sinon.stub().returns(['protocol']),
+        statSync: sinon.stub().returns({isDirectory: () => true})
+      });
+
+      mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
+      const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
+
+      const requireStub = sinon.stub().returns(function () {
+        this.init = sinon.stub().throws(Error('test'));
+      });
+
+      return Rewired.__with__({
+        require: requireStub
+      })(() => {
+        const ep = new Rewired(kuzzle);
+
+        should(ep.loadMoreProtocols())
+          .be.rejectedWith('test');
       });
     });
   });
