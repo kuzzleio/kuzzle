@@ -154,7 +154,8 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false if the specification is not correct', () => {
       const
-        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Bluebird.reject(new Error('Mocked error')));
+        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification')
+          .rejects(new Error('Mocked Error'));
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
         .then(result => {

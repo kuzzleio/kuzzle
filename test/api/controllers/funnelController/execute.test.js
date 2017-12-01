@@ -41,7 +41,7 @@ describe('funnelController.execute', () => {
     sinon.stub(funnel, '_playCachedRequests');
   });
 
-  after(() => {
+  afterEach(() => {
     if (clock) {
       clock.restore();
     }
@@ -66,7 +66,7 @@ describe('funnelController.execute', () => {
 
     it('should forward any error occurring during the request execution', done => {
       const error = new ServiceUnavailableError('test');
-      funnel.checkRights = sinon.stub().returns(Bluebird.reject(error));
+      funnel.checkRights.rejects(error);
 
       funnel.execute(request, (err, res) => {
         should(err).be.instanceOf(Error);

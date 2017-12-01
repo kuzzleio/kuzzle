@@ -127,7 +127,7 @@ describe('funnelController.processRequest', () => {
       action: 'fail',
     });
 
-    funnel.controllers.fakeController.fail.returns(Bluebird.reject(new Error('rejected')));
+    funnel.controllers.fakeController.fail.rejects(new Error('rejected'));
 
     funnel.processRequest(request)
       .then(() => done('Expected test to fail'))
@@ -158,7 +158,7 @@ describe('funnelController.processRequest', () => {
       action: 'fail',
     });
 
-    funnel.pluginsControllers['fakePlugin/controller'].fail.returns(Bluebird.reject(new Error('rejected')));
+    funnel.pluginsControllers['fakePlugin/controller'].fail.rejects(new Error('rejected'));
 
     funnel.processRequest(request)
       .then(() => done('Expected test to fail'))

@@ -104,7 +104,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject when Koncorde throws an error', () => {
-    kuzzle.realtime.normalize.returns(Bluebird.reject(new Error('test')));
+    kuzzle.realtime.normalize.rejects(new Error('test'));
 
     return should(hotelClerk.addSubscription(request)).be.rejected();
   });
