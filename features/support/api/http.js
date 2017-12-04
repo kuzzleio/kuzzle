@@ -1,5 +1,4 @@
 const
-  _ = require('lodash'),
   rp = require('request-promise'),
   routes = require('../../../lib/config/httpRoutes');
 
@@ -84,7 +83,7 @@ class HttpApi {
               const value = args.body[key];
 
               if (value !== undefined) {
-                if (_.isArray(value)) {
+                if (Array.isArray(value)) {
                   queryString.push(...value.map(v => `${key}=${v}`));
                 }
                 else {
