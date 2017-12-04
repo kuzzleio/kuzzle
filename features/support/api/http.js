@@ -1,4 +1,5 @@
 const
+  _ = require('lodash'),
   rp = require('request-promise'),
   routes = require('../../../lib/config/httpRoutes');
 
