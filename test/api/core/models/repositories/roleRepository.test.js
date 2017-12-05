@@ -43,42 +43,6 @@ describe('Test: repositories/roleRepository', () => {
         });
     });
 
-    it('should complete unfetched default roles from config', () => {
-      const role = {foo: 'bar'};
-
-      roleRepository.roles.foo = role;
-      roleRepository.loadMultiFromDatabase = sinon.stub();
-
-      return roleRepository.loadRoles(['foo', 'admin', 'anonymous'])
-        .then(result => {
-          should(result)
-            .be.an.Array()
-            .have.length(3);
-
-          should(result[0])
-            .be.exactly(role);
-
-          should(result[1])
-            .be.an.instanceOf(Role)
-            .match({
-              _id: 'admin',
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              }
-            });
-
-          should(result[2])
-            .be.an.instanceOf(Role)
-            .match({
-              _id: 'anonymous'
-            });
-        });
-    });
-
     it('should load roles from memory & database', () => {
       const
         role1 = new Role(),
@@ -114,7 +78,7 @@ describe('Test: repositories/roleRepository', () => {
 
   describe('#loadRole', () => {
     it('should return a bad request error when no _id is provided', () => {
-      return should(roleRepository.loadRole({})).rejectedWith(BadRequestError);
+      return should(roleRepository.load({})).rejectedWith(BadRequestError);
     });
 
     it('should load the role directly from memory if it\'s in memory', () => {
@@ -122,7 +86,7 @@ describe('Test: repositories/roleRepository', () => {
 
       roleRepository.roles.foo = role;
 
-      return roleRepository.loadRole('foo')
+      return roleRepository.load('foo')
         .then(result => {
           should(result)
             .be.exactly(role);
@@ -134,7 +98,7 @@ describe('Test: repositories/roleRepository', () => {
 
       roleRepository.loadOneFromDatabase = sinon.stub().returns(Bluebird.resolve(role));
 
-      return roleRepository.loadRole('foo')
+      return roleRepository.load('foo')
         .then(result => {
           should(result)
             .be.exactly(role);
@@ -366,11 +330,14 @@ describe('Test: repositories/roleRepository', () => {
           body: {
             controllers: controllers
           }
-        }),
-        role = roleRepository.getRoleFromRequest(request);
+        });
 
-      should(role._id).be.exactly('roleId');
-      should(role.controllers).be.eql(controllers);
+      return roleRepository.getRoleFromRequest(request)
+        .then(role => {
+          should(role._id).be.exactly('roleId');
+          should(role.controllers).be.eql(controllers);
+        });
+
     });
   });
 
