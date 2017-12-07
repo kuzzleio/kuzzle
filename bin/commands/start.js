@@ -26,6 +26,9 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   Request = require('kuzzle-common-objects').Request,
+  {
+    PartialError
+  } = require('kuzzle-common-objects').errors,
   ColorOutput = require('./colorOutput');
 
 function commandStart (options) {
@@ -122,6 +125,14 @@ function commandStart (options) {
     })
     .each(rq => {
       return kuzzle.services.list.storageEngine.import(rq)
+        .then(res => {
+          if (res.partialErrors && res.partialErrors.length > 0) {
+            // use native console to allow default output trimming in case of big fixtures
+            console.error(res.partialErrors);
+            throw new PartialError(`Some data was not imported for ${rq.input.resource.index}/${rq.input.resource.collection} (${res.partialErrors.length}/${res.items.length + res.partialErrors.length}).`, res.partialErrors);
+          }
+          return res;
+        })
         .then(res => console.log(cout.ok(`[✔] Fixtures for ${rq.input.resource.index}/${rq.input.resource.collection} successfully loaded: ${res.items.length} documents created`)));
     })
     .then(() => {
