@@ -233,7 +233,6 @@ describe('Test: server controller', () => {
               publicMethod: {
                 action: 'publicMethod',
                 controller: 'foo',
-                nproutes: 2,
                 http: [
                   {url: '/u/r/l', verb: 'FOO'},
                   {url: '/u/r/l/:foobar', verb: 'FOO'}
@@ -241,15 +240,13 @@ describe('Test: server controller', () => {
               },
               baz: {
                 action: 'baz',
-                controller: 'foo',
-                nproutes: 0
+                controller: 'foo'
               }
             },
             foobar: {
               publicMethod: {
                 action: 'publicMethod',
                 controller: 'foobar',
-                nproutes: 1,
                 http: [{
                   url: '_plugin/foobar',
                   verb: 'BAR'
@@ -257,8 +254,7 @@ describe('Test: server controller', () => {
               },
               anotherMethod: {
                 action: 'anotherMethod',
-                controller: 'foobar',
-                nproutes: 0
+                controller: 'foobar'
               }
             }
           });
