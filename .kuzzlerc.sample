@@ -457,12 +457,12 @@
       "retryInterval": 1000
     },
     // [db]
-    // The database layer is by default relying on Elasticsearch and is
-    // currently the only available database layer.
+    // The default database layer is Elasticsearch and it is
+    // currently the only database layer we support.
     //   * client:
-    //       Elasticsearch constructor options.
-    //       cf https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
-    //       for detailed documentation
+    //       Elasticsearch constructor options. Use this field to specify your Elasticsearch config options, this object
+    //       is passed through to the Elasticsearch constructor and can contain all options/keys outlined here: 
+    //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
     "db": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
