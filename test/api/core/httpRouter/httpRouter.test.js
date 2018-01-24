@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -28,6 +29,10 @@ describe('core/httpRouter', () => {
       headers: {},
       content: ''
     };
+  });
+
+  afterEach(() => {
+    mockrequire.stopAll();
   });
 
   describe('#adding routes', () => {
@@ -259,6 +264,36 @@ describe('core/httpRouter', () => {
       });
     });
 
+    it('should return an error if unable to parse x-kuzzle-volatile header', (done) => {
+      router.get('/foo/bar', handler);
+
+      rq.url = '/foo/bar';
+      rq.method = 'GET';
+      rq.headers['content-type'] = 'application/json';
+      rq.headers['x-kuzzle-volatile'] = '{bad JSON syntax}'
+
+      router.route(rq, result => {
+        should(handler.called).be.false();
+
+        should(result.response.toJSON()).be.match({
+          raw: false,
+          status: 400,
+          requestId: rq.requestId,
+          content: {
+            error: {
+              status: 400,
+              message: 'Unable to convert HTTP x-kuzzle-volatile header to JSON'
+            },
+            requestId: 'requestId',
+            result: null
+          },
+          headers: router.defaultHeaders
+        });
+
+        done();
+      });
+    });
+
     it('should return an error if the content-type is not JSON', (done) => {
       router.post('/foo/bar', handler);
 
@@ -339,6 +374,46 @@ describe('core/httpRouter', () => {
             error: {
               status: 404,
               message: 'API URL not found: /foo/bar'
+            },
+            requestId: 'requestId',
+            result: null
+          },
+          headers: router.defaultHeaders
+        });
+
+        done();
+      });
+    });
+
+    it('should return an error if an exception is thrown', (done) => {
+      const routeHandlerStub = function () {
+        this.getRequest = sinon.stub().throws(new InternalError('HTTP internal exception'));
+      };
+
+      mockrequire('../../../../lib/api/core/httpRouter/routeHandler', routeHandlerStub);
+      mockrequire.reRequire('../../../../lib/api/core/httpRouter/routePart');
+      const MockRouter = mockrequire.reRequire('../../../../lib/api/core/httpRouter');
+
+      router = new MockRouter(kuzzleMock);
+
+      router.post('/foo/bar', handler);
+
+      rq.url = '/foo/bar';
+      rq.method = 'PUT';
+      rq.headers['content-type'] = 'application/json';
+      rq.content = '{"foo": "bar"}';
+
+      router.route(rq, result => {
+        should(handler.called).be.false();
+
+        should(result.response.toJSON()).match({
+          raw: false,
+          status: 500,
+          requestId: rq.requestId,
+          content: {
+            error: {
+              status: 500,
+              message: 'HTTP internal exception'
             },
             requestId: 'requestId',
             result: null
