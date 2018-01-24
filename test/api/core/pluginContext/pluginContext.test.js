@@ -65,7 +65,6 @@ describe('Plugin Context', () => {
     });
 
     describe('#Request', () => {
-
       it('should throw when trying to instantiate a Request object without providing any data', () => {
         should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
       });
@@ -82,7 +81,8 @@ describe('Plugin Context', () => {
             result: 'result',
             error: new Error('error'),
             status: 666,
-            jwt: 'jwt'
+            jwt: 'jwt',
+            volatile: {foo: 'bar'}
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -101,6 +101,7 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
         should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
         should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
+        should(pluginRequest.input.volatile).match({foo: 'bar'});
       });
 
       it('should override origin request data with provided ones', () => {
@@ -116,7 +117,8 @@ describe('Plugin Context', () => {
             result: 'result',
             error: new Error('error'),
             status: 666,
-            jwt: 'jwt'
+            jwt: 'jwt',
+            volatile: {foo: 'bar'}
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -129,6 +131,7 @@ describe('Plugin Context', () => {
             size: 99,
             collection: 'pluginCollection',
             jwt: null,
+            volatile: {foo: 'overridden', bar: 'baz'}
           });
 
         should(pluginRequest.context.protocol).be.eql('protocol');
@@ -146,6 +149,7 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.resource._id).be.eql('_id');
         should(pluginRequest.input.resource.index).be.eql('index');
         should(pluginRequest.input.resource.collection).be.eql('pluginCollection');
+        should(pluginRequest.input.volatile).match({foo: 'overridden', bar: 'baz'});
       });
 
       it('should allow building a request without providing another one', () => {
