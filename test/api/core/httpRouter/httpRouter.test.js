@@ -81,8 +81,8 @@ describe('core/httpRouter', () => {
       rq.headers.foo = 'bar';
       rq.headers.Authorization = 'Bearer jwtFoobar';
       rq.headers['X-Kuzzle-Volatile'] = '{"modifiedBy": "John Doe", "reason": "foobar"}';
-      rq.headers['volatile'] = 'volatile-header';
-      rq.headers['jwt'] = 'jwt-header';
+      rq.headers.volatile = 'volatile-header';
+      rq.headers.jwt = 'jwt-header';
       rq.method = 'POST';
 
       router.route(rq, callback);
@@ -276,7 +276,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'GET';
       rq.headers['content-type'] = 'application/json';
-      rq.headers['x-kuzzle-volatile'] = '{bad JSON syntax}'
+      rq.headers['x-kuzzle-volatile'] = '{bad JSON syntax}';
 
       router.route(rq, result => {
         should(handler.called).be.false();
