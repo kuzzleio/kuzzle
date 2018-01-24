@@ -270,7 +270,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'GET';
       rq.headers['content-type'] = 'application/json';
-      rq.headers['x-kuzzle-volatile'] = '{bad JSON syntax}'
+      rq.headers['x-kuzzle-volatile'] = '{bad JSON syntax}';
 
       router.route(rq, result => {
         should(handler.called).be.false();
