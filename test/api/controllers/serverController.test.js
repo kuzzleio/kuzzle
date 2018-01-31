@@ -217,6 +217,7 @@ describe('Test: server controller', () => {
       };
 
       kuzzle.config.http.routes.push({verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l'});
+      kuzzle.config.http.routes.push({verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l/:foobar'});
       kuzzle.pluginsManager.routes = [{verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'}];
 
       return serverController.info()
@@ -232,10 +233,10 @@ describe('Test: server controller', () => {
               publicMethod: {
                 action: 'publicMethod',
                 controller: 'foo',
-                http: {
-                  url: '/u/r/l',
-                  verb: 'FOO'
-                }
+                http: [
+                  {url: '/u/r/l', verb: 'FOO'},
+                  {url: '/u/r/l/:foobar', verb: 'FOO'}
+                ]
               },
               baz: {
                 action: 'baz',
@@ -246,10 +247,10 @@ describe('Test: server controller', () => {
               publicMethod: {
                 action: 'publicMethod',
                 controller: 'foobar',
-                http: {
+                http: [{
                   url: '_plugin/foobar',
                   verb: 'BAR'
-                }
+                }]
               },
               anotherMethod: {
                 action: 'anotherMethod',

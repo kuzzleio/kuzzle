@@ -1010,13 +1010,13 @@ describe('Test: ElasticSearch service', () => {
 
     it('should raise a "Partial Error" response for bulk data import with some errors', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.bulk.returns(Bluebird.resolve({
+      elasticsearch.client.bulk.resolves({
         errors: true,
-        items: {
-          12: {index: {status: 404, error: 'DocumentMissingException'}},
-          212: {index: {status: 404, error: 'DocumentMissingException'}}
-        }
-      }));
+        items: [
+          {index: {status: 404, error: 'DocumentMissingException'}},
+          {index: {status: 404, error: 'DocumentMissingException'}}
+        ]
+      });
 
       request.input.body = {
         bulkData: [
