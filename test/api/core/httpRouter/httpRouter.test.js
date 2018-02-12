@@ -31,14 +31,14 @@ describe('core/httpRouter', () => {
   });
 
   describe('#adding routes', () => {
-    it('should add a POST route when asked to', () => {
-      router.post('/foo/bar', handler);
-      should(router.routes.POST.subparts.foo.subparts.bar.handler).be.eql(handler);
-    });
-
     it('should add a GET route when asked to', () => {
       router.get('/foo/bar', handler);
       should(router.routes.GET.subparts.foo.subparts.bar.handler).be.eql(handler);
+    });
+
+    it('should add a POST route when asked to', () => {
+      router.post('/foo/bar', handler);
+      should(router.routes.POST.subparts.foo.subparts.bar.handler).be.eql(handler);
     });
 
     it('should add a PUT route when asked to', () => {
@@ -46,9 +46,19 @@ describe('core/httpRouter', () => {
       should(router.routes.PUT.subparts.foo.subparts.bar.handler).be.eql(handler);
     });
 
+    it('should add a PATCH route when asked to', () => {
+      router.patch('/foo/bar', handler);
+      should(router.routes.PATCH.subparts.foo.subparts.bar.handler).be.eql(handler);
+    });
+
     it('should add a DELETE route when asked to', () => {
       router.delete('/foo/bar', handler);
       should(router.routes.DELETE.subparts.foo.subparts.bar.handler).be.eql(handler);
+    });
+
+    it('should add a HEAD route when asked to', () => {
+      router.head('/foo/bar', handler);
+      should(router.routes.HEAD.subparts.foo.subparts.bar.handler).be.eql(handler);
     });
 
     it('should raise an internal error when trying to add a duplicate', () => {
