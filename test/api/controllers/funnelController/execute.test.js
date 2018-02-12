@@ -127,11 +127,9 @@ describe('funnelController.execute', () => {
       should(funnel.overloaded).be.true();
       should(funnel.processRequest.called).be.false();
       should(funnel.requestsCacheQueue.length).be.eql(1);
-      should(funnel.requestsCacheQueue.shift())
-        .eql(request.id);
-      should(funnel.requestsCacheById[request.id]).eql(new (FunnelController.__get__('CacheItem'))('execute', request, callback));
-      should(funnel._playCachedRequests)
-        .be.calledOnce();
+      should(funnel.requestsCacheQueue.shift()).eql(request.internalId);
+      should(funnel.requestsCacheById[request.internalId]).eql(new (FunnelController.__get__('CacheItem'))('execute', request, callback));
+      should(funnel._playCachedRequests).be.calledOnce();
     });
 
     it('should not execute a cached request', () => {
@@ -159,12 +157,9 @@ describe('funnelController.execute', () => {
       should(funnel.overloaded).be.true();
       should(funnel.processRequest.called).be.false();
       should(funnel.requestsCacheQueue.length).be.eql(1);
-      should(funnel.requestsCacheQueue.shift())
-        .be.eql(request.id);
-      should(funnel.requestsCacheById[request.id])
-        .match({request, callback});
-      should(funnel._playCachedRequests)
-        .have.callCount(0);
+      should(funnel.requestsCacheQueue.shift()).be.eql(request.internalId);
+      should(funnel.requestsCacheById[request.internalId]).match({request, callback});
+      should(funnel._playCachedRequests).have.callCount(0);
     });
 
     it('should not play a cached request multiple times', () => {
@@ -177,8 +172,7 @@ describe('funnelController.execute', () => {
         funnel.execute(request, callback);
       }
 
-      should(funnel.requestsCacheQueue.length)
-        .eql(1);
+      should(funnel.requestsCacheQueue.length).eql(1);
     });
 
     it('should discard the request if the requestsBufferSize property is reached', done => {
@@ -224,13 +218,13 @@ describe('funnelController.execute', () => {
     });
 
     it('should play cached request in order', (done) => {
-      const
-        secondRequest = Object.assign({}, request, {id: 'req-2'}),
+      const 
+        serialized = request.serialize(),
+        secondRequest = new Request(Object.assign(serialized.data, {id: 'req-2'})),
         firstCallback = sinon.spy(),
         secondCallback = () => {
           should(firstCallback).be.calledOnce();
-          should(funnel.overloaded)
-            .be.false();
+          should(funnel.overloaded).be.false();
           done();
         };
 
