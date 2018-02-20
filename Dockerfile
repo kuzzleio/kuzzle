@@ -1,10 +1,10 @@
 FROM kuzzleio/base
-MAINTAINER Kuzzle <support@kuzzle.io>
+
+LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
+LABEL description="Power your web, mobile & iot apps with the Kuzzle backend"
 
 COPY ./ /var/app/
-COPY ./docker-compose/scripts/run.sh /run.sh
-COPY ./docker-compose/scripts/install-plugins.sh /install-plugins.sh
-COPY ./docker-compose/config/pm2.json /config/pm2.json
+COPY ./docker-compose/scripts/run.sh /usr/local/bin/kuzzle
 
 WORKDIR /var/app
 
@@ -16,15 +16,20 @@ RUN  apt-get update \
     g++ \
     gdb \
     python \
+  \
   && npm install \
-  && sh /install-plugins.sh \
+  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install; cd /var/app; done \
+  \
+  && chmod a+x /usr/local/bin/kuzzle \
+  && chmod a+x /var/app/docker-compose/scripts/docker-entrypoint.sh \
+  \
   && apt-get clean \
   && apt-get remove -y \
     build-essential \
     g++ \
     python \
   && apt-get autoremove -y \
-  && chmod 755 /run.sh \
   && rm -rf /var/lib/apt/lists/*
 
-CMD ["/run.sh"]
+ENTRYPOINT ["/var/app/docker-compose/scripts/docker-entrypoint.sh"]
+CMD ["kuzzle", "start"]
