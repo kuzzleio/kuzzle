@@ -266,9 +266,8 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith('policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collection"');
+        .be.rejectedWith('policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collections"');
     });
-
   });
 
 });
