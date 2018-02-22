@@ -352,6 +352,12 @@ describe('Plugin Context', () => {
         /Invalid argument: a Request object must be supplied/
       );
     });
+
+    it('should reject if callback argument is not a function', () => {
+      return should(context.accessors.execute({requestId: 'request'}, 'foo'))
+        .be.rejectedWith({message: /^Invalid argument: Expected callback to be a function, received "string"/});
+
+    });
   });
 
   describe('#strategies', () => {
