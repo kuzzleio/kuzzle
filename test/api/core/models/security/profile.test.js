@@ -212,4 +212,77 @@ describe('Test: security/profileTest', () => {
         should(filteredItem).length(0);
       });
   });
+
+  describe('#validateDefinition', () => {
+    it('should reject if no policies are given', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('The "policies" attribute array cannot be empty');
+    });
+
+    it('should reject if no roleId is given', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{}];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0] Missing mandatory attribute "roleId"');
+    });
+
+    it('should reject if an invalid attribute is given', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        foo: 'bar'
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0] Unexpected attribute "foo". Valid attributes are "roleId" and "restrictedTo"');
+    });
+
+    it('should reject if restrictedTo is not an array', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: 'bar'
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0] Expected "restrictedTo" to be an array of objects');
+    });
+
+    it('should reject if restrictedTo is not given an index', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          foo: 'bar'
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0].restrictedTo[0] Missing mandatory attribute "index"');
+    });
+
+    it('should reject if restrictedTo is given an invalid attribute', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          index: 'index',
+          foo: 'bar'
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collections"');
+    });
+  });
+
 });

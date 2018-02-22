@@ -346,7 +346,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject an error if a strategy is unknown', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().resolves(null);
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
 
       request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
@@ -355,13 +355,13 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject an error if credentials don\'t validate the strategy', () => {
-      kuzzle.repositories.user.load = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.load = sandbox.stub().resolves(null);
       kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
       kuzzle.pluginsManager.getStrategyMethod = sandbox.stub();
 
       kuzzle.pluginsManager.getStrategyMethod
         .withArgs('someStrategy', 'exists')
-        .returns(sinon.stub().returns(Bluebird.resolve(false)));
+        .returns(sinon.stub().resolves(false));
 
       kuzzle.pluginsManager.getStrategyMethod
         .withArgs('someStrategy', 'validate')
