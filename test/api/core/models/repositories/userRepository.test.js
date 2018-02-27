@@ -55,6 +55,7 @@ describe('Test: repositories/userRepository', () => {
       .returns(Bluebird.resolve(userInvalidProfile));
 
     kuzzle = new KuzzleMock();
+    kuzzle.repositories.profile.loadProfiles.callsFake((...args) => Bluebird.resolve(args[0].map(id => ({_id: id}))));
 
     userRepository = new UserRepository(kuzzle);
 
@@ -75,67 +76,42 @@ describe('Test: repositories/userRepository', () => {
 
   describe('#anonymous', () => {
     it('should return a valid anonymous user', () => {
-      const user = userRepository.anonymous();
-      assertIsAnonymous(user);
+      return userRepository.anonymous()
+        .then(user => assertIsAnonymous(user));
     });
   });
 
-  describe('#hydrate', () => {
-    it('should return the given user if the given data is not a valid object', () => {
-      const u = new User();
-
-      return Bluebird.all([
-        userRepository.hydrate(u, null),
-        userRepository.hydrate(u),
-        userRepository.hydrate(u, 'a scalar')
-      ])
-        .then(results => {
-          results.forEach(user => should(user).be.exactly(u));
-        });
-    });
-
+  describe('#fromDTO', () => {
     it('should return the anonymous user if no _id is set', () => {
-      const user = new User();
-      user.profileIds = 'a profile';
-
-      return userRepository.hydrate(user, {})
-        .then(result => assertIsAnonymous(result));
+      return userRepository.fromDTO({
+        profileIds: 'a profile'
+      })
+        .then(user => assertIsAnonymous(user));
     });
 
     it('should convert a profileIds string into array', () => {
-      const user = new User();
-      user._id = 'admin';
-
-      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([
-        {_id: 'admin'}
-      ]));
-
-      return userRepository.hydrate(user, {profileIds: 'admin'})
-        .then((result) => {
+      return userRepository.fromDTO({
+        _id: 'admin',
+        profileIds: 'admin'
+      })
+        .then(result => {
           should(result.profileIds).be.an.instanceOf(Array);
           should(result.profileIds[0]).be.exactly('admin');
         });
     });
 
     it('should reject the promise if the profile cannot be found', () => {
-      const user = new User();
+      kuzzle.repositories.profile.loadProfiles.resolves([]);
 
-      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([]));
-
-      return should(userRepository.hydrate(user, userInvalidProfile))
+      return should(userRepository.fromDTO(userInvalidProfile))
         .be.rejectedWith(NotFoundError);
     });
 
     it('should add the default profile if none is set', () => {
-      const user = new User();
-      user._id = 'foo';
-
-      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([
-        {_id: 'default'}
-      ]));
-
-      return userRepository.hydrate(user, {})
-        .then(() => should(user.profileIds).match(kuzzle.config.security.restrictedProfileIds));
+      return userRepository.fromDTO({
+        _id: 'foo'
+      })
+        .then(user => should(user.profileIds).match(kuzzle.config.security.restrictedProfileIds));
 
     });
   });
@@ -185,15 +161,16 @@ describe('Test: repositories/userRepository', () => {
 
   describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
-      const
-        user = userRepository.anonymous(),
-        result = userRepository.serializeToCache(user);
+      return userRepository.anonymous()
+        .then(user => {
+          const result = userRepository.serializeToCache(user);
 
-      should(result).not.be.an.instanceOf(User);
-      should(result).be.an.Object();
-      should(result._id).be.exactly('-1');
-      should(result.profileIds).be.an.Array();
-      should(result.profileIds[0]).be.exactly('anonymous');
+          should(result).not.be.an.instanceOf(User);
+          should(result).be.an.Object();
+          should(result._id).be.exactly('-1');
+          should(result.profileIds).be.an.Array();
+          should(result.profileIds[0]).be.exactly('anonymous');
+        });
     });
   });
 
@@ -210,11 +187,11 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should reject if we try to remove the anonymous profile from the anonymous user', () => {
-      const user = new User();
-      user._id = '-1';
-      user.profileIds = ['test'];
-
-      return should(userRepository.persist(user))
+      return should(userRepository.anonymous()
+        .then(user => {
+          user.profileIds = ['test'];
+          return userRepository.persist(user);
+        }))
         .be.rejectedWith(BadRequestError, {message: 'Anonymous user must be assigned the anonymous profile'});
     });
   });

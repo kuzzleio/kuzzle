@@ -4,11 +4,14 @@ const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   Role = require('../../../../../lib/api/core/models/security/role'),
   Request = require('kuzzle-common-objects').Request;
+
+const
+  _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: security/profileTest', () => {
   const
@@ -65,25 +68,29 @@ describe('Test: security/profileTest', () => {
         }
       }
     };
+    for (const roleId of Object.keys(roles)) {
+      roles[roleId][_kuzzle] = kuzzle;
+    }
 
     profile.policies = [{roleId: 'disallowAllRole'}];
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole').callsFake(roleId => Promise.resolve(roles[roleId]));
+    kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
 
-    return profile.isActionAllowed(request, kuzzle)
+    profile[_kuzzle] = kuzzle;
+    return profile.isActionAllowed(request)
       .then(isAllowed => {
         should(isAllowed).be.false();
 
         profile.policies.push({roleId: 'allowActionRole'});
-        return profile.isActionAllowed(request, kuzzle);
+        return profile.isActionAllowed(request);
       })
       .then(isAllowed => {
         should(isAllowed).be.true();
 
         profile.policies = [
-          {_id: 'disallowAllRole'},
+          {roleId: 'disallowAllRole'},
           {
-            _id: 'allowActionRole',
+            roleId: 'allowActionRole',
             restrictedTo: [
               {index: 'index1'},
               {index: 'index2', collections: ['collection1']},
@@ -92,7 +99,7 @@ describe('Test: security/profileTest', () => {
           }
         ];
 
-        return profile.isActionAllowed(request, kuzzle);
+        return profile.isActionAllowed(request);
       })
       .then(isAllowed => should(isAllowed).be.false());
   });
@@ -136,11 +143,19 @@ describe('Test: security/profileTest', () => {
         actions: { update: {test: 'return true;'}, create: true, delete: {test: 'return true;'} }
       }
     };
+
+    for (const roleId of Object.keys(roles)) {
+      roles[roleId][_kuzzle] = kuzzle;
+    }
+    profile.constructor._hash = kuzzle.constructor.hash;
+
     profile.policies.push({roleId: role3._id});
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole').callsFake(roleId => Promise.resolve(roles[roleId]));
 
-    return profile.getRights(kuzzle)
+    kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
+
+    profile[_kuzzle] = kuzzle;
+    return profile.getRights()
       .then(rights => {
         let filteredItem;
 
