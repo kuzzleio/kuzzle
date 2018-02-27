@@ -236,8 +236,12 @@ describe('Test plugins manager run', () => {
     };
 
     plugin.object.foo = () => {};
+
+    const warnTime = kuzzle.config.plugins.common.pipeWarnTime;
+    kuzzle.config.plugins.common.pipeWarnTime = 10;
+
     fooStub = sandbox.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
-      setTimeout(() => cb(), 50);
+      setTimeout(() => cb(), 11);
     });
 
     return pluginsManager.run()
@@ -247,6 +251,8 @@ describe('Test plugins manager run', () => {
           .be.calledOnce();
         should(spy)
           .be.calledWithMatch('log:warn', /Plugin pipe .*? exceeded [0-9]*ms to execute\./);
+
+        kuzzle.config.plugins.common.pipeWarnTime = warnTime;
       });
   });
 
@@ -257,8 +263,18 @@ describe('Test plugins manager run', () => {
 
     plugin.object.foo = () => {}; // does not call the callback
 
-    return should(pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:bar'))).be.rejectedWith(GatewayTimeoutError);
+    const timeout = kuzzle.config.plugins.common.pipeTimeout;
+    kuzzle.config.plugins.common.pipeTimeout = 50;
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => {
+        throw new Error('should not happen');
+      })
+      .catch(error => {
+        kuzzle.config.plugins.common.pipeTimeout = timeout;
+        should(error).be.an.instanceOf(GatewayTimeoutError);
+      });
   });
 
   it('should attach controller actions on kuzzle object', () => {

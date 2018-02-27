@@ -133,7 +133,10 @@ function commandStart (options) {
           }
           return res;
         })
-        .then(res => console.log(cout.ok(`[✔] Fixtures for ${rq.input.resource.index}/${rq.input.resource.collection} successfully loaded: ${res.items.length} documents created`)));
+        .then(res => {
+          return kuzzle.services.list.storageEngine.refreshIndex(new Request({index: rq.input.resource.index}))
+            .then(() => console.log(cout.ok(`[✔] Fixtures for ${rq.input.resource.index}/${rq.input.resource.collection} successfully loaded: ${res.items.length} documents created`)));
+        });
     })
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));

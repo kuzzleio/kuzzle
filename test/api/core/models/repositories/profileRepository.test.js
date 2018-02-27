@@ -40,16 +40,16 @@ describe('Test: repositories/profileRepository', () => {
     sandbox.restore();
   });
 
-  describe('#loadProfile', () => {
+  describe('#load', () => {
     it('should reject if no profileid is given', () => {
-      return should(profileRepository.loadProfile())
+      return should(profileRepository.load())
         .be.rejectedWith(BadRequestError, {
           message: 'Missing profileId'
         });
     });
 
     it('should reject if the profile id is not a string', () => {
-      return should(profileRepository.loadProfile({}))
+      return should(profileRepository.load({}))
         .be.rejectedWith(BadRequestError, {
           message: 'Invalid argument: Expected profile id to be a string, received "object"'
         });
@@ -59,7 +59,7 @@ describe('Test: repositories/profileRepository', () => {
       const p = {foo: 'bar'};
       profileRepository.profiles.foo = p;
 
-      return profileRepository.loadProfile('foo')
+      return profileRepository.load('foo')
         .then(profile => {
           should(profile)
             .be.exactly(p);
@@ -67,26 +67,35 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should return null if the profile does not exist', () => {
-      kuzzle.internalEngine.get
-        .rejects(new NotFoundError('Not found'));
+      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
 
-      return profileRepository.loadProfile('idontexist')
+      return profileRepository.load('idontexist')
         .then(result => {
           should(result).be.null();
         });
     });
 
     it('should load a profile from the db', () => {
-      const p = {foo: 'bar'};
+      const p = {foo: 'bar', constructor: {_hash: () => false}};
 
-      profileRepository.load = sinon.stub().returns(Bluebird.resolve(p));
+      // ProfileRepository
+      const proto = Object.getPrototypeOf(profileRepository);
+      // Repository
+      const parent = Object.getPrototypeOf(proto);
 
-      return profileRepository.loadProfile('foo')
+      sinon.stub(parent, 'load').resolves(p);
+
+      kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
+
+      return profileRepository.load('foo')
         .then(profile => {
           should(profile)
             .be.exactly(p);
           should(profileRepository.profiles.foo)
             .be.exactly(p);
+
+          // important! for a reason I don't explain, invalidating require cache is not good enough
+          parent.load.restore();
         });
     });
 
@@ -120,20 +129,21 @@ describe('Test: repositories/profileRepository', () => {
 
     it('should load profiles', () => {
       const
-        p1 = {foo: 'bar'},
-        p2 = {bar: 'baz'},
-        p3 = {baz: 'foo'};
+        p1 = {_id: 'p1', foo: 'bar', constructor: {_hash: () => false}},
+        p2 = {_id: 'p2', bar: 'baz', constructor: {_hash: () => false}},
+        p3 = {_id: 'p3', baz: 'foo', constructor: {_hash: () => false}};
 
-      profileRepository.loadProfile = sinon.stub();
+      profileRepository.load= sinon.stub();
 
-      profileRepository.loadProfile.onCall(0).returns(p1);
-      profileRepository.loadProfile.onCall(1).returns(p2);
-      profileRepository.loadProfile.onCall(2).returns(p3);
+      profileRepository.loadMultiFromDatabase = sinon.stub().resolves([p1, p3]);
+      kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
+
+      profileRepository.profiles.p2 = p2;
 
       return profileRepository.loadProfiles(['p1', 'p2', 'p3'])
         .then(result => {
           should(result)
-            .eql([p1, p2, p3]);
+            .eql([p2, p1, p3]);
         });
     });
 
@@ -150,55 +160,38 @@ describe('Test: repositories/profileRepository', () => {
           body: profile
         });
 
+      kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
+
       return profileRepository.buildProfileFromRequest(request)
         .then(p => should(p).match(profile));
     });
   });
 
-  describe('#hydrate', () => {
+  describe('#initialize', () => {
 
     it('should throw if the profile contains unexisting roles', () => {
-      const p = new Profile();
-
       kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([]));
 
-      return should(profileRepository.hydrate(p, {
+      return should(profileRepository.fromDTO({
         policies: [
           {roleId: 'notExistingRole'}
         ]
-      })).be.rejectedWith(NotFoundError);
+      }))
+        .be.rejectedWith(NotFoundError);
     });
 
     it('should set role default when none is given', () => {
-      const p = new Profile();
-
       kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([
         {_id: 'default'}
       ]));
 
-      profileRepository.hydrate(p, {});
-      should(p.policies).match([
-        {roleId: 'default'}
-      ]);
+      return profileRepository.fromDTO({})
+        .then(p => {
+          should(p.policies).match([
+            {roleId: 'default'}
+          ]);
+        });
     });
-
-    it('should unnest _source properties', () => {
-      const p = new Profile();
-
-      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([
-        {_id: 'default'}
-      ]));
-
-      profileRepository.hydrate(p, {
-        foo: 'bar',
-        _source: {
-          foo: 'baz'
-        }
-      });
-      should(p.foo).be.exactly('baz');
-
-    });
-
   });
 
   describe('#deleteProfile', () => {
@@ -339,8 +332,6 @@ describe('Test: repositories/profileRepository', () => {
   describe('#serializeToDatabase', () => {
     it('should return a plain flat object', () => {
       const profile = testProfile;
-
-      profile.getRoles(kuzzle);
 
       let result = profileRepository.serializeToDatabase(profile);
 
