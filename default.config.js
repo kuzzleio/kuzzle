@@ -226,6 +226,18 @@ module.exports = {
         host: 'http://localhost:9200',
         apiVersion: '5.4'
       },
+      commonMapping: {
+        _kuzzle_info: {
+          properties: {
+            active: {type: 'boolean'},
+            author: {type: 'keyword'},
+            createdAt: {type: 'date'},
+            updatedAt: {type: 'date'},
+            updater: {type: 'keyword'},
+            deletedAt: {type: 'date'}
+          }
+        }
+      },
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
