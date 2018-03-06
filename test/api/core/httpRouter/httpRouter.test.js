@@ -91,8 +91,6 @@ describe('core/httpRouter', () => {
       rq.headers.foo = 'bar';
       rq.headers.Authorization = 'Bearer jwtFoobar';
       rq.headers['X-Kuzzle-Volatile'] = '{"modifiedBy": "John Doe", "reason": "foobar"}';
-      rq.headers.volatile = 'volatile-header';
-      rq.headers.jwt = 'jwt-header';
       rq.method = 'POST';
 
       router.route(rq, callback);
@@ -103,13 +101,9 @@ describe('core/httpRouter', () => {
       should(handler.firstCall.args[0].input.headers).be.eql({
         foo: 'bar',
         Authorization: 'Bearer jwtFoobar',
-        'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}',
-        volatile: 'volatile-header',
-        jwt: 'jwt-header'
-      });
+        'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'});
       should(handler.firstCall.args[0].input.jwt).be.exactly('jwtFoobar');
       should(handler.firstCall.args[0].input.volatile).be.eql({modifiedBy: 'John Doe', reason: 'foobar'});
-      should(handler.firstCall.args[0].input.args.foo).be.undefined();
     });
 
     it('should amend the request object if a body is found in the content', () => {

@@ -754,6 +754,13 @@ describe('Test: ElasticSearch service', () => {
       const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
 
       elasticsearch.client.update.returns(Bluebird.resolve({}));
+      elasticsearch.client.get.returns(Bluebird.resolve({
+        _source: {
+          _kuzzle_info: {
+            active: true
+          }
+        }
+      }));
 
       request.input.body = null;
       request.input.resource._id = createdDocumentId;
