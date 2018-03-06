@@ -65,7 +65,6 @@ describe('Plugin Context', () => {
     });
 
     describe('#Request', () => {
-
       it('should throw when trying to instantiate a Request object without providing any data', () => {
         should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
       });
@@ -82,7 +81,8 @@ describe('Plugin Context', () => {
             result: 'result',
             error: new Error('error'),
             status: 666,
-            jwt: 'jwt'
+            jwt: 'jwt',
+            volatile: {foo: 'bar'}
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -101,6 +101,7 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
         should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
         should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
+        should(pluginRequest.input.volatile).match({foo: 'bar'});
       });
 
       it('should override origin request data with provided ones', () => {
@@ -116,7 +117,8 @@ describe('Plugin Context', () => {
             result: 'result',
             error: new Error('error'),
             status: 666,
-            jwt: 'jwt'
+            jwt: 'jwt',
+            volatile: {foo: 'bar'}
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -129,6 +131,7 @@ describe('Plugin Context', () => {
             size: 99,
             collection: 'pluginCollection',
             jwt: null,
+            volatile: {foo: 'overridden', bar: 'baz'}
           });
 
         should(pluginRequest.context.protocol).be.eql('protocol');
@@ -146,6 +149,7 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.resource._id).be.eql('_id');
         should(pluginRequest.input.resource.index).be.eql('index');
         should(pluginRequest.input.resource.collection).be.eql('pluginCollection');
+        should(pluginRequest.input.volatile).match({foo: 'overridden', bar: 'baz'});
       });
 
       it('should allow building a request without providing another one', () => {
@@ -261,7 +265,7 @@ describe('Plugin Context', () => {
             should(callback).be.calledOnce();
             should(err).be.null();
             should(res).match(request);
-            should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+            should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
             done();
           }
           catch(e) {
@@ -286,7 +290,7 @@ describe('Plugin Context', () => {
       return ret
         .then(res => {
           should(res).match(request);
-          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
         });
     });
 
@@ -297,7 +301,7 @@ describe('Plugin Context', () => {
         callback = sinon.spy(
           (err, res) => {
             try {
-              should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+              should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
               should(callback).be.calledOnce();
               should(err).match(error);
               should(res).be.undefined();
@@ -322,7 +326,7 @@ describe('Plugin Context', () => {
 
       return context.accessors.execute(request)
         .catch(err => {
-          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, true, sinon.match.func);
+          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
           should(err).match(error);
         });
     });
@@ -353,33 +357,10 @@ describe('Plugin Context', () => {
       );
     });
 
-    it('should resolve to an error if an improper overloadProtect flag is supplied', done => {
-      const
-        request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
-        callback = sinon.spy(
-          (err, res) => {
-            try {
-              should(kuzzle.funnel.executePluginRequest.called).be.false();
-              should(callback).be.calledOnce();
-              should(err).be.instanceOf(PluginImplementationError);
-              should(err.message).startWith('Invalid argument: the overload protection flag must be a boolean');
-              should(res).be.undefined();
-              done();
-            }
-            catch(e) {
-              done(e);
-            }
-          });
+    it('should reject if callback argument is not a function', () => {
+      return should(context.accessors.execute({requestId: 'request'}, 'foo'))
+        .be.rejectedWith({message: /^Invalid argument: Expected callback to be a function, received "string"/});
 
-      context.accessors.execute(request, 'foobar', callback);
-    });
-
-    it('should reject if an invalid overloadProtect flag is provided', () => {
-      const request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'});
-
-      return should(context.accessors.execute(request, 'foobar')).be.rejectedWith(
-        /Invalid argument: the overload protection flag must be a boolean/
-      );
     });
   });
 

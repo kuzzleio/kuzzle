@@ -42,7 +42,7 @@ module.exports = {
   },
 
   limits: {
-    concurrentRequests: 50,
+    concurrentRequests: 100,
     documentsFetchCount: 1000,
     documentsWriteCount: 200,
     requestsHistorySize: 50,
@@ -56,8 +56,8 @@ module.exports = {
   plugins: {
     common: {
       bootstrapLockTimeout: 5000,
-      pipeWarnTime: 40,
-      pipeTimeout: 250,
+      pipeWarnTime: 500,
+      pipeTimeout: 5000,
       initTimeout: 10000,
     }
   },
@@ -225,6 +225,18 @@ module.exports = {
       client: {
         host: 'http://localhost:9200',
         apiVersion: '5.4'
+      },
+      commonMapping: {
+        _kuzzle_info: {
+          properties: {
+            active: {type: 'boolean'},
+            author: {type: 'keyword'},
+            createdAt: {type: 'date'},
+            updatedAt: {type: 'date'},
+            updater: {type: 'keyword'},
+            deletedAt: {type: 'date'}
+          }
+        }
       },
       defaults: {
         onUpdateConflictRetries: 0,

@@ -1017,13 +1017,13 @@ describe('Test: ElasticSearch service', () => {
 
     it('should raise a "Partial Error" response for bulk data import with some errors', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.bulk.returns(Bluebird.resolve({
+      elasticsearch.client.bulk.resolves({
         errors: true,
-        items: {
-          12: {index: {status: 404, error: 'DocumentMissingException'}},
-          212: {index: {status: 404, error: 'DocumentMissingException'}}
-        }
-      }));
+        items: [
+          {index: {status: 404, error: 'DocumentMissingException'}},
+          {index: {status: 404, error: 'DocumentMissingException'}}
+        ]
+      });
 
       request.input.body = {
         bulkData: [
@@ -1234,6 +1234,53 @@ describe('Test: ElasticSearch service', () => {
           catch(e) { done(e); }
         });
     });
+
+    it('should inject the default mapping', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+
+      elasticsearch.config.commonMapping = {
+        foo: {type: 'boolean'},
+        _kuzzle_info: {
+          properties: {
+            active: {type: 'boolean'},
+            author: {type: 'text'},
+            createdAt: {type: 'date'},
+            updatedAt: {type: 'date'},
+            updater: {type: 'keyword'},
+            deletedAt: {type: 'date'}
+          }
+        }
+      };
+
+      request.input.body = {
+        properties: {
+          city: {type: 'string'}
+        }
+      };
+
+      return elasticsearch.updateMapping(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body).eql({
+            properties: {
+              city: {type: 'string'},
+              foo: {type: 'boolean'},
+              _kuzzle_info: {
+                properties: {
+                  active: {type: 'boolean'},
+                  author: {type: 'text'},
+                  createdAt: {type: 'date'},
+                  updatedAt: {type: 'date'},
+                  updater: {type: 'keyword'},
+                  deletedAt: {type: 'date'}
+                }
+              }
+            }
+          });
+        });
+
+    });
   });
 
   describe('#getMapping', () => {
@@ -1354,6 +1401,47 @@ describe('Test: ElasticSearch service', () => {
 
       request.input.resource.collection = '%foobar';
       return should(elasticsearch.createCollection(request)).be.rejectedWith(PreconditionError);
+    });
+
+    it('should inject default mapping', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+
+      request.input.resource.collection = '%foobar';
+
+      elasticsearch.config.commonMapping = {
+        foo: {type: 'boolean'},
+        _kuzzle_info: {
+          properties: {
+            active: {type: 'boolean'},
+            author: {type: 'text'},
+            createdAt: {type: 'date'},
+            updatedAt: {type: 'date'},
+            updater: {type: 'keyword'},
+            deletedAt: {type: 'date'}
+          }
+        }
+      };
+
+      return elasticsearch.createCollection(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body['%foobar'].properties).eql({
+            foo: {type: 'boolean'},
+            _kuzzle_info: {
+              properties: {
+                active: {type: 'boolean'},
+                author: {type: 'text'},
+                createdAt: {type: 'date'},
+                updatedAt: {type: 'date'},
+                updater: {type: 'keyword'},
+                deletedAt: {type: 'date'}
+              }
+            }
+          });
+        });
+
     });
   });
 

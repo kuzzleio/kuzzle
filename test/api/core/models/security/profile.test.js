@@ -4,11 +4,14 @@ const
   should = require('should'),
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   Role = require('../../../../../lib/api/core/models/security/role'),
   Request = require('kuzzle-common-objects').Request;
+
+const
+  _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: security/profileTest', () => {
   const
@@ -65,25 +68,29 @@ describe('Test: security/profileTest', () => {
         }
       }
     };
+    for (const roleId of Object.keys(roles)) {
+      roles[roleId][_kuzzle] = kuzzle;
+    }
 
     profile.policies = [{roleId: 'disallowAllRole'}];
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole').callsFake(roleId => Promise.resolve(roles[roleId]));
+    kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
 
-    return profile.isActionAllowed(request, kuzzle)
+    profile[_kuzzle] = kuzzle;
+    return profile.isActionAllowed(request)
       .then(isAllowed => {
         should(isAllowed).be.false();
 
         profile.policies.push({roleId: 'allowActionRole'});
-        return profile.isActionAllowed(request, kuzzle);
+        return profile.isActionAllowed(request);
       })
       .then(isAllowed => {
         should(isAllowed).be.true();
 
         profile.policies = [
-          {_id: 'disallowAllRole'},
+          {roleId: 'disallowAllRole'},
           {
-            _id: 'allowActionRole',
+            roleId: 'allowActionRole',
             restrictedTo: [
               {index: 'index1'},
               {index: 'index2', collections: ['collection1']},
@@ -92,7 +99,7 @@ describe('Test: security/profileTest', () => {
           }
         ];
 
-        return profile.isActionAllowed(request, kuzzle);
+        return profile.isActionAllowed(request);
       })
       .then(isAllowed => should(isAllowed).be.false());
   });
@@ -136,11 +143,19 @@ describe('Test: security/profileTest', () => {
         actions: { update: {test: 'return true;'}, create: true, delete: {test: 'return true;'} }
       }
     };
+
+    for (const roleId of Object.keys(roles)) {
+      roles[roleId][_kuzzle] = kuzzle;
+    }
+    profile.constructor._hash = kuzzle.constructor.hash;
+
     profile.policies.push({roleId: role3._id});
 
-    sandbox.stub(kuzzle.repositories.role, 'loadRole').callsFake(roleId => Promise.resolve(roles[roleId]));
 
-    return profile.getRights(kuzzle)
+    kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
+
+    profile[_kuzzle] = kuzzle;
+    return profile.getRights()
       .then(rights => {
         let filteredItem;
 
@@ -197,4 +212,77 @@ describe('Test: security/profileTest', () => {
         should(filteredItem).length(0);
       });
   });
+
+  describe('#validateDefinition', () => {
+    it('should reject if no policies are given', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('The "policies" attribute array cannot be empty');
+    });
+
+    it('should reject if no roleId is given', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{}];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0] Missing mandatory attribute "roleId"');
+    });
+
+    it('should reject if an invalid attribute is given', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        foo: 'bar'
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0] Unexpected attribute "foo". Valid attributes are "roleId" and "restrictedTo"');
+    });
+
+    it('should reject if restrictedTo is not an array', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: 'bar'
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0] Expected "restrictedTo" to be an array of objects');
+    });
+
+    it('should reject if restrictedTo is not given an index', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          foo: 'bar'
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0].restrictedTo[0] Missing mandatory attribute "index"');
+    });
+
+    it('should reject if restrictedTo is given an invalid attribute', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          index: 'index',
+          foo: 'bar'
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith('policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collections"');
+    });
+  });
+
 });

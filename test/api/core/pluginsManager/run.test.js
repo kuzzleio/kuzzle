@@ -25,7 +25,7 @@ describe('Test plugins manager run', () => {
 
   before(() => {
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
-    
+
     // making it quiet
     PluginsManager.__set__({
       console: {
@@ -236,8 +236,12 @@ describe('Test plugins manager run', () => {
     };
 
     plugin.object.foo = () => {};
+
+    const warnTime = kuzzle.config.plugins.common.pipeWarnTime;
+    kuzzle.config.plugins.common.pipeWarnTime = 10;
+
     fooStub = sandbox.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
-      setTimeout(() => cb(), 50);
+      setTimeout(() => cb(), 11);
     });
 
     return pluginsManager.run()
@@ -247,6 +251,8 @@ describe('Test plugins manager run', () => {
           .be.calledOnce();
         should(spy)
           .be.calledWithMatch('log:warn', /Plugin pipe .*? exceeded [0-9]*ms to execute\./);
+
+        kuzzle.config.plugins.common.pipeWarnTime = warnTime;
       });
   });
 
@@ -257,8 +263,18 @@ describe('Test plugins manager run', () => {
 
     plugin.object.foo = () => {}; // does not call the callback
 
-    return should(pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:bar'))).be.rejectedWith(GatewayTimeoutError);
+    const timeout = kuzzle.config.plugins.common.pipeTimeout;
+    kuzzle.config.plugins.common.pipeTimeout = 50;
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => {
+        throw new Error('should not happen');
+      })
+      .catch(error => {
+        kuzzle.config.plugins.common.pipeTimeout = timeout;
+        should(error).be.an.instanceOf(GatewayTimeoutError);
+      });
   });
 
   it('should attach controller actions on kuzzle object', () => {
@@ -280,7 +296,11 @@ describe('Test plugins manager run', () => {
   it('should attach controller routes on kuzzle object', () => {
     plugin.object.routes = [
       {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
-      {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'}
+      {verb: 'head', url: '/bar/:name', controller: 'foo', action: 'bar'},
+      {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'},
+      {verb: 'put', url: '/bar', controller: 'foo', action: 'bar'},
+      {verb: 'delete', url: '/bar', controller: 'foo', action: 'bar'},
+      {verb: 'patch', url: '/bar', controller: 'foo', action: 'bar'}
     ];
 
     plugin.object.controllers = {
@@ -293,17 +313,37 @@ describe('Test plugins manager run', () => {
 
     return pluginsManager.run()
       .then(() => {
-        should(pluginsManager.routes).be.an.Array().and.length(2);
+        should(pluginsManager.routes).be.an.Array().and.length(6);
+
         should(pluginsManager.routes[0].verb).be.equal('get');
         should(pluginsManager.routes[0].url).be.equal('/testPlugin/bar/:name');
-        should(pluginsManager.routes[1].verb).be.equal('post');
-        should(pluginsManager.routes[1].url).be.equal('/testPlugin/bar');
-        should(pluginsManager.routes[0].controller)
-          .be.equal(pluginsManager.routes[0].controller)
-          .and.be.equal('testPlugin/foo');
-        should(pluginsManager.routes[0].action)
-          .be.equal(pluginsManager.routes[0].action)
-          .and.be.equal('bar');
+        should(pluginsManager.routes[0].controller).be.equal('testPlugin/foo');
+        should(pluginsManager.routes[0].action).be.equal('bar');
+
+        should(pluginsManager.routes[1].verb).be.equal('head');
+        should(pluginsManager.routes[1].url).be.equal('/testPlugin/bar/:name');
+        should(pluginsManager.routes[1].controller).be.equal('testPlugin/foo');
+        should(pluginsManager.routes[1].action).be.equal('bar');
+
+        should(pluginsManager.routes[2].verb).be.equal('post');
+        should(pluginsManager.routes[2].url).be.equal('/testPlugin/bar');
+        should(pluginsManager.routes[2].controller).be.equal('testPlugin/foo');
+        should(pluginsManager.routes[2].action).be.equal('bar');
+
+        should(pluginsManager.routes[3].verb).be.equal('put');
+        should(pluginsManager.routes[3].url).be.equal('/testPlugin/bar');
+        should(pluginsManager.routes[3].controller).be.equal('testPlugin/foo');
+        should(pluginsManager.routes[3].action).be.equal('bar');
+
+        should(pluginsManager.routes[4].verb).be.equal('delete');
+        should(pluginsManager.routes[4].url).be.equal('/testPlugin/bar');
+        should(pluginsManager.routes[4].controller).be.equal('testPlugin/foo');
+        should(pluginsManager.routes[4].action).be.equal('bar');
+
+        should(pluginsManager.routes[5].verb).be.equal('patch');
+        should(pluginsManager.routes[5].url).be.equal('/testPlugin/bar');
+        should(pluginsManager.routes[5].controller).be.equal('testPlugin/foo');
+        should(pluginsManager.routes[5].action).be.equal('bar');
       });
   });
 
@@ -339,14 +379,6 @@ describe('Test plugins manager run', () => {
   });
 
   it('should not add an invalid route to the API', () => {
-    plugin.object.routes = [
-      {invalid: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
-      {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'},
-      {verb: 'invalid', url: '/bar', controller: 'foo', action: 'bar'},
-      {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'invalid'},
-      {verb: 'get', url: '/bar/:name', controller: 'invalid', action: 'bar'},
-    ];
-
     plugin.object.controllers = {
       'foo': {
         'bar': 'functionName'
@@ -355,6 +387,30 @@ describe('Test plugins manager run', () => {
 
     plugin.object.functionName = () => {};
 
-    should(pluginsManager.run()).be.rejected();
+    plugin.object.routes = [
+      {invalid: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'}
+    ];
+    should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+
+    plugin.object.routes = [
+      {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'}
+    ];
+    should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+
+    plugin.object.routes = [
+      {verb: 'invalid', url: '/bar', controller: 'foo', action: 'bar'}
+    ];
+    should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+
+    plugin.object.routes = [
+      {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'invalid'}
+    ];
+    should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+
+    plugin.object.routes = [
+      {verb: 'get', url: '/bar/:name', controller: 'invalid', action: 'bar'}
+    ];
+    should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+
   });
 });

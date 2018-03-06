@@ -83,11 +83,13 @@ class HttpApi {
             _.difference(Object.keys(args.body), hits).forEach(key => {
               const value = args.body[key];
 
-              if (_.isArray(value)) {
-                queryString.push(...value.map(v => `${key}=${v}`));
-              }
-              else {
-                queryString.push(`${key}=${value}`);
+              if (value !== undefined) {
+                if (Array.isArray(value)) {
+                  queryString.push(...value.map(v => `${key}=${v}`));
+                }
+                else {
+                  queryString.push(`${key}=${value}`);
+                }
               }
             });
 
@@ -607,13 +609,7 @@ class HttpApi {
   }
 
   getStats (dates) {
-    const options = {
-      url: this.apiPath('_getStats'),
-      method: 'POST',
-      body: dates
-    };
-
-    return this.callApi(options);
+    return this.callApi(this._getRequest(null, null, 'server', 'getStats', {body: dates}));
   }
 
   getUser (id) {

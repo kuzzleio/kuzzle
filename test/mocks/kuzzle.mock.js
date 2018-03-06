@@ -186,6 +186,8 @@ class KuzzleMock extends Kuzzle {
     this.repositories = {
       init: sinon.stub().resolves(),
       profile: {
+        fromDTO: sinon.stub().resolves(),
+        initialize: sinon.stub().resolves(),
         load: sinon.stub().resolves(),
         loadMultiFromDatabase: sinon.stub().resolves(),
         loadProfiles: sinon.stub().resolves(),
@@ -193,22 +195,25 @@ class KuzzleMock extends Kuzzle {
       },
       role: {
         deleteRole: sinon.stub().resolves(),
+        fromDTO: sinon.stub().resolves(),
         getRoleFromRequest: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+        load: sinon.stub().resolves(),
         loadMultiFromDatabase: sinon.stub().resolves(),
-        loadRole: sinon.stub().resolves(),
         loadRoles: sinon.stub().resolves(),
         searchRole: sinon.stub().resolves(),
         validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0]))
       },
       user: {
+        anonymous: sinon.stub().returns({_id: '-1'}),
+        delete: sinon.stub().usingPromise(Bluebird).resolves(),
+        fromDTO: sinon.stub().resolves(),
         load: sinon.stub().resolves(foo),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
         ObjectConstructor: sinon.stub().returns({}),
         hydrate: sinon.stub().resolves(),
         persist: sinon.stub().resolves({}),
-        anonymous: sinon.stub().returns({_id: '-1'}),
-        delete: sinon.stub().usingPromise(Bluebird).resolves()
+        search: sinon.stub().resolves(),
+        scroll: sinon.stub().resolves(),
+        toDTO: sinon.stub()
       },
       token: {
         anonymous: sinon.stub().returns({_id: 'anonymous'}),

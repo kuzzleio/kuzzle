@@ -157,7 +157,11 @@ describe('Test: security controller - profiles', () => {
 
   describe('#getProfile', () => {
     it('should resolve to an object on a getProfile call', () => {
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test', _source: {}, _meta: {}}));
+      kuzzle.repositories.profile.load.resolves({
+        _id: 'test',
+        _source: {},
+        _meta: {}
+      });
 
       return securityController.getProfile(new Request({_id: 'test'}))
         .then(response => {
@@ -173,7 +177,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.profile.load= sandbox.stub().returns(Bluebird.resolve(null));
       return should(securityController.getProfile(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
     });
   });
@@ -337,8 +341,11 @@ describe('Test: security controller - profiles', () => {
 
   describe('#updateProfile', () => {
     it('should return a valid response', () => {
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({}));
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      const profile = {
+        getRights: sinon.spy()
+      };
+      kuzzle.repositories.profile.load.resolves(profile);
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test'});
 
       return securityController.updateProfile(new Request({_id: 'test', body: {foo: 'bar'}}))
         .then(response => {
@@ -354,7 +361,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve({}));
+      kuzzle.repositories.profile.load.resolves({});
       kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
 
       return securityController.updateProfile(new Request({
@@ -376,8 +383,15 @@ describe('Test: security controller - profiles', () => {
   });
 
   it('should reject the promise if the profile cannot be found in the database', () => {
-    kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve(null));
-    return should(securityController.updateProfile(new Request({_id: 'badId', body: {}, context: {action: 'updateProfile'}}))).be.rejected();
+    kuzzle.repositories.profile.load.resolves(null);
+    return should(securityController.updateProfile(new Request({
+      _id: 'badId',
+      body: {},
+      context: {
+        action: 'updateProfile'
+      }
+    })))
+      .be.rejected();
   });
 
   describe('#deleteProfile', () => {
@@ -401,24 +415,19 @@ describe('Test: security controller - profiles', () => {
 
   describe('#getProfileRights', () => {
     it('should resolve to an object on a getProfileRights call', () => {
-      kuzzle.repositories.profile.loadProfile = profileId => {
-        return Bluebird.resolve({
-          _id: profileId,
-          _source: {},
-          getRights: () => {
-            return {
-              rights1: {
-                controller: 'read', action: 'get', index: 'foo', collection: 'bar',
-                value: 'allowed'
-              },
-              rights2: {
-                controller: 'write', action: 'delete', index: '*', collection: '*',
-                value: 'conditional'
-              }
-            };
+      const profile = {
+        getRights: sinon.stub().resolves({
+          rights1: {
+            controller: 'read', action: 'get', index: 'foo', collection: 'bar',
+            value: 'allowed'
+          },
+          rights2: {
+            controller: 'write', action: 'delete', index: '*', collection: '*',
+            value: 'conditional'
           }
-        });
+        })
       };
+      kuzzle.repositories.profile.load.resolves(profile);
 
       return securityController.getProfileRights(new Request({_id: 'test'}))
         .then(response => {
@@ -453,7 +462,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject NotFoundError on a getProfileRights call with a bad id', () => {
-      kuzzle.repositories.profile.loadProfile = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.profile.load.resolves(null);
 
       return should(securityController.getProfileRights(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
     });

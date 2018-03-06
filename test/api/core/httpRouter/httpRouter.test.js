@@ -36,14 +36,14 @@ describe('core/httpRouter', () => {
   });
 
   describe('#adding routes', () => {
-    it('should add a POST route when asked to', () => {
-      router.post('/foo/bar', handler);
-      should(router.routes.POST.subparts.foo.subparts.bar.handler).be.eql(handler);
-    });
-
     it('should add a GET route when asked to', () => {
       router.get('/foo/bar', handler);
       should(router.routes.GET.subparts.foo.subparts.bar.handler).be.eql(handler);
+    });
+
+    it('should add a POST route when asked to', () => {
+      router.post('/foo/bar', handler);
+      should(router.routes.POST.subparts.foo.subparts.bar.handler).be.eql(handler);
     });
 
     it('should add a PUT route when asked to', () => {
@@ -51,9 +51,19 @@ describe('core/httpRouter', () => {
       should(router.routes.PUT.subparts.foo.subparts.bar.handler).be.eql(handler);
     });
 
+    it('should add a PATCH route when asked to', () => {
+      router.patch('/foo/bar', handler);
+      should(router.routes.PATCH.subparts.foo.subparts.bar.handler).be.eql(handler);
+    });
+
     it('should add a DELETE route when asked to', () => {
       router.delete('/foo/bar', handler);
       should(router.routes.DELETE.subparts.foo.subparts.bar.handler).be.eql(handler);
+    });
+
+    it('should add a HEAD route when asked to', () => {
+      router.head('/foo/bar', handler);
+      should(router.routes.HEAD.subparts.foo.subparts.bar.handler).be.eql(handler);
     });
 
     it('should raise an internal error when trying to add a duplicate', () => {
@@ -84,7 +94,7 @@ describe('core/httpRouter', () => {
       rq.method = 'POST';
 
       router.route(rq, callback);
-      should(handler.calledOnce).be.true();
+      should(handler).be.calledOnce();
       should(handler.firstCall.args[0]).be.instanceOf(Request);
       should(handler.firstCall.args[0].context.protocol).be.exactly('http');
       should(handler.firstCall.args[0].context.connectionId).be.exactly('requestId');
@@ -108,7 +118,7 @@ describe('core/httpRouter', () => {
       should(handler.calledOnce).be.true();
       should(handler.firstCall.args[0].id).match(rq.requestId);
       should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-      should(handler.firstCall.args[0].input.args['content-type']).eql('application/json');
+      should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
     });
 
     it('should return dynamic values for parametric routes', () => {
@@ -123,7 +133,7 @@ describe('core/httpRouter', () => {
       should(handler.calledOnce).be.true();
       should(handler.firstCall.args[0].id).match(rq.requestId);
       should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-      should(handler.firstCall.args[0].input.args['content-type']).eql('application/json');
+      should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
       should(handler.firstCall.args[0].input.args.bar).eql('hello');
       should(handler.firstCall.args[0].input.args.baz).eql('world');
     });
@@ -140,7 +150,7 @@ describe('core/httpRouter', () => {
       should(handler.calledOnce).be.true();
       should(handler.firstCall.args[0].id).match(rq.requestId);
       should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-      should(handler.firstCall.args[0].input.args['content-type']).eql('application/json; charset=utf-8');
+      should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json; charset=utf-8');
       should(handler.firstCall.args[0].input.args.bar).eql('hello');
       should(handler.firstCall.args[0].input.args.baz).eql('%world');
     });

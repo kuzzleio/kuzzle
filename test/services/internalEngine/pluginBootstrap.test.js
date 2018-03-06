@@ -34,7 +34,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
     };
 
     it('should call the proper submethods in proper order', () => {
-      engine.createInternalIndex.returns(Promise.resolve());
+      engine.createInternalIndex.returns(Bluebird.resolve());
       return bootstrap.all(collections)
         .then(() => {
           try {
@@ -51,10 +51,10 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
               .be.calledOnce()
               .be.calledWithExactly(engine.index);
 
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
           catch(error) {
-            return Promise.reject(error);
+            return Bluebird.reject(error);
           }
         });
     });
@@ -83,6 +83,20 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
     it('should create a new lock if some old one is found', () => {
       kuzzle.internalEngine.create.rejects();
       kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {timestamp: 0}}));
+
+      return bootstrap.lock()
+        .then(isLocked => {
+          should(isLocked).be.false();
+
+          should(kuzzle.internalEngine.createOrReplace)
+            .be.calledOnce()
+            .be.calledWith('config', 'bootstrap-lock-39aa3b1a81948e4c');
+        });
+    });
+
+    it('should create a new lock if the previous one is in the future', () => {
+      kuzzle.internalEngine.create.rejects();
+      kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {timestamp: Number.MAX_SAFE_INTEGER}}));
 
       return bootstrap.lock()
         .then(isLocked => {

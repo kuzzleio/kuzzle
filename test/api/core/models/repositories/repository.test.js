@@ -1,10 +1,12 @@
 const
   _ = require('lodash'),
   should = require('should'),
-  sandbox = require('sinon').sandbox.create(),
+  sinon = require('sinon'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
-  Bluebird = require('bluebird'),
+  {
+    InternalError: KuzzleInternalError,
+    NotFoundError
+  } = require('kuzzle-common-objects').errors,
   Repository = require('../../../../../lib/api/core/models/repositories/repository');
 
 describe('Test: repositories/repository', () => {
@@ -25,8 +27,6 @@ describe('Test: repositories/repository', () => {
   });
 
   beforeEach(() => {
-    sandbox.reset();
-
     kuzzle = new KuzzleMock();
 
     repository = new Repository(kuzzle);
@@ -43,13 +43,13 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise in case of error', () => {
-      kuzzle.internalEngine.get.rejects(new InternalError('error'));
+      kuzzle.internalEngine.get.rejects(new KuzzleInternalError('error'));
 
-      return should(repository.loadOneFromDatabase('error')).be.rejectedWith(InternalError);
+      return should(repository.loadOneFromDatabase('error')).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
-      kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve(dbPojo));
+      kuzzle.internalEngine.get.resolves(dbPojo);
       return repository.loadOneFromDatabase('persisted')
         .then(result => {
           should(result).be.instanceOf(ObjectConstructor);
@@ -61,17 +61,17 @@ describe('Test: repositories/repository', () => {
 
   describe('#loadMultiFromDatabase', () => {
     it('should return an empty array for an non existing id', () => {
-      kuzzle.internalEngine.mget = sandbox.stub().returns(Bluebird.resolve({hits: []}));
+      kuzzle.internalEngine.mget.resolves({hits: []});
       return repository.loadMultiFromDatabase([-999, -998, -997])
         .then(results => should(results).be.an.Array().and.have.length(0));
     });
 
     it('should reject the promise in case of error', () => {
-      return should(repository.loadMultiFromDatabase('error')).be.rejectedWith(InternalError);
+      return should(repository.loadMultiFromDatabase('error')).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should return a list of plain object', () => {
-      kuzzle.internalEngine.mget = sandbox.stub().returns(Bluebird.resolve({hits: [dbPojo, dbPojo]}));
+      kuzzle.internalEngine.mget.resolves({hits: [dbPojo, dbPojo]});
 
       return repository.loadMultiFromDatabase(['persisted', 'persisted'])
         .then(results => {
@@ -87,7 +87,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should handle list of objects as an argument', () => {
-      kuzzle.internalEngine.mget = sandbox.stub().returns(Bluebird.resolve({hits: [dbPojo, dbPojo]}));
+      kuzzle.internalEngine.mget.resolves({hits: [dbPojo, dbPojo]});
 
       return repository.loadMultiFromDatabase([{_id:'persisted'}, {_id:'persisted'}])
         .then(results => {
@@ -113,26 +113,26 @@ describe('Test: repositories/repository', () => {
 
   describe('#loadFromCache', () => {
     it('should return null for an non-existing id', () => {
-      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.services.list.internalCache.get.resolves(null);
 
       return repository.loadFromCache(-999)
         .then(result => should(result).be.null());
     });
 
     it('should reject the promise in case of error', () => {
-      kuzzle.services.list.internalCache.get.rejects(new InternalError('error'));
+      kuzzle.services.list.internalCache.get.rejects(new KuzzleInternalError('error'));
 
-      return should(repository.loadFromCache('error')).be.rejectedWith(InternalError);
+      return should(repository.loadFromCache('error')).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should reject the promise when loading an incorrect object', () => {
-      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Bluebird.resolve('bad type'));
+      kuzzle.services.list.internalCache.get.resolves('bad type');
 
-      return should(repository.loadFromCache('string')).be.rejectedWith(InternalError);
+      return should(repository.loadFromCache('string')).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
-      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Bluebird.resolve(JSON.stringify(cachePojo)));
+      kuzzle.services.list.internalCache.get.resolves(JSON.stringify(cachePojo));
 
       return repository.loadFromCache('persisted')
         .then(result => {
@@ -145,25 +145,27 @@ describe('Test: repositories/repository', () => {
 
   describe('#load', () => {
     it('should return null for an non-existing id', () => {
+      kuzzle.internalEngine.get.rejects(new NotFoundError('test'));
+
       return repository.load(-999)
         .then(result => should(result).be.null());
     });
 
     it('should reject the promise in case of error', () => {
-      kuzzle.services.list.internalCache.get.rejects(new InternalError('error'));
+      kuzzle.internalEngine.get.rejects(new KuzzleInternalError('test'));
 
-      return should(repository.load('error')).be.rejectedWith(InternalError);
+      return should(repository.load('error')).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should reject the promise when loading an incorrect object', () => {
-      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Bluebird.resolve('bad type'));
+      kuzzle.services.list.internalCache.get = sinon.stub().resolves('bad type');
 
-      return should(repository.load('string')).be.rejectedWith(InternalError);
+      return should(repository.load('string')).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
-      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Bluebird.resolve(null));
-      kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve(dbPojo));
+      kuzzle.services.list.internalCache.get.resolves(null);
+      kuzzle.internalEngine.get.resolves(dbPojo);
 
       return repository.load('persisted')
         .then(result => {
@@ -174,7 +176,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a valid ObjectConstructor instance if found only in cache', () => {
-      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Bluebird.resolve(JSON.stringify(cachePojo)));
+      kuzzle.services.list.internalCache.get.resolves(JSON.stringify(cachePojo));
 
       return repository.load('cached')
         .then(result => {
@@ -185,8 +187,8 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a valid ObjectConstructor instance if found only in databaseEngine', () => {
-      kuzzle.services.list.internalCache.get = sandbox.stub().returns(Bluebird.resolve(null));
-      kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve(dbPojo));
+      kuzzle.services.list.internalCache.get.resolves(null);
+      kuzzle.internalEngine.get.resolves(dbPojo);
 
       return repository.load('uncached')
         .then(result => {
@@ -198,7 +200,7 @@ describe('Test: repositories/repository', () => {
 
     it('should get content only from databaseEngine if cacheEngine is null', () => {
       repository.cacheEngine = null;
-      kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve(dbPojo));
+      kuzzle.internalEngine.get.resolves(dbPojo);
 
       return repository.load('no-cache')
         .then(result => {
@@ -338,14 +340,17 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#serializeToDatabase', () => {
-    it('should return the same object', () => {
-      should(repository.serializeToDatabase(cachePojo)).be.exactly(cachePojo);
+    it('should remove the _id', () => {
+      should(repository.serializeToDatabase(cachePojo))
+        .eql({
+          some: 'source'
+        });
     });
   });
 
   describe('#search', () => {
     it('should return a list from database', () => {
-      kuzzle.internalEngine.search = sandbox.stub().returns(Bluebird.resolve({hits: [dbPojo], total: 1}));
+      kuzzle.internalEngine.search.resolves({hits: [dbPojo], total: 1});
 
       return repository.search({query:'noquery'})
         .then(response => {
@@ -357,7 +362,11 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should inject back the scroll id, if there is one', () => {
-      kuzzle.internalEngine.search = sandbox.stub().returns(Bluebird.resolve({hits: [dbPojo], total: 1, scrollId: 'foobar'}));
+      kuzzle.internalEngine.search.resolves({
+        hits: [dbPojo],
+        total: 1,
+        scrollId: 'foobar'
+      });
 
       return repository.search({query:'noquery'}, {from: 13, size: 42, scroll: '45s'})
         .then(response => {
@@ -370,7 +379,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a list if no hits', () => {
-      kuzzle.internalEngine.search = sandbox.stub().returns(Bluebird.resolve({hits: [], total: 0}));
+      kuzzle.internalEngine.search.resolves({hits: [], total: 0});
 
       return repository.search({})
         .then(response => {
@@ -391,7 +400,10 @@ describe('Test: repositories/repository', () => {
 
   describe('#scroll', () => {
     it('should return a list from database', () => {
-      kuzzle.internalEngine.scroll = sandbox.stub().returns(Bluebird.resolve({hits: [dbPojo], total: 1}));
+      kuzzle.internalEngine.scroll.resolves({
+        hits: [dbPojo],
+        total: 1
+      });
 
       return repository.scroll('foo')
         .then(response => {
@@ -403,7 +415,11 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should inject back the scroll id', () => {
-      kuzzle.internalEngine.scroll = sandbox.stub().returns(Bluebird.resolve({hits: [dbPojo], total: 1, scrollId: 'foobar'}));
+      kuzzle.internalEngine.scroll.resolves({
+        hits: [dbPojo],
+        total: 1,
+        scrollId: 'foobar'
+      });
 
       return repository.scroll('foo', 'bar')
         .then(response => {
@@ -416,7 +432,11 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a list if no hits', () => {
-      kuzzle.internalEngine.scroll = sandbox.stub().returns(Bluebird.resolve({hits: [], total: 0, scrollId: 'foobar'}));
+      kuzzle.internalEngine.scroll.resolves({
+        hits: [],
+        total: 0,
+        scrollId: 'foobar'
+      });
 
       return repository.scroll({})
         .then(response => {
