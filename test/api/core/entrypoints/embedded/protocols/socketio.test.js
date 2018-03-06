@@ -171,9 +171,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
       socket = {
 
       };
-      entrypoint.httpServer = {
-        maxRequestSize: Infinity
-      };
       entrypoint.execute = sinon.spy();
 
       protocol.init(entrypoint);
@@ -187,30 +184,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
       should(entrypoint.execute)
         .have.callCount(0);
-    });
-
-    it('should complain if the message is too big', () => {
-      entrypoint.httpServer.maxRequestSize = 3;
-      const data = {
-        requestId: 'requestId'
-      };
-
-      protocol.onClientMessage(socket, {id: 'connectionId'}, data);
-
-      should(socketEmitStub)
-        .be.calledOnce()
-        .be.calledWith('requestId');
-
-      {
-        const emitted = socketEmitStub.firstCall.args[1];
-        should(emitted)
-          .match({
-            status: 413,
-            error: {
-              message: 'Error: maximum input request size exceeded'
-            }
-          });
-      }
     });
 
     it('should pass the message to the entry point', () => {

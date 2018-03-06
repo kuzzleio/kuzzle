@@ -239,20 +239,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         .have.callCount(0);
     });
 
-    it ('should complain if the size exceeds the max authorized one', () => {
-      entrypoint.httpServer.maxRequestSize = 3;
-      const data = {
-        length: 4
-      };
-
-      protocol.onClientMessage(connection, data);
-
-      should(protocol._send)
-        .be.calledOnce();
-      should(protocol._send.firstCall.args[1])
-        .startWith('{"message":"Error: maximum input request size exceeded');
-    });
-
     it('should call entrypoint execute', () => {
       const data = JSON.stringify({foo: 'bar'});
 
