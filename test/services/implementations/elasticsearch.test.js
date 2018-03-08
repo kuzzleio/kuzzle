@@ -11,7 +11,8 @@ const
     BadRequestError,
     NotFoundError,
     KuzzleError,
-    PreconditionError
+    PreconditionError,
+    ExternalServiceError
   } = require('kuzzle-common-objects').errors,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
@@ -318,7 +319,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject the create promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked create error');
-      elasticsearch.client.get.rejects(new Error('Mocked get error'));
+      elasticsearch.client.get.rejects(new Error('Mocked create error'));
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = 'foobar';
@@ -333,7 +334,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.index.rejects(error);
       request.input.resource._id = '42';
 
-      return should(elasticsearch.create(request)).be.rejectedWith(error);
+      return should(elasticsearch.create(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
 
     it('should reject a promise if the document already exists', () => {
@@ -380,7 +381,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.index.rejects(error);
 
       request.input.resource._id = createdDocumentId;
-      return should(elasticsearch.createOrReplace(request)).be.rejectedWith(error);
+      return should(elasticsearch.createOrReplace(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
 
     it('should reject if index or collection don\'t exist', () => {
@@ -591,7 +592,7 @@ describe('Test: ElasticSearch service', () => {
 
       request.input.body = {query: {foo: 'bar'}};
 
-      return should(elasticsearch.count(request)).be.rejectedWith(error);
+      return should(elasticsearch.count(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -1105,7 +1106,7 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.rejects(error);
 
-      return should(elasticsearch.import(request)).be.rejectedWith(error);
+      return should(elasticsearch.import(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
 
     it('should return a rejected promise if bulk data try to write into internal index', () => {
@@ -1374,7 +1375,7 @@ describe('Test: ElasticSearch service', () => {
 
       request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
       request.input.body = null;
-      return should(elasticsearch.listCollections(request)).be.rejectedWith(error);
+      return should(elasticsearch.listCollections(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -1392,7 +1393,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.indices.putMapping.rejects(error);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
-      return should(elasticsearch.createCollection(request)).be.rejectedWith(error);
+      return should(elasticsearch.createCollection(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
 
     it('should reject if index doesn\'t exist', () => {
@@ -1484,7 +1485,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.indices.getMapping.returns(Bluebird.resolve(indexes));
       elasticsearch.client.indices.delete.rejects(error);
 
-      return should(elasticsearch.deleteIndexes(request)).be.rejectedWith(error);
+      return should(elasticsearch.deleteIndexes(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -1502,7 +1503,7 @@ describe('Test: ElasticSearch service', () => {
       const error = new Error('Mocked error');
       elasticsearch.client.indices.create.rejects(error);
 
-      return should(elasticsearch.createIndex(request)).be.rejectedWith(error);
+      return should(elasticsearch.createIndex(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
 
     it('should throw if attempting to create an internal index', () => {
@@ -1546,7 +1547,7 @@ describe('Test: ElasticSearch service', () => {
       const error = new Error('Mocked error');
       elasticsearch.client.indices.getMapping.rejects(error);
 
-      return should(elasticsearch.listIndexes(request)).be.rejectedWith(error);
+      return should(elasticsearch.listIndexes(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 

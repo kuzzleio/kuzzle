@@ -76,9 +76,9 @@
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "rewire": "2.5.2",
-    "should": "11.2.1",
-    "should-sinon": "0.0.5",
-    "sinon": "^3.3.0",
+    "should": "13.2.1",
+    "should-sinon": "0.0.6",
+    "sinon": "^4.4.2",
     "socket.io-client": "^2.0.4"
   },
   "engines": {

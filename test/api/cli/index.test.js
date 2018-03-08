@@ -58,10 +58,11 @@ describe('Tests: api/cli/index.js', () => {
       Cli = rewire('../../../lib/api/cli/index');
       Cli.__set__({
         console: {
-          log: sinon.stub()
+          log: sinon.stub(),
+          error: sinon.stub()
         }
       });
-      
+
       cli = new Cli(kuzzle);
     });
 
