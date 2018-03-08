@@ -8,7 +8,7 @@ const
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   should = require('should'),
-  WS = require('ws'),
+  WS = require('uws'),
   CircularList = require('easy-circular-list'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   WSClientMock = require('../../mocks/services/ws.mock'),
@@ -137,7 +137,7 @@ describe('Test: Internal broker', () => {
       it('should construct a WS client', () => {
         const WSStub = sandbox.stub();
 
-        mockrequire('ws', WSStub);
+        mockrequire('uws', WSStub);
         mockrequire.reRequire('../../../lib/services/broker/wsBrokerClient');
 
         const WSClient = rewire('../../../lib/services/broker/wsBrokerClient');
@@ -445,7 +445,7 @@ describe('Test: Internal broker', () => {
         clock.tick(20000);
 
         should(socket.__events.close[0]).be.calledThrice();
-        
+
         should(closeSpy).be.calledOnce();
         should(retrySpy).be.calledOnce();
         should(client.onCloseHandlers[0]).be.calledOnce();
@@ -493,7 +493,7 @@ describe('Test: Internal broker', () => {
         client._pingRequestIntervalId = 'fakeIntervalId';
         client._pingRequestTimeoutId = 'fakeTimeoutId';
         socket.on('pong', fakePongListener);
-        
+
         socket.emit('open', 1);
 
         clientConnected
@@ -735,7 +735,7 @@ describe('Test: Internal broker', () => {
           })
         });
 
-        mockrequire('ws', {
+        mockrequire('uws', {
           Server: sinon.spy(WSServerMock)
         });
 

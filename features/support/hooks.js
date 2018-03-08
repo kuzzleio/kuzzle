@@ -9,7 +9,7 @@ const
   Bluebird = require('bluebird');
 
 // before first
-Before({tags: "@first"}, function () {
+Before({tags: '@first'}, function () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
     promises = [];
@@ -31,7 +31,7 @@ Before({tags: "@first"}, function () {
 });
 
 // after last
-After({tags: "@latest"}, function () {
+After({tags: '@latest'}, function () {
   const
     promises = [];
 
