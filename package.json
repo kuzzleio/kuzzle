@@ -58,7 +58,7 @@
     "winston": "^2.4.0",
     "winston-elasticsearch": "^0.5.7",
     "winston-syslog": "^2.0.0",
-    "winston-transport": "^3.0.1",
+    "winston-transport": "^3.0.1"
   },
   "repository": {
     "type": "git",
