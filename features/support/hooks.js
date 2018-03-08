@@ -2,104 +2,89 @@
 
 const
   _ = require('lodash'),
-  {defineSupportCode} = require('cucumber'),
+  {
+    After,
+    Before
+  } = require('cucumber'),
   Bluebird = require('bluebird');
 
-defineSupportCode(function ({After, Before}) {
-  // before first
-  Before(function (scenarioResult) {
-    const
-      scenario = scenarioResult.scenario,
-      feature = scenario.feature;
+// before first
+Before({tags: "@first"}, function () {
+  const
+    fixtures = require('../fixtures/functionalTestsFixtures.json'),
+    promises = [];
 
-    if (feature.scenarios[0] === scenario) {
-      // 1st scenario
-      const
-        fixtures = require('../fixtures/functionalTestsFixtures.json'),
-        promises = [];
+  for (const index of Object.keys(fixtures)) {
+    promises.push(() => this.api.deleteIndex(index)
+      .catch(() => true));
+  }
 
-      for (const index of Object.keys(fixtures)) {
-        promises.push(() => this.api.deleteIndex(index)
-          .catch(() => true));
-      }
+  promises.push(() => this.api.createIndex(this.api.world.fakeIndex));
+  promises.push(() => this.api.createCollection(this.api.world.fakeIndex, this.api.world.fakeCollection));
+  promises.push(() => this.api.createCollection(this.api.world.fakeIndex, this.api.world.fakeAltCollection));
 
-      promises.push(() => this.api.createIndex(this.api.world.fakeIndex));
-      promises.push(() => this.api.createCollection(this.api.world.fakeIndex, this.api.world.fakeCollection));
-      promises.push(() => this.api.createCollection(this.api.world.fakeIndex, this.api.world.fakeAltCollection));
+  promises.push(() => this.api.createIndex(this.api.world.fakeAltIndex));
+  promises.push(() => this.api.createCollection(this.api.world.fakeAltIndex, this.api.world.fakeCollection));
+  promises.push(() => this.api.createCollection(this.api.world.fakeAltIndex, this.api.world.fakeAltCollection));
 
-      promises.push(() => this.api.createIndex(this.api.world.fakeAltIndex));
-      promises.push(() => this.api.createCollection(this.api.world.fakeAltIndex, this.api.world.fakeCollection));
-      promises.push(() => this.api.createCollection(this.api.world.fakeAltIndex, this.api.world.fakeAltCollection));
-
-      return Bluebird.each(promises, promise => promise());
-    }
-
-  });
-
-  // after last
-  After(function (scenarioResult) {
-    const
-      scenario = scenarioResult.scenario,
-      feature = scenario.feature;
-
-    if (scenario !== feature.scenarios[feature.scenarios.length - 1]) {
-      return;
-    }
-
-    const
-      promises = [];
-
-    for (const index of [
-      this.fakeIndex,
-      this.fakeAltIndex,
-      this.fakeNewIndex
-    ]) {
-      promises.push(this.api.deleteIndex(index)
-        .catch(() => true));
-      promises.push(this.api.setAutoRefresh(index, false));
-    }
-
-    return Bluebird.all(promises);
-  });
-
-  After(function () {
-    return this.api.truncateCollection()
-      .then(() => this.api.refreshIndex(this.fakeIndex))
-      .then(() => this.api.disconnect())
-      .then(() => true)
-      .catch(() => true);
-  });
-
-  After({tags: '@realtime'}, function () {
-    return this.api.unsubscribeAll()
-      .catch(() => true);
-  });
-
-  Before({tags: '@security'}, function () {
-    return cleanSecurity.call(this);
-  });
-
-  After({tags: '@security'}, function () {
-    return cleanSecurity.call(this);
-  });
-
-  Before({tags: '@redis'}, function () {
-    return cleanRedis.call(this);
-  });
-
-  After({tags: '@redis'}, function () {
-    return cleanRedis.call(this);
-  });
-
-  Before({tags: '@validation'}, function () {
-    return cleanValidations.call(this);
-  });
-
-  After({tags: '@validation'}, function () {
-    return cleanValidations.call(this);
-  });
-
+  return Bluebird.each(promises, promise => promise());
 });
+
+// after last
+After({tags: "@latest"}, function () {
+  const
+    promises = [];
+
+  for (const index of [
+    this.fakeIndex,
+    this.fakeAltIndex,
+    this.fakeNewIndex
+  ]) {
+    promises.push(this.api.deleteIndex(index)
+      .catch(() => true));
+    promises.push(this.api.setAutoRefresh(index, false));
+  }
+
+  return Bluebird.all(promises);
+});
+
+After(function () {
+  return this.api.truncateCollection()
+    .then(() => this.api.refreshIndex(this.fakeIndex))
+    .then(() => this.api.disconnect())
+    .then(() => true)
+    .catch(() => true);
+});
+
+After({tags: '@realtime'}, function () {
+  return this.api.unsubscribeAll()
+    .catch(() => true);
+});
+
+Before({tags: '@security'}, function () {
+  return cleanSecurity.call(this);
+});
+
+After({tags: '@security'}, function () {
+  return cleanSecurity.call(this);
+});
+
+Before({tags: '@redis'}, function () {
+  return cleanRedis.call(this);
+});
+
+After({tags: '@redis'}, function () {
+  return cleanRedis.call(this);
+});
+
+Before({tags: '@validation'}, function () {
+  return cleanValidations.call(this);
+});
+
+After({tags: '@validation'}, function () {
+  return cleanValidations.call(this);
+});
+
 
 function cleanSecurity () {
   if (this.currentUser) {

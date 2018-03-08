@@ -1,5 +1,6 @@
 Feature: Kuzzle functional tests
 
+  @first
   Scenario: Check server Health
     When I check server health
 
@@ -1740,6 +1741,6 @@ Feature: Kuzzle functional tests
     When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
 
-
+  @latest
   Scenario: Get authentication strategies
     Then I get the registrated authentication strategies
