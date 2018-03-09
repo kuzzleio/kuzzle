@@ -18,6 +18,6 @@ for endpoint in Embedded Proxy; do
       host="$embedded_host"
       port="$embedded_port"
     fi
-    ./node_modules/.bin/cucumber-js --exit --format progress-bar -p "${protocol}${endpoint}" --world-parameters "{\"host\": \"${host}\", \"port\": \"${port}\"}"
+    ./node_modules/.bin/cucumber-js --format progress-bar -p "${protocol}${endpoint}" --world-parameters "{\"host\": \"${host}\", \"port\": \"${port}\"}"
   done
 done

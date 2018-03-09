@@ -4,45 +4,54 @@ const
   _ = require('lodash'),
   {
     After,
-    Before
+    AfterAll,
+    Before,
+    BeforeAll
   } = require('cucumber'),
-  Bluebird = require('bluebird');
+  Bluebird = require('bluebird'),
+  Http = require('./api/http'),
+  World = require('./world');
 
 // before first
-Before({tags: '@first'}, function () {
+BeforeAll(function () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
-    promises = [];
+    promises = [],
+    world = new World({protocol: 'http'}),
+    http = new Http(world);
 
   for (const index of Object.keys(fixtures)) {
-    promises.push(() => this.api.deleteIndex(index)
+    promises.push(() => http.deleteIndex(index)
       .catch(() => true));
   }
 
-  promises.push(() => this.api.createIndex(this.api.world.fakeIndex));
-  promises.push(() => this.api.createCollection(this.api.world.fakeIndex, this.api.world.fakeCollection));
-  promises.push(() => this.api.createCollection(this.api.world.fakeIndex, this.api.world.fakeAltCollection));
+  promises.push(() => http.createIndex(world.fakeIndex));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeCollection));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeAltCollection));
 
-  promises.push(() => this.api.createIndex(this.api.world.fakeAltIndex));
-  promises.push(() => this.api.createCollection(this.api.world.fakeAltIndex, this.api.world.fakeCollection));
-  promises.push(() => this.api.createCollection(this.api.world.fakeAltIndex, this.api.world.fakeAltCollection));
+  promises.push(() => http.createIndex(world.fakeAltIndex));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeCollection));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection));
 
   return Bluebird.each(promises, promise => promise());
 });
 
 // after last
-After({tags: '@latest'}, function () {
+AfterAll(function () {
   const
     promises = [];
 
+  const world = new World({protocol: 'http'});
+  const http = new Http(world);
+
   for (const index of [
-    this.fakeIndex,
-    this.fakeAltIndex,
-    this.fakeNewIndex
+    world.fakeIndex,
+    world.fakeAltIndex,
+    world.fakeNewIndex
   ]) {
-    promises.push(this.api.deleteIndex(index)
+    promises.push(http.deleteIndex(index)
       .catch(() => true));
-    promises.push(this.api.setAutoRefresh(index, false));
+    promises.push(http.setAutoRefresh(index, false));
   }
 
   return Bluebird.all(promises);
@@ -51,9 +60,7 @@ After({tags: '@latest'}, function () {
 After(function () {
   return this.api.truncateCollection()
     .then(() => this.api.refreshIndex(this.fakeIndex))
-    .then(() => this.api.disconnect())
-    .then(() => true)
-    .catch(() => true);
+    .then(() => this.api.disconnect());
 });
 
 After({tags: '@realtime'}, function () {
@@ -139,5 +146,3 @@ function cleanValidations() {
       .map(r => this.api.deleteSpecifications(r._id.split('#')[0], r._id.split('#')[1]))
     ));
 }
-
-
