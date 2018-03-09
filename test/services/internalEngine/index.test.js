@@ -8,7 +8,10 @@ const
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
   Bluebird = require('bluebird'),
-  ms = require('ms');
+  ms = require('ms'),
+  {
+    ExternalServiceError
+  } = require('kuzzle-common-objects').errors;
 
 describe('InternalEngine', () => {
   let
@@ -233,7 +236,7 @@ describe('InternalEngine', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.search.rejects(error);
 
-      return should(kuzzle.internalEngine.search('foo')).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.search('foo')).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -407,7 +410,7 @@ describe('InternalEngine', () => {
     it('should reject the promise if getting the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.get.rejects(error);
-      return should(kuzzle.internalEngine.get('foo', 'bar')).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.get('foo', 'bar')).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -445,7 +448,7 @@ describe('InternalEngine', () => {
     it('should reject the promise if getting the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.mget.rejects(error);
-      return should(kuzzle.internalEngine.mget('foo', ['bar'])).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.mget('foo', ['bar'])).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -484,7 +487,7 @@ describe('InternalEngine', () => {
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.create.rejects(error);
-      return should(kuzzle.internalEngine.create('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.create('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -522,7 +525,7 @@ describe('InternalEngine', () => {
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.index.rejects(error);
-      return should(kuzzle.internalEngine.createOrReplace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.createOrReplace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -563,7 +566,7 @@ describe('InternalEngine', () => {
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.update.rejects(error);
-      return should(kuzzle.internalEngine.update('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.update('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -608,7 +611,7 @@ describe('InternalEngine', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.exists.returns(Bluebird.resolve(true));
       kuzzle.internalEngine.client.index.rejects(error);
-      return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.replace('foo', 'bar', {'baz': 'qux'})).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -642,7 +645,7 @@ describe('InternalEngine', () => {
     it('should reject the promise if deleting the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.delete.rejects(error);
-      return should(kuzzle.internalEngine.delete('foo', 'bar')).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.delete('foo', 'bar')).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
@@ -693,7 +696,7 @@ describe('InternalEngine', () => {
       kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(false));
       kuzzle.internalEngine.client.indices.create.rejects(error);
 
-      return should(kuzzle.internalEngine.createInternalIndex()).be.rejectedWith(error);
+      return should(kuzzle.internalEngine.createInternalIndex()).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 

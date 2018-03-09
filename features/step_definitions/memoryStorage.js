@@ -1,72 +1,71 @@
 const
   {
-    defineSupportCode
+    Then,
+    When
   } = require('cucumber'),
   Bluebird = require('bluebird'),
   should = require('should');
 
-defineSupportCode(function ({When, Then}) {
-  When(/^I call the (.*?) method of the memory storage with arguments$/, function (command, args) {
-    let realArgs = args ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix)) : args;
+When(/^I call the (.*?) method of the memory storage with arguments$/, function (command, args) {
+  let realArgs = args ? JSON.parse(args.replace(/#prefix#/g, this.idPrefix)) : args;
 
-    return this.api.callMemoryStorage(command, realArgs)
-      .then(response => {
-        if (response.error) {
-          return Bluebird.reject(response.error);
-        }
+  return this.api.callMemoryStorage(command, realArgs)
+    .then(response => {
+      if (response.error) {
+        return Bluebird.reject(response.error);
+      }
 
-        this.memoryStorageResult = response;
+      this.memoryStorageResult = response;
 
-        return response;
-      });
-  });
+      return response;
+    });
+});
 
-  When(/^I scan the database using the (.+?) method with arguments$/, function (command, args) {
-    const parsed = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
+When(/^I scan the database using the (.+?) method with arguments$/, function (command, args) {
+  const parsed = JSON.parse(args.replace(/#prefix#/g, this.idPrefix));
 
-    if (parsed.args) {
-      parsed.args.cursor = 0;
+  if (parsed.args) {
+    parsed.args.cursor = 0;
+  }
+  else {
+    parsed.args = {cursor: 0};
+  }
+
+  this.memoryStorageResult = null;
+
+  return scanRedis(this, command, parsed);
+});
+
+Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
+  let
+    regex,
+    val = this.memoryStorageResult.result;
+
+  if (sorted && Array.isArray(val)) {
+    val = val.sort();
+  }
+
+  if (type === 'regex') {
+    regex = new RegExp(pattern.replace(/#prefix#/g, this.idPrefix));
+    if (regex.test(val.toString())) {
+      callback();
     }
     else {
-      parsed.args = {cursor: 0};
+      callback(new Error('pattern mismatch: \n' + JSON.stringify(val) + '\n does not match \n' + regex));
     }
+  }
 
-    this.memoryStorageResult = null;
+  if (type === 'json') {
+    pattern = pattern.replace(/#prefix#/g, this.idPrefix);
 
-    return scanRedis(this, command, parsed);
-  });
-
-  Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
-    let
-      regex,
-      val = this.memoryStorageResult.result;
-
-    if (sorted && Array.isArray(val)) {
-      val = val.sort();
+    try {
+      should(JSON.parse(pattern)).be.eql(val);
+      callback();
     }
-
-    if (type === 'regex') {
-      regex = new RegExp(pattern.replace(/#prefix#/g, this.idPrefix));
-      if (regex.test(val.toString())) {
-        callback();
-      }
-      else {
-        callback(new Error('pattern mismatch: \n' + JSON.stringify(val) + '\n does not match \n' + regex));
-      }
+    catch(err) {
+      return callback(new Error('Error: ' + JSON.stringify(val) + ' does not match ' + pattern));
     }
-
-    if (type === 'json') {
-      pattern = pattern.replace(/#prefix#/g, this.idPrefix);
-
-      try {
-        should(JSON.parse(pattern)).be.eql(val);
-        callback();
-      }
-      catch(err) {
-        return callback(new Error('Error: ' + JSON.stringify(val) + ' does not match ' + pattern));
-      }
-    }
-  });
+  }
 });
 
 /**

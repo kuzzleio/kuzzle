@@ -21,7 +21,7 @@ describe('Test: validation initialization', () => {
     Validation = mockRequire.reRequire('../../../../lib/api/core/validation');
     validation = new Validation(kuzzle);
 
-    sandbox.reset();
+    sandbox.resetHistory();
   });
 
   afterEach(() => {

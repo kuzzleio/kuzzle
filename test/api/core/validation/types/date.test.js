@@ -29,7 +29,7 @@ describe('Test: validation/types/date', () => {
   });
 
   beforeEach(() => {
-    sandbox.reset();
+    sandbox.resetHistory();
     dateType = new DateType();
   });
 
