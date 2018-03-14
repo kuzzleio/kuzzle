@@ -1282,6 +1282,36 @@ describe('Test: ElasticSearch service', () => {
         });
 
     });
+
+    it('should create a fresh mapping for each collection', () => {
+      const mapping = Object.assign({}, elasticsearch.config.commonMapping);
+
+      return elasticsearch.updateMapping(new Request({
+        controller: 'collection',
+        action: 'updateMapping',
+        body: {
+          properties: {
+            foo: {
+              type: 'text'
+            }
+          }
+        }
+      }))
+        .then(() => elasticsearch.updateMapping(new Request({
+          controller: 'collection',
+          action: 'updateMapping',
+          body: {
+            properties: {
+              bar: {
+                type: 'integer'
+              }
+            }
+          }
+        })))
+        .then(() => {
+          should(elasticsearch.config.commonMapping).eql(mapping);
+        });
+    });
   });
 
   describe('#getMapping', () => {
