@@ -178,9 +178,10 @@ describe('core/httpRouter', () => {
           headers: router.defaultHeaders
         });
 
+        should(result.input.headers).match(rq.headers);
         should(kuzzleMock.pluginsManager.trigger.calledOnce).be.true();
         should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
-        should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.args.foo).eql('bar');
+        should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.headers.foo).eql('bar');
         done();
       });
     });
@@ -208,6 +209,7 @@ describe('core/httpRouter', () => {
           headers: router.defaultHeaders
         });
 
+        should(result.input.headers).match(rq.headers);
         done();
       });
     });
