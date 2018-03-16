@@ -83,7 +83,7 @@ describe('PluginsManager: strategy management', () => {
 
     pluginsManager.strategies.someStrategy = pluginManagerStrategy;
 
-    sandbox.reset();
+    sandbox.resetHistory();
   });
 
   describe('#getStrategyFields', () => {

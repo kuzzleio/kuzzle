@@ -33,7 +33,7 @@ describe('Test: security controller - users', () => {
   });
 
   afterEach(() => {
-    sandbox.reset();
+    sandbox.resetHistory();
   });
 
   describe('#updateUserMapping', () => {

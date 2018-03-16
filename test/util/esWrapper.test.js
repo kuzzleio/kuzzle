@@ -100,7 +100,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       const error = new Error('Mocked error');
       client.indices.getMapping.rejects(error);
 
-      return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(error);
+      return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 });

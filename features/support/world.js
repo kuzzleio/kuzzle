@@ -1,5 +1,5 @@
 const
-  {defineSupportCode} = require('cucumber'),
+  {setWorldConstructor} = require('cucumber'),
   HttpApi = require('./api/http'),
   SocketIoApi = require('./api/socketio'),
   WebSocketApi = require('./api/websocket');
@@ -375,8 +375,6 @@ class KWorld {
   }
 }
 
-defineSupportCode(function({setWorldConstructor}) {
-  setWorldConstructor(KWorld);
-});
+setWorldConstructor(KWorld);
 
 module.exports = KWorld;
