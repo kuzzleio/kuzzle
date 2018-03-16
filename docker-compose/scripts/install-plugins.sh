@@ -11,7 +11,7 @@ for target in ${plugins_dir}/* ${protocols_dir}/* ; do
   if [ -d "$target" ]; then
     echo 'Installing dependencies for ' $(basename "$target")
     cd "$target"
-    npm install
+    npm install --unsafe
     cd "$working_dir"
   fi
 done

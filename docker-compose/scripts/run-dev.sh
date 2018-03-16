@@ -4,7 +4,8 @@ set -e
 
 elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
 
-npm install
+npm install --unsafe
+npm rebuild all --unsafe
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
