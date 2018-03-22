@@ -92,6 +92,13 @@ class WebSocketApi extends WsApiBase {
     });
   }
 
+  disconnect () {
+    for (const socketKey of Object.keys(this.sockets)) {
+      this.sockets[socketKey].terminate();
+      delete this.sockets[socketKey];
+    }
+  }
+
 }
 
 module.exports = WebSocketApi;

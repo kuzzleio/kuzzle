@@ -13,7 +13,7 @@ describe('Test: validation utilities', () => {
     };
 
   beforeEach(() => {
-    sandbox.reset();
+    sandbox.resetHistory();
   });
 
   describe('#checkAllowedProperties', () => {

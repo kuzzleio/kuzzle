@@ -16,7 +16,7 @@ describe('models/repositories/pluginRepository', () => {
     pluginRepository;
 
   beforeEach(() => {
-    sandbox.reset();
+    sandbox.resetHistory();
     kuzzle = new KuzzleMock();
     pluginRepository = new PluginRepository(kuzzle, 'pluginName', someCollection);
     pluginRepository.init({
