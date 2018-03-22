@@ -293,7 +293,7 @@
     },
     // (embedded only)
     //   * maxRequestSize:
-    //     The maxium size of an incoming request. Units can be expressed in
+    //     The maximum size of an incoming request. Units can be expressed in
     //     bytes ("b" or none), kilobytes ("kb"), megabytes ("mb"), gigabytes
     //     ("gb") or terabytes ("tb")
     //   * port:

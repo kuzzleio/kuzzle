@@ -39,7 +39,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       entrypoint.config.maxRequestSize = 'invalid';
 
       return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "maxRequestSize" parameter');
+        .throw('Invalid "maxRequestSize" parameter');
     });
 
     it('should throw if an invalid maxFormFileSize is given', () => {
