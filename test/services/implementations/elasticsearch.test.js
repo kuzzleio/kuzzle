@@ -1123,7 +1123,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+      elasticsearch.client.bulk.resolves({});
 
       return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });

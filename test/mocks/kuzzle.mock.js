@@ -157,10 +157,12 @@ class KuzzleMock extends Kuzzle {
       notifyServer: sinon.spy(),
       notifyDocument: sinon.spy(),
       notifyDocumentCreate: sinon.spy(),
-      notifyDocumentDelete: sinon.spy(),
+      notifyDocumentMDelete: sinon.spy(),
       notifyDocumentReplace: sinon.spy(),
       notifyDocumentUpdate: sinon.spy(),
-      publish: sinon.stub().resolves(foo)
+      publish: sinon.stub().resolves(foo),
+      notifyDocumentMCreate: sinon.spy(),
+      notifyDocumentMChanges: sinon.spy()
     };
 
     this.passport = {
@@ -250,22 +252,19 @@ class KuzzleMock extends Kuzzle {
           run: sinon.stub().resolves({ids: []})
         },
         internalCache: {
-          add: sinon.stub().resolves(),
+          get: sinon.stub().resolves(null),
           del: sinon.stub().resolves(),
           exists: sinon.stub().resolves(),
           expire: sinon.stub().resolves(),
           flushdb: sinon.stub().resolves(),
-          get: sinon.stub().resolves(null),
           getInfos: sinon.stub().resolves(),
           persist: sinon.stub().resolves(),
           pexpire: sinon.stub().resolves(),
           psetex: sinon.stub().resolves(),
-          remove: sinon.stub().resolves(),
-          search: sinon.stub().resolves(),
           searchKeys: sinon.stub().resolves([]),
           set: sinon.stub().resolves(),
+          setex: sinon.stub().resolves(),
           setnx: sinon.stub().resolves(),
-          volatileSet: sinon.stub().resolves()
         },
         memoryStorage: {
           flushdb: sinon.stub().resolves(),
@@ -273,7 +272,7 @@ class KuzzleMock extends Kuzzle {
         },
         storageEngine: {
           get: sinon.stub().resolves({_source: {foo}}),
-          mget: sinon.stub(),
+          mget: sinon.stub().resolves({hits: [], total: 0}),
           getInfos: sinon.stub().resolves(),
           getMapping: sinon.stub().resolves(foo),
           listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
@@ -299,7 +298,12 @@ class KuzzleMock extends Kuzzle {
           setAutoRefresh: sinon.stub().resolves(true),
           truncateCollection: sinon.stub().resolves(foo),
           update: sinon.stub().resolves(foo),
-          updateMapping: sinon.stub().resolves(foo)
+          updateMapping: sinon.stub().resolves(foo),
+          mcreate: sinon.stub().resolves({result: [], error: []}),
+          mupdate: sinon.stub().resolves({result: [], error: []}),
+          mcreateOrReplace: sinon.stub().resolves({result: [], error: []}),
+          mdelete: sinon.stub().resolves({result: [], error: []}),
+          mreplace: sinon.stub().resolves({result: [], error: []})
         }
       }
     };

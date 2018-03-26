@@ -246,11 +246,11 @@ describe('Test: repositories/repository', () => {
 
   describe('#deleteFromCache', () => {
     it('should call a cache deletion properly', () => {
-      const removeStub = kuzzle.services.list.internalCache.remove;
+      const delStub = kuzzle.services.list.internalCache.del;
 
       return repository.deleteFromCache('someId')
         .then(() => {
-          should(removeStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
+          should(delStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
         });
     });
   });
@@ -258,12 +258,12 @@ describe('Test: repositories/repository', () => {
   describe('#delete', () => {
     it('should delete an object from both cache and database when pertinent', () => {
       const deleteStub = kuzzle.internalEngine.delete;
-      const removeStub = kuzzle.services.list.internalCache.remove;
+      const delStub = kuzzle.services.list.internalCache.del;
 
       return repository.delete('someId')
         .then(() => {
-          should(removeStub).be.calledOnce();
-          should(removeStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
+          should(delStub).be.calledOnce();
+          should(delStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
           should(deleteStub).be.calledOnce();
           should(deleteStub.firstCall.args[0]).be.eql(repository.collection);
           should(deleteStub.firstCall.args[1]).be.exactly('someId');
@@ -283,13 +283,13 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should set the object with a ttl by default', () => {
-      const volatileSetStub = kuzzle.services.list.internalCache.volatileSet;
+      const setexStub = kuzzle.services.list.internalCache.setex;
 
       return repository.persistToCache(cachePojo, {ttl: 500, key: 'someKey'})
         .then(() => {
-          should(volatileSetStub.firstCall.args[0]).be.eql('someKey');
-          should(volatileSetStub.firstCall.args[1]).be.eql(JSON.stringify(cachePojo));
-          should(volatileSetStub.firstCall.args[2]).be.eql(500);
+          should(setexStub.firstCall.args[0]).be.eql('someKey');
+          should(setexStub.firstCall.args[1]).be.eql(500);
+          should(setexStub.firstCall.args[2]).be.eql(JSON.stringify(cachePojo));
         });
     });
   });

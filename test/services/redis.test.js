@@ -11,8 +11,9 @@ const
 describe('Test redis service', () => {
   let
     kuzzle,
+    redis;
+  const
     dbname = 'unit-tests',
-    redis,
     sandbox = sinon.sandbox.create();
 
   before(() => {
@@ -114,119 +115,6 @@ describe('Test redis service', () => {
       return should(testredis.init()).be.rejected();
     });
 
-  });
-
-  it('should resolve 0 when add a key without value', () => {
-    return should(redis.add('foo')).fulfilledWith(0);
-  });
-
-  it('should resolve 0 when add a key with an empty array', () => {
-    return should(redis.add('foo', [])).fulfilledWith(0);
-  });
-
-  it('should resolve 1 when add a key with one value', () => {
-    return redis.add('foo', 'bar')
-      .then(req => {
-        try {
-          should(req.name).be.exactly('sadd');
-          should(req.args).be.eql([['foo', 'bar']]);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should resolve 2 when add a key with an array with 2 values', () => {
-    return redis.add('foo', ['bar', 'baz'])
-      .then(req => {
-        try {
-          should(req.name).be.exactly('sadd');
-          should(req.args).be.eql([['foo', 'bar', 'baz']]);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should remove a specific value for a key', () => {
-    return redis.remove('foo', 'bar')
-      .then(req => {
-        try {
-          should(req.name).be.exactly('srem');
-          should(req.args).be.eql(['foo', 'bar']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should remove several values for a key', () => {
-    return redis.remove('foo', ['bar', 'baz'])
-      .then(req => {
-        try {
-          should(req.name).be.exactly('srem');
-          should(req.args).be.eql(['foo', ['bar', 'baz']]);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should remove the key', () => {
-    return redis.remove('foo')
-      .then(req => {
-        try {
-          should(req.name).be.exactly('del');
-          should(req.args).be.eql(['foo']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should search values for a specific key', () => {
-    return redis.search('foo')
-      .then(req => {
-        try {
-          should(req.name).be.exactly('smembers');
-          should(req.args).be.eql(['foo']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
-      });
-  });
-
-  it('should add a volatile key', () => {
-    return redis.volatileSet('foo', 'bar', 10)
-      .then(req => {
-        try {
-          should(req.name).be.exactly('setex');
-          should(req.args).be.eql(['foo', 10, 'bar']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
-      });
   });
 
   it('should allow getting a single key value', () => {

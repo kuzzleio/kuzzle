@@ -35,9 +35,9 @@ describe('Test: notifier.notifyDocumentReplace', () => {
   it('should notify subscribers when a replaced document entered their scope', () => {
     const internalCache = kuzzle.services.list.internalCache;
 
-    internalCache.search
-      .onFirstCall().returns(Bluebird.resolve(['foo']))
-      .onSecondCall().returns(Bluebird.resolve(['foo', 'bar']));
+    internalCache.get
+      .onFirstCall().resolves(JSON.stringify(['foo']))
+      .onSecondCall().resolves(JSON.stringify(['foo', 'bar']));
 
     return notifier.notifyDocumentReplace(request)
       .then(() => {
@@ -55,25 +55,21 @@ describe('Test: notifier.notifyDocumentReplace', () => {
             _id: request.input.resource._id
           });
 
-        should(internalCache.search.callCount).be.eql(2);
-        should(internalCache.search.getCall(0)).calledWith(
-          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.id}`
+        should(internalCache.get.callCount).be.eql(2);
+        should(internalCache.get.getCall(0)).calledWith(
+          `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.id}`
         );
 
-        should(internalCache.search.getCall(1)).calledWith(
-          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`
+        should(internalCache.get.getCall(1)).calledWith(
+          `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`
         );
 
-        should(internalCache.remove).calledOnce();
-        should(internalCache.remove).calledWith(
-          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`, 
-          ['bar']
-        );
+        should(internalCache.del).not.be.called();
 
-        should(internalCache.add).calledOnce();
-        should(internalCache.add).calledWith(
-          `notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`, 
-          ['foo']
+        should(internalCache.set).calledOnce();
+        should(internalCache.set).calledWith(
+          `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`, 
+          JSON.stringify(['foo'])
         );
       });
   });

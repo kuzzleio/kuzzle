@@ -8,7 +8,7 @@ const
   Kuzzle = require('../../../mocks/kuzzle.mock'),
   Notifier = require.main.require('lib/api/core/notifier');
 
-describe('Test: notifier.notifyDocumentDelete', () => {
+describe('Test: notifier.notifyDocumentMDelete', () => {
   let
     kuzzle,
     request,
@@ -30,7 +30,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
   });
 
   it('should do nothing if no id is provided', () => {
-    return notifier.notifyDocumentDelete(request, [])
+    return notifier.notifyDocumentMDelete(request, [])
       .then(() => {
         should(notifier.notifyDocument.called).be.false();
       });
@@ -59,18 +59,21 @@ describe('Test: notifier.notifyDocumentDelete', () => {
 
           'Now these points of data': 'make a beautiful line',
           'We\'re out of beta': 'we\'re releasing on time',
-          'And I\'m GLAD I got burned': 'think of all the things we learned',
+          'And I\'m GLaD I got burned': 'think of all the things we learned',
           'For the people who are': 'still alive'
         }
       };
 
     kuzzle.realtime.test.returns(['foo', 'bar']);
-    kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({_id: 'foobar', _source: stillAlive._source, _meta: stillAlive._meta}));
+    kuzzle.services.list.storageEngine.mget.resolves({
+      hits: [
+        {_id: 'foobar', _source: stillAlive._source, _meta: stillAlive._meta}
+      ],
+      total: 1
+    });
 
-    return notifier.notifyDocumentDelete(request, ['foobar'])
-      .then(id => {
-        should(id[0]).be.exactly('foobar');
-
+    return notifier.notifyDocumentMDelete(request, ['foobar'])
+      .then(() => {
         should(notifier.notifyDocument)
           .calledOnce()
           .calledWith(['foo', 'bar'], request, 'out', 'done', 'delete', {
@@ -83,11 +86,15 @@ describe('Test: notifier.notifyDocumentDelete', () => {
   it('should notify for each document when multiple document have been deleted', () => {
     var ids = ['foo', 'bar'];
 
-    kuzzle.services.list.storageEngine.get
-      .onFirstCall().returns(Bluebird.resolve({_id: 'foo'}))
-      .onSecondCall().returns(Bluebird.resolve({_id: 'bar'}));
+    kuzzle.services.list.storageEngine.mget.resolves({
+      hits: [
+        {_id: 'foo'},
+        {_id: 'bar'}
+      ],
+      total: 2
+    });
       
-    return notifier.notifyDocumentDelete(request, ids)
+    return notifier.notifyDocumentMDelete(request, ids)
       .then(() => {
         should(notifier.notifyDocument.callCount).be.eql(2);
         should(notifier.notifyDocument.getCall(0).args[5]._id).be.eql('foo');
