@@ -8,12 +8,12 @@ let
   _init;
 
 class KWorld {
-  constructor ({parameters}) {
+  constructor (config) {
     this.config = Object.assign({
       protocol: 'websocket',
       host: 'localhost',
       port: 7512
-    }, parameters || {});
+    }, config.parameters); 
 
     switch (this.config.protocol) {
       case 'http':
@@ -28,7 +28,7 @@ class KWorld {
         this.config.protocol = 'websocket';
     }
 
-    if (!_init) {
+    if (!_init && !this.config.silent) {
       console.log(`[${this.config.protocol}] ${this.config.host}:${this.config.port}`);
       _init = true;
     }

@@ -17,7 +17,7 @@ BeforeAll(function () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
     promises = [],
-    world = new World({protocol: 'http'}),
+    world = new World({parameters: {protocol: 'http', silent: true}}),
     http = new Http(world);
 
   for (const index of Object.keys(fixtures)) {
@@ -41,7 +41,7 @@ AfterAll(function () {
   const
     promises = [];
 
-  const world = new World({protocol: 'http'});
+  const world = new World({parameters: {protocol: 'http', silent: true}});
   const http = new Http(world);
 
   for (const index of [

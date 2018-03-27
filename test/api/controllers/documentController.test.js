@@ -7,10 +7,8 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   DocumentController = require('../../../lib/api/controllers/documentController'),
-  FunnelController = require('../../../lib/api/controllers/funnelController'),
   {
     InternalError: KuzzleInternalError,
-    ServiceUnavailableError,
     NotFoundError,
     PartialError
   } = require('kuzzle-common-objects').errors;
@@ -19,7 +17,6 @@ describe('Test: document controller', () => {
   const foo = {foo: 'bar'};
   let
     documentController,
-    funnelController,
     kuzzle,
     request,
     engine;
@@ -28,7 +25,6 @@ describe('Test: document controller', () => {
     kuzzle = new KuzzleMock();
     engine = kuzzle.services.list.storageEngine;
     documentController = new DocumentController(kuzzle);
-    funnelController = new FunnelController(kuzzle);
     request = new Request({controller: 'document', index: '%test', collection: 'unit-test-documentController'});
   });
 

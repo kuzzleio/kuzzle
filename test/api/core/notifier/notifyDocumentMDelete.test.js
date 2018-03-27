@@ -3,7 +3,6 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   Kuzzle = require('../../../mocks/kuzzle.mock'),
   Notifier = require.main.require('lib/api/core/notifier');
