@@ -12,7 +12,8 @@ const
     NotFoundError,
     KuzzleError,
     PreconditionError,
-    ExternalServiceError
+    ExternalServiceError,
+    SizeLimitError
   } = require('kuzzle-common-objects').errors,
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
@@ -104,7 +105,7 @@ describe('Test: ElasticSearch service', () => {
     };
 
     request = new Request({
-      controller: 'write',
+      controller: 'document',
       action: 'create',
       requestId: 'foo',
       collection,
@@ -1783,6 +1784,592 @@ describe('Test: ElasticSearch service', () => {
           should(spy)
             .be.calledOnce()
             .be.calledWith(error);
+        });
+    });
+  });
+
+  describe('#mcreate', () => {
+    const metadata = {
+      active: true,
+      author: 'test',
+      updater: null,
+      updatedAt: null,
+      deletedAt: null
+    };
+
+    it('should prevent creating documents to a non-existing index or collection', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mcreate(request)).rejectedWith(PreconditionError, {message: `Index '${index}' and/or collection '${collection}' don't exist`});
+    });
+
+    it('should abort if the number of documents exceeds the configured limit', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      kuzzle.config.limits.documentsWriteCount = 1;
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mcreate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+    });
+
+    it('should get documents from ES only if there are IDs provided', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 201}}
+        ]
+      });
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mcreate(request)
+        .then(result => {
+          should(elasticsearch.client.mget).not.be.called();
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {index: {_index: index, _type: collection}},
+              {foo: 'bar', _kuzzle_info: metadata},
+              {index: {_index: index, _type: collection}},
+              {bar: 'foo', _kuzzle_info: metadata}
+            ]
+          });
+          should(result.error).be.an.Array().and.be.empty();
+          should(result.result).match([
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, status: 201},
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          should(result.result[1]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+        });
+    });
+
+    it('should filter existing documents depending of their "active" status', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      request.input.body = {
+        documents: [
+          {_id: 'foo1', body: {foo: 'bar1'}}, 
+          {body: {foo: 'bar_'}},
+          {_id: 'foo2', body: {foo: 'bar2'}},
+          {_id: 'foo3', body: {foo: 'bar3'}},
+          {_id: 'foo4', body: {foo: 'bar4'}}
+        ]
+      };
+      elasticsearch.client.mget.resolves({
+        docs: [
+          // active document => must be rejected
+          {_id: 'foo1', found: true, _source: {_kuzzle_info: {active: true}}}, 
+          // inactive document => can be overwritten
+          {_id: 'foo2', found: true, _source: {_kuzzle_info: {active: false}}},
+          // non-existent document => can be created
+          {_id: 'foo3', found: false},
+          // document without metadata => must be considered 'active' and be rejected
+          {_id: 'foo4', found: true, _source: {}}
+        ]
+      });
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo?', status: 201}},
+          {index: {_id: 'foo2', status: 201}},
+          {index: {_id: 'foo3', status: 201}}
+        ]
+      });
+
+      return elasticsearch.mcreate(request)
+        .then(result => {
+          should(elasticsearch.client.mget).calledOnce().and.calledWithMatch({
+            index,
+            type: collection,
+            body: {
+              docs: [
+                {_id: 'foo1', _source: '_kuzzle_info.active'},
+                {_id: 'foo2', _source: '_kuzzle_info.active'},
+                {_id: 'foo3', _source: '_kuzzle_info.active'},
+                {_id: 'foo4', _source: '_kuzzle_info.active'},
+              ]
+            }
+          });
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {index: {_index: index, _type: collection}},
+              {foo: 'bar_', _kuzzle_info: metadata},
+              {index: {_index: index, _type: collection, _id: 'foo2'}},
+              {foo: 'bar2', _kuzzle_info: metadata},
+              {index: {_index: index, _type: collection, _id: 'foo3'}},
+              {foo: 'bar3', _kuzzle_info: metadata}
+            ]
+          });
+          should(result.error).be.an.Array().and.match([
+            {document: {_id: 'foo1', body: {foo: 'bar1'}}, reason: 'document already exists'}, 
+            {document: {_id: 'foo4', body: {foo: 'bar4'}}, reason: 'document already exists'}
+          ]);
+          should(result.result).match([
+            {_id: 'foo?', _source: {foo: 'bar_', _kuzzle_info: metadata}, status: 201},
+            {_id: 'foo2', _source: {foo: 'bar2', _kuzzle_info: metadata}, status: 201},
+            {_id: 'foo3', _source: {foo: 'bar3', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          for(let i = 0; i < 3; i++) {
+            should(result.result[i]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          }
+        });
+    });
+
+    it('should correctly separate bulk successes from errors', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 400}}
+        ]
+      });
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mcreate(request)
+        .then(result => {
+          should(elasticsearch.client.mget).not.be.called();
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {index: {_index: index, _type: collection}},
+              {foo: 'bar', _kuzzle_info: metadata},
+              {index: {_index: index, _type: collection}},
+              {bar: 'foo', _kuzzle_info: metadata}
+            ]
+          });
+          should(result.error).match([
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, status: 400}
+          ]);
+          should(result.result).match([
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+        });
+    });
+  });
+
+  describe('#mcreateOrReplace', () => {
+    const metadata = {
+      active: true,
+      author: 'test',
+      updater: null,
+      updatedAt: null,
+      deletedAt: null
+    };
+
+    it('should prevent creating/replacing documents to a non-existing index or collection', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(PreconditionError, {message: `Index '${index}' and/or collection '${collection}' don't exist`});
+    });
+
+    it('should abort if the number of documents exceeds the configured limit', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      kuzzle.config.limits.documentsWriteCount = 1;
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+    });
+
+    it('should bulk import documents to be created or replaced', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 201}}
+        ]
+      });
+      request.input.body = {documents: [{_id: 'foobar', body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mcreateOrReplace(request)
+        .then(result => {
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {index: {_index: index, _type: collection, _id: 'foobar'}},
+              {foo: 'bar', _kuzzle_info: metadata},
+              {index: {_index: index, _type: collection}},
+              {bar: 'foo', _kuzzle_info: metadata}
+            ]
+          });
+          should(result.error).be.an.Array().and.be.empty();
+          should(result.result).match([
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, status: 201},
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          should(result.result[1]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+        });
+    });
+
+    it('should correctly separate bulk successes from errors', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 400}}
+        ]
+      });
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mcreateOrReplace(request)
+        .then(result => {
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {index: {_index: index, _type: collection}},
+              {foo: 'bar', _kuzzle_info: metadata},
+              {index: {_index: index, _type: collection}},
+              {bar: 'foo', _kuzzle_info: metadata}
+            ]
+          });
+          should(result.error).match([
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, status: 400}
+          ]);
+          should(result.result).match([
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+        });
+    });
+  });
+
+  describe('#mupdate', () => {
+    const metadata = {
+      active: true,
+      updater: 'test',
+      deletedAt: null
+    };
+
+    it('should prevent updating documents to a non-existing index or collection', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mupdate(request)).rejectedWith(PreconditionError, {message: `Index '${index}' and/or collection '${collection}' don't exist`});
+    });
+
+    it('should abort if the number of documents exceeds the configured limit', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      kuzzle.config.limits.documentsWriteCount = 1;
+      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mupdate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+    });
+
+    it('should bulk import documents to be updated', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 201}}
+        ]
+      });
+      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+
+      return elasticsearch.mupdate(request)
+        .then(result => {
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {update: {_index: index, _type: collection, _id: 'foo'}},
+              {doc: {foo: 'bar', _kuzzle_info: metadata}, _source: true},
+              {update: {_index: index, _type: collection, _id: 'bar'}},
+              {doc: {bar: 'foo', _kuzzle_info: metadata}, _source: true}
+            ]
+          });
+          should(result.error).be.an.Array().and.be.empty();
+          should(result.result).match([
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, status: 201},
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
+          should(result.result[1]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
+        });
+    });
+
+    it('should correctly separate bulk successes from errors', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 400}}
+        ]
+      });
+      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+
+      return elasticsearch.mupdate(request)
+        .then(result => {
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {update: {_index: index, _type: collection, _id: 'foo'}},
+              {doc: {foo: 'bar', _kuzzle_info: metadata}, _source: true},
+              {update: {_index: index, _type: collection, _id: 'bar'}},
+              {doc: {bar: 'foo', _kuzzle_info: metadata}, _source: true}
+            ]
+          });
+          should(result.error).match([
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, status: 400}
+          ]);
+          should(result.result).match([
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
+        });
+    });
+
+    it('should reject documents without an ID', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mupdate(request)
+        .then(result => {
+          should(elasticsearch.client.bulk).not.be.called();
+          should(result.error).match([
+            {document: {_source: {foo: 'bar'}}, reason: 'a document ID is required'},
+            {document: {_source: {bar: 'foo'}}, reason: 'a document ID is required'}
+          ]);
+          should(result.result).be.an.Array().and.be.empty();
+        });
+    });
+  });  
+
+  describe('#mreplace', () => {
+    const metadata = {
+      active: true,
+      author: 'test',
+      updater: null,
+      updatedAt: null,
+      deletedAt: null
+    };
+
+    it('should prevent replacing documents to a non-existing index or collection', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+      elasticsearch.client.mget.resolves({docs: [{found: true}, {found: true}]});
+      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mreplace(request)).rejectedWith(PreconditionError, {message: `Index '${index}' and/or collection '${collection}' don't exist`});
+    });
+
+    it('should abort if the number of documents exceeds the configured limit', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.mget.resolves({docs: [{found: true}, {found: true}]});
+      kuzzle.config.limits.documentsWriteCount = 1;
+      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+
+      return should(elasticsearch.mreplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+    });
+
+    it('should reject documents that are not found', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      request.input.body = {
+        documents: [
+          {_id: 'foo1', body: {foo: 'bar1'}}, 
+          {_id: 'foo2', body: {foo: 'bar2'}},
+        ]
+      };
+      elasticsearch.client.mget.resolves({
+        docs: [
+          {_id: 'foo1', found: false}, 
+          {_id: 'foo2', found: true, _source: {_kuzzle_info: {active: false}}}
+        ]
+      });
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo2', status: 201}}
+        ]
+      });
+
+      return elasticsearch.mreplace(request)
+        .then(result => {
+          should(elasticsearch.client.mget).calledOnce().and.calledWithMatch({
+            index,
+            type: collection,
+            body: {
+              docs: [
+                {_id: 'foo1', _source: '_kuzzle_info.active'},
+                {_id: 'foo2', _source: '_kuzzle_info.active'}
+              ]
+            }
+          });
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {index: {_index: index, _type: collection, _id: 'foo2'}},
+              {foo: 'bar2', _kuzzle_info: metadata}
+            ]
+          });
+          should(result.error).be.an.Array().and.match([
+            {document: {_id: 'foo1', _source: {foo: 'bar1'}}, reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'}, 
+          ]);
+          should(result.result).match([
+            {_id: 'foo2', _source: {foo: 'bar2', _kuzzle_info: metadata}, status: 201},
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+        });
+    });
+
+    it('should correctly separate bulk successes from errors', () => {
+      const now = Date.now();
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 400}}
+        ]
+      });
+      elasticsearch.client.mget.resolves({
+        docs: [
+          {_id: 'foo', found: true, _source: {_kuzzle_info: {active: true}}}, 
+          {_id: 'bar', found: true, _source: {_kuzzle_info: {active: false}}}
+        ]
+      });
+      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+
+      return elasticsearch.mreplace(request)
+        .then(result => {
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {index: {_index: index, _type: collection, _id: 'foo'}},
+              {foo: 'bar', _kuzzle_info: metadata},
+              {index: {_index: index, _type: collection, _id: 'bar'}},
+              {bar: 'foo', _kuzzle_info: metadata}
+            ]
+          });
+          should(result.error).match([
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, status: 400}
+          ]);
+          should(result.result).match([
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, status: 201}
+          ]);
+
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+        });
+    });
+
+    it('should reject documents without an ID', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mreplace(request)
+        .then(result => {
+          should(elasticsearch.client.bulk).not.be.called();
+          should(result.error).match([
+            {document: {_source: {foo: 'bar'}}, reason: 'a document ID is required'},
+            {document: {_source: {bar: 'foo'}}, reason: 'a document ID is required'}
+          ]);
+          should(result.result).be.an.Array().and.be.empty();
+        });
+    });
+  });
+
+  describe('#mdelete', () => {
+    const metadata = {
+      active: false,
+      updater: 'test'
+    };
+
+    it('should prevent deleting documents in a non-existing index or collection', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(false);
+      request.input.body = {ids: ['foo', 'bar']};
+
+      return should(elasticsearch.mdelete(request)).rejectedWith(PreconditionError, {message: `Index '${index}' and/or collection '${collection}' don't exist`});
+    });
+
+    it('should abort if the number of documents exceeds the configured limit', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      kuzzle.config.limits.documentsWriteCount = 1;
+      request.input.body = {ids: ['foo', 'bar']};
+
+      return should(elasticsearch.mdelete(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+    });
+
+    it('should correctly separate bulk successes from errors', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30, 
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 400}}
+        ]
+      });
+      request.input.body = {ids: ['foo', 'bar']};
+
+      return elasticsearch.mdelete(request)
+        .then(result => {
+          should(elasticsearch.client.bulk.args[0][0]).match({
+            index,
+            type: collection,
+            body: [
+              {update: {_index: index, _type: collection, _id: 'foo'}},
+              {doc: {_kuzzle_info: metadata}},
+              {update: {_index: index, _type: collection, _id: 'bar'}},
+              {doc: {_kuzzle_info: metadata}}
+            ]
+          });
+          should(result.error).match([{_id: 'bar', status: 400}]);
+          should(result.result).match(['foo']);
+        });
+    });
+
+    it('should reject non-string IDs', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      request.input.body = {ids: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mdelete(request)
+        .then(result => {
+          should(elasticsearch.client.bulk).not.be.called();
+          should(result.error).match([
+            {id: {body: {foo: 'bar'}}, reason: 'the document ID must be a string'},
+            {id: {body: {bar: 'foo'}}, reason: 'the document ID must be a string'}
+          ]);
+          should(result.result).be.an.Array().and.be.empty();
         });
     });
   });
