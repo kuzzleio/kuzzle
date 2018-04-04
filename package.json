@@ -73,7 +73,7 @@
     "nyc": "^11.6.0",
     "request": "^2.85.0",
     "request-promise": "^4.2.2",
-    "rewire": "3.0.2",
+    "rewire": "^2.5.2",
     "should": "13.2.1",
     "should-sinon": "0.0.6",
     "sinon": "^4.5.0",
