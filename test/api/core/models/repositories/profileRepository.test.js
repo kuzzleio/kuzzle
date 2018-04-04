@@ -127,7 +127,7 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
-    it('should load profiles', () => {
+    it('should load & cache profiles', () => {
       const
         p1 = {_id: 'p1', foo: 'bar', constructor: {_hash: () => false}},
         p2 = {_id: 'p2', bar: 'baz', constructor: {_hash: () => false}},
@@ -138,15 +138,38 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.loadMultiFromDatabase = sinon.stub().resolves([p1, p3]);
       kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
 
-      profileRepository.profiles.p2 = p2;
+      profileRepository.profiles = {p2};
 
       return profileRepository.loadProfiles(['p1', 'p2', 'p3'])
         .then(result => {
-          should(result)
-            .eql([p2, p1, p3]);
+          should(result).eql([p2, p1, p3]);
+          // should not load p2 from the database since it has been cached
+          should(profileRepository.loadMultiFromDatabase).calledWith(['p1', 'p3']);
+          should(profileRepository.profiles).match({p1, p2, p3});
         });
     });
 
+    it('should use only the cache if all profiles are known', () => {
+      const
+        p1 = {_id: 'p1', foo: 'bar', constructor: {_hash: () => false}},
+        p2 = {_id: 'p2', bar: 'baz', constructor: {_hash: () => false}},
+        p3 = {_id: 'p3', baz: 'foo', constructor: {_hash: () => false}};
+
+      profileRepository.load= sinon.stub();
+
+      profileRepository.loadMultiFromDatabase = sinon.stub();
+      kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
+
+      profileRepository.profiles = {p1, p2, p3};
+
+      return profileRepository.loadProfiles(['p1', 'p2', 'p3'])
+        .then(result => {
+          should(result).eql([p1, p2, p3]);
+          // should not load p2 from the database since it has been cached
+          should(profileRepository.loadMultiFromDatabase).not.called();
+          should(profileRepository.profiles).match({p1, p2, p3});
+        });
+    });
   });
 
   describe('#buildProfileFromRequest', () => {
