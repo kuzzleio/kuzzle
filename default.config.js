@@ -45,7 +45,6 @@ module.exports = {
     concurrentRequests: 100,
     documentsFetchCount: 1000,
     documentsWriteCount: 200,
-    requestsHistorySize: 50,
     requestsBufferSize: 50000,
     requestsBufferWarningThreshold: 5000,
     subscriptionConditionsCount: 16,

@@ -17,7 +17,6 @@ describe('funnelController.executePluginRequest', () => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
     funnel.controllers.testme = {action: sinon.stub()};
-    funnel._historize = sinon.stub();
     funnel.handleErrorDump = sinon.stub();
   });
 
@@ -52,7 +51,6 @@ describe('funnelController.executePluginRequest', () => {
       try {
         should(err).be.null();
         should(res).be.eql(rq);
-        should(funnel._historize).calledOnce().calledWith(rq);
         should(rq.status).be.eql(333);
         should(kuzzle.pluginsManager.trigger.called).be.false();
         done();
@@ -76,7 +74,6 @@ describe('funnelController.executePluginRequest', () => {
       try {
         should(err).be.eql(error);
         should(res).be.undefined();
-        should(funnel._historize).calledOnce().calledWith(rq);
         should(rq.status).be.eql(500);
         should(funnel.handleErrorDump.called).be.true();
         should(kuzzle.pluginsManager.trigger.called).be.false();

@@ -36,8 +36,6 @@
     //      Number of buffered requests after
     //      which Kuzzle will throw 'core:overload' events
     //      (see http://docs.kuzzle.io/plugin-reference/#core)
-    // * requestHistorySize:
-    //      Completed API requests history. For debug and support purposes
     // * subscriptionConditionsCount
     //      Maximum number of conditions a subscription filter can contain
     //      NB: A condition is either a "simple" operator (anything but and, or and bool)
@@ -56,7 +54,6 @@
     "documentsWriteCount": 200,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
-    "requestsHistorySize": 50,
     "subscriptionConditionsCount": 16,
     "subscriptionMinterms": 0,
     "subscriptionRooms": 1000000
