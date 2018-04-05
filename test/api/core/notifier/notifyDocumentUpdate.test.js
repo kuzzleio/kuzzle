@@ -43,7 +43,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       _meta: request.input.body._kuzzle_info
     }));
 
-    kuzzle.services.list.internalCache.search.returns(Bluebird.resolve(['foo', 'bar']));
+    kuzzle.services.list.internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
 
     return notifier.notifyDocumentUpdate(request)
       .then(() => {
@@ -64,18 +64,17 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           _id: request.input.resource._id
         });
 
-        should(kuzzle.services.list.internalCache.search)
+        should(kuzzle.services.list.internalCache.get)
           .calledOnce()
-          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
+          .calledWith(`{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`);
 
-        should(kuzzle.services.list.internalCache.remove)
+        should(kuzzle.services.list.internalCache.del).not.be.called();
+
+        should(kuzzle.services.list.internalCache.set)
           .calledOnce()
-          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
-
-
-        should(kuzzle.services.list.internalCache.add)
-          .calledOnce()
-          .calledWith(`notif/${request.input.resource.index}/${request.input.resource.collection}/${request.input.resource._id}`);
+          .calledWith(
+            `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`,
+            JSON.stringify(['foo']));
       });
   });
 });

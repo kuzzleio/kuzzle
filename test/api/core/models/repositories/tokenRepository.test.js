@@ -175,7 +175,7 @@ describe('Test: repositories/tokenRepository', () => {
         user
       });
 
-      kuzzle.services.list.internalCache.volatileSet.rejects(new Error('error'));
+      kuzzle.services.list.internalCache.setex.rejects(new Error('error'));
 
       return should(tokenRepository.generateToken(user, request))
         .be.rejectedWith(KuzzleInternalError, {message: 'Unable to generate token for unknown user'});
