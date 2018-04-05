@@ -11,7 +11,7 @@ describe('Test: validation/types/geoPoint', () => {
     sandbox = sinon.sandbox.create();
 
   beforeEach(() => {
-    sandbox.reset();
+    sandbox.resetHistory();
   });
 
   it('should derivate from BaseType', () => {

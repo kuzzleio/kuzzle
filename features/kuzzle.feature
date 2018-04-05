@@ -1740,6 +1740,5 @@ Feature: Kuzzle functional tests
     When I delete the specifications again for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     Then There is no error message
 
-
   Scenario: Get authentication strategies
     Then I get the registrated authentication strategies

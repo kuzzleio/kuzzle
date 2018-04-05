@@ -38,7 +38,7 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   beforeEach(() => {
-    sandbox.reset();
+    sandbox.resetHistory();
     convertDistanceStub.returns(1234);
     GeoShapeType.__set__('isPoint', isPoint);
     GeoShapeType.__set__('isLine', isLine);

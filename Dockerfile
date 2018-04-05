@@ -17,8 +17,10 @@ RUN  apt-get update \
     gdb \
     python \
   \
-  && npm install \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install; cd /var/app; done \
+  && npm install --unsafe -g pm2 \
+  && npm install --unsafe \
+  && npm rebuild all --unsafe \
+  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe; cd /var/app; done \
   \
   && chmod a+x /usr/local/bin/kuzzle \
   && chmod a+x /var/app/docker-compose/scripts/docker-entrypoint.sh \

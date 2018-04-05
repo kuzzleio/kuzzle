@@ -83,7 +83,7 @@
       "pipeWarnTime": 40,
       "pipeTimeout": 250,
       "initTimeout": 2000
-    },
+    }
 
     // Custom plugin configurations must be described here.
     // Example:
@@ -293,7 +293,7 @@
     },
     // (embedded only)
     //   * maxRequestSize:
-    //     The maxium size of an incoming request. Units can be expressed in
+    //     The maximum size of an incoming request. Units can be expressed in
     //     bytes ("b" or none), kilobytes ("kb"), megabytes ("mb"), gigabytes
     //     ("gb") or terabytes ("tb")
     //   * port:
@@ -313,7 +313,7 @@
       "socketio": {
         "enabled": true,
         // value of Access-Control-Allow-Origin header to answer the upgrade request
-        "origins": '*:*'
+        "origins": "*:*"
       },
       "websocket": {
         "enabled": true

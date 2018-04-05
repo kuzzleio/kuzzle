@@ -36,7 +36,7 @@ describe('Test: validation.validate', () => {
     kuzzle = new KuzzleMock();
     validation = new Validation(kuzzle);
     [typeChildren, typeNoChild].forEach(type => validation.addType(type));
-    sandbox.reset();
+    sandbox.resetHistory();
     Validation.__set__('manageErrorMessage', manageErrorMessage);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
   });
