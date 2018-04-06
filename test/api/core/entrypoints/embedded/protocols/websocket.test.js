@@ -83,6 +83,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
   describe('#onConnection', () => {
     let
       socket,
+      request,
       onClientSpy;
 
     beforeEach(() => {
@@ -90,15 +91,16 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
       socket = {
         on: onClientSpy,
-        close: sinon.stub(),
-        _socket: {
+        close: sinon.stub()
+      };
+
+      request = {
+        connection: {
           remoteAddress: 'ip'
         },
-        upgradeReq: {
-          headers: {
-            'X-Foo': 'bar',
-            'x-forwarded-for': '1.1.1.1,2.2.2.2'
-          }
+        headers: {
+          'X-Foo': 'bar',
+          'x-forwarded-for': '1.1.1.1,2.2.2.2'
         }
       };
 
@@ -107,24 +109,24 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     });
 
     it('should do nothing if the request is for socketio', () => {
-      socket.upgradeReq.url = '/socket.io/blah';
-      protocol.onConnection(socket);
+      request.url = '/socket.io/blah';
+      protocol.onConnection(socket, request);
 
-      should(protocol.entryPoint.newConnection)
-        .have.callCount(0);
+      should(protocol.entryPoint.newConnection).have.callCount(0);
     });
 
     it('should register the connection and attach events', () => {
       protocol.onClientDisconnection = sinon.spy();
       protocol.onClientMessage = sinon.spy();
 
-      protocol.onConnection(socket);
+      protocol.onConnection(socket, request);
 
       should(protocol.entryPoint.newConnection)
         .be.calledOnce()
         .be.calledWithMatch({
           protocol: protocol.protocol,
-          ips: ['1.1.1.1', '2.2.2.2', 'ip']
+          ips: ['1.1.1.1', '2.2.2.2', 'ip'],
+          headers: request.headers
         });
 
       const connection = protocol.entryPoint.newConnection.firstCall.args[0];
@@ -280,7 +282,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
   });
 
-  describe('#broadcat', () => {
+  describe('#broadcast', () => {
     beforeEach(() => {
       protocol.init(entrypoint);
       protocol._send = sinon.spy();
