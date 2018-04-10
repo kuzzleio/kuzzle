@@ -173,3 +173,17 @@ Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) 
   callback();
 });
 
+Then(/^I use my JWT to subscribe to field "([^"]*)" having value "([^"]*)"(?: with socket "([^"]*)")?$/, function (key, value, socketName) {
+  const filter = {
+    equals: {
+      [key]: value
+    }
+  };
+
+  return this.api.subscribe(filter, socketName, true)
+    .then(body => {
+      if (body.error) {
+        throw body.error;
+      }
+    });
+});
