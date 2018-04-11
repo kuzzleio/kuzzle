@@ -135,16 +135,21 @@ describe('Test: repositories/profileRepository', () => {
 
       profileRepository.load= sinon.stub();
 
-      profileRepository.loadMultiFromDatabase = sinon.stub().resolves([p1, p3]);
+      profileRepository.loadOneFromDatabase = sinon.stub();
+      profileRepository.loadOneFromDatabase.withArgs('p1').resolves(p1);
+      profileRepository.loadOneFromDatabase.withArgs('p3').resolves(p3);
+
       kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
 
       profileRepository.profiles = {p2};
 
       return profileRepository.loadProfiles(['p1', 'p2', 'p3'])
         .then(result => {
-          should(result).eql([p2, p1, p3]);
+          should(result).eql([p1, p2, p3]);
           // should not load p2 from the database since it has been cached
-          should(profileRepository.loadMultiFromDatabase).calledWith(['p1', 'p3']);
+          should(profileRepository.loadOneFromDatabase).calledWith('p1');
+          should(profileRepository.loadOneFromDatabase).neverCalledWith('p2');
+          should(profileRepository.loadOneFromDatabase).calledWith('p3');
           should(profileRepository.profiles).match({p1, p2, p3});
         });
     });
@@ -191,9 +196,8 @@ describe('Test: repositories/profileRepository', () => {
   });
 
   describe('#initialize', () => {
-
     it('should throw if the profile contains unexisting roles', () => {
-      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([]));
+      kuzzle.repositories.role.loadRoles.resolves([null]);
 
       return should(profileRepository.fromDTO({
         policies: [
@@ -204,9 +208,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should set role default when none is given', () => {
-      kuzzle.repositories.role.loadRoles.returns(Bluebird.resolve([
-        {_id: 'default'}
-      ]));
+      kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
 
       return profileRepository.fromDTO({})
         .then(p => {
