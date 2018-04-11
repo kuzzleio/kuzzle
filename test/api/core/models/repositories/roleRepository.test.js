@@ -57,20 +57,21 @@ describe('Test: repositories/roleRepository', () => {
 
       roleRepository.roles.role3 = role3;
 
-      roleRepository.loadMultiFromDatabase = sinon.stub().returns(Bluebird.resolve([role1, role2, role4]));
+      roleRepository.loadOneFromDatabase = sinon.stub();
+      roleRepository.loadOneFromDatabase.withArgs('role1').resolves(role1);
+      roleRepository.loadOneFromDatabase.withArgs('role2').resolves(role2);
+      roleRepository.loadOneFromDatabase.withArgs('role4').resolves(role4);
 
       return roleRepository.loadRoles(['role1', 'role2', 'role3', 'role4'])
         .then(result => {
-          // in memory roles are first in the result array
           should(result)
             .be.an.Array()
-            .match([
-              role3,
-              role1,
-              role2,
-              role4
-            ])
+            .match([role1, role2, role3, role4])
             .have.length(4);
+          should(roleRepository.loadOneFromDatabase).calledWith('role1');
+          should(roleRepository.loadOneFromDatabase).calledWith('role2');
+          should(roleRepository.loadOneFromDatabase).neverCalledWith('role3');
+          should(roleRepository.loadOneFromDatabase).calledWith('role4');
         });
     });
 

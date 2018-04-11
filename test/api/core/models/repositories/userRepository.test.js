@@ -83,17 +83,12 @@ describe('Test: repositories/userRepository', () => {
 
   describe('#fromDTO', () => {
     it('should return the anonymous user if no _id is set', () => {
-      return userRepository.fromDTO({
-        profileIds: 'a profile'
-      })
+      return userRepository.fromDTO({profileIds: 'a profile'})
         .then(user => assertIsAnonymous(user));
     });
 
     it('should convert a profileIds string into array', () => {
-      return userRepository.fromDTO({
-        _id: 'admin',
-        profileIds: 'admin'
-      })
+      return userRepository.fromDTO({_id: 'admin', profileIds: 'admin'})
         .then(result => {
           should(result.profileIds).be.an.instanceOf(Array);
           should(result.profileIds[0]).be.exactly('admin');
@@ -101,18 +96,15 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should reject the promise if the profile cannot be found', () => {
-      kuzzle.repositories.profile.loadProfiles.resolves([]);
+      kuzzle.repositories.profile.loadProfiles.resolves([null]);
 
       return should(userRepository.fromDTO(userInvalidProfile))
         .be.rejectedWith(NotFoundError);
     });
 
     it('should add the default profile if none is set', () => {
-      return userRepository.fromDTO({
-        _id: 'foo'
-      })
+      return userRepository.fromDTO({_id: 'foo'})
         .then(user => should(user.profileIds).match(kuzzle.config.security.restrictedProfileIds));
-
     });
   });
 
