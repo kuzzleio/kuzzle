@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "1.2.10",
+  "version": "1.2.11",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "main": "./lib/index.js",
   "bin": {
@@ -52,13 +52,14 @@
     "socket.io": "^2.1.0",
     "sorted-array": "^2.0.2",
     "triple-beam": "^1.1.0",
+    "utf-8-validate": "^4.0.0",
     "uuid": "^3.2.1",
-    "uws": "^9.14.0",
     "validator": "^9.4.1",
     "winston": "^2.4.1",
     "winston-elasticsearch": "^0.5.8",
     "winston-syslog": "^2.0.0",
-    "winston-transport": "^3.0.1"
+    "winston-transport": "^3.0.1",
+    "ws": "^5.1.1"
   },
   "repository": {
     "type": "git",

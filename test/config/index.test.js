@@ -67,7 +67,7 @@ describe('lib/config/index.js', () => {
     });
   });
 
-  describe('# checkLimits', () => {
+  describe('#checkLimits', () => {
     const 
       checkLimits = Config.__get__('checkLimitsConfig'),
       // checkLimits normally receives a defaulted version of Kuzzle configuration
@@ -119,7 +119,7 @@ describe('lib/config/index.js', () => {
       }
     });
 
-    it('should reset to default if concurrent requests is set higher than request buffer', () => {
+    it('should throw if the concurrentRequests limit is outside its allowed range', () => {
       const config = getcfg({
         limits: {
           concurrentRequests: 1234,
@@ -146,24 +146,6 @@ describe('lib/config/index.js', () => {
 
       config.limits.requestsBufferWarningThreshold = 101;
       should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize'});
-    });
-
-    it('should throw on an invalid document fetch/write count limit configuration', () => {
-      ['documentsWriteCount', 'documentsFetchCount'].forEach(limit => {
-        const config = getcfg({
-          limits: {
-            requestsBufferSize: 50000,
-            requestsBufferWarningThreshold: 100,
-            [limit]: 10000
-          }
-        });
-
-        should(() => checkLimits(config)).throw(KuzzleInternalError, {message: `Invalid limits.${limit} configuration: cannot exceed 80% of limits.requestsBufferSize and cannot be higher than 9999`});
-
-        config.limits.requestsBufferSize = 1000;
-        config.limits[limit] = 900;
-        should(() => checkLimits(config)).throw(KuzzleInternalError, {message: `Invalid limits.${limit} configuration: cannot exceed 80% of limits.requestsBufferSize and cannot be higher than 9999`});
-      });
     });
   });
 });

@@ -45,18 +45,18 @@ describe('Test the auth controller', () => {
 
   describe('#login', () => {
     it('should resolve to a valid jwt token if authentication succeed', () => {
-      const token = new Token();
+      const token = new Token({
+        _id: 'foobar#bar',
+        jwt: 'bar',
+        userId: 'foobar'
+      });
 
-      token._id = 'foo';
-      token.jwt = 'bar';
-      token.userId = 'foobar';
-
-      kuzzle.repositories.token.generateToken.returns(Bluebird.resolve(token));
+      kuzzle.repositories.token.generateToken.resolves(token);
 
       return authController.login(request)
         .then(response => {
           should(kuzzle.pluginsManager.trigger).calledWith('auth:strategyAuthenticated', {strategy: 'mockup', content: user});
-          should(response).match({_id: 'foobar', jwt: 'foo'});
+          should(response).match({_id: 'foobar', jwt: 'bar'});
           should(kuzzle.repositories.token.generateToken).calledWith(user, request, {});
         });
     });
@@ -75,7 +75,7 @@ describe('Test the auth controller', () => {
     it('should handle startegy\'s headers and status code in case of multi-step authentication strategy', () => {
       const redir = {headers: {Location: 'http://github.com'}, statusCode: 302};
 
-      kuzzle.passport.authenticate.returns(Bluebird.resolve(redir));
+      kuzzle.passport.authenticate.resolves(redir);
 
       return authController.login(request)
         .then(response => {
@@ -102,19 +102,19 @@ describe('Test the auth controller', () => {
     });
 
     it('should be able to set authentication expiration', () => {
-      const token = new Token();
+      const token = new Token({
+        _id: 'foobar#bar',
+        jwt: 'bar',
+        userId: 'foobar'
+      });
 
-      token._id = 'foo';
-      token.jwt = 'bar';
-      token.userId = 'foobar';
-
-      kuzzle.repositories.token.generateToken.returns(Bluebird.resolve(token));
+      kuzzle.repositories.token.generateToken.resolves(token);
 
       request.input.args.expiresIn = '1s';
 
       return authController.login(request)
         .then(response => {
-          should(response).match({_id: 'foobar', jwt: 'foo'});
+          should(response).match({_id: 'foobar', jwt: 'bar'});
           should(kuzzle.repositories.token.generateToken).calledWith(user, request, {expiresIn: '1s'});
         });
     });
@@ -130,9 +130,12 @@ describe('Test the auth controller', () => {
     beforeEach(() => {
       const
         signedToken = jwt.sign({_id: 'admin'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm}),
-        t = new Token();
+        t = new Token({
+          _id: 'foo#' + signedToken, 
+          userId: 'foo', 
+          jwt: signedToken
+        });
 
-      t._id = signedToken;
       request = new Request({
         controller: 'auth',
         action: 'logout',
@@ -185,8 +188,7 @@ describe('Test the auth controller', () => {
 
     beforeEach(() => {
       request = new Request({action: 'checkToken', controller: 'auth', body: {token: 'foobar'}}, {});
-      testToken = new Token();
-      testToken.expiresAt = 42;
+      testToken = new Token({expiresAt: 42});
     });
 
     it('should throw an error if no token is provided', () => {

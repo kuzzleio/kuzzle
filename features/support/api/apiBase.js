@@ -1058,7 +1058,7 @@ class ApiBase {
     });
   }
 
-  subscribe (filters, client) {
+  subscribe (filters, client, authentified = false) {
     const
       msg = {
         controller: 'realtime',
@@ -1068,6 +1068,10 @@ class ApiBase {
         users: 'all',
         body: null
       };
+
+    if (authentified) {
+      msg.jwt = this.world.currentUser.token;
+    }
 
     if (filters) {
       msg.body = filters;

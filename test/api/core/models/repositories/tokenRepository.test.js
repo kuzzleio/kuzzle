@@ -143,7 +143,7 @@ describe('Test: repositories/tokenRepository', () => {
         .be.rejectedWith(KuzzleInternalError, {message: 'Error while generating token'});
     });
 
-    it('should resolve to the good jwt token for a given username', () => {
+    it('should resolve to a token signed with the provided username', () => {
       const
         user = new User(),
         checkToken = jwt.sign({_id: 'userInCache'}, kuzzle.config.security.jwt.secret, {
@@ -161,7 +161,8 @@ describe('Test: repositories/tokenRepository', () => {
       return tokenRepository.generateToken(user, request)
         .then(token => {
           should(token).be.an.instanceOf(Token);
-          should(token._id).be.exactly(checkToken);
+          should(token.jwt).be.exactly(checkToken);
+          should(token._id).be.exactly(user._id + '#' + checkToken);
         });
     });
 
@@ -175,7 +176,7 @@ describe('Test: repositories/tokenRepository', () => {
         user
       });
 
-      kuzzle.services.list.internalCache.volatileSet.rejects(new Error('error'));
+      kuzzle.services.list.internalCache.setex.rejects(new Error('error'));
 
       return should(tokenRepository.generateToken(user, request))
         .be.rejectedWith(KuzzleInternalError, {message: 'Unable to generate token for unknown user'});

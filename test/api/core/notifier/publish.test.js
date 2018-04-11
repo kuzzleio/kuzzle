@@ -1,7 +1,6 @@
 'use strict';
 
 const
-  async = require('async'),
   should = require('should'),
   sinon = require('sinon'),
   Kuzzle = require('../../../mocks/kuzzle.mock'),
@@ -22,6 +21,7 @@ describe('Test: notifier.publish', () => {
     rawRequest = {
       controller: 'realtime',
       action: 'publish',
+      index: 'foo',
       collection: 'bar',
       _id: 'I am fabulous',
       body: {youAre: 'fabulous too'},
@@ -31,7 +31,7 @@ describe('Test: notifier.publish', () => {
     notifier.notifyDocument = sinon.stub();
   });
 
-  it('should publish messages', (done) => {
+  it('should publish messages', () => {
     kuzzle.realtime.test.returns(rooms);
 
     const request = new Request(rawRequest);
@@ -44,19 +44,10 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    async.retry({times: 20, interval: 20}, cb => {
-      try {
-        should(kuzzle.services.list.internalCache.add).not.be.called();
-        should(kuzzle.services.list.internalCache.expire).not.be.called();
-        cb();
-      }
-      catch (e) {
-        cb(e);
-      }
-    }, done);
+    should(kuzzle.services.list.internalCache.setex).not.be.called();
   });
 
-  it('should cache the document in case of a create document rawRequest', (done) => {
+  it('should cache the document in case of a create document rawRequest', () => {
     kuzzle.realtime.test.returns(rooms);
 
     rawRequest.controller = 'document';
@@ -71,19 +62,16 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    async.retry({times: 20, interval: 20}, cb => {
-      try {
-        should(kuzzle.services.list.internalCache.add).be.calledOnce();
-        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
-        cb();
-      }
-      catch(e) {
-        cb(e);
-      }
-    }, done);
+    should(kuzzle.services.list.internalCache.setex)
+      .calledOnce()
+      .calledWith(
+        `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.id}`,
+        10,
+        JSON.stringify(rooms)
+      );
   });
 
-  it('should cache the document in case of a createOrReplace document rawRequest', (done) => {
+  it('should cache the document in case of a createOrReplace document rawRequest', () => {
     kuzzle.realtime.test.returns(rooms);
 
     rawRequest.controller = 'document';
@@ -98,19 +86,16 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    async.retry({times: 20, interval: 20}, cb => {
-      try {
-        should(kuzzle.services.list.internalCache.add).be.calledOnce();
-        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
-        cb();
-      }
-      catch(e) {
-        cb(e);
-      }
-    }, done);
+    should(kuzzle.services.list.internalCache.setex)
+      .calledOnce()
+      .calledWith(
+        `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.id}`,
+        10,
+        JSON.stringify(rooms)
+      );
   });
 
-  it('should cache the document in case of a replace document rawRequest', (done) => {
+  it('should cache the document in case of a replace document rawRequest', () => {
     kuzzle.realtime.test.returns(rooms);
 
     rawRequest.controller = 'document';
@@ -125,37 +110,23 @@ describe('Test: notifier.publish', () => {
         _id: rawRequest._id
       });
 
-    async.retry({times: 20, interval: 20}, cb => {
-      try {
-        should(kuzzle.services.list.internalCache.add).be.calledOnce();
-        should(kuzzle.services.list.internalCache.expire).be.calledOnce();
-        cb();
-      }
-      catch(e) {
-        cb(e);
-      }
-    }, done);
+    should(kuzzle.services.list.internalCache.setex)
+      .calledOnce()
+      .calledWith(
+        `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.id}`,
+        10,
+        JSON.stringify(rooms)
+      );
   });
 
-  it('should do nothing if there is no room to notify', (done) => {
-    let result;
-
+  it('should do nothing if there is no room to notify', () => {
     kuzzle.realtime.test.returns([]);
 
-    result = notifier.publish(new Request(rawRequest), 'foo', 'bar');
+    const result = notifier.publish(new Request(rawRequest), 'foo', 'bar');
 
     should(notifier.notifyDocument.called).be.false();
     should(result).match({published: true});
 
-    async.retry({times: 20, interval: 20}, cb => {
-      try {
-        should(kuzzle.services.list.internalCache.add).not.be.called();
-        should(kuzzle.services.list.internalCache.expire).not.be.called();
-        cb();
-      }
-      catch(e) {
-        cb(e);
-      }
-    }, done);
+    should(kuzzle.services.list.internalCache.setex).not.be.called();
   });
 });

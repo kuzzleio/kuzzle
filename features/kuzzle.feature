@@ -491,10 +491,10 @@ Feature: Kuzzle functional tests
 
   @security @realtime
   Scenario: token expiration
-    Given A room subscription listening to "lastName" having value "Hopper"
     Given I create a user "useradmin" with id "useradmin-id"
-    When I log in as useradmin:testpwd expiring in 1s
-    Then I wait 2s
+    When I log in as useradmin:testpwd expiring in 3s
+    Then I use my JWT to subscribe to field "lastName" having value "Hopper"
+    Then I wait 5s
     And I should receive a TokenExpired notification with field message equal to "Authentication Token Expired"
 
   @security

@@ -9,7 +9,7 @@ describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
 
   beforeEach(() => {
-    let mock = new KuzzleMock();
+    const mock = new KuzzleMock();
     kuzzle = new Kuzzle();
 
     [
@@ -108,32 +108,47 @@ describe('/lib/api/kuzzle.js', () => {
         should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly('uncaughtException');
         should(processOnSpy.getCall(1).args[0]).be.exactly('uncaughtException');
 
-        should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly('SIGHUP');
-        should(processOnSpy.getCall(2).args[0]).be.exactly('SIGHUP');
+        should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly('SIGQUIT');
+        should(processOnSpy.getCall(2).args[0]).be.exactly('SIGQUIT');
 
-        should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly('SIGQUIT');
-        should(processOnSpy.getCall(3).args[0]).be.exactly('SIGQUIT');
+        should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly('SIGABRT');
+        should(processOnSpy.getCall(3).args[0]).be.exactly('SIGABRT');
 
-        should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly('SIGABRT');
-        should(processOnSpy.getCall(4).args[0]).be.exactly('SIGABRT');
+        should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly('SIGPIPE');
+        should(processOnSpy.getCall(4).args[0]).be.exactly('SIGPIPE');
 
-        should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly('SIGPIPE');
-        should(processOnSpy.getCall(5).args[0]).be.exactly('SIGPIPE');
+        should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly('SIGTRAP');
+        should(processOnSpy.getCall(5).args[0]).be.exactly('SIGTRAP');
 
-        should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
-        should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
+        should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGINT');
+        should(processOnSpy.getCall(6).args[0]).be.exactly('SIGINT');
 
-        should(processRemoveAllListenersSpy.getCall(7).args[0]).be.exactly('SIGTRAP');
-        should(processOnSpy.getCall(7).args[0]).be.exactly('SIGTRAP');
+        should(processRemoveAllListenersSpy.getCall(7).args[0]).be.exactly('SIGTERM');
+        should(processOnSpy.getCall(7).args[0]).be.exactly('SIGTERM');
       });
     });
 
-    it('does not really test anything but increases coverage', () => {
+    it('should not start if it fails initializing its internal storage', () => {
       const error = new Error('error');
 
       kuzzle.internalEngine.init.rejects(error);
 
-      return should(kuzzle.start()).be.rejectedWith(error);
+      return should(kuzzle.start()).be.rejectedWith(error)
+        .then(() => {
+          should(kuzzle.internalEngine.bootstrap.all).not.be.called();
+          should(kuzzle.validation.init).not.be.called();
+          should(kuzzle.pluginsManager.init).not.be.called();
+          should(kuzzle.pluginsManager.run).not.be.called();
+          should(kuzzle.services.init).not.be.called();
+          should(kuzzle.indexCache.init).not.be.called();
+          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.funnel.init).not.be.called();
+          should(kuzzle.router.init).not.be.called();
+          should(kuzzle.statistics.init).not.be.called();
+          should(kuzzle.entryPoints.init).not.be.called();
+          should(kuzzle.repositories.init).not.be.called();
+          should(kuzzle.cliController.init).not.be.called();
+        });
     });
   });
 });
