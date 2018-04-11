@@ -147,18 +147,5 @@ describe('lib/config/index.js', () => {
       config.limits.requestsBufferWarningThreshold = 101;
       should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize'});
     });
-
-    it('should throw if the documentsFetchCount limit is set higher than its allowed maximum', () => {
-      const config = getcfg({
-        limits: {
-          documentsFetchCount: 10000
-        }
-      });
-
-      should(() => checkLimits(config)).not.throw();
-      config.limits.documentsFetchCount++;
-
-      should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: limits.documentsFetchCount cannot be higher than 10000'});
-    });
   });
 });
