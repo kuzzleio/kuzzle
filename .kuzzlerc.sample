@@ -23,12 +23,15 @@
     //      This value should be kept low to avoid overloading Kuzzle's event loop.
     // * documentsFetchCount:
     //      Maximum number of documents that can be fetched by a single API
-    //      request. This value cannot exceed 9999 and cannot be higher
-    //      than 80% of the requestsBufferSize value
+    //      request. This value must be in the range 1..10000
+    //      This limits is applied to any route returning multiple documents,
+    //      such as document:mGet or document:search
     // * documentsWriteCount:
     //      Maximum number of documents that can be written by a single API
-    //      request. This value cannot exceed 9999 and cannot be higher
-    //      than 80% of the requestsBufferSize value
+    //      request. The minimum value to this limit is 1.
+    //      There is no higher limit to this value, though you will
+    //      also have to configure the "maxRequestSize" (in the "server"
+    //      section) parameter accordingly
     // * requestsBufferSize:
     //      Maximum number of requests that can be buffered.
     //      Requests received above this limit are discarded with a 503 error
@@ -50,7 +53,7 @@
     //      Depends primarily on available memory.
     //      If set to 0, an unlimited number of rooms can be created
     "concurrentRequests": 50,
-    "documentsFetchCount": 1000,
+    "documentsFetchCount": 10000,
     "documentsWriteCount": 200,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
