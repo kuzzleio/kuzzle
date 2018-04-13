@@ -117,6 +117,31 @@ describe('Test: repositories/tokenRepository', () => {
       return tokenRepository.verifyToken(null)
         .then(userToken => assertIsAnonymous(userToken));
     });
+
+    it('should reject the token if it does not contain the user id', () => {
+      const token = jwt.sign({forged: 'token'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
+
+      return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {message: 'Json Web Token Error'});
+    });
+
+    it('should return the token loaded from cache', () => {
+      const 
+        _id = 'auser',
+        token = jwt.sign({_id}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm}),
+        cacheObj = JSON.stringify({_id, jwt: token});
+
+      kuzzle.services.list.internalCache.get.withArgs(tokenRepository.getCacheKey(`${_id}#${token}`)).resolves(cacheObj);
+
+      return tokenRepository.verifyToken(token)
+        .then(loaded => {
+          should(loaded)
+            .be.instanceOf(Token)
+            .and.match(JSON.parse(cacheObj));
+
+          // the cache entry must not be refreshed
+          should(kuzzle.services.list.internalCache.expire).not.be.called();
+        });
+    });
   });
 
   describe('#generateToken', () => {

@@ -1,7 +1,5 @@
 const
-  _ = require('lodash'),
   should = require('should'),
-  sinon = require('sinon'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   {
     InternalError: KuzzleInternalError,
@@ -75,8 +73,7 @@ describe('Test: repositories/repository', () => {
 
       return repository.loadMultiFromDatabase(['persisted', 'persisted'])
         .then(results => {
-          should(results).be.an.Array();
-          should(results).not.be.empty();
+          should(results).be.an.Array().and.not.be.empty();
 
           results.forEach(result => {
             should(result).be.instanceOf(ObjectConstructor);
@@ -91,8 +88,7 @@ describe('Test: repositories/repository', () => {
 
       return repository.loadMultiFromDatabase([{_id:'persisted'}, {_id:'persisted'}])
         .then(results => {
-          should(results).be.an.Array();
-          should(results).not.be.empty();
+          should(results).be.an.Array().and.not.be.empty();
 
           results.forEach(result => {
             should(result).be.instanceOf(ObjectConstructor);
@@ -105,8 +101,7 @@ describe('Test: repositories/repository', () => {
     it('should respond with an empty array if no result found', () => {
       return repository.loadMultiFromDatabase([{_id:'null'}])
         .then(results => {
-          should(results).be.an.Array();
-          should(results).be.empty();
+          should(results).be.an.Array().and.be.empty();
         });
     });
   });
@@ -158,7 +153,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise when loading an incorrect object', () => {
-      kuzzle.services.list.internalCache.get = sinon.stub().resolves('bad type');
+      kuzzle.services.list.internalCache.get.resolves('bad type');
 
       return should(repository.load('string')).be.rejectedWith(KuzzleInternalError);
     });
@@ -220,116 +215,127 @@ describe('Test: repositories/repository', () => {
 
   describe('#persistToDatabase', () => {
     it('should call the createOrReplace method of internal Engine', () => {
-      const createOrReplaceStub = kuzzle.internalEngine.createOrReplace;
       const object = {_id: 'someId', some: 'source'};
 
       return repository.persistToDatabase(object)
         .then(() => {
-          should(createOrReplaceStub.firstCall.args[0]).be.eql(repository.collection);
-          should(createOrReplaceStub.firstCall.args[1]).be.exactly('someId');
-          should(createOrReplaceStub.firstCall.args[2]).be.deepEqual(repository.serializeToDatabase(object));
+          should(kuzzle.internalEngine.createOrReplace)
+            .calledOnce()
+            .calledWith(repository.collection, 'someId', repository.serializeToDatabase(object));
         });
     });
   });
 
   describe('#deleteFromDatabase', () => {
     it('should call a database deletion properly', () => {
-      const deleteStub = kuzzle.internalEngine.delete;
-
       return repository.deleteFromDatabase('someId')
         .then(() => {
-          should(deleteStub.firstCall.args[0]).be.eql(repository.collection);
-          should(deleteStub.firstCall.args[1]).be.exactly('someId');
+          should(kuzzle.internalEngine.delete)
+            .calledOnce()
+            .calledWith(repository.collection, 'someId');
         });
     });
   });
 
   describe('#deleteFromCache', () => {
     it('should call a cache deletion properly', () => {
-      const delStub = kuzzle.services.list.internalCache.del;
-
       return repository.deleteFromCache('someId')
         .then(() => {
-          should(delStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
+          should(kuzzle.services.list.internalCache.del)
+            .calledOnce()
+            .calledWith(repository.getCacheKey('someId'));
         });
     });
   });
 
   describe('#delete', () => {
     it('should delete an object from both cache and database when pertinent', () => {
-      const deleteStub = kuzzle.internalEngine.delete;
-      const delStub = kuzzle.services.list.internalCache.del;
-
       return repository.delete('someId')
         .then(() => {
-          should(delStub).be.calledOnce();
-          should(delStub.firstCall.args[0]).be.exactly(repository.getCacheKey('someId'));
-          should(deleteStub).be.calledOnce();
-          should(deleteStub.firstCall.args[0]).be.eql(repository.collection);
-          should(deleteStub.firstCall.args[1]).be.exactly('someId');
+          should(kuzzle.services.list.internalCache.del)
+            .calledOnce()
+            .calledWith(repository.getCacheKey('someId'));
+
+          should(kuzzle.internalEngine.delete)
+            .calledOnce()
+            .calledWith(repository.collection, 'someId');
         });
     });
   });
 
   describe('#persistToCache', () => {
     it('should set the object if the ttl is false', () => {
-      const setStub = kuzzle.services.list.internalCache.set;
-
       return repository.persistToCache(cachePojo, {ttl: false, key: 'someKey'})
         .then(() => {
-          should(setStub.firstCall.args[0]).be.eql('someKey');
-          should(setStub.firstCall.args[1]).be.eql(JSON.stringify(cachePojo));
+          should(kuzzle.services.list.internalCache.set)
+            .calledOnce()
+            .calledWith('someKey', JSON.stringify(cachePojo));
         });
     });
 
     it('should set the object with a ttl by default', () => {
-      const setexStub = kuzzle.services.list.internalCache.setex;
-
       return repository.persistToCache(cachePojo, {ttl: 500, key: 'someKey'})
         .then(() => {
-          should(setexStub.firstCall.args[0]).be.eql('someKey');
-          should(setexStub.firstCall.args[1]).be.eql(500);
-          should(setexStub.firstCall.args[2]).be.eql(JSON.stringify(cachePojo));
+          should(kuzzle.services.list.internalCache.setex)
+            .calledOnce()
+            .calledWith('someKey', 500, JSON.stringify(cachePojo));
         });
     });
   });
 
   describe('#refreshCacheTTL', () => {
     it('should persist the object if the ttl is set to false', () => {
-      const persistStub = kuzzle.services.list.internalCache.persist;
-
       repository.refreshCacheTTL(cachePojo, {ttl: false});
 
-      should(persistStub.firstCall.args[0]).be.eql(repository.getCacheKey(cachePojo._id, repository.collection));
+      should(kuzzle.services.list.internalCache.persist)
+        .calledOnce()
+        .calledWith(repository.getCacheKey(cachePojo._id, repository.collection));
     });
 
-    it('should refresh the ttl if not passed falsed', () => {
-      const expireStub = kuzzle.services.list.internalCache.expire;
-
+    it('should refresh the ttl with the provided TTL', () => {
       repository.refreshCacheTTL(cachePojo, {ttl: 500});
 
-      should(expireStub.firstCall.args[0]).be.eql(repository.getCacheKey(cachePojo._id, repository.collection));
-      should(expireStub.firstCall.args[1]).be.eql(500);
+      should(kuzzle.services.list.internalCache.expire)
+        .calledOnce()
+        .calledWith(repository.getCacheKey(cachePojo._id, repository.collection), 500);
+    });
+
+    it('should use the provided object TTL if one has been defined', () => {
+      const pojo = Object.assign({}, cachePojo, {ttl: 1234});
+
+      repository.refreshCacheTTL(pojo);
+
+      should(kuzzle.services.list.internalCache.expire)
+        .calledOnce()
+        .calledWith(repository.getCacheKey(pojo._id, repository.collection), 1234);
+    });
+
+    it('should use the provided ttl instead of the object-defined one', () => {
+      const pojo = Object.assign({}, cachePojo, {ttl: 1234});
+
+      repository.refreshCacheTTL(pojo, {ttl: 500});
+
+      should(kuzzle.services.list.internalCache.expire)
+        .calledOnce()
+        .calledWith(repository.getCacheKey(pojo._id, repository.collection), 500);
     });
   });
 
   describe('#expireFromCache', () => {
     it('should expire the object', () => {
-      const expireStub = kuzzle.services.list.internalCache.expire;
-
       repository.expireFromCache(cachePojo);
 
-      should(expireStub.firstCall.args[0]).be.eql(repository.getCacheKey(cachePojo._id, repository.collection));
-      should(expireStub.firstCall.args[1]).be.eql(-1);
+      should(kuzzle.services.list.internalCache.expire)
+        .calledOnce()
+        .calledWith(repository.getCacheKey(cachePojo._id, repository.collection), -1);
     });
   });
 
   describe('#serializeToCache', () => {
     it('should return the same object', () => {
-      const object = new ObjectConstructor();
-      _.assign(object, cachePojo._source, {_id: cachePojo._id});
-
-      const serialized = repository.serializeToCache(object);
+      const 
+        object = Object.assign(new ObjectConstructor(), cachePojo._source, {_id: cachePojo._id}),
+        serialized = repository.serializeToCache(object);
 
       should(Object.keys(serialized).length).be.exactly(Object.keys(object).length);
       Object.keys(repository.serializeToCache(object)).forEach(key => {
@@ -441,8 +447,7 @@ describe('Test: repositories/repository', () => {
       return repository.scroll({})
         .then(response => {
           should(response).be.an.Object();
-          should(response.hits).be.an.Array();
-          should(response.hits).be.empty();
+          should(response.hits).be.an.Array().and.be.empty();
           should(response.total).be.exactly(0);
           should(response.scrollId).be.eql('foobar');
         });
