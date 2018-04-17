@@ -28,6 +28,7 @@
 #### Where should the reviewer start?
 
 <!-- Tell which files are relevant or which parts of the code you are least confident about -->
+<!-- You can link a entire file of you branch like this : https://github.com/<owner>/<project>/blob/<branch-name>/<path-to-the-file> -->
 
 #### How should this be manually tested?
 
@@ -35,8 +36,9 @@
   Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce.
   Please also list any relevant details for your test configuration
 -->
-  - Step 1
-  - Step 2
-  - Step 3
+  - Step 1 :
+  - Step 2 :
+  - Step 3 :  
+  ...
 
 #### Screenshots (if appropriate)
