@@ -3,20 +3,12 @@
   It simply serves to provide a guide to allow a better review of pull requests.
 -->
 
-## What is in this PR?
-<!-- Please fulfill this section -->
+<!--
+  IMPORTANT
+  Don't forget to add the corresponding label to your PR.
+  This is part of our release process in order to generate the change log.
+-->
 
-<!-- Please delete options that are not relevant. -->
-<!-- Add a link for each related issues (eg: [X] Bug fix #42 #21 #84 ) -->
-
-
-- [ ] Bug fix <!-- non-breaking change which fixes an issue -->
-- [ ] New feature <!-- non-breaking change which adds functionality) -->
-- [ ] Breaking change <!-- fix or feature that would cause existing functionality to not work as expected) -->
-
-
-- [ ] Change that requires a documentation update
-- [ ] Change that adds new dependencies
 
 ## What does this PR do ?
 <!-- Please fulfill this section -->
