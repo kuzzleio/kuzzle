@@ -76,6 +76,14 @@ After({tags: '@security'}, function () {
   return cleanSecurity.call(this);
 });
 
+Before({tags: '@firstAdmin'}, function () {
+  return cleanSecurity.call(this);
+});
+
+After({tags: '@firstAdmin'}, function () {
+  return grantDefaultRoles.call(this).then(() => cleanSecurity.call(this));
+});
+
 Before({tags: '@redis'}, function () {
   return cleanRedis.call(this);
 });
@@ -122,6 +130,36 @@ function cleanSecurity () {
 
       return results.length > 0 ? this.api.deleteRoles(results, true) : Bluebird.resolve();
     });
+}
+
+function grantDefaultRoles () {
+  return this.api.login('local', this.users.useradmin.credentials.local)
+    .then(body => {
+      if (body.error) {
+        callback(new Error(body.error.message));
+        return false;
+      }
+
+      if (!body.result) {
+        callback(new Error('No result provided'));
+        return false;
+      }
+
+      if (!body.result.jwt) {
+        callback(new Error('No token received'));
+        return false;
+      }
+
+      if (this.currentUser === null || this.currentUser === undefined) {
+        this.currentUser = {};
+      }
+
+      this.currentToken = {jwt: body.result.jwt};
+      this.currentUser.token = body.result.jwt;
+
+      return this.api.createOrReplaceRole('anonymous', {controllers: {'*': {actions: {'*': true}}}});
+    })
+    .then(() => this.api.createOrReplaceRole('default', {controllers: {'*': {actions: {'*': true}}}}));
 }
 
 function cleanRedis() {
