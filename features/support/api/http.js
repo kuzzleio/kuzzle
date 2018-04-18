@@ -247,6 +247,24 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  createFirstAdmin (body, id, reset) {
+    const options = {
+      url : this.apiPath( '/_createFirstAdmin'),
+      method: 'POST',
+      body
+    };
+
+    if (id !== undefined) {
+      options.url += '/' + id;
+    }
+
+    if (reset) {
+      options.url += '?reset=1';
+    }
+
+    return this.callApi(options);
+  }
+
   createIndex (index) {
     const options = {
       url: this.apiPath(index + '/_create'),

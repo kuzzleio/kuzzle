@@ -257,6 +257,24 @@ class ApiBase {
     return this.send(msg);
   }
 
+  createFirstAdmin (body, id, reset) {
+    const msg = {
+      controller: 'security',
+      action: 'createFirstAdmin',
+      body: body
+    };
+
+    if (id !== undefined) {
+      msg._id = id;
+    }
+
+    if (reset) {
+      msg.reset = true
+    }
+
+    return this.send(msg);
+  }
+
   credentialsExist (strategy, body) {
     return this.send({
       controller: 'auth',
