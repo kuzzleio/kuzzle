@@ -249,7 +249,7 @@ class HttpApi {
 
   createFirstAdmin (body, id, reset) {
     const options = {
-      url : this.apiPath( '/_createFirstAdmin'),
+      url: this.apiPath('/_createFirstAdmin'),
       method: 'POST',
       body
     };

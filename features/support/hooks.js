@@ -136,18 +136,15 @@ function grantDefaultRoles () {
   return this.api.login('local', this.users.useradmin.credentials.local)
     .then(body => {
       if (body.error) {
-        callback(new Error(body.error.message));
-        return false;
+        return Promise.reject(new Error(body.error.message));
       }
 
       if (!body.result) {
-        callback(new Error('No result provided'));
-        return false;
+        return Promise.reject(new Error('No result provided'));
       }
 
       if (!body.result.jwt) {
-        callback(new Error('No token received'));
-        return false;
+        return Promise.reject(new Error('No token received'));
       }
 
       if (this.currentUser === null || this.currentUser === undefined) {

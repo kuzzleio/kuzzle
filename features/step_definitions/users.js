@@ -79,7 +79,7 @@ When(/^I create the first admin with id "(.*?)"( and reset profiles and roles)?$
         return callback(new Error(body.error.message));
       }
 
-        return callback();
+      return callback();
     })
     .catch(error => callback(error));
 });

@@ -269,7 +269,7 @@ class ApiBase {
     }
 
     if (reset) {
-      msg.reset = true
+      msg.reset = true;
     }
 
     return this.send(msg);
