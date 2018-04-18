@@ -101,9 +101,13 @@ describe('Test: security controller - createFirstAdmin', () => {
   });
 
   describe('#resetRoles', () => {
-    it('should call validateAndSaveRole with all default roles', () => {
+    it('should call fromDTO and validateAndSaveRole with all default roles', () => {
       const
-        validateAndSaveRole = sandbox.stub().returns(Promise.resolve()),
+        roleRepository = {
+          fromDTO: role => Promise.resolve(role),
+          validateAndSaveRole: sandbox.stub().returns(Promise.resolve())
+        },
+        fromDTOSpy = sinon.spy(roleRepository, 'fromDTO'),
         mock = {
           admin: {
             controllers: {
@@ -134,49 +138,63 @@ describe('Test: security controller - createFirstAdmin', () => {
           }
         };
 
-      return SecurityController.__get__('resetRoles')(mock, {validateAndSaveRole})
+      return SecurityController.__get__('resetRoles')(mock, roleRepository)
         .then(() => {
-          try {
-            should(validateAndSaveRole).have.callCount(3);
-            should(validateAndSaveRole.firstCall).be.calledWithMatch({_id: 'admin', controllers: {foo: {actions: {bar: true}}}});
-            should(validateAndSaveRole.secondCall).be.calledWithMatch({_id: 'default', controllers: {baz: {actions: {yolo: true}}}});
-            should(validateAndSaveRole.thirdCall).be.calledWithMatch({_id: 'anonymous', controllers: {anon: {actions: {ymous: true}}}});
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
+          should(fromDTOSpy).have.callCount(3);
+          should(roleRepository.validateAndSaveRole).have.callCount(3);
+
+          should(fromDTOSpy.firstCall).be.calledWithMatch({_id: 'admin', controllers: {foo: {actions: {bar: true}}}});
+          should(roleRepository.validateAndSaveRole.firstCall).be.calledWithMatch({_id: 'admin', controllers: {foo: {actions: {bar: true}}}});
+
+          should(fromDTOSpy.secondCall).be.calledWithMatch({_id: 'default', controllers: {baz: {actions: {yolo: true}}}});
+          should(roleRepository.validateAndSaveRole.secondCall).be.calledWithMatch({_id: 'default', controllers: {baz: {actions: {yolo: true}}}});
+
+          should(fromDTOSpy.thirdCall).be.calledWithMatch({_id: 'anonymous', controllers: {anon: {actions: {ymous: true}}}});
+          should(roleRepository.validateAndSaveRole.thirdCall).be.calledWithMatch({_id: 'anonymous', controllers: {anon: {actions: {ymous: true}}}});
         });
     });
   });
 
   describe('#resetProfiles', () => {
-    it('should call validateAndSaveProfile with all default profiles and rights policies', () => {
+    it('should call fromDTO and validateAndSaveProfile with all default profiles and rights policies', () => {
       const
-        validateAndSaveProfile = sandbox.stub().returns(Promise.resolve());
+        profileRepository = {
+          fromDTO: profile => Promise.resolve(profile),
+          validateAndSaveProfile: sandbox.stub().returns(Promise.resolve())
+        },
+        fromDTOSpy = sinon.spy(profileRepository, 'fromDTO');
 
-      return SecurityController.__get__('resetProfiles')({validateAndSaveProfile})
+      return SecurityController.__get__('resetProfiles')(profileRepository)
         .then(() => {
+          should(fromDTOSpy).have.callCount(3);
+          should(profileRepository.validateAndSaveProfile).have.callCount(3);
 
-          try {
-            should(validateAndSaveProfile).have.callCount(3);
-            should(validateAndSaveProfile.firstCall).be.calledWithMatch({
-              _id: 'admin',
-              policies: [{roleId: 'admin'}]
-            });
-            should(validateAndSaveProfile.secondCall).be.calledWithMatch({
-              _id: 'default',
-              policies: [{roleId: 'default'}]
-            });
-            should(validateAndSaveProfile.thirdCall).be.calledWithMatch({
-              _id: 'anonymous',
-              policies: [{roleId: 'anonymous'}]
-            });
-            return Promise.resolve();
-          }
-          catch (error) {
-            return Promise.reject(error);
-          }
+          should(fromDTOSpy.firstCall).be.calledWithMatch({
+            _id: 'admin',
+            policies: [{roleId: 'admin'}]
+          });
+          should(profileRepository.validateAndSaveProfile.firstCall).be.calledWithMatch({
+            _id: 'admin',
+            policies: [{roleId: 'admin'}]
+          });
+
+          should(fromDTOSpy.secondCall).be.calledWithMatch({
+            _id: 'default',
+            policies: [{roleId: 'default'}]
+          });
+          should(profileRepository.validateAndSaveProfile.secondCall).be.calledWithMatch({
+            _id: 'default',
+            policies: [{roleId: 'default'}]
+          });
+
+          should(fromDTOSpy.thirdCall).be.calledWithMatch({
+            _id: 'anonymous',
+            policies: [{roleId: 'anonymous'}]
+          });
+          should(profileRepository.validateAndSaveProfile.thirdCall).be.calledWithMatch({
+            _id: 'anonymous',
+            policies: [{roleId: 'anonymous'}]
+          });
         });
     });
   });
