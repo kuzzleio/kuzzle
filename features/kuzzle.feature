@@ -385,7 +385,7 @@ Feature: Kuzzle functional tests
 
   @security
   Scenario: get profile without id triggers an error
-    Then I cannot a profile without ID
+    Then I cannot get a profile without ID
 
   @security
   Scenario: creating a profile with an empty set of roles triggers an error

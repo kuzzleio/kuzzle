@@ -65,7 +65,7 @@ Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 10
     .catch(() => callback());
 });
 
-Then(/^I cannot a profile without ID$/, function (callback) {
+Then(/^I cannot get a profile without ID$/, function (callback) {
   this.api.getProfile('')
     .then(() => {
       callback(new Error('Getting profile without id succeeded. Expected to throw.'));
