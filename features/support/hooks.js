@@ -2,6 +2,7 @@
 
 const
   _ = require('lodash'),
+  minimist = require('minimist'),
   {
     After,
     AfterAll,
@@ -17,7 +18,7 @@ BeforeAll(function () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
     promises = [],
-    world = new World({parameters: {protocol: 'http', silent: true}}),
+    world = new World({parameters: parseWorldParameters()}),
     http = new Http(world);
 
   for (const index of Object.keys(fixtures)) {
@@ -39,10 +40,9 @@ BeforeAll(function () {
 // after last
 AfterAll(function () {
   const
-    promises = [];
-
-  const world = new World({parameters: {protocol: 'http', silent: true}});
-  const http = new Http(world);
+    promises = [],
+    world = new World({parameters: parseWorldParameters()}),
+    http = new Http(world);
 
   for (const index of [
     world.fakeIndex,
@@ -183,4 +183,17 @@ function cleanValidations() {
       .filter(r => r._id.match(/^kuzzle-test-/))
       .map(r => this.api.deleteSpecifications(r._id.split('#')[0], r._id.split('#')[1]))
     ));
+}
+
+function parseWorldParameters() {
+  const
+    argv = minimist(process.argv.slice(2)),
+    parameters = Object.assign({
+      protocol: 'websocket',
+      host: 'localhost',
+      port: 7512,
+      silent: true
+    }, JSON.parse(argv['world-parameters'] || '{}'));
+
+  return parameters;
 }
