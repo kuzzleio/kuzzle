@@ -5,7 +5,7 @@
 
 <!--
   IMPORTANT
-  Don't forget to add the corresponding label to your PR.
+  Don't forget to add the corresponding "changelog:xxx" label to your PR.
   This is part of our release process in order to generate the change log.
 -->
 
