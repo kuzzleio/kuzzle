@@ -68,7 +68,7 @@ describe('lib/config/index.js', () => {
   });
 
   describe('#checkLimits', () => {
-    const 
+    const
       checkLimits = Config.__get__('checkLimitsConfig'),
       // checkLimits normally receives a defaulted version of Kuzzle configuration
       getcfg = config => {
@@ -99,7 +99,8 @@ describe('lib/config/index.js', () => {
     it('should throw on 0-valued limits except for special cases', () => {
       const canBeZero = [
         'subscriptionMinterms',
-        'subscriptionRooms'
+        'subscriptionRooms',
+        'subscriptionDocumentTTL'
       ];
 
       for (const limit of Object.keys(defaultConfig.limits)) {
@@ -128,7 +129,7 @@ describe('lib/config/index.js', () => {
       });
 
       should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize'});
-      
+
       config.limits.concurrentRequests = config.limits.requestsBufferSize;
       should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize'});
     });

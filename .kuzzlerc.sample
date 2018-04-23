@@ -50,10 +50,16 @@
     //      transformed in their Canonical Disjunctive Normal Form (CDNF).
     //      Set to 0 for no limit.
     // * subscriptionRooms
-    //      Maximum number of different subscription rooms 
+    //      Maximum number of different subscription rooms
     //      (i.e. different index+collection+filters subscription configurations)
     //      Depends primarily on available memory.
     //      If set to 0, an unlimited number of rooms can be created
+    // * subscriptionDocumentTTL
+    //      Maximum time (in seconds) a document will be kept in cache for real-time subscriptions.
+    //      This cache is used to notify subscriber when a document enter or leave a scope after modifications.
+    //      By default, subscription will be kept 72 hour.
+    //      /!\ Remember that keeping subscription over a long period of time can lead to memory leak. /!\
+    //      Set to 0 to keep subscriptions forever.
     "concurrentRequests": 50,
     "documentsFetchCount": 10000,
     "documentsWriteCount": 200,
@@ -61,7 +67,8 @@
     "requestsBufferWarningThreshold": 5000,
     "subscriptionConditionsCount": 16,
     "subscriptionMinterms": 0,
-    "subscriptionRooms": 1000000
+    "subscriptionRooms": 1000000,
+    "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
   },
 
   // The plugins section lets you define plugins behaviors
@@ -89,7 +96,7 @@
 
     // Custom plugin configurations must be described here.
     // Example:
-    // 
+    //
     // "plugin-name": {
     //   "<configuration property name>": "<value>"
     // }
@@ -463,7 +470,7 @@
     // currently the only database layer we support.
     //   * client:
     //       Elasticsearch constructor options. Use this field to specify your Elasticsearch config options, this object
-    //       is passed through to the Elasticsearch constructor and can contain all options/keys outlined here: 
+    //       is passed through to the Elasticsearch constructor and can contain all options/keys outlined here:
     //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
     "db": {
       "backend": "elasticsearch",
