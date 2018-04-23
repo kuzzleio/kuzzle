@@ -407,7 +407,7 @@ describe('Test: repositories/profileRepository', () => {
           done(new Error('The promise is not rejected'));
         })
         .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError);
+          should(e).be.an.instanceOf(BadRequestError).and.match({message: 'Missing profile id'});
           should(kuzzle.pluginsManager.trigger).not.be.called();
           done();
         })
