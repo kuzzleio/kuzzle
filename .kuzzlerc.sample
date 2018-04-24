@@ -60,7 +60,7 @@
     //      By default, subscriptions will be kept 72 hours.
     //      /!\ Please note that keeping subscriptions over a long period of time may result in memory overuse. /!\
     //      If set to 0, the subscription will be kept in cache forever.
-    //      /!\ Setting that property to 0 will lead to a memory leak if documents enter a real-time subscription scope and never leave it again. /!\
+    //      /!\ Setting the property to 0 will lead to a memory leak if documents enter a real-time subscription scope and never exit that scope. /!\
     "concurrentRequests": 50,
     "documentsFetchCount": 10000,
     "documentsWriteCount": 200,
