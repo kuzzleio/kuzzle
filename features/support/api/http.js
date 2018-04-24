@@ -255,7 +255,7 @@ class HttpApi {
     };
 
     if (id !== undefined) {
-      options.url += '/' + id;
+      options.url = this.apiPath('/' + id + '/_createFirstAdmin');
     }
 
     if (reset) {
