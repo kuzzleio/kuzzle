@@ -56,10 +56,10 @@
     //      If set to 0, an unlimited number of rooms can be created
     // * subscriptionDocumentTTL
     //      Maximum time (in seconds) a document will be kept in cache for real-time subscriptions.
-    //      This cache is used to notify subscriber when a document enter or leave a scope after modifications.
-    //      By default, subscription will be kept 72 hour.
-    //      /!\ Remember that keeping subscription over a long period of time can lead to memory leak. /!\
-    //      Set to 0 to keep subscriptions forever.
+    //      This cache is used to notify subscriber when a document enters or leaves a scope after an update.
+    //      By default, subscriptions will be kept 72 hours.
+    //      /!\ Please note that keeping subscriptions over a long period of time can lead to a memory leak. /!\
+    //      If set to 0, the subscription will be kept in cache forever.
     "concurrentRequests": 50,
     "documentsFetchCount": 10000,
     "documentsWriteCount": 200,
