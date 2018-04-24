@@ -156,7 +156,8 @@ function grantDefaultRoles () {
 
       return this.api.createOrReplaceRole('anonymous', {controllers: {'*': {actions: {'*': true}}}});
     })
-    .then(() => this.api.createOrReplaceRole('default', {controllers: {'*': {actions: {'*': true}}}}));
+    .then(() => this.api.createOrReplaceRole('default', {controllers: {'*': {actions: {'*': true}}}}))
+    .then(() => this.api.createOrReplaceRole('admin', {controllers: {'*': {actions: {'*': true}}}}));
 }
 
 function cleanRedis() {
