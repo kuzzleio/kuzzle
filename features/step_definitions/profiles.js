@@ -97,8 +97,11 @@ Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: wit
 
           if (profile) {
             const
-              policies = stringify(body.result._source.policies),
-              expected = stringify(this.profiles[profile].policies);
+              compare = (a, b) => {
+                return a.roleId <= b.roleId;
+              },
+              policies = stringify(body.result._source.policies.sort(compare)),
+              expected = stringify(this.profiles[profile].policies.sort(compare));
 
             if (policies !== expected) {
               if (not) {
