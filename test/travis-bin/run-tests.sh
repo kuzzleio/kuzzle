@@ -10,3 +10,4 @@ fi
 
 docker-compose -f docker-compose/test.yml run kuzzle
 
+NODE_MAJOR=8 docker-compose -f docker-compose/test.yml run kuzzle
