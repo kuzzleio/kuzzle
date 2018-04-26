@@ -82,7 +82,7 @@ kuzzle
 ## Contributing to Kuzzle
 
 You're welcome to contribute to Kuzzle!
-Feel free to report issues, ask for features or even make pull requests !
+Feel free to report issues, ask for features or even make pull requests!
 
 Check our [contributing documentation](./CONTRIBUTING.md) to know about our coding and pull requests rules
 
