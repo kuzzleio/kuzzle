@@ -1,5 +1,5 @@
 <!--
-  This template is not optional.
+  This template is optional.
   It simply serves to provide a guide to allow a better review of pull requests.
 -->
 
