@@ -8,7 +8,8 @@ const
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   Role = require('../../../../../lib/api/core/models/security/role'),
-  Request = require('kuzzle-common-objects').Request;
+  Request = require('kuzzle-common-objects').Request,
+  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError;
 
 const
   _kuzzle = Symbol.for('_kuzzle');
@@ -214,12 +215,21 @@ describe('Test: security/profileTest', () => {
   });
 
   describe('#validateDefinition', () => {
-    it('should reject if no policies are given', () => {
+    it('should reject if no policies are provided', () => {
+      const profile = new Profile();
+      profile.policies = null;
+      profile._id = 'test';
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {message: 'The "policies" attribute is mandatory and must be an array'});
+    });
+
+    it('should reject if an empty policies array is provided', () => {
       const profile = new Profile();
       profile._id = 'test';
 
       return should(profile.validateDefinition())
-        .be.rejectedWith('The "policies" attribute array cannot be empty');
+        .be.rejectedWith(BadRequestError, {message: 'The "policies" attribute array cannot be empty'});
     });
 
     it('should reject if no roleId is given', () => {
@@ -228,7 +238,7 @@ describe('Test: security/profileTest', () => {
       profile.policies = [{}];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith('policies[0] Missing mandatory attribute "roleId"');
+        .be.rejectedWith(BadRequestError, {message: 'policies[0] Missing mandatory attribute "roleId"'});
     });
 
     it('should reject if an invalid attribute is given', () => {
@@ -240,7 +250,7 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith('policies[0] Unexpected attribute "foo". Valid attributes are "roleId" and "restrictedTo"');
+        .be.rejectedWith(BadRequestError, {message: 'policies[0] Unexpected attribute "foo". Valid attributes are "roleId" and "restrictedTo"'});
     });
 
     it('should reject if restrictedTo is not an array', () => {
@@ -252,10 +262,22 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith('policies[0] Expected "restrictedTo" to be an array of objects');
+        .be.rejectedWith(BadRequestError, {message: 'policies[0] Expected "restrictedTo" to be an array of objects'});
     });
 
-    it('should reject if restrictedTo is not given an index', () => {
+    it('should reject if restrictedTo contains a non-object value', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [null]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] should be an object'});
+    });
+
+    it('should reject if restrictedTo does not contain an index', () => {
       const profile = new Profile();
       profile._id = 'test';
       profile.policies = [{
@@ -266,7 +288,7 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith('policies[0].restrictedTo[0] Missing mandatory attribute "index"');
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Missing mandatory attribute "index"'});
     });
 
     it('should reject if restrictedTo is given an invalid attribute', () => {
@@ -281,8 +303,82 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith('policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collections"');
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collections"'});
+    });
+
+    it('should reject if restrictedTo.collections is not an array', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          index: 'index',
+          collections: 'bar'
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" must be of type "array"'});
+    });
+
+    it('should reject if restrictedTo.collections is not an array of strings', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          index: 'index',
+          collections: ['bar', 123]
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" can only contain non-empty string values'});
+    });
+
+    it('should reject if restrictedTo.collections contains an empty string', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          index: 'index',
+          collections: ['bar', '']
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" can only contain non-empty string values'});
+    });
+
+    it('should reject if restrictedTo.index is not a string', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          index: false,
+          collections: ['bar', 'baz']
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "index" must be a non-empty string value'});
+    });
+
+    it('should reject if restrictedTo.index is an empty string', () => {
+      const profile = new Profile();
+      profile._id = 'test';
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{
+          index: '',
+          collections: ['bar', 'baz']
+        }]
+      }];
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "index" must be a non-empty string value'});
     });
   });
-
 });

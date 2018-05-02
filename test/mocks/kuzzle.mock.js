@@ -193,7 +193,8 @@ class KuzzleMock extends Kuzzle {
         load: sinon.stub().resolves(),
         loadMultiFromDatabase: sinon.stub().resolves(),
         loadProfiles: sinon.stub().resolves(),
-        searchProfiles: sinon.stub().resolves()
+        searchProfiles: sinon.stub().resolves(),
+        validateAndSaveProfile: sinon.stub()
       },
       role: {
         deleteRole: sinon.stub().resolves(),
