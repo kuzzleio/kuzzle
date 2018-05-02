@@ -8,9 +8,11 @@ const
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
+  {
+    BadRequestError,
+    NotFoundError,
+    SizeLimitError
+  } = require('kuzzle-common-objects').errors,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - profiles', () => {
@@ -73,7 +75,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#createOrReplaceProfile', () => {
     it('should resolve to an object on a createOrReplaceProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test', _source: {}, _meta: {}}));
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
 
       return securityController.createOrReplaceProfile(new Request({_id: 'test', body: {policies: [{roleId: 'role1'}]}}))
         .then(response => {
@@ -108,6 +110,28 @@ describe('Test: security controller - profiles', () => {
               refresh: 'wait_for'
             });
         });
+    });
+
+    it('should throw if an invalid profile format is provided', () => {
+      request = new Request({});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify a body.'});
+
+      request = new Request({body: {}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify a body attribute "policies".'});
+
+      request = new Request({body: {policies: 'foobar'}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify the body attribute "policies" of type "array".'});
+
+      request = new Request({body: {policies: []}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify an _id.'});
+
+      request = new Request({_id: '_foobar', body: {policies: []}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must not specify an _id that starts with an underscore (_).'});
     });
   });
 
@@ -152,6 +176,28 @@ describe('Test: security controller - profiles', () => {
               refresh: 'wait_for'
             });
         });
+    });
+
+    it('should throw if an invalid profile format is provided', () => {
+      request = new Request({});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify a body.'});
+
+      request = new Request({body: {}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify a body attribute "policies".'});
+
+      request = new Request({body: {policies: 'foobar'}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify the body attribute "policies" of type "array".'});
+
+      request = new Request({body: {policies: []}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must specify an _id.'});
+
+      request = new Request({_id: '_foobar', body: {policies: []}});
+      should(() => securityController.createOrReplaceProfile(request))
+        .throw(BadRequestError, {message: 'The request must not specify an _id that starts with an underscore (_).'});
     });
   });
 
@@ -357,6 +403,12 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error if no id is given', () => {
       return should(() => {
         securityController.updateProfile(new Request({body: {}}));
+      }).throw(BadRequestError);
+    });
+
+    it('should throw an error if no body is given', () => {
+      return should(() => {
+        securityController.updateProfile(new Request({_id: 'foobar'}));
       }).throw(BadRequestError);
     });
 
