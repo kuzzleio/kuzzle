@@ -7,7 +7,7 @@ services:
       - proxy_port=7513
 
   kuzzle:
-    image: kuzzleio/dev
+    image: kuzzleio/dev${NODE_MAJOR}
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
@@ -46,4 +46,3 @@ services:
     environment:
       - cluster.name=kuzzle
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-
