@@ -1,13 +1,13 @@
-var
+const
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
   AnythingType = require('../../../../../lib/api/core/validation/types/anything'),
   should = require('should');
 
 describe('Test: validation/types/anything', () => {
-  var anythingType = new AnythingType();
+  const anythingType = new AnythingType();
 
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(anythingType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(anythingType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -18,11 +18,6 @@ describe('Test: validation/types/anything', () => {
     should(anythingType.allowChildren).be.false();
   });
 
-  it('should override functions properly',() => {
-    should(typeof AnythingType.prototype.validate).be.eql('function');
-    should(typeof AnythingType.prototype.validateFieldSpecification).be.eql('function');
-  });
-
   describe('#validate', () => {
     it('should always return true', () => {
       should(anythingType.validate()).be.true();
@@ -30,8 +25,8 @@ describe('Test: validation/types/anything', () => {
   });
 
   describe('#validateFieldSpecification', () => {
-    it('should always return true', () => {
-      should(anythingType.validateFieldSpecification()).be.true();
+    it('should always return the provided options', () => {
+      should(anythingType.validateFieldSpecification('foobar')).be.equal('foobar');
     });
   });
 });

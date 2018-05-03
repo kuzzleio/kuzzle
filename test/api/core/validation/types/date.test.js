@@ -1,44 +1,20 @@
 'use strict';
 
 const
-  mockrequire = require('mock-require'),
   rewire = require('rewire'),
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
-  sinon = require('sinon'),
-  should = require('should');
+  should = require('should'),
+  DateType = require('../../../../../lib/api/core/validation/types/date');
 
 describe('Test: validation/types/date', () => {
-  'use strict';
-  let
-    DateType,
-    dateType,
-    sandbox = sinon.sandbox.create(),
-    isValidStub = sandbox.stub(),
-    isBeforeStub = sandbox.stub(),
-    utcStub = sandbox.stub(),
-    unixStub = sandbox.stub(),
-    momentMock = {
-      utc: utcStub,
-      unix: unixStub,
-      ISO_8601: 'ISO_8601'
-    };
-
-  before(() => {
-    mockrequire('moment', momentMock);
-    DateType = mockrequire.reRequire('../../../../../lib/api/core/validation/types/date');
-  });
+  let dateType;
 
   beforeEach(() => {
-    sandbox.resetHistory();
     dateType = new DateType();
   });
 
-  after(() => {
-    mockrequire.stopAll();
-  });
-
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(dateType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(dateType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -49,11 +25,6 @@ describe('Test: validation/types/date', () => {
     should(dateType.allowChildren).be.false();
   });
 
-  it('should override functions properly',() => {
-    should(typeof DateType.prototype.validate).be.eql('function');
-    should(typeof DateType.prototype.validateFieldSpecification).be.eql('function');
-  });
-
   describe('#validate', () => {
     it('should return true if the date format is valid', () => {
       const
@@ -61,9 +32,7 @@ describe('Test: validation/types/date', () => {
           formats: ['epoch_millis']
         };
 
-      momentMock.utc.returns({isValid: () => true});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
+      should(dateType.validate(typeOptions, Date.now(), [])).be.true();
     });
 
     it('should return false if the date format is not valid', () => {
@@ -73,82 +42,75 @@ describe('Test: validation/types/date', () => {
           formats: ['epoch_millis']
         };
 
-      momentMock.utc.returns({isValid: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The date format is not valid.']);
+      should(dateType.validate(typeOptions, 'foobar', errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The date format is invalid.']);
     });
 
-    it('should return true if the date is after the min date', () => {
+    it('should validate if the date is after the min date', () => {
       const
         typeOptions = {
-          formats: ['epoch_millis'],
-          range: {min: {}}
+          formats: ['epoch_millis', 'strict_date'],
+          range: {min: '2013-09-21'}
         };
 
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
+      should(dateType.validate(typeOptions, '2014-01-01', [])).be.true();
     });
 
-    it('should return false if the date is before the min date', () => {
+    it('should not validate if the date is before the min date', () => {
       const
         errorMessages = [],
         typeOptions = {
           formats: ['epoch_millis'],
-          range: {min: {}}
+          range: {min: `${Date.now()}`}
         };
 
-      momentMock.utc.returns({isValid: () => true, isBefore: () => true});
-
-      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
+      should(dateType.validate(typeOptions, Date.now() - 10000, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The provided date is before the defined minimum.']);
     });
 
-    it('should call moment.utc if min equals the string "NOW"', () => {
+    it('should call moment.utc if min equals the string "NOW"', done => {
       const
         typeOptions = {
           formats: ['epoch_millis'],
           range: {min: 'NOW'}
         };
 
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
+      should(dateType.validate(typeOptions, Date.now() + 10, [])).be.true();
 
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
-      should(utcStub.callCount).be.eql(2);
+      setTimeout(() => {
+        try {
+          should(dateType.validate(typeOptions, Date.now() + 10, [])).be.true();
+          done();
+        }
+        catch(e) {
+          done(e);
+        }
+      }, 100);
     });
 
-    it('should return true if the date is before the max date', () => {
+    it('should validate if the date is before the max date', () => {
       const
         typeOptions = {
-          formats: ['epoch_millis'],
+          formats: ['strict_basic_week_date', 'epoch_millis', 'strict_date'],
           range: {
-            max: {
-              isBefore: sinon.stub().returns(false)
-            }
+            max: `${Date.now() + 1000}`
           }
         };
 
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
+      should(dateType.validate(typeOptions, Date.now(), [])).be.true();
     });
 
     it('should return false if the date is after the max date', () => {
       const
         errorMessages = [],
-        typeOptions = {
+        typeOptions = dateType.validateFieldSpecification({
           formats: ['epoch_millis'],
           range: {
-            max: {
-              isBefore: sinon.stub().returns(true)
-            }
+            max: `${Date.now()}`
           }
-        };
+        });
 
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
+      should(dateType.validate(typeOptions, Date.now() + 1000, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The provided date is after the defined maximum.']);
     });
 

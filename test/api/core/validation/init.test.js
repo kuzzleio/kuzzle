@@ -5,7 +5,11 @@ const
   Bluebird = require('bluebird'),
   sinon = require('sinon'),
   mockRequire = require('mock-require'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  {
+    PluginImplementationError,
+    PreconditionError
+  } = require('kuzzle-common-objects').errors;
 
 describe('Test: validation initialization', () => {
   let
@@ -666,9 +670,9 @@ describe('Test: validation initialization', () => {
       should(validation.curateFieldSpecification(fieldSpec)).be.deepEqual(expectedReturn);
     });
 
-    it('should throw an error if type validation returns false', () => {
+    it('should throw an error if type validation throws', () => {
       const
-        typeValidateSpecValidation = sandbox.stub().returns(false),
+        typeValidateSpecValidation = sandbox.stub().throws(new PreconditionError('foobar')),
         fieldSpec = {
           type: 'string'
         };
@@ -677,7 +681,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).throw('Field of type string is not specified properly');
+      }).throw(PreconditionError, {message: 'foobar'});
     });
 
     it('should return an error if type validation returns false with verbose mode', () => {
@@ -747,10 +751,9 @@ describe('Test: validation initialization', () => {
       }).throw('Field undefined.undefined.undefined of type string is not specified properly');
     });
 
-    it('should throw an error if an option of typeOptions is invalid', () => {
+    it('should throw a PluginImplementationError if a type throws a non-KuzzleError error', () => {
       const
-        anError = {an: 'error'},
-        typeValidateSpecValidation = sandbox.stub().throws(anError),
+        typeValidateSpecValidation = sandbox.stub().throws(new Error('foobar')),
         fieldSpec = {
           type: 'string',
           typeOptions: {
@@ -765,7 +768,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).throw(anError);
+      }).throw(PluginImplementationError, {message: 'foobar\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
     });
 
     it('should return an error if a field specification format is invalid in verbose mode', () => {
