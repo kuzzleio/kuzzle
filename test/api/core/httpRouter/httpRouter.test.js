@@ -73,18 +73,22 @@ describe('core/httpRouter', () => {
   });
 
   describe('#routing requests', () => {
-    it('should invoke the registered handler on a known route', () => {
+    it('should invoke the registered handler on a known route', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
       rq.method = 'POST';
 
-      router.route(rq, callback);
-      should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0]).be.instanceOf(Request);
+      router.route(rq, callback)
+        .then(() => {
+          should(handler).be.calledOnce();
+          should(handler.firstCall.args[0]).be.instanceOf(Request);
+          done();
+        })
+        .catch(error => done(error));
     });
 
-    it('should init request.context with the good values', () => {
+    it('should init request.context with the good values', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -93,20 +97,24 @@ describe('core/httpRouter', () => {
       rq.headers['X-Kuzzle-Volatile'] = '{"modifiedBy": "John Doe", "reason": "foobar"}';
       rq.method = 'POST';
 
-      router.route(rq, callback);
-      should(handler).be.calledOnce();
-      should(handler.firstCall.args[0]).be.instanceOf(Request);
-      should(handler.firstCall.args[0].context.protocol).be.exactly('http');
-      should(handler.firstCall.args[0].context.connectionId).be.exactly('requestId');
-      should(handler.firstCall.args[0].input.headers).be.eql({
-        foo: 'bar',
-        Authorization: 'Bearer jwtFoobar',
-        'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'});
-      should(handler.firstCall.args[0].input.jwt).be.exactly('jwtFoobar');
-      should(handler.firstCall.args[0].input.volatile).be.eql({modifiedBy: 'John Doe', reason: 'foobar'});
+      router.route(rq, callback)
+        .then(() => {
+          should(handler).be.calledOnce();
+          should(handler.firstCall.args[0]).be.instanceOf(Request);
+          should(handler.firstCall.args[0].context.protocol).be.exactly('http');
+          should(handler.firstCall.args[0].context.connectionId).be.exactly('requestId');
+          should(handler.firstCall.args[0].input.headers).be.eql({
+            foo: 'bar',
+            Authorization: 'Bearer jwtFoobar',
+            'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'});
+          should(handler.firstCall.args[0].input.jwt).be.exactly('jwtFoobar');
+          should(handler.firstCall.args[0].input.volatile).be.eql({modifiedBy: 'John Doe', reason: 'foobar'});
+        })
+        .then(() => done())
+        .catch(error => done(error));
     });
 
-    it('should amend the request object if a body is found in the content', () => {
+    it('should amend the request object if a body is found in the content', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -114,14 +122,18 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, callback);
-      should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0].id).match(rq.requestId);
-      should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-      should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
+      router.route(rq, callback)
+        .then(() => {
+          should(handler).be.calledOnce();
+          should(handler.firstCall.args[0].id).match(rq.requestId);
+          should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
+          should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
+        })
+        .then(() => done())
+        .catch(error => done(error));
     });
 
-    it('should return dynamic values for parametric routes', () => {
+    it('should return dynamic values for parametric routes', done => {
       router.post('/foo/:bar/:baz', handler);
 
       rq.url = '/foo/hello/world';
@@ -129,16 +141,20 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, callback);
-      should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0].id).match(rq.requestId);
-      should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-      should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
-      should(handler.firstCall.args[0].input.args.bar).eql('hello');
-      should(handler.firstCall.args[0].input.args.baz).eql('world');
+      router.route(rq, callback)
+        .then(() => {
+          should(handler).be.calledOnce();
+          should(handler.firstCall.args[0].id).match(rq.requestId);
+          should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
+          should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
+          should(handler.firstCall.args[0].input.args.bar).eql('hello');
+          should(handler.firstCall.args[0].input.args.baz).eql('world');
+        })
+        .then(() => done())
+        .catch(error => done(error));
     });
 
-    it('should unnescape dynamic values for parametric routes', () => {
+    it('should unnescape dynamic values for parametric routes', done => {
       router.post('/foo/:bar/:baz', handler);
 
       rq.url = '/foo/hello/%25world';
@@ -146,13 +162,17 @@ describe('core/httpRouter', () => {
       rq.headers['content-type'] = 'application/json; charset=utf-8';
       rq.content = '{"foo": "bar"}';
 
-      router.route(rq, callback);
-      should(handler.calledOnce).be.true();
-      should(handler.firstCall.args[0].id).match(rq.requestId);
-      should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-      should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json; charset=utf-8');
-      should(handler.firstCall.args[0].input.args.bar).eql('hello');
-      should(handler.firstCall.args[0].input.args.baz).eql('%world');
+      router.route(rq, callback)
+        .then(() => {
+          should(handler).be.calledOnce();
+          should(handler.firstCall.args[0].id).match(rq.requestId);
+          should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
+          should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json; charset=utf-8');
+          should(handler.firstCall.args[0].input.args.bar).eql('hello');
+          should(handler.firstCall.args[0].input.args.baz).eql('%world');
+        })
+        .then(() => done())
+        .catch(error => done(error));
     });
 
     it('should trigger an event when handling an OPTIONS HTTP method', done => {
@@ -164,7 +184,7 @@ describe('core/httpRouter', () => {
       };
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).match({
           raw: false,
@@ -179,11 +199,32 @@ describe('core/httpRouter', () => {
         });
 
         should(result.input.headers).match(rq.headers);
-        should(kuzzleMock.pluginsManager.trigger.calledOnce).be.true();
-        should(kuzzleMock.pluginsManager.trigger.calledWith('http:options', sinon.match.instanceOf(Request))).be.true();
+        should(kuzzleMock.pluginsManager.trigger).be.calledOnce();
+        should(kuzzleMock.pluginsManager.trigger).be.calledWith('http:options', sinon.match.instanceOf(Request));
         should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.headers.foo).eql('bar');
-        done();
+      }).then(() => done()).catch(error => done(error));
+    });
+
+    it('should trigger an appropriate event corresponding to the HTTP method', done => {
+      const httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+      rq.url = '/';
+      rq.headers = { 'content-type': 'application/json' };
+
+      const promises = httpMethods.map(httpMethod => {
+        rq.method = httpMethod;
+
+        return router.route(rq, callback)
+          .then(() => {
+            should(kuzzleMock.pluginsManager.trigger).be.calledWith(`http:${httpMethod.toLowerCase()}`, sinon.match.instanceOf(Request));
+          });
       });
+
+      Promise.all(promises)
+        .then(() => {
+          should(kuzzleMock.pluginsManager.trigger).have.callCount(httpMethods.length);
+          done();
+        })
+        .catch(error => done(error));
     });
 
     it('should register a default / route with the HEAD verb', done => {
@@ -195,7 +236,7 @@ describe('core/httpRouter', () => {
       };
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).match({
           raw: false,
@@ -210,11 +251,10 @@ describe('core/httpRouter', () => {
         });
 
         should(result.input.headers).match(rq.headers);
-        done();
-      });
+      }).then(() => done()).catch(error => done(error));
     });
 
-    it('should return an error if the HTTP method is unknown', (done) => {
+    it('should return an error if the HTTP method is unknown', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -223,8 +263,7 @@ describe('core/httpRouter', () => {
       rq.content = '{"foo": "bar"}';
 
       router.route(rq, result => {
-        should(handler)
-          .have.callCount(0);
+        should(handler).have.callCount(0);
 
         should(result.response.toJSON())
           .match({
@@ -241,12 +280,10 @@ describe('core/httpRouter', () => {
             },
             headers: router.defaultHeaders
           });
-
-        done();
-      });
+      }).then(() => done()).catch(error => done(error));
     });
 
-    it('should return an error if unable to parse the incoming JSON content', (done) => {
+    it('should return an error if unable to parse the incoming JSON content', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -255,7 +292,7 @@ describe('core/httpRouter', () => {
       rq.content = '{bad JSON syntax}';
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).be.match({
           raw: false,
@@ -271,12 +308,10 @@ describe('core/httpRouter', () => {
           },
           headers: router.defaultHeaders
         });
-
-        done();
-      });
+      }).then(() => done()).catch(error => done(error));
     });
 
-    it('should return an error if unable to parse x-kuzzle-volatile header', (done) => {
+    it('should return an error if unable to parse x-kuzzle-volatile header', done => {
       router.get('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -285,7 +320,7 @@ describe('core/httpRouter', () => {
       rq.headers['x-kuzzle-volatile'] = '{bad JSON syntax}';
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).be.match({
           raw: false,
@@ -301,12 +336,10 @@ describe('core/httpRouter', () => {
           },
           headers: router.defaultHeaders
         });
-
-        done();
-      });
+      }).then(() => done()).catch(error => done(error));
     });
 
-    it('should return an error if the content-type is not JSON', (done) => {
+    it('should return an error if the content-type is not JSON', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -315,7 +348,7 @@ describe('core/httpRouter', () => {
       rq.content = '{"foo": "bar"}';
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).match({
           raw: false,
@@ -331,12 +364,10 @@ describe('core/httpRouter', () => {
           },
           headers: router.defaultHeaders
         });
-
-        done();
-      });
+      }).then(() => done()).catch(error => done(error));
     });
 
-    it('should send an error if the charset is not utf-8', (done) => {
+    it('should send an error if the charset is not utf-8', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -345,7 +376,7 @@ describe('core/httpRouter', () => {
       rq.content = '{"foo": "bar"}';
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).match({
           raw: false,
@@ -361,13 +392,10 @@ describe('core/httpRouter', () => {
           },
           headers: router.defaultHeaders
         });
-
-        done();
-
-      });
+      }).then(() => done()).catch(error => done(error));
     });
 
-    it('should return an error if the route does not exist', (done) => {
+    it('should return an error if the route does not exist', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -376,7 +404,7 @@ describe('core/httpRouter', () => {
       rq.content = '{"foo": "bar"}';
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).match({
           raw: false,
@@ -392,12 +420,10 @@ describe('core/httpRouter', () => {
           },
           headers: router.defaultHeaders
         });
-
-        done();
-      });
+      }).then(() => done()).catch(error => done(error));
     });
 
-    it('should return an error if an exception is thrown', (done) => {
+    it('should return an error if an exception is thrown', done => {
       const routeHandlerStub = function () {
         this.getRequest = sinon.stub().throws(new InternalError('HTTP internal exception'));
       };
@@ -416,7 +442,7 @@ describe('core/httpRouter', () => {
       rq.content = '{"foo": "bar"}';
 
       router.route(rq, result => {
-        should(handler.called).be.false();
+        should(handler).not.be.called();
 
         should(result.response.toJSON()).match({
           raw: false,
@@ -432,9 +458,7 @@ describe('core/httpRouter', () => {
           },
           headers: router.defaultHeaders
         });
-
-        done();
-      });
+      }).then(() => done()).catch(error => done(error));
     });
   });
 });
