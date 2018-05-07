@@ -28,7 +28,7 @@ describe('funnelController.executePluginRequest', () => {
         should(res).be.undefined();
         should(err).be.instanceOf(BadRequestError);
         should(err.message).be.eql('Unknown controller foo');
-        should(kuzzle.pluginsManager.trigger.called).be.false();
+        should(kuzzle.pluginsManager.trigger).not.be.called();
         done();
       }
       catch (e) {
@@ -52,7 +52,7 @@ describe('funnelController.executePluginRequest', () => {
         should(err).be.null();
         should(res).be.eql(rq);
         should(rq.status).be.eql(333);
-        should(kuzzle.pluginsManager.trigger.called).be.false();
+        should(kuzzle.pluginsManager.trigger).not.be.called();
         done();
       }
       catch (e) {
@@ -75,8 +75,8 @@ describe('funnelController.executePluginRequest', () => {
         should(err).be.eql(error);
         should(res).be.undefined();
         should(rq.status).be.eql(500);
-        should(funnel.handleErrorDump.called).be.true();
-        should(kuzzle.pluginsManager.trigger.called).be.false();
+        should(funnel.handleErrorDump).be.called();
+        should(kuzzle.pluginsManager.trigger).not.be.called();
         done();
       }
       catch (e) {

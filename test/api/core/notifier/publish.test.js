@@ -124,7 +124,7 @@ describe('Test: notifier.publish', () => {
 
     const result = notifier.publish(new Request(rawRequest), 'foo', 'bar');
 
-    should(notifier.notifyDocument.called).be.false();
+    should(notifier.notifyDocument).not.be.called();
     should(result).match({published: true});
 
     should(kuzzle.services.list.internalCache.setex).not.be.called();

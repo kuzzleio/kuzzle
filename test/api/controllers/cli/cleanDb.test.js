@@ -16,11 +16,11 @@ describe('Test: clean database', () => {
 
   it('should erase the internal ES & Redis dbs', () => {
     kuzzle.repositories.user.search.returns(Bluebird.resolve({total: 0, hits: []}));
-    
+
     return cleanDb(null, sinon.stub())
       .then(() => {
         should(kuzzle.repositories.user.search).be.calledOnce();
-        should(kuzzle.repositories.user.scroll.called).be.false();
+        should(kuzzle.repositories.user.scroll).not.be.called();
         should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
         should(kuzzle.services.list.internalCache.flushdb).be.calledOnce();
 
@@ -49,14 +49,14 @@ describe('Test: clean database', () => {
     ]}));
 
     kuzzle.repositories.user.scroll.onFirstCall().returns(Bluebird.resolve({
-      total: 1, 
-      scrollId: 'foobar2', 
+      total: 1,
+      scrollId: 'foobar2',
       hits: [{_id: 'foo4'}]
     }));
 
     kuzzle.repositories.user.scroll.onSecondCall().returns(Bluebird.resolve({
-      total: 1, 
-      scrollId: 'foobar2', 
+      total: 1,
+      scrollId: 'foobar2',
       hits: [{_id: 'foo5'}]
     }));
 

@@ -442,7 +442,7 @@ describe('Test: ElasticSearch service', () => {
           try {
             should(err).be.an.instanceOf(NotFoundError);
             should(err.message).be.exactly(`Document with id "${request.input.resource._id}" not found.`);
-            should(elasticsearch.client.index.called).be.false();
+            should(elasticsearch.client.index).not.be.called();
 
             done();
           }
@@ -1670,7 +1670,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(elasticsearch.client.indices.refresh.called).be.false();
+          should(elasticsearch.client.indices.refresh).not.be.called();
           should(response).be.eql({ foo: 'bar' });
         });
     });
@@ -1681,7 +1681,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(elasticsearch.client.indices.refresh.called).be.true();
+          should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({foo: 'bar'});
         });
     });
@@ -1697,7 +1697,7 @@ describe('Test: ElasticSearch service', () => {
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
           should(pluginSpy.calledWith('log:error')).be.true();
-          should(elasticsearch.client.indices.refresh.called).be.true();
+          should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({ foo: 'bar' });
           return null;
         });

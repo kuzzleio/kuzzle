@@ -320,7 +320,7 @@ describe('Test redis service', () => {
     sandbox.stub(IORedis, 'Cluster').returns({});
 
     Redis.__get__('buildClient')(config);
-    should(IORedis.Cluster.called).be.true();
+    should(IORedis.Cluster).be.called();
   });
 
   it('should build a client instance of Redis if only one node is defined', () => {
@@ -331,6 +331,6 @@ describe('Test redis service', () => {
     sandbox.stub(IORedis, 'Cluster').returns({});
 
     Redis.__get__('buildClient')(config);
-    should(IORedis.Cluster.called).be.false();
+    should(IORedis.Cluster).not.be.called();
   });
 });
