@@ -43,7 +43,8 @@ services:
 
   elasticsearch:
     image: kuzzleio/elasticsearch:5.4.1
+    ports:
+      - "9200:9200"
     environment:
       - cluster.name=kuzzle
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-

@@ -1742,3 +1742,9 @@ Feature: Kuzzle functional tests
 
   Scenario: Get authentication strategies
     Then I get the registrated authentication strategies
+
+  Scenario: Index and collection creation directly with Elasticsearch
+    When I create an index and a collection with ElasticSearch
+    When I create a document directly with ElasticSearch
+    Then I update the document with Kuzzle
+    Then The _kuzzle_info mapping is correct
