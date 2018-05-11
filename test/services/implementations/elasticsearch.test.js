@@ -1520,8 +1520,85 @@ describe('Test: ElasticSearch service', () => {
             }
           });
         });
-
     });
+
+    it('should create collection with mapping if supplied in the body', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+
+      request.input.resource.collection = '%foobar';
+      elasticsearch.config.commonMapping = {};
+
+      const collectionMapping = {
+        properties: {
+          gordon:   { type: 'text' },
+          freeman:  { type: 'keyword' }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return elasticsearch.createCollection(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body['%foobar'].properties).eql(collectionMapping.properties);
+        });
+    });
+
+    it('should not overwrite kuzzle commonMapping', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+
+      request.input.resource.collection = '%foobar';
+
+      elasticsearch.config.commonMapping = {
+        gordon: { type: 'text' },
+        _kuzzle_info: {
+          properties: {
+            active:     { type: 'boolean' },
+            author:     { type: 'text' },
+            createdAt:  { type: 'date' },
+            updatedAt:  { type: 'date' },
+            updater:    { type: 'keyword' },
+            deletedAt:  { type: 'date' }
+          }
+        }
+      };
+
+      const collectionMapping = {
+        properties: {
+          gordon:   { type: 'keyword' },
+          freeman:  { type: 'keyword' },
+          _kuzzle_info: {
+            properties: {
+              author: { type: 'keyword' }
+            }
+          }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return elasticsearch.createCollection(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body['%foobar'].properties).eql({
+            gordon:   { type: 'text' },
+            freeman:  { type: 'keyword' },
+            _kuzzle_info: {
+              properties: {
+                active:     { type: 'boolean' },
+                author:     { type: 'text' },
+                createdAt:  { type: 'date' },
+                updatedAt:  { type: 'date' },
+                updater:    { type: 'keyword' },
+                deletedAt:  { type: 'date' }
+              }
+            }
+          });
+        });
+    });
+
   });
 
   describe('#truncateCollection', () => {
