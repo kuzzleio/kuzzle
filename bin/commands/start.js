@@ -70,7 +70,7 @@ function commandStart (options) {
       return requests;
     })
     .each(rq => {
-      const 
+      const
         index = rq.input.resource.index,
         indexRequest = new Request({index});
 
@@ -144,7 +144,7 @@ function commandStart (options) {
         .then(res => {
           if (!res) {
             console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
-            console.log(cout.notice('[ℹ] You can use the CLI or the back-office to create the first administrator user.'));
+            console.log(cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.'));
             console.log(cout.notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
           }
         });

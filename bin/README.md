@@ -14,7 +14,7 @@ Starts a Kuzzle instance in the foreground.
 
 # Create the first administrative user account
 
-You will need it to connect to the back-office
+You will need it to connect to the admin console
 
 ```
 $ kuzzle createFirstAdmin
@@ -27,7 +27,7 @@ will guide you through the creation process of the first admin user and fix the 
 # Reset Kuzzle
 
 ```
-$ kuzzle reset 
+$ kuzzle reset
 ```
 
 will allow you to reset Kuzzle and restore it as if it is freshly installed.
@@ -49,14 +49,12 @@ $ kuzzle reset --noint
 
 # Getting help
 
-You can, of course, get some help by using the --help option. 
+You can, of course, get some help by using the --help option.
 
-Try those: 
+Try those:
 
 ```
 $ kuzzle --help
 $ kuzzle start --help
 $ kuzzle reset --help
 ```
-
-
