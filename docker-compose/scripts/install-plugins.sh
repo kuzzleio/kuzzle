@@ -13,7 +13,7 @@ for target in ${plugins_dir}/* ${protocols_dir}/* ; do
     cd "$target"
     npm install --unsafe
     find node_modules/ -type f -exec chmod 666 {} \;
-    find node_modules/ -type d -exec chmod 777 {} \;
+    find node_modules/ -type d -exec chmod 755 {} \;
     cd "$working_dir"
   fi
 done
