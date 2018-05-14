@@ -12,7 +12,7 @@ for target in ${plugins_dir}/* ${protocols_dir}/* ; do
     echo 'Installing dependencies for ' $(basename "$target")
     cd "$target"
     npm install --unsafe
-    find node_modules/ -type f -exec chmod 666 {} \;
+    find -L node_modules/.bin -type f -exec chmod 776 {} \;
     find node_modules/ -type d -exec chmod 755 {} \;
     cd "$working_dir"
   fi
