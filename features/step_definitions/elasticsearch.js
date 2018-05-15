@@ -27,7 +27,7 @@ When('I create an index and a collection with ElasticSearch', function (callback
           }
         }).then(() => callback());
       }).catch(error => callback(error));
-  })
+  });
 });
 
 When('I create a document directly with ElasticSearch', function (callback) {
