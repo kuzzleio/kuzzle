@@ -1,13 +1,14 @@
-var
+const
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
   EnumType = require('../../../../../lib/api/core/validation/types/enum'),
   should = require('should');
 
 describe('Test: validation/types/enum', () => {
-  var enumType = new EnumType();
+  const enumType = new EnumType();
 
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(enumType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(enumType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -18,29 +19,24 @@ describe('Test: validation/types/enum', () => {
     should(enumType.allowChildren).be.false();
   });
 
-  it('should override functions properly',() => {
-    should(typeof EnumType.prototype.validate).be.eql('function');
-    should(typeof EnumType.prototype.validateFieldSpecification).be.eql('function');
-  });
-
   describe('#validate', () => {
-    var typeOptions = {
+    const typeOptions = {
       values: ['a string', 'another string', 'one more string']
     };
 
-    it('should return true if fieldValue has a valid value', () => {
+    it('should return true if fieldValue is a listed value', () => {
       should(enumType.validate(typeOptions, 'another string')).be.true();
     });
 
-    it('should return false if the value is not valid', () => {
-      var errorMessage = [];
+    it('should return false if the value is not listed by the enumeration', () => {
+      const errorMessage = [];
 
       should(enumType.validate(typeOptions, 'not the string you are looking for', errorMessage)).be.false();
       should(errorMessage).be.deepEqual([`The field only accepts following values: "${typeOptions.values.join(', ')}".`]);
     });
 
-    it('should return false if the value is not valid', () => {
-      var errorMessage = [];
+    it('should return false if the value is not a string', () => {
+      const errorMessage = [];
 
       should(enumType.validate(typeOptions, {not: 'a string'}, errorMessage)).be.false();
       should(errorMessage).be.deepEqual(['The field must be a string.']);
@@ -48,18 +44,31 @@ describe('Test: validation/types/enum', () => {
   });
 
   describe('#validateFieldSpecification', () => {
-    it('should return false if no values are provided', () => {
-      should(enumType.validateFieldSpecification({values: []})).be.false();
+    it('should throw if no values are provided', () => {
+      should(() => enumType.validateFieldSpecification({}))
+        .throw(PreconditionError, {message: 'Option "values" is required'});
+
+      should(() => enumType.validateFieldSpecification({values: []}))
+        .throw(PreconditionError, {message: 'Option "values" must be a non-empty array'});
+
+      should(() => enumType.validateFieldSpecification({values: 'foobar'}))
+        .throw(PreconditionError, {message: 'Option "values" must be a non-empty array'});
     });
 
-    it('should return false if a value is not a string', () => {
-      should(enumType.validateFieldSpecification({values: [true, 42, 'a string']})).be.false();
+    it('should throw if a listed value is not a string', () => {
+      should(() => enumType.validateFieldSpecification({values: [true, 42, 'a string']}))
+        .throw(PreconditionError, {message: 'Values must be of type "string". Invalid values: true,42'});
+
+      should(() => enumType.validateFieldSpecification({values: ['a string', null]}))
+        .throw(PreconditionError, {message: 'Values must be of type "string". Invalid value: '});
     });
 
-    it('should return true if all provided values are strings', () => {
+    it('should return the options intact if it is valid', () => {
       should(enumType.validateFieldSpecification({
         values: ['a string', 'another string', 'one more string']
-      })).be.true();
+      })).be.deepEqual({
+        values: ['a string', 'another string', 'one more string']
+      });
     });
   });
 });

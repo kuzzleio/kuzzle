@@ -1,13 +1,14 @@
-var
+const
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
   ObjectType = require('../../../../../lib/api/core/validation/types/object'),
   should = require('should');
 
 describe('Test: validation/types/object', () => {
-  var objectType = new ObjectType();
+  const objectType = new ObjectType();
 
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(objectType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(objectType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -18,32 +19,31 @@ describe('Test: validation/types/object', () => {
     should(objectType.allowChildren).be.true();
   });
 
-  it('should override functions properly',() => {
-    should(typeof ObjectType.prototype.validate).be.eql('function');
-    should(typeof ObjectType.prototype.validateFieldSpecification).be.eql('function');
-    should(typeof ObjectType.prototype.getStrictness).be.eql('function');
-  });
-
   describe('#validate', () => {
     it('should return true if the value is an object', () => {
       should(objectType.validate({}, {})).be.true();
     });
 
     it('should return false if the value is not an object', () => {
-      var errorMessages = [];
+      [[], 'foobar', undefined, null, 123].forEach(v => {
+        const errorMessages = [];
 
-      should(objectType.validate({}, 'a string', errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The value must be an object.']);
+        should(objectType.validate({}, v, errorMessages)).be.false();
+        should(errorMessages).be.deepEqual(['The value must be an object.']);
+      });
     });
   });
 
   describe('#validateFieldSpecification', () => {
-    it('should be true if typeOptions is empty', () => {
-      should(objectType.validateFieldSpecification({})).be.true();
+    it('should throw if the strict option is not a boolean', () => {
+      should(() => objectType.validateFieldSpecification({strict: 'not a boolean'}))
+        .throw(PreconditionError, {message: 'Option "strict" must be of type "boolean"'});
     });
 
-    it('should be false if the strict option is not a boolean', () => {
-      should(objectType.validateFieldSpecification({strict: 'not a boolean'})).be.false();
+    it('should return the typeOptions object if it is valid', () => {
+      const opts = {strict: false};
+
+      should(objectType.validateFieldSpecification(opts)).be.eql(opts);
     });
   });
 
