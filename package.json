@@ -69,6 +69,7 @@
     "codecov": "3.0.1",
     "cucumber": "^4.2.1",
     "eslint": "^4.19.1",
+    "minimist": "1.2.0",
     "mocha": "5.1.1",
     "mock-require": "^3.0.2",
     "nyc": "^11.7.1",

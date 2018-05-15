@@ -2,6 +2,7 @@
 
 const
   _ = require('lodash'),
+  minimist = require('minimist'),
   {
     After,
     AfterAll,
@@ -17,7 +18,7 @@ BeforeAll(function () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
     promises = [],
-    world = new World({parameters: {protocol: 'http', silent: true}}),
+    world = new World({parameters: parseWorldParameters()}),
     http = new Http(world);
 
   for (const index of Object.keys(fixtures)) {
@@ -39,10 +40,9 @@ BeforeAll(function () {
 // after last
 AfterAll(function () {
   const
-    promises = [];
-
-  const world = new World({parameters: {protocol: 'http', silent: true}});
-  const http = new Http(world);
+    promises = [],
+    world = new World({parameters: parseWorldParameters()}),
+    http = new Http(world);
 
   for (const index of [
     world.fakeIndex,
@@ -74,6 +74,14 @@ Before({tags: '@security'}, function () {
 
 After({tags: '@security'}, function () {
   return cleanSecurity.call(this);
+});
+
+Before({tags: '@firstAdmin'}, function () {
+  return cleanSecurity.call(this);
+});
+
+After({tags: '@firstAdmin'}, function () {
+  return grantDefaultRoles.call(this).then(() => cleanSecurity.call(this));
 });
 
 Before({tags: '@redis'}, function () {
@@ -124,6 +132,34 @@ function cleanSecurity () {
     });
 }
 
+function grantDefaultRoles () {
+  return this.api.login('local', this.users.useradmin.credentials.local)
+    .then(body => {
+      if (body.error) {
+        return Promise.reject(new Error(body.error.message));
+      }
+
+      if (!body.result) {
+        return Promise.reject(new Error('No result provided'));
+      }
+
+      if (!body.result.jwt) {
+        return Promise.reject(new Error('No token received'));
+      }
+
+      if (this.currentUser === null || this.currentUser === undefined) {
+        this.currentUser = {};
+      }
+
+      this.currentToken = {jwt: body.result.jwt};
+      this.currentUser.token = body.result.jwt;
+
+      return this.api.createOrReplaceRole('anonymous', {controllers: {'*': {actions: {'*': true}}}});
+    })
+    .then(() => this.api.createOrReplaceRole('default', {controllers: {'*': {actions: {'*': true}}}}))
+    .then(() => this.api.createOrReplaceRole('admin', {controllers: {'*': {actions: {'*': true}}}}));
+}
+
 function cleanRedis() {
   return this.api.callMemoryStorage('keys', { args: { pattern: this.idPrefix + '*' } })
     .then(response => {
@@ -145,4 +181,17 @@ function cleanValidations() {
       .filter(r => r._id.match(/^kuzzle-test-/))
       .map(r => this.api.deleteSpecifications(r._id.split('#')[0], r._id.split('#')[1]))
     ));
+}
+
+function parseWorldParameters() {
+  const
+    argv = minimist(process.argv.slice(2)),
+    parameters = Object.assign({
+      protocol: 'websocket',
+      host: 'localhost',
+      port: 7512,
+      silent: true
+    }, JSON.parse(argv['world-parameters'] || '{}'));
+
+  return parameters;
 }
