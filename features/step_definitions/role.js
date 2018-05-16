@@ -63,12 +63,14 @@ When(/^I create a new role "([^"]*)" with id "([^"]*)"$/, function (role, id, ca
     });
 });
 
-Then(/^I'm ?(not)* able to find a role with id "([^"]*)"(?: equivalent to role "([^"]*)")?$/, function (not, id, role, callback) {
+Then(/^I'm ?(not)* able to find a ?(default)* role with id "([^"]*)"(?: equivalent to role "([^"]*)")?$/, function (not, _default, id, role, callback) {
   var
     controller,
     main;
 
-  id = this.idPrefix + id;
+  if (! _default) {
+    id = this.idPrefix + id;
+  }
 
   if (role && !this.roles[role]) {
     return callback('Fixture for role ' + role + ' not exists');

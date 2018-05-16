@@ -41,7 +41,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
     return notifier.notifyDocumentReplace(request)
       .then(() => {
         should(notifier.notifyDocument.callCount).be.eql(2);
-        
+
         should(notifier.notifyDocument.getCall(0))
           .calledWith(['foo'], request, 'in', 'done', 'replace', {
             _meta: {'can I has': 'cheezburgers?'},
@@ -65,11 +65,12 @@ describe('Test: notifier.notifyDocumentReplace', () => {
 
         should(internalCache.del).not.be.called();
 
-        should(internalCache.set).calledOnce();
-        should(internalCache.set).calledWith(
-          `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`, 
-          JSON.stringify(['foo'])
-        );
+        should(internalCache.setex)
+          .calledOnce()
+          .calledWith(
+            `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`,
+            kuzzle.config.limits.subscriptionDocumentTTL,
+            JSON.stringify(['foo']));
       });
   });
 });
