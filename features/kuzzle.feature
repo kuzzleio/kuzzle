@@ -1743,12 +1743,6 @@ Feature: Kuzzle functional tests
   Scenario: Get authentication strategies
     Then I get the registrated authentication strategies
 
-  Scenario: Index and collection creation directly with Elasticsearch
-    When I create an index and a collection with ElasticSearch
-    When I create a document directly with ElasticSearch
-    Then I update the document with Kuzzle
-    Then The _kuzzle_info mapping is correct
-
   @firstAdmin
   Scenario: Create First Admin
     Given I create a new role "foo" with id "foo"
@@ -1779,3 +1773,9 @@ Feature: Kuzzle functional tests
     Then I'm able to find a default role with id "admin" equivalent to role "admin"
     And I'm able to find a default role with id "default" equivalent to role "default"
     And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"
+
+#  Scenario: Index and collection creation directly with Elasticsearch
+#    When I create an index and a collection with ElasticSearch
+#    When I create a document directly with ElasticSearch
+#    Then I update the document with Kuzzle
+#    Then The _kuzzle_info mapping is correct

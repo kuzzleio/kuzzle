@@ -4,30 +4,56 @@ const
     Then
   } = require('cucumber'),
   ElasticSearch = require('elasticsearch'),
+  Bluebird = require('bluebird'),
   kuzzleConfig = require('../support/config');
 
-const elasticsearchClient = new ElasticSearch.Client({
-  host: 'elasticsearch:9200'
-});
+/**
+ * Returns a new elasticsearch client instance
+ *
+ * @param {object} config - ES client options
+ * @returns {object}
+ */
+function buildClient() {
+  // Passed to Elasticsearch's client to make it use
+  // Bluebird instead of ES6 promises
+  const defer = function defer () {
+    let resolve, reject;
+    const
+      promise = new Bluebird((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
+    return {resolve, reject, promise};
+  };
+
+  return new ElasticSearch.Client(Object.assign({ defer }, { host: 'elasticsearch:9200' }));
+}
+
+const elasticsearchClient = buildClient();
 
 When('I create an index and a collection with ElasticSearch', function (callback) {
-  elasticsearchClient.indices.delete({ index: 'es-index' }).then(() => {
-    elasticsearchClient.indices.create({ index: 'es-index' })
-      .then(() => {
-        elasticsearchClient.indices.putMapping({
-          index:  'es-index',
-          type:   'es-collection',
-          body: {
-            'es-collection': {
-              properties: {
-                name: { type: 'text' },
-                age:  { type: 'integer' },
+  elasticsearchClient.indices.get({ index: 'es-index' })
+    .then(() => elasticsearchClient.indices.delete({ index: 'es-index' }))
+    .catch(() => null)
+    .finally(() => {
+      elasticsearchClient.indices.create({ index: 'es-index' })
+        .then(() => {
+          elasticsearchClient.indices.putMapping({
+            index:  'es-index',
+            type:   'es-collection',
+            body: {
+              'es-collection': {
+                properties: {
+                  name: { type: 'text' },
+                  age:  { type: 'integer' },
+                }
               }
             }
-          }
-        }).then(() => callback());
-      }).catch(error => callback(error));
-  });
+          }).then(() => callback());
+        })
+        .catch(error => callback(error));
+    });
 });
 
 When('I create a document directly with ElasticSearch', function (callback) {
@@ -49,6 +75,9 @@ When('I update the document with Kuzzle', function (callback) {
     name: 'Lau lau'
   };
 
+  // Since the index/collection cache is not hot-reloaded,
+  // Kuzzle doesn't know our collection created with elasticsearch until restart
+  // Waiting for a enhancement before this test can run : https://github.com/kuzzleio/kuzzle/issues/1111
   this.api.update(this.documentId, body, 'es-index', 'es-collection')
     .then(aBody => {
       if (aBody.error) {
