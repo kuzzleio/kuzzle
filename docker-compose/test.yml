@@ -46,4 +46,3 @@ services:
     environment:
       - cluster.name=kuzzle
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-

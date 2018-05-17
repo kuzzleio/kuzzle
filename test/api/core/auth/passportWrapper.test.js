@@ -134,7 +134,7 @@ describe('Test the passport Wrapper', () => {
         should(response).be.an.instanceOf(PassportResponse);
         should(response.statusCode).be.equal(302);
         should(response.getHeader('Location')).be.equal('http://example.org');
-        should(stub.called).be.false();
+        should(stub).not.be.called();
       });
   });
 

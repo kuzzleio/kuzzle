@@ -31,7 +31,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
   it('should do nothing if no id is provided', () => {
     return notifier.notifyDocumentMDelete(request, [])
       .then(() => {
-        should(notifier.notifyDocument.called).be.false();
+        should(notifier.notifyDocument).not.be.called();
       });
   });
 

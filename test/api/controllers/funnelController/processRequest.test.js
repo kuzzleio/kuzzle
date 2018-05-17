@@ -40,7 +40,7 @@ describe('funnelController.processRequest', () => {
     should(() => funnel.processRequest(request)).throw(BadRequestError, {message: 'Unknown controller null'});
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
-    should(kuzzle.statistics.startRequest.called).be.false();
+    should(kuzzle.statistics.startRequest).not.be.called();
   });
 
   it('should throw if no action is specified', () => {
@@ -49,7 +49,7 @@ describe('funnelController.processRequest', () => {
     should(() => funnel.processRequest(request)).throw(BadRequestError, {message: 'No corresponding action null in controller fakeController'});
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
-    should(kuzzle.statistics.startRequest.called).be.false();
+    should(kuzzle.statistics.startRequest).not.be.called();
   });
 
   it('should throw if the action doesn\'t exist', () => {
@@ -59,7 +59,7 @@ describe('funnelController.processRequest', () => {
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorCreate', request)).be.false();
-    should(kuzzle.statistics.startRequest.called).be.false();
+    should(kuzzle.statistics.startRequest).not.be.called();
   });
 
   it('should throw if a plugin action does not exist', () => {
@@ -69,7 +69,7 @@ describe('funnelController.processRequest', () => {
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
     should(kuzzle.pluginsManager.trigger.calledWithMatch('fakePlugin/controller:errorCreate', request)).be.false();
-    should(kuzzle.statistics.startRequest.called).be.false();
+    should(kuzzle.statistics.startRequest).not.be.called();
   });
 
   it('should throw if a plugin action returns a non-thenable object', done => {
@@ -86,7 +86,7 @@ describe('funnelController.processRequest', () => {
           should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
           should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.true();
           should(kuzzle.pluginsManager.trigger.calledWithMatch('fakePlugin/controller:errorOk', request)).be.true();
-          should(kuzzle.statistics.startRequest.called).be.true();
+          should(kuzzle.statistics.startRequest).be.called();
           done();
         }
         catch(err) {
@@ -109,9 +109,9 @@ describe('funnelController.processRequest', () => {
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.true();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.false();
         should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorOk', request)).be.false();
-        should(kuzzle.statistics.startRequest.called).be.true();
-        should(kuzzle.statistics.completedRequest.called).be.true();
-        should(kuzzle.statistics.failedRequest.called).be.false();
+        should(kuzzle.statistics.startRequest).be.called();
+        should(kuzzle.statistics.completedRequest).be.called();
+        should(kuzzle.statistics.failedRequest).not.be.called();
       })).be.fulfilled();
   });
 
@@ -134,9 +134,9 @@ describe('funnelController.processRequest', () => {
           should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
           should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.true();
           should(kuzzle.pluginsManager.trigger.calledWithMatch('fakeController:errorFail', request)).be.true();
-          should(kuzzle.statistics.startRequest.called).be.true();
-          should(kuzzle.statistics.completedRequest.called).be.false();
-          should(kuzzle.statistics.failedRequest.called).be.true();
+          should(kuzzle.statistics.startRequest).be.called();
+          should(kuzzle.statistics.completedRequest).not.be.called();
+          should(kuzzle.statistics.failedRequest).be.called();
           done();
         }
         catch(err) {
@@ -164,9 +164,9 @@ describe('funnelController.processRequest', () => {
           should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onSuccess', request)).be.false();
           should(kuzzle.pluginsManager.trigger.calledWithMatch('request:onError', request)).be.true();
           should(kuzzle.pluginsManager.trigger.calledWithMatch('fakePlugin/controller:errorFail', request)).be.true();
-          should(kuzzle.statistics.startRequest.called).be.true();
-          should(kuzzle.statistics.completedRequest.called).be.false();
-          should(kuzzle.statistics.failedRequest.called).be.true();
+          should(kuzzle.statistics.startRequest).be.called();
+          should(kuzzle.statistics.completedRequest).not.be.called();
+          should(kuzzle.statistics.failedRequest).be.called();
           done();
         }
         catch(err) {
