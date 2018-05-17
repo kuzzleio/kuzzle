@@ -11,7 +11,9 @@
 
 ## Steps to Reproduce
 <!--- Provide a link to a live example, or an unambiguous set of steps to -->
-<!--- reproduce this bug. Include code to reproduce, if relevant -->
+<!--- reproduce this bug. -->
+<!--- Please try to provide scripts or commands to reproduce the bug -->
+<!--- Use https://gist.github.com/ to host code snippets -->
 1.
 2.
 3.

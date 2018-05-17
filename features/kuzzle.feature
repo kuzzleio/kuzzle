@@ -385,7 +385,7 @@ Feature: Kuzzle functional tests
 
   @security
   Scenario: get profile without id triggers an error
-    Then I cannot a profile without ID
+    Then I cannot get a profile without ID
 
   @security
   Scenario: creating a profile with an empty set of roles triggers an error
@@ -1748,3 +1748,34 @@ Feature: Kuzzle functional tests
     When I create a document directly with ElasticSearch
     Then I update the document with Kuzzle
     Then The _kuzzle_info mapping is correct
+
+  @firstAdmin
+  Scenario: Create First Admin
+    Given I create a new role "foo" with id "foo"
+    And I update the default profile with id "admin" by adding the role "foo"
+    And I update the default profile with id "default" by adding the role "foo"
+    And I update the default profile with id "anonymous" by adding the role "foo"
+    And I'm able to find the default profile with id "admin" with profile "adminfoo"
+    Then I create the first admin with id "useradmin-id"
+    And I log in as useradmin:testpwd expiring in 1h
+    And I'm able to find the default profile with id "admin" with profile "adminfoo"
+    And I'm able to find the default profile with id "default" with profile "defaultfoo"
+    And I'm able to find the default profile with id "anonymous" with profile "anonymousfoo"
+    Then I'm able to find a default role with id "admin" equivalent to role "admin"
+    And I'm able to find a default role with id "default" equivalent to role "admin"
+    And I'm able to find a default role with id "anonymous" equivalent to role "admin"
+
+  @firstAdmin
+  Scenario: Create First Admin and reset profiles and roles
+    Given I create a new role "foo" with id "foo"
+    And I update the default profile with id "admin" by adding the role "foo"
+    And I update the default profile with id "default" by adding the role "foo"
+    And I update the default profile with id "anonymous" by adding the role "foo"
+    Then I create the first admin with id "useradmin-id" and reset profiles and roles
+    And I log in as useradmin:testpwd expiring in 1h
+    And I'm able to find the default profile with id "admin" with profile "admin"
+    And I'm able to find the default profile with id "default" with profile "default"
+    And I'm able to find the default profile with id "anonymous" with profile "anonymous"
+    Then I'm able to find a default role with id "admin" equivalent to role "admin"
+    And I'm able to find a default role with id "default" equivalent to role "default"
+    And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"

@@ -49,7 +49,8 @@ module.exports = {
     requestsBufferWarningThreshold: 5000,
     subscriptionConditionsCount: 16,
     subscriptionMinterms: 0,
-    subscriptionRooms: 1000000
+    subscriptionRooms: 1000000,
+    subscriptionDocumentTTL: 259200
   },
 
   plugins: {

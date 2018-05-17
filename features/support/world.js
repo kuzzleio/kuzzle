@@ -183,6 +183,50 @@ class KWorld {
             }
           }
         }
+      },
+      admin: {
+        controllers: {
+          '*': {
+            actions: {
+              '*': true
+            }
+          }
+        }
+      },
+      default: {
+        controllers: {
+          auth: {
+            actions: {
+              checkToken: true,
+              getCurrentUser: true,
+              getMyRights: true,
+              logout: true,
+              updateSelf: true
+            }
+          },
+          server: {
+            actions: {
+              info: true
+            }
+          }
+        }
+      },
+      anonymous: {
+        controllers: {
+          auth: {
+            actions: {
+              checkToken: true,
+              getCurrentUser: true,
+              getMyRights: true,
+              login: true
+            }
+          },
+          server: {
+            actions: {
+              info: true
+            }
+          }
+        }
       }
     };
 
@@ -229,6 +273,24 @@ class KWorld {
       },
       emptyProfile: {
         policies: []
+      },
+      admin: {
+        policies: [{roleId: 'admin'}]
+      },
+      adminfoo: {
+        policies: [{roleId: 'admin'}, {roleId: this.idPrefix +'foo'}]
+      },
+      default: {
+        policies: [{roleId: 'default'}]
+      },
+      defaultfoo: {
+        policies: [{roleId: 'default'}, {roleId: this.idPrefix +'foo'}]
+      },
+      anonymous: {
+        policies: [{roleId: 'anonymous'}]
+      },
+      anonymousfoo: {
+        policies: [{roleId: 'anonymous'}, {roleId: this.idPrefix +'foo'}]
       }
     };
 

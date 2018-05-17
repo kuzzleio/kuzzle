@@ -985,6 +985,53 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should add metadata to documents', () => {
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+
+      request.input.body = {
+        bulkData: [
+          {index: {_id: 1, _type: collection, _index: index}},
+          {firstName: 'foo'},
+          {index: {_id: 2, _type: collection, _index: index}},
+          {firstName: 'bar'},
+          {create: {_id: 3, _type: collection, _index: index}},
+          {firstName: 'gordon'},
+          {update: {_id: 1, _type: collection, _index: index}},
+          {doc: {firstName: 'foobar'}},
+          {delete: {_id: 2, _type: collection, _index: index}}
+        ]
+      };
+
+      return elasticsearch.import(request)
+        .then(() => {
+          const body = elasticsearch.client.bulk.firstCall.args[0].body;
+
+          // Bulk action: index
+          should(body[1]._kuzzle_info).be.type('object');
+          should(body[1]._kuzzle_info.author).be.exactly('test');
+          should(body[1]._kuzzle_info.createdAt).be.belowOrEqual(Date.now());
+          should(body[1]._kuzzle_info.updatedAt).be.null();
+          should(body[1]._kuzzle_info.updater).be.null();
+          should(body[1]._kuzzle_info.active).be.ok();
+          should(body[1]._kuzzle_info.deletedAt).be.null();
+
+          // Bulk action: create
+          should(body[5]._kuzzle_info).be.type('object');
+          should(body[5]._kuzzle_info.author).be.exactly('test');
+          should(body[5]._kuzzle_info.createdAt).be.belowOrEqual(Date.now());
+          should(body[5]._kuzzle_info.updatedAt).be.null();
+          should(body[5]._kuzzle_info.updater).be.null();
+          should(body[5]._kuzzle_info.active).be.ok();
+          should(body[5]._kuzzle_info.deletedAt).be.null();
+
+          // Bulk action: update
+          should(body[7].doc._kuzzle_info).be.type('object');
+          should(body[7].doc._kuzzle_info.updater).be.exactly('test');
+          should(body[7].doc._kuzzle_info.updatedAt).not.be.null();
+        });
+    });
+
     it('should inject only the allowed optional parameters', () => {
       const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
 
@@ -1816,7 +1863,7 @@ describe('Test: ElasticSearch service', () => {
       const now = Date.now();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
@@ -1854,7 +1901,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       request.input.body = {
         documents: [
-          {_id: 'foo1', body: {foo: 'bar1'}}, 
+          {_id: 'foo1', body: {foo: 'bar1'}},
           {body: {foo: 'bar_'}},
           {_id: 'foo2', body: {foo: 'bar2'}},
           {_id: 'foo3', body: {foo: 'bar3'}},
@@ -1864,7 +1911,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.mget.resolves({
         docs: [
           // active document => must be rejected
-          {_id: 'foo1', found: true, _source: {_kuzzle_info: {active: true}}}, 
+          {_id: 'foo1', found: true, _source: {_kuzzle_info: {active: true}}},
           // inactive document => can be overwritten
           {_id: 'foo2', found: true, _source: {_kuzzle_info: {active: false}}},
           // non-existent document => can be created
@@ -1874,7 +1921,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       });
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo?', status: 201}},
@@ -1910,7 +1957,7 @@ describe('Test: ElasticSearch service', () => {
             ]
           });
           should(result.error).be.an.Array().and.match([
-            {document: {_id: 'foo1', body: {foo: 'bar1'}}, reason: 'document already exists'}, 
+            {document: {_id: 'foo1', body: {foo: 'bar1'}}, reason: 'document already exists'},
             {document: {_id: 'foo4', body: {foo: 'bar4'}}, reason: 'document already exists'}
           ]);
           should(result.result).match([
@@ -1929,7 +1976,7 @@ describe('Test: ElasticSearch service', () => {
       const now = Date.now();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
@@ -1991,7 +2038,7 @@ describe('Test: ElasticSearch service', () => {
       const now = Date.now();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
@@ -2027,7 +2074,7 @@ describe('Test: ElasticSearch service', () => {
       const now = Date.now();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
@@ -2086,7 +2133,7 @@ describe('Test: ElasticSearch service', () => {
       const now = Date.now();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
@@ -2122,7 +2169,7 @@ describe('Test: ElasticSearch service', () => {
       const now = Date.now();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
@@ -2168,7 +2215,7 @@ describe('Test: ElasticSearch service', () => {
           should(result.result).be.an.Array().and.be.empty();
         });
     });
-  });  
+  });
 
   describe('#mreplace', () => {
     const metadata = {
@@ -2201,18 +2248,18 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       request.input.body = {
         documents: [
-          {_id: 'foo1', body: {foo: 'bar1'}}, 
+          {_id: 'foo1', body: {foo: 'bar1'}},
           {_id: 'foo2', body: {foo: 'bar2'}},
         ]
       };
       elasticsearch.client.mget.resolves({
         docs: [
-          {_id: 'foo1', found: false}, 
+          {_id: 'foo1', found: false},
           {_id: 'foo2', found: true, _source: {_kuzzle_info: {active: false}}}
         ]
       });
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo2', status: 201}}
@@ -2240,7 +2287,7 @@ describe('Test: ElasticSearch service', () => {
             ]
           });
           should(result.error).be.an.Array().and.match([
-            {document: {_id: 'foo1', _source: {foo: 'bar1'}}, reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'}, 
+            {document: {_id: 'foo1', _source: {foo: 'bar1'}}, reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'},
           ]);
           should(result.result).match([
             {_id: 'foo2', _source: {foo: 'bar2'}, _meta: metadata, status: 201},
@@ -2254,7 +2301,7 @@ describe('Test: ElasticSearch service', () => {
       const now = Date.now();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
@@ -2263,7 +2310,7 @@ describe('Test: ElasticSearch service', () => {
       });
       elasticsearch.client.mget.resolves({
         docs: [
-          {_id: 'foo', found: true, _source: {_kuzzle_info: {active: true}}}, 
+          {_id: 'foo', found: true, _source: {_kuzzle_info: {active: true}}},
           {_id: 'bar', found: true, _source: {_kuzzle_info: {active: false}}}
         ]
       });
@@ -2332,7 +2379,7 @@ describe('Test: ElasticSearch service', () => {
     it('should correctly separate bulk successes from errors', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
       elasticsearch.client.bulk.resolves({
-        took: 30, 
+        took: 30,
         errors: false,
         items: [
           {index: {_id: 'foo', status: 201}},
