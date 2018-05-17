@@ -7,7 +7,7 @@ const
   kuzzleConfig = require('../support/config');
 
 const elasticsearchClient = new ElasticSearch.Client({
-  host: 'localhost:9200'
+  host: 'elasticsearch:9200'
 });
 
 When('I create an index and a collection with ElasticSearch', function (callback) {
