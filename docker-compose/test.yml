@@ -29,6 +29,8 @@ services:
       - DEBUG=
       - CUCUMBER_EMBEDDED_HOST=localhost
       - CUCUMBER_PROXY_HOST=proxy
+      - DEV_UID=${DEV_UID:-1000}
+      - DEV_GID=${DEV_GID:-1000}
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT
@@ -46,4 +48,3 @@ services:
     environment:
       - cluster.name=kuzzle
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-
