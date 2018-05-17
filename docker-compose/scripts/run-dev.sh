@@ -6,7 +6,8 @@ elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
 
 npm install --unsafe
 npm rebuild all --unsafe
-chown -R ${DEV_UID}:${DEV_GID} node_modules
+find -L node_modules/.bin -type f -exec chmod 776 {} \;
+find node_modules/ -type d -exec chmod 755 {} \;
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"

@@ -35,8 +35,6 @@ services:
       - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
       - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
-      - DEV_UID=${DEV_UID:-1000}
-      - DEV_GID=${DEV_GID:-1000}
 
   redis:
     image: redis:3.2
