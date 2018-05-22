@@ -25,7 +25,10 @@ describe('Test: routerController.httpRequest', () => {
       pluginsManager: {
         routes: [
           {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
-        ]
+        ],
+        trigger: function (event, request) {
+          return Promise.resolve(request);
+        }
       },
       funnel: {
         execute: function (request, cb) {

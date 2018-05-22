@@ -442,7 +442,7 @@ describe('Test: ElasticSearch service', () => {
           try {
             should(err).be.an.instanceOf(NotFoundError);
             should(err.message).be.exactly(`Document with id "${request.input.resource._id}" not found.`);
-            should(elasticsearch.client.index.called).be.false();
+            should(elasticsearch.client.index).not.be.called();
 
             done();
           }
@@ -1520,8 +1520,85 @@ describe('Test: ElasticSearch service', () => {
             }
           });
         });
-
     });
+
+    it('should create collection with mapping if supplied in the body', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+
+      request.input.resource.collection = '%foobar';
+      elasticsearch.config.commonMapping = {};
+
+      const collectionMapping = {
+        properties: {
+          gordon:   { type: 'text' },
+          freeman:  { type: 'keyword' }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return elasticsearch.createCollection(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body['%foobar'].properties).eql(collectionMapping.properties);
+        });
+    });
+
+    it('should not overwrite kuzzle commonMapping', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+
+      request.input.resource.collection = '%foobar';
+
+      elasticsearch.config.commonMapping = {
+        gordon: { type: 'text' },
+        _kuzzle_info: {
+          properties: {
+            active:     { type: 'boolean' },
+            author:     { type: 'text' },
+            createdAt:  { type: 'date' },
+            updatedAt:  { type: 'date' },
+            updater:    { type: 'keyword' },
+            deletedAt:  { type: 'date' }
+          }
+        }
+      };
+
+      const collectionMapping = {
+        properties: {
+          gordon:   { type: 'keyword' },
+          freeman:  { type: 'keyword' },
+          _kuzzle_info: {
+            properties: {
+              author: { type: 'keyword' }
+            }
+          }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return elasticsearch.createCollection(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body['%foobar'].properties).eql({
+            gordon:   { type: 'text' },
+            freeman:  { type: 'keyword' },
+            _kuzzle_info: {
+              properties: {
+                active:     { type: 'boolean' },
+                author:     { type: 'text' },
+                createdAt:  { type: 'date' },
+                updatedAt:  { type: 'date' },
+                updater:    { type: 'keyword' },
+                deletedAt:  { type: 'date' }
+              }
+            }
+          });
+        });
+    });
+
   });
 
   describe('#truncateCollection', () => {
@@ -1717,7 +1794,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(elasticsearch.client.indices.refresh.called).be.false();
+          should(elasticsearch.client.indices.refresh).not.be.called();
           should(response).be.eql({ foo: 'bar' });
         });
     });
@@ -1728,7 +1805,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(elasticsearch.client.indices.refresh.called).be.true();
+          should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({foo: 'bar'});
         });
     });
@@ -1744,7 +1821,7 @@ describe('Test: ElasticSearch service', () => {
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
           should(pluginSpy.calledWith('log:error')).be.true();
-          should(elasticsearch.client.indices.refresh.called).be.true();
+          should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({ foo: 'bar' });
           return null;
         });

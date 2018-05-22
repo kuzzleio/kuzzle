@@ -49,7 +49,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     should(() => hotelClerk._removeRoomForCustomer(requestContext, 'roomId')).throw(NotFoundError);
     should(hotelClerk.rooms.roomId).not.be.undefined();
     should(hotelClerk.roomsCount).be.eql(1);
-    should(kuzzle.notifier.notifyUser.called).be.false();
+    should(kuzzle.notifier.notifyUser).not.be.called();
   });
 
   it('should remove the room from the customer list and remove the connection entry if empty', () => {
@@ -67,7 +67,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     should(hotelClerk.rooms).be.an.Object().and.be.empty();
 
     // should not notify since nobody else is listening
-    should(kuzzle.notifier.notifyUser.called).be.false();
+    should(kuzzle.notifier.notifyUser).not.be.called();
   });
 
   it('should remove the room from the customer list and keep other existing rooms', () => {
@@ -90,7 +90,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     should(hotelClerk.roomsCount).be.eql(1);
 
     // should not notify since nobody else is listening
-    should(kuzzle.notifier.notifyUser.called).be.false();
+    should(kuzzle.notifier.notifyUser).not.be.called();
   });
 
   it('should remove a customer and notify other users in the room', () => {

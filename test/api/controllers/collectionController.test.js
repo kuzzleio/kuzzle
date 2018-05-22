@@ -438,8 +438,8 @@ describe('Test: collection controller', () => {
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('stored');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.false();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).not.be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 
@@ -450,8 +450,8 @@ describe('Test: collection controller', () => {
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('realtime');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.false();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).not.be.called();
         });
     });
 
@@ -469,8 +469,8 @@ describe('Test: collection controller', () => {
             {name: 'crealtime', type: 'realtime'}
           ]);
           should(response.type).be.exactly('all');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 
@@ -487,8 +487,8 @@ describe('Test: collection controller', () => {
             {name: 'estored', type: 'stored'}
           ]);
           should(response).be.instanceof(Object);
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 
@@ -507,8 +507,8 @@ describe('Test: collection controller', () => {
             {name: 'astored', type: 'stored'}
           ]);
           should(response.type).be.exactly('all');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 

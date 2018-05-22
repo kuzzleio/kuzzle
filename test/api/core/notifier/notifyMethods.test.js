@@ -56,8 +56,8 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.dispatch.called).be.false();
-          should(kuzzle.pluginsManager.trigger.called).be.false();
+          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.pluginsManager.trigger).not.be.called();
           cb();
         }
         catch(e) {
@@ -142,7 +142,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch).not.be.called();
           cb();
         }
         catch(e) {
@@ -158,7 +158,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch).not.be.called();
           cb();
         }
         catch(e) {
@@ -172,7 +172,7 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.dispatch.called).be.false();
+          should(kuzzle.entryPoints.dispatch).not.be.called();
           cb();
         }
         catch(e) {
@@ -240,8 +240,8 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.dispatch.called).be.false();
-          should(kuzzle.pluginsManager.trigger.called).be.false();
+          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.pluginsManager.trigger).not.be.called();
           cb();
         }
         catch(e) {
@@ -255,8 +255,8 @@ describe('notify methods', () => {
 
       async.retry({times: 20, interval: 20}, cb => {
         try {
-          should(kuzzle.entryPoints.dispatch.called).be.false();
-          should(kuzzle.pluginsManager.trigger.called).be.false();
+          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.pluginsManager.trigger).not.be.called();
           cb();
         }
         catch(e) {
