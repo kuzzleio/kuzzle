@@ -4,6 +4,7 @@ var
   sinon = require('sinon'),
   sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
+  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   IndexCache = require.main.require('lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
@@ -131,6 +132,99 @@ describe('Test: core/indexCache', () => {
       indexCache.reset('index');
       should(indexCache.indexes).be.an.Object().and.have.keys('index');
       should(indexCache.indexes.index).be.an.Array().and.be.empty();
+    });
+  });
+
+  describe('#exists', () => {
+    it('should resolve with true if the index exists in Kuzzle', done => {
+      indexCache.add('index1');
+
+      indexCache.exists('index1')
+        .then(result => {
+          should(result).be.true();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should resolve with true if the collection exists in Kuzzle', done => {
+      indexCache.add('index1', 'collection1');
+
+      indexCache.exists('index1', 'collection1')
+        .then(result => {
+          should(result).be.true();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should resolve with true and update the cache if the index exists in ES but not in Kuzzle', done => {
+      kuzzle.services.list.storageEngine.indexExists.resolves(true);
+
+      indexCache.exists('index1')
+        .then(result => {
+          should(result).be.true();
+          should(indexCache.indexes).have.keys('index1');
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should resolve with true and update the cache if the collection exists in ES but not in Kuzzle', done => {
+      kuzzle.services.list.storageEngine.collectionExists.resolves(true);
+      indexCache.add('index1');
+
+      indexCache.exists('index1', 'collection1')
+        .then(result => {
+          should(result).be.true();
+          should(indexCache.indexes.index1).be.eql(['collection1']);
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should resolve with false if the index does not exists in ES', done => {
+      kuzzle.services.list.storageEngine.indexExists.resolves(false);
+
+      indexCache.exists('index1')
+        .then(result => {
+          should(result).be.false();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should resolve with false if the collection does not exists in ES', done => {
+      kuzzle.services.list.storageEngine.collectionExists.resolves(false);
+      indexCache.add('index1');
+
+      indexCache.exists('index1', 'collection1')
+        .then(result => {
+          should(result).be.false();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should not send a request to elastic with hotReload to false', done => {
+      kuzzle.services.list.storageEngine.indexExists.reset();
+      kuzzle.services.list.storageEngine.collectionExists.reset();
+
+      indexCache.exists('index1', undefined, false)
+        .then(result => {
+          should(result).be.false();
+          should(kuzzle.services.list.storageEngine.indexExists).not.be.called();
+          should(kuzzle.services.list.storageEngine.collectionExists).not.be.called();
+          done();
+        })
+        .catch(error => done(error));
+    });
+
+    it('should propagate other errors', () => {
+      const serviceUnavailableError = new ServiceUnavailableError();
+      kuzzle.services.list.storageEngine.indexExists.rejects(serviceUnavailableError);
+
+      return should(indexCache.exists('index1')).be.rejectedWith(serviceUnavailableError);
     });
   });
 });
