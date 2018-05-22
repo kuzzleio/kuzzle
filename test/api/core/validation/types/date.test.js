@@ -1,44 +1,22 @@
 'use strict';
 
 const
-  mockrequire = require('mock-require'),
-  rewire = require('rewire'),
-  BaseType = require('../../../../../lib/api/core/validation/baseType'),
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   sinon = require('sinon'),
-  should = require('should');
+  mockrequire = require('mock-require'),
+  BaseType = require('../../../../../lib/api/core/validation/baseType'),
+  should = require('should'),
+  DateType = require('../../../../../lib/api/core/validation/types/date');
 
 describe('Test: validation/types/date', () => {
-  'use strict';
-  let
-    DateType,
-    dateType,
-    sandbox = sinon.sandbox.create(),
-    isValidStub = sandbox.stub(),
-    isBeforeStub = sandbox.stub(),
-    utcStub = sandbox.stub(),
-    unixStub = sandbox.stub(),
-    momentMock = {
-      utc: utcStub,
-      unix: unixStub,
-      ISO_8601: 'ISO_8601'
-    };
-
-  before(() => {
-    mockrequire('moment', momentMock);
-    DateType = mockrequire.reRequire('../../../../../lib/api/core/validation/types/date');
-  });
+  let dateType;
 
   beforeEach(() => {
-    sandbox.resetHistory();
     dateType = new DateType();
   });
 
-  after(() => {
-    mockrequire.stopAll();
-  });
-
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(dateType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(dateType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -49,126 +27,8 @@ describe('Test: validation/types/date', () => {
     should(dateType.allowChildren).be.false();
   });
 
-  it('should override functions properly',() => {
-    should(typeof DateType.prototype.validate).be.eql('function');
-    should(typeof DateType.prototype.validateFieldSpecification).be.eql('function');
-  });
-
-  describe('#validate', () => {
-    it('should return true if the date format is valid', () => {
-      const
-        typeOptions = {
-          formats: ['epoch_millis']
-        };
-
-      momentMock.utc.returns({isValid: () => true});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
-    });
-
-    it('should return false if the date format is not valid', () => {
-      const
-        errorMessages = [],
-        typeOptions = {
-          formats: ['epoch_millis']
-        };
-
-      momentMock.utc.returns({isValid: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The date format is not valid.']);
-    });
-
-    it('should return true if the date is after the min date', () => {
-      const
-        typeOptions = {
-          formats: ['epoch_millis'],
-          range: {min: {}}
-        };
-
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
-    });
-
-    it('should return false if the date is before the min date', () => {
-      const
-        errorMessages = [],
-        typeOptions = {
-          formats: ['epoch_millis'],
-          range: {min: {}}
-        };
-
-      momentMock.utc.returns({isValid: () => true, isBefore: () => true});
-
-      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The provided date is before the defined minimum.']);
-    });
-
-    it('should call moment.utc if min equals the string "NOW"', () => {
-      const
-        typeOptions = {
-          formats: ['epoch_millis'],
-          range: {min: 'NOW'}
-        };
-
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
-      should(utcStub.callCount).be.eql(2);
-    });
-
-    it('should return true if the date is before the max date', () => {
-      const
-        typeOptions = {
-          formats: ['epoch_millis'],
-          range: {
-            max: {
-              isBefore: sinon.stub().returns(false)
-            }
-          }
-        };
-
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
-    });
-
-    it('should return false if the date is after the max date', () => {
-      const
-        errorMessages = [],
-        typeOptions = {
-          formats: ['epoch_millis'],
-          range: {
-            max: {
-              isBefore: sinon.stub().returns(true)
-            }
-          }
-        };
-
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The provided date is after the defined maximum.']);
-    });
-
-    it('should call moment.utc if max equals the string "NOW"', () => {
-      const
-        typeOptions = {
-          formats: ['epoch_millis'],
-          range: {
-            max: 'NOW'
-          }
-        };
-
-      momentMock.utc.returns({isValid: () => true, isBefore: () => false});
-
-      should(dateType.validate(typeOptions, '1234567890', [])).be.true();
-    });
-  });
-
   describe('#validateFieldSpecification', () => {
-    it('should return the default typeOptions if typeOptions is empty', () => {
+    it('should return a default options structure if the provided options are empty', () => {
       should(dateType.validateFieldSpecification({})).be.deepEqual({formats: ['epoch_millis']});
     });
 
@@ -181,143 +41,214 @@ describe('Test: validation/types/date', () => {
       should(dateType.validateFieldSpecification(typeOptions)).be.deepEqual(typeOptions);
     });
 
-    it('should return false if formats is empty', () => {
-      should(dateType.validateFieldSpecification({formats: []})).be.false();
+    it('should throw if an invalid "formats" options is provided', () => {
+      should(() => dateType.validateFieldSpecification({formats: []}))
+        .throw(PreconditionError, {message: 'Invalid "formats" option: must be a non-empty array'});
+
+      should(() => dateType.validateFieldSpecification({formats: null}))
+        .throw(PreconditionError, {message: 'Invalid "formats" option: must be a non-empty array'});
     });
 
-    it('should return false if formats contains an unknown format', () => {
-      should(dateType.validateFieldSpecification({formats: ['not_valid']})).be.false();
+    it('should throw if the "formats" option contains an unknown format', () => {
+      should(() => dateType.validateFieldSpecification({formats: ['foobar']}))
+        .throw(PreconditionError, {message: 'Unrecognized format name: foobar'});
+
+      should(() => dateType.validateFieldSpecification({formats: ['foo', 'epoch_millis', 'bar']}))
+        .throw(PreconditionError, {message: 'Unrecognized format names: foo,bar'});
     });
 
-    it('should return false if range contains an unknown property', () => {
-      should(dateType.validateFieldSpecification({range: {unknown: 'property'}})).be.false();
+    it('should throw if the "range" option is invalid', () => {
+      should(() => dateType.validateFieldSpecification({range: null}))
+        .throw(PreconditionError, {message: 'Invalid "range" option definition'});
+
+      should(() => dateType.validateFieldSpecification({range: []}))
+        .throw(PreconditionError, {message: 'Invalid "range" option definition'});
+
+      should(() => dateType.validateFieldSpecification({range: {unknown: null}}))
+        .throw(PreconditionError, {message: 'Invalid "range" option definition'});
     });
 
-    it('should return typeOpts with min equal to NOW if provided value is NOW', () => {
-      const
-        typeOptions = {
-          range: {min: 'NOW'},
-          formats: ['epoch_millis']
-        };
-
-      utcStub.returns({
-        isValid: isValidStub
-      });
-      isValidStub.returns(true);
+    it('should leave the "min" option intact if it contains the special value "NOW"', () => {
+      const typeOptions = {range: {min: 'NOW'}};
 
       should(dateType.validateFieldSpecification(typeOptions)).be.deepEqual(typeOptions);
     });
 
-    it('should return typeOpts with max equal to NOW if provided value is NOW', () => {
-      const
-        typeOptions = {
-          range: {max: 'NOW'},
-          formats: ['epoch_millis']
-        };
-
-      utcStub.returns({
-        isValid: isValidStub
-      });
-      isValidStub.returns(true);
+    it('should leave the "max" option intact if it contains the special value "NOW"', () => {
+      const typeOptions = {range: {max: 'NOW'}};
 
       should(dateType.validateFieldSpecification(typeOptions)).be.deepEqual(typeOptions);
     });
 
-    it('should return false if min is not a string', () => {
-      const
-        typeOptions = {range: {min: 42}};
+    it('should throw if "min" is not a valid date', () => {
+      should(() => dateType.validateFieldSpecification({range: {min: 'foobar'}}))
+        .throw(PreconditionError, {message: 'Unable to parse the range value "foobar"'});
 
-      should(dateType.validateFieldSpecification(typeOptions)).be.false();
+      should(() => dateType.validateFieldSpecification({range: {min: null}}))
+        .throw(PreconditionError, {message: 'Option "range.min": invalid format'});
     });
 
-    it('should return false if max is not a string', () => {
-      const
-        typeOptions = {range: {max: 42}};
+    it('should throw if "max" is not a valid date', () => {
+      should(() => dateType.validateFieldSpecification({range: {max: 'foobar'}}))
+        .throw(PreconditionError, {message: 'Unable to parse the range value "foobar"'});
 
-      should(dateType.validateFieldSpecification(typeOptions)).be.false();
+      should(() => dateType.validateFieldSpecification({range: {max: null}}))
+        .throw(PreconditionError, {message: 'Option "range.max": invalid format'});
     });
 
-    it('should return false if min is not valid', () => {
-      const
-        typeOptions = {
-          range: {min: 'not_valid'},
-          formats: ['epoch_millis']
-        };
-
-      utcStub.returns({
-        isValid: isValidStub
-      });
-      isValidStub.returns(false);
-
-      should(dateType.validateFieldSpecification(typeOptions)).be.false();
-    });
-
-    it('should return false if max is not valid', () => {
-      const
-        typeOptions = {
-          range: {max: 'not_valid'},
-          formats: ['epoch_millis']
-        };
-
-      utcStub.returns({
-        isValid: isValidStub
-      });
-      isValidStub.returns(false);
-
-      should(dateType.validateFieldSpecification(typeOptions)).be.false();
-    });
-
-    it('should return false if max is before min', () => {
+    it('should throw if max < min', () => {
       const
         typeOptions = {
           range: {min: '2020-01-01', max: '2010-01-01'},
           formats: ['epoch_millis']
         };
 
-      utcStub.returns({
-        isValid: isValidStub,
-        isBefore: isBeforeStub
-      });
-      isValidStub.returns(true);
-      isBeforeStub.returns(true);
-
-      should(dateType.validateFieldSpecification(typeOptions)).be.false();
+      should(() => dateType.validateFieldSpecification(typeOptions))
+        .throw(PreconditionError, {message: 'Invalid range: max > min'});
     });
 
-    it('should return modified typeOptions if min and max are defined dates', () => {
+    it('should convert min and max to moment objects if they are valid', () => {
       const
         typeOptions = {
           range: {min: '2010-01-01', max: '2020-01-01'},
           formats: ['epoch_millis']
         };
 
-      utcStub.returns({
-        isMoment: true,
-        isValid: isValidStub,
-        isBefore: isBeforeStub
-      });
-      isValidStub.returns(true);
-      isBeforeStub.returns(false);
-
       const result = dateType.validateFieldSpecification(typeOptions);
 
       should(typeof result).be.eql('object');
-      should(result.range.hasOwnProperty('min')).be.true();
-      should(result.range.min.hasOwnProperty('isMoment')).be.true();
-      should(result.range.hasOwnProperty('max')).be.true();
-      should(result.range.max.hasOwnProperty('isMoment')).be.true();
+      should(result.range.min._isAMomentObject).be.true();
+      should(result.range.min.isValid()).be.true();
+      should(result.range.max._isAMomentObject).be.true();
+      should(result.range.max.isValid()).be.true();
+    });
+  });
+
+  describe('#validate', () => {
+    it('should return true if the date format is valid', () => {
+      const
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['epoch_millis']
+        });
+
+      should(dateType.validate(typeOptions, Date.now(), [])).be.true();
+    });
+
+    it('should return false if the date format is not valid', () => {
+      const
+        errorMessages = [],
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['epoch_millis']
+        });
+
+      should(dateType.validate(typeOptions, 'foobar', errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The date format is invalid.']);
+    });
+
+    it('should validate if the date is after the min date', () => {
+      const
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['epoch_millis', 'strict_date'],
+          range: {min: '2013-09-21'}
+        });
+
+      should(dateType.validate(typeOptions, '2014-01-01', [])).be.true();
+    });
+
+    it('should not validate if the date is before the min date', () => {
+      const
+        errorMessages = [],
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['epoch_millis'],
+          range: {min: Date.now()}
+        });
+
+      should(dateType.validate(typeOptions, Date.now() - 10000, errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The provided date is before the defined minimum.']);
+    });
+
+    it('should call moment.utc if min equals the string "NOW"', done => {
+      const
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['epoch_millis'],
+          range: {min: 'NOW'}
+        });
+
+      should(dateType.validate(typeOptions, Date.now() + 10, [])).be.true();
+      should(dateType.validate(typeOptions, Date.now() - 10, [])).be.false();
+
+      setTimeout(() => {
+        try {
+          should(dateType.validate(typeOptions, Date.now() + 10, [])).be.true();
+          should(dateType.validate(typeOptions, Date.now() - 10, [])).be.false();
+          done();
+        }
+        catch(e) {
+          done(e);
+        }
+      }, 100);
+    });
+
+    it('should validate if the date is before the max date', () => {
+      const
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['strict_basic_week_date', 'epoch_millis', 'strict_date'],
+          range: {
+            max: Date.now() + 1000
+          }
+        });
+
+      should(dateType.validate(typeOptions, Date.now(), [])).be.true();
+    });
+
+    it('should not validate if the date is after the max date', () => {
+      const
+        errorMessages = [],
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['epoch_millis'],
+          range: {
+            max: Date.now()
+          }
+        });
+
+      should(dateType.validate(typeOptions, Date.now() + 1000, errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['The provided date is after the defined maximum.']);
+    });
+
+    it('should call moment.utc if max equals the string "NOW"', done => {
+      const
+        typeOptions = dateType.validateFieldSpecification({
+          formats: ['epoch_millis'],
+          range: {max: 'NOW'}
+        });
+
+      should(dateType.validate(typeOptions, Date.now() + 10, [])).be.false();
+      should(dateType.validate(typeOptions, Date.now() - 10, [])).be.true();
+
+      setTimeout(() => {
+        try {
+          should(dateType.validate(typeOptions, Date.now() + 10, [])).be.false();
+          should(dateType.validate(typeOptions, Date.now() - 10, [])).be.true();
+          done();
+        }
+        catch(e) {
+          done(e);
+        }
+      }, 100);
     });
   });
 
   describe('#formatMap', () => {
+    let DateWithMockedMoment;
     const
-      Rewired = rewire('../../../../../lib/api/core/validation/types/date'),
-      formatMap = Rewired.__get__('formatMap'),
       utcDate = '1234567890',
-      unixDate = 'unixDate',
+      momentMock = {
+        ISO_8601: 'ISO_8601_MOCK',
+        utc: sinon.stub().returns({isValid: () => true}),
+        invalid: sinon.stub().returns({isValid: () => true}),
+        unix: sinon.stub().returnsArg(0)
+      },
       expectedArguments = {
-        epoch_millis: [Number.parseInt(utcDate)],
-        epoch_second: [unixDate],
         strict_date_optional_time: [utcDate, momentMock.ISO_8601, true],
         basic_date: [utcDate, 'YYYYMMDD', true],
         basic_date_time: [utcDate, 'YYYYMMDD\\THHmmss.SSSZ', true],
@@ -393,21 +324,63 @@ describe('Test: validation/types/date', () => {
         strict_year_month: [utcDate, 'YYYYMM', true],
         year_month_day: [utcDate, 'YYYYMMDD', false],
         strict_year_month_day: [utcDate, 'YYYYMMDD', true]
-      },
-      formats = Object.keys(formatMap);
+      };
+
+    before(() => {
+      mockrequire('moment', momentMock);
+      DateWithMockedMoment = mockrequire.reRequire('../../../../../lib/api/core/validation/types/date');
+    });
 
     beforeEach(() => {
-      utcStub.returns(utcDate);
-      unixStub.returns(unixDate);
-      momentMock.utc.returns({isValid: () => true});
+      momentMock.utc.resetHistory();
+      momentMock.invalid.resetHistory();
+      momentMock.unix.resetHistory();
+      dateType = new DateWithMockedMoment();
     });
 
-    formats.forEach(format => {
-      it(`should get proper arguments for format "${format}"`, () => {
-        dateType.validate({formats: [format]}, utcDate, []);
+    after(() => {
+      mockrequire.stopAll();
+    });
 
-        should(momentMock.utc).calledWith(...expectedArguments[format]);
+    // epoch_second and epoch_millis accept numbers instead of strings for dates,
+    // so they behave a bit differently and we need specific tests
+    // for these two
+    ['epoch_second', 'epoch_millis'].forEach(format => {
+      const now = format === 'epoch_second' ? Date.now() / 1000 : Date.now();
+
+      it(`should get proper arguments for format "${format}"`, () => {
+        const errors = [];
+
+        dateType.validate({formats: [format]}, now, errors);
+
+        should(errors).be.an.Array().and.be.empty();
+        should(momentMock.unix.callCount).be.eql(format === 'epoch_second' ? 1 : 0);
+        should(momentMock.utc).calledWith(now);
+
+        // should call moment.invalid() if a non-number date is provided
+        momentMock.utc.resetHistory();
+        momentMock.invalid.resetHistory();
+        momentMock.unix.resetHistory();
+        dateType.validate({formats: [format]}, String(now), errors);
+
+        should(momentMock.utc).not.be.called();
+        should(momentMock.unix).not.be.called();
+        should(momentMock.invalid).be.calledOnce();
       });
     });
+
+    Object.keys(expectedArguments)
+      .forEach(format => {
+        it(`should get proper arguments for format "${format}"`, () => {
+          const errors = [];
+
+          dateType.validate({formats: [format]}, utcDate, errors);
+
+          should(errors).be.an.Array().and.be.empty();
+          should(momentMock.utc).calledWith(...expectedArguments[format]);
+          should(momentMock.invalid).not.be.called();
+        });
+      });
+
   });
 });

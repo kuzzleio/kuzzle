@@ -1,13 +1,14 @@
-var
+const
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
   UrlType = require('../../../../../lib/api/core/validation/types/url'),
   should = require('should');
 
 describe('Test: validation/types/url', () => {
-  var urlType = new UrlType();
+  const urlType = new UrlType();
 
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(urlType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(urlType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -18,44 +19,41 @@ describe('Test: validation/types/url', () => {
     should(urlType.allowChildren).be.false();
   });
 
-  it('should override functions properly',() => {
-    should(typeof UrlType.prototype.validate).be.eql('function');
-    should(typeof UrlType.prototype.validateFieldSpecification).be.eql('function');
-  });
-
   describe('#validate', () => {
     it('should return true if the value is valid', () => {
       should(urlType.validate({notEmpty: true}, 'http://www.domain.com/', [])).be.true();
     });
 
-    it('should return true if the value is valid', () => {
+    it('should return true if the value is empty and optional', () => {
       should(urlType.validate({notEmpty: false}, '', [])).be.true();
     });
 
-    it('should return false if the value is not valid', () => {
-      var errorMessage = [];
+    it('should return false if the value is empty and required', () => {
+      const errorMessage = [];
 
       should(urlType.validate({notEmpty: true}, '', errorMessage)).be.false();
       should(errorMessage).be.deepEqual(['The string must not be empty.']);
     });
 
-    it('should return false if the value is not valid', () => {
+    it('should return false if the value is not a valid URL address', () => {
       var errorMessage = [];
 
-      should(urlType.validate({notEmpty: true}, 'not an ip address', errorMessage)).be.false();
+      should(urlType.validate({notEmpty: true}, 'not an url address', errorMessage)).be.false();
       should(errorMessage).be.deepEqual(['The string must be a valid URL.']);
     });
 
-    it('should return false if the value is not valid', () => {
-      var errorMessage = [];
+    it('should return false if the value is not a string', () => {
+      [[], {}, 123, undefined, null, false].forEach(v => {
+        const errorMessage = [];
 
-      should(urlType.validate({notEmpty: true}, {not: 'a string'}, errorMessage)).be.false();
-      should(errorMessage).be.deepEqual(['The field must be a string.']);
+        should(urlType.validate({notEmpty: true}, v, errorMessage)).be.false();
+        should(errorMessage).be.deepEqual(['The field must be a string.']);
+      });
     });
   });
 
   describe('#validateFieldSpecification', () => {
-    it('should return default typeOptions if there is no typeOptions', () => {
+    it('should return a defaulted typeOptions object if none is provided', () => {
       should(urlType.validateFieldSpecification({})).be.deepEqual({
         notEmpty: false
       });
@@ -69,10 +67,11 @@ describe('Test: validation/types/url', () => {
       });
     });
 
-    it('should return false if notEmpty is not set properly', () => {
-      should(urlType.validateFieldSpecification({
-        notEmpty: 'not proper'
-      })).be.false();
+    it('should throw if notEmpty is not set properly', () => {
+      [[], {}, 'foo', 123, undefined, null].forEach(v => {
+        should(() => urlType.validateFieldSpecification({notEmpty: v}))
+          .throw(PreconditionError, {message: 'Option "notEmpty" must be of type "boolean"'});
+      });
     });
   });
 });

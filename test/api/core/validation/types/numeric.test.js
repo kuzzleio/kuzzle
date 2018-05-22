@@ -1,13 +1,14 @@
-var
+const
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
   NumericType = require('../../../../../lib/api/core/validation/types/numeric'),
   should = require('should');
 
 describe('Test: validation/types/numeric', () => {
-  var numericType = new NumericType();
+  const numericType = new NumericType();
 
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(numericType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(numericType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -18,13 +19,8 @@ describe('Test: validation/types/numeric', () => {
     should(numericType.allowChildren).be.false();
   });
 
-  it('should override functions properly',() => {
-    should(typeof NumericType.prototype.validate).be.eql('function');
-    should(typeof NumericType.prototype.validateFieldSpecification).be.eql('function');
-  });
-
   describe('#validate', () => {
-    var
+    const
       emptyTypeOptions = {},
       rangeTypeOptions = {
         range: {
@@ -42,21 +38,21 @@ describe('Test: validation/types/numeric', () => {
     });
 
     it('should return false if fieldValue is not a number', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
       should(numericType.validate(emptyTypeOptions, 'a string', errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The field must be a number.']);
     });
 
     it('should return false if fieldValue is below min', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
       should(numericType.validate(rangeTypeOptions, 40.1, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The value is lesser than the minimum.']);
     });
 
     it('should return false if fieldValue is above max', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
       should(numericType.validate(rangeTypeOptions, 43.1, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The value is greater than the maximum.']);
@@ -64,32 +60,46 @@ describe('Test: validation/types/numeric', () => {
   });
 
   describe('#validateFieldSpecification', () => {
-    it('should return true if there is no typeOptions', () => {
-      should(numericType.validateFieldSpecification({})).be.true();
-    });
-
-    it('should return true if typeOptions is set properly', () => {
-      should(numericType.validateFieldSpecification({
+    it('should validate if set properly', () => {
+      const opts = {
         range: {
           min: 41,
           max: 42
         }
-      })).be.true();
+      };
+
+      should(numericType.validateFieldSpecification(opts)).be.eql(opts);
     });
 
-    it('should return false if range is not set properly', () => {
-      should(numericType.validateFieldSpecification({
-        range: 'not proper'
-      })).be.false();
+    it('should throw if "range" is not an object', () => {
+      [[], undefined, null, 'foobar', 123].forEach(range => {
+        should(() => numericType.validateFieldSpecification({range}))
+          .throw(PreconditionError, {message: 'Invalid "range" option definition'});
+      });
     });
 
-    it('should return false if min is greater than max', () => {
-      should(numericType.validateFieldSpecification({
+    it('should throw if an unrecognized property is passed to the range options', () => {
+      should(() => numericType.validateFieldSpecification({range: {foo: 123}}))
+        .throw(PreconditionError, {message: 'Invalid "range" option definition'});
+    });
+
+    it('should throw if a non-numeric value is passed to the min or max properties', () => {
+      [[], {}, undefined, null, 'foo'].forEach(v => {
+        should(() => numericType.validateFieldSpecification({range: {min: v}}))
+          .throw(PreconditionError, {message: 'Invalid "range.min" option: must be of type "number"'});
+
+        should(() => numericType.validateFieldSpecification({range: {max: v}}))
+          .throw(PreconditionError, {message: 'Invalid "range.max" option: must be of type "number"'});
+      });
+    });
+
+    it('should throw if min is greater than max', () => {
+      should(() => numericType.validateFieldSpecification({
         range: {
           min: 42,
           max: 41
         }
-      })).be.false();
+      })).throw(PreconditionError, {message: 'Invalid range: min > max'});
     });
   });
 });

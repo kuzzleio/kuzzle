@@ -263,30 +263,22 @@ describe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({
         isValid: false,
         errors: ['bad bad is a bad type !']
-      }));
-      kuzzle.validation.curateSpecification = sandbox.stub();
+      });
 
       return collectionController.updateSpecifications(request)
         .catch(error => {
-          try {
-            should(kuzzle.pluginsManager.trigger).be.calledOnce();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
-            should(kuzzle.internalEngine.refresh).not.be.called();
-            should(kuzzle.validation.curateSpecification).not.be.called();
-            should(kuzzle.internalEngine.createOrReplace).not.be.called();
+          should(kuzzle.pluginsManager.trigger).be.calledOnce();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
+          should(kuzzle.internalEngine.refresh).not.be.called();
+          should(kuzzle.validation.curateSpecification).not.be.called();
+          should(kuzzle.internalEngine.createOrReplace).not.be.called();
 
-            should(error).be.an.instanceOf(BadRequestError);
-            should(error.message).be.exactly('Some errors with provided specifications.');
-            should(error.details).match([ 'bad bad is a bad type !' ]);
-
-            return Bluebird.resolve();
-          }
-          catch (er) {
-            return Bluebird.reject(er);
-          }
+          should(error).be.an.instanceOf(BadRequestError);
+          should(error.message).be.exactly('Some errors with provided specifications.');
+          should(error.details).match([ 'bad bad is a bad type !' ]);
         });
     });
   });
