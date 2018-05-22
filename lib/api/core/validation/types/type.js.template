@@ -15,6 +15,7 @@ class MyNewType extends BaseType {
    * @param {TypeOptions} typeOptions
    * @param {*} fieldValue
    * @param {string[]} errorMessages
+   * @return {boolean}
    */
   validate(typeOptions, fieldValue, errorMessages) {
     // TODO
@@ -23,12 +24,12 @@ class MyNewType extends BaseType {
 
   /**
    * @param {TypeOptions} typeOptions
-   * @return {boolean|TypeOptions}
-   * @throws InternalError
+   * @return {TypeOptions}
+   * @throws {KuzzleError}
    */
   validateFieldSpecification(typeOptions) {
     // TODO
-    return true;
+    return typeOptions;
   }
 }
 

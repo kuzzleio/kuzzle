@@ -6,8 +6,8 @@ const
 describe('Test: validation/types/integer', () => {
   const integerType = new IntegerType();
 
-  it('should derivate from NumericType', () => {
-    should(NumericType.prototype.isPrototypeOf(integerType)).be.true();
+  it('should inherit the NumericType class', () => {
+    should(integerType).be.instanceOf(NumericType);
   });
 
   it('should construct properly', () => {
@@ -16,11 +16,6 @@ describe('Test: validation/types/integer', () => {
     should(Array.isArray(integerType.allowedTypeOptions)).be.true();
     should(integerType.typeName).be.eql('integer');
     should(integerType.allowChildren).be.false();
-  });
-
-  it('should override functions properly',() => {
-    should(typeof IntegerType.prototype.validate).be.eql('function');
-    should(typeof IntegerType.prototype.validateFieldSpecification).be.eql('function');
   });
 
   describe('#validate', () => {
@@ -67,36 +62,6 @@ describe('Test: validation/types/integer', () => {
 
       should(integerType.validate(rangeTypeOptions, 43, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['The value is greater than the maximum.']);
-    });
-  });
-
-  describe('#validateFieldSpecification', () => {
-    it('should return true if there is no typeOptions', () => {
-      should(integerType.validateFieldSpecification({})).be.true();
-    });
-
-    it('should return true if typeOptions is set properly', () => {
-      should(integerType.validateFieldSpecification({
-        range: {
-          min: 41,
-          max: 42
-        }
-      })).be.true();
-    });
-
-    it('should return false if range is not set properly', () => {
-      should(integerType.validateFieldSpecification({
-        range: 'not proper'
-      })).be.false();
-    });
-
-    it('should return false if min is greater than max', () => {
-      should(integerType.validateFieldSpecification({
-        range: {
-          min: 42,
-          max: 41
-        }
-      })).be.false();
     });
   });
 });

@@ -336,7 +336,7 @@ describe('Plugin Context', () => {
         callback = sinon.spy(
           (err, res) => {
             try {
-              should(kuzzle.funnel.executePluginRequest.called).be.false();
+              should(kuzzle.funnel.executePluginRequest).not.be.called();
               should(callback).be.calledOnce();
               should(err).be.instanceOf(PluginImplementationError);
               should(err.message).startWith('Invalid argument: a Request object must be supplied');

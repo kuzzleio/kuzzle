@@ -125,7 +125,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, callback);
 
       should(funnel.overloaded).be.true();
-      should(funnel.processRequest.called).be.false();
+      should(funnel.processRequest).not.be.called();
       should(funnel.requestsCacheQueue.length).be.eql(1);
       should(funnel.requestsCacheQueue.shift()).eql(request.internalId);
       should(funnel.requestsCacheById[request.internalId]).eql(new (FunnelController.__get__('CacheItem'))('execute', request, callback));
@@ -155,7 +155,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, callback);
 
       should(funnel.overloaded).be.true();
-      should(funnel.processRequest.called).be.false();
+      should(funnel.processRequest).not.be.called();
       should(funnel.requestsCacheQueue.length).be.eql(1);
       should(funnel.requestsCacheQueue.shift()).be.eql(request.internalId);
       should(funnel.requestsCacheById[request.internalId]).match({request, callback});
@@ -183,7 +183,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, (err, res) => {
         should(funnel.overloaded).be.true();
         should(funnel._playCachedRequests).have.callCount(0);
-        should(funnel.processRequest.called).be.false();
+        should(funnel.processRequest).not.be.called();
         should(funnel.requestsCacheQueue.length).be.eql(kuzzle.config.limits.requestsBufferSize);
         should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);
@@ -200,8 +200,8 @@ describe('funnelController.execute', () => {
       funnel.checkRights.throws(new Error('funnel.checkRights should not have been called'));
 
       should(funnel.execute(request, cb)).be.eql(0);
-      should(funnel.checkRights.called).be.false();
-      should(cb.called).be.false();
+      should(funnel.checkRights).not.be.called();
+      should(cb).not.be.called();
     });
   });
 

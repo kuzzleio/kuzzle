@@ -1,4 +1,5 @@
 const
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   rewire = require('rewire'),
   mockrequire = require('mock-require'),
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
@@ -7,8 +8,8 @@ const
 
 describe('Test: validation/types/geoShape', () => {
   let
-    GeoShapeType,
     geoShapeType,
+    GeoShapeType,
     sandbox = sinon.sandbox.create(),
     convertDistanceStub = sandbox.stub(),
     isPoint,
@@ -52,8 +53,8 @@ describe('Test: validation/types/geoShape', () => {
     recursiveShapeValidation = geoShapeType.recursiveShapeValidation;
   });
 
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(geoShapeType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(geoShapeType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -62,11 +63,6 @@ describe('Test: validation/types/geoShape', () => {
     should(Array.isArray(geoShapeType.allowedTypeOptions)).be.true();
     should(geoShapeType.typeName).be.eql('geo_shape');
     should(geoShapeType.allowChildren).be.false();
-  });
-
-  it('should override functions properly',() => {
-    should(typeof GeoShapeType.prototype.validate).be.eql('function');
-    should(typeof GeoShapeType.prototype.validateFieldSpecification).be.eql('function');
   });
 
   describe('#validate', () => {
@@ -374,7 +370,7 @@ describe('Test: validation/types/geoShape', () => {
       const
         allowedShapes = ['allowed'],
         shape = {
-          'type': 'allowed',
+          type: 'allowed',
           coordinates: ['some coordinates']
         };
 
@@ -534,12 +530,19 @@ describe('Test: validation/types/geoShape', () => {
       should(geoShapeType.validateFieldSpecification(typeOptions)).be.deepEqual(typeOptions);
     });
 
-    it('should return false if one of the provided shapeTypes is not valid', () => {
-      should(geoShapeType.validateFieldSpecification({shapeTypes: ['not valid']})).be.false();
+    it('should throw if a shape type is not recognized', () => {
+      should(() => geoShapeType.validateFieldSpecification({shapeTypes: ['circle', 'multipolygon', 'invalid']}))
+        .throw(PreconditionError, {message: 'Invalid shape: invalid'});
+
+      should(() => geoShapeType.validateFieldSpecification({shapeTypes: ['invalid', 'circle', 'foo', 'multipolygon', 'bar']}))
+        .throw(PreconditionError, {message: 'Invalid shapes: invalid,foo,bar'});
     });
 
-    it('should return false if the provided shapeTypes list is empty', () => {
-      should(geoShapeType.validateFieldSpecification({shapeTypes: []})).be.false();
+    it('should throw if the provided shapeTypes list is empty or not an array', () => {
+      [[], null, undefined, 'foo', 123].forEach(t => {
+        should(() => geoShapeType.validateFieldSpecification({shapeTypes: t}))
+          .throw(PreconditionError, {message: 'Option "shapeTypes" must be a non-empty array'});
+      });
     });
   });
 

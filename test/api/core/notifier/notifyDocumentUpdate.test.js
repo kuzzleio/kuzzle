@@ -24,11 +24,11 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       index: 'foo',
       collection: 'bar',
       _id: 'Sir Isaac Newton is the deadliest son-of-a-bitch in space',
-      body: { 
+      body: {
         _kuzzle_info: {
           'canIhas': 'cheezburgers?'
         },
-        foo: 'bar' 
+        foo: 'bar'
       }
     });
 
@@ -70,11 +70,38 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
         should(kuzzle.services.list.internalCache.del).not.be.called();
 
-        should(kuzzle.services.list.internalCache.set)
+        should(kuzzle.services.list.internalCache.setex)
           .calledOnce()
           .calledWith(
             `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`,
+            kuzzle.config.limits.subscriptionDocumentTTL,
             JSON.stringify(['foo']));
       });
+  });
+
+  context('with a subscriptionDocumentTTL set to 0', () => {
+    it('should set internalCache with no TTL', () => {
+      kuzzle.config.limits.subscriptionDocumentTTL = 0;
+
+      kuzzle.realtime.test.returns(['foo']);
+      kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({
+        _id: request.input.resource._id,
+        _source: {foo: 'bar'},
+        _meta: request.input.body._kuzzle_info
+      }));
+
+      kuzzle.services.list.internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
+
+      return notifier.notifyDocumentUpdate(request)
+        .then(() => {
+          should(kuzzle.services.list.internalCache.setex).not.be.called();
+
+          should(kuzzle.services.list.internalCache.set)
+            .calledOnce()
+            .calledWith(
+              `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`,
+              JSON.stringify(['foo']));
+        });
+    });
   });
 });

@@ -1,23 +1,17 @@
-var
+const
   should = require('should'),
-  sinon = require('sinon'),
   rewire = require('rewire'),
   Validation = rewire('../../../../lib/api/core/validation'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: validation utilities', () => {
-  var
-    sandbox = sinon.sandbox.create(),
+  const
     genericMock = {
       foo: 'bar'
     };
 
-  beforeEach(() => {
-    sandbox.resetHistory();
-  });
-
   describe('#checkAllowedProperties', () => {
-    var
+    const
       checkAllowedProperties = Validation.__get__('checkAllowedProperties');
 
     it('should be true with proper arguments', () => {
@@ -34,11 +28,11 @@ describe('Test: validation utilities', () => {
   });
 
   describe('#curateStructuredFields', () => {
-    var
+    const
       curateStructuredFields = Validation.__get__('curateStructuredFields');
 
     it('should return a verbose representation of fields', () => {
-      var
+      const
         maxDepth = 3,
         typeAllowChildren = ['object'],
         fields = {
@@ -84,7 +78,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should throw an error if a field level is missing', () => {
-      var
+      const
         maxDepth = 3,
         typeAllowChildren = ['object'],
         fields = {
@@ -98,7 +92,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should throw an error if a parent has not the appropriate type', () => {
-      var
+      const
         maxDepth = 3,
         typeAllowChildren = ['object'],
         fields = {
@@ -113,11 +107,11 @@ describe('Test: validation utilities', () => {
   });
 
   describe('#getParent', () => {
-    var
+    const
       getParent = Validation.__get__('getParent');
 
     it('should return the root if the field has one part', () => {
-      var
+      const
         structuredField = {
           children: {
             foo: 'bar'
@@ -129,7 +123,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should return the good parent that corresponds to the parent\'s field path', () => {
-      var
+      const
         structuredField = {
           children: {
             foo: {
@@ -149,7 +143,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should throw an error if the fieldPath does not fit the structure', () => {
-      var
+      const
         structuredField = {
           children: {
             foo: {
@@ -172,11 +166,11 @@ describe('Test: validation utilities', () => {
   });
 
   describe('#manageErrorMessage', () => {
-    var
+    const
       manageErrorMessage = Validation.__get__('manageErrorMessage');
 
     it('should throw an error if verbose is false and context is not document', () => {
-      var
+      const
         context = ['aField', 'aSubField'],
         verbose = false,
         message = 'a message',
@@ -188,7 +182,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should add a message at the begining of the errorHolder when verbose is false and context is document', () => {
-      var
+      const
         context = 'document',
         verbose = false,
         message = 'a message',
@@ -200,7 +194,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
-      var
+      const
         context = ['aField', 'aSubField'],
         verbose = true,
         message = 'a message',
@@ -225,7 +219,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
-      var
+      const
         context = ['aField', 'aSubField'],
         verbose = true,
         message = 'a message',
@@ -262,7 +256,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
-      var
+      const
         context = ['aField', 'aSubField'],
         verbose = true,
         message = 'a message',
@@ -304,7 +298,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should add the message in the documentScope of the errorHolder when verbose is true and context is document', () => {
-      var
+      const
         context = 'document',
         verbose = true,
         message = 'a message',
@@ -319,7 +313,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should add the message in the documentScope of the errorHolder when verbose is true and context is document', () => {
-      var
+      const
         context = 'document',
         verbose = true,
         message = 'a message',
@@ -337,9 +331,8 @@ describe('Test: validation utilities', () => {
   });
 
   describe('#getValidationConfiguration', () => {
-    var
-      kuzzle,
-      getValidationConfiguration = Validation.__get__('getValidationConfiguration');
+    let kuzzle;
+    const getValidationConfiguration = Validation.__get__('getValidationConfiguration');
 
     beforeEach(() => {
       kuzzle = new KuzzleMock();
@@ -347,7 +340,7 @@ describe('Test: validation utilities', () => {
 
     it('should return the default configuration if nothing is returned from internal engine', () => {
       kuzzle.config.validation = genericMock;
-      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: []}));
+      kuzzle.internalEngine.search.resolves({hits: []});
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
@@ -359,7 +352,7 @@ describe('Test: validation utilities', () => {
 
     it('should return an empty object if nothing is returned from internal engine and there is no configuration', () => {
       delete kuzzle.config.validation;
-      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve({hits: []}));
+      kuzzle.internalEngine.search.resolves({hits: []});
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
@@ -412,7 +405,7 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      kuzzle.internalEngine.search = sandbox.stub().returns(Promise.resolve(internalEngineResponse));
+      kuzzle.internalEngine.search.resolves(internalEngineResponse);
 
       return getValidationConfiguration(kuzzle)
         .then(result => {

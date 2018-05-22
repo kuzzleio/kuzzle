@@ -132,7 +132,7 @@ describe('Test: security/userTest', () => {
       .then(isActionAllowed => {
         should(isActionAllowed).be.a.Boolean();
         should(isActionAllowed).be.true();
-        should(profile.isActionAllowed.called).be.true();
+        should(profile.isActionAllowed).be.called();
       });
   });
 
@@ -142,7 +142,7 @@ describe('Test: security/userTest', () => {
       .then(isActionAllowed => {
         should(isActionAllowed).be.a.Boolean();
         should(isActionAllowed).be.false();
-        should(profile.isActionAllowed.called).be.false();
+        should(profile.isActionAllowed).not.be.called();
       });
   });
 

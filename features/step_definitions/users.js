@@ -66,6 +66,25 @@ When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeou
     .catch(error => callback(not ? null : error));
 });
 
+When(/^I create the first admin with id "(.*?)"( and reset profiles and roles)?$/, {timeout: 20000}, function (id, reset, callback) {
+  var
+    userObject = this.users.useradmin;
+
+  delete userObject.content.profileIds;
+  id = this.idPrefix + id;
+
+  this.api.createFirstAdmin(userObject, id, reset)
+    .then(body => {
+      if (body.error) {
+        return callback(new Error(body.error.message));
+      }
+
+      return callback();
+    })
+    .catch(error => callback(error));
+});
+
+
 Then(/^I am able to get the user "(.*?)"(?: matching {(.*)})?$/, function (id, match) {
   id = this.idPrefix + id;
 

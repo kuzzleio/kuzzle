@@ -1,4 +1,4 @@
-var
+const
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
@@ -8,16 +8,17 @@ var
   Request = require('kuzzle-common-objects').Request;
 
 describe('Test: validation.validate', () => {
-  var
+  let
     validation,
+    kuzzle;
+  const
     sandbox = sinon.sandbox.create(),
-    manageErrorMessage = Validation.__get__('manageErrorMessage'),
-    checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
-    kuzzle,
-    indexName = 'anIndex',
-    collectionName = 'aCollection',
     typeValidateStub = sandbox.stub(),
     getStrictnessStub = sandbox.stub(),
+    manageErrorMessage = Validation.__get__('manageErrorMessage'),
+    checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
+    index = 'anIndex',
+    collection = 'aCollection',
     typeChildren = {
       typeName: 'typeChildren',
       allowChildren: true,
@@ -43,25 +44,13 @@ describe('Test: validation.validate', () => {
 
   describe('#validationPromise', () => {
     it('should return a validation if the specification is empty', () => {
-      var
-        recurseFieldValidationStub = sandbox.stub().returns(true),
-        controllerName = 'aController',
-        actionName = 'anAction',
-        id = null,
+      const
         verbose = false,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
-          body: documentBody
-        });
+        request = new Request({index, collection});
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: false,
             fields: {children: {}},
             validators: null
@@ -69,67 +58,43 @@ describe('Test: validation.validate', () => {
         }
       };
 
-      validation.recurseFieldValidation = recurseFieldValidationStub;
+      sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
       return validation.validationPromise(request, verbose)
-        .then((result) => {
+        .then(result => {
           should(result).be.deepEqual(request);
-          should(recurseFieldValidationStub.callCount).be.eql(1);
-          should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
-          should(typeof recurseFieldValidationStub.args[0][1]).be.eql('object');
-          should(recurseFieldValidationStub.args[0][2]).be.false();
-          should(recurseFieldValidationStub.args[0][3]).be.eql([]);
-          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
+          should(validation.recurseFieldValidation.callCount).be.eql(1);
+          should(validation.recurseFieldValidation.args[0][0]).be.eql(null);
+          should(validation.recurseFieldValidation.args[0][2]).be.false();
+          should(validation.recurseFieldValidation.args[0][3]).be.eql([]);
+          should(validation.recurseFieldValidation.args[0][4]).be.eql(verbose);
         });
     });
+
     it('should return a validation if there is no specification', () => {
-      var
-        recurseFieldValidationStub = sandbox.stub().returns(true),
-        controllerName = 'aController',
-        actionName = 'anAction',
-        id = null,
+      const
         verbose = false,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
-          body: documentBody
-        });
+        request = new Request({index, collection});
 
       validation.specification = {};
 
-      validation.recurseFieldValidation = recurseFieldValidationStub;
+      sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
       return validation.validationPromise(request, verbose)
-        .then((result) => {
-          should(result).be.deepEqual(request);
-          should(recurseFieldValidationStub.callCount).be.eql(0);
+        .then(result => {
+          should(result).be.eql(request);
+          should(validation.recurseFieldValidation.callCount).be.eql(0);
         });
     });
 
     it('should return a validation if the specification is empty', () => {
-      var
-        recurseFieldValidationStub = sandbox.stub().returns(true),
-        controllerName = 'aController',
-        actionName = 'anAction',
-        id = null,
+      const
         verbose = true,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
-          body: documentBody
-        });
+        request = new Request({index, collection});
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: false,
             fields: {children: {}},
             validators: null
@@ -137,42 +102,34 @@ describe('Test: validation.validate', () => {
         }
       };
 
-      validation.recurseFieldValidation = recurseFieldValidationStub;
+      sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
       return validation.validationPromise(request, verbose)
-        .then((result) => {
+        .then(result => {
           should(result).be.deepEqual({errorMessages: {}, valid: true});
-          should(recurseFieldValidationStub.callCount).be.eql(1);
-          should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
-          should(typeof recurseFieldValidationStub.args[0][1]).be.eql('object');
-          should(recurseFieldValidationStub.args[0][2]).be.false();
-          should(recurseFieldValidationStub.args[0][3]).be.eql({});
-          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
+          should(validation.recurseFieldValidation.callCount).be.eql(1);
+          should(validation.recurseFieldValidation.args[0][0]).be.null();
+          should(validation.recurseFieldValidation.args[0][2]).be.false();
+          should(validation.recurseFieldValidation.args[0][3]).be.eql({});
+          should(validation.recurseFieldValidation.args[0][4]).be.eql(verbose);
         });
     });
 
     it('should trigger all validation if specification enables them', () => {
       const
-        recurseFieldValidationStub = sandbox.stub().returns(true),
-        controllerName = 'aController',
-        actionName = 'anAction',
         filterId = 'someFilter',
-        testStub = sandbox.stub().returns([filterId, 'anotherFilter']),
-        koncorde = {test: testStub},
         id = 'anId',
         verbose = false,
         documentBody = {},
         request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
+          index,
+          collection,
           _id: id,
           body: documentBody
         }),
         specification = {
-          [indexName]: {
-            [collectionName]: {
+          [index]: {
+            [collection]: {
               strict: true,
               fields: {children: {aField: 'validation'}},
               validators: filterId
@@ -181,104 +138,78 @@ describe('Test: validation.validate', () => {
         };
 
       validation.specification = specification;
-      validation.recurseFieldValidation = recurseFieldValidationStub;
-      validation.koncorde = koncorde;
+      sinon.stub(validation, 'recurseFieldValidation').returns(true);
+      sinon.stub(validation.koncorde, 'test').returns([filterId, 'anotherFilter']);
 
       return validation.validationPromise(request, verbose)
-        .then((result) => {
+        .then(result => {
           should(result).be.deepEqual(request);
-          should(recurseFieldValidationStub.callCount).be.eql(1);
-          should(recurseFieldValidationStub.args[0][0]).be.deepEqual(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.deepEqual(specification[indexName][collectionName].fields.children);
-          should(recurseFieldValidationStub.args[0][2]).be.true();
-          should(recurseFieldValidationStub.args[0][3]).be.eql([]);
-          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
-          should(testStub.callCount).be.eql(1);
-          should(testStub.args[0][0]).be.deepEqual(indexName);
-          should(testStub.args[0][1]).be.deepEqual(collectionName);
-          should(testStub.args[0][2]).be.deepEqual(documentBody);
-          should(testStub.args[0][3]).be.deepEqual(id);
+          should(validation.recurseFieldValidation.callCount).be.eql(1);
+          should(validation.recurseFieldValidation.args[0][0]).be.deepEqual(documentBody);
+          should(validation.recurseFieldValidation.args[0][1]).be.deepEqual(specification[index][collection].fields.children);
+          should(validation.recurseFieldValidation.args[0][2]).be.true();
+          should(validation.recurseFieldValidation.args[0][3]).be.eql([]);
+          should(validation.recurseFieldValidation.args[0][4]).be.eql(verbose);
+          should(validation.koncorde.test.callCount).be.eql(1);
+          should(validation.koncorde.test.args[0][0]).be.deepEqual(index);
+          should(validation.koncorde.test.args[0][1]).be.deepEqual(collection);
+          should(validation.koncorde.test.args[0][2]).be.deepEqual(documentBody);
+          should(validation.koncorde.test.args[0][3]).be.deepEqual(id);
         });
     });
 
     it('should trigger all validation if specification enables them', () => {
       const
-        recurseFieldValidationStub = sandbox.stub().returns(true),
-        controllerName = 'write',
-        actionName = 'update',
-        filterId = 'someFilter',
-        testStub = sandbox.stub().returns(Promise.resolve([filterId, 'anotherFilter'])),
-        koncorde = {test: testStub},
-        id = 'anId',
         verbose = false,
         documentBody = {foo: 'barbar'},
         request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
+          index,
+          collection,
           body: documentBody
         });
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: true,
             fields: {children: {}}
           }
         }
       };
 
-      validation.recurseFieldValidation = recurseFieldValidationStub;
-      validation.koncorde = koncorde;
+      sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
       return validation.validationPromise(request, verbose)
         .then((result) => {
           should(result).be.deepEqual(request);
-          should(recurseFieldValidationStub.callCount).be.eql(1);
-          should(recurseFieldValidationStub.args[0][0]).be.deepEqual(documentBody);
-          should(recurseFieldValidationStub.args[0][1]).be.deepEqual({});
-          should(recurseFieldValidationStub.args[0][2]).be.true();
-          should(recurseFieldValidationStub.args[0][3]).be.eql([]);
-          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
+          should(validation.recurseFieldValidation.callCount).be.eql(1);
+          should(validation.recurseFieldValidation.args[0][0]).be.deepEqual(documentBody);
+          should(validation.recurseFieldValidation.args[0][1]).be.deepEqual({});
+          should(validation.recurseFieldValidation.args[0][2]).be.true();
+          should(validation.recurseFieldValidation.args[0][3]).be.eql([]);
+          should(validation.recurseFieldValidation.args[0][4]).be.eql(verbose);
         });
     });
 
     it('should throw when field validation fails', () => {
       const
         error = new Error('Mocked error'),
-        controllerName = 'aController',
-        actionName = 'anAction',
         filterId = 'someFilter',
-        testStub = sandbox.stub().returns(Promise.resolve([filterId, 'anotherFilter'])),
-        koncorde = {
-          test: testStub
-        },
-        id = 'anId',
         verbose = false,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
-          body: documentBody
-        });
+        request = new Request({index, collection});
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: true,
             fields: {children: {aField: 'validation'}},
             validators: filterId
           }
         }
       };
-      sandbox.stub(validation, 'recurseFieldValidation').throws(error);
-      validation.koncorde = koncorde;
-      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
+      
+      sinon.stub(validation, 'recurseFieldValidation').throws(error);
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
       return should(validation.validationPromise(request, verbose))
         .be.rejectedWith(error);
@@ -286,63 +217,36 @@ describe('Test: validation.validate', () => {
 
     it('should return an unvalid status when validator validation fails', () => {
       const
-        recurseFieldValidationStub = sandbox.stub().returns(true),
-        controllerName = 'aController',
-        actionName = 'anAction',
         filterId = 'someFilter',
-        testStub = sandbox.stub().returns(Promise.resolve(['anotherFilter'])),
-        koncorde = {
-          test: testStub
-        },
-        id = 'anId',
         verbose = false,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
-          body: documentBody
-        });
+        request = new Request({index, collection});
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: true,
             fields: {children: {aField: 'validation'}},
             validators: filterId
           }
         }
       };
-      validation.recurseFieldValidation = recurseFieldValidationStub;
-      validation.koncorde = koncorde;
-      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
+
+      sinon.stub(validation, 'recurseFieldValidation').returns(true);
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
       return should(validation.validationPromise(request, verbose))
         .be.rejectedWith('The document does not match validation filters.');
     });
 
     it('should intercept a strictness error and set the message accordingly', () => {
-      var
+      const
         error = new BadRequestError('strictness'),
-        controllerName = 'aController',
-        actionName = 'anAction',
-        id = null,
         verbose = false,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
-          body: documentBody
-        });
+        request = new Request({index, collection});
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: true,
             fields: {children: {aField: 'validation'}},
             validators: null
@@ -350,35 +254,24 @@ describe('Test: validation.validate', () => {
         }
       };
 
-      sandbox.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
+      sinon.stub(validation, 'recurseFieldValidation').throws(error);
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
       return should(validation.validationPromise(request, verbose))
         .be.rejectedWith('The document validation is strict; it can not add unspecified sub-fields.');
     });
 
     it('should intercept a strictness error and set the message accordingly', () => {
-      var
+      const
         error = new Error('strictness'),
-        recurseFieldValidationStub = sandbox.stub(validation, 'recurseFieldValidation').throws(error),
-        manageErrorMessageStub = sandbox.stub(),
-        controllerName = 'aController',
-        actionName = 'anAction',
-        id = null,
+        recurseFieldValidationStub = sinon.stub(validation, 'recurseFieldValidation').throws(error),
+        manageErrorMessageStub = sinon.stub(),
         verbose = true,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          _id: id,
-          body: documentBody
-        });
+        request = new Request({index, collection});
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: true,
             fields: {children: {aField: 'validation'}},
             validators: null
@@ -389,63 +282,72 @@ describe('Test: validation.validate', () => {
       Validation.__set__('manageErrorMessage', manageErrorMessageStub);
 
       return validation.validationPromise(request, verbose)
-        .then((result) => {
-
-          try {
-            should(result).be.deepEqual({errorMessages: {}, valid: false});
-            should(recurseFieldValidationStub.callCount).be.eql(1);
-            should(recurseFieldValidationStub.args[0][0]).be.eql(documentBody);
-            should(recurseFieldValidationStub.args[0][1]).be.deepEqual({aField: 'validation'});
-            should(recurseFieldValidationStub.args[0][2]).be.true();
-            should(recurseFieldValidationStub.args[0][3]).be.eql({});
-            should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
-            should(manageErrorMessageStub.callCount).be.eql(1);
-            should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict; it can not add unspecified sub-fields.');
-
-            return Promise.resolve();
-          }
-          catch (err) {
-            return Promise.reject(err);
-          }
+        .then(result => {
+          should(result).be.deepEqual({errorMessages: {}, valid: false});
+          should(recurseFieldValidationStub.callCount).be.eql(1);
+          should(recurseFieldValidationStub.args[0][0]).be.eql(null);
+          should(recurseFieldValidationStub.args[0][1]).be.deepEqual({aField: 'validation'});
+          should(recurseFieldValidationStub.args[0][2]).be.true();
+          should(recurseFieldValidationStub.args[0][3]).be.eql({});
+          should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
+          should(manageErrorMessageStub.callCount).be.eql(1);
+          should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict; it can not add unspecified sub-fields.');
         });
     });
 
     it('should throw back any other error happening during field validation', () => {
-      var
-        error = new BadRequestError('not_strictness'),
-        controllerName = 'aController',
-        actionName = 'anAction',
-        id = null,
+      const
+        error = new BadRequestError('foo'),
         verbose = false,
-        documentBody = {},
-        request = new Request({
-          index: indexName,
-          collection: collectionName,
-          controller: controllerName,
-          action: actionName,
-          data: {_id: id, body: documentBody}
-        });
+        request = new Request({index, collection});
 
       validation.specification = {
-        [indexName]: {
-          [collectionName]: {
+        [index]: {
+          [collection]: {
             strict: true,
             fields: {children: {aField: 'validation'}},
             validators: null
           }
         }
       };
-      sandbox.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sandbox.spy(function() {throw new Error(arguments[2]);}));
+      
+      sinon.stub(validation, 'recurseFieldValidation').throws(error);
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
       return should(validation.validationPromise(request, verbose))
         .be.rejectedWith(error);
+    });
+
+    it('should get the full document from the DB in case of an update', () => {
+      const
+        verbose = false,
+        request = new Request({
+          index, 
+          collection,
+          controller: 'document',
+          action: 'update',
+          _id: 'foo'
+        });
+
+      validation.specification = {};
+
+      return validation.validationPromise(request, verbose)
+        .then(result => {
+          should(result).be.eql(request);
+          should(kuzzle.services.list.storageEngine.get).calledOnce();
+          should(kuzzle.services.list.storageEngine.get.firstCall.args[0]).instanceOf(Request);
+          should(kuzzle.services.list.storageEngine.get.firstCall.args[0].input.resource).match({
+            index,
+            collection,
+            _id: 'foo'
+          });
+        });
     });
   });
 
   describe('#recurseApplyDefault', () => {
     it('should update document with defaults if fields are missing or null', () => {
-      var
+      const
         isUpdate = false,
         documentSubset = {aField: {anotherSubField: 'some value'}, aDefaultField: null},
         collectionSpecSubset = {
@@ -469,11 +371,12 @@ describe('Test: validation.validate', () => {
           aDefaultField: 'some default'
         };
 
-      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
+      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset))
+        .deepEqual(expectedResult);
     });
 
     it('should update document with defaults only if fields are null in write/update mode', () => {
-      var
+      const
         isUpdate = true,
         documentSubset = {aField: {anotherSubField: 'some value',aSubField: null}},
         collectionSpecSubset = {
@@ -488,11 +391,12 @@ describe('Test: validation.validate', () => {
           aField: {anotherSubField: 'some value', aSubField: 'another default'}
         };
 
-      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
+      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset))
+        .deepEqual(expectedResult);
     });
 
     it('should update document with defined defaults in multivalued fields', () => {
-      var
+      const
         isUpdate = true,
         documentSubset = {
           aField: [
@@ -516,44 +420,34 @@ describe('Test: validation.validate', () => {
           ]
         };
 
-      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset)).deepEqual(expectedResult);
+      should(validation.recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset))
+        .deepEqual(expectedResult);
     });
   });
 
   describe('#recurseFieldValidation', () => {
     it('should throw an error if validation is strict and a property is not allowed', () => {
-      try {
-        validation.recurseFieldValidation({anotherField: 'some value'}, {aField: {some: 'specification'}}, true, [], false);
-      }
-      catch (error) {
-        should(error).be.an.instanceOf(BadRequestError);
-        should(error.message).be.exactly('strictness');
-      }
+      should(() => validation.recurseFieldValidation({anotherField: 'some value'}, {aField: {some: 'specification'}}, true, [], false))
+        .throw(BadRequestError, {message: 'strictness'});
     });
 
     it('should throw an exception if isValidField throws an exception', () => {
-      var isValidFieldStub = sandbox.stub().throws({message: 'an error'});
+      sinon.stub(validation, 'isValidField').throws({message: 'an error'});
 
-      validation.isValidField = isValidFieldStub;
-      try {
-        validation.recurseFieldValidation({
-          anotherField: 'some value',
-          aField: 'some value'
-        }, {
-          aField: {some: 'specification'},
-          anotherField: {some: 'other specification'},
-        }, false, [], false);
-      }
-      catch (error) {
-        should(isValidFieldStub.callCount).be.eql(1);
-        should(error).be.deepEqual({message: 'an error'});
-      }
+      should(() => validation.recurseFieldValidation({
+        anotherField: 'some value',
+        aField: 'some value'
+      }, {
+        aField: {some: 'specification'},
+        anotherField: {some: 'other specification'},
+      }, false, [], false)).throw('an error');
+
+      should(validation.isValidField.callCount).be.eql(1);
     });
 
     it('should return true if every fields are valid in verbose mode', () => {
-      var isValidFieldStub = sandbox.stub().returns(true);
+      sinon.stub(validation, 'isValidField').returns(true);
 
-      validation.isValidField = isValidFieldStub;
       should(validation.recurseFieldValidation({
         anotherField: 'some value',
         aField: 'some value'
@@ -561,13 +455,12 @@ describe('Test: validation.validate', () => {
         aField: {some: 'specification'},
         anotherField: {some: 'other specification'},
       }, false, [], true)).be.true();
-      should(isValidFieldStub.callCount).be.eql(2);
+
+      should(validation.isValidField.callCount).be.eql(2);
     });
 
     it('should return true if every fields are valid in none verbose mode', () => {
-      var isValidFieldStub = sandbox.stub().returns(true);
-
-      validation.isValidField = isValidFieldStub;
+      sinon.stub(validation, 'isValidField').returns(true);
       should(validation.recurseFieldValidation({
         anotherField: 'some value',
         aField: 'some value'
@@ -575,13 +468,13 @@ describe('Test: validation.validate', () => {
         aField: {some: 'specification'},
         anotherField: {some: 'other specification'},
       }, true, [], false)).be.true();
-      should(isValidFieldStub.callCount).be.eql(2);
+
+      should(validation.isValidField.callCount).be.eql(2);
     });
 
     it('should return false if a field is not valid in verbose mode', () => {
-      var isValidFieldStub = sandbox.stub().returns(false);
+      sinon.stub(validation, 'isValidField').returns(false);
 
-      validation.isValidField = isValidFieldStub;
       should(validation.recurseFieldValidation({
         anotherField: 'some value',
         aField: 'some value'
@@ -589,13 +482,13 @@ describe('Test: validation.validate', () => {
         aField: {some: 'specification'},
         anotherField: {some: 'other specification'},
       }, false, [], true)).be.false();
-      should(isValidFieldStub.callCount).be.eql(2);
+
+      should(validation.isValidField.callCount).be.eql(2);
     });
 
     it('should return false if a field is not valid in none verbose mode', () => {
-      var isValidFieldStub = sandbox.stub().returns(false);
+      sinon.stub(validation, 'isValidField').returns(false);
 
-      validation.isValidField = isValidFieldStub;
       should(validation.recurseFieldValidation({
         anotherField: 'some value',
         aField: 'some value'
@@ -603,13 +496,14 @@ describe('Test: validation.validate', () => {
         aField: {some: 'specification'},
         anotherField: {some: 'other specification'},
       }, true, [], false)).be.false();
-      should(isValidFieldStub.callCount).be.eql(1);
+
+      should(validation.isValidField.callCount).be.eql(1);
     });
   });
 
   describe('#isValidField', () => {
     it('should return true if the field is correct', () => {
-      var
+      const
         documentSubset = {
           aField: 'some value'
         },
@@ -628,7 +522,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return true if the field is correct as multivalued', () => {
-      var
+      const
         documentSubset = {
           aField: ['some value', 'some other value']
         },
@@ -647,7 +541,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should throw an exception if validation of the field returns false in non verbose', () => {
-      var
+      const
         errorMessages = [],
         documentSubset = {
           aField: 'some value',
@@ -664,16 +558,12 @@ describe('Test: validation.validate', () => {
 
       typeValidateStub.returns(false);
 
-      try {
-        validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false);
-      }
-      catch (error) {
-        should(error.message).be.eql('Field aField: An error has occurred during validation.');
-      }
+      should(() => validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false))
+        .throw('Field aField: An error has occurred during validation.');
     });
 
     it('should returns false in verbose mode', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: 'some value',
@@ -695,7 +585,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return true if the field is correct as multivalued', () => {
-      var
+      const
         documentSubset = {
           aField: ['some value', 'some other value']
         },
@@ -715,7 +605,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if the field is not an array and it should be multivalued', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: 'some other value'
@@ -737,7 +627,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if the field has not enough elements', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: ['some value']
@@ -760,7 +650,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if the field has too much elements', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: ['some value', 'some other value', 'and yet another']
@@ -783,7 +673,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if the field provides an array but is not multivalued', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: ['some value', 'some other value', 'and yet another']
@@ -805,7 +695,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if the field is mandatory but not provided', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: ['some value', 'some other value', 'and yet another']
@@ -825,7 +715,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if one of the subfields is not valid in verbose mode', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: {
@@ -862,7 +752,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should throw an error if one of the subfields is not valid in non verbose mode', () => {
-      var
+      const
         errorMessages = [],
         documentSubset = {
           aField: {
@@ -900,7 +790,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if one of the subfields throws an error in verbose mode', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: {
@@ -937,7 +827,7 @@ describe('Test: validation.validate', () => {
     });
 
     it('should return false if one of the subfields throws an strictness error in verbose mode', () => {
-      var
+      const
         errorMessages = {},
         documentSubset = {
           aField: {

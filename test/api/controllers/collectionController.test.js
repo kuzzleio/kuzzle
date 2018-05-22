@@ -263,30 +263,22 @@ describe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({
         isValid: false,
         errors: ['bad bad is a bad type !']
-      }));
-      kuzzle.validation.curateSpecification = sandbox.stub();
+      });
 
       return collectionController.updateSpecifications(request)
         .catch(error => {
-          try {
-            should(kuzzle.pluginsManager.trigger).be.calledOnce();
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
-            should(kuzzle.internalEngine.refresh).not.be.called();
-            should(kuzzle.validation.curateSpecification).not.be.called();
-            should(kuzzle.internalEngine.createOrReplace).not.be.called();
+          should(kuzzle.pluginsManager.trigger).be.calledOnce();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
+          should(kuzzle.internalEngine.refresh).not.be.called();
+          should(kuzzle.validation.curateSpecification).not.be.called();
+          should(kuzzle.internalEngine.createOrReplace).not.be.called();
 
-            should(error).be.an.instanceOf(BadRequestError);
-            should(error.message).be.exactly('Some errors with provided specifications.');
-            should(error.details).match([ 'bad bad is a bad type !' ]);
-
-            return Bluebird.resolve();
-          }
-          catch (er) {
-            return Bluebird.reject(er);
-          }
+          should(error).be.an.instanceOf(BadRequestError);
+          should(error.message).be.exactly('Some errors with provided specifications.');
+          should(error.details).match([ 'bad bad is a bad type !' ]);
         });
     });
   });
@@ -446,8 +438,8 @@ describe('Test: collection controller', () => {
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('stored');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.false();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).not.be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 
@@ -458,8 +450,8 @@ describe('Test: collection controller', () => {
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('realtime');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.false();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).not.be.called();
         });
     });
 
@@ -477,8 +469,8 @@ describe('Test: collection controller', () => {
             {name: 'crealtime', type: 'realtime'}
           ]);
           should(response.type).be.exactly('all');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 
@@ -495,8 +487,8 @@ describe('Test: collection controller', () => {
             {name: 'estored', type: 'stored'}
           ]);
           should(response).be.instanceof(Object);
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 
@@ -515,8 +507,8 @@ describe('Test: collection controller', () => {
             {name: 'astored', type: 'stored'}
           ]);
           should(response.type).be.exactly('all');
-          should(kuzzle.hotelClerk.getRealtimeCollections.called).be.true();
-          should(kuzzle.services.list.storageEngine.listCollections.called).be.true();
+          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
+          should(kuzzle.services.list.storageEngine.listCollections).be.called();
         });
     });
 

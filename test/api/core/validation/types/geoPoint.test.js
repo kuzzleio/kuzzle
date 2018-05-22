@@ -1,21 +1,13 @@
-var
-  rewire = require('rewire'),
+const
   BaseType = require('../../../../../lib/api/core/validation/baseType'),
-  GeoPointType = rewire('../../../../../lib/api/core/validation/types/geoPoint'),
-  sinon = require('sinon'),
+  GeoPointType = require('../../../../../lib/api/core/validation/types/geoPoint'),
   should = require('should');
 
 describe('Test: validation/types/geoPoint', () => {
-  var
-    geoPointType = new GeoPointType(),
-    sandbox = sinon.sandbox.create();
+  const geoPointType = new GeoPointType();
 
-  beforeEach(() => {
-    sandbox.resetHistory();
-  });
-
-  it('should derivate from BaseType', () => {
-    should(BaseType.prototype.isPrototypeOf(geoPointType)).be.true();
+  it('should inherit the BaseType class', () => {
+    should(geoPointType).be.instanceOf(BaseType);
   });
 
   it('should construct properly', () => {
@@ -26,34 +18,16 @@ describe('Test: validation/types/geoPoint', () => {
     should(geoPointType.allowChildren).be.false();
   });
 
-  it('should override functions properly',() => {
-    should(typeof GeoPointType.prototype.validate).be.eql('function');
-    should(typeof GeoPointType.prototype.validateFieldSpecification).be.eql('function');
-  });
-
   describe('#validate', () => {
-    var
-      convertGeopointStub = sandbox.stub();
-
-    GeoPointType.__set__('convertGeopoint', convertGeopointStub);
-
     it('should return true if the geoPoint is valid', () => {
-      convertGeopointStub.returns(true);
       should(geoPointType.validate({}, {lat: 25.2, lon: 17.3}), []).be.true();
     });
 
     it('should return false if the geoPoint is not valid', () => {
-      var errorMessages = [];
+      const errorMessages = [];
 
-      convertGeopointStub.returns(null);
       should(geoPointType.validate({}, {not: 'a geopoint'}, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['Invalid GeoPoint format']);
-    });
-  });
-
-  describe('#validateFieldSpecification', () => {
-    it('should always return true', () => {
-      should(geoPointType.validateFieldSpecification()).be.true();
     });
   });
 });

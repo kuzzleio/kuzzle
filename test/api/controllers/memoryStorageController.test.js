@@ -689,7 +689,7 @@ describe('Test: memoryStorage controller', () => {
     });
 
     it('custom mapping checks - geohash', () => {
-      const 
+      const
         req = new Request({
           _id: 'myKey',
           members: ['foo', 'bar', 'baz']

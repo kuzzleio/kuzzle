@@ -1,16 +1,15 @@
-var
+const
   BaseType = require('../../../../lib/api/core/validation/baseType'),
   should = require('should');
 
 describe('Test: validation/baseType', () => {
-  var baseType;
+  let baseType;
 
   beforeEach(() => {
     baseType = new BaseType();
   });
 
   it('should define the 4 base functions', () => {
-
     should(typeof baseType.validate).be.eql('function');
     should(typeof baseType.validateFieldSpecification).be.eql('function');
     should(typeof baseType.checkAllowedProperties).be.eql('function');
@@ -21,8 +20,8 @@ describe('Test: validation/baseType', () => {
     should(baseType.validate()).be.true();
   });
 
-  it('should define function validateFieldSpecification to return always true', () => {
-    should(baseType.validateFieldSpecification()).be.true();
+  it('should define function validateFieldSpecification to return the provided options', () => {
+    should(baseType.validateFieldSpecification('foobar')).be.equal('foobar');
   });
 
   it('should define function getStrictness to return parent\'s strictness', () => {
@@ -34,10 +33,9 @@ describe('Test: validation/baseType', () => {
   });
 
   describe('#checkAllowedProperties', () => {
-    var
-      genericMock = {
-        foo: 'bar'
-      };
+    const genericMock = {
+      foo: 'bar'
+    };
 
     it('should be true with proper arguments', () => {
       should(baseType.checkAllowedProperties(genericMock, ['foo', 'mod'])).be.true();
