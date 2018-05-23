@@ -1048,9 +1048,9 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  update (id, body, index) {
+  update (id, body, index, collection = this.world.fakeCollection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id + '/_update'),
+      url: this.apiPath(this.util.getIndex(index) + '/' + collection + '/' + id + '/_update'),
       method: 'PUT',
       body
     };

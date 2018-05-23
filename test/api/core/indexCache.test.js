@@ -170,14 +170,17 @@ describe('Test: core/indexCache', () => {
         .catch(error => done(error));
     });
 
-    it('should resolve with true and update the cache if the collection exists in ES but not in Kuzzle', done => {
+    it('should resolve with true and update the cache and apply mapping if the collection exists in ES but not in Kuzzle', done => {
       kuzzle.services.list.storageEngine.collectionExists.resolves(true);
+      kuzzle.internalEngine.updateMapping.reset();
+      kuzzle.internalEngine.updateMapping.resolves();
       indexCache.add('index1');
 
       indexCache.exists('index1', 'collection1')
         .then(result => {
           should(result).be.true();
           should(indexCache.indexes.index1).be.eql(['collection1']);
+          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
           done();
         })
         .catch(error => done(error));

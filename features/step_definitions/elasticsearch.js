@@ -34,12 +34,12 @@ const elasticsearchClient = buildClient();
 
 When('I create an index and a collection with ElasticSearch', function (callback) {
   elasticsearchClient.indices.get({ index: 'es-index' })
-    .then(() => elasticsearchClient.indices.delete({ index: 'es-index' }))
+    .then(() => this.api.deleteIndex('es-index')) // We use Kuzzle to delete the index to have the cache updated
     .catch(() => null)
     .finally(() => {
       elasticsearchClient.indices.create({ index: 'es-index' })
         .then(() => {
-          elasticsearchClient.indices.putMapping({
+          return elasticsearchClient.indices.putMapping({
             index:  'es-index',
             type:   'es-collection',
             body: {
@@ -75,9 +75,6 @@ When('I update the document with Kuzzle', function (callback) {
     name: 'Lau lau'
   };
 
-  // Since the index/collection cache is not hot-reloaded,
-  // Kuzzle doesn't know our collection created with elasticsearch until restart
-  // Waiting for a enhancement before this test can run : https://github.com/kuzzleio/kuzzle/issues/1111
   this.api.update(this.documentId, body, 'es-index', 'es-collection')
     .then(aBody => {
       if (aBody.error) {
@@ -90,13 +87,17 @@ When('I update the document with Kuzzle', function (callback) {
     });
 });
 
-Then('The _kuzzle_info mapping is correct', function (callback) {
-  elasticsearchClient.indices.get({ index: 'index' })
-    .then(result => {
-      const mapping = result.index.mappings.collection.properties._kuzzle_info.properties;
 
-      Object.entries(kuzzleConfig.services.db.commonMapping).forEach(([field, { type }]) => {
-        if (mapping[field].type !== type) {
+Then('The _kuzzle_info mapping is correct', function (callback) {
+  elasticsearchClient.indices.getMapping({ index: 'es-index', type: 'es-collection' })
+    .then(mappings => {
+      const mapping = mappings['es-index'].mappings['es-collection'].properties._kuzzle_info.properties;
+      const commonMapping = kuzzleConfig.services.db.commonMapping._kuzzle_info.properties;
+
+      Object.keys(commonMapping).forEach(field => {
+        const type = commonMapping[field].type;
+
+        if (mapping[field] && mapping[field].type !== type) {
           callback(new Error(`Mapping mismatch. ${type} expected, got ${mapping[field].type} instead`));
         }
       });
