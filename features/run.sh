@@ -9,10 +9,6 @@ embedded_host="${CUCUMBER_EMBEDDED_HOST:-localhost}"
 proxy_port="${CUCUMBER_PROXY_PORT:-7513}"
 embedded_port="${CUCUMBER_EMBEDDED_PORT:-7512}"
 
-host="$embedded_host"
-port="$embedded_port"
-./node_modules/.bin/cucumber-js --format progress-bar --profile "httpEmbedded" --world-parameters "{\"host\": \"${host}\", \"port\": \"${port}\"}"
-
 for endpoint in Embedded Proxy; do
   for protocol in websocket http socketio; do
     if [ "$endpoint" == "Proxy" ]; then
