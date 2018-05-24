@@ -16,6 +16,8 @@ describe('services/internalEngine/bootstrap.js', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
+    kuzzle.indexCache.exists.resolves(false);
+
     bootstrap = new Bootstrap(kuzzle);
   });
 
@@ -147,7 +149,7 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should do nothing if the collection already exists', () => {
-      kuzzle.indexCache.exists.returns(true);
+      kuzzle.indexCache.exists.resolves(true);
 
       return bootstrap.createRolesCollection()
         .then(() => {
@@ -186,7 +188,7 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should do nothing if the collection exists', () => {
-      kuzzle.indexCache.exists.returns(true);
+      kuzzle.indexCache.exists.resolves(true);
 
       return bootstrap.createPluginsCollection()
         .then(() => {
@@ -246,7 +248,7 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should do nothing if the collection exists', () => {
-      kuzzle.indexCache.exists.returns(true);
+      kuzzle.indexCache.exists.resolves(true);
 
       return bootstrap.createProfilesCollection()
         .then(() => {
@@ -286,7 +288,7 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
 
     it('should do nothing if the collection exists', () => {
-      kuzzle.indexCache.exists.returns(true);
+      kuzzle.indexCache.exists.resolves(true);
 
       return bootstrap.createUsersCollection()
         .then(() => {
