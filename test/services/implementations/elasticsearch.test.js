@@ -1562,7 +1562,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should create collection with mapping if supplied in the body', () => {
       elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.kuzzle.indexCache.exists.resolves(true);
 
       request.input.resource.collection = '%foobar';
       elasticsearch.config.commonMapping = {};
@@ -1585,7 +1585,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should not overwrite kuzzle commonMapping', () => {
       elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.kuzzle.indexCache.exists.resolves(true);
 
       request.input.resource.collection = '%foobar';
 
