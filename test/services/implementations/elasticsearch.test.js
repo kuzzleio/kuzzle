@@ -515,6 +515,18 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.get(request)).be.rejectedWith(BadRequestError);
     });
+
+    it('should allow expose kuzzle metadata in _kuzzle_info and _meta properties', () => {
+      elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: true}}}));
+
+      request.input.body = null;
+      request.input.resource._id = createdDocumentId;
+
+      return elasticsearch.get(request)
+        .then(response => {
+          should(response._source._kuzzle_info).be.eql(response._meta);
+        });
+    });
   });
 
   describe('#mget', () => {
@@ -1964,12 +1976,14 @@ describe('Test: ElasticSearch service', () => {
           });
           should(result.error).be.an.Array().and.be.empty();
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar'}, _meta: metadata, status: 201},
-            {_id: 'bar', _source: {bar: 'foo'}, _meta: metadata, status: 201}
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201},
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
           should(result.result[0]._meta.createdAt).be.approximately(now, 100);
           should(result.result[1]._meta.createdAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          should(result.result[1]._source._kuzzle_info.createdAt).be.approximately(now, 100);
         });
     });
 
@@ -2038,13 +2052,14 @@ describe('Test: ElasticSearch service', () => {
             {document: {_id: 'foo4', body: {foo: 'bar4'}}, reason: 'document already exists'}
           ]);
           should(result.result).match([
-            {_id: 'foo?', _source: {foo: 'bar_'}, _meta: metadata, status: 201},
-            {_id: 'foo2', _source: {foo: 'bar2'}, _meta: metadata, status: 201},
-            {_id: 'foo3', _source: {foo: 'bar3'}, _meta: metadata, status: 201}
+            {_id: 'foo?', _source: {foo: 'bar_', _kuzzle_info: metadata}, _meta: metadata, status: 201},
+            {_id: 'foo2', _source: {foo: 'bar2', _kuzzle_info: metadata}, _meta: metadata, status: 201},
+            {_id: 'foo3', _source: {foo: 'bar3', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
           for(let i = 0; i < 3; i++) {
             should(result.result[i]._meta.createdAt).be.approximately(now, 100);
+            should(result.result[i]._source._kuzzle_info.createdAt).be.approximately(now, 100);
           }
         });
     });
@@ -2076,13 +2091,14 @@ describe('Test: ElasticSearch service', () => {
             ]
           });
           should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo'}, _meta: metadata, status: 400}
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
           ]);
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar'}, _meta: metadata, status: 201}
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
           should(result.result[0]._meta.createdAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
         });
     });
   });
@@ -2138,12 +2154,14 @@ describe('Test: ElasticSearch service', () => {
           });
           should(result.error).be.an.Array().and.be.empty();
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar'}, _meta: metadata, status: 201},
-            {_id: 'bar', _source: {bar: 'foo'}, _meta: metadata, status: 201}
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201},
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
           should(result.result[0]._meta.createdAt).be.approximately(now, 100);
           should(result.result[1]._meta.createdAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          should(result.result[1]._source._kuzzle_info.createdAt).be.approximately(now, 100);
         });
     });
 
@@ -2173,13 +2191,14 @@ describe('Test: ElasticSearch service', () => {
             ]
           });
           should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo'}, _meta: metadata, status: 400}
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
           ]);
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar'}, _meta: metadata, status: 201}
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
           should(result.result[0]._meta.createdAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
         });
     });
   });
@@ -2233,12 +2252,14 @@ describe('Test: ElasticSearch service', () => {
           });
           should(result.error).be.an.Array().and.be.empty();
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar'}, _meta: metadata, status: 201},
-            {_id: 'bar', _source: {bar: 'foo'}, _meta: metadata, status: 201}
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201},
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
           should(result.result[0]._meta.updatedAt).be.approximately(now, 100);
           should(result.result[1]._meta.updatedAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
+          should(result.result[1]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
         });
     });
 
@@ -2268,13 +2289,13 @@ describe('Test: ElasticSearch service', () => {
             ]
           });
           should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo'}, _meta: metadata, status: 400}
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
           ]);
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar'}, _meta: metadata, status: 201}
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
-          should(result.result[0]._meta.updatedAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
         });
     });
 
@@ -2367,10 +2388,11 @@ describe('Test: ElasticSearch service', () => {
             {document: {_id: 'foo1', _source: {foo: 'bar1'}}, reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'},
           ]);
           should(result.result).match([
-            {_id: 'foo2', _source: {foo: 'bar2'}, _meta: metadata, status: 201},
+            {_id: 'foo2', _source: {foo: 'bar2', _kuzzle_info: metadata}, _meta: metadata, status: 201},
           ]);
 
           should(result.result[0]._meta.createdAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
         });
     });
 
@@ -2406,13 +2428,14 @@ describe('Test: ElasticSearch service', () => {
             ]
           });
           should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo'}, _meta: metadata, status: 400}
+            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
           ]);
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar'}, _meta: metadata, status: 201}
+            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
           ]);
 
           should(result.result[0]._meta.createdAt).be.approximately(now, 100);
+          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
         });
     });
 
