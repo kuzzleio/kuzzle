@@ -516,7 +516,7 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.get(request)).be.rejectedWith(BadRequestError);
     });
 
-    it('should allow expose kuzzle metadata in _kuzzle_info and _meta properties', () => {
+    it('should allow expose kuzzle metadata in _source._kuzzle_info and _meta properties', () => {
       elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: true}}}));
 
       request.input.body = null;
