@@ -1,10 +1,10 @@
 version: '3'
 
 services:
-  proxy:
-    image: kuzzleio/proxy
-    ports:
-      - "7513:7512"
+  # proxy:
+  #   image: kuzzleio/proxy
+  #   ports:
+  #     - "7513:7512"
 
   kuzzle:
     image: kuzzleio/dev
