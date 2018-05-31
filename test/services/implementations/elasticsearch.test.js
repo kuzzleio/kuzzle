@@ -21,7 +21,6 @@ const
 describe('Test: ElasticSearch service', () => {
   let
     kuzzle = {},
-    sandbox = sinon.sandbox.create(),
     index = 'test',
     collection = 'unit-tests-elasticsearch',
     createdDocumentId = 'id-test',
@@ -115,10 +114,6 @@ describe('Test: ElasticSearch service', () => {
     elasticsearch.init();
   });
 
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe('#init', () => {
     it('should initialize properly', () => {
       return should(elasticsearch.init()).be.fulfilledWith(elasticsearch);
@@ -160,7 +155,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#search', () => {
     it('should be able to search documents', () => {
-      elasticsearch.client.search.returns(Bluebird.resolve({total: 0, hits: [{_id: 'foo', _source: {foo: 'bar'}}]}));
+      elasticsearch.client.search.resolves({total: 0, hits: [{_id: 'foo', _source: {foo: 'bar'}}]});
 
       request.input.body = filter;
       return elasticsearch.search(request)
@@ -173,7 +168,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should handle search results without a _source property', () => {
-      elasticsearch.client.search.returns(Bluebird.resolve({total: 0, hits: [{_id: 'foo'}]}));
+      elasticsearch.client.search.resolves({total: 0, hits: [{_id: 'foo'}]});
 
       request.input.body = filter;
       return elasticsearch.search(request)
@@ -186,7 +181,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should be able to search with from/size and scroll arguments', () => {
-      elasticsearch.client.search.returns(Bluebird.resolve({total: 0, hits: [], _scroll_id: 'banana42'}));
+      elasticsearch.client.search.resolves({total: 0, hits: [], _scroll_id: 'banana42'});
 
       request.input.body = filter;
       request.input.args.from = 0;
@@ -230,7 +225,7 @@ describe('Test: ElasticSearch service', () => {
       const req = new Request({
         scrollId: 'banana42'
       });
-      elasticsearch.client.scroll.returns(Bluebird.resolve({total: 0, hits: []}));
+      elasticsearch.client.scroll.resolves({total: 0, hits: []});
 
       return elasticsearch.scroll(req)
         .then(result => {
@@ -251,9 +246,9 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#create', () => {
     it('should allow creating documents if the document does not already exists', () => {
-      sandbox.stub(elasticsearch, 'refreshIndex').returns(Bluebird.resolve());
+      sinon.stub(elasticsearch, 'refreshIndex').resolves();
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.index.returns(Bluebird.resolve({}));
+      elasticsearch.client.index.resolves({});
 
       elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
 
@@ -274,12 +269,11 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should replace a document because it already exists but is inactive', () => {
-      const
-        refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.index.returns(Bluebird.resolve({}));
-      elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: false}}}));
+      elasticsearch.client.index.resolves({});
+      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: false}}});
       request.input.resource._id = '42';
 
       return elasticsearch.create(request)
@@ -297,10 +291,10 @@ describe('Test: ElasticSearch service', () => {
     it('should create a document with a non existing id', () => {
       const
         error = new Error('Mocked error'),
-        refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.create.returns(Bluebird.resolve({}));
+      elasticsearch.client.create.resolves({});
       error.displayName = 'NotFound';
 
       elasticsearch.client.get.rejects(error);
@@ -331,7 +325,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the create promise if client.index throws an error', () => {
       const error = new Error('Mocked index error');
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: false}}}));
+      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: false}}});
       elasticsearch.client.index.rejects(error);
       request.input.resource._id = '42';
 
@@ -340,7 +334,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject a promise if the document already exists', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: true}}}));
+      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: true}}});
       request.input.resource._id = '42';
 
       return should(elasticsearch.create(request)).be.rejectedWith(BadRequestError);
@@ -348,7 +342,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject if index or collection don\'t exist', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(false);
-      elasticsearch.client.index.returns(Bluebird.resolve({}));
+      elasticsearch.client.index.resolves({});
 
       return should(elasticsearch.create(request)).be.rejectedWith(PreconditionError);
     });
@@ -356,10 +350,10 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#createOrReplace', () => {
     it('should support createOrReplace capability', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
-      elasticsearch.client.index.returns(Bluebird.resolve({}));
+      elasticsearch.client.index.resolves({});
       request.input.resource._id = createdDocumentId;
 
       return elasticsearch.createOrReplace(request)
@@ -388,7 +382,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject if index or collection don\'t exist', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(false);
 
-      elasticsearch.client.index.returns(Bluebird.resolve({}));
+      elasticsearch.client.index.resolves({});
       request.input.resource._id = createdDocumentId;
 
       return should(elasticsearch.createOrReplace(request)).be.rejectedWith(PreconditionError);
@@ -397,10 +391,10 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#replace', () => {
     it('should support replace capability', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
-      elasticsearch.client.index.returns(Bluebird.resolve({}));
-      elasticsearch.client.exists.returns(Bluebird.resolve(true));
+      elasticsearch.client.index.resolves({});
+      elasticsearch.client.exists.resolves(true);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
@@ -421,7 +415,7 @@ describe('Test: ElasticSearch service', () => {
     it('should reject the replace promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
 
-      elasticsearch.client.exists.returns(Bluebird.resolve(true));
+      elasticsearch.client.exists.resolves(true);
       elasticsearch.client.index.rejects(error);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
@@ -431,7 +425,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should throw a NotFoundError Exception if document already exists', done => {
-      elasticsearch.client.exists.returns(Bluebird.resolve(false));
+      elasticsearch.client.exists.resolves(false);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       kuzzle.indexes = {};
@@ -451,7 +445,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject if index or collection don\'t exist', () => {
-      elasticsearch.client.exists.returns(Bluebird.resolve(false));
+      elasticsearch.client.exists.resolves(false);
       elasticsearch.kuzzle.indexCache.exists.returns(false);
 
       request.input.resource._id = createdDocumentId;
@@ -460,10 +454,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should support replace capability', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
-      elasticsearch.client.index.returns(Bluebird.resolve({}));
-      elasticsearch.client.exists.returns(Bluebird.resolve(true));
+      elasticsearch.client.index.resolves({});
+      elasticsearch.client.exists.resolves(true);
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
@@ -484,7 +478,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#get', () => {
     it('should allow getting a single document', () => {
-      elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: true}}}));
+      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: true}}});
 
       request.input.body = null;
       request.input.resource._id = createdDocumentId;
@@ -496,7 +490,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should not throw error when "_source" is not defined', () => {
-      elasticsearch.client.get.returns(Bluebird.resolve({foo: 'bar'}));
+      elasticsearch.client.get.resolves({foo: 'bar'});
 
       request.input.body = null;
       request.input.resource._id = createdDocumentId;
@@ -505,7 +499,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject requests when document is on inactive stat', () => {
-      elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: false}}}));
+      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: false}}});
 
       return should(elasticsearch.get(request)).be.rejectedWith(NotFoundError);
     });
@@ -533,7 +527,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should allow getting multiples documents', () => {
-      elasticsearch.client.mget.returns(Bluebird.resolve({}));
+      elasticsearch.client.mget.resolves({});
 
       request.input.body = {ids: ['1', '2', '3']};
 
@@ -561,7 +555,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#count', () => {
     it('should allow counting documents using a provided filter', () => {
-      elasticsearch.client.count.returns(Bluebird.resolve({}));
+      elasticsearch.client.count.resolves({});
 
       request.input.body = {};
 
@@ -572,7 +566,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should allow counting objects using a query', () => {
-      elasticsearch.client.count.returns(Bluebird.resolve({}));
+      elasticsearch.client.count.resolves({});
 
       request.input.body = {};
       request.input.body = {query: {foo: 'bar'}};
@@ -599,9 +593,9 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#update', () => {
     it('should allow to update a document', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
-      elasticsearch.client.update.returns(Bluebird.resolve({}));
+      elasticsearch.client.update.resolves({});
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
@@ -624,10 +618,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should handle the retryOnConflict optional argument', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
       elasticsearch.config.defaults.onUpdateConflictRetries = 42;
-      elasticsearch.client.update.returns(Bluebird.resolve({}));
+      elasticsearch.client.update.resolves({});
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
@@ -651,10 +645,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should handle the onUpdateConflictRetries default configuration', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
       elasticsearch.config.defaults.onUpdateConflictRetries = 42;
-      elasticsearch.client.update.returns(Bluebird.resolve({}));
+      elasticsearch.client.update.resolves({});
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource._id = createdDocumentId;
@@ -677,7 +671,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject if index or collection don\'t exist', () => {
-      elasticsearch.client.exists.returns(Bluebird.resolve(false));
+      elasticsearch.client.exists.resolves(false);
       elasticsearch.kuzzle.indexCache.exists.returns(false);
 
       request.input.resource._id = createdDocumentId;
@@ -753,16 +747,16 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#delete', () => {
     it('should allow to delete a document', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
-      elasticsearch.client.update.returns(Bluebird.resolve({}));
-      elasticsearch.client.get.returns(Bluebird.resolve({
+      elasticsearch.client.update.resolves({});
+      elasticsearch.client.get.resolves({
         _source: {
           _kuzzle_info: {
             active: true
           }
         }
-      }));
+      });
 
       request.input.body = null;
       request.input.resource._id = createdDocumentId;
@@ -805,11 +799,11 @@ describe('Test: ElasticSearch service', () => {
 
     it('should allow to deactivate documents using a provided filter', () => {
       const
-        refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded'),
+        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded'),
         mockupIds = ['foo', 'bar', 'baz'],
-        getAllIdsStub = sinon.stub().returns(Bluebird.resolve(mockupIds));
+        getAllIdsStub = sinon.stub().resolves(mockupIds);
 
-      elasticsearch.client.bulk.returns(Bluebird.resolve(mockupIds));
+      elasticsearch.client.bulk.resolves(mockupIds);
 
       return ES.__with__({
         getAllIdsFromQuery: getAllIdsStub,
@@ -894,11 +888,11 @@ describe('Test: ElasticSearch service', () => {
 
     it('should allow to delete inactive documents using a provided filter from the trash', () => {
       const
-        refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded'),
+        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded'),
         mockupIds = ['foo', 'bar', 'baz'],
-        getAllIdsStub = sinon.stub().returns(Bluebird.resolve(mockupIds));
+        getAllIdsStub = sinon.stub().resolves(mockupIds);
 
-      elasticsearch.client.bulk.returns(Bluebird.resolve(mockupIds));
+      elasticsearch.client.bulk.resolves(mockupIds);
       elasticsearch.client.search.yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
 
       return ES.__with__({
@@ -961,10 +955,10 @@ describe('Test: ElasticSearch service', () => {
   describe('#import', () => {
     it('should support bulk data import', () => {
       const
-        refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+      elasticsearch.client.bulk.resolves({});
 
       request.input.body = {
         bulkData: [
@@ -987,7 +981,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should add metadata to documents', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+      elasticsearch.client.bulk.resolves({});
 
       request.input.body = {
         bulkData: [
@@ -1033,9 +1027,9 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should inject only the allowed optional parameters', () => {
-      const refreshIndexSpy = sandbox.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
-      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+      elasticsearch.client.bulk.resolves({});
 
       request.input.body = {
         bulkData: []
@@ -1098,14 +1092,14 @@ describe('Test: ElasticSearch service', () => {
 
     it('should override the type with the collection if one has been specified in the request', () => {
       elasticsearch.kuzzle.indexCache.exists.returns(true);
-      elasticsearch.client.bulk.returns(Bluebird.resolve({
+      elasticsearch.client.bulk.resolves({
         items: [
           {index: {_id: 1, _index: index, _type: collection}},
           {index: {_id: 2, _index: 'indexAlt', _type: collection}},
           {update: {_id: 1, _index: index, _type: collection}},
           {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
         ]
-      }));
+      });
 
       request.input.body = {
         bulkData: [
@@ -1198,7 +1192,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+      elasticsearch.client.bulk.resolves({});
 
       return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
@@ -1219,7 +1213,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+      elasticsearch.client.bulk.resolves({});
 
       return should(elasticsearch.import(request)).be.rejected();
     });
@@ -1237,7 +1231,7 @@ describe('Test: ElasticSearch service', () => {
         ]
       };
 
-      elasticsearch.client.bulk.returns(Bluebird.resolve({}));
+      elasticsearch.client.bulk.resolves({});
 
       return should(elasticsearch.import(request)).be.rejectedWith(PreconditionError);
     });
@@ -1245,7 +1239,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#updateMapping', () => {
     it('should have mapping capabilities', () => {
-      elasticsearch.client.indices.putMapping.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.putMapping.resolves({});
 
       request.input.body = {
         properties: {
@@ -1442,7 +1436,7 @@ describe('Test: ElasticSearch service', () => {
           }
         };
 
-      elasticsearch.client.indices.getMapping.returns(Bluebird.resolve(mappings));
+      elasticsearch.client.indices.getMapping.resolves(mappings);
       request.input.body = null;
       return elasticsearch.listCollections(request);
     });
@@ -1459,7 +1453,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#createCollection', () => {
     it('should allow creating a new collection', () => {
-      elasticsearch.client.indices.putMapping.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.putMapping.resolves({});
       elasticsearch.kuzzle.indexCache.exists.returns(true);
 
       request.input.resource.collection = '%foobar';
@@ -1475,7 +1469,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject if index doesn\'t exist', () => {
-      elasticsearch.client.indices.putMapping.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.putMapping.resolves({});
       elasticsearch.kuzzle.indexCache.exists.returns(false);
 
       request.input.resource.collection = '%foobar';
@@ -1603,7 +1597,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#truncateCollection', () => {
     it('should allow truncating an existing collection', () => {
-      const spy = sandbox.stub(elasticsearch, 'deleteByQuery').returns(Promise.resolve({}));
+      const spy = sinon.stub(elasticsearch, 'deleteByQuery').resolves({});
 
       return elasticsearch.truncateCollection(request)
         .then(() => {
@@ -1617,9 +1611,9 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#reset', () => {
     it('should allow deleting all indexes', () => {
-      elasticsearch.client.indices.delete.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.delete.resolves({});
 
-      elasticsearch.client.cat.indices.returns(Bluebird.resolve('      \n %kuzzle      \n ' + index + ' \n  '));
+      elasticsearch.client.cat.indices.resolves('      \n %kuzzle      \n ' + index + ' \n  ');
 
       request.input.body = {indexes: [index]};
 
@@ -1637,7 +1631,7 @@ describe('Test: ElasticSearch service', () => {
       request.input.body = {indexes: [index]};
       indexes[kuzzle.config.internalIndex] = [];
 
-      elasticsearch.client.indices.getMapping.returns(Bluebird.resolve(indexes));
+      elasticsearch.client.indices.getMapping.resolves(indexes);
       elasticsearch.client.indices.delete.rejects(error);
 
       return should(elasticsearch.deleteIndexes(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
@@ -1646,7 +1640,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#createIndex', () => {
     it('should be able to create index', () => {
-      elasticsearch.client.indices.create.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.create.resolves({});
 
       return elasticsearch.createIndex(request)
         .then(() => {
@@ -1670,7 +1664,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#deleteIndex', () => {
     it('should be able to delete index', () => {
-      elasticsearch.client.indices.delete.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.delete.resolves({});
 
       return elasticsearch.deleteIndex(request)
         .then(() => {
@@ -1693,7 +1687,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#listIndexes', () => {
     it('should allow listing indexes', () => {
-      elasticsearch.client.indices.getMapping.returns(Bluebird.resolve({indexes: []}));
+      elasticsearch.client.indices.getMapping.resolves({indexes: []});
 
       return elasticsearch.listIndexes(request);
     });
@@ -1711,9 +1705,9 @@ describe('Test: ElasticSearch service', () => {
       const
         output = {version: {}, indices: {store: {}}};
 
-      elasticsearch.client.cluster.stats.returns(Bluebird.resolve(output));
-      elasticsearch.client.cluster.health.returns(Bluebird.resolve(output));
-      elasticsearch.client.info.returns(Bluebird.resolve(output));
+      elasticsearch.client.cluster.stats.resolves(output);
+      elasticsearch.client.cluster.health.resolves(output);
+      elasticsearch.client.info.resolves(output);
 
       return elasticsearch.getInfos(request);
     });
@@ -1721,7 +1715,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#refreshIndex', () => {
     it('should send a valid request to es client', () => {
-      elasticsearch.client.indices.refresh = sandbox.spy((req) => Bluebird.resolve(req));
+      elasticsearch.client.indices.refresh = sinon.spy(req => Bluebird.resolve(req));
 
       return elasticsearch.refreshIndex(request)
         .then(data => {
@@ -1766,7 +1760,7 @@ describe('Test: ElasticSearch service', () => {
           body: { autoRefresh: true }
         });
 
-      kuzzle.internalEngine.createOrReplace = sandbox.stub().returns(Bluebird.resolve({}));
+      kuzzle.internalEngine.createOrReplace = sinon.stub().resolves({});
 
       return elasticsearch.setAutoRefresh(req)
         .then(response => {
@@ -1790,7 +1784,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#refreshIndexIfNeeded', () => {
     it('should not refresh the index if autoRefresh is set to false', () => {
-      elasticsearch.client.indices.refresh.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.refresh.resolves({});
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
@@ -1800,7 +1794,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should refresh the index if asked to', () => {
-      elasticsearch.client.indices.refresh.returns(Bluebird.resolve({}));
+      elasticsearch.client.indices.refresh.resolves({});
       elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
@@ -1830,31 +1824,24 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#indexExists', () => {
     it('should call es indices.exists method', () => {
-      elasticsearch.client.indices.exists.returns(Bluebird.resolve(true));
+      elasticsearch.client.indices.exists.resolves(true);
 
       return elasticsearch.indexExists(request)
         .then(response => {
-          try {
-            should(response).be.true();
+          should(response).be.true();
 
-            should(elasticsearch.client.indices.exists).be.calledOnce();
+          should(elasticsearch.client.indices.exists).be.calledOnce();
 
-            should(elasticsearch.client.indices.exists.firstCall.args[0]).match({
-              index: 'test'
-            });
-
-            return Bluebird.resolve();
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(elasticsearch.client.indices.exists.firstCall.args[0]).match({
+            index: 'test'
+          });
         });
     });
 
     it('should format the error', () => {
       const
         error = new Error('test'),
-        spy = sandbox.spy(elasticsearch.esWrapper, 'formatESError');
+        spy = sinon.spy(elasticsearch.esWrapper, 'formatESError');
 
       elasticsearch.client.indices.exists.rejects(error);
 
@@ -1872,24 +1859,17 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#collectionExists', () => {
     it('should call es indices.existType method', () => {
-      elasticsearch.client.indices.existsType.returns(Bluebird.resolve(true));
+      elasticsearch.client.indices.existsType.resolves(true);
 
       return elasticsearch.collectionExists(request)
         .then(() => {
-          try {
-            should(elasticsearch.client.indices.existsType).be.calledOnce();
+          should(elasticsearch.client.indices.existsType).be.calledOnce();
 
-            should(elasticsearch.client.indices.existsType.firstCall.args[0])
-              .match({
-                index,
-                type: collection
-              });
-
-            return Bluebird.resolve();
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(elasticsearch.client.indices.existsType.firstCall.args[0])
+            .match({
+              index,
+              type: collection
+            });
         });
     });
 

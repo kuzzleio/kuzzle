@@ -2,8 +2,6 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   Bluebird = require('bluebird'),
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
@@ -32,10 +30,6 @@ describe('Test: security/profileTest', () => {
     // Replace the KuzzleMock stub by an empty function,
     // as we need to stub this one in the following tests
     kuzzle.repositories.role.loadRole = () => {};
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   it('should disallow any action when no role be found', () => {

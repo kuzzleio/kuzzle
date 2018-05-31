@@ -10,8 +10,7 @@ describe('Test: validation/types/geoShape', () => {
   let
     geoShapeType,
     GeoShapeType,
-    sandbox = sinon.sandbox.create(),
-    convertDistanceStub = sandbox.stub(),
+    convertDistanceStub = sinon.stub(),
     isPoint,
     isPolygonPart,
     isLine,
@@ -39,7 +38,7 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   beforeEach(() => {
-    sandbox.resetHistory();
+    sinon.resetHistory();
     convertDistanceStub.returns(1234);
     GeoShapeType.__set__('isPoint', isPoint);
     GeoShapeType.__set__('isLine', isLine);
@@ -71,7 +70,7 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should call recursiveShapeValidation', () => {
-      const recursiveShapeValidationStub = sandbox.stub();
+      const recursiveShapeValidationStub = sinon.stub();
       geoShapeType.recursiveShapeValidation = recursiveShapeValidationStub;
 
       geoShapeType.validate({shapeTypes: ['shape']});
@@ -82,7 +81,7 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#recursiveShapeValidation', () => {
-    const checkStructureStub = sandbox.stub();
+    const checkStructureStub = sinon.stub();
 
     before(() => {
       GeoShapeType.__set__('convertDistance', convertDistanceStub);
@@ -113,7 +112,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if point is valid', () => {
       const
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['point'],
         shape = {
           type: 'point',
@@ -129,7 +128,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if linestring is valid', () => {
       const
-        isLineStub = sandbox.stub().returns(true),
+        isLineStub = sinon.stub().returns(true),
         allowedShapes = ['linestring'],
         shape = {
           type: 'linestring',
@@ -145,7 +144,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if polygon is valid', () => {
       const
-        isPolygonStub = sandbox.stub().returns(true),
+        isPolygonStub = sinon.stub().returns(true),
         allowedShapes = ['polygon'],
         shape = {
           type: 'polygon',
@@ -161,7 +160,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if geometrycollection is valid', () => {
       const
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['geometrycollection'],
         shape = {
           type: 'geometrycollection',
@@ -182,7 +181,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if envelope is valid', () => {
       const
-        isEnvelopeStub = sandbox.stub().returns(true),
+        isEnvelopeStub = sinon.stub().returns(true),
         allowedShapes = ['envelope'],
         shape = {
           type: 'envelope',
@@ -198,7 +197,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if circle is valid', () => {
       const
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['circle'],
         shape = {
           type: 'circle',
@@ -216,7 +215,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if circle is valid', () => {
       const
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['circle'],
         shape = {
           type: 'circle',
@@ -233,7 +232,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return true if all points of a multipoint is valid', () => {
       const
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['multipoint'],
         shape = {
           type: 'multipoint',
@@ -249,7 +248,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return false if one point of a multipoint is not valid', () => {
       const
-        isPointStub = sandbox.stub().returns(false),
+        isPointStub = sinon.stub().returns(false),
         allowedShapes = ['multipoint'],
         shape = {
           type: 'multipoint',
@@ -265,7 +264,7 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should return false if polygon has a bad "orientation" value', () => {
       const
-        isPolygonStub = sandbox.stub().returns(true),
+        isPolygonStub = sinon.stub().returns(true),
         errorMessages = [],
         allowedShapes = ['polygon'],
         shape = {
@@ -285,7 +284,7 @@ describe('Test: validation/types/geoShape', () => {
     it('should return false if geometrycollection is not valid', () => {
       const
         errorMessages = [],
-        isPointStub = sandbox.stub().returns(false),
+        isPointStub = sinon.stub().returns(false),
         allowedShapes = ['geometrycollection'],
         shape = {
           type: 'geometrycollection',
@@ -308,7 +307,7 @@ describe('Test: validation/types/geoShape', () => {
     it('should return false if the radius of circle is not valid', () => {
       const
         errorMessages = [],
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['circle'],
         shape = {
           type: 'circle',
@@ -327,7 +326,7 @@ describe('Test: validation/types/geoShape', () => {
     it('should return false if the radius of circle is not valid', () => {
       const
         errorMessages = [],
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['circle'],
         shape = {
           type: 'circle',
@@ -347,7 +346,7 @@ describe('Test: validation/types/geoShape', () => {
     it('should return false if the radius of circle is not valid', () => {
       const
         errorMessages = [],
-        isPointStub = sandbox.stub().returns(true),
+        isPointStub = sinon.stub().returns(true),
         allowedShapes = ['circle'],
         shape = {
           type: 'circle',
@@ -597,7 +596,11 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#isLine', () => {
-    const isPointStub = sandbox.stub();
+    const isPointStub = sinon.stub();
+
+    afterEach(() => {
+      isPointStub.resetHistory();
+    });
 
     it('should return true if the argument has the expected format', () => {
       const line = ['one', 'two'];
@@ -628,8 +631,13 @@ describe('Test: validation/types/geoShape', () => {
 
   describe('#isPolygonPart', () => {
     const
-      isLineStub = sandbox.stub(),
-      isPointEqualStub = sandbox.stub();
+      isLineStub = sinon.stub(),
+      isPointEqualStub = sinon.stub();
+
+    afterEach(() => {
+      isLineStub.resetHistory();
+      isPointEqualStub.resetHistory();
+    });
 
     it('should return true if the argument has the expected format', () => {
       const polygonPart = ['one', 'two', 'three', 'four'];
@@ -681,7 +689,11 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#isPolygon', () => {
-    const isPolygonPartStub = sandbox.stub();
+    const isPolygonPartStub = sinon.stub();
+
+    afterEach(() => {
+      isPolygonPartStub.resetHistory();
+    });
 
     it('should return true if the argument has the expected format', () => {
       const polygon = ['one', 'two', 'three'];
@@ -714,7 +726,11 @@ describe('Test: validation/types/geoShape', () => {
   });
 
   describe('#isEnvelope', () => {
-    const isPointStub = sandbox.stub();
+    const isPointStub = sinon.stub();
+
+    afterEach(() => {
+      isPointStub.resetHistory();
+    });
 
     it('should return true if the argument has the expected format', () => {
       const envelope = ['one', 'two'];

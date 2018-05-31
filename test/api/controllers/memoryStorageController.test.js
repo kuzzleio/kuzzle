@@ -2,8 +2,6 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   rewire = require('rewire'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   RedisClientMock = require('../../mocks/services/redisClient.mock'),
@@ -106,7 +104,6 @@ describe('Test: memoryStorage controller', () => {
   });
 
   afterEach(() => {
-    sandbox.restore();
     MemoryStorageController.__set__({mapping: origMapping});
   });
 
