@@ -1398,6 +1398,37 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.config.commonMapping).eql(mapping);
         });
     });
+
+    it('should reuse a previously defined common mapping', () => {
+      kuzzle.indexCache.defaultMappings[index] = {
+        gordon: { type: 'text' }
+      };
+
+      return elasticsearch.updateMapping(new Request({
+        index,
+        collection,
+        body: {
+          properties: {
+            freeman: { type: 'boolean' }
+          }
+        }
+      }))
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq).eql({
+            index,
+            type: collection,
+            body: {
+              properties: {
+                gordon: { type: 'text' },
+                freeman: { type: 'boolean' }
+              }
+            }
+          });
+        });
+
+    });
   });
 
   describe('#getMapping', () => {
@@ -1637,6 +1668,44 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should reuse a previously created common mapping', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch.kuzzle.indexCache.exists.returns(true);
+
+      request.input.resource.collection = '%foobar';
+
+      kuzzle.indexCache.defaultMappings[index] = {
+        gordon: { type: 'text' }
+      };
+
+      const collectionMapping = {
+        properties: {
+          freeman:  { type: 'keyword' },
+          _kuzzle_info: {
+            properties: {
+              author: { type: 'keyword' }
+            }
+          }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return elasticsearch.createCollection(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body['%foobar'].properties).eql({
+            gordon:   { type: 'text' },
+            freeman:  { type: 'keyword' },
+            _kuzzle_info: {
+              properties: {
+                author: { type: 'keyword' }
+              }
+            }
+          });
+        });
+
+    });
   });
 
   describe('#truncateCollection', () => {

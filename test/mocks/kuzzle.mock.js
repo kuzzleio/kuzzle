@@ -107,6 +107,7 @@ class KuzzleMock extends Kuzzle {
 
     this.indexCache = {
       indexes: {},
+      defaultMappings: {},
       add: sinon.stub(),
       exists: sinon.stub(),
       init: sinon.stub().resolves(),
@@ -134,6 +135,8 @@ class KuzzleMock extends Kuzzle {
       exists: sinon.stub().resolves(),
       expire: sinon.stub().resolves(),
       get: sinon.stub().resolves(foo),
+      getFieldMapping: sinon.stub().resolves(),
+      getMapping: sinon.stub().resolves(),
       mget: sinon.stub().resolves({hits: [foo]}),
       index: 'internalIndex',
       init: sinon.stub().resolves(),
@@ -145,8 +148,7 @@ class KuzzleMock extends Kuzzle {
       scroll: sinon.stub().resolves(),
       search: sinon.stub().resolves(),
       update: sinon.stub().resolves(),
-      updateMapping: sinon.stub().resolves(foo),
-      getMapping: sinon.stub()
+      updateMapping: sinon.stub().resolves(foo)
     };
 
     this.once = sinon.stub();
