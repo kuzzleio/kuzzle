@@ -1,13 +1,10 @@
-var
+const
   should = require('should'),
-  Promise = require('bluebird'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   IndexCache = require.main.require('lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  var
+  let
     listIndexesStub,
     listCollectionsStub,
     getMappingStub,
@@ -29,14 +26,10 @@ describe('Test: core/indexCache', () => {
       }
     };
 
-    listIndexesStub = kuzzle.internalEngine.listIndexes.returns(Promise.resolve(['foo']));
-    listCollectionsStub = kuzzle.internalEngine.listCollections.returns(Promise.resolve(['bar', 'baz', 'qux']));
-    getMappingStub = kuzzle.internalEngine.getMapping.returns(Promise.resolve(internalMapping));
+    listIndexesStub = kuzzle.internalEngine.listIndexes.resolves(['foo']);
+    listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
+    getMappingStub = kuzzle.internalEngine.getMapping.resolves(internalMapping);
     indexCache = new IndexCache(kuzzle);
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#init', () => {

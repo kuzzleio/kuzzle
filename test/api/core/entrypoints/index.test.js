@@ -64,12 +64,14 @@ describe('Test: core/entryPoints', () => {
     it('should propagate to all entry points', () => {
       return entrypoints.init()
         .then(() => {
+          const promises = [];
+
           for (const ep of entrypoints.entryPoints) {
-            should(ep.init)
-              .be.calledOnce();
-            should(ep.init.firstCall.returnValue)
-              .be.fulfilled();
+            should(ep.init).be.calledOnce();
+            promises.push(should(ep.init.firstCall.returnValue).be.fulfilled());
           }
+
+          return Bluebird.all(promises);
         });
     });
   });

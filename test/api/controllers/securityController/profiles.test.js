@@ -4,9 +4,7 @@ const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   {
     BadRequestError,
@@ -21,21 +19,13 @@ describe('Test: security controller - profiles', () => {
     request,
     securityController;
 
-  before(() => {
-    kuzzle = new KuzzleMock();
-    securityController = new SecurityController(kuzzle);
-  });
-
   beforeEach(() => {
     request = new Request({controller: 'security'});
-    kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve({}));
-    kuzzle.internalEngine.getMapping = sinon.stub().returns(Bluebird.resolve({internalIndex: {mappings: {profiles: {properties: {}}}}}));
-    kuzzle.repositories.profile.buildProfileFromRequest = sandbox.stub().returns(Bluebird.resolve());
-    kuzzle.repositories.profile.hydrate = sandbox.stub().returns(Bluebird.resolve());
-  });
-
-  afterEach(() => {
-    sandbox.restore();
+    kuzzle = new KuzzleMock();
+    kuzzle.internalEngine.get.resolves({});
+    kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {profiles: {properties: {}}}}});
+    kuzzle.repositories.profile.buildProfileFromRequest.resolves();
+    securityController = new SecurityController(kuzzle);
   });
 
   describe('#updateProfileMapping', () => {
@@ -95,7 +85,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test', _source: {}, _meta: {}}));
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
 
       return securityController.createOrReplaceProfile(new Request({
         _id: 'test',
@@ -146,7 +136,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object on a createProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test', _source: {}, _meta: {}}));
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
 
       return should(securityController.createProfile(new Request({_id: 'test', body: {policies: [{roleId:'role1'}]}})))
         .be.fulfilled();
@@ -159,7 +149,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test', _source: {}, _meta: {}}));
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
 
       return securityController.createProfile(new Request({
         _id: 'test',
@@ -223,7 +213,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
-      kuzzle.repositories.profile.load= sandbox.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.profile.load.resolves(null);
       return should(securityController.getProfile(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
     });
   });
@@ -244,7 +234,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object on a mGetProfiles call', () => {
-      kuzzle.repositories.profile.loadMultiFromDatabase = sandbox.stub().returns(Bluebird.resolve([{_id: 'test', policies: [{roleId: 'role'}]}]));
+      kuzzle.repositories.profile.loadMultiFromDatabase.resolves([{_id: 'test', policies: [{roleId: 'role'}]}]);
 
       return securityController.mGetProfiles(new Request({body: {ids: ['test']}}))
         .then(response => {
@@ -259,7 +249,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object with roles on a mGetProfiles call with hydrate', () => {
-      kuzzle.repositories.profile.loadMultiFromDatabase = sandbox.stub().returns(Bluebird.resolve([{_id: 'test', _source: {}, _meta: {}}]));
+      kuzzle.repositories.profile.loadMultiFromDatabase.resolves([{_id: 'test', _source: {}, _meta: {}}]);
 
       return securityController.mGetProfiles(new Request({
         body: {ids: ['test'], hydrate: true}
@@ -275,7 +265,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#searchProfiles', () => {
     it('should return an object containing an array of profiles on searchProfile call', () => {
-      kuzzle.repositories.profile.searchProfiles = sandbox.stub().returns(Bluebird.resolve({hits: [{_id: 'test'}]}));
+      kuzzle.repositories.profile.searchProfiles.resolves({hits: [{_id: 'test'}]});
 
       return securityController.searchProfiles(new Request({
         body: {},
@@ -292,13 +282,13 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should return an object containing an array of profiles on searchProfile call with hydrate', () => {
-      kuzzle.repositories.profile.searchProfiles = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.repositories.profile.searchProfiles.resolves({
         total: 1,
         hits: [
           {_id: 'test', policies: [ {roleId: 'default'} ]}
         ],
         scrollId: 'foobar'
-      }));
+      });
 
       return securityController.searchProfiles(new Request({body: {roles: ['role1']}}))
         .then(response => {
@@ -339,13 +329,13 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should return an object containing an array of profiles and a scrollId', () => {
-      kuzzle.repositories.profile.scroll = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.repositories.profile.scroll.resolves({
         total: 1,
         hits: [
           {_id: 'test', policies: [ {roleId: 'default'} ]}
         ],
         scrollId: 'foobar'
-      }));
+      });
 
       return securityController.scrollProfiles(new Request({scrollId: 'foobar'}))
         .then(response => {
@@ -362,13 +352,13 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should handle an optional scroll argument', () => {
-      kuzzle.repositories.profile.scroll = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.repositories.profile.scroll.resolves({
         total: 1,
         hits: [
           {_id: 'test', policies: [ {roleId: 'default'} ]}
         ],
         scrollId: 'foobar'
-      }));
+      });
 
       return securityController.scrollProfiles(new Request({scrollId: 'foobar', scroll: '4s'}))
         .then(response => {
@@ -414,7 +404,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should forward refresh option', () => {
       kuzzle.repositories.profile.load.resolves({});
-      kuzzle.repositories.profile.validateAndSaveProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test'});
 
       return securityController.updateProfile(new Request({
         _id: 'test',
@@ -448,7 +438,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#deleteProfile', () => {
     it('should return an object with on deleteProfile call', () => {
-      kuzzle.repositories.profile.deleteProfile = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.profile.deleteProfile.resolves({_id: 'test'});
 
       return securityController.deleteProfile(new Request({_id: 'test'}))
         .then(response => {

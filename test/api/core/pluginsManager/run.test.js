@@ -2,8 +2,6 @@
 
 const
   should = require('should'),
-  mockrequire = require('mock-require'),
-  rewire = require('rewire'),
   /** @type {Params} */
   params = require('../../../../lib/config'),
   sinon = require('sinon'),
@@ -12,29 +10,15 @@ const
     KuzzleError,
     GatewayTimeoutError,
     PluginImplementationError
-  } = require('kuzzle-common-objects').errors;
+  } = require('kuzzle-common-objects').errors,
+  PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager');
 
 describe('Test plugins manager run', () => {
   let
-    PluginsManager,
-    sandbox,
     plugin,
     pluginMock,
     kuzzle,
     pluginsManager;
-
-  before(() => {
-    PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
-
-    // making it quiet
-    PluginsManager.__set__({
-      console: {
-        log: sinon.stub(),
-        error: sinon.stub(),
-        warn: sinon.stub()
-      }
-    });
-  });
 
   beforeEach(() => {
     kuzzle = new EventEmitter({
@@ -46,7 +30,6 @@ describe('Test plugins manager run', () => {
     kuzzle.config = { plugins: params.plugins };
 
     pluginsManager = new PluginsManager(kuzzle);
-    sandbox = sinon.sandbox.create();
 
     plugin = {
       name: 'testPlugin',
@@ -58,16 +41,8 @@ describe('Test plugins manager run', () => {
       manifest: {}
     };
 
-    pluginMock = sandbox.mock(plugin.object);
+    pluginMock = sinon.mock(plugin.object);
     pluginsManager.plugins = {testPlugin: plugin};
-  });
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  after(() => {
-    mockrequire.stopAll();
   });
 
   it('should attach event hook on kuzzle object', () => {
@@ -227,9 +202,7 @@ describe('Test plugins manager run', () => {
   });
 
   it('should log a warning in case a pipe plugin exceeds the warning delay', () => {
-    let
-      spy = sandbox.spy(kuzzle, 'emit'),
-      fooStub;
+    const spy = sinon.spy(kuzzle, 'emit');
 
     plugin.object.pipes = {
       'foo:bar': 'foo'
@@ -240,7 +213,7 @@ describe('Test plugins manager run', () => {
     const warnTime = kuzzle.config.plugins.common.pipeWarnTime;
     kuzzle.config.plugins.common.pipeWarnTime = 10;
 
-    fooStub = sandbox.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
+    const fooStub = sinon.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
       setTimeout(() => cb(), 11);
     });
 

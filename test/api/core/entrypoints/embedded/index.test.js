@@ -1,7 +1,6 @@
 'use strict';
 
 const
-  Bluebird = require('bluebird'),
   {
     InternalError: KuzzleInternalError,
     ServiceUnavailableError
@@ -154,7 +153,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   describe('#init', () => {
     it('should call proper methods in order', () => {
       entrypoint.initLogger = sinon.spy();
-      entrypoint.loadMoreProtocols = sinon.stub().returns(Bluebird.resolve());
+      entrypoint.loadMoreProtocols = sinon.stub().resolves();
 
       return entrypoint.init()
         .then(() => {

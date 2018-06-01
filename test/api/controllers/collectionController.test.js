@@ -1,13 +1,11 @@
 const
-  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
   CollectionController = rewire('../../../lib/api/controllers/collectionController'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  sandbox = sinon.sandbox.create();
+  KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: collection controller', () => {
   let
@@ -30,11 +28,6 @@ describe('Test: collection controller', () => {
     collectionController = new CollectionController(kuzzle);
     request = new Request(data);
   });
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
 
   describe('#updateMapping', () => {
     it('should throw a BadRequestError if the body is missing', () => {
@@ -91,19 +84,13 @@ describe('Test: collection controller', () => {
 
   describe('#getSpecifications', () => {
     it('should call internalEngine with the right id', () => {
-      kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve({_source: {foo: 'bar'}}));
+      kuzzle.internalEngine.get.resolves({_source: {foo: 'bar'}});
 
       return collectionController.getSpecifications(request)
         .then(response => {
-          try {
-            should(kuzzle.internalEngine.get).be.calledOnce();
-            should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
-            should(response).match(foo);
-            return Bluebird.resolve();
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(kuzzle.internalEngine.get).be.calledOnce();
+          should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(response).match(foo);
         });
     });
   });
@@ -120,11 +107,11 @@ describe('Test: collection controller', () => {
     });
 
     it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.search = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.internalEngine.search.resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
-      }));
+      });
 
       request = new Request({
         body: {
@@ -139,18 +126,13 @@ describe('Test: collection controller', () => {
 
       return collectionController.searchSpecifications(request)
         .then(response => {
-          try {
-            should(kuzzle.internalEngine.search).be.calledOnce();
-            should(kuzzle.internalEngine.search).be.calledWithMatch('validations', request.input.body.query, {
-              from: request.input.args.from,
-              size: request.input.args.size,
-              scroll: request.input.args.scroll
-            });
-            should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(kuzzle.internalEngine.search).be.calledOnce();
+          should(kuzzle.internalEngine.search).be.calledWithMatch('validations', request.input.body.query, {
+            from: request.input.args.from,
+            size: request.input.args.size,
+            scroll: request.input.args.scroll
+          });
+          should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
         });
     });
   });
@@ -162,46 +144,36 @@ describe('Test: collection controller', () => {
     });
 
     it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.scroll = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.internalEngine.scroll.resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
-      }));
+      });
 
       request = new Request({scrollId: 'foobar'});
 
       return collectionController.scrollSpecifications(request)
         .then(response => {
-          try {
-            should(kuzzle.internalEngine.scroll).be.calledOnce();
-            should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', undefined);
-            should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(kuzzle.internalEngine.scroll).be.calledOnce();
+          should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', undefined);
+          should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
         });
     });
 
     it('should handle the optional scroll argument', () => {
-      kuzzle.internalEngine.scroll = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.internalEngine.scroll.resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
-      }));
+      });
 
       request = new Request({scrollId: 'foobar', scroll: 'qux'});
 
       return collectionController.scrollSpecifications(request)
         .then(response => {
-          try {
-            should(kuzzle.internalEngine.scroll).be.calledOnce();
-            should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', 'qux');
-            should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(kuzzle.internalEngine.scroll).be.calledOnce();
+          should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', 'qux');
+          should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
         });
     });
   });
@@ -225,23 +197,16 @@ describe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().returns(Bluebird.resolve({isValid: true}));
-      kuzzle.validation.curateSpecification = sandbox.stub().returns(Bluebird.resolve());
+      kuzzle.validation.isValidSpecification.resolves({isValid: true});
+      kuzzle.validation.curateSpecification.resolves();
 
       return collectionController.updateSpecifications(request)
         .then(response => {
-          try {
-            should(kuzzle.internalEngine.refresh).be.calledOnce();
-            should(kuzzle.validation.curateSpecification).be.called();
-            should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
-            should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
-            should(response).match(request.input.body);
-
-            return Bluebird.resolve();
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(kuzzle.internalEngine.refresh).be.calledOnce();
+          should(kuzzle.validation.curateSpecification).be.called();
+          should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
+          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(response).match(request.input.body);
         });
     });
 
@@ -263,7 +228,7 @@ describe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification = sandbox.stub().resolves({
+      kuzzle.validation.isValidSpecification.resolves({
         isValid: false,
         errors: ['bad bad is a bad type !']
       });
@@ -301,22 +266,20 @@ describe('Test: collection controller', () => {
       };
 
       CollectionController.__set__({
-        createSpecificationList: sandbox.stub().returns(Bluebird.resolve({
+        createSpecificationList: sinon.stub().resolves({
           _id: 'indexcollection',
           _source: {
             validation: 'validation',
             index: 'index',
             collection: 'collection'
           }
-        })),
-        validateSpecificationList: sandbox.stub().returns(Bluebird.resolve({valid: true}))
+        }),
+        validateSpecificationList: sinon.stub().resolves({valid: true})
       });
 
       return collectionController.validateSpecifications(request)
         .then(response => {
           should(response).match({valid: true});
-
-          return Bluebird.resolve();
         });
     });
 
@@ -343,15 +306,15 @@ describe('Test: collection controller', () => {
       };
 
       CollectionController.__set__({
-        createSpecificationList: sandbox.stub().returns(Bluebird.resolve({
+        createSpecificationList: sinon.stub().resolves({
           _id: 'indexcollection',
           _source: {
             validation: 'validation',
             index: 'index',
             collection: 'collection'
           }
-        })),
-        validateSpecificationList: sandbox.stub().returns(Bluebird.resolve(errorResponse))
+        }),
+        validateSpecificationList: sinon.stub().resolves(errorResponse)
       });
 
       return collectionController.validateSpecifications(request)
@@ -363,7 +326,7 @@ describe('Test: collection controller', () => {
 
   describe('#deleteSpecifications', () => {
     it('should call the right functions and respond with the right response if the validation specification exists', () => {
-      kuzzle.internalEngine.delete = sandbox.stub().returns(Bluebird.resolve());
+      kuzzle.internalEngine.delete.resolves();
 
       kuzzle.validation.specification = {};
       kuzzle.validation.specification[index] = {};
@@ -371,41 +334,25 @@ describe('Test: collection controller', () => {
 
       return collectionController.deleteSpecifications(request)
         .then(response => {
-
-          try {
-            should(kuzzle.internalEngine.delete).be.calledOnce();
-            should(response).match({acknowledged: true});
-
-            return Bluebird.resolve();
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(kuzzle.internalEngine.delete).be.calledOnce();
+          should(response).match({acknowledged: true});
         });
     });
 
     it('should resolves if there is no specification set', () => {
-      kuzzle.internalEngine.delete = sandbox.stub();
       kuzzle.validation.specification = {};
 
       return collectionController.deleteSpecifications(request)
         .then(response => {
-          try {
-            should(kuzzle.internalEngine.delete).not.be.called();
-            should(response).match({acknowledged: true});
-
-            return Bluebird.resolve();
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(kuzzle.internalEngine.delete).not.be.called();
+          should(response).match({acknowledged: true});
         });
     });
   });
 
   describe('#list', () => {
     beforeEach(() => {
-      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({collections: {stored: ['foo']}}));
+      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['foo']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
@@ -457,7 +404,7 @@ describe('Test: collection controller', () => {
 
     it('should return a portion of the collection list if from and size are specified', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
-      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
+      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -476,7 +423,7 @@ describe('Test: collection controller', () => {
 
     it('should return a portion of the collection list if from is specified', () => {
       request = new Request({index: 'index', type: 'all', from: 8});
-      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}}));
+      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -494,9 +441,9 @@ describe('Test: collection controller', () => {
 
     it('should return a portion of the collection list if size is specified', () => {
       request = new Request({index: 'index', type: 'all', size: 2});
-      kuzzle.services.list.storageEngine.listCollections.returns(Bluebird.resolve({
+      kuzzle.services.list.storageEngine.listCollections.resolves({
         collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
-      }));
+      });
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -528,7 +475,7 @@ describe('Test: collection controller', () => {
 
   describe('#exists', () => {
     it('should call the storageEngine', () => {
-      kuzzle.services.list.storageEngine.collectionExists.returns(Bluebird.resolve(foo));
+      kuzzle.services.list.storageEngine.collectionExists.resolves(foo);
       return collectionController.exists(request)
         .then(response => {
           should(response).match(foo);
@@ -544,26 +491,19 @@ describe('Test: collection controller', () => {
 
       return collectionController.create(request)
         .then(response => {
-          try {
-            should(engine.createCollection).be.calledOnce();
-            should(engine.createCollection).be.calledWith(request);
+          should(engine.createCollection).be.calledOnce();
+          should(engine.createCollection).be.calledWith(request);
 
-            should(kuzzle.indexCache.add).be.calledOnce();
-            should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
+          should(kuzzle.indexCache.add).be.calledOnce();
+          should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
 
-            sinon.assert.callOrder(
-              engine.createCollection,
-              kuzzle.indexCache.add
-            );
+          sinon.assert.callOrder(
+            engine.createCollection,
+            kuzzle.indexCache.add
+          );
 
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
         });
     });
   });

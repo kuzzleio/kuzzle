@@ -2,7 +2,6 @@
 
 const
   mockrequire = require('mock-require'),
-  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -25,11 +24,14 @@ describe('Plugin Context', () => {
         createCollection: sinon.spy()
       };
     });
-    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
-    PluginContext = rewire('../../../../lib/api/core/plugins/pluginContext');
+    PluginContext = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
+  });
+
+  afterEach(() => {
+    mockrequire.stopAll();
   });
 
   describe('#constructor', () => {
@@ -366,12 +368,12 @@ describe('Plugin Context', () => {
 
   describe('#strategies', () => {
     it('should allow to add a strategy and link it to its owner plugin', () => {
-      const 
+      const
         mockedStrategy = {},
         result = context.accessors.strategies.add('foo', mockedStrategy);
 
       should(result).be.a.Promise();
-      
+
       return result
         .then(() => {
           should(kuzzle.pluginsManager.registerStrategy).calledWith('pluginName', 'foo', mockedStrategy);
@@ -398,7 +400,7 @@ describe('Plugin Context', () => {
       const result = context.accessors.strategies.remove('foo');
 
       should(result).be.a.Promise();
-      
+
       return result
         .then(() => {
           should(kuzzle.pluginsManager.unregisterStrategy).calledWith('pluginName', 'foo');

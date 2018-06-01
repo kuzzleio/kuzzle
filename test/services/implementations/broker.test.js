@@ -6,7 +6,6 @@ const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   should = require('should'),
   WS = require('ws'),
   CircularList = require('easy-circular-list'),
@@ -39,11 +38,12 @@ describe('Test: Internal broker', () => {
 
   beforeEach(() =>{
     kuzzle.pluginsManager.trigger = sinon.stub();
-    sandbox.restore();
   });
 
   after(() => {
     clock.restore();
+    sinon.restore();
+    sinon.reset();
     mockrequire.stopAll();
   });
 
@@ -135,7 +135,7 @@ describe('Test: Internal broker', () => {
 
     describe('#ws', () => {
       it('should construct a WS client', () => {
-        const WSStub = sandbox.stub();
+        const WSStub = sinon.stub();
 
         mockrequire('ws', WSStub);
         mockrequire.reRequire('../../../lib/services/broker/wsBrokerClient');
@@ -431,8 +431,8 @@ describe('Test: Internal broker', () => {
 
       it('on close should try reconnecting if :close was not explicitly called', () => {
         const
-          retrySpy = sandbox.spy(client, 'retryConnection'),
-          closeSpy = sandbox.spy(client, 'close'),
+          retrySpy = sinon.spy(client, 'retryConnection'),
+          closeSpy = sinon.spy(client, 'close'),
           socket = client.client.socket;
 
         client.onCloseHandlers.push(sinon.spy());
@@ -453,8 +453,8 @@ describe('Test: Internal broker', () => {
 
       it('on error should set the client state to retrying and retry to connect', () => {
         const
-          retrySpy = sandbox.spy(client, 'retryConnection'),
-          closeSpy = sandbox.spy(client, 'close'),
+          retrySpy = sinon.spy(client, 'retryConnection'),
+          closeSpy = sinon.spy(client, 'close'),
           socket = client.client.socket;
 
         client.onErrorHandlers.push(sinon.spy());
@@ -482,7 +482,7 @@ describe('Test: Internal broker', () => {
 
         client.ws = () => new WSClientMock();
 
-        return Bluebird.all([server.init()]);
+        return server.init();
       });
 
       it('should clear ping timeout and interval once connected', done => {
@@ -594,7 +594,7 @@ describe('Test: Internal broker', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
 
-        sandbox.spy(client, 'retryConnection');
+        sinon.spy(client, 'retryConnection');
 
         socket.emit('open', 1);
 
@@ -1138,8 +1138,8 @@ describe('Test: Internal broker', () => {
         const
           serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket),
-          dispatchSpy = sandbox.spy(server, 'dispatch'),
-          sendSpy = sandbox.spy(server, 'send');
+          dispatchSpy = sinon.spy(server, 'dispatch'),
+          sendSpy = sinon.spy(server, 'send');
 
         serverSocket.emit('connection', clientSocket);
 
@@ -1159,8 +1159,8 @@ describe('Test: Internal broker', () => {
         const
           serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket),
-          dispatchSpy = sandbox.spy(server, 'dispatch'),
-          broadcastSpy = sandbox.spy(server, 'broadcast');
+          dispatchSpy = sinon.spy(server, 'dispatch'),
+          broadcastSpy = sinon.spy(server, 'broadcast');
 
 
         serverSocket.emit('connection', clientSocket);

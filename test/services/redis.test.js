@@ -12,9 +12,7 @@ describe('Test redis service', () => {
   let
     kuzzle,
     redis;
-  const
-    dbname = 'unit-tests',
-    sandbox = sinon.sandbox.create();
+  const dbname = 'unit-tests';
 
   before(() => {
     kuzzle = new KuzzleMock();
@@ -24,32 +22,22 @@ describe('Test redis service', () => {
     });
   });
 
-  beforeEach(() => {
-  });
-
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   it('should init a redis client with default (0) database', () => {
     const
       myRedis = new Redis(kuzzle, {service: dbname}, {}),
       myRedisClient = new RedisClientMock(),
-      spy = sandbox.spy(myRedisClient, 'select');
+      spy = sinon.spy(myRedisClient, 'select');
 
     return Redis.__with__('buildClient', () => myRedisClient)(() => {
       return myRedis.init()
         .then(() => {
-          try {
-            should(myRedis).have.property('_client');
-            should(myRedis._client).be.an.Object();
-            should(spy).not.be.called();
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
+          should(myRedis).have.property('_client');
+          should(myRedis._client).be.an.Object();
+          should(spy).not.be.called();
         });
     });
   });
@@ -58,21 +46,14 @@ describe('Test redis service', () => {
     const
       myRedis = new Redis(kuzzle, {service: dbname}, {database: 1}),
       myRedisClient = new RedisClientMock(),
-      spy = sandbox.spy(myRedisClient, 'select');
+      spy = sinon.spy(myRedisClient, 'select');
 
     return Redis.__with__('buildClient', () => myRedisClient)(() => {
       return myRedis.init()
         .then(() => {
-          try {
-            should(myRedis).have.property('_client');
-            should(myRedis._client).be.an.Object();
-            should(spy).be.calledWith(1);
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
+          should(myRedis).have.property('_client');
+          should(myRedis._client).be.an.Object();
+          should(spy).be.calledWith(1);
         });
     });
   });
@@ -81,21 +62,14 @@ describe('Test redis service', () => {
     const
       myRedis = new Redis(kuzzle, {service: dbname}, {}),
       myRedisClient = new RedisClientMock(),
-      spy = sandbox.spy(myRedisClient, 'flushdb');
+      spy = sinon.spy(myRedisClient, 'flushdb');
 
     return Redis.__with__('buildClient', () => myRedisClient)(() => {
       return myRedis.init()
         .then(() => {
-          try {
-            should(myRedis).have.property('_client');
-            should(myRedis._client).be.an.Object();
-            should(spy).not.be.called();
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
+          should(myRedis).have.property('_client');
+          should(myRedis._client).be.an.Object();
+          should(spy).not.be.called();
         });
     });
   });
@@ -120,30 +94,16 @@ describe('Test redis service', () => {
   it('should allow getting a single key value', () => {
     return redis.get('foo')
       .then(req => {
-        try {
-          should(req.name).be.exactly('get');
-          should(req.args).be.eql(['foo']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
+        should(req.name).be.exactly('get');
+        should(req.args).be.eql(['foo']);
       });
   });
 
   it('should retrieve values from multiple keys', () => {
     return redis.mget(['foo', 'baz'])
       .then(req => {
-        try {
-          should(req.name).be.exactly('mget');
-          should(req.args).be.eql([['foo', 'baz']]);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
+        should(req.name).be.exactly('mget');
+        should(req.args).be.eql([['foo', 'baz']]);
       });
   });
 
@@ -154,63 +114,35 @@ describe('Test redis service', () => {
   it('should allow listing keys using pattern matching', () => {
     return redis.searchKeys('s*')
       .then(keys => {
-        try {
-          should(keys).be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
+        should(keys).be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
       });
   });
 
   it('should retrieve all stored keys of a database', () => {
     return redis.getAllKeys()
       .then(keys => {
-        try {
-          should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
+        should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
       });
   });
 
   it('#set should set a single value', () => {
     return redis.set('foo', 'bar')
       .then(req => {
-        try {
-          should(req.name).be.exactly('set');
-          should(req.args).be.eql(['foo', 'bar']);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
+        should(req.name).be.exactly('set');
+        should(req.args).be.eql(['foo', 'bar']);
       });
   });
 
   it('#expireAt should allow to set a ttl based on a timestamp', () => {
     return redis.expireAt('foo', 999)
       .then(req => {
-        try {
-          should(req.name).be.exactly('expireat');
-          should(req.args).be.eql(['foo', 999]);
-
-          return Promise.resolve();
-        }
-        catch(error) {
-          return Promise.reject(error);
-        }
+        should(req.name).be.exactly('expireat');
+        should(req.args).be.eql(['foo', 999]);
       });
   });
 
   it('#getInfos should return a properly formatted response', () => {
-    sandbox.stub(redis._client, 'info').returns(Promise.resolve(`redis_version:3.0.7
+    sinon.stub(redis._client, 'info').resolves(`redis_version:3.0.7
     redis_git_sha1:00000000
     redis_git_dirty:0
     redis_build_id:fcba39adccee99b1
@@ -302,7 +234,7 @@ describe('Test redis service', () => {
 # Keyspace
     db1:keys=5,expires=5,avg_ttl=3584283
     db5:keys=1,expires=0,avg_ttl=0
-    `));
+    `);
     return should(redis.getInfos()).be.fulfilled();
   });
 
@@ -317,7 +249,7 @@ describe('Test redis service', () => {
       ]
     };
 
-    sandbox.stub(IORedis, 'Cluster').returns({});
+    sinon.stub(IORedis, 'Cluster').returns({});
 
     Redis.__get__('buildClient')(config);
     should(IORedis.Cluster).be.called();
@@ -328,7 +260,7 @@ describe('Test redis service', () => {
       node: {host: 'foobar', port: 6379, lazyConnect: true},
     };
 
-    sandbox.stub(IORedis, 'Cluster').returns({});
+    sinon.stub(IORedis, 'Cluster').returns({});
 
     Redis.__get__('buildClient')(config);
     should(IORedis.Cluster).not.be.called();

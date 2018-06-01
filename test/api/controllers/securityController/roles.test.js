@@ -5,7 +5,6 @@ const
   should = require('should'),
   Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
@@ -26,12 +25,8 @@ describe('Test: security controller - roles', () => {
     securityController = new SecurityController(kuzzle);
 
     request = new Request({controller: 'security'});
-    kuzzle.internalEngine.get = sandbox.stub().returns(Bluebird.resolve({}));
-    kuzzle.internalEngine.getMapping = sinon.stub().returns(Bluebird.resolve({internalIndex: {mappings: {roles: {properties: {}}}}}));
-  });
-
-  afterEach(() => {
-    sandbox.restore();
+    kuzzle.internalEngine.get.resolves({});
+    kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {roles: {properties: {}}}}});
   });
 
   describe('#updateRoleMapping', () => {
@@ -72,7 +67,7 @@ describe('Test: security controller - roles', () => {
 
   describe('#createOrReplaceRole', () => {
     it('should resolve to an object on a createOrReplaceRole call', () => {
-      kuzzle.repositories.role.validateAndSaveRole = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.role.validateAndSaveRole.resolves({_id: 'test'});
       return securityController.createOrReplaceRole(new Request({_id: 'test', body: {controllers: {}}}))
         .then(response => {
           should(response).be.instanceof(Object);
@@ -87,7 +82,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.role.validateAndSaveRole = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.role.validateAndSaveRole.resolves({_id: 'test'});
 
       return securityController.createOrReplaceRole(new Request({
         _id: 'test',
@@ -108,7 +103,7 @@ describe('Test: security controller - roles', () => {
 
   describe('#createRole', () => {
     it('should resolve to an object on a createRole call', () => {
-      kuzzle.repositories.role.validateAndSaveRole = sandbox.stub().returns(Bluebird.resolve({_id: 'test'}));
+      kuzzle.repositories.role.validateAndSaveRole.resolves({_id: 'test'});
       return should(securityController.createRole(new Request({_id: 'test', body: {controllers: {}}})))
         .be.fulfilled();
     });
@@ -147,7 +142,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should resolve to an object', done => {
-      kuzzle.repositories.role.loadMultiFromDatabase = sandbox.stub().returns(Bluebird.resolve([{_id: 'test', _source: null, _meta: {}}]));
+      kuzzle.repositories.role.loadMultiFromDatabase.resolves([{_id: 'test', _source: null, _meta: {}}]);
       securityController.mGetRoles(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
@@ -164,10 +159,10 @@ describe('Test: security controller - roles', () => {
 
   describe('#searchRoles', () => {
     it('should return response with an array of roles on searchRole call', () => {
-      kuzzle.repositories.role.searchRole = sandbox.stub().returns(Bluebird.resolve({
+      kuzzle.repositories.role.searchRole.resolves({
         hits: [{_id: 'test'}],
         total: 1
-      }));
+      });
 
       return securityController.searchRoles(new Request({body: {controllers: ['foo', 'bar']}}))
         .then(response => {
@@ -254,7 +249,7 @@ describe('Test: security controller - roles', () => {
       const role = {my: 'role'};
 
       kuzzle.repositories.role.getRoleFromRequest.resolves(role);
-      kuzzle.repositories.role.deleteRole = sandbox.stub().returns(Bluebird.resolve());
+      kuzzle.repositories.role.deleteRole.resolves();
 
       securityController.deleteRole(new Request({_id: 'test',body: {}}))
         .then(() => {
@@ -273,7 +268,7 @@ describe('Test: security controller - roles', () => {
       const role = {my: 'role'};
 
       kuzzle.repositories.role.getRoleFromRequest.resolves(role);
-      kuzzle.repositories.role.deleteRole = sandbox.stub().returns(Bluebird.resolve());
+      kuzzle.repositories.role.deleteRole.resolves();
 
       return securityController.deleteRole(new Request({
         _id: 'test',

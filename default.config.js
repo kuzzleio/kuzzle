@@ -168,7 +168,8 @@ module.exports = {
           transport: 'console',
           level: 'info',
           stderrLevels: [],
-          format: 'simple'
+          format: 'simple',
+          silent: true
         }
       ],
       accessLogFormat: 'combined',
