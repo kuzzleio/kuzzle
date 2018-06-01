@@ -114,17 +114,14 @@ describe('/lib/api/kuzzle.js', () => {
         should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly('SIGABRT');
         should(processOnSpy.getCall(3).args[0]).be.exactly('SIGABRT');
 
-        should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly('SIGPIPE');
-        should(processOnSpy.getCall(4).args[0]).be.exactly('SIGPIPE');
+        should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly('SIGTRAP');
+        should(processOnSpy.getCall(4).args[0]).be.exactly('SIGTRAP');
 
-        should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly('SIGTRAP');
-        should(processOnSpy.getCall(5).args[0]).be.exactly('SIGTRAP');
+        should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly('SIGINT');
+        should(processOnSpy.getCall(5).args[0]).be.exactly('SIGINT');
 
-        should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGINT');
-        should(processOnSpy.getCall(6).args[0]).be.exactly('SIGINT');
-
-        should(processRemoveAllListenersSpy.getCall(7).args[0]).be.exactly('SIGTERM');
-        should(processOnSpy.getCall(7).args[0]).be.exactly('SIGTERM');
+        should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
+        should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
       });
     });
 
