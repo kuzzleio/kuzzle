@@ -1670,7 +1670,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reuse a previously created common mapping', () => {
       elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.returns(true);
+      elasticsearch.kuzzle.indexCache.exists.resolves(true);
 
       request.input.resource.collection = '%foobar';
 
