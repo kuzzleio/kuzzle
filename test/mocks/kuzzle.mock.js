@@ -68,7 +68,9 @@ class KuzzleMock extends Kuzzle {
         },
         security: {
           createFirstAdmin: sinon.spy(),
-          deleteUser: sinon.spy()
+          deleteUser: sinon.spy(),
+          deleteProfile: sinon.spy(),
+          deleteRole: sinon.spy()
         }
       },
       pluginsControllers: {
@@ -196,6 +198,8 @@ class KuzzleMock extends Kuzzle {
         loadMultiFromDatabase: sinon.stub().resolves(),
         loadProfiles: sinon.stub().resolves(),
         searchProfiles: sinon.stub().resolves(),
+        search: sinon.stub().resolves(),
+        scroll: sinon.stub().resolves(),
         validateAndSaveProfile: sinon.stub()
       },
       role: {
@@ -206,6 +210,8 @@ class KuzzleMock extends Kuzzle {
         loadMultiFromDatabase: sinon.stub().resolves(),
         loadRoles: sinon.stub().resolves(),
         searchRole: sinon.stub().resolves(),
+        search: sinon.stub().resolves(),
+        scroll: sinon.stub().resolves(),
         validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0]))
       },
       user: {
@@ -362,5 +368,3 @@ class KuzzleMock extends Kuzzle {
 }
 
 module.exports = KuzzleMock;
-
-

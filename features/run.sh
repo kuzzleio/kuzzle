@@ -20,6 +20,6 @@ for endpoint in Embedded Proxy; do
     fi
 
     # profiles are defined in the cucumber.js file at the root of this project
-    ./node_modules/.bin/cucumber-js --format progress-bar --profile "${protocol}${endpoint}" --world-parameters "{\"host\": \"${host}\", \"port\": \"${port}\"}"
+    ./node_modules/.bin/cucumber-js --profile "${protocol}${endpoint}" --world-parameters "{\"host\": \"${host}\", \"port\": \"${port}\"}"
   done
 done

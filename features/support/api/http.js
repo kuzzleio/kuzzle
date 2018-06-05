@@ -1180,6 +1180,32 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  resetCache (database) {
+    const options = {
+      url: this.apiPath(`admin/resetCache/${database}`),
+      method: 'GET'
+    };
+
+    return this.callApi(options);
+  }
+
+  resetKuzzleData () {
+    const options = {
+      url: this.apiPath('admin/resetKuzzleData'),
+      method: 'GET'
+    };
+
+    return this.callApi(options);
+  }
+
+  resetSecurity () {
+    const options = {
+      url: this.apiPath('admin/resetSecurity'),
+      method: 'GET'
+    };
+
+    return this.callApi(options);
+  }
 }
 
 module.exports = HttpApi;
