@@ -13,11 +13,12 @@ const
   MSController = require('../../../../lib/api/controllers/memoryStorageController'),
   RealtimeController = require('../../../../lib/api/controllers/realtimeController'),
   SecurityController = require('../../../../lib/api/controllers/securityController'),
-  ServerController = require('../../../../lib/api/controllers/serverController');
+  ServerController = require('../../../../lib/api/controllers/serverController'),
+  AdminController = require('../../../../lib/api/controllers/adminController');
 
 describe('funnelController.init', () => {
   it('should initialize API and plugins controller', () => {
-    const 
+    const
       kuzzle = new KuzzleMock(),
       funnel = new FunnelController(kuzzle);
 
@@ -26,7 +27,7 @@ describe('funnelController.init', () => {
     funnel.init();
     funnel.loadPluginControllers();
 
-    should(Object.keys(funnel.controllers).length).be.eql(10);
+    should(Object.keys(funnel.controllers).length).be.eql(11);
     should(funnel.controllers.auth).be.instanceOf(AuthController);
     should(funnel.controllers.bulk).be.instanceOf(BulkController);
     should(funnel.controllers.collection).be.instanceOf(CollectionController);
@@ -37,6 +38,7 @@ describe('funnelController.init', () => {
     should(funnel.controllers.realtime).be.instanceOf(RealtimeController);
     should(funnel.controllers.security).be.instanceOf(SecurityController);
     should(funnel.controllers.server).be.instanceOf(ServerController);
+    should(funnel.controllers.admin).be.instanceOf(AdminController);
     should(funnel.pluginsControllers).match({foo: 'bar'});
   });
 });

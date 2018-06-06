@@ -1,17 +1,24 @@
 const
   {
-    Then
+    Then,
+    When
   } = require('cucumber');
 
-Then(/I can reset the cache "([^"]*)"/, function (database) {
-  return this.api.resetCache(database);
+Then(/I (can )?reset the cache "([^"]*)"/, function (can, database, done) {
+  this.api.resetCache(database)
+    .then(() => done())
+    .catch(error => done(error));
 });
 
 
-Then('I can reset Kuzzle Data', function () {
-  return this.api.resetKuzzleData();
+Then(/I (can )?reset Kuzzle Data/, function (can, done) {
+  this.api.resetKuzzleData()
+    .then(() => done())
+    .catch(error => done(error));
 });
 
-Then('I can reset Security', function () {
-  return this.api.resetSecurity();
+When(/I (can )?reset Security/, function (can, done) {
+  this.api.resetSecurity()
+    .then(() => done())
+    .catch(error => done(error));
 });
