@@ -240,7 +240,7 @@ describe('Test: admin controller', () => {
           should(deleteIndex.getCall(0).args[0].input.resource.index).be.eql('halflife3');
           should(deleteIndex.getCall(1).args[0].input.resource.index).be.eql('borealis');
           should(deleteIndex.getCall(2).args[0].input.resource.index).be.eql('confirmed');
-          should(kuzzle.indexCache.indexes).be.empty();
+          should(kuzzle.indexCache.indexes).be.eql({ '%kuzzle': [] });
         });
     });
   });
