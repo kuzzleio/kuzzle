@@ -223,8 +223,26 @@ describe('Test: admin controller', () => {
           should(kuzzle.funnel.controllers.security.deleteRole.getCall(4).args[0].input.resource._id).be.eql('role5');
         });
     });
+  });
 
+  describe('#resetDatabase', () => {
+    beforeEach(() => {
+      request.action = 'resetDatabase';
+    });
 
+    it('remove all indexes handled by Kuzzle', () => {
+      const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
+      kuzzle.indexCache.indexes = { halflife3: [], borealis: [], confirmed: [], '%kuzzle': [] };
+
+      return adminController.resetDatabase(request)
+        .then(() => {
+          should(deleteIndex.callCount).be.eql(3);
+          should(deleteIndex.getCall(0).args[0].input.resource.index).be.eql('halflife3');
+          should(deleteIndex.getCall(1).args[0].input.resource.index).be.eql('borealis');
+          should(deleteIndex.getCall(2).args[0].input.resource.index).be.eql('confirmed');
+          should(kuzzle.indexCache.indexes).be.empty();
+        });
+    });
   });
 
 });

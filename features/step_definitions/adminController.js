@@ -1,7 +1,6 @@
 const
   {
-    Then,
-    When
+    Then
   } = require('cucumber');
 
 Then(/I (can )?reset the cache "([^"]*)"/, function (can, database, done) {
@@ -17,8 +16,14 @@ Then(/I (can )?reset Kuzzle Data/, function (can, done) {
     .catch(error => done(error));
 });
 
-When(/I (can )?reset Security/, function (can, done) {
+Then(/I (can )?reset Security/, function (can, done) {
   this.api.resetSecurity()
+    .then(() => done())
+    .catch(error => done(error));
+});
+
+Then(/I (can )?reset Database/, function (can, done) {
+  this.api.resetDatabase()
     .then(() => done())
     .catch(error => done(error));
 });

@@ -1206,6 +1206,15 @@ class HttpApi {
 
     return this.callApi(options);
   }
+
+  resetDatabase () {
+    const options = {
+      url: this.apiPath('admin/resetDatabase'),
+      method: 'GET'
+    };
+
+    return this.callApi(options);
+  }
 }
 
 module.exports = HttpApi;

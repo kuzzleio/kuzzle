@@ -1278,6 +1278,13 @@ class ApiBase {
       action: 'resetSecurity'
     });
   }
+
+  resetDatabase () {
+    return this.send({
+      controller: 'admin',
+      action: 'resetDatabase'
+    });
+  }
 }
 
 

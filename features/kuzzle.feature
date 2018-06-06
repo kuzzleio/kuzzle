@@ -1774,12 +1774,6 @@ Feature: Kuzzle functional tests
     And I'm able to find a default role with id "default" equivalent to role "default"
     And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"
 
-#  Scenario: Index and collection creation directly with Elasticsearch
-#    When I create an index and a collection with ElasticSearch
-#    When I create a document directly with ElasticSearch
-#    Then I update the document with Kuzzle
-#    Then The _kuzzle_info mapping is correct
-
   @security
   Scenario: Reset Redis Cache
     When I create a user "useradmin" with id "useradmin-id"
@@ -1793,7 +1787,22 @@ Feature: Kuzzle functional tests
     Then I can reset Kuzzle Data
 
   @security
-  Scenario: Reset Kuzzle Data
+  Scenario: Reset Security
     When I create a user "useradmin" with id "useradmin-id"
     And I log in as useradmin:testpwd expiring in 1h
     Then I can reset Security
+
+  Scenario: Reset all users, roles and profiles
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a new profile "profile2" with id "profile2"
+    And I create a user "user1" with id "user1-id"
+    And I create a user "user2" with id "user2-id"
+    When I reset Security
+    Then I'm not able to find a role with id "role1"
+    Then I'm not able to find a role with id "role2"
+    Then I'm not able to find a profile with id "profile1"
+    Then I'm not able to find a profile with id "profile2"
+    Then I'm not able to find a user with id "user1-id"
+    Then I'm not able to find a user with id "user2-id"
