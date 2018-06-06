@@ -46,7 +46,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
           .calledWith(['foo'], request, 'in', 'done', 'replace', {
             _meta: {'can I has': 'cheezburgers?'},
             _id: request.input.resource._id,
-            _source: {foo: 'bar'}
+            _source: {foo: 'bar', _kuzzle_info: {'can I has': 'cheezburgers?'}}
           });
 
         should(notifier.notifyDocument.getCall(1))
