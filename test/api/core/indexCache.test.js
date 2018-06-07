@@ -11,11 +11,9 @@ describe('Test: core/indexCache', () => {
     indexCache,
     kuzzle;
 
-  before(() => {
-    kuzzle = new KuzzleMock();
-  });
-
   beforeEach(() => {
+    kuzzle = new KuzzleMock();
+
     const internalMapping = {
       foo: {
         mappings: {
@@ -29,11 +27,14 @@ describe('Test: core/indexCache', () => {
     listIndexesStub = kuzzle.internalEngine.listIndexes.resolves(['foo']);
     listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
     getMappingStub = kuzzle.internalEngine.getMapping.resolves(internalMapping);
+    kuzzle.internalEngine.getFieldMapping.resolves({});
     indexCache = new IndexCache(kuzzle);
   });
 
   describe('#init', () => {
     it('should initialize the index cache properly', () => {
+      kuzzle.internalEngine.getFieldMapping.resolves({});
+
       return indexCache.init()
         .then(() => {
           should(listIndexesStub.calledOnce).be.true();
@@ -42,6 +43,86 @@ describe('Test: core/indexCache', () => {
           should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
         });
     });
+
+    it('should inject the default mapping if none found', () => {
+      return indexCache.init()
+        .then(() => {
+          should(kuzzle.internalEngine.updateMapping)
+            .be.calledThrice();
+
+          should(indexCache.defaultMappings.foo)
+            .eql(indexCache.commonMapping);
+        });
+    });
+
+    it('should re-inject the existing mapping if one found', () => {
+      kuzzle.internalEngine.getFieldMapping
+        .resolves({
+          foo: {
+            mappings: {
+              baz: {
+                '_kuzzle_info.updater': {
+                  mapping: {
+                    some: 'mapping'
+                  }
+                }
+              }
+            }
+          }
+        });
+
+      return indexCache.init()
+        .then(() => {
+          should(indexCache.defaultMappings.foo).eql({
+            _kuzzle_info: {
+              properties: Object.assign({}, indexCache.commonMapping._kuzzle_info.properties, {some: 'mapping'})
+            }
+          });
+
+          for (const collection of ['bar', 'baz', 'qux']) {
+            should(kuzzle.internalEngine.updateMapping)
+              .be.calledWithMatch(collection, {
+                properties: {
+                  _kuzzle_info: {
+                    properties: {
+                      some: 'mapping'
+                    }
+                  }
+                }
+              });
+          }
+        });
+    });
+
+    it('should inject kuzzle_info mapping for known fields only', () => {
+      kuzzle.internalEngine.getFieldMapping
+        .resolves({
+          foo: {
+            mappings: {
+              baz: {
+                '_kuzzle_info.unknown': {
+                  mapping: {
+                    some: 'mapping'
+                  }
+                }
+              }
+            }
+          }
+        });
+
+      return indexCache.init()
+        .then(() => {
+          should(indexCache.defaultMappings.foo).eql(indexCache.commonMapping);
+
+          for (const collection of ['bar', 'baz', 'qux']) {
+            should(kuzzle.internalEngine.updateMapping)
+              .be.calledWithMatch(collection, {
+                properties: indexCache.commonMapping
+              });
+          }
+        });
+    });
+
   });
 
   describe('#initInternal', () => {

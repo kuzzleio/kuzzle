@@ -109,6 +109,7 @@ class KuzzleMock extends Kuzzle {
 
     this.indexCache = {
       indexes: {},
+      defaultMappings: {},
       add: this.sandbox.stub(),
       exists: this.sandbox.stub(),
       init: this.sandbox.stub().resolves(),
@@ -136,6 +137,8 @@ class KuzzleMock extends Kuzzle {
       exists: this.sandbox.stub().resolves(),
       expire: this.sandbox.stub().resolves(),
       get: this.sandbox.stub().resolves(foo),
+      getFieldMapping: this.sandbox.stub().resolves(),
+      getMapping: this.sandbox.stub(),
       mget: this.sandbox.stub().resolves({hits: [foo]}),
       index: 'internalIndex',
       init: this.sandbox.stub().resolves(),
@@ -147,8 +150,7 @@ class KuzzleMock extends Kuzzle {
       scroll: this.sandbox.stub().resolves(),
       search: this.sandbox.stub().resolves(),
       update: this.sandbox.stub().resolves(),
-      updateMapping: this.sandbox.stub().resolves(foo),
-      getMapping: this.sandbox.stub()
+      updateMapping: this.sandbox.stub().resolves(foo)
     };
 
     this.once = this.sandbox.stub();
