@@ -82,9 +82,54 @@ module.exports = {
     default: {
       role: {
         controllers: {
-          '*': {
+          auth: {
             actions: {
               '*': true
+            }
+          },
+          bulk: {
+            actions: {
+              '*': true
+            }
+          },
+          collection: {
+            actions: {
+              '*': true
+            }
+          },
+          document: {
+            actions: {
+              '*': true
+            }
+          },
+          index: {
+            actions: {
+              '*': true
+            }
+          },
+          memoryStorage: {
+            actions: {
+              '*': true
+            }
+          },
+          realtime: {
+            actions: {
+              '*': true
+            }
+          },
+          security: {
+            actions: {
+              '*': true
+            }
+          },
+          server: {
+            actions: {
+              '*': true
+            }
+          },
+          admin: {
+            actions: {
+              '*': false
             }
           }
         }
