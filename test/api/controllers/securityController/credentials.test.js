@@ -3,9 +3,7 @@
 const
   rewire = require('rewire'),
   should = require('should'),
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
@@ -20,16 +18,12 @@ describe('Test: security controller - credentials', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     securityController = new SecurityController(kuzzle);
-    kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-  });
-
-  afterEach(() => {
-    sandbox.restore();
+    kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
   });
 
   describe('#createCredentials', () => {
     it('should call the plugin create method', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'createCredentials',
@@ -39,7 +33,7 @@ describe('Test: security controller - credentials', () => {
         },
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.createCredentials(request)
         .then(result => {
@@ -72,7 +66,7 @@ describe('Test: security controller - credentials', () => {
         _id: 'someUserId',
       });
 
-      kuzzle.repositories.user.load.returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.load.resolves(null);
 
       return should(securityController.createCredentials(request))
         .rejectedWith(BadRequestError, {message: 'Cannot create credentials: unknown kuid "someUserId"'});
@@ -81,7 +75,7 @@ describe('Test: security controller - credentials', () => {
 
   describe('#updateCredentials', () => {
     it('should call the plugin update method', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'createCredentials',
@@ -91,7 +85,7 @@ describe('Test: security controller - credentials', () => {
         },
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.updateCredentials(request)
         .then(result => {
@@ -124,7 +118,7 @@ describe('Test: security controller - credentials', () => {
         _id: 'someUserId',
       });
 
-      kuzzle.repositories.user.load.returns(Bluebird.resolve(null));
+      kuzzle.repositories.user.load.resolves(null);
 
       return should(securityController.updateCredentials(request))
         .rejectedWith(BadRequestError, {message: 'Cannot update credentials: unknown kuid "someUserId"'});
@@ -133,14 +127,14 @@ describe('Test: security controller - credentials', () => {
 
   describe('#hasCredentials', () => {
     it('should call the plugin exists method', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'hasCredentials',
         strategy: 'someStrategy',
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.hasCredentials(request)
         .then(result => {
@@ -158,7 +152,7 @@ describe('Test: security controller - credentials', () => {
 
   describe('#validateCredentials', () => {
     it('should call the plugin validate method', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'validateCredentials',
@@ -168,7 +162,7 @@ describe('Test: security controller - credentials', () => {
         },
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.validateCredentials(request)
         .then(result => {
@@ -187,14 +181,14 @@ describe('Test: security controller - credentials', () => {
 
   describe('#deleteCredentials', () => {
     it('should call the plugin delete method', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'deleteCredentials',
         strategy: 'someStrategy',
         _id: 'someUserId'
       });
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.deleteCredentials(request)
         .then(result => {
@@ -212,15 +206,15 @@ describe('Test: security controller - credentials', () => {
 
   describe('#getCredentials', () => {
     it('should call the plugin getInfo method if it is provided', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'getCredentials',
         strategy: 'someStrategy',
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(true);
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.hasStrategyMethod.returns(true);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.getCredentials(request)
         .then(result => {
@@ -239,15 +233,15 @@ describe('Test: security controller - credentials', () => {
     });
 
     it('should resolve to an empty object if getInfo method is not provided', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'getCredentials',
         strategy: 'someStrategy',
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(false);
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.hasStrategyMethod.returns(false);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.getCredentials(request)
         .then(result => {
@@ -262,15 +256,15 @@ describe('Test: security controller - credentials', () => {
 
   describe('#getCredentialsById', () => {
     it('should call the plugin getById method if it is provided', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'getCredentials',
         strategy: 'someStrategy',
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(true);
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.hasStrategyMethod.returns(true);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.getCredentialsById(request)
         .then(result => {
@@ -289,15 +283,15 @@ describe('Test: security controller - credentials', () => {
     });
 
     it('should resolve to an empty object if getById method is not provided', () => {
-      const methodStub = sinon.stub().returns(Bluebird.resolve({foo: 'bar'}));
+      const methodStub = sinon.stub().resolves({foo: 'bar'});
       request = new Request({
         controller: 'security',
         action: 'getCredentials',
         strategy: 'someStrategy',
         _id: 'someUserId',
       });
-      kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(false);
-      kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+      kuzzle.pluginsManager.hasStrategyMethod.returns(false);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.getCredentialsById(request)
         .then(result => {
@@ -317,7 +311,7 @@ describe('Test: security controller - credentials', () => {
         action: 'getCredentialFields',
         strategy: 'someStrategy'
       });
-      kuzzle.pluginsManager.getStrategyFields = sandbox.stub().returns(['aField', 'anotherField']);
+      kuzzle.pluginsManager.getStrategyFields.returns(['aField', 'anotherField']);
 
       return securityController.getCredentialFields(request)
         .then(result => {
@@ -335,8 +329,8 @@ describe('Test: security controller - credentials', () => {
         action: 'getAllCredentialFields',
         strategy: 'someStrategy'
       });
-      kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy', 'someOtherStrategy']);
-      kuzzle.pluginsManager.getStrategyFields = sandbox.stub().returns(['aField', 'anotherField']);
+      kuzzle.pluginsManager.listStrategies.returns(['someStrategy', 'someOtherStrategy']);
+      kuzzle.pluginsManager.getStrategyFields.returns(['aField', 'anotherField']);
 
       return securityController.getAllCredentialFields(request)
         .then(result => {

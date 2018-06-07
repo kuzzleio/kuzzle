@@ -12,9 +12,8 @@ describe('Test: validation.validate', () => {
     validation,
     kuzzle;
   const
-    sandbox = sinon.sandbox.create(),
-    typeValidateStub = sandbox.stub(),
-    getStrictnessStub = sandbox.stub(),
+    typeValidateStub = sinon.stub(),
+    getStrictnessStub = sinon.stub(),
     manageErrorMessage = Validation.__get__('manageErrorMessage'),
     checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
     index = 'anIndex',
@@ -37,9 +36,13 @@ describe('Test: validation.validate', () => {
     kuzzle = new KuzzleMock();
     validation = new Validation(kuzzle);
     [typeChildren, typeNoChild].forEach(type => validation.addType(type));
-    sandbox.resetHistory();
     Validation.__set__('manageErrorMessage', manageErrorMessage);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
+  });
+
+  afterEach(() => {
+    typeValidateStub.reset();
+    getStrictnessStub.reset();
   });
 
   describe('#validationPromise', () => {
@@ -207,7 +210,7 @@ describe('Test: validation.validate', () => {
           }
         }
       };
-      
+
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
@@ -310,7 +313,7 @@ describe('Test: validation.validate', () => {
           }
         }
       };
-      
+
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
@@ -322,7 +325,7 @@ describe('Test: validation.validate', () => {
       const
         verbose = false,
         request = new Request({
-          index, 
+          index,
           collection,
           controller: 'document',
           action: 'update',

@@ -1,12 +1,10 @@
 const
-  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   IndexController = require('../../../lib/api/controllers/indexController'),
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  sandbox = sinon.sandbox.create();
+  KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: index controller', () => {
   let
@@ -29,20 +27,16 @@ describe('Test: index controller', () => {
     request = new Request(data);
   });
 
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe('#mDelete', () => {
     let isActionAllowedStub;
 
     beforeEach(() => {
       isActionAllowedStub = sinon.stub();
-      isActionAllowedStub.onCall(0).returns(Bluebird.resolve(true));
-      isActionAllowedStub.onCall(1).returns(Bluebird.resolve(false));
-      isActionAllowedStub.onCall(2).returns(Bluebird.resolve(true));
-      isActionAllowedStub.onCall(3).returns(Bluebird.resolve(false));
-      isActionAllowedStub.returns(Bluebird.resolve(true));
+      isActionAllowedStub.onCall(0).resolves(true);
+      isActionAllowedStub.onCall(1).resolves(false);
+      isActionAllowedStub.onCall(2).resolves(true);
+      isActionAllowedStub.onCall(3).resolves(false);
+      isActionAllowedStub.resolves(true);
 
       indexController = new IndexController(kuzzle);
     });
@@ -60,31 +54,25 @@ describe('Test: index controller', () => {
         .then(response => {
           const engine = kuzzle.services.list.storageEngine;
 
-          try {
-            should(isActionAllowedStub).have.callCount(5);
+          should(isActionAllowedStub).have.callCount(5);
 
-            should(engine.deleteIndexes).be.calledOnce();
-            should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(Request);
-            should(engine.deleteIndexes.firstCall.args[0].serialize()).match({
-              data: {
-                body: {
-                  indexes: ['a', 'e', 'i']
-                }
+          should(engine.deleteIndexes).be.calledOnce();
+          should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(Request);
+          should(engine.deleteIndexes.firstCall.args[0].serialize()).match({
+            data: {
+              body: {
+                indexes: ['a', 'e', 'i']
               }
-            });
+            }
+          });
 
-            should(kuzzle.indexCache.remove).be.calledThrice();
-            should(kuzzle.indexCache.remove.getCall(0)).be.calledWith('a');
-            should(kuzzle.indexCache.remove.getCall(1)).be.calledWith('e');
-            should(kuzzle.indexCache.remove.getCall(2)).be.calledWith('i');
+          should(kuzzle.indexCache.remove).be.calledThrice();
+          should(kuzzle.indexCache.remove.getCall(0)).be.calledWith('a');
+          should(kuzzle.indexCache.remove.getCall(1)).be.calledWith('e');
+          should(kuzzle.indexCache.remove.getCall(2)).be.calledWith('i');
 
-            should(response).be.instanceof(Object);
-            should(response).match({deleted: ['a', 'e', 'i']});
-            return Bluebird.resolve();
-          }
-          catch (error) {
-            return Bluebird.reject(error);
-          }
+          should(response).be.instanceof(Object);
+          should(response).match({deleted: ['a', 'e', 'i']});
         });
     });
   });
@@ -218,7 +206,7 @@ describe('Test: index controller', () => {
 
   describe('#exists', () => {
     it('should call the storagEngine', () => {
-      kuzzle.services.list.storageEngine.indexExists.returns(Bluebird.resolve(foo));
+      kuzzle.services.list.storageEngine.indexExists.resolves(foo);
       return indexController.exists(request)
         .then(response => {
           should(response).match(foo);

@@ -1,7 +1,6 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   RealtimeController = require('../../../lib/api/controllers/realtimeController'),
   Request = require('kuzzle-common-objects').Request,
@@ -19,10 +18,6 @@ describe('Test: subscribe controller', () => {
     realtimeController = new RealtimeController(kuzzle);
     request = new Request({index: 'test', collection: 'collection', controller: 'realtime', body: {}}, {user: {_id: '42'}});
     kuzzle.repositories.user.anonymous = sinon.stub();
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#subscribe', () => {

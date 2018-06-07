@@ -131,8 +131,8 @@ describe('Test the auth controller', () => {
       const
         signedToken = jwt.sign({_id: 'admin'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm}),
         t = new Token({
-          _id: 'foo#' + signedToken, 
-          userId: 'foo', 
+          _id: 'foo#' + signedToken,
+          userId: 'foo',
           jwt: signedToken
         });
 
@@ -322,12 +322,6 @@ describe('Test the auth controller', () => {
   });
 
   describe('Credentials', () => {
-    let sandbox = sinon.sandbox.create();
-
-    afterEach(() => {
-      sandbox.restore();
-    });
-
     describe('#createMyCredentials', () => {
       it('should call the plugin create method', () => {
         const methodStub = sinon.stub().returns(Promise.resolve({foo: 'bar'}));
@@ -343,8 +337,8 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
         return authController.createMyCredentials(request)
           .then(result => {
@@ -380,8 +374,8 @@ describe('Test the auth controller', () => {
           }
         });
 
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
 
         return should(authController.createMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });
@@ -402,8 +396,8 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
         return authController.updateMyCredentials(request)
           .then(result => {
@@ -438,8 +432,8 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
 
         return should(authController.updateMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });
@@ -457,8 +451,8 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+        kuzzle.pluginsManager.listStrategies = sinon.stub().returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod = sinon.stub().returns(methodStub);
 
         return authController.credentialsExist(request)
           .then(result => {
@@ -483,8 +477,8 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
 
         return should(authController.credentialsExist(request)).be.rejectedWith(PluginImplementationError);
       });
@@ -505,8 +499,8 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
         return authController.validateMyCredentials(request)
           .then(result => {
@@ -536,8 +530,8 @@ describe('Test the auth controller', () => {
           }
         });
 
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
 
         return should(authController.validateMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });
@@ -555,8 +549,8 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
         return authController.deleteMyCredentials(request)
           .then(result => {
@@ -581,9 +575,9 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
 
         return should(authController.deleteMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });
@@ -601,9 +595,9 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(true);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.hasStrategyMethod.returns(true);
+        kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
         return authController.getMyCredentials(request)
           .then(result => {
@@ -632,9 +626,9 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(false);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(methodStub);
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.hasStrategyMethod.returns(false);
+        kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
         return authController.getMyCredentials(request)
           .then(result => {
@@ -656,10 +650,10 @@ describe('Test the auth controller', () => {
             _id: 'someUserId'
           }
         });
-        
-        kuzzle.pluginsManager.listStrategies = sandbox.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.hasStrategyMethod = sandbox.stub().returns(true);
-        kuzzle.pluginsManager.getStrategyMethod = sandbox.stub().returns(() => Bluebird.reject('foo'));
+
+        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.hasStrategyMethod.returns(true);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
 
         return should(authController.getMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });

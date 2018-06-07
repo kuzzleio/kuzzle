@@ -2,12 +2,10 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
   RouterController = require('../../../../lib/api/controllers/routerController');
 
 describe('Test: routerController.httpRequest', () => {
   let
-    sandbox = sinon.sandbox.create(),
     kuzzleStub,
     /** @type Request */
     response,
@@ -52,10 +50,6 @@ describe('Test: routerController.httpRequest', () => {
       headers: {},
       content: ''
     };
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   it('should register GET routes from the config/httpRoutes file', (done) => {
