@@ -15,8 +15,6 @@ services:
       - "./config/pm2.json:/config/pm2.json"
     cap_add:
       - SYS_PTRACE
-    sysctls:
-      - net.core.somaxconn=8192
     depends_on:
       - proxy
       - redis
