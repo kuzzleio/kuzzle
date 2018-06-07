@@ -4,7 +4,7 @@ const
   IndexCache = require.main.require('lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  let
+  var
     listIndexesStub,
     listCollectionsStub,
     getMappingStub,
