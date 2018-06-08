@@ -1,13 +1,18 @@
 const
   EntryPoint = require('../../../../../../lib/api/core/entrypoints/embedded'),
   HttpProtocol = require('../../../../../../lib/api/core/entrypoints/embedded/protocols/http'),
+  HttpFormDataStream = require('../../../../../../lib/api/core/entrypoints/embedded/service/httpFormDataStream'),
   KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
-  KuzzleError = require('kuzzle-common-objects').errors.KuzzleError,
+  {
+    KuzzleError,
+    SizeLimitError
+  } = require('kuzzle-common-objects').errors,
   should = require('should'),
-  sinon = require('sinon');
+  sinon = require('sinon'),
+  Writable = require('stream').Writable;
 
-describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
+describe.only('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   let
     kuzzle,
     entrypoint,
@@ -83,6 +88,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             remoteAddress: '1.1.1.1'
           },
           url: 'url',
+          emit: sinon.spy(),
+          pipe: sinon.spy(),
+          unpipe: sinon.spy()
         };
 
         protocol.init(entrypoint);
@@ -122,14 +130,13 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         onRequest(request, response);
 
-        const dataCb = request.on.firstCall.args[1];
-        const endCb = request.on.secondCall.args[1];
+        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
+        const writable = request.pipe.firstCall.args[0];
 
-        dataCb('chunk1');
-        dataCb('chunk2');
-        dataCb('chunk3');
-        endCb();
-
+        writable.write('chunk1');
+        writable.write('chunk2');
+        writable.write('chunk3');
+        writable.emit('finish');
       });
 
       it('should handle valid x-www-form-urlencoded request', done => {
@@ -144,11 +151,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         onRequest(request, response);
 
-        const dataCB = request.on.firstCall.args[1];
-        dataCB('foo=bar&baz=1234');
+        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(HttpFormDataStream));
+        const writable = request.pipe.firstCall.args[0];
 
-        const endCB = request.on.lastCall.args[1];
-        endCB();
+        writable.write('foo=bar&baz=1234');
+        writable.emit('finish');
       });
 
       it('should handle valid multipart/form-data request', done => {
@@ -165,31 +172,60 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         onRequest(request, response);
 
-        let dataCB = request.on.firstCall.args[1];
-        dataCB(multipart);
+        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(HttpFormDataStream));
+        const writable = request.pipe.firstCall.args[0];
 
-        let endCB = request.on.lastCall.args[1];
-        endCB();
+        writable.write(multipart);
+        writable.emit('finish');
       });
 
-      it('should reply with error if the actual data sent exceeds the maxRequestSize', () => {
+      it('should reply with error if the actual data sent exceeds the maxRequestSize', done => {
         protocol.maxRequestSize = 2;
         onRequest(request, response);
 
-        const dataCB = request.on.firstCall.args[1];
+        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
+        const writable = request.pipe.firstCall.args[0];
 
-        dataCB('a slightly too big chunk');
-        should(request.removeAllListeners).be.calledTwice();
+        sinon.spy(writable, 'removeAllListeners');
+        sinon.spy(writable, 'end');
 
-        should(protocol._replyWithError)
-          .be.calledWithMatch(/^[0-9a-z-]+$/, {
-            url: request.url,
-            method: request.method
-          },
-          response,
-          {
-            message: 'Error: maximum HTTP request size exceeded'
-          });
+        should(request.on).calledOnce().calledWith('error', sinon.match.func);
+        const errorHandler = request.on.firstCall.args[1];
+
+        writable.on('error', error => {
+          try {
+            should(error).instanceOf(SizeLimitError).match({message: 'Error: maximum HTTP request size exceeded'});
+
+            // called automatically when a pipe rejects a callback, but not
+            // by our mock obviously
+            errorHandler(error);
+
+            should(request.unpipe).calledOnce();
+            should(request.removeAllListeners).calledOnce();
+            // should-sinon is outdated, so we cannot use it with calledAfter :-(
+            should(request.removeAllListeners.calledAfter(request.unpipe)).be.true();
+            should(request.resume).calledOnce();
+            should(request.resume.calledAfter(request.removeAllListeners)).be.true();
+            should(writable.removeAllListeners).calledOnce();
+            should(writable.end).calledOnce();
+            should(writable.end.calledAfter(writable.removeAllListeners)).be.true();
+
+            should(protocol._replyWithError)
+              .be.calledWithMatch(/^[0-9a-z-]+$/, {
+                url: request.url,
+                method: request.method
+              },
+              response,
+              {
+                message: 'Error: maximum HTTP request size exceeded'
+              });
+            done();
+          } catch (e) {
+            done(e);
+          }
+        });
+
+        writable.write('a slightly too big chunk');
       });
 
       it('should reply with error if the content type is unsupported', () => {
@@ -372,7 +408,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     });
 
     it('should log the access and reply with error', () => {
-      const 
+      const
         error = new KuzzleError('test'),
         connectionId = 'connectionId',
         payload = {requestId: 'foobar'};
