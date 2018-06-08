@@ -55,7 +55,7 @@
     "utf-8-validate": "^4.0.2",
     "uuid": "^3.2.1",
     "validator": "^10.2.0",
-    "winston": "^2.4.2",
+    "winston": "^3.0.0-rc6",
     "winston-elasticsearch": "^0.6.0",
     "winston-syslog": "^2.0.0",
     "winston-transport": "^4.0.0",
