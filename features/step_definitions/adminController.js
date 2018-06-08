@@ -4,6 +4,10 @@ const
   } = require('cucumber');
 
 Then(/I (can |can not )?reset the cache "([^"]*)"/, function (can, database, done) {
+  if (! can) {
+    can = '';
+  }
+
   if (can.indexOf('can not') === -1) {
     this.api.resetCache(database)
       .then(() => done())
@@ -25,6 +29,10 @@ Then(/I (can |can not )?reset the cache "([^"]*)"/, function (can, database, don
 
 
 Then(/I (can |can not )?reset Kuzzle Data/, function (can, done) {
+  if (! can) {
+    can = '';
+  }
+
   if (can.indexOf('can not') === -1) {
     this.api.resetKuzzleData()
       .then(() => done())
@@ -45,6 +53,10 @@ Then(/I (can |can not )?reset Kuzzle Data/, function (can, done) {
 });
 
 Then(/I (can |can not )?reset Security/, function (can, done) {
+  if (! can) {
+    can = '';
+  }
+
   if (can.indexOf('can not') === -1) {
     this.api.resetSecurity()
       .then(() => done())
@@ -65,6 +77,10 @@ Then(/I (can |can not )?reset Security/, function (can, done) {
 });
 
 Then(/I (can |can not )?reset Database/, function (can, done) {
+  if (! can) {
+    can = '';
+  }
+
   if (can.indexOf('can not') === -1) {
     this.api.resetDatabase()
       .then(() => done())

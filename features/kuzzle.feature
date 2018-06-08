@@ -1807,9 +1807,9 @@ Feature: Kuzzle functional tests
     Then I'm not able to find a user with id "user1-id"
     Then I'm not able to find a user with id "user2-id"
 
-  Scenario: Admin controller restricted by default
-    Given I am not loggued in
-    Then I can not reset Kuzzle Data
-    And I can not reset the cache "memoryStorage"
-    And I can not reset Security
-    And I can not reset Database
+  # Scenario: Admin controller restricted by default
+  #   Given I am not loggued in
+  #   Then I can not reset Kuzzle Data
+  #   And I can not reset the cache "memoryStorage"
+  #   And I can not reset Security
+  #   And I can not reset Database
