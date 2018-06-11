@@ -26,7 +26,10 @@ const
   readlineSync = require('readline-sync'),
   rc = require('rc'),
   params = rc('kuzzle'),
-  ColorOutput = require('./colorOutput');
+  ColorOutput = require('./colorOutput'),
+  {
+    sendAction
+  } = require('./common');
 
 /** @type ColorOutput */
 let cout;
@@ -74,7 +77,6 @@ function confirm (username, resetRoles) {
 }
 
 function commandCreateFirstAdmin (options) {
-  const kuzzle = new (require('../../lib/api/kuzzle'))();
   let
     username,
     password,
@@ -83,8 +85,11 @@ function commandCreateFirstAdmin (options) {
   cout = new ColorOutput(options);
 
   process.stdin.setEncoding('utf8');
-
-  return kuzzle.cli.doAction('adminExists', {})
+  const action = {
+    controller: 'server',
+    action: 'adminExists'
+  };
+  return sendAction(options, action)
     .then(adminExists => {
       if (adminExists.result.exists) {
         console.log('An administrator account already exists.');
@@ -111,9 +116,12 @@ function commandCreateFirstAdmin (options) {
         console.log(cout.warn('Aborting'));
         process.exit(0);
       }
-
-      return kuzzle.cli.doAction('createFirstAdmin', {
-        _id: username,
+      const args = {
+        controller: 'security',
+        action: 'createFirstAdmin',
+        _id: username
+      };
+      const query = {
         reset: resetRoles,
         body: {
           content: {
@@ -126,7 +134,9 @@ function commandCreateFirstAdmin (options) {
             }
           }
         }
-      }, {pid: params.pid, debug: options.parent.debug});
+      };
+
+      return sendAction(options, args, query);
     })
     .then(() => {
       console.log(cout.ok(`[✔] "${username}" administrator account created`));

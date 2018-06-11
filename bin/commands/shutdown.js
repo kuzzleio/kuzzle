@@ -21,7 +21,12 @@
 
 /* eslint-disable no-console */
 
-const ColorOutput = require('./colorOutput');
+const
+  ColorOutput = require('./colorOutput'),
+  {
+    readPidFile
+  } = require('../../lib/util/pidFile');
+
 
 function commandShutdown(options) {
   const
@@ -30,7 +35,8 @@ function commandShutdown(options) {
 
   console.log(cout.notice('[ℹ] Shutting down...'));
 
-  return kuzzle.cli.doAction('shutdown', {})
+  return readPidFile(kuzzle.config)
+    .then(pid => process.kill(pid, 'SIGTERM'))
     .then(() => {
       console.log(cout.notice('[✔] Done!'));
       process.exit(0);
@@ -43,4 +49,3 @@ function commandShutdown(options) {
 }
 
 module.exports = commandShutdown;
-

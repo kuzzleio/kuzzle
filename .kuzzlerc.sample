@@ -328,7 +328,9 @@
       "websocket": {
         "enabled": true
       }
-    }
+    },
+    // Path to the Kuzzle PID file
+    "pidFile": "/var/run/kuzzle.pid"
   },
 
   // Services are the external components Kuzzle relies on.

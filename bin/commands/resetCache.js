@@ -25,31 +25,42 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
-  ColorOutput = require('./colorOutput');
+  ColorOutput = require('./colorOutput'),
+  {
+    sendAction
+  } = require('./common');
 
-function commandReset (options) {
-  const
-    kuzzle = new (require('../../lib/api/kuzzle'))(),
-    cout = new ColorOutput(options);
+function commandResetCache (database, options) {
+  let
+    opts = options,
+    db = database,
+    userIsSure;
 
-  let userIsSure = false;
+  if (options === undefined) {
+    opts = database;
+    db = 'internalCache';
+  }
 
-  console.log(cout.warn('[ℹ] You are about to reset Kuzzle configuration and users'));
-  console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
+  const cout = new ColorOutput(opts);
 
-  if (!params.noint) {
-    userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
-  } 
-  else {
-    // non-interactive mode
-    userIsSure = true;
+  if (db === 'memoryStorage') {
+    console.log(cout.warn('[ℹ] You are about to clear Kuzzle memoryStorage database.'));
+    console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
+    userIsSure = params.noint || readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
+  } else {
+    userIsSure = readlineSync.keyInYN(cout.question('[❓] Do you want to clear Kuzzle internal cache?'));
   }
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    return kuzzle.cli.doAction('cleanDb', {}, {debug: options.parent.debug})
+    const args = {
+      controller: 'admin',
+      action: 'resetCache'
+    };
+
+    return sendAction(opts, args, { database: db })
       .then(() => {
-        console.log(cout.ok('[✔] Kuzzle has been successfully reset'));
+        console.log(cout.ok(`[✔] Kuzzle cache '${db}' has been successfully reset`));
         process.exit(0);
       })
       .catch(err => {
@@ -61,4 +72,4 @@ function commandReset (options) {
   console.log(cout.notice('[ℹ] Aborted'));
 }
 
-module.exports = commandReset;
+module.exports = commandResetCache;

@@ -31,6 +31,9 @@ const program = require('commander');
 
 program
   .version(require('../package.json').version)
+  .option('-p, --port <port>', 'Kuzzle port number', parseInt)
+  .option('-U, --username <username>', 'Admin username')
+  .option('-P, --password <password>', 'Admin password')
   .option('-d, --debug', 'make errors more verbose')
   .option('-C, --noColors', 'do not use ANSI coloring');
 
@@ -44,14 +47,28 @@ program
 program
   .command('clearCache')
   .description('clear internal caches in Redis')
-  .action(require('./commands/clearCache'));
+  .action(require('./commands/resetCache'));
 
 // $ kuzzle reset
 program
   .command('reset')
   .description('delete Kuzzle configuration and users from database')
   .option('--noint', 'non interactive mode')
-  .action(require('./commands/reset'));
+  .action(require('./commands/resetKuzzleData'));
+
+// $ kuzzle resetSecurity
+program
+  .command('resetSecurity')
+  .description('delete all created users, profiles and roles')
+  .option('--noint', 'non interactive mode')
+  .action(require('./commands/resetSecurity'));
+
+// $ kuzzle resetDatabase
+program
+  .command('resetDatabase')
+  .description('remove all data stored on Kuzzle')
+  .option('--noint', 'non interactive mode')
+  .action(require('./commands/resetDatabase'));
 
 // $ kuzzle shutdown
 program
@@ -73,6 +90,8 @@ program
   .command('dump')
   .description('create a dump of current state of kuzzle')
   .action(require('./commands/dump'));
+
+
 
 // Run user command
 program.parse(process.argv);

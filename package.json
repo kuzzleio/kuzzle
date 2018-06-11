@@ -41,6 +41,7 @@
     "jsonwebtoken": "^8.2.1",
     "koncorde": "^1.1.5",
     "kuzzle-common-objects": "^3.0.7",
+    "kuzzle-sdk": "^5.0.11",
     "lodash": "4.17.5",
     "moment": "^2.22.1",
     "ms": "^2.1.1",

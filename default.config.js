@@ -83,7 +83,7 @@ module.exports = {
       role: {
         controllers: {
           '*': {
-            actions: {              
+            actions: {
               '*': true
             }
           }
@@ -187,7 +187,8 @@ module.exports = {
       websocket: {
         enabled: true
       }
-    }
+    },
+    pidFile: '/var/run/kuzzle.pid'
   },
 
   services: {
