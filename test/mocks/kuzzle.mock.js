@@ -18,19 +18,6 @@ class KuzzleMock extends Kuzzle {
     this.config = _.merge({}, config);
     this.config.server.entryPoints.proxy = true;
 
-    this.cliController = {
-      init: this.sandbox.stub().resolves(),
-      actions: {
-        adminExists: this.sandbox.stub().resolves(),
-        createFirstAdmin: this.sandbox.stub().resolves(),
-        cleanAndPrepare: this.sandbox.stub().resolves(),
-        cleanDb: this.sandbox.stub().resolves(),
-        managePlugins: this.sandbox.stub().resolves(),
-        data: this.sandbox.stub().resolves(),
-        dump: this.sandbox.stub().usingPromise(Bluebird).resolves()
-      }
-    };
-
     this.realtime = {
       test: this.sandbox.stub().returns([]),
       register: this.sandbox.stub().resolves(),
