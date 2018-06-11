@@ -24,8 +24,6 @@
 const
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
-  rc = require('rc'),
-  params = rc('kuzzle'),
   ColorOutput = require('./colorOutput'),
   {
     sendAction
@@ -89,7 +87,7 @@ function commandCreateFirstAdmin (options) {
     controller: 'server',
     action: 'adminExists'
   };
-  
+
   return sendAction(options, action)
     .then(adminExists => {
       if (adminExists.result.exists) {

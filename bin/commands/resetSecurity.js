@@ -56,7 +56,7 @@ function commandResetSecurity (options) {
 
     return sendAction(options, args)
       .then(() => {
-        console.log(cout.ok(`[✔] Kuzzle users, profiles and roles have been successfully reset`));
+        console.log(cout.ok('[✔] Kuzzle users, profiles and roles have been successfully reset'));
         process.exit(0);
       })
       .catch(err => {

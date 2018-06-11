@@ -253,7 +253,6 @@ describe('Test: admin controller', () => {
       fsStub,
       coreStub,
       getAllStatsStub,
-      dump,
       globStub;
 
     afterEach(() => {
@@ -290,27 +289,17 @@ describe('Test: admin controller', () => {
       globMock.sync = sinon.stub();
       globStub = sinon.spy(globMock);
 
-      kuzzle = {
-        config: {
-          dump: {
-            history: {
-              coredump: 3,
-              reports: 5
-            },
-            path: '/tmp',
-            dateFormat: 'YYYY'
-          }
+      kuzzle.config.dump = {
+        history: {
+          coredump: 3,
+          reports: 5
         },
-        pluginsManager: {
-          getPluginsDescription: () => { return {'foo': {}}; },
-          plugins: {
-            'foo': {}
-          }
-        },
-        statistics: {
-          getAllStats: getAllStatsStub
-        }
+        path: '/tmp',
+        dateFormat: 'YYYY'
       };
+      kuzzle.pluginsManager.getPluginsDescription.returns({ foo: {} });
+      kuzzle.pluginsManager.plugins = { foo: {} };
+      kuzzle.statistics.getAllStats = getAllStatsStub;
 
       mockrequire('fs-extra', fsStub);
       mockrequire('dumpme', coreStub);

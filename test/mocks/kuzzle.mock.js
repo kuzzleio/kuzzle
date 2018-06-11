@@ -204,7 +204,9 @@ class KuzzleMock extends Kuzzle {
         searchProfiles: sinon.stub().resolves(),
         search: sinon.stub().resolves(),
         scroll: sinon.stub().resolves(),
-        validateAndSaveProfile: sinon.stub()
+        validateAndSaveProfile: sinon.stub(),
+        deleteProfile: sinon.stub(),
+        buildProfileFromRequest: sinon.stub()
       },
       role: {
         deleteRole: sinon.stub().resolves(),

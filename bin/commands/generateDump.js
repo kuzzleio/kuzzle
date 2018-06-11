@@ -22,9 +22,6 @@
 /* eslint-disable no-console */
 
 const
-  rc = require('rc'),
-  params = rc('kuzzle'),
-  readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
   {
     sendAction
