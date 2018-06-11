@@ -3,12 +3,11 @@ const
   should = require('should'),
   sinon = require('sinon'),
   Action = rewire('../../../lib/api/cli/action'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
-  sandbox = sinon.sandbox.create();
+  InternalError = require('kuzzle-common-objects').errors.InternalError;
 
 describe('Tests: cliController action client', () => {
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   describe('#constructor', () => {
@@ -60,7 +59,7 @@ describe('Tests: cliController action client', () => {
         action = new Action(),
         error = new Error('test');
 
-      sandbox.stub(action.deferred, 'reject');
+      sinon.stub(action.deferred, 'reject');
 
       action.onError(error);
       should(action.deferred.reject).be.calledOnce();
@@ -74,7 +73,7 @@ describe('Tests: cliController action client', () => {
         action = new Action(),
         data = {foo: 'bar'};
 
-      sandbox.stub(action.deferred, 'resolve');
+      sinon.stub(action.deferred, 'resolve');
 
       action.onSuccess(data);
 
@@ -93,8 +92,8 @@ describe('Tests: cliController action client', () => {
       });
       action = new Action();
 
-      sandbox.stub(action, 'onSuccess');
-      sandbox.stub(action, 'onError');
+      sinon.stub(action, 'onSuccess');
+      sinon.stub(action, 'onError');
     });
 
     afterEach(() => {

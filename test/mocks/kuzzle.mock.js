@@ -12,59 +12,61 @@ class KuzzleMock extends Kuzzle {
   constructor () {
     super();
 
+    this.sandbox = sinon.createSandbox();
+
     // we need a deep copy here
     this.config = _.merge({}, config);
     this.config.server.entryPoints.proxy = true;
 
     this.cliController = {
-      init: sinon.stub().resolves(),
+      init: this.sandbox.stub().resolves(),
       actions: {
-        adminExists: sinon.stub().resolves(),
-        createFirstAdmin: sinon.stub().resolves(),
-        cleanAndPrepare: sinon.stub().resolves(),
-        cleanDb: sinon.stub().resolves(),
-        managePlugins: sinon.stub().resolves(),
-        data: sinon.stub().resolves(),
-        dump: sinon.stub().usingPromise(Bluebird).resolves()
+        adminExists: this.sandbox.stub().resolves(),
+        createFirstAdmin: this.sandbox.stub().resolves(),
+        cleanAndPrepare: this.sandbox.stub().resolves(),
+        cleanDb: this.sandbox.stub().resolves(),
+        managePlugins: this.sandbox.stub().resolves(),
+        data: this.sandbox.stub().resolves(),
+        dump: this.sandbox.stub().usingPromise(Bluebird).resolves()
       }
     };
 
     this.realtime = {
-      test: sinon.stub().returns([]),
-      register: sinon.stub().resolves(),
-      remove: sinon.stub().resolves(),
-      normalize: sinon.stub().resolves({id: 'foobar'}),
-      store: sinon.stub().returns({id: 'foobar'})
+      test: this.sandbox.stub().returns([]),
+      register: this.sandbox.stub().resolves(),
+      remove: this.sandbox.stub().resolves(),
+      normalize: this.sandbox.stub().resolves({id: 'foobar'}),
+      store: this.sandbox.stub().returns({id: 'foobar'})
     };
 
 
     this.entryPoints = {
-      dispatch: sinon.spy(),
+      dispatch: this.sandbox.spy(),
       entryPoints: [
         {
-          dispatch: sinon.spy(),
-          init: sinon.stub().resolves(),
-          joinChannel: sinon.spy(),
-          leaveChannel: sinon.spy(),
-          send: sinon.spy()
+          dispatch: this.sandbox.spy(),
+          init: this.sandbox.stub().resolves(),
+          joinChannel: this.sandbox.spy(),
+          leaveChannel: this.sandbox.spy(),
+          send: this.sandbox.spy()
         },
         {
-          dispatch: sinon.spy(),
-          init: sinon.stub().resolves(),
-          joinChannel: sinon.spy(),
-          leaveChannel: sinon.spy(),
-          send: sinon.spy()
+          dispatch: this.sandbox.spy(),
+          init: this.sandbox.stub().resolves(),
+          joinChannel: this.sandbox.spy(),
+          leaveChannel: this.sandbox.spy(),
+          send: this.sandbox.spy()
         }
       ],
-      init: sinon.spy(),
-      joinChannel: sinon.spy(),
-      leaveChannel: sinon.spy()
+      init: this.sandbox.spy(),
+      joinChannel: this.sandbox.spy(),
+      leaveChannel: this.sandbox.spy()
     };
 
     this.funnel = {
       controllers: {
         server: {
-          adminExists: sinon.stub(),
+          adminExists: this.sandbox.stub(),
         },
         security: {
           createFirstAdmin: sinon.spy(),
@@ -75,122 +77,124 @@ class KuzzleMock extends Kuzzle {
       },
       pluginsControllers: {
       },
-      init: sinon.spy(),
-      loadPluginControllers: sinon.spy(),
-      getRequestSlot: sinon.stub().returns(true),
-      handleErrorDump: sinon.spy(),
-      execute: sinon.spy(),
-      mExecute: sinon.stub(),
-      processRequest: sinon.stub().resolves(),
-      checkRights: sinon.stub(),
-      getEventName: sinon.spy(),
-      executePluginRequest: sinon.stub()
+      init: this.sandbox.spy(),
+      loadPluginControllers: this.sandbox.spy(),
+      getRequestSlot: this.sandbox.stub().returns(true),
+      handleErrorDump: this.sandbox.spy(),
+      execute: this.sandbox.spy(),
+      mExecute: this.sandbox.stub(),
+      processRequest: this.sandbox.stub().resolves(),
+      checkRights: this.sandbox.stub(),
+      getEventName: this.sandbox.spy(),
+      executePluginRequest: this.sandbox.stub()
     };
 
     this.gc = {
-      init: sinon.spy(),
-      run: sinon.spy()
+      init: this.sandbox.spy(),
+      run: this.sandbox.spy()
     };
 
 
     this.hooks = {
-      init: sinon.spy()
+      init: this.sandbox.spy()
     };
 
     this.hotelClerk = {
-      getRealtimeCollections: sinon.stub(),
-      removeCustomerFromAllRooms: sinon.stub(),
-      addSubscription: sinon.stub().resolves(foo),
-      join: sinon.stub().resolves(foo),
-      removeSubscription: sinon.stub().resolves(foo),
-      countSubscription: sinon.stub().resolves(foo),
-      listSubscriptions: sinon.stub().resolves(foo),
+      getRealtimeCollections: this.sandbox.stub(),
+      removeCustomerFromAllRooms: this.sandbox.stub(),
+      addSubscription: this.sandbox.stub().resolves(foo),
+      join: this.sandbox.stub().resolves(foo),
+      removeSubscription: this.sandbox.stub().resolves(foo),
+      countSubscription: this.sandbox.stub().resolves(foo),
+      listSubscriptions: this.sandbox.stub().resolves(foo),
     };
 
     this.indexCache = {
       indexes: {},
       defaultMappings: {},
-      add: sinon.stub(),
-      exists: sinon.stub(),
-      init: sinon.stub().resolves(),
-      initInternal: sinon.stub().resolves(),
-      remove: sinon.stub(),
-      reset: sinon.stub()
+      add: this.sandbox.stub(),
+      exists: this.sandbox.stub(),
+      init: this.sandbox.stub().resolves(),
+      initInternal: this.sandbox.stub().resolves(),
+      remove: this.sandbox.stub(),
+      reset: this.sandbox.stub()
     };
 
     this.internalEngine = {
       bootstrap: {
-        adminExists: sinon.stub().resolves(true),
-        all: sinon.stub().resolves(),
-        createCollections: sinon.stub().resolves(),
-        createRolesCollection: sinon.stub().resolves(),
-        createProfilesCollection: sinon.stub().resolves(),
-        createUsersCollection: sinon.stub().resolves(),
-        createPluginsCollection: sinon.stub().resolves(),
-        delete: sinon.stub().resolves()
+        adminExists: this.sandbox.stub().resolves(true),
+        all: this.sandbox.stub().resolves(),
+        createCollections: this.sandbox.stub().resolves(),
+        createRolesCollection: this.sandbox.stub().resolves(),
+        createProfilesCollection: this.sandbox.stub().resolves(),
+        createUsersCollection: this.sandbox.stub().resolves(),
+        createPluginsCollection: this.sandbox.stub().resolves(),
+        delete: this.sandbox.stub().resolves()
       },
-      create: sinon.stub().resolves(),
-      createInternalIndex: sinon.stub().resolves(),
-      createOrReplace: sinon.stub().resolves(),
-      delete: sinon.stub().resolves(),
-      deleteIndex: sinon.stub().resolves(),
-      exists: sinon.stub().resolves(),
-      expire: sinon.stub().resolves(),
-      get: sinon.stub().resolves(foo),
-      getFieldMapping: sinon.stub().resolves(),
-      getMapping: sinon.stub().resolves(),
-      mget: sinon.stub().resolves({hits: [foo]}),
+      create: this.sandbox.stub().resolves(),
+      createInternalIndex: this.sandbox.stub().resolves(),
+      createOrReplace: this.sandbox.stub().resolves(),
+      delete: this.sandbox.stub().resolves(),
+      deleteIndex: this.sandbox.stub().resolves(),
+      exists: this.sandbox.stub().resolves(),
+      expire: this.sandbox.stub().resolves(),
+      get: this.sandbox.stub().resolves(foo),
+      getFieldMapping: this.sandbox.stub().resolves(),
+      getMapping: this.sandbox.stub().resolves(),
+      mget: this.sandbox.stub().resolves({hits: [foo]}),
       index: 'internalIndex',
-      init: sinon.stub().resolves(),
-      listCollections: sinon.stub(),
-      listIndexes: sinon.stub(),
-      persist: sinon.stub().resolves(),
-      refresh: sinon.stub().resolves(),
-      replace: sinon.stub().resolves(),
-      scroll: sinon.stub().resolves(),
-      search: sinon.stub().resolves(),
-      update: sinon.stub().resolves(),
-      updateMapping: sinon.stub().resolves(foo)
+      init: this.sandbox.stub().resolves(),
+      listCollections: this.sandbox.stub(),
+      listIndexes: this.sandbox.stub(),
+      persist: this.sandbox.stub().resolves(),
+      refresh: this.sandbox.stub().resolves(),
+      replace: this.sandbox.stub().resolves(),
+      scroll: this.sandbox.stub().resolves(),
+      search: this.sandbox.stub().resolves(),
+      update: this.sandbox.stub().resolves(),
+      updateMapping: this.sandbox.stub().resolves(foo)
     };
 
-    this.once = sinon.stub();
+    this.once = this.sandbox.stub();
 
     this.notifier = {
-      init: sinon.spy(),
-      notifyUser: sinon.spy(),
-      notifyServer: sinon.spy(),
-      notifyDocument: sinon.spy(),
-      notifyDocumentCreate: sinon.spy(),
-      notifyDocumentMDelete: sinon.spy(),
-      notifyDocumentReplace: sinon.spy(),
-      notifyDocumentUpdate: sinon.spy(),
-      publish: sinon.stub().resolves(foo),
-      notifyDocumentMCreate: sinon.spy(),
-      notifyDocumentMChanges: sinon.spy()
+      init: this.sandbox.spy(),
+      notifyUser: this.sandbox.spy(),
+      notifyServer: this.sandbox.spy(),
+      notifyDocument: this.sandbox.spy(),
+      notifyDocumentCreate: this.sandbox.spy(),
+      notifyDocumentMDelete: this.sandbox.spy(),
+      notifyDocumentReplace: this.sandbox.spy(),
+      notifyDocumentUpdate: this.sandbox.spy(),
+      publish: this.sandbox.stub().resolves(foo),
+      notifyDocumentMCreate: this.sandbox.spy(),
+      notifyDocumentMChanges: this.sandbox.spy()
     };
 
     this.passport = {
-      use: sinon.stub(),
-      unuse: sinon.stub(),
-      authenticate: sinon.stub().resolves({}),
-      injectAuthenticateOptions: sinon.stub()
+      use: this.sandbox.stub(),
+      unuse: this.sandbox.stub(),
+      authenticate: this.sandbox.stub().resolves({}),
+      injectAuthenticateOptions: this.sandbox.stub()
     };
 
     this.pluginsManager = {
-      init: sinon.stub().resolves(),
+      init: this.sandbox.stub().resolves(),
       plugins: {},
-      run: sinon.stub().resolves(),
-      getPluginsDescription: sinon.stub().returns({}),
-      trigger: sinon.stub().callsFake((...args) => Bluebird.resolve(args[1])),
-      listStrategies: sinon.stub().returns([]),
-      getStrategyMethod: sinon.stub().returns(sinon.stub()),
+      run: this.sandbox.stub().resolves(),
+      getPluginsDescription: this.sandbox.stub().returns({}),
+      trigger: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[1])),
+      listStrategies: this.sandbox.stub().returns([]),
+      getStrategyFields: this.sandbox.stub().resolves(),
+      getStrategyMethod: this.sandbox.stub().returns(this.sandbox.stub()),
+      hasStrategyMethod: this.sandbox.stub().returns(false),
       strategies: {},
-      registerStrategy: sinon.stub(),
-      unregisterStrategy: sinon.stub()
+      registerStrategy: this.sandbox.stub(),
+      unregisterStrategy: this.sandbox.stub()
     };
 
     this.repositories = {
-      init: sinon.stub().resolves(),
+      init: this.sandbox.stub().resolves(),
       profile: {
         fromDTO: sinon.stub().resolves(),
         initialize: sinon.stub().resolves(),
@@ -215,132 +219,134 @@ class KuzzleMock extends Kuzzle {
         validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0]))
       },
       user: {
-        anonymous: sinon.stub().returns({_id: '-1'}),
-        delete: sinon.stub().usingPromise(Bluebird).resolves(),
-        fromDTO: sinon.stub().resolves(),
-        load: sinon.stub().resolves(foo),
-        ObjectConstructor: sinon.stub().returns({}),
-        hydrate: sinon.stub().resolves(),
-        persist: sinon.stub().resolves({}),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
-        toDTO: sinon.stub()
+        anonymous: this.sandbox.stub().returns({_id: '-1'}),
+        delete: this.sandbox.stub().usingPromise(Bluebird).resolves(),
+        fromDTO: this.sandbox.stub().resolves(),
+        load: this.sandbox.stub().resolves(foo),
+        ObjectConstructor: this.sandbox.stub().returns({}),
+        hydrate: this.sandbox.stub().resolves(),
+        persist: this.sandbox.stub().resolves({}),
+        search: this.sandbox.stub().resolves(),
+        scroll: this.sandbox.stub().resolves(),
+        toDTO: this.sandbox.stub()
       },
       token: {
-        anonymous: sinon.stub().returns({_id: 'anonymous'}),
-        verifyToken: sinon.stub().resolves(),
-        generateToken: sinon.stub().resolves({}),
-        expire: sinon.stub().resolves(),
-        deleteByUserId: sinon.stub().resolves()
+        anonymous: this.sandbox.stub().returns({_id: 'anonymous'}),
+        verifyToken: this.sandbox.stub().resolves(),
+        generateToken: this.sandbox.stub().resolves({}),
+        expire: this.sandbox.stub().resolves(),
+        deleteByUserId: this.sandbox.stub().resolves()
       }
     };
 
     this.rootPath = '/kuzzle';
 
     this.router = {
-      execute: sinon.stub().resolves(foo),
-      isConnectionAlive: sinon.stub().returns(true),
-      init: sinon.spy(),
-      newConnection: sinon.stub().resolves(foo),
-      removeConnection: sinon.spy(),
+      execute: this.sandbox.stub().resolves(foo),
+      isConnectionAlive: this.sandbox.stub().returns(true),
+      init: this.sandbox.spy(),
+      newConnection: this.sandbox.stub().resolves(foo),
+      removeConnection: this.sandbox.spy(),
       http: {
-        route: sinon.stub()
+        route: this.sandbox.stub()
       }
     };
 
     this.services = {
-      init: sinon.stub().resolves(),
+      init: this.sandbox.stub().resolves(),
       list: {
         broker: {
-          getInfos: sinon.stub().resolves(),
-          listen: sinon.spy(),
-          send: sinon.stub().resolves()
+          getInfos: this.sandbox.stub().resolves(),
+          listen: this.sandbox.spy(),
+          send: this.sandbox.stub().resolves()
         },
         gc: {
-          init: sinon.spy(),
-          run: sinon.stub().resolves({ids: []})
+          init: this.sandbox.spy(),
+          run: this.sandbox.stub().resolves({ids: []})
         },
         internalCache: {
-          get: sinon.stub().resolves(null),
-          del: sinon.stub().resolves(),
-          exists: sinon.stub().resolves(),
-          expire: sinon.stub().resolves(),
-          flushdb: sinon.stub().resolves(),
-          getInfos: sinon.stub().resolves(),
-          persist: sinon.stub().resolves(),
-          pexpire: sinon.stub().resolves(),
-          psetex: sinon.stub().resolves(),
-          searchKeys: sinon.stub().resolves([]),
-          set: sinon.stub().resolves(),
-          setex: sinon.stub().resolves(),
-          setnx: sinon.stub().resolves(),
+          get: this.sandbox.stub().resolves(null),
+          del: this.sandbox.stub().resolves(),
+          exists: this.sandbox.stub().resolves(),
+          expire: this.sandbox.stub().resolves(),
+          flushdb: this.sandbox.stub().resolves(),
+          getInfos: this.sandbox.stub().resolves(),
+          mget: this.sandbox.stub().resolves(),
+          persist: this.sandbox.stub().resolves(),
+          pexpire: this.sandbox.stub().resolves(),
+          psetex: this.sandbox.stub().resolves(),
+          searchKeys: this.sandbox.stub().resolves([]),
+          set: this.sandbox.stub().resolves(),
+          setex: this.sandbox.stub().resolves(),
+          setnx: this.sandbox.stub().resolves(),
         },
         memoryStorage: {
-          flushdb: sinon.stub().resolves(),
-          getInfos: sinon.stub().resolves()
+          flushdb: this.sandbox.stub().resolves(),
+          getInfos: this.sandbox.stub().resolves()
         },
         storageEngine: {
-          get: sinon.stub().resolves({_source: {foo}}),
-          mget: sinon.stub().resolves({hits: [], total: 0}),
-          getInfos: sinon.stub().resolves(),
-          getMapping: sinon.stub().resolves(foo),
-          listIndexes: sinon.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
-          collectionExists: sinon.stub().resolves(),
-          count: sinon.stub().resolves(42),
-          create: sinon.stub().resolves(foo),
-          createCollection: sinon.stub().resolves(foo),
-          createIndex: sinon.stub().resolves(foo),
-          createOrReplace: sinon.stub().resolves(foo),
-          delete: sinon.stub().resolves(foo),
-          deleteByQuery: sinon.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
-          deleteByQueryFromTrash: sinon.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
-          deleteIndex: sinon.stub().resolves(foo),
-          deleteIndexes: sinon.stub().resolves({deleted: ['a', 'e', 'i']}),
-          getAutoRefresh: sinon.stub().resolves(false),
-          import: sinon.stub().resolves(foo),
-          indexExists: sinon.stub().resolves(),
-          listCollections: sinon.stub().resolves(),
-          refreshIndex: sinon.stub().resolves(foo),
-          replace: sinon.stub().resolves(foo),
-          search: sinon.stub().resolves(foo),
-          scroll: sinon.stub().resolves(foo),
-          setAutoRefresh: sinon.stub().resolves(true),
-          truncateCollection: sinon.stub().resolves(foo),
-          update: sinon.stub().resolves(foo),
-          updateMapping: sinon.stub().resolves(foo),
-          mcreate: sinon.stub().resolves({result: [], error: []}),
-          mupdate: sinon.stub().resolves({result: [], error: []}),
-          mcreateOrReplace: sinon.stub().resolves({result: [], error: []}),
-          mdelete: sinon.stub().resolves({result: [], error: []}),
-          mreplace: sinon.stub().resolves({result: [], error: []})
+          get: this.sandbox.stub().resolves({_source: {foo}}),
+          mget: this.sandbox.stub().resolves({hits: [], total: 0}),
+          getInfos: this.sandbox.stub().resolves(),
+          getMapping: this.sandbox.stub().resolves(foo),
+          listIndexes: this.sandbox.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
+          collectionExists: this.sandbox.stub().resolves(),
+          count: this.sandbox.stub().resolves(42),
+          create: this.sandbox.stub().resolves(foo),
+          createCollection: this.sandbox.stub().resolves(foo),
+          createIndex: this.sandbox.stub().resolves(foo),
+          createOrReplace: this.sandbox.stub().resolves(foo),
+          delete: this.sandbox.stub().resolves(foo),
+          deleteByQuery: this.sandbox.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
+          deleteByQueryFromTrash: this.sandbox.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
+          deleteIndex: this.sandbox.stub().resolves(foo),
+          deleteIndexes: this.sandbox.stub().resolves({deleted: ['a', 'e', 'i']}),
+          getAutoRefresh: this.sandbox.stub().resolves(false),
+          import: this.sandbox.stub().resolves(foo),
+          indexExists: this.sandbox.stub().resolves(),
+          listCollections: this.sandbox.stub().resolves(),
+          refreshIndex: this.sandbox.stub().resolves(foo),
+          replace: this.sandbox.stub().resolves(foo),
+          search: this.sandbox.stub().resolves(foo),
+          scroll: this.sandbox.stub().resolves(foo),
+          setAutoRefresh: this.sandbox.stub().resolves(true),
+          truncateCollection: this.sandbox.stub().resolves(foo),
+          update: this.sandbox.stub().resolves(foo),
+          updateMapping: this.sandbox.stub().resolves(foo),
+          mcreate: this.sandbox.stub().resolves({result: [], error: []}),
+          mupdate: this.sandbox.stub().resolves({result: [], error: []}),
+          mcreateOrReplace: this.sandbox.stub().resolves({result: [], error: []}),
+          mdelete: this.sandbox.stub().resolves({result: [], error: []}),
+          mreplace: this.sandbox.stub().resolves({result: [], error: []})
         }
       }
     };
 
     this.statistics = {
-      completedRequest: sinon.spy(),
-      newConnection: sinon.stub(),
-      failedRequest: sinon.spy(),
-      getAllStats: sinon.stub().resolves(foo),
-      getLastStats: sinon.stub().resolves(foo),
-      getStats: sinon.stub().resolves(foo),
-      init: sinon.spy(),
-      dropConnection: sinon.stub(),
-      startRequest: sinon.spy()
+      completedRequest: this.sandbox.spy(),
+      newConnection: this.sandbox.stub(),
+      failedRequest: this.sandbox.spy(),
+      getAllStats: this.sandbox.stub().resolves(foo),
+      getLastStats: this.sandbox.stub().resolves(foo),
+      getStats: this.sandbox.stub().resolves(foo),
+      init: this.sandbox.spy(),
+      dropConnection: this.sandbox.stub(),
+      startRequest: this.sandbox.spy()
     };
 
     this.tokenManager = {
-      link: sinon.stub(),
-      unlink: sinon.stub(),
-      expire: sinon.stub()
+      link: this.sandbox.stub(),
+      unlink: this.sandbox.stub(),
+      expire: this.sandbox.stub()
     };
 
     this.validation = {
-      init: sinon.spy(),
-      curateSpecification: sinon.stub().resolves(),
-      validate: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-      validationPromise: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-      addType: sinon.spy()
+      init: this.sandbox.spy(),
+      curateSpecification: this.sandbox.stub().resolves(),
+      isValidSpecification: this.sandbox.stub().resolves({isValid: false}),
+      validate: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+      validationPromise: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+      addType: this.sandbox.spy()
     };
 
     {

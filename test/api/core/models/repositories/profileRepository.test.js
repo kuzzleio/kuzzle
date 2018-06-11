@@ -1,9 +1,7 @@
 'use strict';
 
 const
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   should = require('should'),
   Role = require('../../../../../lib/api/core/models/security/role'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
@@ -34,10 +32,6 @@ describe('Test: repositories/profileRepository', () => {
     ];
 
     return profileRepository.init();
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#load', () => {
@@ -242,9 +236,9 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should reject and not trigger any event if a user uses the profile about to be deleted', done => {
-      kuzzle.repositories.user.search.returns(Bluebird.resolve({
+      kuzzle.repositories.user.search.resolves({
         total: 1
-      }));
+      });
 
       profileRepository.deleteProfile({_id: 'test'})
         .then(() => {
@@ -323,9 +317,9 @@ describe('Test: repositories/profileRepository', () => {
     it('should return a raw delete response after deleting', () => {
       const response = {_id: 'testprofile'};
 
-      kuzzle.repositories.user.search.returns(Bluebird.resolve({}));
-      profileRepository.deleteFromCache = sinon.stub().returns(Bluebird.resolve());
-      profileRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve(response));
+      kuzzle.repositories.user.search.resolves({});
+      profileRepository.deleteFromCache = sinon.stub().resolves();
+      profileRepository.deleteFromDatabase = sinon.stub().resolves(response);
 
       return profileRepository.deleteProfile(testProfile)
         .then(r => {
@@ -335,9 +329,9 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should call deleteFromDatabase, remove the profile from memory and trigger a "core:profileRepository:delete" event', () => {
-      kuzzle.repositories.user.search.returns(Bluebird.resolve({}));
-      profileRepository.deleteFromCache = sinon.stub().returns(Bluebird.resolve());
-      profileRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve({acknowledge: true}));
+      kuzzle.repositories.user.search.resolves({});
+      profileRepository.deleteFromCache = sinon.stub().resolves();
+      profileRepository.deleteFromDatabase = sinon.stub().resolves({acknowledge: true});
       profileRepository.profiles.foo = true;
 
       return profileRepository.deleteProfile({_id: 'foo'})
@@ -417,7 +411,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
-      profileRepository.persistToDatabase = sinon.stub().returns(Bluebird.resolve(null));
+      profileRepository.persistToDatabase = sinon.stub().resolves(null);
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {

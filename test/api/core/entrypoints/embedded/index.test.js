@@ -1,7 +1,6 @@
 'use strict';
 
 const
-  Bluebird = require('bluebird'),
   {
     InternalError: KuzzleInternalError,
     ServiceUnavailableError
@@ -23,7 +22,14 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     winstonTransportConsole,
     winstonTransportFile,
     winstonTransportElasticsearch,
-    winstonTransportSyslog;
+    winstonTransportSyslog,
+    winstonFormatMock = {
+      simple: sinon.stub().returns('format.simple'),
+      json: sinon.stub().returns('format.json'),
+      colorize: sinon.stub().returns('format.colorize'),
+      timestamp: sinon.stub().returns('format.timestamp'),
+      prettyPrint: sinon.stub().returns('format.prettyPrint')
+    };
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -46,11 +52,12 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
     mockrequire('http', httpMock);
     mockrequire('winston', {
-      Logger: sinon.spy(),
+      createLogger: sinon.stub(),
       transports: {
         Console: winstonTransportConsole,
         File: winstonTransportFile
-      }
+      },
+      format: winstonFormatMock
     });
     mockrequire('winston-elasticsearch', winstonTransportElasticsearch);
     mockrequire('winston-syslog', winstonTransportSyslog);
@@ -71,6 +78,9 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
   afterEach(() => {
     mockrequire.stopAll();
+    for (const stub of ['prettyPrint', 'simple', 'json', 'colorize', 'timestamp']) {
+      winstonFormatMock[stub].resetHistory();
+    }
   });
 
   describe('#dispatch', () => {
@@ -154,7 +164,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   describe('#init', () => {
     it('should call proper methods in order', () => {
       entrypoint.initLogger = sinon.spy();
-      entrypoint.loadMoreProtocols = sinon.stub().returns(Bluebird.resolve());
+      entrypoint.loadMoreProtocols = sinon.stub().resolves();
 
       return entrypoint.init()
         .then(() => {
@@ -200,16 +210,15 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
   describe('#initLogger', () => {
     it('should support all available transports', () => {
+
       entrypoint.config.logs.transports = [{
         level: 'level',
-        silent: 'silent',
-        colorize: 'colorize',
-        timestamp: 'timestamp',
-        json: 'json',
-        stringify: 'stringify',
-        prettyPrint: 'prettyPrint',
+        silent: true,
+        colorize: true,
+        timestamp: true,
+        prettyPrint: true,
         depth: 'depth',
-        showLevel: 'showLevel'
+        format: 'simple'
       }];
       for (let i = 0; i < 3; i++) {
         entrypoint.config.logs.transports.push(Object.assign({}, entrypoint.config.logs.access));
@@ -262,16 +271,23 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         .be.calledOnce()
         .be.calledWithMatch({
           level: 'level',
-          silent: 'silent',
-          colorize: 'colorize',
-          timestamp: 'timestamp',
-          json: 'json',
-          stringify: 'stringify',
-          prettyPrint: 'prettyPrint',
+          silent: true,
+          colorize: 'format.colorize',
+          timestamp: 'format.timestamp',
+          prettyPrint: 'format.prettyPrint',
           depth: 'depth',
-          showLevel: 'showLevel',
-          humanReadableUnhandledException: 'humanReadableUnhandledException'
+          format: 'format.simple',
+          humanReadableUnhandledException: 'humanReadableUnhandledException',
+          stderrLevels: ['error', 'debug']
         });
+
+      should(winstonFormatMock.colorize).calledOnce();
+      should(winstonFormatMock.timestamp).calledOnce();
+      should(winstonFormatMock.prettyPrint).calledOnce();
+      should(winstonFormatMock.simple).calledOnce();
+      // default format, so it should be called 3 times
+      // (we used the "simple" format for the 1st transport)
+      should(winstonFormatMock.json.callCount).be.eql(3);
     });
 
     it('should ignore badly configured transports', () => {

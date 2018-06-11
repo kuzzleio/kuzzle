@@ -1,12 +1,9 @@
 const
-  Bluebird = require('bluebird'),
   should = require('should'),
-  sinon = require('sinon'),
   ServerController = require('../../../lib/api/controllers/serverController'),
   Request = require('kuzzle-common-objects').Request,
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  sandbox = sinon.sandbox.create();
+  KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: server controller', () => {
   let
@@ -26,10 +23,6 @@ describe('Test: server controller', () => {
     kuzzle = new KuzzleMock();
     serverController = new ServerController(kuzzle);
     request = new Request(data);
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#getStats', () => {
@@ -77,7 +70,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return false if there is no result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.returns(Bluebird.resolve(false));
+      kuzzle.internalEngine.bootstrap.adminExists.resolves(false);
 
       return serverController.adminExists()
         .then((response) => {
@@ -86,7 +79,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return true if there is result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.returns(Bluebird.resolve(true));
+      kuzzle.internalEngine.bootstrap.adminExists.resolves(true);
 
       return serverController.adminExists()
         .then((response) => {
@@ -108,7 +101,7 @@ describe('Test: server controller', () => {
 
   describe('#healthCheck', () => {
     beforeEach(() => {
-      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'green'}));
+      kuzzle.services.list.storageEngine.getInfos.resolves({status: 'green'});
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
@@ -123,7 +116,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "yellow" and Redis is OK', () => {
-      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'yellow'}));
+      kuzzle.services.list.storageEngine.getInfos.resolves({status: 'yellow'});
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -136,7 +129,7 @@ describe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
-      kuzzle.services.list.storageEngine.getInfos.returns(Bluebird.resolve({status: 'red'}));
+      kuzzle.services.list.storageEngine.getInfos.resolves({status: 'red'});
 
       return serverController.healthCheck(request)
         .then(response => {

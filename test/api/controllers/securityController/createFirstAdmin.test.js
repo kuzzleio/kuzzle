@@ -1,14 +1,13 @@
 'use strict';
 
 const
-  Promise = require('bluebird'),
+  Bluebird = require('bluebird'),
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController'),
   Request = require('kuzzle-common-objects').Request,
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  sandbox = sinon.sandbox.create();
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('Test: security controller - createFirstAdmin', () => {
   let
@@ -20,10 +19,6 @@ describe('Test: security controller - createFirstAdmin', () => {
     adminController = new SecurityController(kuzzle);
   });
 
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe('#createFirstAdmin', () => {
     let
       reset,
@@ -33,12 +28,12 @@ describe('Test: security controller - createFirstAdmin', () => {
 
     beforeEach(() => {
       reset = SecurityController.__set__({
-        resetRoles: sandbox.stub().returns(Promise.resolve()),
-        resetProfiles: sandbox.stub().returns(Promise.resolve())
+        resetRoles: sinon.stub().resolves(),
+        resetProfiles: sinon.stub().resolves()
       });
       resetRolesStub = SecurityController.__get__('resetRoles');
       resetProfilesStub = SecurityController.__get__('resetProfiles');
-      createUser = sandbox.stub().returns(Promise.resolve());
+      createUser = sinon.stub().resolves();
 
       adminController.createUser = createUser;
     });
@@ -48,7 +43,7 @@ describe('Test: security controller - createFirstAdmin', () => {
     });
 
     it('should do nothing if admin already exists', () => {
-      kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: true}));
+      kuzzle.funnel.controllers.server.adminExists.resolves({exists: true});
 
       return should(adminController.createFirstAdmin(new Request({
         controller: 'security',
@@ -59,8 +54,8 @@ describe('Test: security controller - createFirstAdmin', () => {
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', () => {
-      kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.funnel.controllers.server.adminExists.resolves({exists: false});
+      kuzzle.repositories.user.load.resolves(kuzzle.repositories.user.anonymous());
 
       return adminController.createFirstAdmin(new Request({
         controller: 'security',
@@ -77,11 +72,11 @@ describe('Test: security controller - createFirstAdmin', () => {
     });
 
     it('should create the admin user and reset roles & profiles if asked to', () => {
-      kuzzle.funnel.controllers.server.adminExists = sandbox.stub().returns(Promise.resolve({exists: false}));
-      kuzzle.repositories.user.load = sandbox.stub().returns(Promise.resolve(kuzzle.repositories.user.anonymous()));
+      kuzzle.funnel.controllers.server.adminExists.resolves({exists: false});
+      kuzzle.repositories.user.load.resolves(kuzzle.repositories.user.anonymous());
 
       kuzzle.funnel.controllers.index = {
-        refreshInternal: sandbox.stub().returns(Promise.resolve({}))
+        refreshInternal: sinon.stub().resolves()
       };
 
       return adminController.createFirstAdmin(new Request({
@@ -104,8 +99,8 @@ describe('Test: security controller - createFirstAdmin', () => {
     it('should call fromDTO and validateAndSaveRole with all default roles', () => {
       const
         roleRepository = {
-          fromDTO: role => Promise.resolve(role),
-          validateAndSaveRole: sandbox.stub().returns(Promise.resolve())
+          fromDTO: role => Bluebird.resolve(role),
+          validateAndSaveRole: sinon.stub().resolves()
         },
         fromDTOSpy = sinon.spy(roleRepository, 'fromDTO'),
         mock = {
@@ -159,8 +154,8 @@ describe('Test: security controller - createFirstAdmin', () => {
     it('should call fromDTO and validateAndSaveProfile with all default profiles and rights policies', () => {
       const
         profileRepository = {
-          fromDTO: profile => Promise.resolve(profile),
-          validateAndSaveProfile: sandbox.stub().returns(Promise.resolve())
+          fromDTO: profile => Bluebird.resolve(profile),
+          validateAndSaveProfile: sinon.stub().resolves()
         },
         fromDTOSpy = sinon.spy(profileRepository, 'fromDTO');
 

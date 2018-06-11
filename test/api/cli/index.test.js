@@ -1,29 +1,17 @@
 const
   mockrequire = require('mock-require'),
-  rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Action = require('../../../lib/api/cli/action');
+  Action = require('../../../lib/api/cli/action'),
+  Cli = require('../../../lib/api/cli/index');
+
 
 describe('Tests: api/cli/index.js', () => {
-  let
-    kuzzle,
-    Cli;
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    Cli = require('../../../lib/api/cli/index');
-  });
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  after(() => {
-    mockrequire.stopAll();
   });
 
   describe('#constructor', () => {
@@ -45,25 +33,20 @@ describe('Tests: api/cli/index.js', () => {
     beforeEach(() => {
       mockrequire('../../../lib/services/internalBroker', function () {
         return {
-          init: sinon.stub().returns(Bluebird.resolve()),
+          init: sinon.stub().resolves(),
           listen: sinon.stub(),
           broadcast: sinon.stub(),
           send: sinon.stub()
         };
       });
 
-      mockrequire.reRequire('../../../lib/api/cli/index');
+      const CliRerequired = mockrequire.reRequire('../../../lib/api/cli/index');
 
-      // disable console.log
-      Cli = rewire('../../../lib/api/cli/index');
-      Cli.__set__({
-        console: {
-          log: sinon.stub(),
-          error: sinon.stub()
-        }
-      });
+      cli = new CliRerequired(kuzzle);
+    });
 
-      cli = new Cli(kuzzle);
+    afterEach(() => {
+      mockrequire.stopAll();
     });
 
     it('should send the action to the internalBroker', () => {
