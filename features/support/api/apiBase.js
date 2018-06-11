@@ -1127,11 +1127,11 @@ class ApiBase {
     return this.send(msg, false);
   }
 
-  update (id, body, index) {
+  update (id, body, index, collection) {
     const
       msg = {
         controller: 'document',
-        collection: this.world.fakeCollection,
+        collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'update',
         _id: id,

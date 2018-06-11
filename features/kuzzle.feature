@@ -1773,6 +1773,7 @@
     Then I'm able to find a default role with id "admin" equivalent to role "admin"
     And I'm able to find a default role with id "default" equivalent to role "default"
     And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"
+<<<<<<< HEAD
 
   @security
   Scenario: Reset Redis Cache
@@ -1785,3 +1786,5 @@
     When I create a user "useradmin" with id "useradmin-id"
     And I log in as useradmin:testpwd expiring in 1h
     Then I can reset Kuzzle Data
+=======
+>>>>>>> 1.x
