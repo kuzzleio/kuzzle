@@ -1,7 +1,6 @@
 const
   _ = require('lodash'),
   should = require('should'),
-  sandbox = require('sinon').sandbox.create(),
   PluginRepository = require('../../../../../lib/api/core/models/repositories/pluginRepository'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock');
 
@@ -16,7 +15,6 @@ describe('models/repositories/pluginRepository', () => {
     pluginRepository;
 
   beforeEach(() => {
-    sandbox.resetHistory();
     kuzzle = new KuzzleMock();
     pluginRepository = new PluginRepository(kuzzle, 'pluginName', someCollection);
     pluginRepository.init({

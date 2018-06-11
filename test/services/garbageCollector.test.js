@@ -18,7 +18,6 @@ describe('Test: GarbageCollector service', () => {
     gc,
     kuzzle,
     clock;
-  const sandbox = sinon.sandbox.create();
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -30,19 +29,19 @@ describe('Test: GarbageCollector service', () => {
     // Timer methods must be overridden for all tests to prevent
     // a timer to stay on the event loop because of a test,
     // forcing mocha to run indefinitely
-    clock = sandbox.useFakeTimers();
+    clock = sinon.useFakeTimers();
 
     gc = new GarbageCollector(kuzzle);
   });
 
   afterEach(() => {
     clock.restore();
-    sandbox.restore();
+    sinon.restore();
   });
 
   describe('#init', () => {
     it('should run the garbage collector (delayed) and resolve a promise directly', () => {
-      sandbox.stub(gc, 'run');
+      sinon.stub(gc, 'run');
 
       return gc.init()
         .then(() => {
@@ -64,6 +63,7 @@ describe('Test: GarbageCollector service', () => {
           clock.tick(oneDay);
 
           should(kuzzle.pluginsManager.trigger).called();
+          return null;
         });
     });
 
@@ -169,6 +169,8 @@ describe('Test: GarbageCollector service', () => {
 
           clock.tick(oneHour);
           should(kuzzle.pluginsManager.trigger).be.called();
+
+          return null;
         });
     });
 
@@ -181,6 +183,8 @@ describe('Test: GarbageCollector service', () => {
 
           clock.tick(oneHour);
           should(kuzzle.pluginsManager.trigger).be.called();
+
+          return null;
         });
     });
   });

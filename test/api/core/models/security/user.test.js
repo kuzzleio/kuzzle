@@ -1,6 +1,5 @@
 const
   should = require('should'),
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   Kuzzle = require('../../../../../lib/api/kuzzle'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
@@ -13,36 +12,30 @@ const
 describe('Test: security/userTest', () => {
   let
     kuzzle,
-    sandbox,
     profile,
     profile2,
     user;
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
     kuzzle = new Kuzzle();
 
     profile = new Profile();
     profile._id = 'profile';
-    profile.isActionAllowed = sinon.stub().returns(Bluebird.resolve(true));
+    profile.isActionAllowed = sinon.stub().resolves(true);
 
     profile2 = new Profile();
     profile2._id = 'profile2';
-    profile2.isActionAllowed = sinon.stub().returns(Bluebird.resolve(false));
+    profile2.isActionAllowed = sinon.stub().resolves(false);
 
     user = new User();
     user.profileIds = ['profile', 'profile2'];
 
     kuzzle.repositories = {
       profile: {
-        loadProfile: sinon.stub().returns(Bluebird.resolve(profile)),
-        loadProfiles: sinon.stub().returns(Bluebird.resolve([profile, profile2]))
+        loadProfile: sinon.stub().resolves(profile),
+        loadProfiles: sinon.stub().resolves([profile, profile2])
       }
     };
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   it('should retrieve the good rights list', () => {
@@ -68,9 +61,9 @@ describe('Test: security/userTest', () => {
         }
       };
 
-    sandbox.stub(user, 'getProfiles').returns(Bluebird.resolve([profile, profile2]));
-    sandbox.stub(profile, 'getRights').returns(Bluebird.resolve(profileRights));
-    sandbox.stub(profile2, 'getRights').returns(Bluebird.resolve(profileRights2));
+    sinon.stub(user, 'getProfiles').resolves([profile, profile2]);
+    sinon.stub(profile, 'getRights').resolves(profileRights);
+    sinon.stub(profile2, 'getRights').resolves(profileRights2);
 
     return user.getRights(kuzzle)
       .then(rights => {
@@ -147,7 +140,7 @@ describe('Test: security/userTest', () => {
   });
 
   it('should rejects if the loadProfiles throws an error', () => {
-    sandbox.stub(user, 'getProfiles').returns(Promise.reject(new Error('error')));
+    sinon.stub(user, 'getProfiles').rejects(new Error('error'));
     return should(user.isActionAllowed(new Request({}))).be.rejectedWith('error');
   });
 });

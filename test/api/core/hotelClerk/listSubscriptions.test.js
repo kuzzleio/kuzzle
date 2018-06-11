@@ -2,7 +2,6 @@ const
   should = require('should'),
   Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   Request = require('kuzzle-common-objects').Request;
@@ -32,10 +31,6 @@ describe('Test: hotelClerk.listSubscription', () => {
     request = new Request({}, context);
   });
 
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   it('should return an empty object if there is no room', () => {
     return hotelClerk.listSubscriptions(request)
       .then(response => {
@@ -46,7 +41,7 @@ describe('Test: hotelClerk.listSubscription', () => {
   it('should return a correct list according to subscribe on filter', () => {
     request.context.user = {
       _id: 'user',
-      isActionAllowed: sandbox.stub().returns(Bluebird.resolve(true))
+      isActionAllowed: sinon.stub().resolves(true)
     };
 
     kuzzle.realtime.storage.filtersIndex = {
@@ -127,14 +122,14 @@ describe('Test: hotelClerk.listSubscription', () => {
 
     request.context.user = {
       _id: 'user',
-      isActionAllowed: sandbox.stub().returns(Bluebird.resolve(true))
+      isActionAllowed: sinon.stub().resolves(true)
     };
     request.context.user.isActionAllowed
       .onSecondCall()
-      .returns(Bluebird.resolve(false));
+      .resolves(false);
     request.context.user.isActionAllowed
       .onThirdCall()
-      .returns(Bluebird.resolve(false));
+      .resolves(false);
 
     return hotelClerk.listSubscriptions(request)
       .then(response => {
@@ -187,7 +182,7 @@ describe('Test: hotelClerk.listSubscription', () => {
           if (i === 2) {
             delete kuzzle.realtime.storage.filtersIndex.anotherIndex;
           }
-          return Bluebird.resolve(true);
+          return true;
         })
     };
 

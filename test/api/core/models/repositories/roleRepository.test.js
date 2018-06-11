@@ -1,9 +1,7 @@
 'use strict';
 
 const
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   Request = require('kuzzle-common-objects').Request,
@@ -21,10 +19,6 @@ describe('Test: repositories/roleRepository', () => {
     roleRepository = new RoleRepository(kuzzle);
 
     return roleRepository.init();
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#loadRoles', () => {
@@ -97,7 +91,7 @@ describe('Test: repositories/roleRepository', () => {
     it('should load the role directly from DB if it\'s not in memory', () => {
       const role = {_id: 'foobar'};
 
-      roleRepository.loadOneFromDatabase = sinon.stub().returns(Bluebird.resolve(role));
+      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
 
       return roleRepository.load('foo')
         .then(result => {
@@ -160,7 +154,7 @@ describe('Test: repositories/roleRepository', () => {
         }
       };
 
-      roleRepository.search = sinon.stub().returns(Bluebird.resolve({
+      roleRepository.search = sinon.stub().resolves({
         total: 4,
         hits: [
           roles.default,
@@ -168,7 +162,7 @@ describe('Test: repositories/roleRepository', () => {
           roles.bar,
           roles.foobar
         ]
-      }));
+      });
 
       return roleRepository.searchRole(['foo'])
         .then(result => {
@@ -240,12 +234,12 @@ describe('Test: repositories/roleRepository', () => {
     });
 
     it('should reject and not trigger any event if a profile uses the role about to be deleted', done => {
-      kuzzle.repositories.profile.searchProfiles.returns(Bluebird.resolve({
+      kuzzle.repositories.profile.searchProfiles.resolves({
         total: 1,
         hits: [
           'test'
         ]
-      }));
+      });
 
       roleRepository.deleteRole({_id: 'test'})
         .then(() => {
@@ -266,8 +260,8 @@ describe('Test: repositories/roleRepository', () => {
       const role = new Role();
       role._id = 'foo';
 
-      kuzzle.repositories.profile.searchProfiles.returns(Bluebird.resolve({total: 0}));
-      roleRepository.deleteFromDatabase = sinon.stub().returns(Bluebird.resolve(null));
+      kuzzle.repositories.profile.searchProfiles.resolves({total: 0});
+      roleRepository.deleteFromDatabase = sinon.stub().resolves(null);
       roleRepository.roles.foo = true;
 
       return roleRepository.deleteRole(role)
@@ -431,7 +425,7 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
 
-      roleRepository.persistToDatabase = sinon.stub().returns(Bluebird.resolve());
+      roleRepository.persistToDatabase = sinon.stub().resolves();
 
       return roleRepository.validateAndSaveRole(role)
         .then(() => {

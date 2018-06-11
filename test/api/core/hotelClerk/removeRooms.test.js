@@ -1,7 +1,5 @@
 const
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   Request = require('kuzzle-common-objects').Request,
   Koncorde = require('koncorde'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
@@ -34,10 +32,6 @@ describe('Test: hotelClerk.removeRooms', () => {
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.realtime = new Koncorde();
     context = {connectionId, token: {userId: ''}, user: {_id: ''}};
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   it('should reject an error if there is no subscription on this index', () => {

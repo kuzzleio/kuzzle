@@ -1,13 +1,11 @@
-let
+const
   should = require('should'),
-  sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
   IndexCache = require.main.require('lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  let
+  var
     listIndexesStub,
     listCollectionsStub,
     getMappingStub,
@@ -32,10 +30,6 @@ describe('Test: core/indexCache', () => {
     getMappingStub = kuzzle.internalEngine.getMapping.resolves(internalMapping);
     kuzzle.internalEngine.getFieldMapping.resolves({});
     indexCache = new IndexCache(kuzzle);
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#init', () => {

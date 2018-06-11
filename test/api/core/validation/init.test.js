@@ -15,17 +15,16 @@ describe('Test: validation initialization', () => {
   let
     Validation,
     validation,
-    sandbox = sinon.sandbox.create(),
     kuzzle;
 
   beforeEach(() => {
+    sinon.reset();
+
     mockRequire.stopAll();
     kuzzle = new KuzzleMock();
 
     Validation = mockRequire.reRequire('../../../../lib/api/core/validation');
     validation = new Validation(kuzzle);
-
-    sandbox.resetHistory();
   });
 
   afterEach(() => {
@@ -43,8 +42,8 @@ describe('Test: validation initialization', () => {
 
   it('should add the type provided in defaultTypesFiles', () => {
     const
-      validationStub = sandbox.spy(() => {}),
-      addTypeStub = sandbox.stub();
+      validationStub = sinon.spy(() => {}),
+      addTypeStub = sinon.stub();
 
     [
       'anything',
@@ -105,8 +104,8 @@ describe('Test: validation initialization', () => {
     });
 
     it('should build a specification if everything goes as expected', () => {
-      validation.curateCollectionSpecification = sandbox.spy(function () {
-        return Bluebird.resolve(arguments[2]);
+      validation.curateCollectionSpecification = sinon.spy(function (...args) {
+        return Bluebird.resolve(args[2]);
       });
 
       return validation.curateSpecification()
@@ -122,7 +121,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should build a specification if everything goes as expected', () => {
-      validation.curateCollectionSpecification = sandbox.spy(function () {
+      validation.curateCollectionSpecification = sinon.spy(function () {
         return Bluebird.reject(new Error('error'));
       });
 
@@ -145,7 +144,7 @@ describe('Test: validation initialization', () => {
   describe('#isValidSpecification', () => {
     it('should resolve true if the specification is correct', () => {
       const
-        curateCollectionSpecificationStub = sandbox.stub().returns(Bluebird.resolve({}));
+        curateCollectionSpecificationStub = sinon.stub().resolves({});
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
@@ -158,7 +157,7 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false if the specification is not correct', () => {
       const
-        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification')
+        curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
           .rejects(new Error('Mocked Error'));
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
@@ -170,7 +169,8 @@ describe('Test: validation initialization', () => {
 
     it('should resolve false and provide errors if the specification is not correct and we want some verbose errors', () => {
       const
-        curateCollectionSpecificationStub = sandbox.stub(validation, 'curateCollectionSpecification').returns(Bluebird.resolve({isValid: false, errors: ['some error']}));
+        curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
+          .resolves({isValid: false, errors: ['some error']});
 
       return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'}, true)
         .then(result => {
@@ -299,8 +299,7 @@ describe('Test: validation initialization', () => {
   });
 
   describe('#curateCollectionSpecification', () => {
-    const
-      checkAllowedPropertiesStub = sandbox.stub();
+    const checkAllowedPropertiesStub = sinon.stub();
 
     it('should return a default specification if there an empty collection specification is provided', () => {
       const
@@ -361,7 +360,7 @@ describe('Test: validation initialization', () => {
     it('should return structured fields when a collection specification is provided', () => {
       const
         indexName = 'anIndex',
-        structureCollectionValidationStub = sandbox.spy(function () {return arguments[0].fields;}),
+        structureCollectionValidationStub = sinon.spy(function (...args) {return args[0].fields;}),
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
@@ -389,7 +388,7 @@ describe('Test: validation initialization', () => {
     it('should return structured fields when a collection specification is provided even in verbose mode', () => {
       const
         indexName = 'anIndex',
-        structureCollectionValidationStub = sandbox.spy(function () {return arguments[0].fields;}),
+        structureCollectionValidationStub = sinon.spy(function (...args) {return args[0].fields;}),
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
@@ -418,7 +417,7 @@ describe('Test: validation initialization', () => {
     it('should reject an error if the field specification throws an error', () => {
       const
         indexName = 'anIndex',
-        structureCollectionValidationStub = sandbox.stub().throws(new Error('an error')),
+        structureCollectionValidationStub = sinon.stub().throws(new Error('an error')),
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
@@ -446,7 +445,7 @@ describe('Test: validation initialization', () => {
         dryRun = false;
 
       checkAllowedPropertiesStub.returns(true);
-      sandbox.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
+      sinon.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith('an error');
@@ -464,7 +463,7 @@ describe('Test: validation initialization', () => {
         dryRun = false,
         verboseErrors = true;
 
-      sandbox.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
+      sinon.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
 
       checkAllowedPropertiesStub.returns(true);
 
@@ -479,7 +478,7 @@ describe('Test: validation initialization', () => {
     it('should return a treated collection specification if validators are valid', () => {
       const
         indexName = 'anIndex',
-        curateValidatorFilterStub = sandbox.spy(function () {return Bluebird.resolve({id: 'aFilterId'});}),
+        curateValidatorFilterStub = sinon.spy(function () {return Bluebird.resolve({id: 'aFilterId'});}),
         collectionName = 'aCollection',
         collectionSpec = {
           validators: [
@@ -510,7 +509,7 @@ describe('Test: validation initialization', () => {
     it('should reject an error if validators are not valid', () => {
       const
         indexName = 'anIndex',
-        curateValidatorFilterStub = sandbox.spy(function () {return Bluebird.reject(new Error('error'));}),
+        curateValidatorFilterStub = sinon.spy(function () {return Bluebird.reject(new Error('error'));}),
         collectionName = 'aCollection',
         collectionSpec = {
           validators: [
@@ -530,7 +529,7 @@ describe('Test: validation initialization', () => {
   describe('#structureCollectionValidation', () => {
     it('should return a structured collection specification if configuration is correct', () => {
       const
-        curateFieldSpecificationStub = sandbox.spy(function (...args) {return {isValid: true, fieldSpec: args[0]};}),
+        curateFieldSpecificationStub = sinon.spy(function (...args) {return {isValid: true, fieldSpec: args[0]};}),
         collectionSpec = {
           fields: {
             aField: {a: 'field', type: 'foo'},
@@ -565,7 +564,7 @@ describe('Test: validation initialization', () => {
 
     it('should throw an error if one of the field curation throws an error', () => {
       const
-        curateFieldSpecificationStub = sandbox.stub().throws(new Error('an error')),
+        curateFieldSpecificationStub = sinon.stub().throws(new Error('an error')),
         collectionSpec = {
           fields: {
             aField: {a: 'field'},
@@ -587,7 +586,7 @@ describe('Test: validation initialization', () => {
 
     it('should return an error array if one of the field curation returns an error in verbose mode', () => {
       const
-        curateFieldSpecificationStub = sandbox.stub(),
+        curateFieldSpecificationStub = sinon.stub(),
         indexName = 'anIndex',
         collectionName = 'aCollection',
         verboseErrors = true,
@@ -620,12 +619,12 @@ describe('Test: validation initialization', () => {
 
   describe('#curateFieldSpecification', () => {
     beforeEach(() => {
-      validation.curateFieldSpecificationFormat = sandbox.stub().returns({isValid: true});
+      validation.curateFieldSpecificationFormat = sinon.stub().returns({isValid: true});
     });
 
     it('should validate and curate field specifications with default configuration', () => {
       const
-        typeValidateSpecValidation = sandbox.stub().returns({}),
+        typeValidateSpecValidation = sinon.stub().returns({}),
         fieldSpec = {
           type: 'string'
         },
@@ -649,7 +648,7 @@ describe('Test: validation initialization', () => {
     it('should validate, curate field specifications and use returned typeOptions of the field validation', () => {
       const
         genericMock = {foo: 'bar'},
-        typeValidateSpecValidation = sandbox.stub().returns(genericMock),
+        typeValidateSpecValidation = sinon.stub().returns(genericMock),
         fieldSpec = {
           type: 'string'
         },
@@ -672,7 +671,7 @@ describe('Test: validation initialization', () => {
 
     it('should throw an error if type validation throws', () => {
       const
-        typeValidateSpecValidation = sandbox.stub().throws(new PreconditionError('foobar')),
+        typeValidateSpecValidation = sinon.stub().throws(new PreconditionError('foobar')),
         fieldSpec = {
           type: 'string'
         };
@@ -686,7 +685,7 @@ describe('Test: validation initialization', () => {
 
     it('should return an error if type validation returns false with verbose mode', () => {
       const
-        typeValidateSpecValidation = sandbox.stub().returns(true),
+        typeValidateSpecValidation = sinon.stub().returns(true),
         fieldSpec = {
           type: 'string',
           typeOptions: 'foobar'
@@ -702,7 +701,7 @@ describe('Test: validation initialization', () => {
 
     it('should validate typeOptions from the field type', () => {
       const
-        typeValidateSpecValidation = sandbox.stub().returns({some: 'options'}),
+        typeValidateSpecValidation = sinon.stub().returns({some: 'options'}),
         fieldSpec = {
           type: 'string',
           typeOptions: {
@@ -733,7 +732,7 @@ describe('Test: validation initialization', () => {
 
     it('should throw an error if an option of typeOptions is invalid', () => {
       const
-        typeValidateSpecValidation = sandbox.stub().returns(true),
+        typeValidateSpecValidation = sinon.stub().returns(true),
         fieldSpec = {
           type: 'string',
           typeOptions: {
@@ -753,7 +752,7 @@ describe('Test: validation initialization', () => {
 
     it('should throw a PluginImplementationError if a type throws a non-KuzzleError error', () => {
       const
-        typeValidateSpecValidation = sandbox.stub().throws(new Error('foobar')),
+        typeValidateSpecValidation = sinon.stub().throws(new Error('foobar')),
         fieldSpec = {
           type: 'string',
           typeOptions: {
@@ -781,7 +780,7 @@ describe('Test: validation initialization', () => {
           }
         };
 
-      validation.curateFieldSpecificationFormat = sandbox.stub().returns({isValid: false, errors: ['an error']});
+      validation.curateFieldSpecificationFormat = sinon.stub().returns({isValid: false, errors: ['an error']});
 
       const response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
 
@@ -972,8 +971,8 @@ describe('Test: validation initialization', () => {
   describe('#curateValidatorFilter', () => {
     it('should return a promise if everything goes as expected', () => {
       const
-        registerStub = sandbox.stub().returns(Bluebird.resolve({})),
-        validateStub = sandbox.stub().returns(Bluebird.resolve({})),
+        registerStub = sinon.stub().resolves({}),
+        validateStub = sinon.stub().resolves({}),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],
@@ -1002,8 +1001,8 @@ describe('Test: validation initialization', () => {
 
     it('should return a promise if everything goes as expected and avoid registration if dryRun is true', () => {
       const
-        registerStub = sandbox.stub().returns(Bluebird.resolve({})),
-        validateStub = sandbox.stub().returns(Bluebird.resolve({})),
+        registerStub = sinon.stub().resolves({}),
+        validateStub = sinon.stub().resolves({}),
         indexName = 'anIndex',
         collectionName= 'aCollection',
         validatorFilter = [{some: 'filters'}],
