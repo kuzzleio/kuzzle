@@ -89,6 +89,7 @@ function commandCreateFirstAdmin (options) {
     controller: 'server',
     action: 'adminExists'
   };
+  
   return sendAction(options, action)
     .then(adminExists => {
       if (adminExists.result.exists) {
