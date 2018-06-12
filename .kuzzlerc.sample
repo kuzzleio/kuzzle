@@ -445,31 +445,6 @@
       "cleanInterval": 86400000,
       "maxDelete": 1000
     },
-
-    // [internalBroker]
-    // The internalBroker is used for internal Kuzzle communication,
-    // notably to transport messages between the CLI and the server.
-    //   * host:
-    //       Host name of a Kuzzle server. Change this only if you want to use
-    //       the CLI from a distant host.
-    //   * port:
-    //       Network port to open for internal communications
-    //   * retryInterval:
-    //       Time interval (in milliseconds) between reconnection retries
-    //       when the connection to the broker server has been lost
-    //   * pingInterval:
-    //       Time (in milliseconds) between ping requests
-    //   * pingTimeout:
-    //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
-    //       marks its connection to the distant host as lost.
-    "internalBroker": {
-      "aliases": ["broker"],
-      "host": "localhost",
-      "pingInterval": 60000,
-      "pingTimeout": 500,
-      "port": 7911,
-      "retryInterval": 1000
-    },
     // [db]
     // The default database layer is Elasticsearch and it is
     // currently the only database layer we support.
