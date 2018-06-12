@@ -178,7 +178,9 @@ module.exports = {
     protocols: {
       http: {
         enabled: true,
-        maxFormFileSize: '1MB'
+        maxFormFileSize: '1MB',
+        maxEncodingsCount: 3,
+        allowCompression: true
       },
       socketio: {
         enabled: true,
