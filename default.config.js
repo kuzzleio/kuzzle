@@ -189,8 +189,7 @@ module.exports = {
       websocket: {
         enabled: true
       }
-    },
-    pidFile: '/var/run/kuzzle.pid'
+    }
   },
 
   services: {

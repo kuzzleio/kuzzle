@@ -20,7 +20,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     WebSocketServer = sinon.spy(function () {
       this.on = sinon.spy();
     });
-    mockrequire('ws', {
+    mockrequire('uws', {
       Server: WebSocketServer
     });
 
@@ -32,7 +32,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
   describe('#init', () => {
     it('should do nothing if the protocol is not enabled', () => {
       entrypoint.config.protocols.websocket.enabled = false;
-      
+
       protocol.init(entrypoint);
       should(protocol.entryPoint)
         .be.undefined();
