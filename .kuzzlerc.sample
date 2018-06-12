@@ -320,7 +320,7 @@
         //    Set to "false" to disable HTTP support
         // * maxFormFileSize:
         //    Maximum size of requests sent via http forms
-        // * maxEncodingsCount:
+        // * maxEncodingLayers:
         //    Maximum number of encoding layers that can be applied
         //    to an http message, using the Content-Encoding header.
         //    This parameter is meant to prevent abuses by setting an
@@ -334,7 +334,7 @@
         //    compression support is disabled
         "enabled": true,
         "maxFormFileSize": "1mb",
-        "maxEncodingsCount": 3,
+        "maxEncodingLayers": 3,
         "allowCompression": true
       },
       "socketio": {

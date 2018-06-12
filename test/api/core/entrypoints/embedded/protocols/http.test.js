@@ -12,7 +12,7 @@ const
   sinon = require('sinon'),
   Writable = require('stream').Writable;
 
-describe.only('/lib/api/core/entrypoints/embedded/protocols/http', () => {
+describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   let
     kuzzle,
     entrypoint,
@@ -40,18 +40,32 @@ describe.only('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   });
 
   describe('#init', () => {
-    it('should throw if an invalid maxRequestSize is given', () => {
+    it('should throw if an invalid maxRequestSize parameter is set', () => {
       entrypoint.config.maxRequestSize = 'invalid';
 
       return should(() => protocol.init(entrypoint))
-        .throw('Invalid "maxRequestSize" parameter');
+        .throw('Invalid "maxRequestSize" parameter value: expected a numeric value');
     });
 
-    it('should throw if an invalid maxFormFileSize is given', () => {
+    it('should throw if an invalid maxFormFileSize parameter is set', () => {
       entrypoint.config.protocols.http.maxFormFileSize = 'invalid';
 
       return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "maxFormFileSize" parameter');
+        .throw('Invalid HTTP "maxFormFileSize" parameter value: expected a numeric value');
+    });
+
+    it('should throw if an invalid maxEncodingLayers parameter is set', () => {
+      entrypoint.config.protocols.http.maxEncodingLayers = 'invalid';
+
+      return should(() => protocol.init(entrypoint))
+        .throw('Invalid HTTP "maxEncodingLayers" parameter value: expected a numeric value');
+    });
+
+    it('should throw if an invalid allowCompression parameter is set', () => {
+      entrypoint.config.protocols.http.allowCompression = 'foobar';
+
+      return should(() => protocol.init(entrypoint))
+        .throw('Invalid HTTP "allowCompression" parameter value: expected a boolean value');
     });
 
     describe('#onRequest', () => {
@@ -251,21 +265,21 @@ describe.only('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         request.headers['content-type'] = 'multipart/form-data; boundary=---------------------------165748628625109734809700179';
         onRequest(request, response);
 
-        const dataCB = request.on.firstCall.args[1];
+        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(HttpFormDataStream));
+        const writable = request.pipe.firstCall.args[0];
 
-        dataCB(multipart);
+        sinon.spy(writable, 'removeAllListeners');
+        sinon.spy(writable, 'end');
 
-        should(request.removeAllListeners).be.calledTwice();
-        should(protocol._replyWithError)
-          .be.calledWithMatch(/^[0-9a-z-]+$/,
-            {
-              url: request.url,
-              method: request.method
-            },
-            response,
-            {
-              message: 'Error: maximum HTTP file size exceeded'
-            });
+        should(request.on).calledOnce().calledWith('error', sinon.match.func);
+
+        writable.write(multipart);
+
+        should(request.emit)
+          .calledOnce()
+          .calledWith('error', sinon.match.instanceOf(SizeLimitError));
+
+        should(request.emit.firstCall.args[1].message).be.eql('Error: maximum HTTP file size exceeded');
       });
     });
 
@@ -322,7 +336,7 @@ describe.only('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(response.end)
           .be.calledOnce()
-          .be.calledWith(JSON.stringify(expected, undefined, 2));
+          .be.calledWith(Buffer.from(JSON.stringify(expected, undefined, 2)));
       });
 
       it('should output buffer raw result', () => {
@@ -378,7 +392,7 @@ describe.only('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         cb(result);
 
         should(response.end)
-          .be.calledWith(JSON.stringify([{foo: 'bar'}]));
+          .be.calledWith(Buffer.from(JSON.stringify([{foo: 'bar'}])));
       });
 
       it('should output scalar content as-is if marked as raw', () => {
@@ -394,7 +408,7 @@ describe.only('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(response.end)
           .be.calledOnce()
-          .be.calledWithExactly('content');
+          .be.calledWithExactly(Buffer.from('content'));
       });
 
     });
