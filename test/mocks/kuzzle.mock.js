@@ -113,7 +113,9 @@ class KuzzleMock extends Kuzzle {
         all: this.sandbox.stub().resolves(),
         createCollections: this.sandbox.stub().resolves(),
         createRolesCollection: this.sandbox.stub().resolves(),
+        createDefaultRoles: this.sandbox.stub().resolves(),
         createProfilesCollection: this.sandbox.stub().resolves(),
+        createDefaultProfiles: this.sandbox.stub().resolves(),
         createUsersCollection: this.sandbox.stub().resolves(),
         createPluginsCollection: this.sandbox.stub().resolves(),
         delete: this.sandbox.stub().resolves()

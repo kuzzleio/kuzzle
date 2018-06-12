@@ -92,7 +92,6 @@ program
   .action(require('./commands/generateDump'));
 
 
-
 // Run user command
 program.parse(process.argv);
 

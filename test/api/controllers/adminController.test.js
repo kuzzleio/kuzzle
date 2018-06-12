@@ -125,7 +125,7 @@ describe('Test: admin controller', () => {
     });
   });
 
-  describe('#resetKuzzleData', () => {
+  describe('#resetSecurity', () => {
     beforeEach(() => {
       request.action = 'resetKuzzleData';
     });
@@ -224,6 +224,9 @@ describe('Test: admin controller', () => {
           should(kuzzle.funnel.controllers.security.deleteRole.getCall(2).args[0].input.resource._id).be.eql('role3');
           should(kuzzle.funnel.controllers.security.deleteRole.getCall(3).args[0].input.resource._id).be.eql('role4');
           should(kuzzle.funnel.controllers.security.deleteRole.getCall(4).args[0].input.resource._id).be.eql('role5');
+
+          should(kuzzle.internalEngine.bootstrap.createDefaultRoles).be.calledOnce();
+          should(kuzzle.internalEngine.bootstrap.createDefaultProfiles).be.calledOnce();
         });
     });
   });
