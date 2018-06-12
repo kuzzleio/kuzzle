@@ -20,30 +20,30 @@
  */
 
 /* eslint-disable no-console */
-
 const
   ColorOutput = require('./colorOutput'),
   {
-    readPidFile
-  } = require('../../lib/util/pidFile');
+    sendAction
+  } = require('./common');
 
-
-function commandShutdown(options) {
+function commandShutdown (options) {
   const
-    kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options);
 
   console.log(cout.notice('[ℹ] Shutting down...'));
 
-  return readPidFile(kuzzle.config)
-    .then(pid => process.kill(pid, 'SIGTERM'))
+  const args = {
+    controller: 'admin',
+    action: 'shutdown'
+  };
+
+  return sendAction(options, args)
     .then(() => {
-      console.log(cout.notice('[✔] Done!'));
+      console.log(cout.ok('[✔] Done'));
       process.exit(0);
     })
     .catch(err => {
-      console.dir(err, {showHidden: true, colors: true});
-      console.error(cout.error(`[✖] ${err}`));
+      console.error(err);
       process.exit(1);
     });
 }
