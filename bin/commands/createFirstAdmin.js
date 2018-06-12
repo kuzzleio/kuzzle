@@ -25,9 +25,7 @@ const
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  {
-    sendAction
-  } = require('./common');
+  sendAction = require('./sendAction');
 
 /** @type ColorOutput */
 let cout;
@@ -123,9 +121,7 @@ function commandCreateFirstAdmin (options) {
       const query = {
         reset: resetRoles,
         body: {
-          content: {
-
-          },
+          content: { },
           credentials: {
             local: {
               username,

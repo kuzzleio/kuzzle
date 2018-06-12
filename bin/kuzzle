@@ -32,6 +32,7 @@ const program = require('commander');
 program
   .version(require('../package.json').version)
   .option('-p, --port <port>', 'Kuzzle port number', parseInt)
+  .option('-h, --host <host>', 'Kuzzle host')
   .option('-U, --username <username>', 'Admin username')
   .option('-P, --password <password>', 'Admin password')
   .option('-d, --debug', 'make errors more verbose')

@@ -26,9 +26,7 @@ const
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  {
-    sendAction
-  } = require('./common');
+  sendAction = require('./sendAction');
 
 function commandDatabase (options) {
   const

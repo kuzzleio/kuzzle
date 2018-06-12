@@ -22,9 +22,7 @@
 /* eslint-disable no-console */
 const
   ColorOutput = require('./colorOutput'),
-  {
-    sendAction
-  } = require('./common');
+  sendAction = require('./sendAction');
 
 function commandShutdown (options) {
   const

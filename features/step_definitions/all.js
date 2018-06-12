@@ -88,16 +88,3 @@ Then(/^The mapping should contain "(.*?)" field of type "(.*?)"$/, function (fie
   }
   callback();
 });
-
-Then(/I am not loggued in/, function (callback) {
-  this.api.getCurrentUser()
-    .then(response => {
-      if (response.result._id.toString() !== '-1') {
-        return this.api.logout(this.currentUser.token);
-      }
-
-      return;
-    })
-    .then(() => callback())
-    .catch(error => callback(error));
-});

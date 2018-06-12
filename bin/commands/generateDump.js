@@ -23,9 +23,7 @@
 
 const
   ColorOutput = require('./colorOutput'),
-  {
-    sendAction
-  } = require('./common');
+  sendAction = require('./sendAction');
 
 function commandGenerateDump (options) {
   const
