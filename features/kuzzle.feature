@@ -431,8 +431,10 @@ Feature: Kuzzle functional tests
   Scenario: get profile rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
+    And I create a new profile "profile1" with id "profile1"
     And I create a new profile "profile2" with id "profile2"
     Then I'm able to find rights for profile "profile2"
+    Then I'm able to find rights for profile "profile1"
     Then I'm not able to find rights for profile "fake-profile"
 
   @security
