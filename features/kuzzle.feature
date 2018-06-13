@@ -15,7 +15,7 @@ Feature: Kuzzle functional tests
 
   @http
   Scenario: Send a request compressed with multiple algorithms
-    Given a request compressed with "deflate, gzip, deflate, identity"
+    Given a request compressed with "deflate, gzip, identity"
     When I write the document
     Then I should receive a document id
     Then I'm able to get the document

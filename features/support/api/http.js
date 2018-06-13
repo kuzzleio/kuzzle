@@ -171,16 +171,17 @@ class HttpApi {
       options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
     }
 
-    if (this.body && this.encoding !== 'identity') {
+    if (options.body && this.encoding !== 'identity') {
+      options.body = JSON.stringify(options.body);
       options.headers['content-encoding'] = this.encoding;
 
       const algorithms = this.encoding.split(',').map(a => a.trim().toLowerCase());
 
       for(const algorithm of algorithms) {
         if (algorithm === 'gzip') {
-          options.body = zlib.gzipSync(JSON.stringify(options.body));
+          options.body = zlib.gzipSync(options.body);
         } else if (algorithm === 'deflate') {
-          options.body = zlib.deflateSync(JSON.stringify(options.body));
+          options.body = zlib.deflateSync(options.body);
         }
       }
     } else {
@@ -201,7 +202,7 @@ class HttpApi {
       .then(response => {
         // we need to manually parse the stringified json if
         // we sent a compressed buffer through the request module
-        if (this.body && this.encoding !== 'identity') {
+        if (options.body && this.encoding !== 'identity') {
           return JSON.parse(response);
         }
 
