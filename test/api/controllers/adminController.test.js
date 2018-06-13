@@ -256,13 +256,26 @@ describe('Test: admin controller', () => {
       fsStub,
       coreStub,
       getAllStatsStub,
+      originalLog,
       globStub;
 
     afterEach(() => {
       mockrequire.stopAll();
     });
 
+    afterEach(() => {
+      Object.defineProperty(console, 'log', {
+        value: originalLog
+      });
+    });
+
+    /* eslint-disable no-console */
     beforeEach(() => {
+      originalLog = console.log;
+      Object.defineProperty(console, 'log', {
+        value: sinon.stub()
+      });
+
       fsStub = {
         accessSync: sinon.stub(),
         constants: {},
@@ -492,7 +505,35 @@ describe('Test: admin controller', () => {
           });
       });
     });
+  });
 
+  describe('#shutdown', () => {
+    let
+      originalKill;
+
+    beforeEach(() => {
+      originalKill = process.kill;
+      Object.defineProperty(process, 'kill', {
+        value: sinon.stub()
+      });
+
+      request.action = 'generateDump';
+    });
+
+    afterEach(() => {
+      Object.defineProperty(process, 'kill', {
+        value: originalKill
+      });
+    });
+
+    it('should send a SIGTERM', () => {
+      return adminController.shutdown(request)
+        .then(() => {
+          should(process.kill).be.calledOnce();
+          should(process.kill.getCall(0).args[0]).be.eql(process.pid);
+          should(process.kill.getCall(0).args[1]).be.eql('SIGTERM');
+        });
+    });
   });
 
 });
