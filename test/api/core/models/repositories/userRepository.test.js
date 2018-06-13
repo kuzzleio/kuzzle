@@ -24,7 +24,7 @@ describe('Test: repositories/userRepository', () => {
   beforeEach(() => {
     const
       encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a';
-    
+
     repositoryLoadStub = sinon.stub(Repository.prototype, 'load');
 
     userInCache = {
