@@ -32,10 +32,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
   describe('#init', () => {
     it('should do nothing if the protocol is not enabled', () => {
       entrypoint.config.protocols.websocket.enabled = false;
-      
+
       protocol.init(entrypoint);
-      should(protocol.entryPoint)
-        .be.undefined();
+      should(protocol.server).be.null();
     });
 
     it('should launch a websocket server and bind events to it', () => {
