@@ -63,7 +63,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
   it('should not delete all subscriptions when we want to just remove one', () => {
     const response = hotelClerk.removeSubscription(unsubscribeRequest, context);
-    
+
     should(response).be.exactly(unsubscribeRequest.input.body.roomId);
 
     should(kuzzle.realtime.remove).be.calledOnce();

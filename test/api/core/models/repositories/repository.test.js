@@ -333,7 +333,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#serializeToCache', () => {
     it('should return the same object', () => {
-      const 
+      const
         object = Object.assign(new ObjectConstructor(), cachePojo._source, {_id: cachePojo._id}),
         serialized = repository.serializeToCache(object);
 

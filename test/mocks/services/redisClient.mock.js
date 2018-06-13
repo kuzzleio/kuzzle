@@ -27,7 +27,7 @@ class RedisClientMock extends EventEmitter {
 
     this.flushdb = this.FLUSHDB = callback => callback(null);
 
-    process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));    
+    process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));
   }
 
   scanStream (options) {

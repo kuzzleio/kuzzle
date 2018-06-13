@@ -372,7 +372,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     });
 
     it('should log the access and reply with error', () => {
-      const 
+      const
         error = new KuzzleError('test'),
         connectionId = 'connectionId',
         payload = {requestId: 'foobar'};

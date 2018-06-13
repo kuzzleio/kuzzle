@@ -64,7 +64,7 @@ describe('funnelController.executePluginRequest', () => {
   });
 
   it('should forward a controller error to the callback', done => {
-    const 
+    const
       rq = new Request({controller: 'testme', action: 'action'}),
       error = new Error('foobar');
 

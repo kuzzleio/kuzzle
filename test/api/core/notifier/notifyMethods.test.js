@@ -7,7 +7,7 @@ const
   Notification = require('../../../../lib/api/core/models/notifications');
 
 describe('notify methods', () => {
-  let 
+  let
     kuzzle,
     request,
     notifier;
@@ -69,11 +69,11 @@ describe('notify methods', () => {
     it('should notify the right channels', done => {
       const content = {some: 'content'};
       notifier.notifyDocument(
-        ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'], 
-        request, 
-        'out', 
-        'pending', 
-        'action', 
+        ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'],
+        request,
+        'out',
+        'pending',
+        'action',
         content
       );
 
@@ -82,7 +82,7 @@ describe('notify methods', () => {
           should(kuzzle.entryPoints.dispatch).calledOnce();
 
           should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('broadcast');
-          
+
           should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
             .match(['matching_all', 'matching_out', 'matching_pending', 'always']);
 
@@ -132,11 +132,11 @@ describe('notify methods', () => {
     it('should not notify if no channel match the provided scope/state arguments', done => {
       const content = {some: 'content'};
       notifier.notifyDocument(
-        ['nonMatching', 'IAMERROR'], 
-        request, 
-        'not a state', 
-        'not a scope', 
-        'action', 
+        ['nonMatching', 'IAMERROR'],
+        request,
+        'not a state',
+        'not a scope',
+        'action',
         content
       );
 
@@ -190,7 +190,7 @@ describe('notify methods', () => {
           should(kuzzle.entryPoints.dispatch).calledOnce();
 
           should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('broadcast');
-          
+
           should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
             .match(['matching_all', 'matching_userOut']);
 
@@ -273,7 +273,7 @@ describe('notify methods', () => {
           should(kuzzle.entryPoints.dispatch).calledOnce();
 
           should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('notify');
-          
+
           should(kuzzle.entryPoints.dispatch.firstCall.args[1].connectionId).be.eql('foobar');
 
           should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
