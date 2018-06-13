@@ -70,6 +70,57 @@ describe('core/httpRouter', () => {
     });
   });
 
+  describe('#default headers', () => {
+    it('should define appropriate default HTTP headers', () => {
+      should(router.defaultHeaders).eql({
+        'content-type': 'application/json',
+        'Accept-Encoding': 'gzip,deflate,identity',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
+        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding'
+      });
+    });
+
+    it('should update the list of accepted compression algorithms if compression is disabled', () => {
+      kuzzleMock.config.server.protocols.http.allowCompression = false;
+      router = new Router(kuzzleMock);
+
+      should(router.defaultHeaders).eql({
+        'content-type': 'application/json',
+        'Accept-Encoding': 'identity',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
+        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding'
+      });
+    });
+
+    it('should set the default allow-origin header to "*" if undefined in the config', () => {
+      delete kuzzleMock.config.http.accessControlAllowOrigin;
+      router = new Router(kuzzleMock);
+
+      should(router.defaultHeaders).eql({
+        'content-type': 'application/json',
+        'Accept-Encoding': 'gzip,deflate,identity',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
+        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding'
+      });
+    });
+
+    it('should take the value of the allow-origin header from the config file, if set', () => {
+      kuzzleMock.config.http.accessControlAllowOrigin = 'foobar';
+      router = new Router(kuzzleMock);
+
+      should(router.defaultHeaders).eql({
+        'content-type': 'application/json',
+        'Accept-Encoding': 'gzip,deflate,identity',
+        'Access-Control-Allow-Origin': 'foobar',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
+        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding'
+      });
+    });
+  });
+
   describe('#routing requests', () => {
     it('should invoke the registered handler on a known route', () => {
       router.post('/foo/bar', handler);

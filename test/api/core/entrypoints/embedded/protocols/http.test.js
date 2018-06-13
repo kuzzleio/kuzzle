@@ -1,23 +1,49 @@
 const
-  EntryPoint = require('../../../../../../lib/api/core/entrypoints/embedded'),
-  HttpProtocol = require('../../../../../../lib/api/core/entrypoints/embedded/protocols/http'),
+  mockrequire = require('mock-require'),
   HttpFormDataStream = require('../../../../../../lib/api/core/entrypoints/embedded/service/httpFormDataStream'),
+  EntryPoint = require('../../../../../../lib/api/core/entrypoints/embedded'),
   KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   {
     KuzzleError,
-    SizeLimitError
+    SizeLimitError,
+    BadRequestError
   } = require('kuzzle-common-objects').errors,
   should = require('should'),
   sinon = require('sinon'),
   Writable = require('stream').Writable;
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
+  const
+    gunzipMock = sinon.stub(),
+    inflateMock = sinon.stub(),
+    identityMock = sinon.stub(),
+    zlibstub = {
+      gzip: sinon.stub(),
+      deflate: sinon.stub(),
+      createGunzip: sinon.stub().returns(gunzipMock),
+      createInflate: sinon.stub().returns(inflateMock)
+    };
   let
+    HttpProtocol,
     kuzzle,
     entrypoint,
     protocol,
     response;
+
+  before(() => {
+    [gunzipMock, inflateMock, identityMock].forEach(m => {
+      m.pipe = sinon.stub();
+      m.on = sinon.stub();
+      m.close = sinon.stub();
+    });
+    mockrequire('zlib', zlibstub);
+    HttpProtocol = mockrequire.reRequire('../../../../../../lib/api/core/entrypoints/embedded/protocols/http');
+  });
+
+  after(() => {
+    mockrequire.stopAll();
+  });
 
   beforeEach(() => {
     response = {
@@ -37,6 +63,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     };
 
     protocol = new HttpProtocol();
+  });
+
+  afterEach(() => {
+    Object.keys(zlibstub).forEach(s => zlibstub[s].resetHistory());
+    [gunzipMock, inflateMock, identityMock].forEach(m => {
+      m.resetHistory();
+      ['pipe', 'on', 'close'].forEach(f => m[f].resetHistory());
+    });
   });
 
   describe('#init', () => {
@@ -66,6 +100,32 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       return should(() => protocol.init(entrypoint))
         .throw('Invalid HTTP "allowCompression" parameter value: expected a boolean value');
+    });
+
+    it('should configure the zlib decoders', () => {
+      protocol.init(entrypoint);
+
+      should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
+      should(protocol.decoders.gzip).eql(zlibstub.createGunzip);
+      should(protocol.decoders.deflate).eql(zlibstub.createInflate);
+      should(protocol.decoders.identity).be.a.Function();
+      should(protocol.decoders.identity('foobar')).eql(null);
+    });
+
+    it('should set decoders with throwables if compression is disabled', () => {
+      const message = 'Compression support is disabled';
+
+      entrypoint.config.protocols.http.allowCompression = false;
+      protocol.init(entrypoint);
+
+      should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
+      should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
+      should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
+      should(protocol.decoders.identity).be.a.Function();
+
+      should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
+      should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
+      should(protocol.decoders.identity('foobar')).eql(null);
     });
 
     describe('#onRequest', () => {
@@ -108,6 +168,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         };
 
         protocol.init(entrypoint);
+
         onRequest = protocol.server.on.firstCall.args[1];
 
         protocol._replyWithError = sinon.spy();
@@ -128,18 +189,20 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             method: request.method
           },
           response,
-          {message: 'Error: maximum HTTP request size exceeded'});
-
+          {message: 'Maximum HTTP request size exceeded'});
       });
 
       it('should handle json content', done => {
         request.headers['content-type'] = 'application/json charset=utf-8';
 
         protocol._sendRequest = (connectionId, resp, payload) => {
-          should(payload.content)
-            .eql('chunk1chunk2chunk3');
-
-          done();
+          try {
+            should(payload.content).eql('chunk1chunk2chunk3');
+            done();
+          }
+          catch(e) {
+            done(e);
+          }
         };
 
         onRequest(request, response);
@@ -151,6 +214,71 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         writable.write('chunk2');
         writable.write('chunk3');
         writable.emit('finish');
+      });
+
+      it('should handle compressed content', () => {
+        request.headers['content-encoding'] = 'gzip';
+
+        onRequest(request, response);
+
+        should(request.pipe).calledOnce().calledWith(gunzipMock);
+        should(gunzipMock.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
+        should(protocol.decoders.identity).not.called();
+        should(protocol.decoders.deflate).not.called();
+
+        should(protocol.decoders.gzip).calledOnce();
+        should(gunzipMock.on).calledOnce().calledWith('error');
+      });
+
+      it('should reject if there are more compression layers than the configured limit', () => {
+        protocol.maxEncodingLayers = 3;
+        request.headers['content-encoding'] = 'identity, identity, identity, identity';
+
+        onRequest(request, response);
+        should(request.pipe).not.called();
+        should(protocol._replyWithError)
+          .be.calledOnce()
+          .be.calledWithMatch(/^[0-9a-w-]+$/, {
+            url: request.url,
+            method: request.method
+          },
+          response,
+          {message: 'Too many encodings'});
+      });
+
+      it('should reject if an unknown compression algorithm is provided', () => {
+        request.headers['content-encoding'] = 'foobar';
+
+        onRequest(request, response);
+
+        should(protocol._replyWithError)
+          .be.calledOnce()
+          .be.calledWithMatch(/^[0-9a-w-]+$/, {
+            url: request.url,
+            method: request.method
+          },
+          response,
+          {message: 'Unsupported compression algorithm "foobar"'});
+      });
+
+      it('should handle chain pipes properly to match multi-layered compression', () => {
+        protocol.maxEncodingLayers = 5;
+        protocol.decoders.identity = sinon.stub().returns(identityMock);
+        request.headers['content-encoding'] = 'gzip, deflate, iDeNtItY, DEFlate, GzIp';
+
+        onRequest(request, response);
+        should(request.pipe).calledOnce();
+        should(protocol.decoders.gzip).calledTwice();
+        should(protocol.decoders.deflate).calledTwice();
+        should(protocol.decoders.identity).calledOnce();
+
+        // testing the pipe chain
+        should(request.pipe).calledWith(gunzipMock);
+        should(gunzipMock.pipe.firstCall).calledWith(inflateMock);
+        should(inflateMock.pipe.firstCall).calledWith(identityMock);
+        should(identityMock.pipe.firstCall).calledWith(inflateMock);
+        should(inflateMock.pipe.secondCall).calledWith(gunzipMock);
+        should(gunzipMock.pipe.secondCall).calledWith(sinon.match.instanceOf(Writable));
       });
 
       it('should handle valid x-www-form-urlencoded request', done => {
@@ -195,10 +323,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       it('should reply with error if the actual data sent exceeds the maxRequestSize', done => {
         protocol.maxRequestSize = 2;
+        request.headers['content-encoding'] = 'gzip';
         onRequest(request, response);
 
-        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
-        const writable = request.pipe.firstCall.args[0];
+        should(request.pipe).calledOnce().calledWith(gunzipMock);
+        should(gunzipMock.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
+        const writable = gunzipMock.pipe.firstCall.args[0];
 
         sinon.spy(writable, 'removeAllListeners');
         sinon.spy(writable, 'end');
@@ -208,7 +338,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         writable.on('error', error => {
           try {
-            should(error).instanceOf(SizeLimitError).match({message: 'Error: maximum HTTP request size exceeded'});
+            should(error).instanceOf(SizeLimitError).match({message: 'Maximum HTTP request size exceeded'});
 
             // called automatically when a pipe rejects a callback, but not
             // by our mock obviously
@@ -224,6 +354,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             should(writable.end).calledOnce();
             should(writable.end.calledAfter(writable.removeAllListeners)).be.true();
 
+            // pipes should be closed manually
+            should(gunzipMock.close).calledOnce();
+
             should(protocol._replyWithError)
               .be.calledWithMatch(/^[0-9a-z-]+$/, {
                 url: request.url,
@@ -231,7 +364,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
               },
               response,
               {
-                message: 'Error: maximum HTTP request size exceeded'
+                message: 'Maximum HTTP request size exceeded'
               });
             done();
           } catch (e) {
@@ -279,7 +412,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           .calledOnce()
           .calledWith('error', sinon.match.instanceOf(SizeLimitError));
 
-        should(request.emit.firstCall.args[1].message).be.eql('Error: maximum HTTP file size exceeded');
+        should(request.emit.firstCall.args[1].message).be.eql('Maximum HTTP file size exceeded');
       });
     });
 
@@ -290,6 +423,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         payload = {
           requestId: 'requestId',
           url: 'url?pretty',
+          method: 'getpostput',
           json: {
             some: 'value'
           }
@@ -411,6 +545,95 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           .be.calledWithExactly(Buffer.from('content'));
       });
 
+      it('should compress the outgoing message with deflate if asked to', () => {
+        payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, deflate, baz'};
+        protocol._sendRequest('connectionId', response, payload);
+
+        const cb = kuzzle.router.http.route.firstCall.args[1];
+
+        const result = new Request({});
+        result.setResult('content', {});
+
+        cb(result);
+
+        should(response.setHeader).calledWith('Content-Encoding', 'deflate');
+        should(zlibstub.deflate).calledOnce();
+        should(zlibstub.gzip).not.called();
+      });
+
+      it('should compress the outgoing message with gzip if asked to', () => {
+        payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, gzip, baz'};
+        protocol._sendRequest('connectionId', response, payload);
+
+        const cb = kuzzle.router.http.route.firstCall.args[1];
+
+        const result = new Request({});
+        result.setResult('content', {});
+
+        cb(result);
+
+        should(response.setHeader).calledWith('Content-Encoding', 'gzip');
+        should(zlibstub.deflate).not.called();
+        should(zlibstub.gzip).calledOnce();
+      });
+
+      it('should not compress if no suitable algorithm is found within the accept-encoding list', () => {
+        payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, baz'};
+        protocol._sendRequest('connectionId', response, payload);
+
+        const cb = kuzzle.router.http.route.firstCall.args[1];
+
+        const result = new Request({});
+        result.setResult('content', {});
+
+        cb(result);
+
+        should(response.setHeader).not.calledWith('Content-Encoding', sinon.match.string);
+        should(zlibstub.deflate).not.called();
+        should(zlibstub.gzip).not.called();
+      });
+
+      it('should prefer gzip over deflate if both algorithm are accepted', () => {
+        payload.headers = {'accept-encoding': 'deflate,deflate,DEFLATE,dEfLaTe, GZiP, DEFLATE,deflate'};
+        protocol._sendRequest('connectionId', response, payload);
+
+        const cb = kuzzle.router.http.route.firstCall.args[1];
+
+        const result = new Request({});
+        result.setResult('content', {});
+
+        cb(result);
+
+        should(response.setHeader).calledWith('Content-Encoding', 'gzip');
+        should(zlibstub.deflate).not.called();
+        should(zlibstub.gzip).calledOnce();
+      });
+
+      it('should reply with an error if compressing fails', () => {
+        payload.headers = {'accept-encoding': 'gzip'};
+        zlibstub.gzip.yields(new Error('foobar'));
+        sinon.stub(protocol, '_replyWithError');
+        protocol._sendRequest('connectionId', response, payload);
+
+        const cb = kuzzle.router.http.route.firstCall.args[1];
+
+        const result = new Request({});
+        result.setResult('content', {});
+
+        cb(result);
+
+        should(protocol._replyWithError)
+          .be.calledOnce()
+          .be.calledWithMatch('connectionId',
+            payload,
+            response,
+            {message: 'foobar'});
+
+        should(protocol._replyWithError.firstCall.args[3]).be.instanceOf(BadRequestError);
+        should(response.setHeader).calledWith('Content-Encoding', 'gzip');
+        should(zlibstub.deflate).not.called();
+        should(zlibstub.gzip).calledOnce();
+      });
     });
 
   });
@@ -457,9 +680,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       protocol._replyWithError('connectionId', {}, response, error);
 
-      should(entrypoint.clients)
-        .be.empty();
+      should(entrypoint.clients).be.empty();
     });
   });
-
 });
