@@ -92,7 +92,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
       ],
       total: 2
     });
-      
+
     return notifier.notifyDocumentMDelete(request, ids)
       .then(() => {
         should(notifier.notifyDocument.callCount).be.eql(2);

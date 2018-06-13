@@ -13,7 +13,7 @@ class KWorld {
       protocol: 'websocket',
       host: 'localhost',
       port: 7512
-    }, config.parameters); 
+    }, config.parameters);
 
     switch (this.config.protocol) {
       case 'http':

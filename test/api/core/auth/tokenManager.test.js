@@ -89,7 +89,7 @@ describe('Test: token manager core component', () => {
         rooms: new Set(['bar'])
       });
 
-      const 
+      const
         runTimerStub = sinon.stub(tokenManager, 'runTimer'),
         tokenAfter = new Token({
           _id: 'foo2#bar2',
@@ -137,7 +137,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should do nothing if the provided token is from the anonymous user', () => {
-      const 
+      const
         anon = kuzzle.repositories.token.anonymous(),
         // manually insert the anonymous token in the manager
         // should never happen in real-life scenarios (see UTs above)
@@ -179,7 +179,7 @@ describe('Test: token manager core component', () => {
 
   describe('#checkTokensValidity', () => {
     it('should do nothing if no token has expired', () => {
-      const 
+      const
         expiresAt = Date.now() + 1000000,
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
@@ -196,7 +196,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should clean up subscriptions upon a token expiration', () => {
-      const 
+      const
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
@@ -227,7 +227,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should behave correctly if the token does not match any subscription', () => {
-      const 
+      const
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
@@ -248,7 +248,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should not rerun a timer if the last token has been removed', () => {
-      const 
+      const
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
@@ -266,7 +266,7 @@ describe('Test: token manager core component', () => {
 
   describe('#unlink', () => {
     it('should not try to unlink an anonymous token', () => {
-      const 
+      const
         anon = kuzzle.repositories.token.anonymous(),
         // manually insert the anonymous token in the manager
         // should never happen in real-life scenarios (see UTs above)

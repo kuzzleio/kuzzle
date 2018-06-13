@@ -218,7 +218,7 @@ describe('funnelController.execute', () => {
     });
 
     it('should play cached request in order', (done) => {
-      const 
+      const
         serialized = request.serialize(),
         secondRequest = new Request(Object.assign(serialized.data, {id: 'req-2'})),
         firstCallback = sinon.spy(),
