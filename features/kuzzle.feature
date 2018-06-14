@@ -1,4 +1,38 @@
 Feature: Kuzzle functional tests
+  @http
+  Scenario: Send a request compressed with gzip
+    Given a request compressed with "gzip"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Send a request compressed with deflate
+    Given a request compressed with "deflate"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Send a request compressed with multiple algorithms
+    Given a request compressed with "deflate, gzip, identity"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Receive a request compressed with gzip
+    Given an expected response compressed with "gzip"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Receive a request compressed with deflate
+    Given an expected response compressed with "deflate"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
 
   Scenario: Check server Health
     When I check server health

@@ -1,7 +1,20 @@
 const
   _ = require('lodash'),
   rp = require('request-promise'),
-  routes = require('../../../lib/config/httpRoutes');
+  routes = require('../../../lib/config/httpRoutes'),
+  zlib = require('zlib');
+
+function checkAlgorithm(algorithm) {
+  const
+    supported = ['identity', 'gzip', 'deflate'],
+    list = algorithm.split(',').map(a => a.trim().toLowerCase());
+
+  for(const l of list) {
+    if (!supported.some(a => a === l)) {
+      throw new Error(`Unsupported compression algorithm: ${l}`);
+    }
+  }
+}
 
 class HttpApi {
   constructor (world) {
@@ -15,6 +28,9 @@ class HttpApi {
     };
 
     this.isRealtimeCapable = false;
+
+    this.encoding = 'identity';
+    this.expectedEncoding = 'identity';
   }
 
   _getRequest (index, collection, controller, action, args) {
@@ -147,17 +163,51 @@ class HttpApi {
    * @return {Promise.<IncomingMessage>}
    */
   callApi (options) {
+    if (!options.headers) {
+      options.headers = {};
+    }
+
     if (this.world.currentUser && this.world.currentUser.token) {
-      if (!options.headers) {
-        options.headers = {};
-      }
       options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
     }
 
-    options.json = true;
+    if (options.body && this.encoding !== 'identity') {
+      options.body = JSON.stringify(options.body);
+      options.headers['content-encoding'] = this.encoding;
+
+      const algorithms = this.encoding.split(',').map(a => a.trim().toLowerCase());
+
+      for(const algorithm of algorithms) {
+        if (algorithm === 'gzip') {
+          options.body = zlib.gzipSync(options.body);
+        } else if (algorithm === 'deflate') {
+          options.body = zlib.deflateSync(options.body);
+        }
+      }
+    } else {
+      options.json = true;
+    }
+
+    if (this.expectedEncoding !== 'identity') {
+      options.headers['accept-encoding'] = this.expectedEncoding;
+
+      // despite the name, that options asks "request" to handle
+      // both gzip or deflate compressed responses
+      options.gzip = true;
+    }
+
     options.forever = true;
 
-    return rp(options);
+    return rp(options)
+      .then(response => {
+        // we need to manually parse the stringified json if
+        // we sent a compressed buffer through the request module
+        if (options.body && this.encoding !== 'identity') {
+          return JSON.parse(response);
+        }
+
+        return response;
+      });
   }
 
   callMemoryStorage (command, args) {
@@ -1180,6 +1230,15 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  encode(algorithm) {
+    checkAlgorithm(algorithm);
+    this.encoding = algorithm;
+  }
+
+  decode(algorithm) {
+    checkAlgorithm(algorithm);
+    this.expectedEncoding = algorithm;
+  }
 }
 
 module.exports = HttpApi;

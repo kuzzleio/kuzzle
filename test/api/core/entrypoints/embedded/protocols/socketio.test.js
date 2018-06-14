@@ -35,9 +35,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
     it ('should do nothing if the protocol is disabled', () => {
       entrypoint.config.protocols.socketio.enabled = false;
       protocol.init(entrypoint);
-
-      should(protocol.entryPoint)
-        .be.null();
+      should(protocol.io).be.null();
     });
 
     it('should create the socket and attach events', () => {
@@ -46,11 +44,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
       protocol.init(entrypoint);
 
-      should(protocol.io.set)
-        .be.calledOnce();
-
-      should(protocol.io.on)
-        .be.calledTwice();
+      should(protocol.io.set).be.calledOnce();
+      should(protocol.io.on).be.calledTwice();
 
       {
         const onConnectionH = protocol.io.on.firstCall.args[1];
