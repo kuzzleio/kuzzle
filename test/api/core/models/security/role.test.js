@@ -153,43 +153,42 @@ describe('Test: security/roleTest', () => {
       return role.isActionAllowed(req)
         .then(isAllowed => {
           should(isAllowed).be.true();
-          role.restrictedTo = restrictions;
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           req.input.resource.index = 'index';
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           req.input.resource.index = 'index1';
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           req.input.resource.index = 'index2';
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           req.input.resource.collection = 'collection';
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           req.input.resource.collection = 'collection1';
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();
           req.input.resource.collection = 'collection2';
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.false();
           req.input.resource.index = 'index3';
-          return role.isActionAllowed(req);
+          return role.isActionAllowed(req, restrictions);
         })
         .then(isAllowed => {
           should(isAllowed).be.true();

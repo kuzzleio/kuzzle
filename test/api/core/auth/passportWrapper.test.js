@@ -11,7 +11,7 @@ const
   PassportResponse = require('../../../../lib/api/core/auth/passportResponse');
 
 describe('Test the passport Wrapper', () => {
-  let 
+  let
     PassportWrapper,
     passportWrapper,
     passportMock;
@@ -47,7 +47,7 @@ describe('Test the passport Wrapper', () => {
   });
 
   it('should store strategy options and use them when authenticating', () => {
-    const 
+    const
       stub = sinon.stub(),
       opts = {foo: 'bar'};
 

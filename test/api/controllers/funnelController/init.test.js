@@ -17,7 +17,7 @@ const
 
 describe('funnelController.init', () => {
   it('should initialize API and plugins controller', () => {
-    const 
+    const
       kuzzle = new KuzzleMock(),
       funnel = new FunnelController(kuzzle);
 

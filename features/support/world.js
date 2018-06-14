@@ -13,7 +13,7 @@ class KWorld {
       protocol: 'websocket',
       host: 'localhost',
       port: 7512
-    }, config.parameters); 
+    }, config.parameters);
 
     switch (this.config.protocol) {
       case 'http':
@@ -228,6 +228,17 @@ class KWorld {
           }
         }
       }
+    };
+
+    this.policies = {
+      profile1: [
+        {controller: '*', action: '*', index: '*', collection: '*', value: 'allowed'}
+      ],
+      profile2: [
+        {controller: '*', action: '*', index: this.fakeIndex, collection: '*', value: 'allowed'},
+        {controller: 'document', action: '*', index: '*', collection: '*', value: 'allowed'},
+        {controller: 'auth', action: 'logout', index: '*', collection: '*', value: 'allowed'}
+      ]
     };
 
     this.profiles = {

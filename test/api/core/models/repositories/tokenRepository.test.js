@@ -4,7 +4,6 @@ const
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
   Token = require('../../../../../lib/api/core/models/security/token'),
   User = require('../../../../../lib/api/core/models/security/user'),
   Request = require('kuzzle-common-objects').Request,
@@ -30,10 +29,6 @@ describe('Test: repositories/tokenRepository', () => {
     tokenRepository = new TokenRepository(kuzzle);
 
     return tokenRepository.init();
-  });
-
-  afterEach(() => {
-    sandbox.restore();
   });
 
   describe('#constructor', () => {
@@ -107,8 +102,7 @@ describe('Test: repositories/tokenRepository', () => {
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {
       const token = jwt.sign({_id: 'auser'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
 
-      sandbox.stub(tokenRepository, 'loadFromCache')
-        .rejects(new KuzzleInternalError('Error'));
+      sinon.stub(tokenRepository, 'loadFromCache').rejects(new KuzzleInternalError('Error'));
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(KuzzleInternalError);
     });
@@ -125,7 +119,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should return the token loaded from cache', () => {
-      const 
+      const
         _id = 'auser',
         token = jwt.sign({_id}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm}),
         cacheObj = JSON.stringify({_id, jwt: token});

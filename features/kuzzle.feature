@@ -1,4 +1,38 @@
 Feature: Kuzzle functional tests
+  @http
+  Scenario: Send a request compressed with gzip
+    Given a request compressed with "gzip"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Send a request compressed with deflate
+    Given a request compressed with "deflate"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Send a request compressed with multiple algorithms
+    Given a request compressed with "deflate, gzip, identity"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Receive a request compressed with gzip
+    Given an expected response compressed with "gzip"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Receive a request compressed with deflate
+    Given an expected response compressed with "deflate"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
 
   Scenario: Check server Health
     When I check server health
@@ -431,8 +465,10 @@ Feature: Kuzzle functional tests
   Scenario: get profile rights
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
+    And I create a new profile "profile1" with id "profile1"
     And I create a new profile "profile2" with id "profile2"
     Then I'm able to find rights for profile "profile2"
+    Then I'm able to find rights for profile "profile1"
     Then I'm not able to find rights for profile "fake-profile"
 
   @security
@@ -1773,9 +1809,3 @@ Feature: Kuzzle functional tests
     Then I'm able to find a default role with id "admin" equivalent to role "admin"
     And I'm able to find a default role with id "default" equivalent to role "default"
     And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"
-
-#  Scenario: Index and collection creation directly with Elasticsearch
-#    When I create an index and a collection with ElasticSearch
-#    When I create a document directly with ElasticSearch
-#    Then I update the document with Kuzzle
-#    Then The _kuzzle_info mapping is correct

@@ -4,7 +4,7 @@ const
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  Request = require('kuzzle-common-objects').Request, 
+  Request = require('kuzzle-common-objects').Request,
   RequestContext = require('kuzzle-common-objects').models.RequestContext;
 
 describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {

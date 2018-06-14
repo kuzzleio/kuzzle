@@ -167,7 +167,9 @@ module.exports = {
         {
           transport: 'console',
           level: 'info',
-          stderrLevels: []
+          stderrLevels: [],
+          format: 'simple',
+          silent: true
         }
       ],
       accessLogFormat: 'combined',
@@ -178,7 +180,9 @@ module.exports = {
     protocols: {
       http: {
         enabled: true,
-        maxFormFileSize: '1MB'
+        maxFormFileSize: '1MB',
+        maxEncodingLayers: 3,
+        allowCompression: true
       },
       socketio: {
         enabled: true,

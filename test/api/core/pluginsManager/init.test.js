@@ -32,15 +32,6 @@ describe('PluginsManager', () => {
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
-    // making it quiet
-    PluginsManager.__set__({
-      console: {
-        log: sinon.stub(),
-        error: sinon.stub(),
-        warn: sinon.stub()
-      }
-    });
-
     kuzzle = new KuzzleMock();
     pluginsManager = new PluginsManager(kuzzle);
   });

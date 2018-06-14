@@ -1,22 +1,11 @@
 const
   rewire = require('rewire'),
-  sinon = require('sinon'),
   should = require('should'),
   Config = rewire('../../lib/config'),
   defaultConfig = require('../../default.config'),
   KuzzleInternalError = require('kuzzle-common-objects').errors.InternalError;
 
 describe('lib/config/index.js', () => {
-  before(() => {
-    Config.__set__({
-      console: {
-        log: sinon.stub(),
-        warn: sinon.stub(),
-        error: sinon.stub()
-      }
-    });
-  });
-
   describe('#unstringify', () => {
     const unstringify = Config.__get__('unstringify');
 

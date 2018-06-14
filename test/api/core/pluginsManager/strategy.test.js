@@ -2,10 +2,9 @@
 
 const
   should = require('should'),
-  rewire = require('rewire'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager'),
+  PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager'),
   PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError;
 
 describe('PluginsManager: strategy management', () => {
@@ -20,7 +19,6 @@ describe('PluginsManager: strategy management', () => {
       manifest: {}
     },
     pluginManagerStrategy,
-    sandbox = sinon.sandbox.create(),
     foo = {foo: 'bar'};
 
   beforeEach(() => {
@@ -33,7 +31,7 @@ describe('PluginsManager: strategy management', () => {
       strategies: {
         someStrategy: {
           config: {
-            constructor: sandbox.stub(),
+            constructor: sinon.stub(),
             strategyOptions: {
               someStrategy: 'options'
             },
@@ -55,15 +53,15 @@ describe('PluginsManager: strategy management', () => {
           }
         }
       },
-      afterRegisterFunction: sandbox.stub(),
-      createFunction: sandbox.stub(),
-      existsFunction: sandbox.stub(),
-      deleteFunction: sandbox.stub(),
-      getByIdFunction: sandbox.stub(),
-      getInfoFunction: sandbox.stub(),
-      updateFunction: sandbox.stub(),
-      validateFunction: sandbox.stub(),
-      verifyFunction: sandbox.stub()
+      afterRegisterFunction: sinon.stub(),
+      createFunction: sinon.stub(),
+      existsFunction: sinon.stub(),
+      deleteFunction: sinon.stub(),
+      getByIdFunction: sinon.stub(),
+      getInfoFunction: sinon.stub(),
+      updateFunction: sinon.stub(),
+      validateFunction: sinon.stub(),
+      verifyFunction: sinon.stub()
     };
 
     pluginManagerStrategy = {
@@ -82,8 +80,7 @@ describe('PluginsManager: strategy management', () => {
     };
 
     pluginsManager.strategies.someStrategy = pluginManagerStrategy;
-
-    sandbox.resetHistory();
+    sinon.resetHistory();
   });
 
   describe('#getStrategyFields', () => {
@@ -109,24 +106,15 @@ describe('PluginsManager: strategy management', () => {
   });
 
   describe('#initAuthentication', () => {
-    let
-      consoleMock;
-
     beforeEach(() => {
-      consoleMock = {
-        log: sandbox.stub(),
-        warn: sandbox.stub(),
-        error: sandbox.stub()
-      };
       pluginsManager.strategies = {};
-      PluginsManager.__set__('console', consoleMock);
     });
 
     it('should add the strategy in strategies if it is well-formed', done => {
       let verifyAdapter;
 
-      plugin.object.existsFunction = sandbox.stub().returns(foo);
-      plugin.object.verifyFunction = sandbox.stub().returns(Promise.resolve({kuid: 'foo'}));
+      plugin.object.existsFunction = sinon.stub().returns(foo);
+      plugin.object.verifyFunction = sinon.stub().resolves({kuid: 'foo'});
 
       pluginsManager._initAuthentication(plugin);
       should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
@@ -161,7 +149,7 @@ describe('PluginsManager: strategy management', () => {
     });
 
     it('method invocation should intercept a thrown error to transform it into PluginImplementationError', () => {
-      plugin.object.existsFunction = sandbox.stub().throws(new Error('some error'));
+      plugin.object.existsFunction = sinon.stub().throws(new Error('some error'));
 
       pluginsManager._initAuthentication(plugin);
       should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
@@ -212,7 +200,7 @@ describe('PluginsManager: strategy management', () => {
 
     it('should print an error in the console if a mandatory method is not available in the plugin object', () => {
       ['exists', 'create', 'update', 'delete', 'validate', 'verify'].forEach(methodName => {
-        const 
+        const
           fnName = methodName + 'Function',
           save = plugin.object[fnName];
 

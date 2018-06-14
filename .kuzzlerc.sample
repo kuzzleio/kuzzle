@@ -296,6 +296,8 @@
           "transport": "console",
           "level": "info",
           "stderrLevels": []
+          "format": "simple",
+          "silent": true
         }
       ],
       "accessLogFormat": "combined",
@@ -316,9 +318,26 @@
     // protocols can be extended using plugins and configured in this section.
     "protocols": {
       "http": {
+        // * enabled:
+        //    Set to "false" to disable HTTP support
+        // * maxFormFileSize:
+        //    Maximum size of requests sent via http forms
+        // * maxEncodingLayers:
+        //    Maximum number of encoding layers that can be applied
+        //    to an http message, using the Content-Encoding header.
+        //    This parameter is meant to prevent abuses by setting an
+        //    abnormally large number of encodings, forcing Kuzzle to
+        //    allocate as many decoders to handle the incoming request.
+        // * allowCompression:
+        //    Enable support for compressed requests, using the
+        //    Content-Encoding header
+        //    Currently supported compression algorithms: gzip, deflate, identity
+        //    Note: "identity" is always an accepted value, even if
+        //    compression support is disabled
         "enabled": true,
-        // maximum size of documents sent via http forms
-        "maxFormFileSize": "1mb"
+        "maxFormFileSize": "1mb",
+        "maxEncodingLayers": 3,
+        "allowCompression": true
       },
       "socketio": {
         "enabled": true,

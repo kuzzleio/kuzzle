@@ -100,6 +100,10 @@ After({tags: '@validation'}, function () {
   return cleanValidations.call(this);
 });
 
+After({tags: '@http'}, function () {
+  this.api.encode('identity');
+  this.api.decode('identity');
+});
 
 function cleanSecurity () {
   if (this.currentUser) {

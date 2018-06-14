@@ -241,7 +241,7 @@ describe('Test: document controller', () => {
   describe('#doMultipleActions', () => {
     it('mCreate should fulfill with an object', () => {
       kuzzle.services.list.storageEngine.mcreate.resolves({
-        result: ['created', 'created'], 
+        result: ['created', 'created'],
         error: []
       });
 
@@ -260,7 +260,7 @@ describe('Test: document controller', () => {
 
     it('mCreate should set a partial error if one of the action fails', () => {
       kuzzle.services.list.storageEngine.mcreate.resolves({
-        result: ['created'], 
+        result: ['created'],
         error: [new KuzzleInternalError('some error')]
       });
 
@@ -291,7 +291,7 @@ describe('Test: document controller', () => {
 
     it('mCreateOrReplace should fulfill with an object', () => {
       kuzzle.services.list.storageEngine.mcreateOrReplace.resolves({
-        result: ['created', 'replaced'], 
+        result: ['created', 'replaced'],
         error: []
       });
 
@@ -310,7 +310,7 @@ describe('Test: document controller', () => {
 
     it('mUpdate should fulfill with an object', () => {
       kuzzle.services.list.storageEngine.mupdate.resolves({
-        result: ['updated', 'updated'], 
+        result: ['updated', 'updated'],
         error: []
       });
 
@@ -329,7 +329,7 @@ describe('Test: document controller', () => {
 
     it('mReplace should fulfill with an object', () => {
       kuzzle.services.list.storageEngine.mreplace.resolves({
-        result: ['replaced', 'replaced'], 
+        result: ['replaced', 'replaced'],
         error: []
       });
 
@@ -527,7 +527,7 @@ describe('Test: document controller', () => {
   describe('#mDelete', () => {
     it('should fulfill with an object', () => {
       kuzzle.services.list.storageEngine.mdelete.resolves({
-        result: ['documentId', 'anotherDocumentId'], 
+        result: ['documentId', 'anotherDocumentId'],
         error: []
       });
 
@@ -541,7 +541,7 @@ describe('Test: document controller', () => {
 
     it('should set a partial error if one of the action fails', () => {
       kuzzle.services.list.storageEngine.mdelete.resolves({
-        result: ['documentId'], 
+        result: ['documentId'],
         error: ['anotherDocumentId']
       });
 
