@@ -320,7 +320,7 @@ describe('Test: admin controller', () => {
       adminController = new AdminController(kuzzle);
 
       return should(() => {
-        adminController.generateDump(request)
+        adminController.generateDump(request);
       }).throw(BadRequestError);
     });
 
@@ -529,7 +529,7 @@ describe('Test: admin controller', () => {
       adminController = new AdminController(kuzzle);
 
       return should(() => {
-        adminController.shutdown(request)
+        adminController.shutdown(request);
       }).throw(BadRequestError);
     });
 

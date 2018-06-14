@@ -102,7 +102,7 @@ describe('funnelController.executePluginRequest', () => {
 
     funnel.controllers.testme.action.rejects(error);
 
-    const callback = error => {
+    const callback = () => {
       setTimeout(() => {
         should(kuzzle.pluginsManager.trigger).be.called();
         should(kuzzle.adminController.generateDump).be.called();
@@ -111,7 +111,7 @@ describe('funnelController.executePluginRequest', () => {
     };
 
     try {
-      funnel.executePluginRequest(rq, callback)
+      funnel.executePluginRequest(rq, callback);
     }
     catch (e) {
       done(e);
