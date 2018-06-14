@@ -1,7 +1,6 @@
 'use strict';
 
 const
-  path = require('path'),
   Bluebird = require('bluebird'),
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
@@ -137,7 +136,7 @@ describe('Test: Internal broker', () => {
 
         should(WSStub)
           .be.calledOnce()
-          .be.calledWith(`ws://localhost:4242`, {perMessageDeflate: false});
+          .be.calledWith('ws://localhost:4242', {perMessageDeflate: false});
 
         mockrequire.stopAll();
       });

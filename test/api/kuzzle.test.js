@@ -194,7 +194,7 @@ describe('/lib/api/kuzzle.js', () => {
       Object.defineProperty(process, 'exit', {
         value: originalExit
       });
-    })
+    });
 
     it('should dump on unhandledRejection in development', () => {
       process.emit('unhandledRejection', reason, 'promise');
