@@ -3,7 +3,8 @@ const
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
-  KuzzleMock = require('../mocks/kuzzle.mock');
+  KuzzleMock = require('../mocks/kuzzle.mock'),
+  Bluebird = require('bluebird');
 
 describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
@@ -144,6 +145,81 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.entryPoints.init).not.be.called();
           should(kuzzle.repositories.init).not.be.called();
         });
+    });
+  });
+
+  describe('#registerErrorHandlers', () => {
+    let
+      reason,
+      originalExit;
+
+    beforeEach(() => {
+      reason = {
+        message: 'message',
+        stack: 'stack'
+      };
+
+      const mock = new KuzzleMock();
+      kuzzle = new Kuzzle();
+
+      originalExit = process.exit;
+      Object.defineProperty(process, 'exit', {
+        value: sinon.stub()
+      });
+
+      [
+        'entryPoints',
+        'funnel',
+        'router',
+        'indexCache',
+        'internalEngine',
+        'notifier',
+        'gc',
+        'pluginsManager',
+        'adminController',
+        'repositories',
+        'services',
+        'statistics',
+        'validation'
+      ].forEach(k => {
+        kuzzle[k] = mock[k];
+      });
+
+      kuzzle.adminController.generateDump = sinon.stub().returns(Bluebird.resolve());
+
+      kuzzle.start();
+    });
+
+    afterEach(() => {
+      Object.defineProperty(process, 'exit', {
+        value: originalExit
+      });
+    })
+
+    it('should dump on unhandledRejection in development', () => {
+      process.emit('unhandledRejection', reason, 'promise');
+
+      should(kuzzle.adminController.generateDump).be.calledOnce();
+    });
+
+    it('should not dump on unhandledRejection in production', () => {
+      process.env.NODE_ENV = 'production';
+      process.emit('unhandledRejection', reason, 'promise');
+
+      should(kuzzle.adminController.generateDump).not.be.called();
+      process.env.NODE_ENV = 'development';
+    });
+
+    it('should dump on uncaughtException', () => {
+      process.emit('uncaughtException', reason);
+
+      should(kuzzle.adminController.generateDump).be.calledOnce();
+    });
+
+    it('should dump on SIGTRAP', () => {
+      process.emit('uncaughtException', reason);
+
+      should(kuzzle.adminController.generateDump).be.calledOnce();
     });
   });
 });
