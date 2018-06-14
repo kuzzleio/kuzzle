@@ -256,26 +256,14 @@ describe('Test: admin controller', () => {
       fsStub,
       coreStub,
       getAllStatsStub,
-      originalLog,
       globStub;
 
     afterEach(() => {
       mockrequire.stopAll();
+      AdminController.__set__('_dump', false);
     });
 
-    afterEach(() => {
-      Object.defineProperty(console, 'log', {
-        value: originalLog
-      });
-    });
-
-    /* eslint-disable no-console */
     beforeEach(() => {
-      originalLog = console.log;
-      Object.defineProperty(console, 'log', {
-        value: sinon.stub()
-      });
-
       fsStub = {
         accessSync: sinon.stub(),
         constants: {},
@@ -325,6 +313,15 @@ describe('Test: admin controller', () => {
       adminController = new AdminControllerReRequired(kuzzle);
 
       request.action = 'generateDump';
+    });
+
+    it('should throw an error if a dump is in progress', () => {
+      AdminController.__set__('_dump', true);
+      adminController = new AdminController(kuzzle);
+
+      return should(() => {
+        adminController.generateDump(request)
+      }).throw(BadRequestError);
     });
 
     describe('#dump', () => {
@@ -524,6 +521,16 @@ describe('Test: admin controller', () => {
       Object.defineProperty(process, 'kill', {
         value: originalKill
       });
+      AdminController.__set__('_shutdown', false);
+    });
+
+    it('should throw an error if shutdown is in progress', () => {
+      AdminController.__set__('_shutdown', true);
+      adminController = new AdminController(kuzzle);
+
+      return should(() => {
+        adminController.shutdown(request)
+      }).throw(BadRequestError);
     });
 
     it('should send a SIGTERM', () => {
