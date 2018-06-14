@@ -3,8 +3,7 @@ const
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
-  KuzzleMock = require('../mocks/kuzzle.mock'),
-  Bluebird = require('bluebird');
+  KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
