@@ -60,7 +60,7 @@ program
 // $ kuzzle resetSecurity
 program
   .command('resetSecurity')
-  .description('delete all created users, profiles and roles')
+  .description('reset all users, profiles and roles')
   .option('--noint', 'non interactive mode')
   .action(require('./commands/resetSecurity'));
 
