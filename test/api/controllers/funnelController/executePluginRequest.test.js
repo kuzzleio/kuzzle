@@ -94,7 +94,7 @@ describe('funnelController.executePluginRequest', () => {
 
   it('should dump on errors in whitelist', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
-    kuzzle.adminController.generateDump = sinon.stub();
+    kuzzle.adminController.dump = sinon.stub();
 
     const
       rq = new Request({controller: 'testme', action: 'action'}),
@@ -105,7 +105,7 @@ describe('funnelController.executePluginRequest', () => {
     const callback = () => {
       setTimeout(() => {
         should(kuzzle.pluginsManager.trigger).be.called();
-        should(kuzzle.adminController.generateDump).be.called();
+        should(kuzzle.adminController.dump).be.called();
         done();
       }, 50);
     };

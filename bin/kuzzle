@@ -90,7 +90,7 @@ program
 program
   .command('dump')
   .description('create a dump of current state of kuzzle')
-  .action(require('./commands/generateDump'));
+  .action(require('./commands/dump'));
 
 
 // Run user command

@@ -25,7 +25,7 @@ const
   ColorOutput = require('./colorOutput'),
   sendAction = require('./sendAction');
 
-function commandGenerateDump (options) {
+function commanddump (options) {
   const
     cout = new ColorOutput(options);
 
@@ -33,7 +33,7 @@ function commandGenerateDump (options) {
 
   const args = {
     controller: 'admin',
-    action: 'generateDump'
+    action: 'dump'
   };
 
   return sendAction(options, args, { suffix: 'cli' })
@@ -49,4 +49,4 @@ function commandGenerateDump (options) {
     });
 }
 
-module.exports = commandGenerateDump;
+module.exports = commanddump;

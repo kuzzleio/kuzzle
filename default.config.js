@@ -56,9 +56,12 @@ module.exports = {
   plugins: {
     common: {
       bootstrapLockTimeout: 5000,
-      pipeWarnTime: 500,
-      pipeTimeout: 5000,
+      pipeWarnTime: 5000,
+      pipeTimeout: 10000,
       initTimeout: 10000,
+    },
+    cluster: {
+      privileged: true
     }
   },
 
