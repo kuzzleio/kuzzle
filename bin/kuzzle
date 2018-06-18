@@ -53,7 +53,7 @@ program
 // $ kuzzle reset
 program
   .command('reset')
-  .description('delete Kuzzle configuration and users from database')
+  .description('reset all users, profiles, roles and documents validation specifications')
   .option('--noint', 'non interactive mode')
   .action(require('./commands/resetKuzzleData'));
 
