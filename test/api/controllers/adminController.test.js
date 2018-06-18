@@ -322,6 +322,7 @@ describe('Test: admin controller', () => {
       adminController = new AdminControllerReRequired(kuzzle);
 
       request.action = 'dump';
+      kuzzle.config.dump.enabled = true;
     });
 
     it('should throw an error if a dump is in progress', () => {
@@ -331,6 +332,19 @@ describe('Test: admin controller', () => {
       return should(() => {
         adminController.dump(request);
       }).throw(BadRequestError);
+    });
+
+    it('should throw an error if dump is disabled by configuration', done => {
+      kuzzle.config.dump.enabled = false;
+
+      try {
+        adminController.dump(request);
+        done(new Error('Should throw an error if dump is disabled'));
+      }
+      catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+        done();
+      }
     });
 
     describe('#dump', () => {
