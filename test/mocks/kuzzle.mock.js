@@ -194,11 +194,12 @@ class KuzzleMock extends Kuzzle {
         search: sinon.stub().resolves(),
         scroll: sinon.stub().resolves(),
         validateAndSaveProfile: sinon.stub(),
-        deleteProfile: sinon.stub(),
-        buildProfileFromRequest: sinon.stub()
+        delete: sinon.stub(),
+        getProfileFromRequest: sinon.stub(),
+        truncate: sinon.stub().resolves()
       },
       role: {
-        deleteRole: sinon.stub().resolves(),
+        delete: sinon.stub().resolves(),
         fromDTO: sinon.stub().resolves(),
         getRoleFromRequest: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
         load: sinon.stub().resolves(),
@@ -207,7 +208,8 @@ class KuzzleMock extends Kuzzle {
         searchRole: sinon.stub().resolves(),
         search: sinon.stub().resolves(),
         scroll: sinon.stub().resolves(),
-        validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0]))
+        validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+        truncate: sinon.stub().resolves()
       },
       user: {
         anonymous: this.sandbox.stub().returns({_id: '-1'}),
@@ -219,14 +221,16 @@ class KuzzleMock extends Kuzzle {
         persist: this.sandbox.stub().resolves({}),
         search: this.sandbox.stub().resolves(),
         scroll: this.sandbox.stub().resolves(),
-        toDTO: this.sandbox.stub()
+        toDTO: this.sandbox.stub(),
+        truncate: sinon.stub().resolves()
       },
       token: {
         anonymous: this.sandbox.stub().returns({_id: 'anonymous'}),
         verifyToken: this.sandbox.stub().resolves(),
         generateToken: this.sandbox.stub().resolves({}),
         expire: this.sandbox.stub().resolves(),
-        deleteByUserId: this.sandbox.stub().resolves()
+        deleteByUserId: this.sandbox.stub().resolves(),
+        truncate: sinon.stub().resolves()
       }
     };
 

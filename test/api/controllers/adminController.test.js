@@ -62,12 +62,10 @@ describe('Test: admin controller', () => {
     });
 
     it('should erase the internal ES & Redis dbs', done => {
-      kuzzle.repositories.user.search.returns(Bluebird.resolve({total: 0, hits: []}));
-
       adminController.resetKuzzleData(request);
+
       setTimeout(() => {
-        should(kuzzle.repositories.user.search).be.calledOnce();
-        should(kuzzle.repositories.user.scroll).not.be.called();
+        should(kuzzle.repositories.user.truncate).be.calledOnce();
         should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
         should(kuzzle.services.list.internalCache.flushdb).be.calledOnce();
 
@@ -88,45 +86,6 @@ describe('Test: admin controller', () => {
         done();
       }, 50);
     });
-
-    it('should scroll and delete all registered users', done => {
-      kuzzle.repositories.user.search.returns(Bluebird.resolve({total: 5, scrollId: 'foobar', hits: [
-        {_id: 'foo1' },
-        {_id: 'foo2' },
-        {_id: 'foo3' }
-      ]}));
-
-      kuzzle.repositories.user.scroll.onFirstCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobar2',
-        hits: [{_id: 'foo4'}]
-      }));
-
-      kuzzle.repositories.user.scroll.onSecondCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobar2',
-        hits: [{_id: 'foo5'}]
-      }));
-
-      adminController.resetKuzzleData(request);
-
-      setTimeout(() => {
-        should(kuzzle.repositories.user.search).be.calledOnce();
-        should(kuzzle.repositories.user.scroll).be.calledTwice();
-
-        should(kuzzle.repositories.user.scroll.getCall(0).args[0]).be.eql('foobar');
-        should(kuzzle.repositories.user.scroll.getCall(1).args[0]).be.eql('foobar2');
-
-        should(kuzzle.funnel.controllers.security.deleteUser.callCount).be.eql(5);
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(0).args[0].input.resource._id).be.eql('foo1');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(1).args[0].input.resource._id).be.eql('foo2');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(2).args[0].input.resource._id).be.eql('foo3');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(3).args[0].input.resource._id).be.eql('foo4');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(4).args[0].input.resource._id).be.eql('foo5');
-
-        done();
-      }, 50);
-    });
   });
 
   describe('#resetSecurity', () => {
@@ -135,103 +94,22 @@ describe('Test: admin controller', () => {
     });
 
     it('should scroll and delete all registered users, profiles and roles', done => {
-      kuzzle.repositories.user.search.returns(Bluebird.resolve({total: 5, scrollId: 'foobarUser', hits: [
-        {_id: 'user1' },
-        {_id: 'user2' },
-        {_id: 'user3' }
-      ]}));
-      kuzzle.repositories.user.scroll.onFirstCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobarUser2',
-        hits: [{_id: 'user4'}]
-      }));
-      kuzzle.repositories.user.scroll.onSecondCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobarUser2',
-        hits: [{_id: 'user5'}]
-      }));
-
-      kuzzle.repositories.profile.search.returns(Bluebird.resolve({total: 5, scrollId: 'foobarProfile', hits: [
-        {_id: 'profile1' },
-        {_id: 'profile2' },
-        {_id: 'profile3' }
-      ]}));
-      kuzzle.repositories.profile.scroll.onFirstCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobarProfile2',
-        hits: [{_id: 'profile4'}]
-      }));
-      kuzzle.repositories.profile.scroll.onSecondCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobarProfile2',
-        hits: [{_id: 'profile5'}]
-      }));
-
-      kuzzle.repositories.role.search.returns(Bluebird.resolve({total: 5, scrollId: 'foobarRole', hits: [
-        {_id: 'role1' },
-        {_id: 'role2' },
-        {_id: 'role3' }
-      ]}));
-      kuzzle.repositories.role.scroll.onFirstCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobarRole2',
-        hits: [{_id: 'role4'}]
-      }));
-      kuzzle.repositories.role.scroll.onSecondCall().returns(Bluebird.resolve({
-        total: 1,
-        scrollId: 'foobarRole2',
-        hits: [{_id: 'role5'}]
-      }));
-
       adminController.resetSecurity(request);
+
       setTimeout(() => {
-        should(kuzzle.repositories.user.search).be.calledOnce();
-        should(kuzzle.repositories.user.scroll).be.calledTwice();
-
-        should(kuzzle.repositories.user.scroll.getCall(0).args[0]).be.eql('foobarUser');
-        should(kuzzle.repositories.user.scroll.getCall(1).args[0]).be.eql('foobarUser2');
-
-        should(kuzzle.funnel.controllers.security.deleteUser.callCount).be.eql(5);
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(0).args[0].input.resource._id).be.eql('user1');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(0).args[0].input.args.refresh).be.eql('wait_for');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(1).args[0].input.resource._id).be.eql('user2');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(2).args[0].input.resource._id).be.eql('user3');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(3).args[0].input.resource._id).be.eql('user4');
-        should(kuzzle.funnel.controllers.security.deleteUser.getCall(4).args[0].input.resource._id).be.eql('user5');
-
-
-        should(kuzzle.repositories.profile.search).be.calledOnce();
-        should(kuzzle.repositories.profile.scroll).be.calledTwice();
-
-        should(kuzzle.repositories.profile.scroll.getCall(0).args[0]).be.eql('foobarProfile');
-        should(kuzzle.repositories.profile.scroll.getCall(1).args[0]).be.eql('foobarProfile2');
-
-        should(kuzzle.funnel.controllers.security.deleteProfile.callCount).be.eql(5);
-        should(kuzzle.funnel.controllers.security.deleteProfile.getCall(0).args[0].input.resource._id).be.eql('profile1');
-        should(kuzzle.funnel.controllers.security.deleteProfile.getCall(0).args[0].input.args.refresh).be.eql('wait_for');
-        should(kuzzle.funnel.controllers.security.deleteProfile.getCall(1).args[0].input.resource._id).be.eql('profile2');
-        should(kuzzle.funnel.controllers.security.deleteProfile.getCall(2).args[0].input.resource._id).be.eql('profile3');
-        should(kuzzle.funnel.controllers.security.deleteProfile.getCall(3).args[0].input.resource._id).be.eql('profile4');
-        should(kuzzle.funnel.controllers.security.deleteProfile.getCall(4).args[0].input.resource._id).be.eql('profile5');
-
-
-        should(kuzzle.repositories.role.search).be.calledOnce();
-        should(kuzzle.repositories.role.scroll).be.calledTwice();
-
-        should(kuzzle.repositories.role.scroll.getCall(0).args[0]).be.eql('foobarRole');
-        should(kuzzle.repositories.role.scroll.getCall(1).args[0]).be.eql('foobarRole2');
-
-        should(kuzzle.funnel.controllers.security.deleteRole.callCount).be.eql(5);
-        should(kuzzle.funnel.controllers.security.deleteRole.getCall(0).args[0].input.resource._id).be.eql('role1');
-        should(kuzzle.funnel.controllers.security.deleteRole.getCall(0).args[0].input.args.refresh).be.eql('wait_for');
-        should(kuzzle.funnel.controllers.security.deleteRole.getCall(1).args[0].input.resource._id).be.eql('role2');
-        should(kuzzle.funnel.controllers.security.deleteRole.getCall(2).args[0].input.resource._id).be.eql('role3');
-        should(kuzzle.funnel.controllers.security.deleteRole.getCall(3).args[0].input.resource._id).be.eql('role4');
-        should(kuzzle.funnel.controllers.security.deleteRole.getCall(4).args[0].input.resource._id).be.eql('role5');
-
-        should(kuzzle.internalEngine.bootstrap.createDefaultRoles).be.calledOnce();
+        should(kuzzle.repositories.user.truncate).be.calledOnce();
+        should(kuzzle.repositories.profile.truncate).be.calledOnce();
+        should(kuzzle.repositories.role.truncate).be.calledOnce();
         should(kuzzle.internalEngine.bootstrap.createDefaultProfiles).be.calledOnce();
+        should(kuzzle.internalEngine.bootstrap.createDefaultRoles).be.calledOnce();
 
+        sinon.assert.callOrder(
+          kuzzle.repositories.user.truncate,
+          kuzzle.repositories.profile.truncate,
+          kuzzle.repositories.role.truncate,
+          kuzzle.internalEngine.bootstrap.createDefaultProfiles,
+          kuzzle.internalEngine.bootstrap.createDefaultRoles
+        );
         done();
       }, 50);
     });

@@ -171,7 +171,7 @@ describe('Test: repositories/profileRepository', () => {
     });
   });
 
-  describe('#buildProfileFromRequest', () => {
+  describe('#getProfileFromRequest', () => {
     it('should resolve to a valid Profile when a valid object is provided', () => {
       const
         profile = {
@@ -184,7 +184,7 @@ describe('Test: repositories/profileRepository', () => {
 
       kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
 
-      return profileRepository.buildProfileFromRequest(request)
+      return profileRepository.getProfileFromRequest(request)
         .then(p => should(p).match(profile));
     });
   });
@@ -213,7 +213,7 @@ describe('Test: repositories/profileRepository', () => {
     });
   });
 
-  describe('#deleteProfile', () => {
+  describe('#delete', () => {
     it('should reject and not trigger any event when no id is provided', done => {
       const invalidProfileObject = new Request({
         body: {
@@ -221,7 +221,7 @@ describe('Test: repositories/profileRepository', () => {
         }
       });
 
-      profileRepository.deleteProfile(invalidProfileObject)
+      profileRepository.delete(invalidProfileObject)
         .then(() => {
           done(new Error('The promise is not rejected'));
         })
@@ -240,7 +240,7 @@ describe('Test: repositories/profileRepository', () => {
         total: 1
       });
 
-      profileRepository.deleteProfile({_id: 'test'})
+      profileRepository.delete({_id: 'test'})
         .then(() => {
           done(new Error('The promise is not rejected'));
         })
@@ -260,7 +260,7 @@ describe('Test: repositories/profileRepository', () => {
         policies: [ {roleId: 'admin'} ]
       };
 
-      profileRepository.deleteProfile(profile)
+      profileRepository.delete(profile)
         .then(() => {
           done(new Error('The promise is not rejected'));
         })
@@ -280,7 +280,7 @@ describe('Test: repositories/profileRepository', () => {
         policies: [ {roleId: 'default'} ]
       };
 
-      profileRepository.deleteProfile(profile)
+      profileRepository.delete(profile)
         .then(() => {
           done(new Error('The promise is not rejected'));
         })
@@ -300,7 +300,7 @@ describe('Test: repositories/profileRepository', () => {
         policies: [ {roleId: 'anonymous'} ]
       };
 
-      profileRepository.deleteProfile(profile)
+      profileRepository.delete(profile)
         .then(() => {
           done(new Error('The promise is not rejected'));
         })
@@ -321,7 +321,7 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.deleteFromCache = sinon.stub().resolves();
       profileRepository.deleteFromDatabase = sinon.stub().resolves(response);
 
-      return profileRepository.deleteProfile(testProfile)
+      return profileRepository.delete(testProfile)
         .then(r => {
           should(r)
             .be.exactly(response);
@@ -334,7 +334,7 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.deleteFromDatabase = sinon.stub().resolves({acknowledge: true});
       profileRepository.profiles.foo = true;
 
-      return profileRepository.deleteProfile({_id: 'foo'})
+      return profileRepository.delete({_id: 'foo'})
         .then(() => {
           should(profileRepository.deleteFromDatabase)
             .be.calledOnce()
