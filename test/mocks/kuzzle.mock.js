@@ -96,6 +96,11 @@ class KuzzleMock extends Kuzzle {
       listSubscriptions: this.sandbox.stub().resolves(foo),
     };
 
+    this.janitor = {
+      dump: sinon.stub(),
+      shutdown: sinon.stub()
+    };
+
     this.indexCache = {
       indexes: {},
       defaultMappings: {},
