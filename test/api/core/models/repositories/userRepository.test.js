@@ -195,7 +195,7 @@ describe('Test: repositories/userRepository', () => {
         .catch(error => {
           should(error).be.instanceOf(BadRequestError);
           done();
-        })
+        });
     });
 
     it('should delete user from both cache and database', () => {
@@ -236,13 +236,10 @@ describe('Test: repositories/userRepository', () => {
 
       return userRepository.delete(user, options)
         .then(() => {
-          const options = kuzzle.internalEngine.delete.firstCall.args[2];
-          should(options).match({
-            refresh: 'wait_for'
-          });
+          should(kuzzle.internalEngine.delete.firstCall.args[2]).match(options);
         });
     });
-  })
+  });
 });
 
 function assertIsAnonymous (user) {

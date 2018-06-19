@@ -2,7 +2,6 @@ const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,

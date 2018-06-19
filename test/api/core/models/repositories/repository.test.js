@@ -6,7 +6,6 @@ const
     InternalError: KuzzleInternalError,
     NotFoundError
   } = require('kuzzle-common-objects').errors,
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   Repository = require('../../../../../lib/api/core/models/repositories/repository');
 
@@ -260,7 +259,7 @@ describe('Test: repositories/repository', () => {
         .catch(error => {
           should(error).be.instanceOf(BadRequestError);
           done();
-        })
+        });
     });
 
     it('should delete an object from both cache and database when pertinent', () => {
