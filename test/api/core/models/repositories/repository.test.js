@@ -482,40 +482,43 @@ describe('Test: repositories/repository', () => {
       repository.scroll = sinon.stub();
       repository.delete = sinon.stub();
       repository.load = sinon.stub();
-      repository.search.resolves({total: 5, scrollId: 'foobarUser', hits: [
-        {_id: 'user1' },
-        {_id: 'user2' },
-        {_id: 'user3' }
+      repository.search.resolves({total: 6, scrollId: 'foobarRole', hits: [
+        {_id: 'admin' },
+        {_id: 'role1' },
+        {_id: 'role2' },
+        {_id: 'role3' }
       ]});
       repository.scroll.onFirstCall().resolves({
         total: 1,
-        scrollId: 'foobarUser2',
-        hits: [{_id: 'user4'}]
+        scrollId: 'foobarRole2',
+        hits: [{_id: 'role4'}]
       });
       repository.scroll.onSecondCall().resolves({
         total: 1,
-        scrollId: 'foobarUser2',
-        hits: [{_id: 'user5'}]
+        scrollId: 'foobarRole2',
+        hits: [{_id: 'role5'}]
       });
       for (let i = 0; i < 6; i++) {
-        repository.load.onCall(i).resolves({ _id: `user${i + 1}` });
+        repository.load.onCall(i).resolves({ _id: `role${i + 1}` });
       }
 
       return repository.truncate({ refresh: 'wait_for' })
-        .then(() => {
+        .then(result => {
           should(repository.search).be.calledOnce();
           should(repository.scroll).be.calledTwice();
 
-          should(repository.scroll.getCall(0).args[0]).be.eql('foobarUser');
-          should(repository.scroll.getCall(1).args[0]).be.eql('foobarUser2');
+          should(repository.scroll.getCall(0).args[0]).be.eql('foobarRole');
+          should(repository.scroll.getCall(1).args[0]).be.eql('foobarRole2');
 
           should(repository.delete.callCount).be.eql(5);
-          should(repository.delete.getCall(0).args[0]._id).be.eql('user1');
+          should(repository.delete.getCall(0).args[0]._id).be.eql('role1');
           should(repository.delete.getCall(0).args[1]).be.eql({ refresh: 'wait_for' });
-          should(repository.delete.getCall(1).args[0]._id).be.eql('user2');
-          should(repository.delete.getCall(2).args[0]._id).be.eql('user3');
-          should(repository.delete.getCall(3).args[0]._id).be.eql('user4');
-          should(repository.delete.getCall(4).args[0]._id).be.eql('user5');
+          should(repository.delete.getCall(1).args[0]._id).be.eql('role2');
+          should(repository.delete.getCall(2).args[0]._id).be.eql('role3');
+          should(repository.delete.getCall(3).args[0]._id).be.eql('role4');
+          should(repository.delete.getCall(4).args[0]._id).be.eql('role5');
+
+          should(result).be.eql(5);
         });
     });
 

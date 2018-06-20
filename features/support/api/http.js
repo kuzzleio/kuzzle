@@ -1182,8 +1182,8 @@ class HttpApi {
 
   resetCache (database) {
     const options = {
-      url: this.apiPath(`admin/resetCache/${database}`),
-      method: 'GET'
+      url: this.apiPath(`admin/_resetCache/${database}`),
+      method: 'POST'
     };
 
     return this.callApi(options);
@@ -1191,8 +1191,8 @@ class HttpApi {
 
   resetKuzzleData () {
     const options = {
-      url: this.apiPath('admin/resetKuzzleData'),
-      method: 'GET'
+      url: this.apiPath('admin/_resetKuzzleData'),
+      method: 'POST'
     };
 
     return this.callApi(options);
@@ -1200,8 +1200,11 @@ class HttpApi {
 
   resetSecurity () {
     const options = {
-      url: this.apiPath('admin/resetSecurity'),
-      method: 'GET'
+      url: this.apiPath('admin/_resetSecurity'),
+      method: 'POST',
+      body: {
+        refresh: 'wait_for'
+      }
     };
 
     return this.callApi(options);
@@ -1209,8 +1212,8 @@ class HttpApi {
 
   resetDatabase () {
     const options = {
-      url: this.apiPath('admin/resetDatabase'),
-      method: 'GET'
+      url: this.apiPath('admin/_resetDatabase'),
+      method: 'POST'
     };
 
     return this.callApi(options);

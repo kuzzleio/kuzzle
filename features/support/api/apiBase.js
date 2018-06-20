@@ -1275,7 +1275,8 @@ class ApiBase {
   resetSecurity () {
     return this.send({
       controller: 'admin',
-      action: 'resetSecurity'
+      action: 'resetSecurity',
+      refresh: 'wait_for'
     });
   }
 
