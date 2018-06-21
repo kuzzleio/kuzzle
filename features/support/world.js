@@ -230,6 +230,17 @@ class KWorld {
       }
     };
 
+    this.policies = {
+      profile1: [
+        {controller: '*', action: '*', index: '*', collection: '*', value: 'allowed'}
+      ],
+      profile2: [
+        {controller: '*', action: '*', index: this.fakeIndex, collection: '*', value: 'allowed'},
+        {controller: 'document', action: '*', index: '*', collection: '*', value: 'allowed'},
+        {controller: 'auth', action: 'logout', index: '*', collection: '*', value: 'allowed'}
+      ]
+    };
+
     this.profiles = {
       profile1: {
         policies: [{roleId: this.idPrefix + 'role1'}]

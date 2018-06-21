@@ -131,12 +131,18 @@ Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: wit
 });
 
 Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, {timeout: 20 * 1000}, function (not, id) {
-  id = this.idPrefix + id;
-
-  return this.api.getProfileRights(id)
+  return this.api.getProfileRights(this.idPrefix + id)
     .then(body => {
       if (body.error) {
         throw new Error(body.error.message);
+      }
+
+      const
+        policies = stringify(body.result.hits),
+        expected = stringify(this.policies[id]);
+
+      if (policies !== expected) {
+        throw new Error(`Bad profileRights for ${id}.\nExpected: ${expected}\nGot: ${policies}`);
       }
 
       if (not) {

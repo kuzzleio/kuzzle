@@ -18,6 +18,13 @@ describe('Test: routerController.httpRequest', () => {
         http: {
           routes: require('../../../../lib/config/httpRoutes'),
           accessControlAllowOrigin: 'foobar'
+        },
+        server: {
+          protocols: {
+            http: {
+
+            }
+          }
         }
       },
       pluginsManager: {
