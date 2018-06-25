@@ -70,8 +70,6 @@ describe('core/httpRouter', () => {
     });
   });
 
-
-
   describe('#default headers', () => {
     it('should define appropriate default HTTP headers', () => {
       should(router.defaultHeaders).eql({
