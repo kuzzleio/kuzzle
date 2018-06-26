@@ -25,7 +25,7 @@ const
   ColorOutput = require('./colorOutput'),
   sendAction = require('./sendAction');
 
-function commanddump (options) {
+function commandDump (options) {
   const
     cout = new ColorOutput(options);
 
@@ -49,4 +49,4 @@ function commanddump (options) {
     });
 }
 
-module.exports = commanddump;
+module.exports = commandDump;

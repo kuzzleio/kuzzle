@@ -28,7 +28,7 @@ const
   ColorOutput = require('./colorOutput'),
   sendAction = require('./sendAction');
 
-function commandDatabase (options) {
+function commandResetDatabase (options) {
   const
     cout = new ColorOutput(options);
 
@@ -66,4 +66,4 @@ function commandDatabase (options) {
   console.log(cout.notice('[ℹ] Aborted'));
 }
 
-module.exports = commandDatabase;
+module.exports = commandResetDatabase;
