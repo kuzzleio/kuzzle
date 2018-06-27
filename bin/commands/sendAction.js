@@ -54,11 +54,12 @@ function sendAction (options, args, query = {}) {
     const kuzzle = new Kuzzle(config.host, { port: config.port }, err => {
       if (err) {
         reject(err);
+        return;
       }
 
       // Usage of defered promise to have the same workflow either with login or not
       // Promises are defered because if we login first we need to construct the query with jwt token
-      let deferredPromises = [];
+      const deferredPromises = [];
 
       if (config.login) {
         deferredPromises.push(() => kuzzle.loginPromise(config.login.strategy, config.login.credentials));
@@ -66,10 +67,8 @@ function sendAction (options, args, query = {}) {
 
       deferredPromises.push(() => kuzzle.queryPromise(args, query));
 
-      deferredPromises.reduce((promise, deferedPromise) => {
-        return promise.then(() => deferedPromise());
-      }, Bluebird.resolve())
-        .then(response => resolve(response))
+      Bluebird.mapSeries(deferredPromises, deferredPromise => deferredPromise())
+        .then(response => resolve(response[response.length - 1]))
         .catch(error => reject(error));
     });
   });

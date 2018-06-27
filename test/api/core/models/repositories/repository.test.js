@@ -477,11 +477,12 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#truncate', () => {
-    it('should scroll and delete all objects', () => {
+    it('should scroll and delete all objects except protected ones', () => {
       repository.search = sinon.stub();
       repository.scroll = sinon.stub();
       repository.delete = sinon.stub();
       repository.load = sinon.stub();
+      repository.collection = 'profiles';
       repository.search.resolves({total: 6, scrollId: 'foobarRole', hits: [
         {_id: 'admin' },
         {_id: 'role1' },
