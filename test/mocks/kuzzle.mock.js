@@ -18,19 +18,6 @@ class KuzzleMock extends Kuzzle {
     this.config = _.merge({}, config);
     this.config.server.entryPoints.proxy = true;
 
-    this.cliController = {
-      init: this.sandbox.stub().resolves(),
-      actions: {
-        adminExists: this.sandbox.stub().resolves(),
-        createFirstAdmin: this.sandbox.stub().resolves(),
-        cleanAndPrepare: this.sandbox.stub().resolves(),
-        cleanDb: this.sandbox.stub().resolves(),
-        managePlugins: this.sandbox.stub().resolves(),
-        data: this.sandbox.stub().resolves(),
-        dump: this.sandbox.stub().usingPromise(Bluebird).resolves()
-      }
-    };
-
     this.realtime = {
       test: this.sandbox.stub().returns([]),
       register: this.sandbox.stub().resolves(),
@@ -69,8 +56,10 @@ class KuzzleMock extends Kuzzle {
           adminExists: this.sandbox.stub(),
         },
         security: {
-          createFirstAdmin: this.sandbox.spy(),
-          deleteUser: this.sandbox.spy()
+          createFirstAdmin: sinon.spy(),
+          deleteUser: sinon.spy(),
+          deleteProfile: sinon.spy(),
+          deleteRole: sinon.spy()
         }
       },
       pluginsControllers: {
@@ -107,6 +96,11 @@ class KuzzleMock extends Kuzzle {
       listSubscriptions: this.sandbox.stub().resolves(foo),
     };
 
+    this.janitor = {
+      dump: sinon.stub(),
+      shutdown: sinon.stub()
+    };
+
     this.indexCache = {
       indexes: {},
       defaultMappings: {},
@@ -124,7 +118,9 @@ class KuzzleMock extends Kuzzle {
         all: this.sandbox.stub().resolves(),
         createCollections: this.sandbox.stub().resolves(),
         createRolesCollection: this.sandbox.stub().resolves(),
+        createDefaultRoles: this.sandbox.stub().resolves(),
         createProfilesCollection: this.sandbox.stub().resolves(),
+        createDefaultProfiles: this.sandbox.stub().resolves(),
         createUsersCollection: this.sandbox.stub().resolves(),
         createPluginsCollection: this.sandbox.stub().resolves(),
         delete: this.sandbox.stub().resolves()
@@ -194,26 +190,31 @@ class KuzzleMock extends Kuzzle {
     this.repositories = {
       init: this.sandbox.stub().resolves(),
       profile: {
-        fromDTO: this.sandbox.stub().resolves(),
-        initialize: this.sandbox.stub().resolves(),
-        load: this.sandbox.stub().resolves(),
-        loadMultiFromDatabase: this.sandbox.stub().resolves(),
-        loadProfiles: this.sandbox.stub().resolves(),
-        searchProfiles: this.sandbox.stub().resolves(),
-        validateAndSaveProfile: this.sandbox.stub(),
-        buildProfileFromRequest: this.sandbox.stub(),
-        deleteProfile: this.sandbox.stub(),
-        scroll: this.sandbox.stub()
+        fromDTO: sinon.stub().resolves(),
+        initialize: sinon.stub().resolves(),
+        load: sinon.stub().resolves(),
+        loadMultiFromDatabase: sinon.stub().resolves(),
+        loadProfiles: sinon.stub().resolves(),
+        searchProfiles: sinon.stub().resolves(),
+        search: sinon.stub().resolves(),
+        scroll: sinon.stub().resolves(),
+        validateAndSaveProfile: sinon.stub(),
+        delete: sinon.stub(),
+        getProfileFromRequest: sinon.stub(),
+        truncate: sinon.stub().resolves()
       },
       role: {
-        deleteRole: this.sandbox.stub().resolves(),
-        fromDTO: this.sandbox.stub().resolves(),
-        getRoleFromRequest: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-        load: this.sandbox.stub().resolves(),
-        loadMultiFromDatabase: this.sandbox.stub().resolves(),
-        loadRoles: this.sandbox.stub().resolves(),
-        searchRole: this.sandbox.stub().resolves(),
-        validateAndSaveRole: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0]))
+        delete: sinon.stub().resolves(),
+        fromDTO: sinon.stub().resolves(),
+        getRoleFromRequest: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+        load: sinon.stub().resolves(),
+        loadMultiFromDatabase: sinon.stub().resolves(),
+        loadRoles: sinon.stub().resolves(),
+        searchRole: sinon.stub().resolves(),
+        search: sinon.stub().resolves(),
+        scroll: sinon.stub().resolves(),
+        validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
+        truncate: sinon.stub().resolves()
       },
       user: {
         anonymous: this.sandbox.stub().returns({_id: '-1'}),
@@ -225,14 +226,16 @@ class KuzzleMock extends Kuzzle {
         persist: this.sandbox.stub().resolves({}),
         search: this.sandbox.stub().resolves(),
         scroll: this.sandbox.stub().resolves(),
-        toDTO: this.sandbox.stub()
+        toDTO: this.sandbox.stub(),
+        truncate: sinon.stub().resolves()
       },
       token: {
         anonymous: this.sandbox.stub().returns({_id: 'anonymous'}),
         verifyToken: this.sandbox.stub().resolves(),
         generateToken: this.sandbox.stub().resolves({}),
         expire: this.sandbox.stub().resolves(),
-        deleteByUserId: this.sandbox.stub().resolves()
+        deleteByUserId: this.sandbox.stub().resolves(),
+        truncate: sinon.stub().resolves()
       }
     };
 

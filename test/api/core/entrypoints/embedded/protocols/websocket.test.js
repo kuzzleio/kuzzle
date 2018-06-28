@@ -20,7 +20,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     WebSocketServer = sinon.spy(function () {
       this.on = sinon.spy();
     });
-    mockrequire('ws', {
+    mockrequire('uws', {
       Server: WebSocketServer
     });
 

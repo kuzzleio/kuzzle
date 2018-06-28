@@ -2,10 +2,8 @@ const
   mockrequire = require('mock-require'),
   sinon = require('sinon'),
   should = require('should'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  WsBrokerClient = require('../../../../lib/services/broker/wsBrokerClient'),
-  WsBrokerServer = require('../../../../lib/services/broker/wsBrokerServer');
-
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
+  
 describe('Privileged Plugin Context', () => {
   let
     PrivilegedPluginContext;
@@ -29,8 +27,6 @@ describe('Privileged Plugin Context', () => {
         privilegedContext = new PrivilegedPluginContext(kuzzle, 'pluginName');
 
       should(privilegedContext.accessors.kuzzle).be.exactly(kuzzle);
-      should(privilegedContext.constructors.services.WsBrokerClient).be.exactly(WsBrokerClient);
-      should(privilegedContext.constructors.services.WsBrokerServer).be.exactly(WsBrokerServer);
     });
   });
 });

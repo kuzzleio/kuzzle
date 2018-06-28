@@ -249,17 +249,17 @@ describe('Test: security controller - roles', () => {
       const role = {my: 'role'};
 
       kuzzle.repositories.role.getRoleFromRequest.resolves(role);
-      kuzzle.repositories.role.deleteRole.resolves();
+      kuzzle.repositories.role.delete.resolves();
 
       securityController.deleteRole(new Request({_id: 'test',body: {}}))
         .then(() => {
-          should(kuzzle.repositories.role.deleteRole.calledWith(role)).be.true();
+          should(kuzzle.repositories.role.delete.calledWith(role)).be.true();
           done();
         });
     });
 
     it('should reject the promise if attempting to delete one of the core roles', () => {
-      kuzzle.repositories.role.deleteRole
+      kuzzle.repositories.role.delete
         .rejects(new Error('admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.'));
       return should(securityController.deleteRole(new Request({_id: 'admin',body: {}}))).be.rejected();
     });
@@ -268,7 +268,7 @@ describe('Test: security controller - roles', () => {
       const role = {my: 'role'};
 
       kuzzle.repositories.role.getRoleFromRequest.resolves(role);
-      kuzzle.repositories.role.deleteRole.resolves();
+      kuzzle.repositories.role.delete.resolves();
 
       return securityController.deleteRole(new Request({
         _id: 'test',
@@ -276,7 +276,7 @@ describe('Test: security controller - roles', () => {
         refresh: 'wait_for'
       }))
         .then(() => {
-          const options = kuzzle.repositories.role.deleteRole.firstCall.args[1];
+          const options = kuzzle.repositories.role.delete.firstCall.args[1];
 
           should(options).match({
             refresh: 'wait_for'

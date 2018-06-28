@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2017 Kuzzle
+ * Copyright 2015-2018 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -25,9 +25,10 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
-  ColorOutput = require('./colorOutput');
+  ColorOutput = require('./colorOutput'),
+  sendAction = require('./sendAction');
 
-function commandClearCache (database, options) {
+function commandResetCache (database, options) {
   let
     opts = options,
     db = database,
@@ -35,11 +36,10 @@ function commandClearCache (database, options) {
 
   if (options === undefined) {
     opts = database;
-    db = null;
+    db = 'internalCache';
   }
 
   const cout = new ColorOutput(opts);
-  const data = {database: db};
 
   if (db === 'memoryStorage') {
     console.log(cout.warn('[ℹ] You are about to clear Kuzzle memoryStorage database.'));
@@ -50,21 +50,24 @@ function commandClearCache (database, options) {
   }
 
   if (userIsSure) {
-    const kuzzle = new (require('../../lib/api/kuzzle'))();
-
     console.log(cout.notice('[ℹ] Processing...\n'));
-    return kuzzle.cli.doAction('clearCache', data)
+    const args = {
+      controller: 'admin',
+      action: 'resetCache'
+    };
+
+    return sendAction(opts, args, { database: db })
       .then(() => {
-        console.log(cout.ok('[✔] Done!'));
+        console.log(cout.ok(`[✔] Kuzzle cache '${db}' has been successfully reset`));
         process.exit(0);
       })
       .catch(err => {
-        console.log(cout.error(`[✖] ${err}`));
+        console.error(err);
         process.exit(1);
       });
   }
 
-  console.log(cout.notice('[ℹ] Nothing have been done... you do not look that sure...'));
+  console.log(cout.notice('[ℹ] Aborted'));
 }
 
-module.exports = commandClearCache;
+module.exports = commandResetCache;

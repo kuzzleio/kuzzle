@@ -1257,6 +1257,35 @@ class ApiBase {
     });
   }
 
+  resetCache (database) {
+    return this.send({
+      controller: 'admin',
+      action: 'resetCache',
+      database
+    });
+  }
+
+  resetKuzzleData () {
+    return this.send({
+      controller: 'admin',
+      action: 'resetKuzzleData'
+    });
+  }
+
+  resetSecurity () {
+    return this.send({
+      controller: 'admin',
+      action: 'resetSecurity',
+      refresh: 'wait_for'
+    });
+  }
+
+  resetDatabase () {
+    return this.send({
+      controller: 'admin',
+      action: 'resetDatabase'
+    });
+  }
 }
 
 

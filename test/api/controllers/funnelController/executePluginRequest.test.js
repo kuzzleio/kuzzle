@@ -6,17 +6,22 @@ const
   Request = require('kuzzle-common-objects').Request,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError;
+  {
+    InternalError: KuzzleInternalError,
+    BadRequestError
+  } = require('kuzzle-common-objects').errors;
 
 describe('funnelController.executePluginRequest', () => {
   let
     kuzzle,
+    originalHandleErrorDump,
     funnel;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
     funnel.controllers.testme = {action: sinon.stub()};
+    originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
   });
 
@@ -85,6 +90,32 @@ describe('funnelController.executePluginRequest', () => {
     };
 
     should(funnel.executePluginRequest(rq, callback)).be.eql(0);
+  });
+
+  it('should dump on errors in whitelist', done => {
+    funnel.handleErrorDump = originalHandleErrorDump;
+    kuzzle.adminController.dump = sinon.stub();
+
+    const
+      rq = new Request({controller: 'testme', action: 'action'}),
+      error = new KuzzleInternalError('foo\nbar');
+
+    funnel.controllers.testme.action.rejects(error);
+
+    const callback = () => {
+      setTimeout(() => {
+        should(kuzzle.pluginsManager.trigger).be.called();
+        should(kuzzle.adminController.dump).be.called();
+        done();
+      }, 50);
+    };
+
+    try {
+      funnel.executePluginRequest(rq, callback);
+    }
+    catch (e) {
+      done(e);
+    }
   });
 
 });

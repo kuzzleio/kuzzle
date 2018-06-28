@@ -24,7 +24,7 @@ describe('Test: security controller - profiles', () => {
     kuzzle = new KuzzleMock();
     kuzzle.internalEngine.get.resolves({});
     kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {profiles: {properties: {}}}}});
-    kuzzle.repositories.profile.buildProfileFromRequest.resolves();
+    kuzzle.repositories.profile.getProfileFromRequest.resolves();
     securityController = new SecurityController(kuzzle);
   });
 
@@ -438,7 +438,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#deleteProfile', () => {
     it('should return an object with on deleteProfile call', () => {
-      kuzzle.repositories.profile.deleteProfile.resolves({_id: 'test'});
+      kuzzle.repositories.profile.delete.resolves({_id: 'test'});
 
       return securityController.deleteProfile(new Request({_id: 'test'}))
         .then(response => {
@@ -449,7 +449,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with an error in case of error', () => {
       const error = new Error('Mocked error');
-      kuzzle.repositories.profile.deleteProfile.rejects(error);
+      kuzzle.repositories.profile.delete.rejects(error);
 
       return should(securityController.deleteProfile(new Request({_id: 'test'}))).be.rejectedWith(error);
     });

@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2017 Kuzzle
+ * Copyright 2015-2018 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -20,27 +20,30 @@
  */
 
 /* eslint-disable no-console */
+const
+  ColorOutput = require('./colorOutput'),
+  sendAction = require('./sendAction');
 
-const ColorOutput = require('./colorOutput');
-
-function commandShutdown(options) {
+function commandShutdown (options) {
   const
-    kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options);
 
   console.log(cout.notice('[ℹ] Shutting down...'));
 
-  return kuzzle.cli.doAction('shutdown', {})
+  const args = {
+    controller: 'admin',
+    action: 'shutdown'
+  };
+
+  return sendAction(options, args)
     .then(() => {
-      console.log(cout.notice('[✔] Done!'));
+      console.log(cout.ok('[✔] Done'));
       process.exit(0);
     })
     .catch(err => {
-      console.dir(err, {showHidden: true, colors: true});
-      console.error(cout.error(`[✖] ${err}`));
+      console.error(err);
       process.exit(1);
     });
 }
 
 module.exports = commandShutdown;
-

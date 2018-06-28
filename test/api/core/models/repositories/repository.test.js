@@ -2,9 +2,11 @@ const
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   {
+    BadRequestError,
     InternalError: KuzzleInternalError,
     NotFoundError
   } = require('kuzzle-common-objects').errors,
+  sinon = require('sinon'),
   Repository = require('../../../../../lib/api/core/models/repositories/repository');
 
 describe('Test: repositories/repository', () => {
@@ -249,8 +251,21 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#delete', () => {
+    it('should throw an error when no object id is given', done => {
+      const someObject = { name: 'barney' };
+
+      repository.delete(someObject)
+        .then(() => done(new Error('should throw error')))
+        .catch(error => {
+          should(error).be.instanceOf(BadRequestError);
+          done();
+        });
+    });
+
     it('should delete an object from both cache and database when pertinent', () => {
-      return repository.delete('someId')
+      const someObject = { _id: 'someId' };
+
+      return repository.delete(someObject)
         .then(() => {
           should(kuzzle.services.list.internalCache.del)
             .calledOnce()
@@ -459,5 +474,54 @@ describe('Test: repositories/repository', () => {
 
       return should(repository.scroll('foo')).be.rejectedWith(error);
     });
+  });
+
+  describe('#truncate', () => {
+    it('should scroll and delete all objects except protected ones', () => {
+      repository.search = sinon.stub();
+      repository.scroll = sinon.stub();
+      repository.delete = sinon.stub();
+      repository.load = sinon.stub();
+      repository.collection = 'profiles';
+      repository.search.resolves({total: 6, scrollId: 'foobarRole', hits: [
+        {_id: 'admin' },
+        {_id: 'role1' },
+        {_id: 'role2' },
+        {_id: 'role3' }
+      ]});
+      repository.scroll.onFirstCall().resolves({
+        total: 1,
+        scrollId: 'foobarRole2',
+        hits: [{_id: 'role4'}]
+      });
+      repository.scroll.onSecondCall().resolves({
+        total: 1,
+        scrollId: 'foobarRole2',
+        hits: [{_id: 'role5'}]
+      });
+      for (let i = 0; i < 6; i++) {
+        repository.load.onCall(i).resolves({ _id: `role${i + 1}` });
+      }
+
+      return repository.truncate({ refresh: 'wait_for' })
+        .then(result => {
+          should(repository.search).be.calledOnce();
+          should(repository.scroll).be.calledTwice();
+
+          should(repository.scroll.getCall(0).args[0]).be.eql('foobarRole');
+          should(repository.scroll.getCall(1).args[0]).be.eql('foobarRole2');
+
+          should(repository.delete.callCount).be.eql(5);
+          should(repository.delete.getCall(0).args[0]._id).be.eql('role1');
+          should(repository.delete.getCall(0).args[1]).be.eql({ refresh: 'wait_for' });
+          should(repository.delete.getCall(1).args[0]._id).be.eql('role2');
+          should(repository.delete.getCall(2).args[0]._id).be.eql('role3');
+          should(repository.delete.getCall(3).args[0]._id).be.eql('role4');
+          should(repository.delete.getCall(4).args[0]._id).be.eql('role5');
+
+          should(result).be.eql(5);
+        });
+    });
+
   });
 });

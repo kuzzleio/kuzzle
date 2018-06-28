@@ -187,6 +187,59 @@ describe('Test: repositories/userRepository', () => {
         .be.rejectedWith(BadRequestError, {message: 'Anonymous user must be assigned the anonymous profile'});
     });
   });
+
+  describe('#delete', () => {
+    it('should throw an error when no user id is given', done => {
+      userRepository.delete({ profileIds: [], name: 'gordon' })
+        .then(() => done(new Error('should throw error')))
+        .catch(error => {
+          should(error).be.instanceOf(BadRequestError);
+          done();
+        });
+    });
+
+    it('should delete user from both cache and database', () => {
+      return userRepository.delete({ _id: 'alyx' })
+        .then(() => {
+          should(kuzzle.services.list.internalCache.del)
+            .calledOnce()
+            .calledWith(userRepository.getCacheKey('alyx'));
+
+          should(kuzzle.internalEngine.delete)
+            .calledOnce()
+            .calledWith(userRepository.collection, 'alyx');
+        });
+    });
+
+    it('should delete user credentials', () => {
+      const
+        user = { _id: 'kleiner' },
+        existsMethod = sinon.stub().resolves(true),
+        deleteMethod = sinon.stub().resolves();
+      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .onFirstCall().returns(existsMethod)
+        .onSecondCall().returns(deleteMethod);
+
+      return userRepository.delete(user)
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response._id).be.exactly('kleiner');
+        });
+    });
+
+    it('should forward refresh option', () => {
+      const
+        user = { _id: 'mossman' },
+        options = { refresh: 'wait_for' };
+
+      return userRepository.delete(user, options)
+        .then(() => {
+          should(kuzzle.internalEngine.delete.firstCall.args[2]).match(options);
+        });
+    });
+  });
 });
 
 function assertIsAnonymous (user) {
