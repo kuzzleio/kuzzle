@@ -47,12 +47,56 @@ describe('InternalEngine', () => {
   });
 
   describe('#search', () => {
+    it('should accept a query at root level', () => {
+      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
+
+      return kuzzle.internalEngine.search('collection', {some: 'filters'})
+        .then(() => {
+          should(kuzzle.internalEngine.client.search)
+            .be.calledWithMatch({
+              type: 'collection',
+              body: {
+                query: {
+                  some: 'filters'
+                }
+              }
+            });
+        });
+    });
+
+    it('should inject allowed root arguments if given', () => {
+      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
+
+      return kuzzle.internalEngine.search('collection', {
+        query: 'query',
+        aggs: 'aggs',
+        highlight: 'highlight',
+        ignored: true
+      })
+        .then(() => {
+          const req = kuzzle.internalEngine.client.search.firstCall.args[0];
+
+          should(req).eql({
+            type: 'collection',
+            body: {
+              aggs: 'aggs',
+              query: 'query',
+              highlight: 'highlight'
+            },
+            from: undefined,
+            index: kuzzle.internalEngine.index,
+            scroll: undefined,
+            size: undefined
+          });
+        });
+    });
+
     it('should harmonize search results', () => {
       const
         collection = 'collection',
         query = { 'some': 'filters' };
 
-      kuzzle.internalEngine.client.search.returns(Bluebird.resolve({hits: { hits: ['foo', 'bar'], total: 123}}));
+      kuzzle.internalEngine.client.search.resolves({hits: { hits: ['foo', 'bar'], total: 123}});
 
       return kuzzle.internalEngine.search(collection, query, {from: 0, size: 20, scroll: 'foo'})
         .then(result => {
@@ -79,6 +123,24 @@ describe('InternalEngine', () => {
           catch(error) {
             return Bluebird.reject(error);
           }
+        });
+    });
+
+    it('should inject allowed response arguments back in the response', () => {
+      kuzzle.internalEngine.client.search.resolves({
+        hits: { hits: ['foo', 'bar'], total: 123},
+        aggregations: 'aggregations',
+        ignored: true
+      });
+
+      // nb: highlight is returned inside hits
+      return kuzzle.internalEngine.search('collection', {})
+        .then(response => {
+          should(response).eql({
+            hits: ['foo', 'bar'],
+            total: 123,
+            aggregations: 'aggregations'
+          });
         });
     });
 
