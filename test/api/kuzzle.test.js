@@ -21,7 +21,7 @@ describe('/lib/api/kuzzle.js', () => {
       'notifier',
       'gc',
       'pluginsManager',
-      'cliController',
+      'adminController',
       'repositories',
       'services',
       'statistics',
@@ -56,7 +56,6 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.statistics.init).be.calledOnce();
           should(kuzzle.entryPoints.init).be.calledOnce();
           should(kuzzle.repositories.init).be.calledOnce();
-          should(kuzzle.cliController.init).be.calledOnce();
         });
     });
 
@@ -144,7 +143,6 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.statistics.init).not.be.called();
           should(kuzzle.entryPoints.init).not.be.called();
           should(kuzzle.repositories.init).not.be.called();
-          should(kuzzle.cliController.init).not.be.called();
         });
     });
   });

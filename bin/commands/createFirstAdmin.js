@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2017 Kuzzle
+ * Copyright 2015-2018 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -24,9 +24,8 @@
 const
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
-  rc = require('rc'),
-  params = rc('kuzzle'),
-  ColorOutput = require('./colorOutput');
+  ColorOutput = require('./colorOutput'),
+  sendAction = require('./sendAction');
 
 /** @type ColorOutput */
 let cout;
@@ -74,7 +73,6 @@ function confirm (username, resetRoles) {
 }
 
 function commandCreateFirstAdmin (options) {
-  const kuzzle = new (require('../../lib/api/kuzzle'))();
   let
     username,
     password,
@@ -83,8 +81,12 @@ function commandCreateFirstAdmin (options) {
   cout = new ColorOutput(options);
 
   process.stdin.setEncoding('utf8');
+  const action = {
+    controller: 'server',
+    action: 'adminExists'
+  };
 
-  return kuzzle.cli.doAction('adminExists', {})
+  return sendAction(options, action)
     .then(adminExists => {
       if (adminExists.result.exists) {
         console.log('An administrator account already exists.');
@@ -111,14 +113,15 @@ function commandCreateFirstAdmin (options) {
         console.log(cout.warn('Aborting'));
         process.exit(0);
       }
-
-      return kuzzle.cli.doAction('createFirstAdmin', {
-        _id: username,
+      const args = {
+        controller: 'security',
+        action: 'createFirstAdmin',
+        _id: username
+      };
+      const query = {
         reset: resetRoles,
         body: {
-          content: {
-
-          },
+          content: { },
           credentials: {
             local: {
               username,
@@ -126,7 +129,9 @@ function commandCreateFirstAdmin (options) {
             }
           }
         }
-      }, {pid: params.pid, debug: options.parent.debug});
+      };
+
+      return sendAction(options, args, query);
     })
     .then(() => {
       console.log(cout.ok(`[✔] "${username}" administrator account created`));

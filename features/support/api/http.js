@@ -1230,6 +1230,45 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  resetCache (database) {
+    const options = {
+      url: this.apiPath(`admin/_resetCache/${database}`),
+      method: 'POST'
+    };
+
+    return this.callApi(options);
+  }
+
+  resetKuzzleData () {
+    const options = {
+      url: this.apiPath('admin/_resetKuzzleData'),
+      method: 'POST'
+    };
+
+    return this.callApi(options);
+  }
+
+  resetSecurity () {
+    const options = {
+      url: this.apiPath('admin/_resetSecurity'),
+      method: 'POST',
+      body: {
+        refresh: 'wait_for'
+      }
+    };
+
+    return this.callApi(options);
+  }
+
+  resetDatabase () {
+    const options = {
+      url: this.apiPath('admin/_resetDatabase'),
+      method: 'POST'
+    };
+
+    return this.callApi(options);
+  }
+
   encode(algorithm) {
     checkAlgorithm(algorithm);
     this.encoding = algorithm;

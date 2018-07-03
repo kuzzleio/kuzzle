@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2017 Kuzzle
+ * Copyright 2015-2018 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -21,19 +21,22 @@
 
 /* eslint-disable no-console */
 
-const ColorOutput = require('./colorOutput');
+const
+  ColorOutput = require('./colorOutput'),
+  sendAction = require('./sendAction');
 
-/**
- * @param {object} options
- */
-module.exports = function commandDump (options) {
+function commandDump (options) {
   const
-    kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options);
 
   console.log(cout.notice('[ℹ] Creating dump file...'));
 
-  kuzzle.cli.doAction('dump', {suffix: 'cli'})
+  const args = {
+    controller: 'admin',
+    action: 'dump'
+  };
+
+  return sendAction(options, args, { suffix: 'cli' })
     .then(request => {
       console.log(cout.ok('[✔] Done!'));
       console.log('\n' + cout.warn(`[ℹ] Dump has been successfully generated in "${request.result}" folder`));
@@ -44,4 +47,6 @@ module.exports = function commandDump (options) {
       console.log(cout.error(`[✖] ${err}`));
       process.exit(1);
     });
-};
+}
+
+module.exports = commandDump;

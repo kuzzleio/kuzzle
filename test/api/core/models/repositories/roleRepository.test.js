@@ -213,12 +213,12 @@ describe('Test: repositories/roleRepository', () => {
     });
   });
 
-  describe('#deleteRole', () => {
+  describe('#delete', () => {
     it('should reject and not trigger any event if trying to delete a reserved role', done => {
       let role = new Role();
       role._id = 'admin';
 
-      roleRepository.deleteRole(role)
+      roleRepository.delete(role)
         .then(() => {
           done(new Error('The promise is not rejected'));
         })
@@ -241,7 +241,7 @@ describe('Test: repositories/roleRepository', () => {
         ]
       });
 
-      roleRepository.deleteRole({_id: 'test'})
+      roleRepository.delete({_id: 'test'})
         .then(() => {
           done(new Error('The promise is not rejected'));
         })
@@ -264,7 +264,7 @@ describe('Test: repositories/roleRepository', () => {
       roleRepository.deleteFromDatabase = sinon.stub().resolves(null);
       roleRepository.roles.foo = true;
 
-      return roleRepository.deleteRole(role)
+      return roleRepository.delete(role)
         .then(() => {
           should(roleRepository.deleteFromDatabase)
             .be.calledOnce()
