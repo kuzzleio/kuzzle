@@ -369,7 +369,11 @@ describe('Plugin Context', () => {
   describe('#strategies', () => {
     it('should allow to add a strategy and link it to its owner plugin', () => {
       const
-        mockedStrategy = {},
+        mockedStrategy = {
+          config: {
+            authenticator: 'foo'
+          }
+        },
         result = context.accessors.strategies.add('foo', mockedStrategy);
 
       should(result).be.a.Promise();
@@ -389,11 +393,21 @@ describe('Plugin Context', () => {
       const error = new Error('foobar');
       kuzzle.pluginsManager.registerStrategy.throws(error);
 
-      const result = context.accessors.strategies.add('foo', {});
+      const result = context.accessors.strategies.add('foo', {
+        config: {
+          authenticator: 'foobar'
+        }
+      });
 
       should(result).be.a.Promise();
 
       return should(result).be.rejectedWith(error);
+    });
+
+    it('should throw if no authenticator is provided', () => {
+
+      return should(context.accessors.strategies.add('foo', null))
+        .rejectedWith(PluginImplementationError, {message: '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
     });
 
     it('should allow to remove a strategy', () => {
