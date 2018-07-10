@@ -8,5 +8,6 @@ if [ "${TRAVIS_BRANCH}" != "master" ]; then
   export DOCKER_PROXY_TAG=":develop"
 fi
 
-docker-compose -f docker-compose/test.yml run kuzzle
+NODE_LTS=6 docker-compose -f docker-compose/test.yml run kuzzle
 
+NODE_LTS=8 docker-compose -f docker-compose/test.yml run kuzzle
