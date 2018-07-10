@@ -52,10 +52,10 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   });
 
   it('should do nothing when a bad connectionId is given', () => {
-    context.connectionId = 'unknown';
+    const fakeContext = new RequestContext({connectionId: 'unknown'});
     hotelClerk._removeRoomForCustomer = sinon.stub();
 
-    hotelClerk.removeCustomerFromAllRooms(context);
+    hotelClerk.removeCustomerFromAllRooms(fakeContext);
     should(hotelClerk._removeRoomForCustomer).not.be.called();
     should(hotelClerk.roomsCount).be.eql(2);
   });

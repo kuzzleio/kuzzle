@@ -215,11 +215,6 @@ module.exports = {
         port: 6379
       }
     },
-    internalBroker: {
-      aliases: ['broker'],
-      socket: './run/broker.sock',
-      retryInterval: 1000
-    },
     internalEngine: {
       bootstrapLockTimeout: 5000
     },

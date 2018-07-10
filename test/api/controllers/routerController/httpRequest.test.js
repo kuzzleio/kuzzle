@@ -2,6 +2,8 @@
 
 const
   should = require('should'),
+  sinon = require('sinon'),
+  Request = require('kuzzle-common-objects').Request,
   RouterController = require('../../../../lib/api/controllers/routerController');
 
 describe('Test: routerController.httpRequest', () => {
@@ -9,6 +11,7 @@ describe('Test: routerController.httpRequest', () => {
     kuzzleStub,
     /** @type Request */
     response,
+    triggerSpy,
     httpRequest,
     routeController;
 
@@ -32,6 +35,7 @@ describe('Test: routerController.httpRequest', () => {
           {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
         ],
         trigger: function (event, request) {
+          triggerSpy(event, request);
           return Promise.resolve(request);
         }
       },
@@ -57,6 +61,7 @@ describe('Test: routerController.httpRequest', () => {
       headers: {},
       content: ''
     };
+    triggerSpy = sinon.stub();
   });
 
   it('should register GET routes from the config/httpRoutes file', (done) => {
@@ -72,6 +77,9 @@ describe('Test: routerController.httpRequest', () => {
         should(result.response.headers['Access-Control-Allow-Origin']).be.eql('foobar');
         should(result.response.status).be.eql(1234);
         should(result.response).be.exactly(response.response);
+        should(triggerSpy).be.calledOnce();
+        should(triggerSpy.firstCall.args[0]).be.eql('http:get');
+        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {
@@ -81,18 +89,21 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should register POST routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = '/profiles/foobar/_update';
-    httpRequest.method = 'PUT';
-    httpRequest.content = '{"profileId": "foobar"}';
+    httpRequest.url = '/my-index/my-collection/_count';
+    httpRequest.method = 'POST';
+    httpRequest.content = '{"filter": "foobar"}';
 
     routeController.http.route(httpRequest, result => {
       try {
-        should(response.input.controller).be.eql('security');
-        should(response.input.action).be.eql('updateProfile');
+        should(response.input.controller).be.eql('document');
+        should(response.input.action).be.eql('count');
         should(result.response.requestId).be.eql(httpRequest.requestId);
         should(result.response.headers['content-type']).be.eql('application/json');
         should(result.response.status).be.eql(1234);
         should(result.response).be.exactly(response.response);
+        should(triggerSpy).be.calledOnce();
+        should(triggerSpy.firstCall.args[0]).be.eql('http:post');
+        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {
@@ -114,6 +125,9 @@ describe('Test: routerController.httpRequest', () => {
         should(result.response.headers['content-type']).be.eql('application/json');
         should(result.response.status).be.eql(1234);
         should(result.response).be.exactly(response.response);
+        should(triggerSpy).be.calledOnce();
+        should(triggerSpy.firstCall.args[0]).be.eql('http:put');
+        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {
@@ -134,6 +148,9 @@ describe('Test: routerController.httpRequest', () => {
         should(result.response.headers['content-type']).be.eql('application/json');
         should(result.response.status).be.eql(1234);
         should(result.response).be.exactly(response.response);
+        should(triggerSpy).be.calledOnce();
+        should(triggerSpy.firstCall.args[0]).be.eql('http:delete');
+        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {

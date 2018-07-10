@@ -239,28 +239,6 @@ describe('core/httpRouter', () => {
       });
     });
 
-    it('should trigger an appropriate event corresponding to the HTTP method', () => {
-      const httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
-      router.get('/', handler);
-      router.post('/', handler);
-      router.put('/', handler);
-      router.patch('/', handler);
-      router.delete('/', handler);
-
-      rq.url = '/';
-      rq.headers = { 'content-type': 'application/json' };
-
-      httpMethods.forEach(httpMethod => {
-        rq.method = httpMethod;
-
-        router.route(rq, () => {
-          should(kuzzleMock.pluginsManager.trigger).be.calledWith(`http:${httpMethod.toLowerCase()}`, sinon.match.instanceOf(Request));
-        });
-      });
-
-      should(kuzzleMock.pluginsManager.trigger).have.callCount(httpMethods.length);
-    });
-
     it('should register a default / route with the HEAD verb', () => {
       rq.url = '/';
       rq.method = 'HEAD';

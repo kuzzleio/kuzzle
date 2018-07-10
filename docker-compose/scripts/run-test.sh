@@ -4,6 +4,19 @@ set -e
 
 elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
 
+if [ "$NODE_LTS" = "6" ]; then
+  NODE_VERSION=$NODE_6_VERSION
+elif [ "$NODE_LTS" = "8" ]; then
+  NODE_VERSION=$NODE_8_VERSION
+else
+  echo "Unsupported Node LTS: $NODE_LTS"
+  exit 1
+fi
+
+echo "Testing Kuzzle against node v$NODE_VERSION"
+n $NODE_VERSION
+
+rm -rf node_modules
 npm install --unsafe-perm
 npm install --unsafe-perm --only=dev
 find -L node_modules/.bin -type f -exec chmod 776 {} \;

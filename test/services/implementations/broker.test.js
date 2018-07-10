@@ -1,13 +1,13 @@
 'use strict';
 
 const
-  path = require('path'),
   Bluebird = require('bluebird'),
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   sinon = require('sinon'),
+  sandbox = sinon.createSandbox(),
   should = require('should'),
-  WS = require('ws'),
+  WS = require('uws'),
   CircularList = require('easy-circular-list'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   WSClientMock = require('../../mocks/services/ws.mock'),
@@ -38,12 +38,11 @@ describe('Test: Internal broker', () => {
 
   beforeEach(() =>{
     kuzzle.pluginsManager.trigger = sinon.stub();
+    sandbox.restore();
   });
 
   after(() => {
     clock.restore();
-    sinon.restore();
-    sinon.reset();
     mockrequire.stopAll();
   });
 
@@ -111,7 +110,7 @@ describe('Test: Internal broker', () => {
     describe('#constructor', () => {
       it('should throw if no valid configuration is given', () => {
         return should(() => new WSBrokerClient('broker', {}))
-          .throw(InternalError, {message: 'No endpoint configuration given to connect.'});
+          .throw(InternalError, {message: 'No endpoint configuration given to connect. Please provide "host".'});
       });
 
       it('should connect to a TCP host', () => {
@@ -121,33 +120,23 @@ describe('Test: Internal broker', () => {
           transport: 'tcp'
         });
       });
-
-      it('should connect to a Unix socket', () => {
-        client = new WSBrokerClient('broker', {socket: 'socket'});
-        should(client.server).match({
-          address: 'ws+unix://' + path.resolve('.') + '/socket',
-          transport: 'unix',
-          path: 'socket'
-        });
-      });
-
     });
 
     describe('#ws', () => {
       it('should construct a WS client', () => {
-        const WSStub = sinon.stub();
+        const WSStub = sandbox.stub();
 
-        mockrequire('ws', WSStub);
+        mockrequire('uws', WSStub);
         mockrequire.reRequire('../../../lib/services/broker/wsBrokerClient');
 
         const WSClient = rewire('../../../lib/services/broker/wsBrokerClient');
-        client = new WSClient('broker', {socket: 'socket'});
+        client = new WSClient('broker', {host: 'localhost', port: 4242});
 
         client.ws();
 
         should(WSStub)
           .be.calledOnce()
-          .be.calledWith('ws+unix://' + path.resolve('.') + '/socket', {perMessageDeflate: false});
+          .be.calledWith('ws://localhost:4242', {perMessageDeflate: false});
 
         mockrequire.stopAll();
       });
@@ -431,8 +420,8 @@ describe('Test: Internal broker', () => {
 
       it('on close should try reconnecting if :close was not explicitly called', () => {
         const
-          retrySpy = sinon.spy(client, 'retryConnection'),
-          closeSpy = sinon.spy(client, 'close'),
+          retrySpy = sandbox.spy(client, 'retryConnection'),
+          closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
         client.onCloseHandlers.push(sinon.spy());
@@ -453,8 +442,8 @@ describe('Test: Internal broker', () => {
 
       it('on error should set the client state to retrying and retry to connect', () => {
         const
-          retrySpy = sinon.spy(client, 'retryConnection'),
-          closeSpy = sinon.spy(client, 'close'),
+          retrySpy = sandbox.spy(client, 'retryConnection'),
+          closeSpy = sandbox.spy(client, 'close'),
           socket = client.client.socket;
 
         client.onErrorHandlers.push(sinon.spy());
@@ -482,7 +471,7 @@ describe('Test: Internal broker', () => {
 
         client.ws = () => new WSClientMock();
 
-        return server.init();
+        return Bluebird.all([server.init()]);
       });
 
       it('should clear ping timeout and interval once connected', done => {
@@ -594,7 +583,7 @@ describe('Test: Internal broker', () => {
         let clientConnected = client.init();
         let socket = client.client.socket;
 
-        sinon.spy(client, 'retryConnection');
+        sandbox.spy(client, 'retryConnection');
 
         socket.emit('open', 1);
 
@@ -735,7 +724,7 @@ describe('Test: Internal broker', () => {
           })
         });
 
-        mockrequire('ws', {
+        mockrequire('uws', {
           Server: sinon.spy(WSServerMock)
         });
 
@@ -747,7 +736,7 @@ describe('Test: Internal broker', () => {
         return should(() => {
           ws.call(server, () => {});
         })
-          .throw(InternalError, {message: 'Invalid configuration provided for internalBroker. Either "port" or "socket" must be provided.'});
+          .throw(InternalError, {message: 'Invalid configuration provided for internalBroker. "port" must be provided.'});
       });
 
       it('should create a TCP host:port based Websocket server', () => {
@@ -788,79 +777,6 @@ describe('Test: Internal broker', () => {
           .be.calledWith('port');
         should(httpServer.listen.firstCall.args)
           .have.length(2);
-      });
-
-      it('should throw if an invalid path if given for a unix socket', () => {
-        fsStub.existsSync.returns(false);
-
-        return should(() => {
-          server = new WSBrokerServerRewire('broker', {socket: '/invalid/path/socket'}, kuzzle.pluginsManager);
-          server.ws(() => {});
-        })
-          .throw(InternalError, {message: 'Invalid configuration provided for broker. Could not find /invalid/path directory.'});
-      });
-
-      it('should create a unix socket based Websocket server', () => {
-        const error = new Error('test');
-
-        server = new WSBrokerServerRewire('broker', {socket: 'socket'}, kuzzle.pluginsManager);
-        server.ws(() => {});
-
-        const httpServer = WSBrokerServerRewire.__get__('http.createServer').firstCall.returnValue;
-
-        should(httpServer.on)
-          .be.calledOnce()
-          .be.calledWith('error');
-
-        const httpServerOnErrorCB = httpServer.on.firstCall.args[1];
-
-        should(httpServer.listen)
-          .be.calledOnce()
-          .be.calledWith(path.resolve('.', 'socket'));
-
-        // Errors handling
-
-        // != EADDRINUSE => rethrow
-        should(() => httpServerOnErrorCB(error))
-          .throw(error);
-
-        // no error on net.connect => socket is actually in use => rethrow
-        error.code = 'EADDRINUSE';
-        WSBrokerServerRewire.__with__('net.connect', sinon.stub().yields())(() => {
-          should(() => httpServerOnErrorCB(error))
-            .throw(error);
-        });
-
-        // error received on net layer
-        httpServerOnErrorCB(error);
-        const netErrorCB = WSBrokerServerRewire.__get__('net.connect').firstCall.returnValue.on.firstCall.args[1];
-
-        // != ECONNREFUSED => rethrow
-        should(() => netErrorCB(error)).throw(error);
-
-        // ECONNREFUSED => delete socket file and try again
-        error.code = 'ECONNREFUSED';
-        server.wss = null;
-        netErrorCB(error);
-
-        should(WSBrokerServerRewire.__get__('fs.unlinkSync'))
-          .be.calledOnce()
-          .be.calledWith(path.resolve('.', 'socket'));
-
-        should(httpServer.listen).be.calledTwice();
-
-        // second http.server listen call should not include any callback
-        should(httpServer.listen.secondCall.args).have.length(1);
-
-        server.wss = new WSServerMock();
-
-        netErrorCB(error);
-        should(server.wss.close).be.calledOnce();
-
-        server.wss.close.firstCall.args[0]();
-        should(httpServer.listen).be.calledThrice();
-
-        should(httpServer.listen.thirdCall.args).have.length(1);
       });
     });
 
@@ -1138,8 +1054,8 @@ describe('Test: Internal broker', () => {
         const
           serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket),
-          dispatchSpy = sinon.spy(server, 'dispatch'),
-          sendSpy = sinon.spy(server, 'send');
+          dispatchSpy = sandbox.spy(server, 'dispatch'),
+          sendSpy = sandbox.spy(server, 'send');
 
         serverSocket.emit('connection', clientSocket);
 
@@ -1159,8 +1075,8 @@ describe('Test: Internal broker', () => {
         const
           serverSocket = server.wss,
           clientSocket = new WSClientMock(serverSocket),
-          dispatchSpy = sinon.spy(server, 'dispatch'),
-          broadcastSpy = sinon.spy(server, 'broadcast');
+          dispatchSpy = sandbox.spy(server, 'dispatch'),
+          broadcastSpy = sandbox.spy(server, 'broadcast');
 
 
         serverSocket.emit('connection', clientSocket);
@@ -1211,4 +1127,3 @@ describe('Test: Internal broker', () => {
     });
   });
 });
-

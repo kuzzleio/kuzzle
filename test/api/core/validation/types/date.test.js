@@ -332,6 +332,10 @@ describe('Test: validation/types/date', () => {
     });
 
     beforeEach(() => {
+      momentMock.utc.returns({isValid: () => true});
+      momentMock.invalid.returns({isValid: () => true});
+      momentMock.unix.returnsArg(0);
+
       momentMock.utc.resetHistory();
       momentMock.invalid.resetHistory();
       momentMock.unix.resetHistory();

@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2017 Kuzzle
+ * Copyright 2015-2018 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -25,21 +25,21 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
-  ColorOutput = require('./colorOutput');
+  ColorOutput = require('./colorOutput'),
+  sendAction = require('./sendAction');
 
-function commandReset (options) {
+function commandResetDatabase (options) {
   const
-    kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options);
 
   let userIsSure = false;
 
-  console.log(cout.warn('[ℹ] You are about to reset Kuzzle configuration and users'));
+  console.log(cout.warn('[ℹ] You are about to clear all data stored on Kuzzle.'));
   console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
 
   if (!params.noint) {
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
-  } 
+  }
   else {
     // non-interactive mode
     userIsSure = true;
@@ -47,9 +47,14 @@ function commandReset (options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    return kuzzle.cli.doAction('cleanDb', {}, {debug: options.parent.debug})
+    const args = {
+      controller: 'admin',
+      action: 'resetDatabase'
+    };
+
+    return sendAction(options, args)
       .then(() => {
-        console.log(cout.ok('[✔] Kuzzle has been successfully reset'));
+        console.log(cout.ok('[✔] Kuzzle databases have been successfully reset'));
         process.exit(0);
       })
       .catch(err => {
@@ -61,4 +66,4 @@ function commandReset (options) {
   console.log(cout.notice('[ℹ] Aborted'));
 }
 
-module.exports = commandReset;
+module.exports = commandResetDatabase;

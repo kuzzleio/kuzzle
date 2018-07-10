@@ -63,22 +63,26 @@ When(/^I create a new role "([^"]*)" with id "([^"]*)"$/, function (role, id, ca
     });
 });
 
-Then(/^I'm ?(not)* able to find a ?(default)* role with id "([^"]*)"(?: equivalent to role "([^"]*)")?$/, function (not, _default, id, role, callback) {
-  var
+Then(/^I'm ?(not)* able to find a ?(default)* (role|profile|user) with id "([^"]*)"(?: equivalent to (role|profile|user) "([^"]*)")?$/, function (not, _default, objectType, id, objectType2, object, callback) {
+  let
     controller,
     main;
+
+  const objectTypeCapitalized = objectType.charAt(0).toUpperCase() + objectType.slice(1);
 
   if (! _default) {
     id = this.idPrefix + id;
   }
 
-  if (role && !this.roles[role]) {
-    return callback('Fixture for role ' + role + ' not exists');
+  if (object && !this[`${objectType}s`][object]) {
+    return callback(`Fixture for ${objectType} ${object} not exists`);
   }
 
   main = function (callbackAsync) {
     setTimeout(() => {
-      this.api.getRole(id)
+      const method = `get${objectTypeCapitalized}`;
+
+      this.api[method].apply(this.api, [id]) // eslint-disable-line no-useless-call
         .then(body => {
           if (body.error) {
             return callbackAsync(body.error.message);
@@ -93,17 +97,17 @@ Then(/^I'm ?(not)* able to find a ?(default)* role with id "([^"]*)"(?: equivale
           }
 
           if (not) {
-            return callbackAsync(`Role with id ${id} exists`);
+            return callbackAsync(`${objectTypeCapitalized} with id ${id} exists`);
           }
 
-          if (role) {
-            controller = Object.keys(this.roles[role].controllers)[0];
+          if (object) {
+            controller = Object.keys(this[`${objectType}s`][object].controllers)[0];
             if (!body.result._source.controllers[controller]) {
               if (not) {
                 return callbackAsync();
               }
 
-              return callbackAsync(`Could not find role ${id}`);
+              return callbackAsync(`Could not find ${objectType} ${id}`);
             }
           }
 
@@ -324,4 +328,3 @@ Then(/^I'm ?(not)* allowed to count documents in index "([^"]*)" and collection 
       callback(error);
     });
 });
-

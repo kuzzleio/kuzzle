@@ -88,4 +88,3 @@ Then(/^The mapping should contain "(.*?)" field of type "(.*?)"$/, function (fie
   }
   callback();
 });
-

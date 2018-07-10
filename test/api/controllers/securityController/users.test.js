@@ -98,7 +98,7 @@ describe('Test: security controller - users', () => {
 
       return securityController.searchUsers(request)
         .then(response => {
-          should(kuzzle.repositories.user.search).be.calledWithMatch({foo: 'bar'}, {from: 13, size: 42, scroll: 'foo'});
+          should(kuzzle.repositories.user.search).be.calledWithMatch({query: {foo: 'bar'}}, {from: 13, size: 42, scroll: 'foo'});
           should(response).be.instanceof(Object);
           should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
         });
@@ -116,6 +116,54 @@ describe('Test: security controller - users', () => {
           should(kuzzle.repositories.user.search).be.calledWithMatch({}, {});
           should(response).be.instanceof(Object);
           should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
+        });
+    });
+
+    it('should pass allowed `aggs` and `highlight` arguments', () => {
+      kuzzle.repositories.user.search.resolves({
+        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
+        total: 2,
+        scrollId: 'foobar'
+      });
+
+      request = new Request({
+        body: {
+          aggs: 'aggs'
+        }
+      });
+
+      return securityController.searchUsers(request)
+        .then(() => {
+          should(kuzzle.repositories.user.search)
+            .be.calledWith({aggs: 'aggs'}, {});
+
+          // highlight only
+          return securityController.searchUsers(new Request({
+            body: {
+              highlight: 'highlight'
+            }
+          }));
+        })
+        .then(() => {
+          should(kuzzle.repositories.user.search)
+            .be.calledWith({highlight: 'highlight'}, {});
+
+          // all in one
+          return securityController.searchUsers(new Request({
+            body: {
+              query: 'query',
+              aggs: 'aggs',
+              highlight: 'highlight'
+            }
+          }));
+        })
+        .then(() => {
+          should(kuzzle.repositories.user.search)
+            .be.calledWith({
+              aggs: 'aggs',
+              highlight: 'highlight',
+              query: 'query'
+            }, {});
         });
     });
 

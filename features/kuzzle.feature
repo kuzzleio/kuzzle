@@ -1,4 +1,5 @@
 Feature: Kuzzle functional tests
+
   @http
   Scenario: Send a request compressed with gzip
     Given a request compressed with "gzip"
