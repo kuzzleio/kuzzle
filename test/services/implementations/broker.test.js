@@ -5,7 +5,7 @@ const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  sandbox = sinon.sandbox.create(),
+  sandbox = sinon.createSandbox(),
   should = require('should'),
   WS = require('uws'),
   CircularList = require('easy-circular-list'),
