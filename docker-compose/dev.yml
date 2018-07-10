@@ -7,7 +7,7 @@ services:
       - "7513:7512"
 
   kuzzle:
-    image: kuzzleio/dev
+    image: kuzzleio/core-dev
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
