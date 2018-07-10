@@ -38,8 +38,8 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no connectionId is provided', () => {
-      requestContext.connectionId = null;
-      routerController.newConnection(requestContext);
+      const context = new RequestContext({protocol});
+      routerController.newConnection(context);
 
       should(kuzzle.pluginsManager.trigger).be.calledOnce();
       should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
@@ -47,8 +47,8 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no protocol is provided', () => {
-      requestContext.protocol = null;
-      routerController.newConnection(requestContext);
+      const context = new RequestContext({connectionId});
+      routerController.newConnection(context);
 
       should(kuzzle.pluginsManager.trigger).be.calledOnce();
       should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
@@ -79,9 +79,9 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no connectionId is provided', () => {
-      requestContext.connectionId = null;
-      routerController.connections[connectionId] = requestContext;
-      routerController.removeConnection(requestContext);
+      const context = new RequestContext({protocol});
+      routerController.connections[connectionId] = context;
+      routerController.removeConnection(context);
 
       should(kuzzle.pluginsManager.trigger).be.calledOnce();
       should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
@@ -89,9 +89,9 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no protocol is provided', () => {
-      requestContext.protocol = null;
-      routerController.connections[connectionId] = requestContext;
-      routerController.removeConnection(requestContext);
+      const context = new RequestContext({connectionId});
+      routerController.connections[connectionId] = context;
+      routerController.removeConnection(context);
 
       should(kuzzle.pluginsManager.trigger).be.calledOnce();
       should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
@@ -112,8 +112,11 @@ describe('Test: routerController', () => {
     });
 
     it('should always return true on HTTP connections', () => {
-      requestContext.protocol = 'http';
-      should(routerController.isConnectionAlive(requestContext)).be.true();
+      const context = new RequestContext({
+        connectionId,
+        protocol: 'http'
+      });
+      should(routerController.isConnectionAlive(context)).be.true();
     });
   });
 });
