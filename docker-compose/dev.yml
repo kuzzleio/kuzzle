@@ -7,7 +7,7 @@ services:
       - "7513:7512"
 
   kuzzle:
-    image: kuzzleio/dev
+    image: kuzzleio/core-dev
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
@@ -43,6 +43,8 @@ services:
 
   elasticsearch:
     image: kuzzleio/elasticsearch:5.4.1
+    ulimits:
+      nofile: 65536
     environment:
       - cluster.name=kuzzle
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
