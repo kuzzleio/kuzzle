@@ -4,12 +4,16 @@ group: edge
 
 jdk: oraclejdk8
 
+env:
+  global:
+    - secure: U0+F9Dk03aCycppFX83SZnSvo7syf9NJ2Hns/87wpafjKRXlyUKt3XEsqVUKW+hpI3Me0Av8bjJEBGxchv9xEk+8HcNfzIV8qdfOClym2GF/fY2M2Jjdy4XW7eNsZIYXKo4GHw/+flVRSVR+IG0XP74CuVcAUR/bjMiZomRPJJmfeZ8vaUXbM5P2rTKj4pvtxhR9dFDIzz4XgMBaGvuOVQmmYcms6zlanYkuk2ZDRgZRrnL7BGPkxYjhYvcNLjG4EA9VLqMs/CSdUQMI4BcW3+mI0bGmB25FhjUnMFHLuZctyw4zc42Lzi+Mjept9ynUnKZeTa2W3p5qEYsCr1grT2kScr3NpzacRkRtwEa943zrLFThMkXITVIFACAfelDcDxzAO16Gmqr1Khai6pSAyiQFDJsap/WlZ9JK+mFjsW1hI+jO3HZ30F+TVeaiLp9UFZEg8+DpHueHlwEz3NhPzdg1tWdH8e+itX33Ro0LBjEtX/9MH/ztDycVIs4R+ouSRvrSWH3/vj/653b3xHpJ7/n9OtM8OIpq1xDMpZxBLBtleCD3dUkbDxy8G5qSxPAOk7GZ1GDmiufCYTQXu1rgY7dXj+vCaXyH9f7zwu8WielEoU/0GPUb36usnUGyJkXXgdgGpVdSe73NmGyZgUwp7IQEkOb5507KVy6nEPpIWLI=
+
 services:
-- docker
+ - docker
 
 script:
-- bash test/travis-bin/run-tests.sh
-- bash test/travis-bin/sonar.sh
+ - bash test/travis-bin/run-tests.sh
+ - bash test/travis-bin/sonar.sh
 
 cache:
   directories:
@@ -19,7 +23,7 @@ cache:
 notifications:
   webhooks:
     urls:
-    - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
+     - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
     on_success: change
     on_failure: always
     on_start: never
@@ -41,3 +45,7 @@ deploy:
 
 addons:
   sonarqube: true
+
+after_success:
+  - docker login -u aschen -p $DOCKER_PASSWORD
+  - bash build-docker-images.sh
