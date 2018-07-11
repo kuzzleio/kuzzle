@@ -50,9 +50,9 @@ if [ -z "$TRAVIS_BRANCH" ]; then
   exit 1
 fi
 
+
 if [ "$TRAVIS_BRANCH" == "1.x" ]; then
   git_clone
-
   tag="develop"
 
   docker_build 'plugin-dev' $tag kuzzle_branch=$TRAVIS_BRANCH
