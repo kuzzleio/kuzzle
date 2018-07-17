@@ -200,8 +200,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
             foo: 'bar'
           },
           options: {
-            connectionId: connection.id,
-            protocol: 'socketio'
+            connection
           }
         });
 
