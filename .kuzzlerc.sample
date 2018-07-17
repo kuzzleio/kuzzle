@@ -103,6 +103,11 @@
     // }
   },
 
+  // Queue names used by Kuzzle internal communications
+  "queues": {
+    "remoteActionQueue": "remote-action-queue"
+  },
+
   // The repositories are used internally by Kuzzle to store its data (users,
   // permissions, configuration etc.)
   "repositories": {

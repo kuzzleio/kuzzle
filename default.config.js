@@ -199,6 +199,7 @@ module.exports = {
       defaultInitTimeout: 10000,
       retryInterval: 1000
     },
+
     internalCache: {
       backend: 'redis',
       node: {
