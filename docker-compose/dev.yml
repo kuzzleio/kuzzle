@@ -3,8 +3,6 @@ version: '3'
 services:
   proxy:
     image: kuzzleio/proxy
-    volumes:
-      - "../../kuzzle-proxy:/var/app"
     ports:
       - "7513:7512"
 
