@@ -511,11 +511,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
       should(kuzzle.router.newConnection)
         .be.calledOnce()
-        .be.calledWithMatch(new RequestContext({
-          connectionId: connection.id,
-          protocol: connection.protocol,
-          headers: connection.headers
-        }));
+        .be.calledWithMatch(new RequestContext({connection}));
     });
   });
 
