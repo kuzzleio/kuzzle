@@ -16,8 +16,10 @@ describe('Test: routerController', () => {
 
   beforeEach(() => {
     requestContext = new RequestContext({
-      protocol,
-      connectionId
+      connection: {
+        protocol,
+        id: connectionId
+      }
     });
     kuzzle = new KuzzleMock();
     routerController = new RouterController(kuzzle);
@@ -38,7 +40,7 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no connectionId is provided', () => {
-      const context = new RequestContext({protocol});
+      const context = new RequestContext({connection: {protocol}});
       routerController.newConnection(context);
 
       should(kuzzle.pluginsManager.trigger).be.calledOnce();
@@ -47,7 +49,7 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no protocol is provided', () => {
-      const context = new RequestContext({connectionId});
+      const context = new RequestContext({connection: {id: connectionId}});
       routerController.newConnection(context);
 
       should(kuzzle.pluginsManager.trigger).be.calledOnce();
@@ -79,7 +81,7 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no connectionId is provided', () => {
-      const context = new RequestContext({protocol});
+      const context = new RequestContext({connection: {protocol}});
       routerController.connections[connectionId] = context;
       routerController.removeConnection(context);
 
@@ -89,7 +91,7 @@ describe('Test: routerController', () => {
     });
 
     it('should return an error if no protocol is provided', () => {
-      const context = new RequestContext({connectionId});
+      const context = new RequestContext({connection: {id: connectionId}});
       routerController.connections[connectionId] = context;
       routerController.removeConnection(context);
 
@@ -113,8 +115,10 @@ describe('Test: routerController', () => {
 
     it('should always return true on HTTP connections', () => {
       const context = new RequestContext({
-        connectionId,
-        protocol: 'http'
+        connection: {
+          id: connectionId,
+          protocol: 'http'
+        }
       });
       should(routerController.isConnectionAlive(context)).be.true();
     });

@@ -108,7 +108,7 @@ describe('Test: statistics core component', () => {
   });
 
   it('should handle new connections', () => {
-    const context = new RequestContext({protocol: 'foobar'});
+    const context = new RequestContext({connection: {protocol: 'foobar'}});
     stats.newConnection(context);
     should(stats.currentStats.connections.foobar).not.be.undefined().and.be.exactly(1);
     stats.newConnection(context);
@@ -116,7 +116,7 @@ describe('Test: statistics core component', () => {
   });
 
   it('should be able to unregister a connection', () => {
-    const context = new RequestContext({protocol: 'foobar'});
+    const context = new RequestContext({connection: {protocol: 'foobar'}});
 
     stats.currentStats.connections.foobar = 2;
     stats.dropConnection(context);
