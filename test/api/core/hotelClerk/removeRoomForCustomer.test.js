@@ -33,8 +33,10 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     hotelClerk._removeRoomFromRealtimeEngine = sinon.spy();
 
     requestContext = new RequestContext({
-      connectionId: 'connectionId',
-      protocol: 'protocol'
+      connection: {
+        id: 'connectionId',
+        protocol: 'protocol'
+      }
     });
 
   });
