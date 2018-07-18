@@ -16,7 +16,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     context;
 
   beforeEach(() => {
-    context = new RequestContext({connectionId});
+    context = new RequestContext({connection: {id: connectionId}});
     kuzzle = new KuzzleMock();
     hotelClerk = new HotelClerk(kuzzle);
 
@@ -52,7 +52,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   });
 
   it('should do nothing when a bad connectionId is given', () => {
-    const fakeContext = new RequestContext({connectionId: 'unknown'});
+    const fakeContext = new RequestContext({connection: {id: 'unknown'}});
     hotelClerk._removeRoomForCustomer = sinon.stub();
 
     hotelClerk.removeCustomerFromAllRooms(fakeContext);
