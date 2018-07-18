@@ -7,9 +7,12 @@ const
   mockrequire = require('mock-require'),
   Bluebird = require('bluebird'),
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Request = require('kuzzle-common-objects').Request,
-  ParseError = require('kuzzle-common-objects').errors.ParseError,
+  {
+    Request,
+    errors: {
+      BadRequestError
+    }
+  } = require('kuzzle-common-objects'),
   Role = require(ROLE_MODULE_PATH);
 
 const
@@ -274,7 +277,7 @@ describe('Test: security/roleTest', () => {
 
       role[_kuzzle] = kuzzle;
       return should(role.isActionAllowed(request))
-        .be.rejectedWith(ParseError);
+        .be.rejectedWith(BadRequestError);
     });
 
     it('should reject if an invalid argument is given', () => {
@@ -297,7 +300,7 @@ describe('Test: security/roleTest', () => {
 
       role[_kuzzle] = kuzzle;
       return should(role.isActionAllowed(request))
-        .be.rejectedWith(ParseError);
+        .be.rejectedWith(BadRequestError);
     });
 
     it('should handle a custom right function', () => {
