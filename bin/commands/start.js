@@ -145,7 +145,7 @@ function commandStart (options) {
           if (!res) {
             console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
             console.log(cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.'));
-            console.log(cout.notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
+            console.log(cout.notice('    For more information: https://docs.kuzzle.io/guide/essentials/security'));
           }
         });
     })
