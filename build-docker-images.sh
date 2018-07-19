@@ -53,6 +53,7 @@ fi
 
 if [ "$TRAVIS_BRANCH" == "1.x" ]; then
   git_clone
+
   tag="develop"
 
   docker_build 'plugin-dev' $tag kuzzle_branch=$TRAVIS_BRANCH
@@ -67,17 +68,20 @@ elif [ "$TRAVIS_BRANCH" == "master" ]; then
 
   tag=$TRAVIS_TAG
 
-  docker_build 'plugin-dev' $tag kuzzle_branch=$TRAVIS_BRANCH
-  docker_build 'kuzzle-test' $tag current_tag=$tag
+  # Build and push only if we had a tag (it may be a hotfix merge).
+  if [ ! -z "$tag" ]; then
+    docker_build 'plugin-dev' $tag kuzzle_branch=$TRAVIS_BRANCH
+    docker_build 'kuzzle-test' $tag current_tag=$tag
 
-  docker_tag "plugin-dev:$tag" latest
-  docker_tag "kuzzle-test:$tag" latest
+    docker_tag "plugin-dev:$tag" latest
+    docker_tag "kuzzle-test:$tag" latest
 
-  docker_push 'plugin-dev' $tag
-  docker_push 'kuzzle-test' $tag
+    docker_push 'plugin-dev' $tag
+    docker_push 'kuzzle-test' $tag
 
-  docker_push 'plugin-dev' 'latest'
-  docker_push 'kuzzle-test' 'latest'
+    docker_push 'plugin-dev' 'latest'
+    docker_push 'kuzzle-test' 'latest'
+  fi
 
   rm -rf kuzzle-containers
 fi
