@@ -36,7 +36,7 @@ function commandStart (options) {
     kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options);
 
-  console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
+  console.log(cout.kuz('[ℹ] Starting Kuzzle Backend'));
 
   kuzzle.start(params)
     // fixtures && mapping
@@ -139,13 +139,13 @@ function commandStart (options) {
         });
     })
     .then(() => {
-      console.log(cout.kuz('[✔] Kuzzle server ready'));
+      console.log(cout.kuz('[✔] Kuzzle Backend ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
           if (!res) {
             console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
             console.log(cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.'));
-            console.log(cout.notice('    For more information: http://docs.kuzzle.io/guide/essentials/security'));
+            console.log(cout.notice('    For more information: https://docs.kuzzle.io/guide/essentials/security'));
           }
         });
     })
