@@ -36,7 +36,7 @@ function commandStart (options) {
     kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options);
 
-  console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
+  console.log(cout.kuz('[ℹ] Starting Kuzzle Backend'));
 
   kuzzle.start(params)
     // fixtures && mapping
@@ -139,7 +139,7 @@ function commandStart (options) {
         });
     })
     .then(() => {
-      console.log(cout.kuz('[✔] Kuzzle server ready'));
+      console.log(cout.kuz('[✔] Kuzzle Backend ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
           if (!res) {

@@ -31,7 +31,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
   });
 
-  it('should construct a kuzzle server object with emit and listen event', (done) => {
+  it('should build a kuzzle backend object with emit and listen event', (done) => {
     kuzzle.on('event', () => {
       done();
     });

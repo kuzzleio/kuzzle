@@ -41,7 +41,7 @@ You can perform a reset followed by a fixtures and/or mappings import by doing:
 $ kuzzle reset --fixtures /path/to/the/fixtures/file.json --mappings /path/to/the/mappings/file.json
 ```
 
-## Reset the Kuzzle server from a script or cron
+## Reset the Kuzzle Backend from a script or cron
 
 ```
 $ kuzzle reset --noint
