@@ -161,7 +161,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
     beforeEach(() => {
       connection = {
-        id: 'connectionId'
+        id: 'connectionId',
+        protocol: 'socketio'
       };
       socket = {
 
@@ -199,8 +200,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
             foo: 'bar'
           },
           options: {
-            connectionId: connection.id,
-            protocol: 'socketio'
+            connection
           }
         });
 
