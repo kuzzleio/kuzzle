@@ -16,9 +16,7 @@ const
 
 describe('Test: repositories/tokenRepository', () => {
   const
-    context = new RequestContext({
-      connectionId: 'papagayo'
-    });
+    context = new RequestContext({connection: {id: 'papagayo'}});
   let
     kuzzle,
     tokenRepository;
