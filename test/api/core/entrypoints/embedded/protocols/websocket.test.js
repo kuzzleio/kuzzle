@@ -216,7 +216,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
     beforeEach(() => {
       connection = {
-        id: 'connectionId'
+        id: 'connectionId',
+        protocol: 'websocket'
       };
 
       entrypoint.execute = sinon.spy();
@@ -257,8 +258,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
             foo: 'bar'
           },
           options: {
-            connectionId: connection.id,
-            protocol: 'websocket'
+            connection
           }
         });
 
