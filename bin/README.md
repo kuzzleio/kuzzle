@@ -14,15 +14,15 @@ Starts a Kuzzle instance in the foreground.
 
 # Create the first administrative user account
 
-You will need it to connect to the admin console
+This is a recommended first step to secure your Kuzzle Backend
 
 ```
 $ kuzzle createFirstAdmin
 ```
 
-will guide you through the creation process of the first admin user and fix the rights to other user types if needed.
+This command will guide you through the creation process of the first admin user and fix the rights to other user types if needed.
 
-**Note:** This command is interactive and let you choose to reset the roles rights or not.
+**Note:** This command is interactive and let you choose whether you want to apply the default secured roles and profiles or not
 
 # Reset Kuzzle
 
