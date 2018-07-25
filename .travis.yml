@@ -4,12 +4,17 @@ group: edge
 
 jdk: oraclejdk8
 
+env:
+  global:
+    # DockerHub password for kuzzleteam account
+    secure: "VlK2mDM3pIR1XPK+PVTfaGZzyp2auK4HFvwl4k9Jz9AohVCxzIcvFpq7lFMiwy/Mk/2pk/QaK3d3ZbEW7LxDwDt2lhKUWIX7w4p0pfRx7SbSdOpN1ZpZ2v3tNbbgmpyLfxIwu9FW9/9klmnpaC/ai5vllJ1tJesYMBxJZ20Qx36qv9A42Ia35z/kJwqBJNkl2H7KCcpjc+ORGEySN0tHqmrlR3qMH/XGjYBR5KrrF617R+Ja1I2f6PXu/dWfUlWi7BogB9qSNmVq2Xq2ZN2x8DBQWrLav9xeONHNJW48SfCYvOnsi/vpmQr/61zvCtkMNLN7FOg7SHdkpFwvlHN4Fe1aR0keDqb86kr5xCAkciXsT8cWau1YIoz7XqesmGfSQVeC9PTsO7ku/sYao/2gB4eOw7Eq5imrHVHFbVEj78SEA8u5OLT96jzflLeBqb4U3M3sEQXwUPkQDjdkD0WnTHzhHY2J/1tRBsKKhiyIdFryIqzmJPB6z8THVQp7F+RHXCWn7iVobmh8BjuONiK4XOfj4tAzJHmNdIi53wvHmcKgjHUl8oq705BESmmpYUlT6fTIBeBsLRpy9qjZweMzgU/dOlZXrDZcPgRJKrYrJiNmmTo96mbWOV8jBmTv/Pp/Noi4OOGpAC6KMKp67uox9hcjvemX0HP4hsCsbc3CBss="
+
 services:
-- docker
+ - docker
 
 script:
-- bash test/travis-bin/run-tests.sh
-- bash test/travis-bin/sonar.sh
+ - bash test/travis-bin/run-tests.sh
+ - bash test/travis-bin/sonar.sh
 
 cache:
   directories:
@@ -19,7 +24,7 @@ cache:
 notifications:
   webhooks:
     urls:
-    - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
+     - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
     on_success: change
     on_failure: always
     on_start: never
@@ -41,3 +46,7 @@ deploy:
 
 addons:
   sonarqube: true
+
+after_success:
+  - docker login -u kuzzleteam -p $DOCKER_PASSWORD
+  - bash build-docker-images.sh
