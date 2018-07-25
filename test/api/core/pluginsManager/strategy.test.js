@@ -110,16 +110,41 @@ describe('PluginsManager: strategy management', () => {
     });
   });
 
-  describe('#initAuthentication', () => {
+  describe('#initAuthenticators', () => {
+    it('should throw if the provided authenticators property is not an object', () => {
+      const message = /\[some-plugin-name\]: the exposed "authenticators" plugin property must be of type "object"/;
+
+      [[], 'foobar', 123, true].forEach(authenticators => {
+        plugin.object.authenticators = authenticators;
+        should(() => pluginsManager._initAuthenticators(plugin))
+          .throw(PluginImplementationError, {message});
+      });
+    });
+
+    it('should throw if one of the provided authenticators is not a constructor', () => {
+      const message = /\[some-plugin-name\]: invalid authenticator foo: expected a constructor/;
+
+      [() => {}, 'foobar', true, 123].forEach(ctor => {
+        plugin.object.authenticators.foo = ctor;
+        should(() => pluginsManager._initAuthenticators(plugin))
+          .throw(PluginImplementationError, {message});
+      });
+    });
+  });
+
+  describe('#initStrategies', () => {
     beforeEach(() => {
       pluginsManager.strategies = {};
+      pluginsManager.authenticators[plugin.name] = {
+        SomeStrategy: plugin.object.authenticators.SomeStrategy
+      };
     });
 
     it('should add the strategy in strategies if it is well-formed', done => {
       plugin.object.existsFunction = sinon.stub().returns(foo);
       plugin.object.verifyFunction = sinon.stub().resolves({kuid: 'foo'});
 
-      pluginsManager._initAuthentication(plugin);
+      pluginsManager._initStrategies(plugin);
       should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
       should(pluginsManager.strategies.someStrategy.methods.afterRegister).be.Function();
       should(plugin.object.afterRegisterFunction).be.calledOnce();
@@ -147,7 +172,7 @@ describe('PluginsManager: strategy management', () => {
     it('method invocation should intercept a thrown error to transform it into PluginImplementationError', () => {
       plugin.object.existsFunction = sinon.stub().throws(new Error('some error'));
 
-      pluginsManager._initAuthentication(plugin);
+      pluginsManager._initStrategies(plugin);
       should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
       should(pluginsManager.strategies.someStrategy.methods.exists).be.Function();
       should(pluginsManager.strategies.someStrategy.methods.create).be.Function();
@@ -164,7 +189,7 @@ describe('PluginsManager: strategy management', () => {
 
       [{}, [], null, undefined, 'foobar', 123, true].forEach(strategies => {
         plugin.object.strategies = strategies;
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -173,7 +198,7 @@ describe('PluginsManager: strategy management', () => {
       [[], null, undefined, 'foobar', 123, true].forEach(strategy => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the strategy description to be an object, got: ${strategy}`);
         plugin.object.strategies.someStrategy = strategy;
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -182,7 +207,7 @@ describe('PluginsManager: strategy management', () => {
       [[], null, undefined, 'foobar', 123, true].forEach(methods => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected a "methods" property of type "object", got: ${methods}`);
         plugin.object.strategies.someStrategy.methods = methods;
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -191,7 +216,7 @@ describe('PluginsManager: strategy management', () => {
       [[], null, undefined, 'foobar', 123, true].forEach(config => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected a "config" property of type "object", got: ${config}`);
         plugin.object.strategies.someStrategy.config = config;
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -200,7 +225,7 @@ describe('PluginsManager: strategy management', () => {
       [[], null, undefined, {}, 123, true].forEach(fn => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected a "exists" property of type "string", got: ${_.escapeRegExp(fn)}`);
         plugin.object.strategies.someStrategy.methods.exists = fn;
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -213,7 +238,7 @@ describe('PluginsManager: strategy management', () => {
 
         delete plugin.object[fnName];
 
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
 
         plugin.object[fnName] = sinon.stub();
@@ -227,7 +252,7 @@ describe('PluginsManager: strategy management', () => {
         [[], {}, 123, false].forEach(name => {
           const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "${methodName}" property to be of type "string", got: ${_.escapeRegExp(name)}`);
           clone.object.strategies.someStrategy.methods[methodName] = name;
-          should(() => pluginsManager._initAuthentication(clone))
+          should(() => pluginsManager._initStrategies(clone))
             .throw(PluginImplementationError, {message});
         });
       });
@@ -241,7 +266,7 @@ describe('PluginsManager: strategy management', () => {
 
         delete plugin.object[fnName];
 
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
 
         plugin.object[fnName] = sinon.stub();
@@ -253,27 +278,27 @@ describe('PluginsManager: strategy management', () => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected an "authenticator" property of type "string", got: ${_.escapeRegExp(authenticator)}`);
         plugin.object.strategies.someStrategy.config.authenticator = authenticator;
 
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
 
     it('should throw if the provided authenticator is not listed in this.authenticators', () => {
       plugin.object.strategies.someStrategy.config.authenticator = 'foobar';
-      should(() => pluginsManager._initAuthentication(plugin))
+      should(() => pluginsManager._initStrategies(plugin))
         .throw(PluginImplementationError, {message: /\[some-plugin-name\] Strategy someStrategy: unknown authenticator value: foobar/});
     });
 
     it('should throw if both an authenticator and a constructor are provided', () => {
       plugin.object.strategies.someStrategy.config.constructor = function () {};
-      should(() => pluginsManager._initAuthentication(plugin))
+      should(() => pluginsManager._initStrategies(plugin))
         .throw(PluginImplementationError, {message: /\[some-plugin-name\] Strategy someStrategy: the "authenticator" and "constructor" parameters cannot both be set/});
     });
 
     it('should throw if the provided constructor is not a constructor', () => {
       plugin.object.strategies.someStrategy.config.constructor = () => {};
       delete plugin.object.strategies.someStrategy.config.authenticator;
-      should(() => pluginsManager._initAuthentication(plugin))
+      should(() => pluginsManager._initStrategies(plugin))
         .throw(PluginImplementationError, {message: /\[some-plugin-name\] Strategy someStrategy: invalid "constructor" property value: constructor expected/});
     });
 
@@ -282,7 +307,7 @@ describe('PluginsManager: strategy management', () => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "strategyOptions" property to be of type "object", got: ${_.escapeRegExp(opts)}`);
         plugin.object.strategies.someStrategy.config.strategyOptions = opts;
 
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -292,7 +317,7 @@ describe('PluginsManager: strategy management', () => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "authenticateOptions" property to be of type "object", got: ${_.escapeRegExp(opts)}`);
         plugin.object.strategies.someStrategy.config.authenticateOptions = opts;
 
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -302,7 +327,7 @@ describe('PluginsManager: strategy management', () => {
         const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "fields" property to be of type "array", got: ${_.escapeRegExp(opts)}`);
         plugin.object.strategies.someStrategy.config.fields = opts;
 
-        should(() => pluginsManager._initAuthentication(plugin))
+        should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {message});
       });
     });
@@ -310,11 +335,11 @@ describe('PluginsManager: strategy management', () => {
     it('should unregister a strategy first if already registered', () => {
       sinon.spy(pluginsManager, 'unregisterStrategy');
 
-      pluginsManager._initAuthentication(plugin);
+      pluginsManager._initStrategies(plugin);
 
       should(pluginsManager.unregisterStrategy).not.be.called();
 
-      pluginsManager._initAuthentication(plugin);
+      pluginsManager._initStrategies(plugin);
 
       should(pluginsManager.unregisterStrategy)
         .calledOnce()
@@ -326,7 +351,10 @@ describe('PluginsManager: strategy management', () => {
     let verifyAdapter;
 
     beforeEach(() => {
-      pluginsManager._initAuthentication(plugin);
+      pluginsManager.authenticators[plugin.name] = {
+        SomeStrategy: plugin.object.authenticators.SomeStrategy
+      };
+      pluginsManager._initStrategies(plugin);
       verifyAdapter = plugin.object.authenticators.SomeStrategy.firstCall.args[1];
     });
 
