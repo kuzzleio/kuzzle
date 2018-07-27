@@ -651,16 +651,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         payload = {requestId: 'foobar'};
       error.status = 123;
 
-      const rq = new Request(payload, {connectionId, error});
+      const expected = (new Request(payload, {connectionId, error})).serialize();
+
+      // likely to be different, and we do not care about it
+      delete expected.data.timestamp;
+
       protocol._replyWithError(connectionId, payload, response, error);
 
-      should(entrypoint.logAccess)
-        .be.calledOnce()
-        .be.calledWithMatch(rq, {});
-
-      should(entrypoint.logAccess.firstCall.args[0].context.connectionId).be.eql(connectionId);
-      should(entrypoint.logAccess.firstCall.args[0].status).be.eql(123);
-      should(entrypoint.logAccess.firstCall.args[0].error).be.eql(error);
+      should(entrypoint.logAccess).be.calledOnce();
+      should(entrypoint.logAccess.firstCall.args[0].serialize()).match(expected);
 
       should(response.writeHead)
         .be.calledOnce()
