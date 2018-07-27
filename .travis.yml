@@ -1,30 +1,21 @@
 dist: trusty
 sudo: required
 group: edge
-
 jdk: oraclejdk8
-
 env:
   global:
-    # DockerHub password for kuzzleteam account
-    secure: "VlK2mDM3pIR1XPK+PVTfaGZzyp2auK4HFvwl4k9Jz9AohVCxzIcvFpq7lFMiwy/Mk/2pk/QaK3d3ZbEW7LxDwDt2lhKUWIX7w4p0pfRx7SbSdOpN1ZpZ2v3tNbbgmpyLfxIwu9FW9/9klmnpaC/ai5vllJ1tJesYMBxJZ20Qx36qv9A42Ia35z/kJwqBJNkl2H7KCcpjc+ORGEySN0tHqmrlR3qMH/XGjYBR5KrrF617R+Ja1I2f6PXu/dWfUlWi7BogB9qSNmVq2Xq2ZN2x8DBQWrLav9xeONHNJW48SfCYvOnsi/vpmQr/61zvCtkMNLN7FOg7SHdkpFwvlHN4Fe1aR0keDqb86kr5xCAkciXsT8cWau1YIoz7XqesmGfSQVeC9PTsO7ku/sYao/2gB4eOw7Eq5imrHVHFbVEj78SEA8u5OLT96jzflLeBqb4U3M3sEQXwUPkQDjdkD0WnTHzhHY2J/1tRBsKKhiyIdFryIqzmJPB6z8THVQp7F+RHXCWn7iVobmh8BjuONiK4XOfj4tAzJHmNdIi53wvHmcKgjHUl8oq705BESmmpYUlT6fTIBeBsLRpy9qjZweMzgU/dOlZXrDZcPgRJKrYrJiNmmTo96mbWOV8jBmTv/Pp/Noi4OOGpAC6KMKp67uox9hcjvemX0HP4hsCsbc3CBss="
-
+    secure: VlK2mDM3pIR1XPK+PVTfaGZzyp2auK4HFvwl4k9Jz9AohVCxzIcvFpq7lFMiwy/Mk/2pk/QaK3d3ZbEW7LxDwDt2lhKUWIX7w4p0pfRx7SbSdOpN1ZpZ2v3tNbbgmpyLfxIwu9FW9/9klmnpaC/ai5vllJ1tJesYMBxJZ20Qx36qv9A42Ia35z/kJwqBJNkl2H7KCcpjc+ORGEySN0tHqmrlR3qMH/XGjYBR5KrrF617R+Ja1I2f6PXu/dWfUlWi7BogB9qSNmVq2Xq2ZN2x8DBQWrLav9xeONHNJW48SfCYvOnsi/vpmQr/61zvCtkMNLN7FOg7SHdkpFwvlHN4Fe1aR0keDqb86kr5xCAkciXsT8cWau1YIoz7XqesmGfSQVeC9PTsO7ku/sYao/2gB4eOw7Eq5imrHVHFbVEj78SEA8u5OLT96jzflLeBqb4U3M3sEQXwUPkQDjdkD0WnTHzhHY2J/1tRBsKKhiyIdFryIqzmJPB6z8THVQp7F+RHXCWn7iVobmh8BjuONiK4XOfj4tAzJHmNdIi53wvHmcKgjHUl8oq705BESmmpYUlT6fTIBeBsLRpy9qjZweMzgU/dOlZXrDZcPgRJKrYrJiNmmTo96mbWOV8jBmTv/Pp/Noi4OOGpAC6KMKp67uox9hcjvemX0HP4hsCsbc3CBss=
 services:
- - docker
-
+- docker
 script:
- - bash test/travis-bin/run-tests.sh
- - bash test/travis-bin/sonar.sh
-
+- bash test/travis-bin/run-tests.sh
+- bash test/travis-bin/sonar.sh
 cache:
-  directories:
-    – $HOME/.pm2
-    – $HOME/.sonar/cache
-
+  directories: "– $HOME/.pm2 – $HOME/.sonar/cache"
 notifications:
   webhooks:
     urls:
-     - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
+    - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
     on_success: change
     on_failure: always
     on_start: never
@@ -34,19 +25,16 @@ notifications:
     on_success: never
     on_failure: always
     on_start: never
-
 deploy:
   provider: npm
   email: support@kuzzle.io
   api_key:
-    secure: euSme8FvrgBTvLOZ4RrTYCntyVH4s9/8F44GD0t4s4Myo/lUWxWbMPueqWh1KXNwLvkYpm/z7c0xep9g+bz8pWGG2QiSDraBlBVR2BJwWMg/J2eb0bXSe4Ovo/7xlgn1y+2NTagoj6ZS8qG+cMrKP1FLeE7B7RUFbGCMEy0s6m+Kky0t3+nvWvHBhROrNgcMO/X/O/zN4c2MMiUztTeBclVHh5JONzbJXqGzCBBAI+vZWOeh+8eF9QLK+FV98KXJ29ATwzCpBTkoYumj680uFuEloDU0nb/026Bv9U0lmcsSU0W5z50MfKdOnJqfMqBjdaYUZ5eSdstC7yLRxG3uoDP7zrJCqBCszF7jaOtaanqayl7eTMgCm7MduryhsI2ujqGgkzfQwY9W6jQhL1/hrJHPmzgpvXhgwILyr54rTR7Gu3+VcxNrlBp6h2OBU1pMsB7Xcay4/GlOqkFnTnpybDD2/ykAZQwDafCa4o6GzpcIzQSDxIfCADGcVyg6DFkduE8dIbP8e5z4AXX19i3sqJmK5JhY9OW6xTXI41cfWvFN4DwUBlnxm3632jg+kDGY+cKh9hfdjrm7OEfB2uHMNz4Oodt2MnVkTfw/DfBLTfpPB+/YsqDaSjF+PNuNyWSOm+Re7lUlJ4zEpbRDO7JRe/g81HKWdH/G3bzFwHAddwI=
+    secure: ueYTwE9O8n5nNb0RRqszFEWBAuLPt6w+f0oXgp3nuSV3YVlrXPj4OQ3kmqoPD0abfr9koC1GfrLd2UOyspF5tzVHorueUJJtKb2O59usTrxUOntswIWpjIy8+/CFiw8isbdfhK35d4d2B+A8sFIwcBnuTdFdsI23OiEwJtiilDtxZrowVehDSUxgAMrbp0FtavXAJsC4C39OM1iHrdGhq/3ujzpHPudW7j78Lc6W9BvP7hHCFH3X/b0lCESSFuGTuduDN0LGHJegQ48U930zI4mVEAz8CN32NFZPd3FaLEkJGU0cOILJLqWYPkfOW8g/FSca/Qpa6nlV6MhLOjd3ld9V1DRihOVQg5qUCn9Gy5OaWj+E2S6KEIi3HVmz7LhM2UVcEchrWxsER/DSO02phlvyMrcBdNNxwshf6TO45L2V3cdb95rniP5hECunviV1Kd8rbuh0ptUyNAg/vb/WSEfJmOU4NF3wJHyLSIMXANgZAiNkYfNsydIbKRUSGzwSvLlQc27OnAQlHDbWqAn88XFKGQxibZIh+LOox+nsmH8roBgY0yqMB6nkzbDHadMoObCKKMIe5SKsq7ZOc6LCbdSePq6XbxS8gJO+fr3KfpwxRUqH/EUtpcGzLMU3HBpnwwOjScBq+vVHhaVsenYDUXcaiHnw8kEqIocTtS0vtuU=
   on:
     repo: kuzzleio/kuzzle
     branch: master
-
 addons:
   sonarqube: true
-
 after_success:
-  - docker login -u kuzzleteam -p $DOCKER_PASSWORD
-  - bash build-docker-images.sh
+- docker login -u kuzzleteam -p $DOCKER_PASSWORD
+- bash build-docker-images.sh
