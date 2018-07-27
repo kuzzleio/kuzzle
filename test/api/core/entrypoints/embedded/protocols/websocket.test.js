@@ -90,13 +90,13 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
       socket = {
         on: onClientSpy,
-        close: sinon.stub()
+        close: sinon.stub(),
+        _socket: {
+          remoteAddress: 'ip'
+        }
       };
 
       request = {
-        connection: {
-          remoteAddress: 'ip'
-        },
         headers: {
           'X-Foo': 'bar',
           'x-forwarded-for': '1.1.1.1,2.2.2.2'
