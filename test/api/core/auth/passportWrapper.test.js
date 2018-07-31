@@ -6,7 +6,8 @@ const
   passport = require('passport'),
   {
     ForbiddenError,
-    PluginImplementationError
+    PluginImplementationError,
+    UnauthorizedError
   } = require('kuzzle-common-objects').errors,
   PassportResponse = require('../../../../lib/api/core/auth/passportResponse');
 
@@ -80,9 +81,10 @@ describe('Test the passport Wrapper', () => {
   });
 
   it('should reject if passport does not return a user', () => {
-    passportMock.authenticate.yields(null, null, new Error('foobar'));
+    passportMock.authenticate.yields(null, false, 'foobar');
 
-    return should(passportWrapper.authenticate('foo', 'bar')).be.rejectedWith('foobar');
+    return should(passportWrapper.authenticate('foo', 'bar'))
+      .be.rejectedWith(UnauthorizedError, {message: 'foobar'});
   });
 
   it('should reject in case of an authentication error', () => {
@@ -139,8 +141,16 @@ describe('Test the passport Wrapper', () => {
   });
 
   it('should reject a promise because an exception has been thrown', () => {
+    passportMock.authenticate.throws(new UnauthorizedError('foobar'));
+
+    return should(passportWrapper.authenticate('foo', 'bar'))
+      .be.rejectedWith(UnauthorizedError, {message: 'foobar'});
+  });
+
+  it('should wrap a promise if a non-KuzzleError was thrown', () => {
     passportMock.authenticate.throws(new Error('foobar'));
 
-    return should(passportWrapper.authenticate('foo', 'bar')).be.rejectedWith('foobar');
+    return should(passportWrapper.authenticate('foo', 'bar'))
+      .be.rejectedWith(PluginImplementationError, {message: /^foobar.*/});
   });
 });
