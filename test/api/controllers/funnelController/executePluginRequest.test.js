@@ -95,6 +95,7 @@ describe('funnelController.executePluginRequest', () => {
   it('should dump on errors in whitelist', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
     kuzzle.adminController.dump = sinon.stub();
+    kuzzle.config.dump.enabled = true;
 
     const
       rq = new Request({controller: 'testme', action: 'action'}),
@@ -106,6 +107,32 @@ describe('funnelController.executePluginRequest', () => {
       setTimeout(() => {
         should(kuzzle.pluginsManager.trigger).be.called();
         should(kuzzle.adminController.dump).be.called();
+        done();
+      }, 50);
+    };
+
+    try {
+      funnel.executePluginRequest(rq, callback);
+    }
+    catch (e) {
+      done(e);
+    }
+  });
+
+  it('should not dump on errors if dump is disabled', done => {
+    funnel.handleErrorDump = originalHandleErrorDump;
+    kuzzle.adminController.dump = sinon.stub();
+    kuzzle.config.dump.enabled = false;
+
+    const
+      rq = new Request({controller: 'testme', action: 'action'}),
+      error = new KuzzleInternalError('foo\nbar');
+
+    funnel.controllers.testme.action.rejects(error);
+
+    const callback = () => {
+      setTimeout(() => {
+        should(kuzzle.adminController.dump).not.be.called();
         done();
       }, 50);
     };
