@@ -202,6 +202,7 @@ describe('Test: ElasticSearch service', () => {
           should(result.total).be.exactly(0);
           should(result.hits).be.an.Array();
           should(result._scroll_id).be.an.exactly('banana42');
+          should(result.scrollId).be.an.exactly('banana42');
         });
     });
 
