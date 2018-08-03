@@ -113,6 +113,60 @@ describe('Test: security/roleTest', () => {
         .be.fulfilledWith(true);
     });
 
+    // @deprecated
+    it('should handle the memory storage controller aliases', () => {
+      const
+        role = new Role(),
+        msRequest = new Request({
+          controller: 'ms',
+          action: 'time'
+        }),
+        memoryStorageRequest = new Request({
+          controller: 'memoryStorage',
+          action: 'time'
+        }),
+        forbiddenMsRequest = new Request({
+          controller: 'ms',
+          action: 'flushdb'
+        });
+
+      role.controllers = {
+        ms: {
+          actions: {
+            time: true
+          }
+        }
+      };
+
+      role[_kuzzle] = kuzzle;
+
+      return role.isActionAllowed(msRequest)
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(memoryStorageRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(forbiddenMsRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.false();
+
+          delete role.controllers.ms;
+          role.controllers.memoryStorage = {actions: {time: true}};
+          return role.isActionAllowed(msRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(memoryStorageRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(forbiddenMsRequest);
+        })
+        .then(allowed => should(allowed).be.false());
+    });
+
     it('should allow a wildcard action', () => {
       const role = new Role();
       role.controllers = {
