@@ -168,27 +168,45 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
       return entrypoint.init()
         .then(() => {
-          should(entrypoint.initLogger)
-            .be.calledOnce();
+          should(entrypoint.initLogger).be.calledOnce();
 
-          should(entrypoint.httpServer)
-            .be.an.Object();
-          should(httpMock.createServer)
-            .be.calledOnce();
+          should(entrypoint.httpServer).be.an.Object();
+          should(httpMock.createServer).be.calledOnce();
           should(httpMock.createServer.firstCall.returnValue.listen)
             .be.calledOnce()
             .be.calledWith(kuzzle.config.server.port, kuzzle.config.server.host);
 
-          should(entrypoint.protocols.http.init)
-            .be.calledOnce();
-          should(entrypoint.protocols.websocket.init)
-            .be.calledOnce();
-          should(entrypoint.protocols.socketio.init)
-            .be.calledOnce();
-
-          should(entrypoint.loadMoreProtocols)
-            .be.calledOnce();
+          should(entrypoint.protocols.http.init).be.calledOnce();
+          should(entrypoint.protocols.websocket.init).be.calledOnce();
+          should(entrypoint.protocols.socketio.init).be.calledOnce();
+          should(entrypoint.loadMoreProtocols).be.calledOnce();
         });
+    });
+
+    it('should override the listened port with the one provided in the options object', () => {
+      entrypoint.initLogger = sinon.spy();
+      entrypoint.loadMoreProtocols = sinon.stub().resolves();
+
+      return entrypoint.init({port: 1234})
+        .then(() => {
+          should(entrypoint.initLogger).be.calledOnce();
+
+          should(entrypoint.httpServer).be.an.Object();
+          should(httpMock.createServer).be.calledOnce();
+          should(httpMock.createServer.firstCall.returnValue.listen)
+            .be.calledOnce()
+            .be.calledWith(1234, kuzzle.config.server.host);
+
+          should(entrypoint.protocols.http.init).be.calledOnce();
+          should(entrypoint.protocols.websocket.init).be.calledOnce();
+          should(entrypoint.protocols.socketio.init).be.calledOnce();
+          should(entrypoint.loadMoreProtocols).be.calledOnce();
+        });
+    });
+
+    it('should throw if the provided port is not an integer', () => {
+      should(() => entrypoint.init({port: 'foobar'}))
+        .throw(KuzzleInternalError, {message: 'Invalid network port number: foobar'});
     });
 
     it('should log and reject if an error occured', () => {
