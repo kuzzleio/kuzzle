@@ -23,6 +23,7 @@ docker_build() {
 
   print_something "Build image kuzzleio/$image:$kuzzle_tag with stage $build_stage of Dockerfile"
 
+  # The $build_stage variable will be removed when this script will be production-ready (push kuzzleio/kuzzle instead of kuzzleio/kuzzle8)
   docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag  --build-arg kuzzle_tag=$kuzzle_tag .
 }
 
@@ -57,26 +58,26 @@ if [ "$TRAVIS_BRANCH" == "1.x" ]; then
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
-  docker_build 'kuzzle-test' "$TRAVIS_BRANCH" 'kuzzle'
+  docker_build 'kuzzle8' "$TRAVIS_BRANCH" 'kuzzle'
 
   docker_push 'plugin-dev' "$TRAVIS_BRANCH"
-  docker_push 'kuzzle-test' "$TRAVIS_BRANCH"
+  docker_push 'kuzzle8' "$TRAVIS_BRANCH"
 
   # Keep develop tag for now
   docker_tag 'plugin-dev' "$TRAVIS_BRANCH" 'develop'
   docker_tag 'kuzzle8' "$TRAVIS_BRANCH" 'develop'
 
   docker_push 'plugin-dev' 'develop'
-  docker_push 'kuzzle-test' 'develop'
+  docker_push 'kuzzle8' 'develop'
 elif [ "$TRAVIS_BRANCH" == "2.x" ]; then
   # Build trigger by a merge on branch 2.x
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
-  docker_build 'kuzzle-test' "$TRAVIS_BRANCH" 'kuzzle'
+  docker_build 'kuzzle8' "$TRAVIS_BRANCH" 'kuzzle'
 
   docker_push 'plugin-dev' "$TRAVIS_BRANCH"
-  docker_push 'kuzzle-test' "$TRAVIS_BRANCH"
+  docker_push 'kuzzle8' "$TRAVIS_BRANCH"
 else
   # Build triggered by a new release
   # Images are built in EC2
