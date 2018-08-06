@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 ################################################################################
 # Script used to build kuzzleio/plugin-dev and kuzzleio/kuzzle Docker images  ##
 ################################################################################
@@ -46,12 +44,14 @@ docker_push() {
   docker push kuzzleio/$image:$tag
 }
 
-
 if [ -z "$DOCKER_PASSWORD" ]; then
   echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
-  exit 1
+  echo "Will not push images to Dockerhub"
+  EXIT_VALUE=1
+else
+  docker login -u kuzzleteam -p $DOCKER_PASSWORD
+  EXIT_VALUE=0
 fi
-docker login -u kuzzleteam -p $DOCKER_PASSWORD
 
 if [ "$TRAVIS_BRANCH" == "1.x" ]; then
   # Build trigger by a merge on branch 1.x
@@ -106,3 +106,5 @@ else
   docker_push 'plugin-dev' 'latest'
   docker_push 'kuzzle8' 'latest'
 fi
+
+exit $EXIT_VALUE

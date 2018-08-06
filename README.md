@@ -94,12 +94,12 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 * Come chat with us on [gitter](https://gitter.im/kuzzleio/kuzzle)
 * Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
 
-## Kuzzle Enterprise
+## Kuzzle in production
 
-Kuzzle Enterprise is production-proof, and provides all the business-critical features your need for your business, as
-the scalability, the high-availability (multi-nodes), probes for BI, diagnostic tools & professional services,
+Kuzzle is production-proof, and provides all the business-critical features your need for your business, as
+the scalability, the high-availability (multi-nodes), probes for BI & diagnostic tools.  
 
-[Compare editions to learn more](https://kuzzle.io/pricing/)
+See our [Professional services](https://kuzzle.io/pricing/).
 
 ## License
 
