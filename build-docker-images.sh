@@ -1,5 +1,11 @@
 #!/bin/bash
 
+set -e
+
+################################################################################
+# Script used to build kuzzleio/plugin-dev and kuzzleio/kuzzle Docker images  ##
+################################################################################
+
 print_something() {
   something=$1
 
@@ -12,21 +18,22 @@ print_something() {
 
 docker_build() {
   image=$1
-  tag=$2
-  build_arg=$3
+  kuzzle_tag=$2
+  build_stage=$3
 
-  print_something "Build image kuzzleio/$image:$tag from kuzzle-containers/$image/Dockerfile"
+  print_something "Build image kuzzleio/$image:$kuzzle_tag with stage $build_stage of Dockerfile"
 
-  docker build -t kuzzleio/$image:$tag -f kuzzle-containers/$image/Dockerfile --build-arg $build_arg kuzzle-containers/$image
+  docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag  --build-arg kuzzle_tag=$kuzzle_tag .
 }
 
 docker_tag() {
   image=$1
-  tag=$2
+  from_tag=$2
+  to_tag=$3
 
-  print_something "Tag image kuzzleio/$image with $tag"
+  print_something "Tag image kuzzleio/$image:$from_tag to kuzzleio/$image:$to_tag"
 
-  docker tag kuzzleio/$image kuzzleio/$image:$tag
+  docker tag kuzzleio/$image:$from_tag kuzzleio/$image:$to_tag
 }
 
 docker_push() {
@@ -38,50 +45,63 @@ docker_push() {
   docker push kuzzleio/$image:$tag
 }
 
-git_clone() {
-  git clone --depth 1 https://github.com/kuzzleio/kuzzle-containers
-  # cp ../kuzzle-containers .
-  # use a test docker repository for now
-  mv kuzzle-containers/kuzzle kuzzle-containers/kuzzle-test
-}
 
-if [ -z "$TRAVIS_BRANCH" ]; then
-  echo "TRAVIS_BRANCH not found"
+if [ -z "$DOCKER_PASSWORD" ]; then
+  echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
   exit 1
 fi
-
+docker login -u kuzzleteam -p $DOCKER_PASSWORD
 
 if [ "$TRAVIS_BRANCH" == "1.x" ]; then
-  git_clone
+  # Build trigger by a merge on branch 1.x
+  # Images are built in Travis
 
-  tag="develop"
+  docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
+  docker_build 'kuzzle-test' "$TRAVIS_BRANCH" 'kuzzle'
 
-  docker_build 'plugin-dev' $tag kuzzle_branch=$TRAVIS_BRANCH
-  docker_build 'kuzzle-test' $tag current_tag=$tag
+  docker_push 'plugin-dev' "$TRAVIS_BRANCH"
+  docker_push 'kuzzle-test' "$TRAVIS_BRANCH"
 
-  docker_push 'plugin-dev' $tag
-  docker_push 'kuzzle-test' $tag
+  # Keep develop tag for now
+  docker_tag 'plugin-dev' "$TRAVIS_BRANCH" 'develop'
+  docker_tag 'kuzzle8' "$TRAVIS_BRANCH" 'develop'
 
-  rm -rf kuzzle-containers
-elif [ "$TRAVIS_BRANCH" == "master" ]; then
-  git_clone
+  docker_push 'plugin-dev' 'develop'
+  docker_push 'kuzzle-test' 'develop'
+elif [ "$TRAVIS_BRANCH" == "2.x" ]; then
+  # Build trigger by a merge on branch 2.x
+  # Images are built in Travis
 
-  tag=$TRAVIS_TAG
+  docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
+  docker_build 'kuzzle-test' "$TRAVIS_BRANCH" 'kuzzle'
 
-  # Build and push only if we had a tag (it may be a hotfix merge).
-  if [ ! -z "$tag" ]; then
-    docker_build 'plugin-dev' $tag kuzzle_branch=$TRAVIS_BRANCH
-    docker_build 'kuzzle-test' $tag current_tag=$tag
+  docker_push 'plugin-dev' "$TRAVIS_BRANCH"
+  docker_push 'kuzzle-test' "$TRAVIS_BRANCH"
+else
+  # Build triggered by a new release
+  # Images are built in EC2
 
-    docker_tag "plugin-dev:$tag" latest
-    docker_tag "kuzzle-test:$tag" latest
+  RELEASE_TAG=$1
 
-    docker_push 'plugin-dev' $tag
-    docker_push 'kuzzle-test' $tag
-
-    docker_push 'plugin-dev' 'latest'
-    docker_push 'kuzzle-test' 'latest'
+  if [ -z "$RELEASE_TAG" ]; then
+    echo "You must pass the release tag as first argument"
+    exit 1
   fi
 
-  rm -rf kuzzle-containers
+  if [ -z "$DOCKER_PASSWORD" ]; then
+    echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
+    exit 1
+  fi
+
+  docker_build 'plugin-dev' "$RELEASE_TAG" 'plugin-dev'
+  docker_build 'kuzzle8' "$RELEASE_TAG" 'kuzzle'
+
+  docker_tag 'plugin-dev' "$RELEASE_TAG" 'latest'
+  docker_tag 'kuzzle8' "$RELEASE_TAG" 'latest'
+
+  docker_push 'plugin-dev' "$RELEASE_TAG"
+  docker_push 'kuzzle8' "$RELEASE_TAG"
+
+  docker_push 'plugin-dev' 'latest'
+  docker_push 'kuzzle8' 'latest'
 fi
