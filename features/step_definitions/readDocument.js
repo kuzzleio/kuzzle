@@ -123,8 +123,8 @@ Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in 
         return Bluebird.reject(body.error);
       }
 
-      if (body.result && body.result._scroll_id) {
-        this.scrollId = body.result._scroll_id;
+      if (body.result && body.result.scrollId) {
+        this.scrollId = body.result.scrollId;
       }
 
       if (body.result && body.result.hits && body.result.total !== 0) {
