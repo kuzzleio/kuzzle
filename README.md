@@ -99,7 +99,7 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 Kuzzle is production-proof, and provides all the business-critical features your need for your business, as
 the scalability, the high-availability (multi-nodes), probes for BI & diagnostic tools.  
 
-See our [Professional services](https://kuzzle.io/pricing/).
+Check out our [support plans](https://kuzzle.io/pricing/).
 
 ## License
 

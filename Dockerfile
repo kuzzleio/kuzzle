@@ -44,7 +44,7 @@ WORKDIR /var/app
 
 RUN  npm install --unsafe-perm \
   && npm rebuild all --unsafe-perm \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe; cd /var/app; done
+  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done
 
 ################################################################################
 # Production image
