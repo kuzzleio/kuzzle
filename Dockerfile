@@ -66,6 +66,9 @@ RUN  apt-get update \
 COPY --from=plugin-dev /var/app /var/app
 COPY --from=plugin-dev /opt/node-v$NODE_VERSION-linux-x64 /opt/node-v$NODE_VERSION-linux-x64
 
+RUN  npm remove -g \
+      pm2
+
 RUN  ln -s /var/app/docker-compose/scripts/run.sh /usr/local/bin/kuzzle \
   && chmod a+x /usr/local/bin/kuzzle \
   && chmod a+x /var/app/docker-compose/scripts/docker-entrypoint.sh
