@@ -397,7 +397,7 @@ describe('PluginsManager: strategy management', () => {
       verifyAdapter((err, res, msg) => {
         try {
           should(res).be.false();
-          should(msg).be.null();
+          should(msg).be.eql({message: null});
           should(err).be.null();
           done();
         }
@@ -412,7 +412,7 @@ describe('PluginsManager: strategy management', () => {
       verifyAdapter((err, res, msg) => {
         try {
           should(res).be.false();
-          should(msg).be.eql('Unable to log in using the strategy "someStrategy"');
+          should(msg).be.eql({message: 'Unable to log in using the strategy "someStrategy"'});
           should(err).be.null();
           done();
         }
@@ -427,7 +427,7 @@ describe('PluginsManager: strategy management', () => {
       verifyAdapter((err, res, msg) => {
         try {
           should(res).be.false();
-          should(msg).be.eql('"NONE SHALL PASS!" -The Black Knight');
+          should(msg).be.eql({message: '"NONE SHALL PASS!" -The Black Knight'});
           should(err).be.null();
           done();
         }

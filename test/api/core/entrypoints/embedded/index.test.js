@@ -165,30 +165,29 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     it('should call proper methods in order', () => {
       entrypoint.initLogger = sinon.spy();
       entrypoint.loadMoreProtocols = sinon.stub().resolves();
+      kuzzle.config.server.port = -42;
 
       return entrypoint.init()
         .then(() => {
-          should(entrypoint.initLogger)
-            .be.calledOnce();
+          should(entrypoint.initLogger).be.calledOnce();
 
-          should(entrypoint.httpServer)
-            .be.an.Object();
-          should(httpMock.createServer)
-            .be.calledOnce();
+          should(entrypoint.httpServer).be.an.Object();
+          should(httpMock.createServer).be.calledOnce();
           should(httpMock.createServer.firstCall.returnValue.listen)
             .be.calledOnce()
             .be.calledWith(kuzzle.config.server.port, kuzzle.config.server.host);
 
-          should(entrypoint.protocols.http.init)
-            .be.calledOnce();
-          should(entrypoint.protocols.websocket.init)
-            .be.calledOnce();
-          should(entrypoint.protocols.socketio.init)
-            .be.calledOnce();
-
-          should(entrypoint.loadMoreProtocols)
-            .be.calledOnce();
+          should(entrypoint.protocols.http.init).be.calledOnce();
+          should(entrypoint.protocols.websocket.init).be.calledOnce();
+          should(entrypoint.protocols.socketio.init).be.calledOnce();
+          should(entrypoint.loadMoreProtocols).be.calledOnce();
         });
+    });
+
+    it('should throw if the provided port is not an integer', () => {
+      kuzzle.config.server.port = 'foobar';
+      should(() => entrypoint.init())
+        .throw(KuzzleInternalError, {message: 'Invalid network port number: foobar'});
     });
 
     it('should log and reject if an error occured', () => {

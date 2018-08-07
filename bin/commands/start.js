@@ -24,12 +24,14 @@
 const
   fs = require('fs'),
   rc = require('rc'),
-  params = rc('kuzzle'),
-  Request = require('kuzzle-common-objects').Request,
   {
-    PartialError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: { PartialError }
+  } = require('kuzzle-common-objects'),
   ColorOutput = require('./colorOutput');
+
+const
+  params = rc('kuzzle');
 
 function commandStart (options) {
   const
