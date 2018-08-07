@@ -44,17 +44,15 @@ docker_push() {
   docker push kuzzleio/$image:$tag
 }
 
+
 if [ -z "$DOCKER_PASSWORD" ]; then
   echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
-  echo "Will not push images to Dockerhub"
-  EXIT_VALUE=1
-else
-  docker login -u kuzzleteam -p $DOCKER_PASSWORD
-  EXIT_VALUE=0
+  exit 1
 fi
+docker login -u kuzzleteam -p $DOCKER_PASSWORD
 
 if [ "$TRAVIS_BRANCH" == "1.x" ]; then
-  # Build trigger by a merge on branch 1.x
+  # Build triggered by a merge on branch 1.x
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
@@ -70,7 +68,7 @@ if [ "$TRAVIS_BRANCH" == "1.x" ]; then
   docker_push 'plugin-dev' 'develop'
   docker_push 'kuzzle8' 'develop'
 elif [ "$TRAVIS_BRANCH" == "2.x" ]; then
-  # Build trigger by a merge on branch 2.x
+  # Build triggered by a merge on branch 2.x
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
@@ -78,21 +76,10 @@ elif [ "$TRAVIS_BRANCH" == "2.x" ]; then
 
   docker_push 'plugin-dev' "$TRAVIS_BRANCH"
   docker_push 'kuzzle8' "$TRAVIS_BRANCH"
-else
+elif [ ! -z "$RELEASE_TAG" ]; then
   # Build triggered by a new release
-  # Images are built in EC2
-
-  RELEASE_TAG=$1
-
-  if [ -z "$RELEASE_TAG" ]; then
-    echo "You must pass the release tag as first argument"
-    exit 1
-  fi
-
-  if [ -z "$DOCKER_PASSWORD" ]; then
-    echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
-    exit 1
-  fi
+  # The build is triggered by Github webhook
+  # Images are built in Travis
 
   docker_build 'plugin-dev' "$RELEASE_TAG" 'plugin-dev'
   docker_build 'kuzzle8' "$RELEASE_TAG" 'kuzzle'
@@ -106,5 +93,3 @@ else
   docker_push 'plugin-dev' 'latest'
   docker_push 'kuzzle8' 'latest'
 fi
-
-exit $EXIT_VALUE
