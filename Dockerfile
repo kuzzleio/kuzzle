@@ -6,7 +6,7 @@ FROM debian:stretch-slim as plugin-dev
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
-ENV NODE_VERSION=8.9.0
+ENV NODE_VERSION=8.11.3
 ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 
 ADD https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz /tmp/
