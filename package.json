@@ -40,7 +40,7 @@
     "jsonwebtoken": "^8.3.0",
     "koncorde": "^1.1.7",
     "kuzzle-common-objects": "^3.0.13",
-    "kuzzle-sdk": "^5.0.12",
+    "kuzzle-sdk": "git://github.com/kuzzleio/sdk-javascript.git#6.x",
     "lodash": "4.17.10",
     "moment": "^2.22.2",
     "ms": "^2.1.1",
