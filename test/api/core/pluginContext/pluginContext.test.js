@@ -197,7 +197,7 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger', 'strategies']);
+      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
     });
 
     it('should expose a data validation accessor', () => {
@@ -231,6 +231,21 @@ describe('Plugin Context', () => {
 
       should(strategies.add).be.a.Function();
       should(strategies.remove).be.a.Function();
+    });
+
+    it('should expose an SDK client accessor', () => {
+      const sdk = context.accessors.sdk;
+
+      should(sdk.query).be.a.Function();
+      should(sdk.auth).be.an.Object();
+      should(sdk.bulk).be.an.Object();
+      should(sdk.collection).be.an.Object();
+      should(sdk.document).be.an.Object();
+      should(sdk.index).be.an.Object();
+      should(sdk.ms).be.an.Object();
+      should(sdk.realtime).be.an.Object();
+      should(sdk.security).be.an.Object();
+      should(sdk.server).be.an.Object();
     });
   });
 
