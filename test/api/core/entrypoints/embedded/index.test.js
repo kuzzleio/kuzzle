@@ -11,7 +11,8 @@ const
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
   rewire = require('rewire'),
   should = require('should'),
-  sinon = require('sinon');
+  sinon = require('sinon'),
+  Bluebird = require('bluebird');
 
 describe('lib/core/api/core/entrypoints/embedded/index', () => {
   let
@@ -19,6 +20,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     httpMock,
     EntryPoint,
     entrypoint,
+    manifestMock = sinon.stub(),
     winstonTransportConsole,
     winstonTransportFile,
     winstonTransportElasticsearch,
@@ -30,6 +32,10 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       timestamp: sinon.stub().returns('format.timestamp'),
       prettyPrint: sinon.stub().returns('format.prettyPrint')
     };
+
+  before(() => {
+    sinon.usingPromise(Bluebird);
+  });
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -62,6 +68,17 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     mockrequire('winston-elasticsearch', winstonTransportElasticsearch);
     mockrequire('winston-syslog', winstonTransportSyslog);
 
+    mockrequire('../../../../../lib/api/core/plugins/manifest', sinon.stub());
+
+    // Bluebird.map forces a of context, preventing rewire to mock "require"
+    mockrequire('bluebird', {
+      map: (arr, fn) => Promise.all(arr.map(e => fn(e))),
+      resolve: sinon.stub().resolves(),
+      timeout: sinon.stub().resolves(),
+      catch: sinon.stub().resolves(),
+      then: sinon.stub().resolves()
+    });
+
     EntryPoint = mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
 
     entrypoint = new EntryPoint(kuzzle);
@@ -81,6 +98,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     for (const stub of ['prettyPrint', 'simple', 'json', 'colorize', 'timestamp']) {
       winstonFormatMock[stub].resetHistory();
     }
+
+    manifestMock.resetHistory();
   });
 
   describe('#dispatch', () => {
@@ -444,9 +463,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   });
 
   describe('#loadMoreProtocols', () => {
-    it('should load plugins as NodeJS modules and simple require-ables', () => {
+    it('should load plugins as Node.js modules and simple requirables', () => {
       mockrequire('fs', {
-        existsSync: sinon.stub().returns(true),
         readdirSync: sinon.stub().returns(['one', 'two']),
         statSync: sinon.stub().returns({isDirectory: () => true})
       });
@@ -465,15 +483,12 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
         ep.loadMoreProtocols();
 
-        should(requireStub)
-          .be.calledTwice();
-
+        should(requireStub).be.calledTwice();
       });
     });
 
     it('should log and reject if an error occured', () => {
       mockrequire('fs', {
-        existsSync: sinon.stub().returns(true),
         readdirSync: sinon.stub().returns(['protocol']),
         statSync: sinon.stub().returns({isDirectory: () => true})
       });
