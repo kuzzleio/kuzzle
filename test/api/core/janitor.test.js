@@ -7,6 +7,16 @@ const
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
+function rewireJanitor() {
+  const Janitor = rewire('../../../lib/api/core/janitor');
+  Janitor.__set__('console', {
+    log: sinon.stub(),
+    error: sinon.stub()
+  });
+
+  return Janitor;
+}
+
 /*
  /!\ In these tests, the promise returned by shutdown
  do not mark the function as "finished".
@@ -14,7 +24,6 @@ const
  the shutdown is initiated using the CLI, to allow it
  to finish and exit while Kuzzle is shutting down.
  */
-
 describe('Test: core/janitor', () => {
   let
     Janitor,
@@ -23,8 +32,7 @@ describe('Test: core/janitor', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-
-    Janitor = require('../../../lib/api/core/janitor');
+    Janitor = rewireJanitor();
     janitor = new Janitor(kuzzle);
   });
 
@@ -87,7 +95,8 @@ describe('Test: core/janitor', () => {
       mockrequire('dumpme', coreStub);
       mockrequire('glob', globStub);
 
-      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
+      mockrequire.reRequire('../../../lib/api/core/janitor');
+      Janitor = rewireJanitor();
       janitor = new Janitor(kuzzle);
 
       kuzzle.config.dump.enabled = true;
@@ -301,7 +310,7 @@ describe('Test: core/janitor', () => {
 
       mockrequire('pm2', pm2Mock);
       mockrequire.reRequire('../../../lib/api/core/janitor');
-      Janitor = rewire('../../../lib/api/core/janitor');
+      Janitor = rewireJanitor();
 
       Janitor.__set__({
         process: processMock,
