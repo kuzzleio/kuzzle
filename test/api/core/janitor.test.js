@@ -28,6 +28,103 @@ describe('Test: core/janitor', () => {
     janitor = new Janitor(kuzzle);
   });
 
+  describe('#loadFixtures', () => {
+    let
+      fsStub;
+
+    const
+      fixtures = require('../../mocks/fixtures.json');
+
+    afterEach(() => {
+     mockrequire.stopAll();
+    });
+
+    beforeEach(() => {
+      fsStub = {
+        readFile: sinon.stub()
+      };
+
+      mockrequire('fs-extra', fsStub);
+
+      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
+      janitor = new Janitor(kuzzle);
+    });
+
+    it('create index and collection that does not exists', done => {
+      fsStub.readFile.yields(null, JSON.stringify(fixtures));
+      const storageEngine = kuzzle.services.list.storageEngine;
+      storageEngine.import.onCall(0).resolves(false)
+                               .onCall(1).resolves(true)
+                               .onCall(2).resolves(false);
+
+      janitor.loadFixtures('path')
+        .then(() => {
+          should(storageEngine.import.callCount).be.eql(3);
+          should(storageEngine.import.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
+          should(storageEngine.import.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
+          should(storageEngine.import.getCall(0).args[0].input.body.bulkData[1]).be.eql({ "name": "alyx" });
+
+          should(storageEngine.refreshIndex.callCount).be.eql(3);
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+  });
+
+  describe('#loadMappings', () => {
+    let
+      fsStub;
+
+    const
+      mappings = require('../../mocks/mappings.json');
+
+    afterEach(() => {
+     mockrequire.stopAll();
+    });
+
+    beforeEach(() => {
+      fsStub = {
+        readFile: sinon.stub()
+      };
+
+      mockrequire('fs-extra', fsStub);
+
+      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
+      janitor = new Janitor(kuzzle);
+    });
+
+    it('create index and collection that does not exists', done => {
+      fsStub.readFile.yields(null, JSON.stringify(mappings));
+      const storageEngine = kuzzle.services.list.storageEngine;
+      storageEngine.indexExists.onCall(0).resolves(false)
+                               .onCall(1).resolves(true)
+                               .onCall(2).resolves(false);
+
+      janitor.loadMappings('path')
+        .then(() => {
+          should(storageEngine.indexExists.callCount).be.eql(3);
+          should(storageEngine.createIndex.callCount).be.eql(2);
+          should(storageEngine.createIndex.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
+
+          should(storageEngine.updateMapping.callCount).be.eql(3);
+          should(storageEngine.updateMapping.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
+          should(storageEngine.updateMapping.getCall(0).args[0].input.body.properties).be.eql({ "name": { "type": "text" } });
+
+          should(storageEngine.refreshIndex.callCount).be.eql(3);
+
+          should(kuzzle.indexCache.add.callCount).be.eql(3);
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+  });
+
   describe('#dump', () => {
     let
       fsStub,
