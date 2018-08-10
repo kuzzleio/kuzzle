@@ -50,7 +50,7 @@ describe('funnelController.executePluginRequest', () => {
       });
   });
 
-  it('should dump on errors in whitelist', (done) => {
+  it('should dump on errors in whitelist', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
     kuzzle.adminController.dump = sinon.stub();
     kuzzle.config.dump.enabled = true;
