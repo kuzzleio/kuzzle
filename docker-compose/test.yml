@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
   proxy:
@@ -29,7 +29,7 @@ services:
       - DEBUG=
       - CUCUMBER_EMBEDDED_HOST=localhost
       - CUCUMBER_PROXY_HOST=proxy
-      - NODE_LTS
+      - NODE_LTS=${NODE_LTS:-8}
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT

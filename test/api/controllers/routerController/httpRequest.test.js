@@ -234,7 +234,7 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   it('should return a 404 if the requested route does not exist', (done) => {
-    httpRequest.url = '/foo/bar';
+    httpRequest.url = '/a/b/c/d';
     httpRequest.method = 'GET';
 
     routeController.http.route(httpRequest, result => {
@@ -242,7 +242,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.response.requestId).be.eql(httpRequest.requestId);
         should(result.response.headers['content-type']).be.eql('application/json');
         should(result.response.status).be.eql(404);
-        should(result.response.error.message).be.eql('API URL not found: /foo/bar');
+        should(result.response.error.message).be.eql('API URL not found: /a/b/c/d');
         done();
       }
       catch (e) {
