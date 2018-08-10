@@ -164,8 +164,9 @@ describe('PluginsManager', () => {
       kuzzle.config.version = '1.0.0';
       pluginsManager = new PluginsManager(kuzzle);
 
+      const message = new RegExp(`\\[/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest\\.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the plugin requirements \\(\\^5\\.x\\)`);
       should(() => pluginsManager.init())
-        .throw(PluginImplementationError, {message: /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\/manifest\.json\] Requires Kuzzle version '\^5\.x' \(current Kuzzle version: 1\.0\.0\)/});
+        .throw(PluginImplementationError, {message});
     });
 
     it('should load custom plugin configuration if exists', () => {
