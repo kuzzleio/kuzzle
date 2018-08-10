@@ -6,8 +6,7 @@ const
   rewire = require('rewire'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  { PluginImplementationError } = require('kuzzle-common-objects').errors,
-  Manifest = require('../../../../lib/api/core/plugins/manifest');
+  { PluginImplementationError } = require('kuzzle-common-objects').errors;
 
 describe('PluginsManager', () => {
   let
@@ -15,7 +14,14 @@ describe('PluginsManager', () => {
     pluginsManager,
     fsStub,
     kuzzle,
-    pluginStub;
+    pluginStub,
+    Manifest;
+
+  before(() => {
+    // Disables unnecessary console warnings
+    Manifest = rewire('../../../../lib/api/core/plugins/manifest');
+    Manifest.__set__('console', { warn: sinon.stub() });
+  });
 
   beforeEach(() => {
     pluginStub = function () {
@@ -31,6 +37,7 @@ describe('PluginsManager', () => {
     };
 
     mockrequire('fs', fsStub);
+    mockrequire('../../../../lib/api/core/plugins/manifest', Manifest);
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -126,8 +133,7 @@ describe('PluginsManager', () => {
 
       should(() => pluginsManager.init()).not.throw();
       should(pluginsManager.plugins[instanceName]).be.Object();
-      should(pluginsManager.plugins[instanceName]).have.keys('object', 'config', 'manifest', 'path');
-      should(pluginsManager.plugins[instanceName].manifest.name).be.eql(instanceName);
+      should(pluginsManager.plugins[instanceName]).have.keys('object', 'config', 'manifest');
       should(pluginsManager.plugins[instanceName].config).be.eql({});
       should(pluginsManager.plugins[instanceName].manifest)
         .instanceOf(Manifest)
@@ -138,7 +144,6 @@ describe('PluginsManager', () => {
           path: '/kuzzle/plugins/enabled/kuzzle-plugin-test'
         });
       should(pluginsManager.plugins[instanceName].object).be.ok();
-      should(pluginsManager.plugins[instanceName].path).be.ok();
     });
 
     it('should reject plugin initialization if a plugin requires another version of kuzzle core', () => {
@@ -184,13 +189,12 @@ describe('PluginsManager', () => {
 
       should(() => pluginsManager.init()).not.throw();
       should(pluginsManager.plugins[instanceName]).be.Object();
-      should(pluginsManager.plugins[instanceName]).have.keys('object', 'config', 'manifest', 'path');
+      should(pluginsManager.plugins[instanceName]).have.keys('object', 'config', 'manifest');
       should(pluginsManager.plugins[instanceName].manifest)
         .instanceOf(Manifest)
         .match({name: instanceName});
       should(pluginsManager.plugins[instanceName].config).be.eql(config);
       should(pluginsManager.plugins[instanceName].object).be.ok();
-      should(pluginsManager.plugins[instanceName].path).be.ok();
     });
 
     it('should throw if trying to set a privileged plugin which does not support privileged mode', () => {
