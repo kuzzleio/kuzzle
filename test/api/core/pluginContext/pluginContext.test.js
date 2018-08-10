@@ -277,12 +277,14 @@ describe('Plugin Context', () => {
     it('should call the callback with a result if everything went well', done => {
       const
         request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
+        result = {foo: 'bar'},
         callback = sinon.spy((err, res) => {
           try {
             should(callback).be.calledOnce();
             should(err).be.null();
             should(res).match(request);
-            should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+            should(res.result).be.equal(result);
+            should(kuzzle.funnel.executePluginRequest).calledWith(request);
             done();
           }
           catch(e) {
@@ -290,15 +292,17 @@ describe('Plugin Context', () => {
           }
         });
 
-      kuzzle.funnel.executePluginRequest.yields(null, request);
+      kuzzle.funnel.executePluginRequest.resolves(result);
 
       should(context.accessors.execute(request, callback)).not.be.a.Promise();
     });
 
     it('should resolve a Promise with a result if everything went well', () => {
-      const request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
+      const
+        request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
+        result = {foo: 'bar'};
 
-      kuzzle.funnel.executePluginRequest.yields(null, request);
+      kuzzle.funnel.executePluginRequest.resolves(result);
 
       const ret = context.accessors.execute(request);
 
@@ -307,7 +311,8 @@ describe('Plugin Context', () => {
       return ret
         .then(res => {
           should(res).match(request);
-          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+          should(res.result).be.equal(result);
+          should(kuzzle.funnel.executePluginRequest).calledWith(request);
         });
     });
 
@@ -318,7 +323,7 @@ describe('Plugin Context', () => {
         callback = sinon.spy(
           (err, res) => {
             try {
-              should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+              should(kuzzle.funnel.executePluginRequest).calledWith(request);
               should(callback).be.calledOnce();
               should(err).match(error);
               should(res).be.undefined();
@@ -329,7 +334,7 @@ describe('Plugin Context', () => {
             }
           });
 
-      kuzzle.funnel.executePluginRequest.yields(error);
+      kuzzle.funnel.executePluginRequest.rejects(error);
 
       context.accessors.execute(request, callback);
     });
@@ -339,11 +344,11 @@ describe('Plugin Context', () => {
         request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
         error = new Error('error');
 
-      kuzzle.funnel.executePluginRequest.yields(error);
+      kuzzle.funnel.executePluginRequest.rejects(error);
 
       return context.accessors.execute(request)
         .catch(err => {
-          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+          should(kuzzle.funnel.executePluginRequest).calledWith(request);
           should(err).match(error);
         });
     });

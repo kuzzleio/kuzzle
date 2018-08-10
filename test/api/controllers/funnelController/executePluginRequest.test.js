@@ -25,74 +25,32 @@ describe('funnelController.executePluginRequest', () => {
     funnel.handleErrorDump = sinon.stub();
   });
 
-  it('should fail if an unknown controller is invoked', done => {
+  it('should fail if an unknown controller is invoked', () => {
     const rq = new Request({controller: 'foo', action: 'bar'});
 
-    const ret = funnel.executePluginRequest(rq, (err, res) => {
-      try {
-        should(res).be.undefined();
+    return funnel.executePluginRequest(rq)
+      .then(() => Promise.reject(new Error('Should not resolves')))
+      .catch(err => {
         should(err).be.instanceOf(BadRequestError);
         should(err.message).be.eql('Unknown controller foo');
         should(kuzzle.pluginsManager.trigger).not.be.called();
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-
-    should(ret).be.eql(1);
+      });
   });
 
-  it('should execute the request', done => {
-    const rq = new Request({controller: 'testme', action: 'action'});
-
-    funnel.controllers.testme.action.callsFake(() => {
-      rq.status = 333;
-      return Promise.resolve(rq);
-    });
-
-    const callback = (err, res) => {
-      try {
-        should(err).be.null();
-        should(res).be.eql(rq);
-        should(rq.status).be.eql(333);
-        should(kuzzle.pluginsManager.trigger).not.be.called();
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    };
-
-    should(funnel.executePluginRequest(rq, callback)).be.eql(0);
-  });
-
-  it('should forward a controller error to the callback', done => {
+  it('should execute the request', () => {
     const
       rq = new Request({controller: 'testme', action: 'action'}),
-      error = new Error('foobar');
+      result = {foo: 'bar'};
 
-    funnel.controllers.testme.action.rejects(error);
+    funnel.controllers.testme.action.callsFake(() => Promise.resolve(result));
 
-    const callback = (err, res) => {
-      try {
-        should(err).be.eql(error);
-        should(res).be.undefined();
-        should(rq.status).be.eql(500);
-        should(funnel.handleErrorDump).be.called();
-        should(kuzzle.pluginsManager.trigger).not.be.called();
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    };
-
-    should(funnel.executePluginRequest(rq, callback)).be.eql(0);
+    return funnel.executePluginRequest(rq)
+      .then(res => {
+        should(res).be.equal(result);
+      });
   });
 
-  it('should dump on errors in whitelist', done => {
+  it('should dump on errors in whitelist', (done) => {
     funnel.handleErrorDump = originalHandleErrorDump;
     kuzzle.adminController.dump = sinon.stub();
     kuzzle.config.dump.enabled = true;
@@ -111,12 +69,14 @@ describe('funnelController.executePluginRequest', () => {
       }, 50);
     };
 
-    try {
-      funnel.executePluginRequest(rq, callback);
-    }
-    catch (e) {
-      done(e);
-    }
+    funnel.executePluginRequest(rq)
+      .then(() => done(new Error('Should not resolves')))
+      .catch (e => {
+        if (e instanceof KuzzleInternalError) {
+          return callback();
+        }
+        done(e);
+      });
   });
 
   it('should not dump on errors if dump is disabled', done => {
@@ -137,12 +97,14 @@ describe('funnelController.executePluginRequest', () => {
       }, 50);
     };
 
-    try {
-      funnel.executePluginRequest(rq, callback);
-    }
-    catch (e) {
-      done(e);
-    }
+    funnel.executePluginRequest(rq)
+      .then(() => done(new Error('Should not resolves')))
+      .catch (e => {
+        if (e instanceof KuzzleInternalError) {
+          return callback();
+        }
+        done(e);
+      });
   });
 
 });
