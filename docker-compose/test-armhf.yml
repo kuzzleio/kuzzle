@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  proxy:
+    image: kuzzleio/proxy${DOCKER_PROXY_TAG}
+    environment:
+      - proxy_port=7513
+
+  kuzzle:
+    image: kuzzleio/core-dev-armh
+    command: sh -c 'chmod 755 /run.sh && /run.sh'
+    volumes:
+      - "..:/var/app"
+      - "./scripts/run-test-arm.sh:/run.sh"
+      - "./config/pm2.json:/config/pm2.json"
+    cap_add:
+      - SYS_PTRACE
+    depends_on:
+      - proxy
+      - redis
+      - elasticsearch
+    environment:
+      - kuzzle_services__db__client__host=http://elasticsearch:9200
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_server__entryPoints__proxy=true
+      - kuzzle_server__proxy__host=proxy
+      - NODE_ENV=production
+      - DEBUG=
+      - CUCUMBER_EMBEDDED_HOST=localhost
+      - CUCUMBER_PROXY_HOST=proxy
+      - NODE_LTS=${NODE_LTS:-8}
+      # Travis env var must be propagated into the container
+      - TRAVIS
+      - TRAVIS_COMMIT
+      - TRAVIS_JOB_NUMBER
+      - TRAVIS_BRANCH
+      - TRAVIS_JOB_ID
+      - TRAVIS_PULL_REQUEST
+      - TRAVIS_REPO_SLUG
+
+  redis:
+    image: redis:3.2
+
+  elasticsearch:
+    image: kuzzleio/elasticsearch:5.4.1
+    ulimits:
+      nofile: 65536
+    environment:
+      - cluster.name=kuzzle
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
