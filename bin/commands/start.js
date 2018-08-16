@@ -59,6 +59,14 @@ function commandStart (options) {
         .then(() => console.log(cout.ok(`[✔] Fixtures successfully loaded`)));
     })
     .then(() => {
+      if (! params.securities) {
+        return null;
+      }
+
+      return kuzzle.janitor.loadSecurities(params.securities)
+        .then(() => console.log(cout.ok(`[✔] Roles, profiles and users successfully loaded`)));
+    })
+    .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {

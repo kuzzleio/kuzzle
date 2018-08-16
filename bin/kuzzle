@@ -83,6 +83,7 @@ program
   .description('start a Kuzzle instance')
   .option('    --fixtures <file>', 'import data from file')
   .option('    --mappings <file>', 'apply mappings from file')
+  .option('    --securities <file>', 'create roles, profiles and users from file')
   .action(require('./commands/start'));
 
 // $ kuzzle dump
