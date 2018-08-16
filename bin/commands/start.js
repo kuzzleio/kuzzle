@@ -22,12 +22,7 @@
 /* eslint-disable no-console */
 
 const
-  fs = require('fs'),
   rc = require('rc'),
-  {
-    Request,
-    errors: { PartialError }
-  } = require('kuzzle-common-objects'),
   ColorOutput = require('./colorOutput');
 
 const
@@ -48,7 +43,7 @@ function commandStart (options) {
       }
 
       return kuzzle.janitor.loadMappings(params.mappings)
-        .then(() => console.log(cout.ok(`[✔] Mappings successfully applied`)));
+        .then(() => console.log(cout.ok('[✔] Mappings successfully applied')));
     })
     .then(() => {
       if (! params.fixtures) {
@@ -56,7 +51,7 @@ function commandStart (options) {
       }
 
       return kuzzle.janitor.loadFixtures(params.fixtures)
-        .then(() => console.log(cout.ok(`[✔] Fixtures successfully loaded`)));
+        .then(() => console.log(cout.ok('[✔] Fixtures successfully loaded')));
     })
     .then(() => {
       if (! params.securities) {
@@ -64,7 +59,7 @@ function commandStart (options) {
       }
 
       return kuzzle.janitor.loadSecurities(params.securities)
-        .then(() => console.log(cout.ok(`[✔] Roles, profiles and users successfully loaded`)));
+        .then(() => console.log(cout.ok('[✔] Roles, profiles and users successfully loaded')));
     })
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));
