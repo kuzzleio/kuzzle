@@ -28,7 +28,7 @@ describe('Test: core/janitor', () => {
     janitor = new Janitor(kuzzle);
   });
 
-  describe.only('#loadSecurities', () => {
+  describe('#loadSecurities', () => {
     let
       fsStub;
 
