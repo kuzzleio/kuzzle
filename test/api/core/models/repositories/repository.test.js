@@ -262,6 +262,15 @@ describe('Test: repositories/repository', () => {
         });
     });
 
+    it('should return a 404 if the given object is not present', done => {
+      repository.delete(null)
+        .then(() => done(new Error('should throw error')))
+        .catch(error => {
+          should(error).be.instanceOf(NotFoundError);
+          done();
+        });
+    });
+
     it('should delete an object from both cache and database when pertinent', () => {
       const someObject = { _id: 'someId' };
 
