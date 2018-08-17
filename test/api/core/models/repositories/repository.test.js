@@ -31,14 +31,28 @@ describe('Test: repositories/repository', () => {
 
     repository = new Repository(kuzzle);
     repository.index = '%test';
-    repository.collection = 'repository';
+    repository.collection = 'objects';
     repository.init({});
     repository.ObjectConstructor = ObjectConstructor;
   });
 
   describe('#loadOneFromDatabase', () => {
-    it('should return null for an non existing id', () => {
-      return repository.loadOneFromDatabase(-9999)
+    it('should reject for an non existing id', done => {
+      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
+
+      repository.loadOneFromDatabase(-9999)
+        .then(() => done(new Error('Should reject with a NotFoundError')))
+        .catch(error => {
+          should(error).be.instanceOf(NotFoundError);
+          should(error.message).eql('Unable to find object with id \'-9999\'');
+          done();
+        });
+    });
+
+    it('should return null for an non existing id with returnNull to true', () => {
+      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
+
+      return repository.loadOneFromDatabase(-9999, { returnNull: true })
         .then(result => should(result).be.null());
     });
 
@@ -141,10 +155,22 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#load', () => {
-    it('should return null for an non-existing id', () => {
-      kuzzle.internalEngine.get.rejects(new NotFoundError('test'));
+    it('should reject for an non existing id', done => {
+      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
 
-      return repository.load(-999)
+      repository.load(-9999)
+        .then(() => done(new Error('Should reject with a NotFoundError')))
+        .catch(error => {
+          should(error).be.instanceOf(NotFoundError);
+          should(error.message).eql('Unable to find object with id \'-9999\'');
+          done();
+        });
+    });
+
+    it('should return null for an non existing id with returnNull to true', () => {
+      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
+
+      return repository.load(-9999, { returnNull: true })
         .then(result => should(result).be.null());
     });
 
