@@ -13,14 +13,23 @@ describe('PluginsManager', () => {
     PluginsManager,
     pluginsManager,
     fsStub,
+    manifestFsStub,
     kuzzle,
     pluginStub,
     Manifest;
 
   before(() => {
-    // Disables unnecessary console warnings
+    manifestFsStub = {
+      accessSync: sinon.stub(),
+      constants: {
+        R_OK: true
+      }
+    };
     Manifest = rewire('../../../../lib/api/core/plugins/manifest');
-    Manifest.__set__('console', { warn: sinon.stub() });
+    Manifest.__set__({
+      console: { warn: sinon.stub() },
+      fs: manifestFsStub
+    });
   });
 
   beforeEach(() => {
@@ -35,6 +44,8 @@ describe('PluginsManager', () => {
       accessSync: sinon.stub(),
       statSync: sinon.stub()
     };
+
+    manifestFsStub.accessSync.returns();
 
     mockrequire('fs', fsStub);
     mockrequire('../../../../lib/api/core/plugins/manifest', Manifest);
@@ -71,6 +82,7 @@ describe('PluginsManager', () => {
 
     it('should throw if a plugin does not contain a manifest.json file nor a package.json one', () => {
       pluginsManager = new PluginsManager(kuzzle);
+      manifestFsStub.accessSync.throws(new Error('foobar'));
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory () {
@@ -85,6 +97,7 @@ describe('PluginsManager', () => {
     it('should throw if a plugin with the same name already exists', () => {
       const instanceName = 'kuzzle-plugin-test';
       pluginsManager = new PluginsManager(kuzzle);
+
       fsStub.readdirSync.returns([instanceName, 'another-plugin']);
       fsStub.statSync.returns({
         isDirectory: () => true
@@ -164,7 +177,8 @@ describe('PluginsManager', () => {
       kuzzle.config.version = '1.0.0';
       pluginsManager = new PluginsManager(kuzzle);
 
-      const message = new RegExp(`\\[/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest\\.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the plugin requirements \\(\\^5\\.x\\)`);
+      const message = new RegExp(`\\[/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest\\.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the manifest requirements \\(\\^5\\.x\\)`);
+
       should(() => pluginsManager.init())
         .throw(PluginImplementationError, {message});
     });

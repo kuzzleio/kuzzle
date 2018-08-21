@@ -24,6 +24,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     httpMock,
     EntryPoint,
     entrypoint,
+    AbstractManifest,
     Manifest,
     winstonTransportConsole,
     winstonTransportFile,
@@ -39,9 +40,6 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
   before(() => {
     sinon.usingPromise(Bluebird);
-    // Disables unnecessary console warnings
-    Manifest = rewire('../../../../../lib/api/core/plugins/manifest');
-    Manifest.__set__('console', { warn: sinon.stub() });
   });
 
   beforeEach(() => {
@@ -75,7 +73,14 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     mockrequire('winston-elasticsearch', winstonTransportElasticsearch);
     mockrequire('winston-syslog', winstonTransportSyslog);
 
-    mockrequire('../../../../../lib/api/core/plugins/manifest', Manifest);
+    // Disables unnecessary console warnings
+    AbstractManifest = rewire('../../../../../lib/api/core/abstractManifest');
+    AbstractManifest.__set__({ console: { warn: sinon.stub() }});
+    mockrequire('../../../../../lib/api/core/abstractManifest', AbstractManifest);
+
+    Manifest = rewire('../../../../../lib/api/core/entrypoints/embedded/manifest');
+    Manifest.__set__({ console: { warn: sinon.stub() }});
+    mockrequire('../../../../../lib/api/core/entrypoints/embedded/manifest', Manifest);
 
     // Bluebird.map forces a different context, preventing rewire to mock "require"
     mockrequire('bluebird', {
@@ -543,7 +548,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
 
       const
-        message = new RegExp(`\\[${path.join(protocolDirectory, 'protocol')}\\] Missing "protocol" property`),
+        message = new RegExp(`\\[${path.join(protocolDirectory, 'protocol')}\\] Unable to load the file 'manifest.json'`),
         requireStub = sinon.stub().returns(function () {
           this.init = sinon.spy();
         });
