@@ -29,7 +29,7 @@ describe('funnelController.executePluginRequest', () => {
     const rq = new Request({controller: 'foo', action: 'bar'});
 
     return funnel.executePluginRequest(rq)
-      .then(() => Promise.reject(new Error('Should not resolves')))
+      .then(() => Promise.reject(new Error('Should not resolve')))
       .catch(err => {
         should(err).be.instanceOf(BadRequestError);
         should(err.message).be.eql('Unknown controller foo');
