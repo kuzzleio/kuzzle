@@ -7,7 +7,7 @@ services:
       - proxy_port=7513
 
   kuzzle:
-    image: kuzzleio/core-dev-armh
+    image: kuzzleio/core-dev-armhf
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
