@@ -39,41 +39,6 @@ describe('AbstractManifest class', () => {
     should(() => manifest.load()).throw(PluginImplementationError, {message});
   });
 
-  it('should throw if an invalid privileged value is provided', () => {
-    const
-      message = new RegExp(`\\[.*?${pluginPath}/manifest\\.json\\] Invalid "privileged" property: expected a boolean, got a number`),
-      manifest = new Manifest(kuzzle, pluginPath);
-
-    mockRequireManifest({name: 'foobar', privileged: 123})(() => {
-      should(() => manifest.load())
-        .throw(PluginImplementationError, {message});
-    });
-  });
-
-  it('should properly set its privileged value according to the manifest.json one', () => {
-    mockRequireManifest({name: 'foobar', privileged: true})(() => {
-      const manifest = new Manifest(kuzzle, pluginPath);
-
-      should(manifest).match({
-        kuzzle,
-        name: null,
-        kuzzleVersion: null,
-        privileged: false,
-        path: pluginPath
-      });
-
-      manifest.load();
-
-      should(manifest).match({
-        kuzzle,
-        name: 'foobar',
-        kuzzleVersion: defaultKuzzleVersion,
-        privileged: true,
-        path: pluginPath
-      });
-    });
-  });
-
   it('should throw if kuzzleVersion is not a string', () => {
     const message = new RegExp(`\\[${pluginPath}/manifest.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the manifest requirements \\(123\\)`),
       manifest = new Manifest(kuzzle, pluginPath);
@@ -141,6 +106,22 @@ describe('AbstractManifest class', () => {
 
     mockRequireManifest({name: 'foobar', kuzzleVersion})(() => {
       should(() => manifest.load()).throw(PluginImplementationError, {message});
+    });
+  });
+
+  it('should serialize only the necessary properties', () => {
+    const manifest = new Manifest(kuzzle, pluginPath);
+
+    mockRequireManifest({name: 'foobar'})(() => {
+      manifest.load();
+
+      const serialized = JSON.parse(JSON.stringify(manifest));
+
+      should(serialized).eql({
+        name: manifest.name,
+        path: manifest.path,
+        kuzzleVersion: manifest.kuzzleVersion
+      });
     });
   });
 });

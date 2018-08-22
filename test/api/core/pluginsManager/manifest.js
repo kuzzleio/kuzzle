@@ -126,24 +126,4 @@ describe('Plugins manifest class', () => {
       should(() => manifest.load()).throw(PluginImplementationError, {message});
     });
   });
-
-
-  it('should throw if an invalid privileged value is provided', () => {
-    const
-      message = new RegExp(`\\[.*?${pluginPath}\\] Invalid "privileged" property: expected a boolean, got a number`),
-      manifest = new Manifest(kuzzle, pluginPath);
-
-    manifest.raw = {privileged: 123};
-    should(() => manifest.load()).throw(PluginImplementationError, {message});
-  });
-
-  it('should properly set its privileged value according to the manifest.json one', () => {
-    const manifest = new Manifest(kuzzle, pluginPath);
-
-    should(manifest.privileged).be.false();
-    manifest.raw = {privileged: true};
-    manifest.load();
-
-    should(manifest.privileged).be.true();
-  });
 });
