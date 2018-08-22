@@ -49,13 +49,6 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should return null for an non existing id with returnNull to true', () => {
-      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
-
-      return repository.loadOneFromDatabase(-9999, { returnNull: true })
-        .then(result => should(result).be.null());
-    });
-
     it('should reject the promise in case of error', () => {
       kuzzle.internalEngine.get.rejects(new KuzzleInternalError('error'));
 
@@ -165,13 +158,6 @@ describe('Test: repositories/repository', () => {
           should(error.message).eql('Unable to find object with id \'-9999\'');
           done();
         });
-    });
-
-    it('should return null for an non existing id with returnNull to true', () => {
-      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
-
-      return repository.load(-9999, { returnNull: true })
-        .then(result => should(result).be.null());
     });
 
     it('should reject the promise in case of error', () => {
