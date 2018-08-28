@@ -210,6 +210,15 @@ Feature: Kuzzle functional tests
     And The notification should have a "_source" member
     And The notification should have volatile
 
+  @security
+  @realtime
+  Scenario: Notification subscription on metadata
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    And A room subscription listening to "_kuzzle_info.author" having value "kuzzle-functional-tests-useradmin-id"
+    When I write the document "documentGrace"
+    Then I should receive a document notification with field action equal to "create"
+
   @realtime
   Scenario: Document creation notifications with not exists
     Given A room subscription listening field "toto" doesn't exists

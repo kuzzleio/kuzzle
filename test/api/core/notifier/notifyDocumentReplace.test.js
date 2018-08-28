@@ -33,10 +33,9 @@ describe('Test: notifier.notifyDocumentReplace', () => {
 
   it('should notify subscribers when a replaced document entered their scope', () => {
     const internalCache = kuzzle.services.list.internalCache;
+    kuzzle.realtime.test.returns(['foo']);
 
-    internalCache.get
-      .onFirstCall().resolves(JSON.stringify(['foo']))
-      .onSecondCall().resolves(JSON.stringify(['foo', 'bar']));
+    internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
 
     return notifier.notifyDocumentReplace(request)
       .then(() => {
@@ -54,12 +53,8 @@ describe('Test: notifier.notifyDocumentReplace', () => {
             _id: request.input.resource._id
           });
 
-        should(internalCache.get.callCount).be.eql(2);
+        should(internalCache.get.callCount).be.eql(1);
         should(internalCache.get.getCall(0)).calledWith(
-          `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.id}`
-        );
-
-        should(internalCache.get.getCall(1)).calledWith(
           `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`
         );
 
