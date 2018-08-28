@@ -170,5 +170,20 @@ describe('Test: subscribe controller', () => {
           }
         });
     });
+
+    it('should add basic metadata to body', () => {
+      request.input.resource.index = '%test';
+      request.input.resource.collection = 'test-collection';
+
+      return realtimeController.publish(request)
+        .then(() => {
+          should(kuzzle.notifier.publish).be.calledOnce();
+
+          const req = kuzzle.notifier.publish.getCall(0).args[0];
+          should(req.input.body._kuzzle_info).be.instanceof(Object);
+          should(req.input.body._kuzzle_info.author).be.eql('42');
+          should(req.input.body._kuzzle_info.createdAt).be.approximately(Date.now(), 100);
+        });
+    });
   });
 });
