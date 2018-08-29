@@ -10,6 +10,7 @@ services:
   - docker
 
 script:
+  - env
   - bash test/travis-bin/run-tests.sh
   - bash test/travis-bin/sonar.sh
 
