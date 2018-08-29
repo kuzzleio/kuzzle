@@ -10,8 +10,7 @@ services:
   - docker
 
 script:
-  - chmod +x a.out
-  - ./a.out $DOCKER_PASSWORD
+  - bash test.sh
   - bash test/travis-bin/run-tests.sh
   - bash test/travis-bin/sonar.sh
 
