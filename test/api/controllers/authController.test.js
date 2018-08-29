@@ -48,7 +48,9 @@ describe('Test the auth controller', () => {
       const token = new Token({
         _id: 'foobar#bar',
         jwt: 'bar',
-        userId: 'foobar'
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234
       });
 
       kuzzle.repositories.token.generateToken.resolves(token);
@@ -56,7 +58,12 @@ describe('Test the auth controller', () => {
       return authController.login(request)
         .then(response => {
           should(kuzzle.pluginsManager.trigger).calledWith('auth:strategyAuthenticated', {strategy: 'mockup', content: user});
-          should(response).match({_id: 'foobar', jwt: 'bar'});
+          should(response).match({
+            _id: 'foobar',
+            jwt: 'bar',
+            expiresAt: 4567,
+            ttl: 1234
+          });
           should(kuzzle.repositories.token.generateToken).calledWith(user, request, {});
         });
     });
@@ -105,7 +112,9 @@ describe('Test the auth controller', () => {
       const token = new Token({
         _id: 'foobar#bar',
         jwt: 'bar',
-        userId: 'foobar'
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234
       });
 
       kuzzle.repositories.token.generateToken.resolves(token);
@@ -114,7 +123,12 @@ describe('Test the auth controller', () => {
 
       return authController.login(request)
         .then(response => {
-          should(response).match({_id: 'foobar', jwt: 'bar'});
+          should(response).match({
+            _id: 'foobar',
+            jwt: 'bar',
+            expiresAt: 4567,
+            ttl: 1234
+          });
           should(kuzzle.repositories.token.generateToken).calledWith(user, request, {expiresIn: '1s'});
         });
     });

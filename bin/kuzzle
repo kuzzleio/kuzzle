@@ -81,7 +81,6 @@ program
 program
   .command('start')
   .description('start a Kuzzle instance')
-  .option('-p, --port <port>', 'Kuzzle port number', parseInt)
   .option('    --fixtures <file>', 'import data from file')
   .option('    --mappings <file>', 'apply mappings from file')
   .action(require('./commands/start'));

@@ -23,12 +23,15 @@ const clc = require('cli-color');
 
 class ColorOutput {
   constructor (opts) {
-    this.error = string => opts.parent.noColors ? string : clc.red(string);
-    this.warn = string => opts.parent.noColors ? string : clc.yellow(string);
-    this.notice = string => opts.parent.noColors ? string : clc.cyanBright(string);
-    this.ok = string => opts.parent.noColors ? string: clc.green.bold(string);
-    this.question = string => opts.parent.noColors ? string : clc.whiteBright(string);
-    this.kuz = string => opts.parent.noColors ? string : clc.greenBright.bold(string);
+    // /!\ "opts" might be a string
+    const noColors = typeof opts === 'object' && opts.parent && opts.parent.noColors;
+
+    this.error = string => noColors ? string : clc.red(string);
+    this.warn = string => noColors ? string : clc.yellow(string);
+    this.notice = string => noColors ? string : clc.cyanBright(string);
+    this.ok = string => noColors ? string: clc.green.bold(string);
+    this.question = string => noColors ? string : clc.whiteBright(string);
+    this.kuz = string => noColors ? string : clc.greenBright.bold(string);
   }
 }
 
