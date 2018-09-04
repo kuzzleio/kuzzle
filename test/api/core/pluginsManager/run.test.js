@@ -2,10 +2,8 @@
 
 const
   should = require('should'),
-  /** @type {Params} */
-  params = require('../../../../lib/config'),
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
   sinon = require('sinon'),
-  EventEmitter = require('eventemitter2').EventEmitter2,
   {
     KuzzleError,
     GatewayTimeoutError,
@@ -13,7 +11,7 @@ const
   } = require('kuzzle-common-objects').errors,
   PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager');
 
-describe('Test plugins manager run', () => {
+describe('PluginsManager.run', () => {
   let
     plugin,
     pluginMock,
@@ -21,24 +19,19 @@ describe('Test plugins manager run', () => {
     pluginsManager;
 
   beforeEach(() => {
-    kuzzle = new EventEmitter({
-      verboseMemoryLeak: true,
-      wildcard: true,
-      maxListeners: 30,
-      delimiter: ':'
-    });
-    kuzzle.config = { plugins: params.plugins };
-
+    kuzzle = new KuzzleMock();
     pluginsManager = new PluginsManager(kuzzle);
 
     plugin = {
-      name: 'testPlugin',
       path: '',
       object: {
         init: () => {}
       },
       config: {},
-      manifest: {}
+      manifest: {
+        name: 'testPlugin',
+        path: ''
+      }
     };
 
     pluginMock = sinon.mock(plugin.object);

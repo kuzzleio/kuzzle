@@ -191,7 +191,7 @@ describe('Test the auth controller', () => {
       const req = new Request({body: {}}, {token: {userId: 'admin'}, user: {_id: 'admin'}});
 
       kuzzle.pluginsManager.listStrategies.returns(['foo']);
-      kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject('bar'));
+      kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('bar')));
 
       return should(authController.getCurrentUser(req)).be.rejectedWith(PluginImplementationError);
     });
