@@ -31,15 +31,22 @@ describe('Test: repositories/repository', () => {
 
     repository = new Repository(kuzzle);
     repository.index = '%test';
-    repository.collection = 'repository';
+    repository.collection = 'objects';
     repository.init({});
     repository.ObjectConstructor = ObjectConstructor;
   });
 
   describe('#loadOneFromDatabase', () => {
-    it('should return null for an non existing id', () => {
-      return repository.loadOneFromDatabase(-9999)
-        .then(result => should(result).be.null());
+    it('should reject for an non existing id', done => {
+      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
+
+      repository.loadOneFromDatabase(-9999)
+        .then(() => done(new Error('Should reject with a NotFoundError')))
+        .catch(error => {
+          should(error).be.instanceOf(NotFoundError);
+          should(error.message).eql('Unable to find object with id \'-9999\'');
+          done();
+        });
     });
 
     it('should reject the promise in case of error', () => {
@@ -141,11 +148,16 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#load', () => {
-    it('should return null for an non-existing id', () => {
-      kuzzle.internalEngine.get.rejects(new NotFoundError('test'));
+    it('should reject for an non existing id', done => {
+      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
 
-      return repository.load(-999)
-        .then(result => should(result).be.null());
+      repository.load(-9999)
+        .then(() => done(new Error('Should reject with a NotFoundError')))
+        .catch(error => {
+          should(error).be.instanceOf(NotFoundError);
+          should(error.message).eql('Unable to find object with id \'-9999\'');
+          done();
+        });
     });
 
     it('should reject the promise in case of error', () => {
@@ -258,6 +270,15 @@ describe('Test: repositories/repository', () => {
         .then(() => done(new Error('should throw error')))
         .catch(error => {
           should(error).be.instanceOf(BadRequestError);
+          done();
+        });
+    });
+
+    it('should return a 404 if the given object is not present', done => {
+      repository.delete(null)
+        .then(() => done(new Error('should throw error')))
+        .catch(error => {
+          should(error).be.instanceOf(NotFoundError);
           done();
         });
     });

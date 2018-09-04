@@ -248,7 +248,7 @@ describe('Test: security controller - roles', () => {
     it('should return response with on deleteRole call', done => {
       const role = {my: 'role'};
 
-      kuzzle.repositories.role.getRoleFromRequest.resolves(role);
+      kuzzle.repositories.role.load.resolves(role);
       kuzzle.repositories.role.delete.resolves();
 
       securityController.deleteRole(new Request({_id: 'test',body: {}}))
