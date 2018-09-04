@@ -49,7 +49,7 @@ describe('AbstractManifest class', () => {
     });
   });
 
-  it('should complain and default the Kuzzle target version to 1.x if no kuzzleVersion property is found', () => {
+  it('should complain and default the Kuzzle target version to v1 if no kuzzleVersion property is found', () => {
     mockRequireManifest({name: 'foobar'})(() => {
       const manifest = new Manifest(kuzzle, pluginPath);
       manifest.load();
