@@ -36,6 +36,187 @@ describe('Test: core/janitor', () => {
     janitor = new Janitor(kuzzle);
   });
 
+  describe('#loadSecurities', () => {
+    let
+      fsStub;
+
+    const
+      securities = require('../../mocks/securities.json');
+
+    afterEach(() => {
+      mockrequire.stopAll();
+    });
+
+    beforeEach(() => {
+      fsStub = {
+        readFile: sinon.stub()
+      };
+
+      mockrequire('fs-extra', fsStub);
+
+      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
+      janitor = new Janitor(kuzzle);
+    });
+
+    it('create or replace roles', done => {
+      fsStub.readFile.yields(null, JSON.stringify({ roles: securities.roles }));
+      kuzzle.funnel.processRequest.resolves(true);
+
+      janitor.loadSecurities('path')
+        .then(() => {
+          should(kuzzle.funnel.processRequest.callCount).be.eql(2);
+
+          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createOrReplaceRole');
+          should(kuzzle.funnel.processRequest.getCall(0).args[0].input.resource._id).be.eql('driver');
+          should(kuzzle.funnel.processRequest.getCall(0).args[0].input.body.controllers.document.actions['*']).be.eql(true);
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    it('create or replace profiles', done => {
+      fsStub.readFile.yields(null, JSON.stringify({ profiles: securities.profiles }));
+      kuzzle.funnel.processRequest.resolves(true);
+
+      janitor.loadSecurities('path')
+        .then(() => {
+          should(kuzzle.funnel.processRequest.callCount).be.eql(2);
+
+          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createOrReplaceProfile');
+          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.resource._id).be.eql('customer');
+          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.body.policies[0].roleId).be.eql('customer');
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+    it('delete then create users', done => {
+      fsStub.readFile.yields(null, JSON.stringify({ users: securities.users }));
+      kuzzle.funnel.processRequest.resolves(true);
+
+      janitor.loadSecurities('path')
+        .then(() => {
+          should(kuzzle.funnel.processRequest.callCount).be.eql(3);
+
+          should(kuzzle.funnel.processRequest.getCall(0).args[0].input.action).be.eql('mDeleteUsers');
+          should(kuzzle.funnel.processRequest.getCall(0).args[0].input.body.ids).be.eql(['gfreeman', 'bcalhoun']);
+
+          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createUser');
+          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.resource._id).be.eql('gfreeman');
+          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.body.content.profileIds).be.eql(['driver']);
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+
+  });
+
+  describe('#loadFixtures', () => {
+    let
+      fsStub;
+
+    const
+      fixtures = require('../../mocks/fixtures.json');
+
+    afterEach(() => {
+      mockrequire.stopAll();
+    });
+
+    beforeEach(() => {
+      fsStub = {
+        readFile: sinon.stub()
+      };
+
+      mockrequire('fs-extra', fsStub);
+
+      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
+      janitor = new Janitor(kuzzle);
+    });
+
+    it('create index and collection that does not exists', done => {
+      fsStub.readFile.yields(null, JSON.stringify(fixtures));
+      const storageEngine = kuzzle.services.list.storageEngine;
+      storageEngine.import.onCall(0).resolves(false);
+      storageEngine.import.onCall(1).resolves(true);
+      storageEngine.import.onCall(2).resolves(false);
+
+      janitor.loadFixtures('path')
+        .then(() => {
+          should(storageEngine.import.callCount).be.eql(3);
+          should(storageEngine.import.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
+          should(storageEngine.import.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
+          should(storageEngine.import.getCall(0).args[0].input.body.bulkData[1]).be.eql({ name: 'alyx' });
+
+          should(storageEngine.refreshIndex.callCount).be.eql(3);
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+  });
+
+  describe('#loadMappings', () => {
+    let
+      fsStub;
+
+    const
+      mappings = require('../../mocks/mappings.json');
+
+    afterEach(() => {
+      mockrequire.stopAll();
+    });
+
+    beforeEach(() => {
+      fsStub = {
+        readFile: sinon.stub()
+      };
+
+      mockrequire('fs-extra', fsStub);
+
+      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
+      janitor = new Janitor(kuzzle);
+    });
+
+    it('create index and collection that does not exists', done => {
+      fsStub.readFile.yields(null, JSON.stringify(mappings));
+      const storageEngine = kuzzle.services.list.storageEngine;
+      storageEngine.indexExists.onCall(0).resolves(false);
+      storageEngine.indexExists.onCall(1).resolves(true);
+      storageEngine.indexExists.onCall(2).resolves(false);
+
+      janitor.loadMappings('path')
+        .then(() => {
+          should(storageEngine.indexExists.callCount).be.eql(3);
+          should(storageEngine.createIndex.callCount).be.eql(2);
+          should(storageEngine.createIndex.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
+
+          should(storageEngine.updateMapping.callCount).be.eql(3);
+          should(storageEngine.updateMapping.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
+          should(storageEngine.updateMapping.getCall(0).args[0].input.body.properties).be.eql({ name: { type: 'text' } });
+
+          should(storageEngine.refreshIndex.callCount).be.eql(3);
+
+          should(kuzzle.indexCache.add.callCount).be.eql(3);
+
+          done();
+        })
+        .catch(error => {
+          done(error);
+        });
+    });
+  });
+
   describe('#dump', () => {
     let
       fsStub,

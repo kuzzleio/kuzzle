@@ -1,0 +1,24 @@
+{
+  "nyc-open-data": {
+    "yellow-taxi": [
+      { "index": {} },
+      { "name": "alyx" },
+      { "index": {} },
+      { "name": "gordon" }
+    ],
+    "green-taxi": [
+      { "index": {} },
+      { "data": "anti-citizen", "number": 1 },
+      { "index": {} },
+      { "data": "lambda-core", "number": 42 }
+    ]
+  },
+  "mtp-open-data": {
+    "yellow-bicycle": [
+      { "index": {} },
+      { "name": "kleiner" },
+      { "index": {} },
+      { "name": "eli" }
+    ]
+  }
+}

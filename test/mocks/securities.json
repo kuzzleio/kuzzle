@@ -1,0 +1,85 @@
+{
+  "roles": {
+    "driver": {
+      "controllers": {
+        "auth": {
+          "actions": {
+            "checkToken": true,
+            "getCurrentUser": true,
+            "getMyRights": true,
+            "login": true
+          }
+        },
+        "document": {
+          "actions": {
+            "*": true
+          }
+        }
+      }
+    },
+    "customer": {
+      "controllers": {
+        "auth": {
+          "actions": {
+            "checkToken": true,
+            "getCurrentUser": true,
+            "getMyRights": true,
+            "login": true
+          }
+        },
+        "document": {
+          "actions": {
+            "get": true,
+            "search": true
+          }
+        }
+      }
+    }
+  },
+  "profiles": {
+    "driver": {
+      "policies": [
+        {
+          "roleId": "driver",
+          "restrictedTo": [
+            { "index": "nyc-open-data", "collections": ["yellow-taxi"] }
+          ]
+        }
+      ]
+    },
+    "customer": {
+      "policies": [
+        {
+          "roleId": "customer",
+          "restrictedTo": [
+            { "index": "nyc-open-data", "collections": ["yellow-taxi"] }
+          ]
+        }
+      ]
+    }
+  },
+  "users": {
+    "gfreeman": {
+      "content": {
+        "profileIds": ["driver"]
+      },
+      "credentials": {
+        "local": {
+          "username": "gfreeman",
+          "password": "lambdacore"
+        }
+      }
+    },
+    "bcalhoun": {
+      "content": {
+        "profileIds": ["customer"]
+      },
+      "credentials": {
+        "local": {
+          "username": "bcalhoun",
+          "password": "blueshift"
+        }
+      }
+    }
+  }
+}
