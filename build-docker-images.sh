@@ -51,8 +51,8 @@ if [ -z "$DOCKER_PASSWORD" ]; then
 fi
 docker login -u kuzzleteam -p $DOCKER_PASSWORD
 
-if [ "$TRAVIS_BRANCH" == "1.x" ]; then
-  # Build triggered by a merge on branch 1.x
+if [ "$TRAVIS_BRANCH" == "1-dev" ]; then
+  # Build triggered by a merge on branch 1-dev
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
@@ -67,8 +67,8 @@ if [ "$TRAVIS_BRANCH" == "1.x" ]; then
 
   docker_push 'plugin-dev' 'develop'
   docker_push 'kuzzle8' 'develop'
-elif [ "$TRAVIS_BRANCH" == "2.x" ]; then
-  # Build triggered by a merge on branch 2.x
+elif [ "$TRAVIS_BRANCH" == "2-dev" ]; then
+  # Build triggered by a merge on branch 2-dev
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
