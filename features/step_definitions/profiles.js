@@ -74,7 +74,7 @@ Then(/^I cannot get a profile without ID$/, function (callback) {
     .catch(() => callback());
 });
 
-Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, _default, id, profile, callback) {
+Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (notModifier, _default, id, profile, callback) {
   if (profile && !this.profiles[profile]) {
     return callback(new Error('Fixture for profile ' + profile + ' not exists'));
   }
@@ -91,7 +91,7 @@ Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: wit
             return callbackAsync(new Error(body.error.message));
           }
 
-          if (not) {
+          if (notModifier) {
             return callbackAsync(new Error(`Profile with id ${id} exists`));
           }
 
@@ -104,20 +104,20 @@ Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: wit
               expected = stringify(this.profiles[profile].policies.sort(compare));
 
             if (policies !== expected) {
-              if (not) {
+              if (notModifier) {
                 return callbackAsync();
               }
               return callbackAsync('policies does not match');
             }
 
-            if (not) {
+            if (notModifier) {
               return callbackAsync('policies are equal');
             }
           }
 
           callbackAsync();
         })
-        .catch(error => callback(not ? null : error));
+        .catch(error => callback(notModifier ? null : error));
     }, 20); // end setTimeout
   };
 
@@ -303,4 +303,3 @@ Then(/^I am able to perform a scrollProfiles request$/, function () {
       }
     });
 });
-
