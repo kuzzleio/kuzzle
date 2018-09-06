@@ -60,12 +60,15 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
-    it('should return null if the profile does not exist', () => {
+    it('should reject if the profile does not exist', done => {
       kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
 
-      return profileRepository.load('idontexist')
-        .then(result => {
-          should(result).be.null();
+      profileRepository.load('idontexist')
+        .then(() => done(new Error('Should reject with NotFoundError')))
+        .catch(error => {
+          should(error).be.instanceOf(NotFoundError);
+          should(error.message).eql('Unable to find profile with id \'idontexist\'');
+          done();
         });
     });
 
