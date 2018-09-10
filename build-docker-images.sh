@@ -87,16 +87,17 @@ elif [ ! -z "$RELEASE_TAG" ]; then
   docker_build 'plugin-dev' "$RELEASE_TAG"
   docker_build 'kuzzle' "$RELEASE_TAG"
 
+  docker_push 'plugin-dev' "$RELEASE_TAG"
+  docker_push 'kuzzle' "$RELEASE_TAG"
+
   # If this is a release of the current major version
   # we can push with the 'latest' tag
   if [[ "$RELEASE_TAG" == "$KUZZLE_LATEST_MAJOR."* ]]; then
     docker_tag 'plugin-dev' "$RELEASE_TAG" 'latest'
     docker_tag 'kuzzle' "$RELEASE_TAG" 'latest'
+
+    docker_push 'plugin-dev' 'latest'
+    docker_push 'kuzzle' 'latest'
   fi
 
-  docker_push 'plugin-dev' "$RELEASE_TAG"
-  docker_push 'kuzzle' "$RELEASE_TAG"
-
-  docker_push 'plugin-dev' 'latest'
-  docker_push 'kuzzle' 'latest'
 fi
