@@ -44,7 +44,7 @@ docker_push() {
 
   print_something "Push image kuzzleio/$image:$tag to Dockerhub"
 
-  echo "docker push kuzzleio/$image:$tag"
+  docker push kuzzleio/$image:$tag
 }
 
 
