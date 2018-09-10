@@ -54,7 +54,7 @@ FROM debian:stretch-slim as kuzzle
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
-ENV NODE_VERSION=8.9.0
+ENV NODE_VERSION=8.11.3
 ENV NODE_ENV=production
 ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 
