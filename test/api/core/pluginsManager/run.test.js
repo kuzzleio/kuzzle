@@ -11,7 +11,7 @@ const
   } = require('kuzzle-common-objects').errors,
   PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager');
 
-describe('PluginsManager.run', () => {
+describe.only('PluginsManager.run', () => {
   let
     plugin,
     pluginMock,
