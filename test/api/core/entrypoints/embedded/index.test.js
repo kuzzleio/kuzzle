@@ -2,16 +2,21 @@
 
 const
   {
-    InternalError: KuzzleInternalError,
-    ServiceUnavailableError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    models: { RequestContext },
+    errors: {
+      InternalError: KuzzleInternalError,
+      ServiceUnavailableError,
+      PluginImplementationError
+    }
+  } = require('kuzzle-common-objects'),
+  path = require('path'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   mockrequire = require('mock-require'),
-  Request = require('kuzzle-common-objects').Request,
-  RequestContext = require('kuzzle-common-objects').models.RequestContext,
   rewire = require('rewire'),
   should = require('should'),
-  sinon = require('sinon');
+  sinon = require('sinon'),
+  Bluebird = require('bluebird');
 
 describe('lib/core/api/core/entrypoints/embedded/index', () => {
   let
@@ -19,6 +24,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     httpMock,
     EntryPoint,
     entrypoint,
+    AbstractManifest,
+    Manifest,
     winstonTransportConsole,
     winstonTransportFile,
     winstonTransportElasticsearch,
@@ -31,10 +38,14 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       prettyPrint: sinon.stub().returns('format.prettyPrint')
     };
 
+  before(() => {
+    sinon.usingPromise(Bluebird);
+  });
+
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    const initStub = function () { this.init = sinon.stub(); }; // eslint-disable-line no-invalid-this
+    const initStub = function () { this.init = sinon.stub(); };
 
     httpMock = {
       createServer: sinon.stub().returns({
@@ -61,6 +72,32 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     });
     mockrequire('winston-elasticsearch', winstonTransportElasticsearch);
     mockrequire('winston-syslog', winstonTransportSyslog);
+
+    // Disables unnecessary console warnings
+    AbstractManifest = rewire('../../../../../lib/api/core/abstractManifest');
+    AbstractManifest.__set__({ console: { warn: sinon.stub() }});
+    mockrequire('../../../../../lib/api/core/abstractManifest', AbstractManifest);
+
+    Manifest = rewire('../../../../../lib/api/core/entrypoints/embedded/manifest');
+    Manifest.__set__({ console: { warn: sinon.stub() }});
+    mockrequire('../../../../../lib/api/core/entrypoints/embedded/manifest', Manifest);
+
+    // Bluebird.map forces a different context, preventing rewire to mock "require"
+    mockrequire('bluebird', {
+      map: (arr, fn) => Promise.all(arr.map(e => {
+        let result;
+        try {
+          result = fn(e);
+        } catch (err) {
+          return Promise.reject(err);
+        }
+        return result;
+      })),
+      resolve: sinon.stub().resolves(),
+      timeout: sinon.stub().resolves(),
+      catch: sinon.stub().resolves(),
+      then: sinon.stub().resolves()
+    });
 
     EntryPoint = mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
 
@@ -444,13 +481,16 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   });
 
   describe('#loadMoreProtocols', () => {
-    it('should load plugins as NodeJS modules and simple require-ables', () => {
+    const protocolDirectory = path.join(__dirname, '../../../../../protocols/enabled');
+
+    it('should load plugins as Node.js modules', () => {
       mockrequire('fs', {
-        existsSync: sinon.stub().returns(true),
         readdirSync: sinon.stub().returns(['one', 'two']),
         statSync: sinon.stub().returns({isDirectory: () => true})
       });
 
+      mockrequire(path.join(protocolDirectory, 'one/manifest.json'), {name: 'foo'});
+      mockrequire(path.join(protocolDirectory, 'two/manifest.json'), {name: 'bar'});
       mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
       const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
 
@@ -458,26 +498,74 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         this.init = sinon.spy();
       });
 
-      return Rewired.__with__({
-        require: requireStub
-      })(() => {
+      return Rewired.__with__({ require: requireStub })(() => {
+        const ep = new Rewired(kuzzle);
+        return ep.loadMoreProtocols();
+      })
+        .then(() => should(requireStub).be.calledTwice());
+    });
+
+    it('should set the protocol name as the "protocol" property, if there is no manifest.json file', () => {
+      mockrequire('fs', {
+        readdirSync: sinon.stub().returns(['one', 'two']),
+        statSync: sinon.stub().returns({isDirectory: () => true})
+      });
+
+      mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
+      const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
+
+      const requireStub = sinon.stub();
+
+      requireStub.onFirstCall().returns(function () {
+        this.init = sinon.spy();
+        this.protocol = 'foo';
+      });
+
+      requireStub.onSecondCall().returns(function () {
+        this.init = sinon.spy();
+        this.protocol = 'bar';
+      });
+
+      return Rewired.__with__({ require: requireStub })(() => {
         const ep = new Rewired(kuzzle);
 
-        ep.loadMoreProtocols();
-
-        should(requireStub)
-          .be.calledTwice();
-
+        return ep.loadMoreProtocols()
+          .then(() => {
+            should(requireStub).be.calledTwice();
+            should(ep.protocols).properties(['foo', 'bar']);
+          });
       });
     });
 
-    it('should log and reject if an error occured', () => {
+    it('should throw if there is no manifest.json and no protocol property either', () => {
       mockrequire('fs', {
-        existsSync: sinon.stub().returns(true),
         readdirSync: sinon.stub().returns(['protocol']),
         statSync: sinon.stub().returns({isDirectory: () => true})
       });
 
+
+      mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
+      const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
+
+      const
+        message = new RegExp(`\\[${path.join(protocolDirectory, 'protocol')}\\] Unable to load the file 'manifest.json'`),
+        requireStub = sinon.stub().returns(function () {
+          this.init = sinon.spy();
+        });
+
+      return should(Rewired.__with__({ require: requireStub })(() => {
+        const ep = new Rewired(kuzzle);
+        return ep.loadMoreProtocols();
+      })).rejectedWith(PluginImplementationError, {message});
+    });
+
+    it('should log and reject if an error occured', () => {
+      mockrequire('fs', {
+        readdirSync: sinon.stub().returns(['protocol']),
+        statSync: sinon.stub().returns({isDirectory: () => true})
+      });
+
+      mockrequire(path.join(protocolDirectory, 'protocol/manifest.json'), {name: 'foo'});
       mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
       const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
 
@@ -490,8 +578,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       })(() => {
         const ep = new Rewired(kuzzle);
 
-        should(ep.loadMoreProtocols())
-          .be.rejectedWith('test');
+        return should(ep.loadMoreProtocols()).be.rejectedWith('test');
       });
     });
   });

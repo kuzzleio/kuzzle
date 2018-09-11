@@ -3,7 +3,7 @@ const
   should = require('should'),
   Config = rewire('../../lib/config'),
   defaultConfig = require('../../default.config'),
-  KuzzleInternalError = require('kuzzle-common-objects').errors.InternalError;
+  { InternalError: KuzzleInternalError } = require('kuzzle-common-objects').errors;
 
 describe('lib/config/index.js', () => {
   describe('#unstringify', () => {
