@@ -1,7 +1,7 @@
 const
   EventEmitter = require('eventemitter2').EventEmitter2,
-  getBuiltinCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands,
-  redisCommands = getBuiltinCommands(),
+  IORedis = require('ioredis'),
+  getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands,
   Bluebird = require('bluebird');
 
 /**
@@ -14,7 +14,7 @@ class RedisClientMock extends EventEmitter {
 
     this.getBuiltinCommands = getBuiltinCommands;
 
-    redisCommands.forEach(command => {
+    getBuiltinCommands().forEach(command => {
       this[command] = this[command.toUpperCase()] = function () {
         return Bluebird.resolve({
           name: command,

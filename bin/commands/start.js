@@ -22,14 +22,11 @@
 /* eslint-disable no-console */
 
 const
-  fs = require('fs'),
   rc = require('rc'),
-  params = rc('kuzzle'),
-  Request = require('kuzzle-common-objects').Request,
-  {
-    PartialError
-  } = require('kuzzle-common-objects').errors,
   ColorOutput = require('./colorOutput');
+
+const
+  params = rc('kuzzle');
 
 function commandStart (options) {
   const
@@ -41,102 +38,28 @@ function commandStart (options) {
   kuzzle.start(params)
     // fixtures && mapping
     .then(() => {
-      const requests = [];
-
-      if (params.mappings) {
-        let mappings;
-
-        try {
-          mappings = JSON.parse(fs.readFileSync(params.mappings, 'utf8'));
-        }
-        catch (e) {
-          console.log(cout.error(`[✖] The file ${params.mappings} cannot be parsed. Abort.`));
-          process.exit(1);
-        }
-
-        console.log(cout.notice(`[ℹ] Loading mappings from ${params.mappings} into storage layer`));
-
-        for (const index of Object.keys(mappings)) {
-          for (const collection of Object.keys(mappings[index])) {
-            requests.push(new Request({
-              index,
-              collection,
-              body: mappings[index][collection]
-            }));
-          }
-        }
+      if (! params.mappings) {
+        return null;
       }
 
-      return requests;
-    })
-    .each(rq => {
-      const
-        index = rq.input.resource.index,
-        indexRequest = new Request({index});
-
-      return kuzzle.services.list.storageEngine.indexExists(indexRequest)
-        .then(exist => {
-          if (!exist) {
-            console.log(cout.notice(`[ℹ] Creating index: ${index}`));
-            return kuzzle.services.list.storageEngine.createIndex(indexRequest);
-          }
-        })
-        .then(() => kuzzle.services.list.storageEngine.updateMapping(rq))
-        .then(() => kuzzle.services.list.storageEngine.refreshIndex(indexRequest))
-        .then(() => {
-          const collection = rq.input.resource.collection;
-
-          kuzzle.indexCache.add(index, collection);
-          console.log(cout.ok(`[✔] Mappings for ${index}/${collection} successfully applied`));
-
-          return null;
-        });
+      return kuzzle.janitor.loadMappings(params.mappings)
+        .then(() => console.log(cout.ok('[✔] Mappings successfully applied')));
     })
     .then(() => {
-      const requests = [];
-
-      if (params.fixtures) {
-        let fixtures;
-
-        try {
-          fixtures = JSON.parse(fs.readFileSync(params.fixtures, 'utf8'));
-        }
-        catch (e) {
-          console.log(cout.error(`[✖] The file ${params.fixtures} cannot be parsed. Abort.`));
-          process.exit(1);
-        }
-
-        console.log(cout.notice(`[ℹ] Loading fixtures from ${params.fixtures} into storage layer`));
-
-        for (const index of Object.keys(fixtures)) {
-          for (const collection of Object.keys(fixtures[index])) {
-            requests.push(new Request({
-              index,
-              collection,
-              body: {
-                bulkData: fixtures[index][collection]
-              }
-            }));
-          }
-        }
+      if (! params.fixtures) {
+        return null;
       }
 
-      return requests;
+      return kuzzle.janitor.loadFixtures(params.fixtures)
+        .then(() => console.log(cout.ok('[✔] Fixtures successfully loaded')));
     })
-    .each(rq => {
-      return kuzzle.services.list.storageEngine.import(rq)
-        .then(res => {
-          if (res.partialErrors && res.partialErrors.length > 0) {
-            // use native console to allow default output trimming in case of big fixtures
-            console.error(res.partialErrors);
-            throw new PartialError(`Some data was not imported for ${rq.input.resource.index}/${rq.input.resource.collection} (${res.partialErrors.length}/${res.items.length + res.partialErrors.length}).`, res.partialErrors);
-          }
-          return res;
-        })
-        .then(res => {
-          return kuzzle.services.list.storageEngine.refreshIndex(new Request({index: rq.input.resource.index}))
-            .then(() => console.log(cout.ok(`[✔] Fixtures for ${rq.input.resource.index}/${rq.input.resource.collection} successfully loaded: ${res.items.length} documents created`)));
-        });
+    .then(() => {
+      if (! params.securities) {
+        return null;
+      }
+
+      return kuzzle.janitor.loadSecurities(params.securities)
+        .then(() => console.log(cout.ok('[✔] Roles, profiles and users successfully loaded')));
     })
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));

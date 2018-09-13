@@ -1,0 +1,22 @@
+{
+  "nyc-open-data": {
+    "yellow-taxi": {
+      "properties": {
+        "name": { "type": "text" }
+      }
+    },
+    "green-taxi": {
+      "properties": {
+        "data": { "type": "text"},
+        "number": { "type": "integer" }
+      }
+    }
+  },
+  "mtp-open-data": {
+    "yellow-bicycle": {
+      "properties": {
+        "name": { "type": "text" }
+      }
+    }
+  }
+}

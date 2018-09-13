@@ -4,7 +4,7 @@
     "script"       : "bin/kuzzle",
     "args"         : ["start"],
     "watch"        : ["lib/**/*.js", "default.config.js", "plugins/enabled/**/*.js"],
-    "node_args"    : "--inspect",
+    "node_args"    : "--inspect=0.0.0.0:9229",
     "kill_timeout" : 15000
   }]
 }

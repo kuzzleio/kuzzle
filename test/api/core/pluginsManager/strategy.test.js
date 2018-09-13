@@ -6,18 +6,19 @@ const
   _ = require('lodash'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager'),
-  PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError;
+  { PluginImplementationError } = require('kuzzle-common-objects').errors;
 
 describe('PluginsManager: strategy management', () => {
   let
     kuzzle,
     pluginsManager,
     plugin = {
-      name: 'some-plugin-name',
-      path: {},
       object: null,
       config: {},
-      manifest: {}
+      manifest: {
+        name: 'some-plugin-name',
+        path: ''
+      }
     },
     pluginManagerStrategy,
     foo = {foo: 'bar'};
@@ -26,7 +27,7 @@ describe('PluginsManager: strategy management', () => {
     kuzzle = new KuzzleMock();
     /** @type {PluginsManager} */
     pluginsManager = new PluginsManager(kuzzle);
-    pluginsManager.plugins[plugin.name] = plugin;
+    pluginsManager.plugins[plugin.manifest.name] = plugin;
 
     plugin.object = {
       authenticators: {
@@ -80,7 +81,7 @@ describe('PluginsManager: strategy management', () => {
         validate: plugin.object.validateFunction,
         afterRegister: plugin.object.afterRegisterFunction
       },
-      owner: plugin.name
+      owner: plugin.manifest.name
     };
 
     pluginsManager.strategies.someStrategy = pluginManagerStrategy;
@@ -135,7 +136,7 @@ describe('PluginsManager: strategy management', () => {
   describe('#initStrategies', () => {
     beforeEach(() => {
       pluginsManager.strategies = {};
-      pluginsManager.authenticators[plugin.name] = {
+      pluginsManager.authenticators[plugin.manifest.name] = {
         SomeStrategy: plugin.object.authenticators.SomeStrategy
       };
     });
@@ -343,7 +344,7 @@ describe('PluginsManager: strategy management', () => {
 
       should(pluginsManager.unregisterStrategy)
         .calledOnce()
-        .calledWith(plugin.name, 'someStrategy');
+        .calledWith(plugin.manifest.name, 'someStrategy');
     });
   });
 
@@ -351,7 +352,7 @@ describe('PluginsManager: strategy management', () => {
     let verifyAdapter;
 
     beforeEach(() => {
-      pluginsManager.authenticators[plugin.name] = {
+      pluginsManager.authenticators[plugin.manifest.name] = {
         SomeStrategy: plugin.object.authenticators.SomeStrategy
       };
       pluginsManager._initStrategies(plugin);
@@ -459,13 +460,13 @@ describe('PluginsManager: strategy management', () => {
 
   describe('#unregisterStrategy', () => {
     it('should remove a strategy using its provided name', () => {
-      pluginsManager.unregisterStrategy(plugin.name, 'someStrategy');
+      pluginsManager.unregisterStrategy(plugin.manifest.name, 'someStrategy');
       should(pluginsManager.strategies).be.an.Object().and.be.empty();
       should(kuzzle.passport.unuse).calledWith('someStrategy');
     });
 
     it('should throw if the strategy does not exist', () => {
-      should(() => pluginsManager.unregisterStrategy(plugin.name, 'foobar'))
+      should(() => pluginsManager.unregisterStrategy(plugin.manifest.name, 'foobar'))
         .throw(/Cannot remove strategy foobar: strategy does not exist/i);
     });
 

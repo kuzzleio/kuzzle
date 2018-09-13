@@ -7,9 +7,12 @@ const
   mockrequire = require('mock-require'),
   Bluebird = require('bluebird'),
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Request = require('kuzzle-common-objects').Request,
-  ParseError = require('kuzzle-common-objects').errors.ParseError,
+  {
+    Request,
+    errors: {
+      BadRequestError
+    }
+  } = require('kuzzle-common-objects'),
   Role = require(ROLE_MODULE_PATH);
 
 const
@@ -111,6 +114,60 @@ describe('Test: security/roleTest', () => {
       role[_kuzzle] = kuzzle;
       return should(role.isActionAllowed(request))
         .be.fulfilledWith(true);
+    });
+
+    // @deprecated
+    it('should handle the memory storage controller aliases', () => {
+      const
+        role = new Role(),
+        msRequest = new Request({
+          controller: 'ms',
+          action: 'time'
+        }),
+        memoryStorageRequest = new Request({
+          controller: 'memoryStorage',
+          action: 'time'
+        }),
+        forbiddenMsRequest = new Request({
+          controller: 'ms',
+          action: 'flushdb'
+        });
+
+      role.controllers = {
+        ms: {
+          actions: {
+            time: true
+          }
+        }
+      };
+
+      role[_kuzzle] = kuzzle;
+
+      return role.isActionAllowed(msRequest)
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(memoryStorageRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(forbiddenMsRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.false();
+
+          delete role.controllers.ms;
+          role.controllers.memoryStorage = {actions: {time: true}};
+          return role.isActionAllowed(msRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(memoryStorageRequest);
+        })
+        .then(allowed => {
+          should(allowed).be.true();
+          return role.isActionAllowed(forbiddenMsRequest);
+        })
+        .then(allowed => should(allowed).be.false());
     });
 
     it('should allow a wildcard action', () => {
@@ -274,7 +331,7 @@ describe('Test: security/roleTest', () => {
 
       role[_kuzzle] = kuzzle;
       return should(role.isActionAllowed(request))
-        .be.rejectedWith(ParseError);
+        .be.rejectedWith(BadRequestError);
     });
 
     it('should reject if an invalid argument is given', () => {
@@ -297,7 +354,7 @@ describe('Test: security/roleTest', () => {
 
       role[_kuzzle] = kuzzle;
       return should(role.isActionAllowed(request))
-        .be.rejectedWith(ParseError);
+        .be.rejectedWith(BadRequestError);
     });
 
     it('should handle a custom right function', () => {
