@@ -97,7 +97,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.janitor = {
-      dump: sinon.stub(),
+      dump: sinon.stub().resolves(),
       shutdown: sinon.stub()
     };
 

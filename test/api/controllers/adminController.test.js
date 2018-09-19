@@ -90,7 +90,7 @@ describe('Test: admin controller', () => {
 
   describe('#resetSecurity', () => {
     beforeEach(() => {
-      request.input.action = 'resetKuzzleData';
+      request.input.action = 'resetSecurity';
     });
 
     it('should scroll and delete all registered users, profiles and roles', done => {
@@ -115,7 +115,8 @@ describe('Test: admin controller', () => {
     });
 
     it('should unlock the action even if the promise reject', done => {
-      kuzzle.repositories.user.truncate.rejects(new Error('Error'));
+      request.input.args.refresh = 'wait_for';
+      kuzzle.repositories.user.truncate.rejects();
 
       adminController.resetSecurity(request)
         .then(() => {
@@ -123,12 +124,13 @@ describe('Test: admin controller', () => {
         })
         .catch(error => {
           should(error).be.instanceOf(Error);
+
+          kuzzle.repositories.user.truncate.resolves();
           return adminController.resetSecurity(request);
         })
-        .catch(error => {
-          should(error).be.instanceOf(Error);
-          done();
-        });
+        .then(() => done())
+        .catch(error => done(error));
+
     });
   });
 
@@ -140,7 +142,7 @@ describe('Test: admin controller', () => {
     it('remove all indexes handled by Kuzzle', done => {
       const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
       kuzzle.indexCache.indexes = { halflife3: [], borealis: [], confirmed: [], '%kuzzle': [] };
-      request.input.args = 'wait_for';
+      request.input.args.refresh = 'wait_for';
 
       adminController.resetDatabase(request)
         .then(() => {
@@ -151,10 +153,9 @@ describe('Test: admin controller', () => {
           should(kuzzle.indexCache.indexes).match({ '%kuzzle': [] });
 
           // Check if unlocked
-          adminController.resetDatabase(request);
-
-          done();
+          return adminController.resetDatabase(request);
         })
+        .then(() => done())
         .catch(error => done(error));
     });
   });
