@@ -4,7 +4,7 @@ const
   sinon = require('sinon'),
   path = require('path'),
   should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 function rewireJanitor() {
@@ -290,7 +290,7 @@ describe('Test: core/janitor', () => {
 
       return should(() => {
         janitor.dump(suffix);
-      }).throw(BadRequestError);
+      }).throw(PreconditionError);
     });
 
     it('should throw an error if dump is disabled by configuration', () => {
@@ -298,7 +298,7 @@ describe('Test: core/janitor', () => {
 
       return should(() => {
         janitor.dump(suffix);
-      }).throw(BadRequestError);
+      }).throw(PreconditionError);
     });
 
     describe('#dump', () => {
