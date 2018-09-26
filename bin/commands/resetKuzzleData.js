@@ -47,12 +47,12 @@ function commandResetKuzzleData (options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    const args = {
+    const query = {
       controller: 'admin',
       action: 'resetKuzzleData'
     };
 
-    return sendAction(options, args)
+    return sendAction(query, options)
       .then(() => {
         console.log(cout.ok('[✔] Kuzzle has been successfully reset'));
         process.exit(0);

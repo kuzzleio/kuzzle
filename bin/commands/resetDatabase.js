@@ -29,9 +29,7 @@ const
   sendAction = require('./sendAction');
 
 function commandResetDatabase (options) {
-  const
-    cout = new ColorOutput(options);
-
+  const cout = new ColorOutput(options);
   let userIsSure = false;
 
   console.log(cout.warn('[ℹ] You are about to clear all data stored on Kuzzle.'));
@@ -47,12 +45,12 @@ function commandResetDatabase (options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    const args = {
+    const query = {
       controller: 'admin',
       action: 'resetDatabase'
     };
 
-    return sendAction(options, args)
+    return sendAction(query, options)
       .then(() => {
         console.log(cout.ok('[✔] Kuzzle databases have been successfully reset'));
         process.exit(0);

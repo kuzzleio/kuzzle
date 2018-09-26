@@ -51,12 +51,13 @@ function commandResetCache (database, options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    const args = {
+    const query = {
       controller: 'admin',
-      action: 'resetCache'
+      action: 'resetCache',
+      database: db
     };
 
-    return sendAction(opts, args, { database: db })
+    return sendAction(query, opts)
       .then(() => {
         console.log(cout.ok(`[✔] Kuzzle cache '${db}' has been successfully reset`));
         process.exit(0);
