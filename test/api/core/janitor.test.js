@@ -285,20 +285,26 @@ describe('Test: core/janitor', () => {
       suffix = 'dump-me-master';
     });
 
-    it('should throw an error if a dump is in progress', () => {
+    it('should reject with an error if a dump is in progress', done => {
       janitor._dump = true;
 
-      return should(() => {
-        janitor.dump(suffix);
-      }).throw(PreconditionError);
+      janitor.dump(suffix)
+        .then(() => done(new Error('Should rejects with error')))
+        .catch(error => {
+          should(error).be.instanceOf(PreconditionError);
+          done();
+        });
     });
 
-    it('should throw an error if dump is disabled by configuration', () => {
+    it('should reject with an error if dump is disabled by configuration', done => {
       kuzzle.config.dump.enabled = false;
 
-      return should(() => {
-        janitor.dump(suffix);
-      }).throw(PreconditionError);
+      janitor.dump(suffix)
+        .then(() => done(new Error('Should rejects with error')))
+        .catch(error => {
+          should(error).be.instanceOf(PreconditionError);
+          done();
+        });
     });
 
     describe('#dump', () => {
