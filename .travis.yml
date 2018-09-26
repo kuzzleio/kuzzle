@@ -4,18 +4,16 @@ group: edge
 jdk: oraclejdk8
 env:
   global:
-    secure: VlK2mDM3pIR1XPK+PVTfaGZzyp2auK4HFvwl4k9Jz9AohVCxzIcvFpq7lFMiwy/Mk/2pk/QaK3d3ZbEW7LxDwDt2lhKUWIX7w4p0pfRx7SbSdOpN1ZpZ2v3tNbbgmpyLfxIwu9FW9/9klmnpaC/ai5vllJ1tJesYMBxJZ20Qx36qv9A42Ia35z/kJwqBJNkl2H7KCcpjc+ORGEySN0tHqmrlR3qMH/XGjYBR5KrrF617R+Ja1I2f6PXu/dWfUlWi7BogB9qSNmVq2Xq2ZN2x8DBQWrLav9xeONHNJW48SfCYvOnsi/vpmQr/61zvCtkMNLN7FOg7SHdkpFwvlHN4Fe1aR0keDqb86kr5xCAkciXsT8cWau1YIoz7XqesmGfSQVeC9PTsO7ku/sYao/2gB4eOw7Eq5imrHVHFbVEj78SEA8u5OLT96jzflLeBqb4U3M3sEQXwUPkQDjdkD0WnTHzhHY2J/1tRBsKKhiyIdFryIqzmJPB6z8THVQp7F+RHXCWn7iVobmh8BjuONiK4XOfj4tAzJHmNdIi53wvHmcKgjHUl8oq705BESmmpYUlT6fTIBeBsLRpy9qjZweMzgU/dOlZXrDZcPgRJKrYrJiNmmTo96mbWOV8jBmTv/Pp/Noi4OOGpAC6KMKp67uox9hcjvemX0HP4hsCsbc3CBss=
-
+    secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
+    
 services:
-  - docker
-
+- docker
 script:
-  - bash test/travis-bin/run-tests.sh
-  - bash test/travis-bin/sonar.sh
-
+- bash test/travis-bin/run-tests.sh
+- bash test/travis-bin/sonar.sh
+- bash build-docker-images.sh
 cache:
   directories: "– $HOME/.pm2 – $HOME/.sonar/cache"
-
 notifications:
   webhooks:
     urls:
@@ -29,7 +27,6 @@ notifications:
     on_success: never
     on_failure: always
     on_start: never
-
 deploy:
   provider: npm
   email: support@kuzzle.io
@@ -38,9 +35,5 @@ deploy:
   on:
     repo: kuzzleio/kuzzle
     branch: master
-
 addons:
   sonarqube: true
-
-after_success:
-  - bash build-docker-images.sh

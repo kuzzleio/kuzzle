@@ -103,10 +103,6 @@ Then(/^I'm ?(not)* able to find a ?(default)* (role|profile|user) with id "([^"]
           if (object) {
             controller = Object.keys(this[`${objectType}s`][object].controllers)[0];
             if (!body.result._source.controllers[controller]) {
-              if (not) {
-                return callbackAsync();
-              }
-
               return callbackAsync(`Could not find ${objectType} ${id}`);
             }
           }

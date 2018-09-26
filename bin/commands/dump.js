@@ -31,12 +31,13 @@ function commandDump (options) {
 
   console.log(cout.notice('[ℹ] Creating dump file...'));
 
-  const args = {
+  const query = {
     controller: 'admin',
-    action: 'dump'
+    action: 'dump',
+    suffix: 'cli'
   };
 
-  return sendAction(options, args, { suffix: 'cli' })
+  return sendAction(query, options)
     .then(request => {
       console.log(cout.ok('[✔] Done!'));
       console.log('\n' + cout.warn(`[ℹ] Dump has been successfully generated in "${request.result}" folder`));

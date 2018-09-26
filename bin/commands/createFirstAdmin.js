@@ -86,7 +86,7 @@ function commandCreateFirstAdmin (options) {
     action: 'adminExists'
   };
 
-  return sendAction(options, action)
+  return sendAction(action, options)
     .then(adminExists => {
       if (adminExists.result.exists) {
         console.log('An administrator account already exists.');
@@ -113,12 +113,11 @@ function commandCreateFirstAdmin (options) {
         console.log(cout.warn('Aborting'));
         process.exit(0);
       }
-      const args = {
+
+      const query = {
         controller: 'security',
         action: 'createFirstAdmin',
-        _id: username
-      };
-      const query = {
+        _id: username,
         reset: resetRoles,
         body: {
           content: { },
@@ -131,7 +130,7 @@ function commandCreateFirstAdmin (options) {
         }
       };
 
-      return sendAction(options, args, query);
+      return sendAction(query, options);
     })
     .then(() => {
       console.log(cout.ok(`[✔] "${username}" administrator account created`));
