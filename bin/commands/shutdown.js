@@ -30,12 +30,12 @@ function commandShutdown (options) {
 
   console.log(cout.notice('[ℹ] Shutting down...'));
 
-  const args = {
+  const query = {
     controller: 'admin',
     action: 'shutdown'
   };
 
-  return sendAction(options, args)
+  return sendAction(query, options)
     .then(() => {
       console.log(cout.ok('[✔] Done'));
       process.exit(0);
