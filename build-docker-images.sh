@@ -25,7 +25,7 @@ docker_build() {
 
   print_something "Build image kuzzleio/$image:$kuzzle_tag with stage $build_stage of Dockerfile"
 
-  docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag  --build-arg kuzzle_tag=$kuzzle_tag .
+echo "  docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag ."
 }
 
 docker_tag() {
@@ -35,7 +35,7 @@ docker_tag() {
 
   print_something "Tag image kuzzleio/$image:$from_tag to kuzzleio/$image:$to_tag"
 
-  docker tag kuzzleio/$image:$from_tag kuzzleio/$image:$to_tag
+  echo "docker tag kuzzleio/$image:$from_tag kuzzleio/$image:$to_tag"
 }
 
 docker_push() {
@@ -44,7 +44,7 @@ docker_push() {
 
   print_something "Push image kuzzleio/$image:$tag to Dockerhub"
 
-  docker push kuzzleio/$image:$tag
+  echo "docker push kuzzleio/$image:$tag"
 }
 
 
@@ -54,8 +54,8 @@ if [ -z "$DOCKER_PASSWORD" ]; then
 fi
 docker login -u kuzzleteam -p $DOCKER_PASSWORD
 
-if [ "$TRAVIS_BRANCH" == "1-dev" ]; then
-  # Build triggered by a merge on branch 1-dev
+if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
+  # Build triggered by a merge on branch *-dev
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH"
@@ -65,20 +65,15 @@ if [ "$TRAVIS_BRANCH" == "1-dev" ]; then
   docker_push 'kuzzle' "$TRAVIS_BRANCH"
 
   # Keep develop tag for now
-  docker_tag 'plugin-dev' "$TRAVIS_BRANCH" 'develop'
-  docker_tag 'kuzzle' "$TRAVIS_BRANCH" 'develop'
+  # If this is a release of the current major version
+  # we can push with the 'develop' tag
+  if [ "$TRAVIS_BRANCH" == "$KUZZLE_LATEST_MAJOR-dev" ]; then
+    docker_tag 'plugin-dev' "$TRAVIS_BRANCH" 'develop'
+    docker_tag 'kuzzle' "$TRAVIS_BRANCH" 'develop'
 
-  docker_push 'plugin-dev' 'develop'
-  docker_push 'kuzzle' 'develop'
-elif [ "$TRAVIS_BRANCH" == "2-dev" ]; then
-  # Build triggered by a merge on branch 2-dev
-  # Images are built in Travis
-
-  docker_build 'plugin-dev' "$TRAVIS_BRANCH"
-  docker_build 'kuzzle' "$TRAVIS_BRANCH"
-
-  docker_push 'plugin-dev' "$TRAVIS_BRANCH"
-  docker_push 'kuzzle' "$TRAVIS_BRANCH"
+    docker_push 'plugin-dev' 'develop'
+    docker_push 'kuzzle' 'develop'
+  fi
 elif [ ! -z "$RELEASE_TAG" ]; then
   # Build triggered by a new release
   # The build is triggered by Github webhook
