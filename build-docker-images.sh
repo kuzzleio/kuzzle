@@ -4,6 +4,14 @@ set -e
 
 KUZZLE_LATEST_MAJOR=1
 
+if [ -z "$MODE" ]; then
+  echo "This script have three mode that you can use with the variable MODE"
+  echo "  - test (or empty string): Just print the command that will be run in other modes"
+  echo "  - local: Build and tag images locally"
+  echo "  - production: Build and tag images then push them to Dockerhub"
+  echo ""
+fi
+
 ################################################################################
 # Script used to build kuzzleio/plugin-dev and kuzzleio/kuzzle Docker images  ##
 ################################################################################
@@ -23,8 +31,8 @@ print_something() {
 run_or_echo () {
   command=$1
 
-  if [ "$MODE" == "production" ]; then
-    $(command)
+  if [ "$MODE" == "production" ] || [ "$MODE" == "local" ]; then
+    $command
   else
     echo "$command"
   fi
@@ -60,12 +68,14 @@ docker_push() {
   run_or_echo "docker push kuzzleio/$image:$tag"
 }
 
+if [ "$MODE" == "production" ]; then
+  if [ -z "$DOCKER_PASSWORD" ]; then
+    echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
+    exit 1
+  fi
 
-if [ "$MODE" == "production" ] && [ -z "$DOCKER_PASSWORD" ]; then
-  echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
-  exit 1
+  run_or_echo "docker login -u kuzzleteam -p $DOCKER_PASSWORD"
 fi
-run_or_echo "docker login -u kuzzleteam -p $DOCKER_PASSWORD"
 
 if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
   # Build triggered by a merge on branch *-dev
@@ -107,5 +117,6 @@ elif [ ! -z "$RELEASE_TAG" ]; then
     docker_push 'plugin-dev' 'latest'
     docker_push 'kuzzle' 'latest'
   fi
-
+else
+  echo "Could not find RELEASE_TAG or TRAVIS_BRANCH variables. Exiting."
 fi
