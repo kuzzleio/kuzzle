@@ -12,7 +12,7 @@ script:
 - bash test/travis-bin/run-tests.sh
 - bash test/travis-bin/sonar.sh
 # Dockerhub password is inside travis settings
-- bash build-docker-images.sh
+- MODE=production bash build-docker-images.sh
 cache:
   directories: "– $HOME/.pm2 – $HOME/.sonar/cache"
 notifications:

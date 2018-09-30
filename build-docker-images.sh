@@ -11,11 +11,23 @@ KUZZLE_LATEST_MAJOR=1
 print_something() {
   something=$1
 
-  echo "##############################################################"
-  echo ""
-  echo $something
   echo ""
   echo "##############################################################"
+  echo "#"
+  echo "#      $something"
+  echo "#"
+  echo "##############################################################"
+  echo ""
+}
+
+run_or_echo () {
+  command=$1
+
+  if [ "$MODE" == "production" ]; then
+    $(command)
+  else
+    echo "$command"
+  fi
 }
 
 docker_build() {
@@ -25,7 +37,7 @@ docker_build() {
 
   print_something "Build image kuzzleio/$image:$kuzzle_tag with stage $build_stage of Dockerfile"
 
-echo "  docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag ."
+  run_or_echo "docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag ."
 }
 
 docker_tag() {
@@ -35,7 +47,7 @@ docker_tag() {
 
   print_something "Tag image kuzzleio/$image:$from_tag to kuzzleio/$image:$to_tag"
 
-  echo "docker tag kuzzleio/$image:$from_tag kuzzleio/$image:$to_tag"
+  run_or_echo "docker tag kuzzleio/$image:$from_tag kuzzleio/$image:$to_tag"
 }
 
 docker_push() {
@@ -44,15 +56,16 @@ docker_push() {
 
   print_something "Push image kuzzleio/$image:$tag to Dockerhub"
 
-  echo "docker push kuzzleio/$image:$tag"
+
+  run_or_echo "docker push kuzzleio/$image:$tag"
 }
 
 
-if [ -z "$DOCKER_PASSWORD" ]; then
+if [ "$MODE" == "production" ] && [ -z "$DOCKER_PASSWORD" ]; then
   echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
   exit 1
 fi
-docker login -u kuzzleteam -p $DOCKER_PASSWORD
+run_or_echo "docker login -u kuzzleteam -p $DOCKER_PASSWORD"
 
 if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
   # Build triggered by a merge on branch *-dev
