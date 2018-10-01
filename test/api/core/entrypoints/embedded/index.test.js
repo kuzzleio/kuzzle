@@ -609,11 +609,11 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     });
 
     it('should trigger an warn log if no connection could be found', () => {
-      entrypoint.logAccess(new Request({}, {connectionId: '-1'}));
+      entrypoint.logAccess(new Request({controller: 'controller', action: 'action'}, {connectionId: '-1'}));
 
       should(kuzzle.pluginsManager.trigger)
         .be.calledOnce()
-        .be.calledWith('log:warn', '[access log] No connection retrieved for connection id: -1\n' +
+        .be.calledWith('log:warn', '[access log] No connection retrieved for connection id: -1 on controller:action\n' +
         'Most likely, the connection was closed before the response was received.');
 
       should(entrypoint.logger.info)
