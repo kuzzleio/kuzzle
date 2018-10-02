@@ -5,7 +5,7 @@ set -e
 KUZZLE_LATEST_MAJOR=1
 
 if [ -z "$MODE" ]; then
-  echo "This script have three mode that you can use with the variable MODE"
+  echo "This script has three mode that you can use with the variable MODE"
   echo "  - MODE=test (or empty string): Just print the command that will be run in other modes"
   echo "  - MODE=local: Build and tag images locally"
   echo "  - MODE=production: Build and tag images then push them to Dockerhub"
