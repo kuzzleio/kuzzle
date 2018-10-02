@@ -83,7 +83,7 @@ Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: wit
     id = this.idPrefix + id;
   }
 
-  let main = function (callbackAsync) {
+  const main = function (callbackAsync) {
     setTimeout(() => {
       this.api.getProfile(id)
         .then(body => {
@@ -104,14 +104,7 @@ Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: wit
               expected = stringify(this.profiles[profile].policies.sort(compare));
 
             if (policies !== expected) {
-              if (not) {
-                return callbackAsync();
-              }
               return callbackAsync('policies does not match');
-            }
-
-            if (not) {
-              return callbackAsync('policies are equal');
             }
           }
 

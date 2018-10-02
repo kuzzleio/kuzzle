@@ -242,6 +242,7 @@ class KuzzleMock extends Kuzzle {
     this.rootPath = '/kuzzle';
 
     this.router = {
+      connections: {},
       execute: this.sandbox.stub().resolves(foo),
       isConnectionAlive: this.sandbox.stub().returns(true),
       init: this.sandbox.spy(),

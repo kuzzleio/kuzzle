@@ -47,12 +47,12 @@ function commandResetSecurity (options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    const args = {
+    const query = {
       controller: 'admin',
       action: 'resetSecurity'
     };
 
-    return sendAction(options, args)
+    return sendAction(query, options)
       .then(() => {
         console.log(cout.ok('[✔] Kuzzle users, profiles and roles have been successfully reset'));
         process.exit(0);
