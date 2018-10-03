@@ -26,6 +26,7 @@ NODE_LTS=6 docker-compose -f docker-compose/test.yml run kuzzle
 section "x64 - node 8"
 NODE_LTS=8 docker-compose -f docker-compose/test.yml run kuzzle
 
+docker run --rm --privileged multiarch/qemu-user-static:register
 section "armhf"
 docker-compose -f docker-compose/test-armhf.yml run kuzzle
 section "aarch64"
