@@ -252,6 +252,20 @@ describe('PluginsManager.run', () => {
       });
   });
 
+  it('should accept promises for pipes', () => {
+    plugin.object.pipes = {
+      'foo:bar': 'foo'
+    };
+
+    plugin.object.foo = () => Promise.resolve('ok');
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(response => {
+        should(response).eql('ok');
+      });
+  });
+
   it('should attach controller actions on kuzzle object', () => {
     plugin.object.controllers = {
       'foo': {
