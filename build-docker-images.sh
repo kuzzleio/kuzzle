@@ -4,6 +4,14 @@ set -e
 
 KUZZLE_LATEST_MAJOR=1
 
+if [ -z "$MODE" ]; then
+  echo "This script has three mode that you can use with the variable MODE"
+  echo "  - MODE=test (or empty string): Just print the command that will be run in other modes"
+  echo "  - MODE=local: Build and tag images locally"
+  echo "  - MODE=production: Build and tag images then push them to Dockerhub"
+  echo ""
+fi
+
 ################################################################################
 # Script used to build kuzzleio/plugin-dev and kuzzleio/kuzzle Docker images  ##
 ################################################################################
@@ -11,11 +19,23 @@ KUZZLE_LATEST_MAJOR=1
 print_something() {
   something=$1
 
-  echo "##############################################################"
-  echo ""
-  echo $something
   echo ""
   echo "##############################################################"
+  echo "#"
+  echo "#      $something"
+  echo "#"
+  echo "##############################################################"
+  echo ""
+}
+
+run_or_echo () {
+  command=$1
+
+  if [ "$MODE" == "production" ] || [ "$MODE" == "local" ]; then
+    $command
+  else
+    echo "$command"
+  fi
 }
 
 docker_build() {
@@ -25,7 +45,7 @@ docker_build() {
 
   print_something "Build image kuzzleio/$image:$kuzzle_tag with stage $build_stage of Dockerfile"
 
-  docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag  --build-arg kuzzle_tag=$kuzzle_tag .
+  run_or_echo "docker build --target $build_stage -t kuzzleio/$image:$kuzzle_tag ."
 }
 
 docker_tag() {
@@ -35,7 +55,7 @@ docker_tag() {
 
   print_something "Tag image kuzzleio/$image:$from_tag to kuzzleio/$image:$to_tag"
 
-  docker tag kuzzleio/$image:$from_tag kuzzleio/$image:$to_tag
+  run_or_echo "docker tag kuzzleio/$image:$from_tag kuzzleio/$image:$to_tag"
 }
 
 docker_push() {
@@ -44,18 +64,21 @@ docker_push() {
 
   print_something "Push image kuzzleio/$image:$tag to Dockerhub"
 
-  docker push kuzzleio/$image:$tag
+
+  run_or_echo "docker push kuzzleio/$image:$tag"
 }
 
+if [ "$MODE" == "production" ]; then
+  if [ -z "$DOCKER_PASSWORD" ]; then
+    echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
+    exit 1
+  fi
 
-if [ -z "$DOCKER_PASSWORD" ]; then
-  echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
-  exit 1
+  run_or_echo "docker login -u kuzzleteam -p $DOCKER_PASSWORD"
 fi
-docker login -u kuzzleteam -p $DOCKER_PASSWORD
 
-if [ "$TRAVIS_BRANCH" == "1-dev" ]; then
-  # Build triggered by a merge on branch 1-dev
+if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
+  # Build triggered by a merge on branch *-dev
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$TRAVIS_BRANCH"
@@ -65,20 +88,15 @@ if [ "$TRAVIS_BRANCH" == "1-dev" ]; then
   docker_push 'kuzzle' "$TRAVIS_BRANCH"
 
   # Keep develop tag for now
-  docker_tag 'plugin-dev' "$TRAVIS_BRANCH" 'develop'
-  docker_tag 'kuzzle' "$TRAVIS_BRANCH" 'develop'
+  # If this is a release of the current major version
+  # we can push with the 'develop' tag
+  if [ "$TRAVIS_BRANCH" == "$KUZZLE_LATEST_MAJOR-dev" ]; then
+    docker_tag 'plugin-dev' "$TRAVIS_BRANCH" 'develop'
+    docker_tag 'kuzzle' "$TRAVIS_BRANCH" 'develop'
 
-  docker_push 'plugin-dev' 'develop'
-  docker_push 'kuzzle' 'develop'
-elif [ "$TRAVIS_BRANCH" == "2-dev" ]; then
-  # Build triggered by a merge on branch 2-dev
-  # Images are built in Travis
-
-  docker_build 'plugin-dev' "$TRAVIS_BRANCH"
-  docker_build 'kuzzle' "$TRAVIS_BRANCH"
-
-  docker_push 'plugin-dev' "$TRAVIS_BRANCH"
-  docker_push 'kuzzle' "$TRAVIS_BRANCH"
+    docker_push 'plugin-dev' 'develop'
+    docker_push 'kuzzle' 'develop'
+  fi
 elif [ ! -z "$RELEASE_TAG" ]; then
   # Build triggered by a new release
   # The build is triggered by Github webhook
@@ -99,5 +117,6 @@ elif [ ! -z "$RELEASE_TAG" ]; then
     docker_push 'plugin-dev' 'latest'
     docker_push 'kuzzle' 'latest'
   fi
-
+else
+  echo "Could not find RELEASE_TAG or TRAVIS_BRANCH variables. Exiting."
 fi
