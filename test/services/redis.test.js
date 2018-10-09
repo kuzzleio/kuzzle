@@ -3,7 +3,7 @@ const
   rewire = require('rewire'),
   Redis = rewire('../../lib/services/redis'),
   IORedis = require('ioredis'),
-  redisCommands = (require('ioredis')({lazyConnect: true})).getBuiltinCommands(),
+  redisCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands(),
   KuzzleMock = require('../mocks/kuzzle.mock'),
   sinon = require('sinon'),
   RedisClientMock = require('../mocks/services/redisClient.mock');

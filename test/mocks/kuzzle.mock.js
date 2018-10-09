@@ -73,7 +73,7 @@ class KuzzleMock extends Kuzzle {
       processRequest: this.sandbox.stub().resolves(),
       checkRights: this.sandbox.stub(),
       getEventName: this.sandbox.spy(),
-      executePluginRequest: this.sandbox.stub()
+      executePluginRequest: this.sandbox.stub().resolves()
     };
 
     this.gc = {
@@ -97,7 +97,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.janitor = {
-      dump: sinon.stub(),
+      dump: sinon.stub().resolves(),
       shutdown: sinon.stub()
     };
 
@@ -242,6 +242,7 @@ class KuzzleMock extends Kuzzle {
     this.rootPath = '/kuzzle';
 
     this.router = {
+      connections: {},
       execute: this.sandbox.stub().resolves(foo),
       isConnectionAlive: this.sandbox.stub().returns(true),
       init: this.sandbox.spy(),

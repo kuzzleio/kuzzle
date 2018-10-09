@@ -1,23 +1,20 @@
 const
-  /** @type {Params} */
-  params = require('../../../../lib/config'),
-  PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager'),
-  EventEmitter = require('eventemitter2').EventEmitter2;
+  mockrequire = require('mock-require'),
+  ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
+  KuzzleMock = require('../../../mocks/kuzzle.mock');
+
 
 describe('Test plugins manager trigger', () => {
   it('should trigger hooks with wildcard event', function (done) {
-    let
-      kuzzle = new EventEmitter({
-        verboseMemoryLeak: true,
-        wildcard: true,
-        maxListeners: 30,
-        delimiter: ':'
-      }),
-      pluginsManager;
+    mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
+    mockrequire.reRequire('../../../../lib/services/internalEngine');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
+    const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
-    kuzzle.config = {plugins: params.plugins};
-
-    pluginsManager = new PluginsManager(kuzzle);
+    const
+      kuzzle = new KuzzleMock(),
+      pluginsManager = new PluginsManager(kuzzle);
 
     pluginsManager.plugins = [{
       object: {
@@ -30,7 +27,10 @@ describe('Test plugins manager trigger', () => {
         }
       },
       config: {},
-      activated: true
+      activated: true,
+      manifest: {
+        name: 'foo'
+      }
     }];
 
     pluginsManager.run()

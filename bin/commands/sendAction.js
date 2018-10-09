@@ -19,9 +19,7 @@
  * limitations under the License.
  */
 
-const
-  Bluebird = require('bluebird'),
-  Kuzzle = require('kuzzle-sdk');
+const { Kuzzle } = require('kuzzle-sdk');
 
 /**
  *  Send an action through the API
@@ -34,7 +32,7 @@ const
  *  @param {object} query
  *  @return {Promise}
  */
-function sendAction (options, args, query = {}) {
+function sendAction (query, options) {
   const config = {
     host: options.parent.host || 'localhost',
     port: options.parent.port || 7512
@@ -50,28 +48,15 @@ function sendAction (options, args, query = {}) {
     };
   }
 
-  return new Bluebird((resolve, reject) => {
-    const kuzzle = new Kuzzle(config.host, { port: config.port }, err => {
-      if (err) {
-        reject(err);
-        return;
-      }
+  const kuzzle = new Kuzzle('websocket', {host: config.host, port: config.port });
 
-      // Usage of defered promise to have the same workflow either with login or not
-      // Promises are defered because if we login first we need to construct the query with jwt token
-      const deferredPromises = [];
-
+  return kuzzle.connect()
+    .then(() => {
       if (config.login) {
-        deferredPromises.push(() => kuzzle.loginPromise(config.login.strategy, config.login.credentials));
+        return kuzzle.auth.login(config.login.strategy, config.login.credentials);
       }
-
-      deferredPromises.push(() => kuzzle.queryPromise(args, query));
-
-      Bluebird.mapSeries(deferredPromises, deferredPromise => deferredPromise())
-        .then(response => resolve(response[response.length - 1]))
-        .catch(error => reject(error));
-    });
-  });
+    })
+    .then(() => kuzzle.query(query));
 }
 
 module.exports = sendAction;

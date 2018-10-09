@@ -1,44 +1,46 @@
 'use strict';
 
 const
+  mockrequire = require('mock-require'),
   should = require('should'),
-  /** @type {Params} */
-  params = require('../../../../lib/config'),
+  ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
   sinon = require('sinon'),
-  EventEmitter = require('eventemitter2').EventEmitter2,
   {
     KuzzleError,
     GatewayTimeoutError,
     PluginImplementationError
-  } = require('kuzzle-common-objects').errors,
-  PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager');
+  } = require('kuzzle-common-objects').errors;
 
-describe('Test plugins manager run', () => {
+describe('PluginsManager.run', () => {
   let
     plugin,
     pluginMock,
     kuzzle,
+    PluginsManager,
     pluginsManager;
 
   beforeEach(() => {
-    kuzzle = new EventEmitter({
-      verboseMemoryLeak: true,
-      wildcard: true,
-      maxListeners: 30,
-      delimiter: ':'
-    });
-    kuzzle.config = { plugins: params.plugins };
+    kuzzle = new KuzzleMock();
+
+    mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
+    mockrequire.reRequire('../../../../lib/services/internalEngine');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
+    PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
     pluginsManager = new PluginsManager(kuzzle);
 
     plugin = {
-      name: 'testPlugin',
       path: '',
       object: {
         init: () => {}
       },
       config: {},
-      manifest: {}
+      manifest: {
+        name: 'testPlugin',
+        path: ''
+      }
     };
 
     pluginMock = sinon.mock(plugin.object);
@@ -247,6 +249,20 @@ describe('Test plugins manager run', () => {
       .catch(error => {
         kuzzle.config.plugins.common.pipeTimeout = timeout;
         should(error).be.an.instanceOf(GatewayTimeoutError);
+      });
+  });
+
+  it('should accept promises for pipes', () => {
+    plugin.object.pipes = {
+      'foo:bar': 'foo'
+    };
+
+    plugin.object.foo = () => Promise.resolve('ok');
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(response => {
+        should(response).eql('ok');
       });
   });
 

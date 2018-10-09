@@ -197,7 +197,7 @@ describe('Plugin Context', () => {
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger', 'strategies']);
+      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
     });
 
     it('should expose a data validation accessor', () => {
@@ -232,6 +232,21 @@ describe('Plugin Context', () => {
       should(strategies.add).be.a.Function();
       should(strategies.remove).be.a.Function();
     });
+
+    it('should expose an SDK client accessor', () => {
+      const sdk = context.accessors.sdk;
+
+      should(sdk.query).be.a.Function();
+      should(sdk.auth).be.an.Object();
+      should(sdk.bulk).be.an.Object();
+      should(sdk.collection).be.an.Object();
+      should(sdk.document).be.an.Object();
+      should(sdk.index).be.an.Object();
+      should(sdk.ms).be.an.Object();
+      should(sdk.realtime).be.an.Object();
+      should(sdk.security).be.an.Object();
+      should(sdk.server).be.an.Object();
+    });
   });
 
   describe('#trigger', () => {
@@ -262,12 +277,14 @@ describe('Plugin Context', () => {
     it('should call the callback with a result if everything went well', done => {
       const
         request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
+        result = {foo: 'bar'},
         callback = sinon.spy((err, res) => {
           try {
             should(callback).be.calledOnce();
             should(err).be.null();
             should(res).match(request);
-            should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+            should(res.result).be.equal(result);
+            should(kuzzle.funnel.executePluginRequest).calledWith(request);
             done();
           }
           catch(e) {
@@ -275,15 +292,17 @@ describe('Plugin Context', () => {
           }
         });
 
-      kuzzle.funnel.executePluginRequest.yields(null, request);
+      kuzzle.funnel.executePluginRequest.resolves(result);
 
       should(context.accessors.execute(request, callback)).not.be.a.Promise();
     });
 
     it('should resolve a Promise with a result if everything went well', () => {
-      const request = new Request({requestId: 'request'}, {connectionId: 'connectionid'});
+      const
+        request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
+        result = {foo: 'bar'};
 
-      kuzzle.funnel.executePluginRequest.yields(null, request);
+      kuzzle.funnel.executePluginRequest.resolves(result);
 
       const ret = context.accessors.execute(request);
 
@@ -292,7 +311,8 @@ describe('Plugin Context', () => {
       return ret
         .then(res => {
           should(res).match(request);
-          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+          should(res.result).be.equal(result);
+          should(kuzzle.funnel.executePluginRequest).calledWith(request);
         });
     });
 
@@ -303,7 +323,7 @@ describe('Plugin Context', () => {
         callback = sinon.spy(
           (err, res) => {
             try {
-              should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+              should(kuzzle.funnel.executePluginRequest).calledWith(request);
               should(callback).be.calledOnce();
               should(err).match(error);
               should(res).be.undefined();
@@ -314,7 +334,7 @@ describe('Plugin Context', () => {
             }
           });
 
-      kuzzle.funnel.executePluginRequest.yields(error);
+      kuzzle.funnel.executePluginRequest.rejects(error);
 
       context.accessors.execute(request, callback);
     });
@@ -324,11 +344,11 @@ describe('Plugin Context', () => {
         request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
         error = new Error('error');
 
-      kuzzle.funnel.executePluginRequest.yields(error);
+      kuzzle.funnel.executePluginRequest.rejects(error);
 
       return context.accessors.execute(request)
         .catch(err => {
-          should(kuzzle.funnel.executePluginRequest).calledWithMatch(request, sinon.match.func);
+          should(kuzzle.funnel.executePluginRequest).calledWith(request);
           should(err).match(error);
         });
     });

@@ -34,11 +34,7 @@ RUN  set -x \
   && rm -rf /var/lib/apt/lists/* \
   && echo "alias ll=\"ls -lahF --color\"" >> ~/.bashrc
 
-ARG kuzzle_tag
-
-RUN  git clone --depth 1 --branch $kuzzle_tag https://github.com/kuzzleio/kuzzle /var/app \
-  && git clone --depth 1 https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local /var/app/plugins/available/kuzzle-plugin-auth-passport-local \
-  && git clone --depth 1 https://github.com/kuzzleio/kuzzle-plugin-logger /var/app/plugins/available/kuzzle-plugin-logger
+ADD . /var/app
 
 WORKDIR /var/app
 
@@ -54,7 +50,7 @@ FROM debian:stretch-slim as kuzzle
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
-ENV NODE_VERSION=8.9.0
+ENV NODE_VERSION=8.11.3
 ENV NODE_ENV=production
 ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 
