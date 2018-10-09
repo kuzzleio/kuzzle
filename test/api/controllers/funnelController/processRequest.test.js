@@ -115,6 +115,48 @@ describe('funnelController.processRequest', () => {
       })).be.fulfilled();
   });
 
+  it('should allow the controller\'s action result to be a Request object', () => {
+    const request = new Request({
+      requestId: 'i-am-the-request-id',
+      controller: 'fakeController',
+      action: 'returnRequest'
+    });
+
+    const responseRequest = new Request({
+      requestId: 'i-am-the-request-id',
+      controller: 'fakeController',
+      action: 'returnRequest'
+    }, { status: 200, result: 'Hey' });
+
+    funnel.controllers.fakeController.returnRequest = sinon.stub().resolves(responseRequest);
+
+    return funnel.processRequest(request)
+      .then(response => {
+        should(response.result).be.eql(responseRequest.result);
+        should(response.status).be.eql(responseRequest.status);
+      });
+  });
+
+  it('should return a PluginImplementationError if the Request object returned is not the same', () => {
+    const request = new Request({
+      controller: 'fakeController',
+      action: 'returnRequest'
+    });
+
+    const responseRequest = new Request({
+      controller: 'fakeController',
+      action: 'returnRequest'
+    }, { status: 200, result: 'Hey' });
+
+    funnel.controllers.fakeController.returnRequest = sinon.stub().resolves(responseRequest);
+
+    return funnel.processRequest(request)
+      .then(response => {
+        should(response.status).be.eql(500);
+        should(response.error).be.instanceOf(PluginImplementationError);
+      });
+  });
+
   it('should reject the promise if a controller action fails', done => {
     const request = new Request({
       controller: 'fakeController',
