@@ -1,25 +1,34 @@
 'use strict';
 
 const
+  mockrequire = require('mock-require'),
   should = require('should'),
+  ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   sinon = require('sinon'),
   {
     KuzzleError,
     GatewayTimeoutError,
     PluginImplementationError
-  } = require('kuzzle-common-objects').errors,
-  PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager');
+  } = require('kuzzle-common-objects').errors;
 
 describe('PluginsManager.run', () => {
   let
     plugin,
     pluginMock,
     kuzzle,
+    PluginsManager,
     pluginsManager;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
+    mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
+    mockrequire.reRequire('../../../../lib/services/internalEngine');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
+    PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
     pluginsManager = new PluginsManager(kuzzle);
 
     plugin = {
@@ -240,6 +249,20 @@ describe('PluginsManager.run', () => {
       .catch(error => {
         kuzzle.config.plugins.common.pipeTimeout = timeout;
         should(error).be.an.instanceOf(GatewayTimeoutError);
+      });
+  });
+
+  it('should accept promises for pipes', () => {
+    plugin.object.pipes = {
+      'foo:bar': 'foo'
+    };
+
+    plugin.object.foo = () => Promise.resolve('ok');
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(response => {
+        should(response).eql('ok');
       });
   });
 
