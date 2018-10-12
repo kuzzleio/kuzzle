@@ -20,8 +20,8 @@ export NVM_DIR="$HOME/.nvm"
 nvm use $NODE_VERSION
 
 find -type d -name node_modules -print -exec rm -rf '{}' \; || true
-npm install --unsafe-perm
-npm install --unsafe-perm --only=dev
+npm install --silent --unsafe-perm
+npm install --silent --unsafe-perm --only=dev
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
@@ -41,7 +41,12 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     exit 1
 fi
 
-echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
-
 node bin/kuzzle start &
+echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
+while ! curl -f -s -o /dev/null http://localhost:7512
+do
+    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle"
+    sleep 1
+done
+
 npm run functional-testing
