@@ -19,10 +19,6 @@ export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
 nvm use $NODE_VERSION
 
-find -type d -name node_modules -print -exec rm -rf '{}' \; || true
-npm install --silent --unsafe-perm
-npm install --silent --unsafe-perm --only=dev
-docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "$elastic_host"

@@ -151,6 +151,7 @@ jobs:
         - docker run --rm --privileged multiarch/qemu-user-static:register
 
       script:
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-armhf ./.ci/scripts/install-armhf-deps.sh
         - docker-compose -f .ci/test-armhf.yml run kuzzle
 
 # ---------------------------------------
@@ -172,6 +173,7 @@ jobs:
         - docker run --rm --privileged multiarch/qemu-user-static:register
 
       script:
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-aarch64 ./.ci/scripts/install-aarch64-deps.sh
         - docker-compose -f .ci/test-aarch64.yml run kuzzle
 
 # ---------------------------------------
