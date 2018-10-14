@@ -6,9 +6,6 @@ env:
   global:
     secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
 
-# script:
-## Dockerhub password is inside travis settings
-#- MODE=production bash build-docker-images.sh
 
 cache:
   directories: "– $HOME/.pm2 – $HOME/.sonar/cache"
@@ -16,16 +13,9 @@ cache:
 stage:
   - name: Unit tests & Linters
   - name: Functional tests
-#  - name: Deploy
+  - name: Deployments
 
-deploy:
-  provider: npm
-  email: support@kuzzle.io
-  api_key:
-    secure: ueYTwE9O8n5nNb0RRqszFEWBAuLPt6w+f0oXgp3nuSV3YVlrXPj4OQ3kmqoPD0abfr9koC1GfrLd2UOyspF5tzVHorueUJJtKb2O59usTrxUOntswIWpjIy8+/CFiw8isbdfhK35d4d2B+A8sFIwcBnuTdFdsI23OiEwJtiilDtxZrowVehDSUxgAMrbp0FtavXAJsC4C39OM1iHrdGhq/3ujzpHPudW7j78Lc6W9BvP7hHCFH3X/b0lCESSFuGTuduDN0LGHJegQ48U930zI4mVEAz8CN32NFZPd3FaLEkJGU0cOILJLqWYPkfOW8g/FSca/Qpa6nlV6MhLOjd3ld9V1DRihOVQg5qUCn9Gy5OaWj+E2S6KEIi3HVmz7LhM2UVcEchrWxsER/DSO02phlvyMrcBdNNxwshf6TO45L2V3cdb95rniP5hECunviV1Kd8rbuh0ptUyNAg/vb/WSEfJmOU4NF3wJHyLSIMXANgZAiNkYfNsydIbKRUSGzwSvLlQc27OnAQlHDbWqAn88XFKGQxibZIh+LOox+nsmH8roBgY0yqMB6nkzbDHadMoObCKKMIe5SKsq7ZOc6LCbdSePq6XbxS8gJO+fr3KfpwxRUqH/EUtpcGzLMU3HBpnwwOjScBq+vVHhaVsenYDUXcaiHnw8kEqIocTtS0vtuU=
-  on:
-    repo: kuzzleio/kuzzle
-    branch: master
+
 
 jobs:
   include:
@@ -179,20 +169,15 @@ jobs:
 # ---------------------------------------
 # Deploy
 # ---------------------------------------
-#    - stage: Deploy
-#      name: "Unit Tests"
-#
-#      language: node_js
-#      node_js:
-#        - "8"
-#
-#      install:
-#        - npm install --silent --only=dev
-#
-#      script:
-#        - npm run unit-testing
-#
-#      after_script:
-#        - npm run codecov
+# Dockerhub
+# ---------------------------------------
+    - stage: Deployments
+      name: "Build & publish Docker images on Dockerhub"
+
+      if: type != pull_request
+
+      script:
+        - MODE=production bash build-docker-images.sh
+
 
 
