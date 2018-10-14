@@ -169,6 +169,25 @@ jobs:
 # ---------------------------------------
 # Deploy
 # ---------------------------------------
+# NPM
+# ---------------------------------------
+    - stage: Deployments
+      name: "Deploy on NPM"
+      if: type != pull_request AND branch = master
+
+      script:
+        - echo "Deploying Kuzzle on NPM"
+
+      deploy:
+        provider: npm
+        email: support@kuzzle.io
+        api_key:
+          secure: ueYTwE9O8n5nNb0RRqszFEWBAuLPt6w+f0oXgp3nuSV3YVlrXPj4OQ3kmqoPD0abfr9koC1GfrLd2UOyspF5tzVHorueUJJtKb2O59usTrxUOntswIWpjIy8+/CFiw8isbdfhK35d4d2B+A8sFIwcBnuTdFdsI23OiEwJtiilDtxZrowVehDSUxgAMrbp0FtavXAJsC4C39OM1iHrdGhq/3ujzpHPudW7j78Lc6W9BvP7hHCFH3X/b0lCESSFuGTuduDN0LGHJegQ48U930zI4mVEAz8CN32NFZPd3FaLEkJGU0cOILJLqWYPkfOW8g/FSca/Qpa6nlV6MhLOjd3ld9V1DRihOVQg5qUCn9Gy5OaWj+E2S6KEIi3HVmz7LhM2UVcEchrWxsER/DSO02phlvyMrcBdNNxwshf6TO45L2V3cdb95rniP5hECunviV1Kd8rbuh0ptUyNAg/vb/WSEfJmOU4NF3wJHyLSIMXANgZAiNkYfNsydIbKRUSGzwSvLlQc27OnAQlHDbWqAn88XFKGQxibZIh+LOox+nsmH8roBgY0yqMB6nkzbDHadMoObCKKMIe5SKsq7ZOc6LCbdSePq6XbxS8gJO+fr3KfpwxRUqH/EUtpcGzLMU3HBpnwwOjScBq+vVHhaVsenYDUXcaiHnw8kEqIocTtS0vtuU=
+        on:
+          repo: kuzzleio/kuzzle
+          branch: master
+
+# ---------------------------------------
 # Dockerhub
 # ---------------------------------------
     - stage: Deployments
