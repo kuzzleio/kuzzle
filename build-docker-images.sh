@@ -2,7 +2,7 @@
 
 set -e
 
-KUZZLE_LATEST_MAJOR=1
+KUZZLE_LATEST_MAJOR=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]' | cut -d. -f 1)
 
 if [ -z "$MODE" ]; then
   echo "This script has three mode that you can use with the variable MODE"
