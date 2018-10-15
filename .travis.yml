@@ -14,8 +14,6 @@ stage:
   - name: Unit tests & Linters
   - name: Functional tests
   - name: Deployments
-    if: type != pull_request
-
 
 jobs:
   include:
@@ -174,7 +172,7 @@ jobs:
     - stage: Deployments
       name: "Deploy on NPM"
 
-      if: branch =~ ^master|.?-dev$
+      if: type != pull_request AND branch =~ ^master|.?-dev$
 
       script:
         - echo "Deploying Kuzzle on NPM"
@@ -194,7 +192,7 @@ jobs:
     - stage: Deployments
       name: "Build & publish Docker images on Dockerhub"
 
-      if: branch =~ ^master|.?-dev$
+      if: type != pull_request AND branch =~ ^master|.?-dev$
 
       script:
         - MODE=production bash build-docker-images.sh
