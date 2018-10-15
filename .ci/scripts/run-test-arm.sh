@@ -14,14 +14,11 @@ else
 fi
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
-n $NODE_VERSION
 
-rm -rf node_modules
-npm install --unsafe-perm
-npm install --unsafe-perm --only=dev
-find -L node_modules/.bin -type f -exec chmod 776 {} \;
-find node_modules/ -type d -exec chmod 755 {} \;
-docker-compose/scripts/install-plugins.sh
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+nvm use $NODE_VERSION
+
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "$elastic_host"
@@ -40,11 +37,12 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     exit 1
 fi
 
+node bin/kuzzle start &
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
+while ! curl -f -s -o /dev/null http://localhost:7512
+do
+    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle"
+    sleep 1
+done
 
-pm2 start --silent /config/pm2.json
-
-npm run --silent lint
-npm run unit-testing
-npm run codecov
 npm run functional-testing
