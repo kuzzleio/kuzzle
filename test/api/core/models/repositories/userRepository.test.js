@@ -189,13 +189,9 @@ describe('Test: repositories/userRepository', () => {
   });
 
   describe('#delete', () => {
-    it('should throw an error when no user id is given', done => {
-      userRepository.delete({ profileIds: [], name: 'gordon' })
-        .then(() => done(new Error('should throw error')))
-        .catch(error => {
-          should(error).be.instanceOf(BadRequestError);
-          done();
-        });
+    it('should throw an error when no user id is given', () => {
+      return should(userRepository.delete({ profileIds: [], name: 'gordon' }))
+        .rejectedWith(KuzzleInternalError, {message: 'Repository users: missing _id'});
     });
 
     it('should delete user from both cache and database', () => {
