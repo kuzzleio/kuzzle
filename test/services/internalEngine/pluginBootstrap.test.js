@@ -90,7 +90,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
 
           should(kuzzle.internalEngine.createOrReplace)
             .be.calledOnce()
-            .be.calledWith('config', 'bootstrap-lock-39aa3b1a81948e4c');
+            .be.calledWith('config', 'bootstrap-lock-bba3dedad8ca21312221410b7cdef353');
         });
     });
 
@@ -104,7 +104,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
 
           should(kuzzle.internalEngine.createOrReplace)
             .be.calledOnce()
-            .be.calledWith('config', 'bootstrap-lock-39aa3b1a81948e4c');
+            .be.calledWith('config', 'bootstrap-lock-bba3dedad8ca21312221410b7cdef353');
         });
     });
   });

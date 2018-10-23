@@ -2,7 +2,6 @@ const
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   {
-    BadRequestError,
     InternalError: KuzzleInternalError,
     NotFoundError
   } = require('kuzzle-common-objects').errors,
@@ -19,7 +18,6 @@ describe('Test: repositories/repository', () => {
     cachePojo = {_id: 'someId', some: 'source'};
 
   before(() => {
-
     /**
      * @constructor
      */
@@ -37,22 +35,18 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#loadOneFromDatabase', () => {
-    it('should reject for an non existing id', done => {
+    it('should reject for an non existing id', () => {
       kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
 
-      repository.loadOneFromDatabase(-9999)
-        .then(() => done(new Error('Should reject with a NotFoundError')))
-        .catch(error => {
-          should(error).be.instanceOf(NotFoundError);
-          should(error.message).eql('Unable to find object with id \'-9999\'');
-          done();
-        });
+      return should(repository.loadOneFromDatabase(-9999))
+        .rejectedWith(NotFoundError, {message: 'Unable to find objects with id \'-9999\''});
     });
 
     it('should reject the promise in case of error', () => {
       kuzzle.internalEngine.get.rejects(new KuzzleInternalError('error'));
 
-      return should(repository.loadOneFromDatabase('error')).be.rejectedWith(KuzzleInternalError);
+      return should(repository.loadOneFromDatabase('error'))
+        .rejectedWith(KuzzleInternalError, {message: 'error'});
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
@@ -74,7 +68,8 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise in case of error', () => {
-      return should(repository.loadMultiFromDatabase('error')).be.rejectedWith(KuzzleInternalError);
+      return should(repository.loadMultiFromDatabase('error')).
+        rejectedWith(KuzzleInternalError, {message: 'Bad argument: error is not an array.'});
     });
 
     it('should return a list of plain object', () => {
@@ -126,13 +121,15 @@ describe('Test: repositories/repository', () => {
     it('should reject the promise in case of error', () => {
       kuzzle.services.list.internalCache.get.rejects(new KuzzleInternalError('error'));
 
-      return should(repository.loadFromCache('error')).be.rejectedWith(KuzzleInternalError);
+      return should(repository.loadFromCache('error')).
+        rejectedWith(KuzzleInternalError, {message: 'error'});
     });
 
     it('should reject the promise when loading an incorrect object', () => {
       kuzzle.services.list.internalCache.get.resolves('bad type');
 
-      return should(repository.loadFromCache('string')).be.rejectedWith(KuzzleInternalError);
+      return should(repository.loadFromCache('string'))
+        .rejectedWith(KuzzleInternalError, {message: 'Unexpected token b in JSON at position 0'});
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
@@ -148,28 +145,25 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#load', () => {
-    it('should reject for an non existing id', done => {
+    it('should reject for an non existing id', () => {
       kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
 
-      repository.load(-9999)
-        .then(() => done(new Error('Should reject with a NotFoundError')))
-        .catch(error => {
-          should(error).be.instanceOf(NotFoundError);
-          should(error.message).eql('Unable to find object with id \'-9999\'');
-          done();
-        });
+      return should(repository.load(-9999))
+        .rejectedWith(NotFoundError, {message: 'Unable to find objects with id \'-9999\''});
     });
 
     it('should reject the promise in case of error', () => {
       kuzzle.internalEngine.get.rejects(new KuzzleInternalError('test'));
 
-      return should(repository.load('error')).be.rejectedWith(KuzzleInternalError);
+      return should(repository.load('error'))
+        .rejectedWith(KuzzleInternalError, {message: 'test'});
     });
 
     it('should reject the promise when loading an incorrect object', () => {
       kuzzle.services.list.internalCache.get.resolves('bad type');
 
-      return should(repository.load('string')).be.rejectedWith(KuzzleInternalError);
+      return should(repository.load('string'))
+        .rejectedWith(KuzzleInternalError, {message: 'Unexpected token b in JSON at position 0'});
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
@@ -263,24 +257,16 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#delete', () => {
-    it('should throw an error when no object id is given', done => {
+    it('should throw an error when no object id is given', () => {
       const someObject = { name: 'barney' };
 
-      repository.delete(someObject)
-        .then(() => done(new Error('should throw error')))
-        .catch(error => {
-          should(error).be.instanceOf(BadRequestError);
-          done();
-        });
+      return should(repository.delete(someObject))
+        .rejectedWith(KuzzleInternalError, {message: 'Repository objects: missing _id'});
     });
 
-    it('should return a 404 if the given object is not present', done => {
-      repository.delete(null)
-        .then(() => done(new Error('should throw error')))
-        .catch(error => {
-          should(error).be.instanceOf(NotFoundError);
-          done();
-        });
+    it('should return a 404 if the given object is not present', () => {
+      return should(repository.delete(null))
+        .rejectedWith(KuzzleInternalError, {message: 'Repository objects: nothing to delete'});
     });
 
     it('should delete an object from both cache and database when pertinent', () => {
