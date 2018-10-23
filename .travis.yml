@@ -172,7 +172,7 @@ jobs:
     - stage: Deployments
       name: "Deploy on NPM"
 
-      if: type != pull_request AND branch =~ ^master|.?-dev$
+      if: type != pull_request AND branch = master
 
       script:
         - echo "Deploying Kuzzle on NPM"
