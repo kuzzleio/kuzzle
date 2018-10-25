@@ -43,7 +43,7 @@ jobs:
     - stage: Unit tests & Linters
       name: "SonarQube"
 
-      if: type = pull_request
+      if: type = pull_request && fork != true
 
       language: node_js
       node_js:
@@ -172,7 +172,7 @@ jobs:
     - stage: Deployments
       name: "Deploy on NPM"
 
-      if: type != pull_request AND branch =~ ^master|.?-dev$
+      if: type != pull_request AND branch = master
 
       script:
         - echo "Deploying Kuzzle on NPM"
