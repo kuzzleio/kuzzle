@@ -1,37 +1,201 @@
-dist: trusty
+os: linux
 sudo: required
-group: edge
-jdk: oraclejdk8
+language: minimal
 
-services:
-- docker
-script:
-- bash test/travis-bin/run-tests.sh
-- bash test/travis-bin/sonar.sh
-# Dockerhub password is inside travis settings
-- MODE=production bash build-docker-images.sh
+env:
+  global:
+    secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
+
+
 cache:
   directories: "– $HOME/.pm2 – $HOME/.sonar/cache"
-notifications:
-  webhooks:
-    urls:
-    - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
-    on_success: change
-    on_failure: always
-    on_start: never
-  email: false
-  slack:
-    secure: lcjjpIGmtjOac4SkeMg6rMcUu+3wee+xgEsBC6a1sYCWGKTxs6x22ezCHwBKbjZ9r14wm+2zOfYuBxWtvxkfduB8WVHH/U+2l5Fto37BxFvWSBqBJy+6BzMz+3gH9JvpHHOjuiqotDX8IQwsQhCgO2MIu+clU3F/T2KT9QtZAFzGnD00vjAkPH+9usxTKfFAmKNwETbTCP3cf3s0KOeX8q3YVW7yYV2Rx3lKT6LDtwzRoO1Fuhp6XNgTkKSWnrbkGsr0terSinkwHj/77cgyrnAVKKUo21Oorz9w6lBTOhvj32H0cShta0zk97+E3bhdhCg9hZtF7oqA+u2thLEWRX2luWlN45X6+kpcrEJYg4Zlhd+ABJyk9a68GwP9H9Kqa8+BxTk4tJzf9w/jgKhFcyM2HMBpD97aGqtQMUKXV5lwQPgutL7eGg8irGKwaidWKT9yWRthAQc0xRiv9/zc6Hwtb9RuRi6KZeyKrLFmDT2PP4Y5NhkDV6XFMaxllx0MSaYC4skl59gbrMl3FZWv8xgJUNHHyxfxheg9Apyf1MXGZOqsIlmqky87pO6csqVL1N5MsKrR12EEzBhW+71VnEPph5vNtTU6gm7sIHCkMPUdCbPNZtBnoK+1SF/T8PehgTPIkakFxmqMNy/ApEFHlUT3/5KvAKs37k481QROGV8=
-    on_success: never
-    on_failure: always
-    on_start: never
-deploy:
-  provider: npm
-  email: support@kuzzle.io
-  api_key:
-    secure: ueYTwE9O8n5nNb0RRqszFEWBAuLPt6w+f0oXgp3nuSV3YVlrXPj4OQ3kmqoPD0abfr9koC1GfrLd2UOyspF5tzVHorueUJJtKb2O59usTrxUOntswIWpjIy8+/CFiw8isbdfhK35d4d2B+A8sFIwcBnuTdFdsI23OiEwJtiilDtxZrowVehDSUxgAMrbp0FtavXAJsC4C39OM1iHrdGhq/3ujzpHPudW7j78Lc6W9BvP7hHCFH3X/b0lCESSFuGTuduDN0LGHJegQ48U930zI4mVEAz8CN32NFZPd3FaLEkJGU0cOILJLqWYPkfOW8g/FSca/Qpa6nlV6MhLOjd3ld9V1DRihOVQg5qUCn9Gy5OaWj+E2S6KEIi3HVmz7LhM2UVcEchrWxsER/DSO02phlvyMrcBdNNxwshf6TO45L2V3cdb95rniP5hECunviV1Kd8rbuh0ptUyNAg/vb/WSEfJmOU4NF3wJHyLSIMXANgZAiNkYfNsydIbKRUSGzwSvLlQc27OnAQlHDbWqAn88XFKGQxibZIh+LOox+nsmH8roBgY0yqMB6nkzbDHadMoObCKKMIe5SKsq7ZOc6LCbdSePq6XbxS8gJO+fr3KfpwxRUqH/EUtpcGzLMU3HBpnwwOjScBq+vVHhaVsenYDUXcaiHnw8kEqIocTtS0vtuU=
-  on:
-    repo: kuzzleio/kuzzle
-    branch: master
-addons:
-  sonarqube: true
+
+stage:
+  - name: Unit tests & Linters
+  - name: Functional tests
+  - name: Deployments
+
+jobs:
+  include:
+# ---------------------------------------
+# Unit Testing
+# ---------------------------------------
+    - stage: Unit tests & Linters
+      name: "Unit Tests"
+
+      language: node_js
+      node_js:
+        - "8"
+
+      install:
+        - npm install --silent
+        - npm install --silent --only=dev
+
+      script:
+        - npm run unit-testing
+
+      after_script:
+        - npm run codecov
+
+# ---------------------------------------
+# SonarQube
+# ---------------------------------------
+    - stage: Unit tests & Linters
+      name: "SonarQube"
+
+      if: type = pull_request && fork != true
+
+      language: node_js
+      node_js:
+        - "8"
+
+      addons:
+        sonarqube: true
+
+      install:
+        - npm install --silent --only=dev
+
+      script:
+        - bash .ci/sonar.sh
+
+# ---------------------------------------
+# ESLint
+# ---------------------------------------
+    - stage: Unit tests & Linters
+      name: "ESLint"
+
+      language: node_js
+      node_js:
+        - "8"
+
+      addons:
+        sonarqube: true
+
+      install:
+        - npm install --silent
+        - npm install --silent --only=dev
+
+      script:
+        - npm run --silent lint
+
+# ---------------------------------------
+# Functionnal Testing
+# ---------------------------------------
+# Node 6 - x64
+# ---------------------------------------
+    - stage: Functional tests
+      name: "Functionnal Tests - amd64 - Node v6"
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=6
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      services:
+        - docker
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
+
+# ---------------------------------------
+# Node 8 - x64
+# ---------------------------------------
+    - stage: Functional tests
+      name: "Functionnal Tests - amd64 - Node v8"
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=8
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      services:
+        - docker
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
+
+# ---------------------------------------
+# Node 8 - armhf
+# ---------------------------------------
+    - stage: Functional tests
+      name: "Functionnal Tests - armhf - Node v8"
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=8
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      services:
+        - docker
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+        - docker run --rm --privileged multiarch/qemu-user-static:register
+
+      script:
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-armhf ./.ci/scripts/install-armhf-deps.sh
+        - docker-compose -f .ci/test-armhf.yml run kuzzle
+
+# ---------------------------------------
+# Node 8 - aarch64
+# ---------------------------------------
+    - stage: Functional tests
+      name: "Functionnal Tests - aarch64 - Node v8"
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=8
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      services:
+        - docker
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+        - docker run --rm --privileged multiarch/qemu-user-static:register
+
+      script:
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-aarch64 ./.ci/scripts/install-aarch64-deps.sh
+        - docker-compose -f .ci/test-aarch64.yml run kuzzle
+
+# ---------------------------------------
+# Deploy
+# ---------------------------------------
+# NPM
+# ---------------------------------------
+    - stage: Deployments
+      name: "Deploy on NPM"
+
+      if: type != pull_request AND branch = master
+
+      script:
+        - echo "Deploying Kuzzle on NPM"
+
+      deploy:
+        provider: npm
+        email: support@kuzzle.io
+        api_key:
+          secure: ueYTwE9O8n5nNb0RRqszFEWBAuLPt6w+f0oXgp3nuSV3YVlrXPj4OQ3kmqoPD0abfr9koC1GfrLd2UOyspF5tzVHorueUJJtKb2O59usTrxUOntswIWpjIy8+/CFiw8isbdfhK35d4d2B+A8sFIwcBnuTdFdsI23OiEwJtiilDtxZrowVehDSUxgAMrbp0FtavXAJsC4C39OM1iHrdGhq/3ujzpHPudW7j78Lc6W9BvP7hHCFH3X/b0lCESSFuGTuduDN0LGHJegQ48U930zI4mVEAz8CN32NFZPd3FaLEkJGU0cOILJLqWYPkfOW8g/FSca/Qpa6nlV6MhLOjd3ld9V1DRihOVQg5qUCn9Gy5OaWj+E2S6KEIi3HVmz7LhM2UVcEchrWxsER/DSO02phlvyMrcBdNNxwshf6TO45L2V3cdb95rniP5hECunviV1Kd8rbuh0ptUyNAg/vb/WSEfJmOU4NF3wJHyLSIMXANgZAiNkYfNsydIbKRUSGzwSvLlQc27OnAQlHDbWqAn88XFKGQxibZIh+LOox+nsmH8roBgY0yqMB6nkzbDHadMoObCKKMIe5SKsq7ZOc6LCbdSePq6XbxS8gJO+fr3KfpwxRUqH/EUtpcGzLMU3HBpnwwOjScBq+vVHhaVsenYDUXcaiHnw8kEqIocTtS0vtuU=
+        on:
+          repo: kuzzleio/kuzzle
+          branch: master
+
+# ---------------------------------------
+# Dockerhub
+# ---------------------------------------
+    - stage: Deployments
+      name: "Build & publish Docker images on Dockerhub"
+
+      if: type != pull_request AND branch =~ ^master|.?-dev$
+
+      script:
+        - MODE=production bash build-docker-images.sh
+
+
+
