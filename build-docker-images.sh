@@ -97,9 +97,9 @@ if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
     docker_push 'plugin-dev' 'develop'
     docker_push 'kuzzle' 'develop'
   fi
-elif [ ! -z "$RELEASE_TAG" ]; then
+elif [[ "$TRAVIS_BRANCH" == "master" ]]; then
+  RELEASE_TAG=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
   # Build triggered by a new release
-  # The build is triggered by Github webhook
   # Images are built in Travis
 
   docker_build 'plugin-dev' "$RELEASE_TAG"
