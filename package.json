@@ -39,7 +39,7 @@
     "jsonwebtoken": "^8.3.0",
     "koncorde": "^1.2.0",
     "kuzzle-common-objects": "^3.0.13",
-    "kuzzle-sdk": "git://github.com/kuzzleio/sdk-javascript.git#6-beta",
+    "kuzzle-sdk": "https://github.com/kuzzleio/sdk-javascript.git#6-beta",
     "lodash": "4.17.11",
     "moment": "^2.22.2",
     "ms": "^2.1.1",
