@@ -174,6 +174,10 @@ jobs:
 
       if: type != pull_request AND branch = master
 
+      language: node_js
+      node_js:
+        - "8"
+
       script:
         - echo "Deploying Kuzzle on NPM"
 
@@ -181,7 +185,7 @@ jobs:
         provider: npm
         email: support@kuzzle.io
         api_key:
-          secure: ueYTwE9O8n5nNb0RRqszFEWBAuLPt6w+f0oXgp3nuSV3YVlrXPj4OQ3kmqoPD0abfr9koC1GfrLd2UOyspF5tzVHorueUJJtKb2O59usTrxUOntswIWpjIy8+/CFiw8isbdfhK35d4d2B+A8sFIwcBnuTdFdsI23OiEwJtiilDtxZrowVehDSUxgAMrbp0FtavXAJsC4C39OM1iHrdGhq/3ujzpHPudW7j78Lc6W9BvP7hHCFH3X/b0lCESSFuGTuduDN0LGHJegQ48U930zI4mVEAz8CN32NFZPd3FaLEkJGU0cOILJLqWYPkfOW8g/FSca/Qpa6nlV6MhLOjd3ld9V1DRihOVQg5qUCn9Gy5OaWj+E2S6KEIi3HVmz7LhM2UVcEchrWxsER/DSO02phlvyMrcBdNNxwshf6TO45L2V3cdb95rniP5hECunviV1Kd8rbuh0ptUyNAg/vb/WSEfJmOU4NF3wJHyLSIMXANgZAiNkYfNsydIbKRUSGzwSvLlQc27OnAQlHDbWqAn88XFKGQxibZIh+LOox+nsmH8roBgY0yqMB6nkzbDHadMoObCKKMIe5SKsq7ZOc6LCbdSePq6XbxS8gJO+fr3KfpwxRUqH/EUtpcGzLMU3HBpnwwOjScBq+vVHhaVsenYDUXcaiHnw8kEqIocTtS0vtuU=
+          secure: gqLBt1Scnr8wAR0zauW3jI7M576Jr7d+d2C5gvCA+iI1Y6gBWMM04A3w1MHHcPUBNA+xbwNimyoxbrBozq7otiMEDbP5ConS+T3KRWyHYwjdSfmL5KmEoNqwjmo128qJq2uWFxEecBmBk63q9A3gbnhdw3/D+05NKL4B44PpyNDpT6fApsVyDNXQmeib6cYfjwB1rCv8Mcf2sbVE1eqcJuGTwDtxx/860405PqBSg7H8iGGJJr7cymaU8cK4RLre+u8GHRiSDoKeU1UiWIoIoLG0y8TisFllSstZu9kguA6ShPJJA28NLiNyJ7j0KxKW6muvY03AFxa4XQ0sMaxotjQxN3IRUnLdN1mnQydWqMRP2+HWK1uRXCiDoL9ZnSClS1BixSAv15tvhggqE76Rq4uGCcl7hYfagpUzQpsUIV40Wc7CHez/O4ZvvicWIOdo2jmh/6fRYWOFY2+ihzwszaZwAQT1cdTm75JMIqrATyNWEZvwvczQzC85HmJajhf1azyEY08kdIJxwmwh30AMl2Is0vlq9ujCp8XRsanbdj74CcDNf9RSgesiD83McLd/ZJZHSDIe//wNypcTcW4fQbSfGb1oDHWVLQ6L/jr+W3OJUgVBG31mMciGo2jSROOos8n4iHHqs3QbxTwh0B+t+1amvZlpelFUEoicprPCcN8=
         on:
           repo: kuzzleio/kuzzle
           branch: master
