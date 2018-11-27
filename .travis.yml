@@ -196,10 +196,7 @@ jobs:
     - stage: Deployments
       name: "Build & publish Docker images on Dockerhub"
 
-      if: type != pull_request AND branch =~ ^master|.?-dev$
+      if: type != pull_request AND branch =~ ^master|[1-9]+-dev$
 
       script:
         - MODE=production bash build-docker-images.sh
-
-
-
