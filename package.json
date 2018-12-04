@@ -72,6 +72,7 @@
     "minimist": "1.2.0",
     "mocha": "5.2.0",
     "mock-require": "^3.0.2",
+    "mqtt": "^2.18.8",
     "nyc": "^13.0.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",

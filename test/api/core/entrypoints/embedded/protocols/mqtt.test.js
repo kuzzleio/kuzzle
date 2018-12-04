@@ -3,7 +3,10 @@ const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  KuzzleMock = require('../../../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
+  {
+    BadRequestError
+  } = require('kuzzle-common-objects').errors;
 
 describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   const moscaOnMock = sinon.stub();
@@ -243,4 +246,172 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
     });
   });
 
+  describe('#onConnection', () => {
+    it('should register new connections', () => {
+      const client = {
+        connection: {
+          stream: {
+            remoteAddress: 'ip'
+          }
+        }
+      };
+
+      protocol.onConnection(client);
+
+      should(protocol.connections.size).eql(1);
+      should(Object.keys(protocol.connectionsById)).length(1);
+
+      const connectionId = Object.keys(protocol.connectionsById)[0];
+      should(protocol.connections.get(client).id)
+        .be.exactly(connectionId);
+
+      should(entrypoint.newConnection)
+        .be.calledOnce();
+    });
+  });
+
+  describe('#onDisconnection', () => {
+    it('should do nothing if the connection is unknown', () => {
+      protocol.onDisconnection({});
+
+      should(entrypoint.removeConnection)
+        .have.callCount(0);
+    });
+
+    it('should remove the connection', () => {
+      const client = {};
+
+      protocol.connections.set(client, {id: 'id'});
+      protocol.connectionsById = {
+        id: client
+      };
+
+      protocol.onDisconnection(client);
+      clock.tick(protocol.config.disconnectDelay + 1);
+
+      should(entrypoint.removeConnection)
+        .be.calledOnce()
+        .be.calledWith('id');
+    });
+
+  });
+
+  describe('#onMessage', () => {
+    it('should do nothing if topic is not the request one of if the payload is not valid', () => {
+      // invalid topic
+      protocol.onMessage({
+        topic: 'topic',
+        payload: 'payload'
+      }, {id: 'id'});
+
+      // invalid payload
+      protocol.onMessage({
+        topic: protocol.config.requestTopic
+      }, {id: 'id'});
+
+      // no client id
+      protocol.onMessage({
+        topic: protocol.config.requestTopic,
+        payload: 'payload'
+      }, {});
+
+      should(entrypoint.execute)
+        .have.callCount(0);
+    });
+
+    it('should do nothing if the connection is unknown', () => {
+      protocol.onMessage({
+        topic: protocol.config.requestTopic,
+        payload: 'payload'
+      }, {id: 'foo'});
+
+      should(entrypoint.execute)
+        .have.callCount(0);
+    });
+
+    it('should forward the client payload to kuzzle and respond the client back', () => {
+      const client = {
+        id: 'clientId',
+        forward: sinon.spy()
+      };
+      protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
+
+      protocol.onMessage({
+        topic: protocol.config.requestTopic,
+        payload: Buffer.from(JSON.stringify({foo: 'bar'}))
+      }, client);
+
+      should(entrypoint.execute)
+        .be.calledOnce();
+
+      const request = entrypoint.execute.firstCall.args[0];
+      should(request.serialize())
+        .match({
+          data: {
+            foo: 'bar'
+          },
+          options: {
+            connection: {
+              id: 'id',
+              protocol: protocol.protocol
+            }
+          }
+        });
+
+      const cb = entrypoint.execute.firstCall.args[1];
+      cb({content: 'response'});
+      should(client.forward)
+        .be.calledOnce()
+        .be.calledWith(protocol.config.responseTopic, '"response"', {}, protocol.config.responseTopic, 0);
+    });
+
+    it('should respond with an error if the payload cannot be parsed', () => {
+      protocol._respond = sinon.spy();
+
+      const client = {
+        id: 'clientId',
+        forward: sinon.spy()
+      };
+      protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
+
+      protocol.onMessage({
+        topic: protocol.config.requestTopic,
+        payload: Buffer.from('invalid')
+      }, client);
+
+      should(protocol._respond)
+        .be.calledOnce()
+        .be.calledWith(client);
+
+      const response = protocol._respond.firstCall.args[1];
+      should(response.content.error)
+        .be.an.instanceOf(BadRequestError);
+    });
+  });
+
+  describe('#_respond', () => {
+    it('should broadcast if in development mode', () => {
+      const client = {
+        forward: sinon.spy()
+      };
+      const currentEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      protocol.broadcast = sinon.spy();
+      protocol.config.developmentMode = true;
+
+      protocol._respond(client, {content: 'response'});
+      process.env.NODE_ENV = currentEnv;
+
+      should(protocol.broadcast)
+        .be.calledOnce()
+        .be.calledWith({
+          channels: [protocol.config.responseTopic],
+          payload: 'response'
+        });
+
+      should(client.forward)
+        .have.callCount(0);
+    });
+  });
 });

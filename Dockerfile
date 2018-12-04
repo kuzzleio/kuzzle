@@ -22,6 +22,7 @@ RUN  set -x \
        git \
        python \
        libfontconfig \
+       libzmq3-dev \
        wget \
   && tar xf /tmp/node-v$NODE_VERSION-linux-x64.tar.gz -C /opt/ \
   && rm /tmp/node-v$NODE_VERSION-linux-x64.tar.gz \
@@ -57,6 +58,7 @@ ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 RUN  apt-get update \
   && apt-get install -y \
        curl \
+       libzmq3-dev \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=plugin-dev /var/app /var/app

@@ -30,8 +30,8 @@ services:
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_server__entryPoints__proxy=true
       - kuzzle_server__proxy__host=proxy
-      - kuzzle_server__protocols__mqtt__enabled
-      - kuzzle_server__protocols__mqtt__developmentMode
+      - kuzzle_server__protocols__mqtt__enabled=true
+      - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=${NODE_ENV:-development}
     # - DEBUG=kuzzle:*
       - DEBUG=${DEBUG:-none}
