@@ -48,5 +48,4 @@ do
     sleep 1
 done
 
-pm2 start --silent /config/pm2.json
 npm run functional-testing

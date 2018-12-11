@@ -23,3 +23,6 @@ for endpoint in Embedded Proxy; do
     ./node_modules/.bin/cucumber-js --format progress-bar --profile "${protocol}${endpoint}" --world-parameters "{\"host\": \"${host}\", \"port\": \"${port}\"}"
   done
 done
+
+# mqtt
+./node_modules/.bin/cucumber-js --format progress-bar --profile "mqttEmbedded" --world-parameters "{\"host\": \"${embedded_host}\"}"
