@@ -59,9 +59,10 @@ describe('Test: Deprecate util', () => {
     });
 
     it('should print default deprecation warning', () => {
-      deprecatedObject.foo
-      deprecatedObject.leet
+      let something = deprecatedObject.foo;
+      something = deprecatedObject.leet;
 
+      should(something).not.be.undefined();
       should(consoleStub.warn.callCount).be.eql(4);
       should(consoleStub.warn.getCall(0).args[0]).be.eql('DEPRECATION WARNING');
       should(consoleStub.warn.getCall(1).args[0]).be.eql('Use of \'foo\' property is deprecated. Please, use \'FOO\' instead.');
@@ -69,8 +70,9 @@ describe('Test: Deprecate util', () => {
     });
 
     it('should print custom deprecation warning', () => {
-      deprecatedObject['1337']
+      let something = deprecatedObject['1337'];
 
+      should(something).not.be.undefined();
       should(consoleStub.warn).be.calledTwice();
       should(consoleStub.warn.getCall(0).args[0]).be.eql('DEPRECATION WARNING');
       should(consoleStub.warn.getCall(1).args[0]).be.eql('gig');
