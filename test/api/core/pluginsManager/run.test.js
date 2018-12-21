@@ -345,7 +345,7 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should attach controller actions on kuzzle object', () => {
+  it('should attach controller actions with method name', () => {
     plugin.object.controllers = {
       'foo': {
         'actionName': 'functionName'
@@ -358,6 +358,24 @@ describe('PluginsManager.run', () => {
       .then(() => {
         should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
         should(pluginsManager.controllers['testPlugin/foo'].actionName).be.eql(plugin.object.functionName.bind(plugin.object));
+      });
+  });
+
+  it('should attach controller actions with function', () => {
+    const action = sinon.spy();
+
+    plugin.object.controllers = {
+      'foo': {
+        'actionName': action
+      }
+    };
+
+    plugin.object.functionName = () => {};
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
+        should(pluginsManager.controllers['testPlugin/foo'].actionName).be.eql(action);
       });
   });
 
