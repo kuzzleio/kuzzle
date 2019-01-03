@@ -334,6 +334,34 @@
         "maxEncodingLayers": 3,
         "allowCompression": true
       },
+      "mqtt": {
+        // * enabled:
+        //    Set to true to enable MQTT support
+        // * allowPubSub
+        //    Allow MQTT pub/sub capabilities or restrict to Kuzzle requests
+        //    only
+        // * developmentMode
+        //    Switches responseTopic back to a regular public topic
+        // * disconnectDelay
+        //    Delay in ms to apply between a disconnection notification is
+        //    received and the connection is actually removed
+        // * requestTopic
+        //    Name of the topic listened by the plugin for requests
+        // * responseTopic
+        //    Name of the topic clients should listen to get requests result
+        // * server
+        //    Constructor options passed to underlying mqtt server.
+        //    See mosca documentation for further reference.
+        "enabled": false,
+        "allowPubSub": false,
+        "developmentMode": false,
+        "disconnectDelay": 250,
+        "requestTopic": "Kuzzle/request",
+        "responseTopic": "Kuzzle/response",
+        "server": {
+          "port": 1883
+        }
+      },
       "socketio": {
         "enabled": true,
         // value of Access-Control-Allow-Origin header to answer the upgrade request

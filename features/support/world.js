@@ -1,6 +1,7 @@
 const
   {setWorldConstructor} = require('cucumber'),
   HttpApi = require('./api/http'),
+  MqttApi = require('./api/mqtt'),
   SocketIoApi = require('./api/socketio'),
   WebSocketApi = require('./api/websocket');
 
@@ -18,6 +19,9 @@ class KWorld {
     switch (this.config.protocol) {
       case 'http':
         this.api = new HttpApi(this);
+        break;
+      case 'mqtt':
+        this.api = new MqttApi(this);
         break;
       case 'socketio':
         this.api = new SocketIoApi(this);
