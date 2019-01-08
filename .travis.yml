@@ -121,6 +121,26 @@ jobs:
         - docker-compose -f .ci/test.yml run kuzzle
 
 # ---------------------------------------
+# Node 10 - x64
+# ---------------------------------------
+    - stage: Functional tests
+      name: "Functionnal Tests - amd64 - Node v10"
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=10
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      services:
+        - docker
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
+
+# ---------------------------------------
 # Node 8 - armhf
 # ---------------------------------------
     - stage: Functional tests
