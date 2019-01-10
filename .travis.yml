@@ -124,7 +124,7 @@ jobs:
 # Node 10 - x64
 # ---------------------------------------
     - stage: Functional tests
-      name: "Functionnal Tests - amd64 - Node v10"
+      name: "Functional Tests - amd64 - Node v10"
 
       env:
         - DOCKER_COMPOSE_VERSION=1.9.0
