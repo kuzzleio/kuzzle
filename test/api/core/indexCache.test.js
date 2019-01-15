@@ -6,6 +6,7 @@ const
 
 describe('Test: core/indexCache', () => {
   var
+    listAliasesStub,
     listIndexesStub,
     listCollectionsStub,
     getMappingStub,
@@ -25,6 +26,7 @@ describe('Test: core/indexCache', () => {
       }
     };
 
+    listAliasesStub = kuzzle.internalEngine.listAliases.resolves({alias: 'foo', alias2: 'foo'});
     listIndexesStub = kuzzle.internalEngine.listIndexes.resolves(['foo']);
     listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
     getMappingStub = kuzzle.internalEngine.getMapping.resolves(internalMapping);
@@ -38,10 +40,13 @@ describe('Test: core/indexCache', () => {
 
       return indexCache.init()
         .then(() => {
+          should(listAliasesStub).be.calledOnce();
           should(listIndexesStub.calledOnce).be.true();
           should(listCollectionsStub.calledOnce).be.true();
-          should(indexCache.indexes).be.an.Object().and.have.keys('foo');
+          should(indexCache.indexes).be.an.Object().and.have.keys('alias', 'alias2', 'foo');
           should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
+          should(indexCache.indexes.alias).be.exactly(indexCache.indexes.foo);
+          should(indexCache.indexes.alias2).be.exactly(indexCache.indexes.foo);
         });
     });
 
