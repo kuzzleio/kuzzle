@@ -139,6 +139,7 @@ class KuzzleMock extends Kuzzle {
       index: 'internalIndex',
       init: this.sandbox.stub().resolves(),
       listCollections: this.sandbox.stub(),
+      listAliases: this.sandbox.stub().resolves([]),
       listIndexes: this.sandbox.stub(),
       persist: this.sandbox.stub().resolves(),
       refresh: this.sandbox.stub().resolves(),
