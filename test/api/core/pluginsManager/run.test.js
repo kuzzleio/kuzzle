@@ -10,7 +10,8 @@ const
     KuzzleError,
     GatewayTimeoutError,
     PluginImplementationError
-  } = require('kuzzle-common-objects').errors;
+  } = require('kuzzle-common-objects').errors,
+  KuzzleRequest = require('kuzzle-common-objects').Request;
 
 describe('PluginsManager.run', () => {
   let
@@ -120,15 +121,15 @@ describe('PluginsManager.run', () => {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = () => {};
-    plugin.object.bar = () => {};
-
-    pluginMock.expects('foo').once().callsArg(1);
-    pluginMock.expects('bar').never().callsArg(1);
+    plugin.object.foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
+    plugin.object.bar = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
 
     return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
-      .then(() => pluginMock.verify());
+      .then(() => {
+        should(plugin.object.foo).be.calledOnce();
+        should(plugin.object.bar).not.be.called();
+      });
   });
 
   it('should attach pipes event with wildcard', () => {
@@ -137,15 +138,15 @@ describe('PluginsManager.run', () => {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = () => {};
-    plugin.object.bar = () => {};
-
-    pluginMock.expects('foo').once().callsArg(1);
-    pluginMock.expects('bar').never().callsArg(1);
+    plugin.object.foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
+    plugin.object.bar = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
 
     return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
-      .then(() => pluginMock.verify());
+      .then(() => {
+        should(plugin.object.foo).be.calledOnce();
+        should(plugin.object.bar).not.be.called();
+      });
   });
 
   it('should attach multi-function event to pipes', () => {
@@ -154,17 +155,17 @@ describe('PluginsManager.run', () => {
       'bar:foo': 'bar'
     };
 
-    plugin.object.foo = () => {};
-    plugin.object.bar = () => {};
-    plugin.object.baz = () => {};
-
-    pluginMock.expects('foo').once().callsArg(1);
-    pluginMock.expects('bar').never().callsArg(1);
-    pluginMock.expects('baz').once().callsArg(1);
+    plugin.object.foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
+    plugin.object.bar = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
+    plugin.object.baz = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
 
     return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
-      .then(() => pluginMock.verify());
+      .then(() => {
+        should(plugin.object.foo).be.calledOnce();
+        should(plugin.object.bar).not.be.called();
+        should(plugin.object.baz).be.calledOnce();
+      });
   });
 
   it('should throw if a pipe target does not exist', () => {
@@ -180,13 +181,11 @@ describe('PluginsManager.run', () => {
       'foo:bar': 'foo'
     };
 
-    plugin.object.foo = () => {};
+    plugin.object.foo = sinon.stub().callsArgWith(1, new KuzzleError('foobar'));
 
-    pluginMock.expects('foo').once().callsArgWith(1, new KuzzleError('foobar'));
 
     return should(pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:bar'))
-      .then(() => pluginMock.verify())).be.rejectedWith(KuzzleError, {message: 'foobar'});
+      .then(() => pluginsManager.trigger('foo:bar'))).be.rejectedWith(KuzzleError, {message: 'foobar'});
   });
 
   it('should embed a non-KuzzleError error in a PluginImplementationError', () => {
@@ -216,7 +215,7 @@ describe('PluginsManager.run', () => {
     kuzzle.config.plugins.common.pipeWarnTime = 10;
 
     const fooStub = sinon.stub(plugin.object, 'foo').callsFake(function (ev, cb) {
-      setTimeout(() => cb(), 11);
+      setTimeout(() => cb(null, new KuzzleRequest({})), 11);
     });
 
     return pluginsManager.run()
@@ -256,13 +255,15 @@ describe('PluginsManager.run', () => {
     plugin.object.pipes = {
       'foo:bar': 'foo'
     };
+    const request = new KuzzleRequest({});
 
-    plugin.object.foo = () => Promise.resolve('ok');
+    plugin.object.foo = sinon.stub().resolves(request);
 
     return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
       .then(response => {
-        should(response).eql('ok');
+        should(plugin.object.foo).be.calledOnce();
+        should(response.internalId).eql(request.internalId);
       });
   });
 
