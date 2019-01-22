@@ -7,7 +7,7 @@ const
   Request = require('kuzzle-common-objects').Request,
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  {BadRequestError} = require('kuzzle-common-objects').errors;
+  {BadRequestError, PluginImplementationError} = require('kuzzle-common-objects').errors;
 
 describe('funnelController.processRequest', () => {
   let
@@ -69,4 +69,34 @@ describe('funnelController.processRequest', () => {
         }
       });
   });
+
+  it('wraps plugin developer error in a PluginImplementationError', done => {
+    const
+      originalError = new BadRequestError('original error'),
+      customError = new Error('custom error'),
+      request = new Request({
+        controller: 'fakePlugin/controller',
+        action: 'fail',
+      });
+
+    kuzzle.pluginsManager.trigger = sinon.stub();
+    kuzzle.pluginsManager.trigger.onFirstCall().rejects(originalError);
+    kuzzle.pluginsManager.trigger.onSecondCall().callsFake(() => {
+      throw customError;
+    });
+
+    funnel.handleProcessRequestError(request, request, funnel.pluginsControllers, originalError)
+      .then(() => done('Expected test to fail'))
+      .catch(e => {
+        try {
+          should(e).be.instanceOf(PluginImplementationError);
+          should(e.message).be.eql('custom error');
+          done();
+        }
+        catch(err) {
+          done(err);
+        }
+      });
+  });
+
 });
