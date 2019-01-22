@@ -3,7 +3,6 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   Request = require('kuzzle-common-objects').Request,
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
@@ -17,26 +16,6 @@ describe('funnelController.processRequest', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
-
-    // injects fake controllers for unit tests
-    funnel.controllers = {
-      'fakeController': {
-        ok: sinon.stub().returns(Bluebird.resolve()),
-        fail: sinon.stub()
-      }
-    };
-
-    funnel.pluginsControllers = {
-      'fakePlugin/controller': {
-        ok: sinon.stub().returns(Bluebird.resolve()),
-        fail: sinon.stub(),
-        changeError: (request) => {
-          request.setError(new BadRequestError('custom erro'));
-
-          return Promise.reject(request);
-        }
-      }
-    };
   });
 
   it('allows plugin developer to set a new error on request:onError event', done => {
@@ -70,7 +49,7 @@ describe('funnelController.processRequest', () => {
       });
   });
 
-  it('wraps plugin developer error in a PluginImplementationError', done => {
+  it('wraps plugin developer error in a PluginImplementationError', () => {
     const
       originalError = new BadRequestError('original error'),
       customError = new Error('custom error'),
@@ -81,22 +60,18 @@ describe('funnelController.processRequest', () => {
 
     kuzzle.pluginsManager.trigger = sinon.stub();
     kuzzle.pluginsManager.trigger.onFirstCall().rejects(originalError);
-    kuzzle.pluginsManager.trigger.onSecondCall().callsFake(() => {
+    kuzzle.pluginsManager.trigger.onSecondCall().callsFake(() => Promise.resolve().then(() => {
       throw customError;
-    });
+    }));
 
-    funnel.handleProcessRequestError(request, request, funnel.pluginsControllers, originalError)
-      .then(() => done('Expected test to fail'))
-      .catch(e => {
-        try {
-          should(e).be.instanceOf(PluginImplementationError);
-          should(e.message).be.eql('custom error');
-          done();
-        }
-        catch(err) {
-          done(err);
-        }
-      });
+    return should(
+      funnel.handleProcessRequestError(
+        request,
+        request,
+        funnel.pluginsControllers,
+        originalError
+      )
+    ).rejectedWith(PluginImplementationError, { message: /^custom error.*/ });
   });
 
 });
