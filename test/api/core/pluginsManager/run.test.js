@@ -175,8 +175,8 @@ describe('PluginsManager.run', () => {
 
   it('should attach pipes event with function', () => {
     const
-      bar = sinon.stub().callsArgWith(1),
-      foo = sinon.stub().callsArgWith(1);
+      bar = sinon.stub().callsArgWith(1, null, new KuzzleRequest({})),
+      foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
 
     plugin.object.pipes = {
       'foo:bar': foo,
@@ -229,9 +229,9 @@ describe('PluginsManager.run', () => {
 
   it('should attach multi-target event to pipes with function', () => {
     const
-      bar = sinon.stub().callsArgWith(1),
-      foo = sinon.stub().callsArgWith(1),
-      baz = sinon.stub().callsArgWith(1);
+      bar = sinon.stub().callsArgWith(1, null, new KuzzleRequest({})),
+      foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({})),
+      baz = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
 
     plugin.object.pipes = {
       'foo:bar': [foo, baz],
