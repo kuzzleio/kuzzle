@@ -184,6 +184,17 @@ module.exports = {
         maxEncodingLayers: 3,
         allowCompression: true
       },
+      mqtt: {
+        enabled: false,
+        allowPubSub: false,
+        developmentMode: false,
+        disconnectDelay: 250,
+        requestTopic: 'Kuzzle/request',
+        responseTopic: 'Kuzzle/response',
+        server: {
+          port: 1883
+        }
+      },
       socketio: {
         enabled: true,
         origins: '*:*'
