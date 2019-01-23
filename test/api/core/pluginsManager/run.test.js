@@ -48,7 +48,7 @@ describe('PluginsManager.run', () => {
     pluginsManager.plugins = {testPlugin: plugin};
   });
 
-  it('should attach event hook on kuzzle object', () => {
+  it('should attach event hook with method name', () => {
     plugin.object.hooks = {
       'foo:bar': 'foo',
       'bar:foo': 'bar'
@@ -67,7 +67,26 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should attach multi-target hook on kuzzle object', () => {
+  it('should attach event hook with function', () => {
+    const
+      bar = sinon.spy(),
+      foo = sinon.spy();
+
+    plugin.object.hooks = {
+      'foo:bar': bar,
+      'bar:foo': foo
+    };
+
+    return pluginsManager.run()
+      .then(() => {
+        kuzzle.emit('foo:bar');
+
+        should(bar).be.calledOnce();
+        should(foo).not.be.called();
+      });
+  });
+
+  it('should attach multi-target hook with method name', () => {
     plugin.object.hooks = {
       'foo:bar': ['foo', 'bar'],
       'bar:foo': ['baz']
@@ -88,7 +107,29 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should attach event hook with wildcard on kuzzle object', () => {
+  it('should attach multi-target hook with function', () => {
+    const
+      bar = sinon.spy(),
+      foo = sinon.spy(),
+      baz = sinon.spy();
+
+    plugin.object.hooks = {
+      'foo:bar': [foo, bar],
+      'bar:foo': [baz]
+    };
+
+    return pluginsManager.run()
+      .then(() => {
+        kuzzle.emit('foo:bar');
+
+        should(bar).be.calledOnce();
+        should(foo).be.calledOnce();
+        should(baz).not.be.called();
+      });
+  });
+
+
+  it('should attach event hook with wildcard with method name', () => {
     plugin.object.hooks = {
       'foo:*': 'foo',
       'bar:foo': 'bar'
@@ -107,7 +148,7 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should throw if a hook target does not exist', () => {
+  it('should throw if a hook target is not a function and not a method name', () => {
     plugin.object.hooks = {
       'foo:bar': 'foo'
     };
@@ -115,7 +156,7 @@ describe('PluginsManager.run', () => {
     return should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
   });
 
-  it('should attach pipes event', () => {
+  it('should attach pipes event with method name', () => {
     plugin.object.pipes = {
       'foo:bar': 'foo',
       'bar:foo': 'bar'
@@ -132,7 +173,25 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should attach pipes event with wildcard', () => {
+  it('should attach pipes event with function', () => {
+    const
+      bar = sinon.stub().callsArgWith(1, null, new KuzzleRequest({})),
+      foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
+
+    plugin.object.pipes = {
+      'foo:bar': foo,
+      'bar:foo': bar
+    };
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => {
+        should(foo).be.calledOnce();
+        should(bar).not.be.called();
+      });
+  });
+
+  it('should attach pipes event with wildcard with method name', () => {
     plugin.object.pipes = {
       'foo:*': 'foo',
       'bar:foo': 'bar'
@@ -149,10 +208,10 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should attach multi-function event to pipes', () => {
+  it('should attach multi-target event to pipes with method name', () => {
     plugin.object.pipes = {
       'foo:bar': ['foo', 'baz'],
-      'bar:foo': 'bar'
+      'bar:foo': ['bar']
     };
 
     plugin.object.foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
@@ -168,7 +227,27 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should throw if a pipe target does not exist', () => {
+  it('should attach multi-target event to pipes with function', () => {
+    const
+      bar = sinon.stub().callsArgWith(1, null, new KuzzleRequest({})),
+      foo = sinon.stub().callsArgWith(1, null, new KuzzleRequest({})),
+      baz = sinon.stub().callsArgWith(1, null, new KuzzleRequest({}));
+
+    plugin.object.pipes = {
+      'foo:bar': [foo, baz],
+      'bar:foo': [bar]
+    };
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => {
+        should(foo).be.calledOnce();
+        should(baz).be.calledOnce();
+        should(bar).not.be.called();
+      });
+  });
+
+  it('should throw if a pipe target is not a function and not a method name', () => {
     plugin.object.pipes = {
       'foo:bar': 'foo'
     };
@@ -267,7 +346,7 @@ describe('PluginsManager.run', () => {
       });
   });
 
-  it('should attach controller actions on kuzzle object', () => {
+  it('should attach controller actions with method name', () => {
     plugin.object.controllers = {
       'foo': {
         'actionName': 'functionName'
@@ -280,6 +359,24 @@ describe('PluginsManager.run', () => {
       .then(() => {
         should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
         should(pluginsManager.controllers['testPlugin/foo'].actionName).be.eql(plugin.object.functionName.bind(plugin.object));
+      });
+  });
+
+  it('should attach controller actions with function', () => {
+    const action = sinon.spy();
+
+    plugin.object.controllers = {
+      'foo': {
+        'actionName': action
+      }
+    };
+
+    plugin.object.functionName = () => {};
+
+    return pluginsManager.run()
+      .then(() => {
+        should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
+        should(pluginsManager.controllers['testPlugin/foo'].actionName).be.eql(action);
       });
   });
 
