@@ -68,6 +68,6 @@ describe('Test plugins manager trigger', () => {
 
     return should(pluginsManager.trigger('foo:bar')).rejectedWith(
       PluginImplementationError,
-      {message: /^Plugin foo pipe for event 'foo:bar' throwed a non-Kuzzle error: Error: foobar.*/});
+      {message: /^Plugin foo pipe for event 'foo:bar' threw a non-Kuzzle error: Error: foobar.*/});
   });
 });
