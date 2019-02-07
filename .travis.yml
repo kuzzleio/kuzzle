@@ -40,23 +40,23 @@ jobs:
 # ---------------------------------------
 # SonarQube
 # ---------------------------------------
-    - stage: Unit tests & Linters
-      name: "SonarQube"
+    # - stage: Unit tests & Linters
+    #   name: "SonarQube"
 
-      if: type = pull_request && fork != true
+    #   if: type = pull_request && fork != true
 
-      language: node_js
-      node_js:
-        - "8"
+    #   language: node_js
+    #   node_js:
+    #     - "8"
 
-      addons:
-        sonarqube: true
+    #   addons:
+    #     sonarqube: true
 
-      install:
-        - npm install --silent --only=dev
+    #   install:
+    #     - npm install --silent --only=dev
 
-      script:
-        - bash .ci/sonar.sh
+    #   script:
+    #     - bash .ci/sonar.sh
 
 # ---------------------------------------
 # ESLint
