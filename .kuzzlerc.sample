@@ -495,7 +495,7 @@
       "aliases": ["storageEngine"],
       "client": {
         "host": "http://localhost:9200",
-        "apiVersion": "5.4"
+        "apiVersion": "5.6"
       },
       // default mapping applied to all collections
       "commonMapping": {
