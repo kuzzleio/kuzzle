@@ -387,6 +387,29 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
       should(response.content.error)
         .be.an.instanceOf(BadRequestError);
     });
+
+    it('should respond with an error if the requestId is not a string', () => {
+      protocol._respond = sinon.spy();
+
+      const client = {
+        id: 'clientId',
+        forward: sinon.spy()
+      };
+      protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
+
+      protocol.onMessage({
+        topic: protocol.config.requestTopic,
+        payload: Buffer.from(JSON.stringify({ requestId: 42 }))
+      }, client);
+
+      should(protocol._respond)
+        .be.calledOnce()
+        .be.calledWith(client);
+
+      const response = protocol._respond.firstCall.args[1];
+      should(response.content.error)
+        .be.an.instanceOf(BadRequestError);
+    });
   });
 
   describe('#_respond', () => {
