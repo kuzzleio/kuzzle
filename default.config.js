@@ -233,7 +233,7 @@ module.exports = {
       backend: 'elasticsearch',
       client: {
         host: 'http://localhost:9200',
-        apiVersion: '5.4'
+        apiVersion: '5.6'
       },
       commonMapping: {
         _kuzzle_info: {
