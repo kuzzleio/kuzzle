@@ -235,21 +235,29 @@ describe('Plugin Context', () => {
       should(strategies.remove).be.a.Function();
     });
 
-    describe('accessors.sdk', () => {
-      it('should expose an SDK client accessor', () => {
-        const sdk = context.accessors.sdk;
+    it('should expose an SDK client accessor', () => {
+      const sdk = context.accessors.sdk;
 
-        should(sdk.context).be.a.Function();
-        should(sdk.query).be.a.Function();
-        should(sdk.auth).be.an.Object();
-        should(sdk.bulk).be.an.Object();
-        should(sdk.collection).be.an.Object();
-        should(sdk.document).be.an.Object();
-        should(sdk.index).be.an.Object();
-        should(sdk.ms).be.an.Object();
-        should(sdk.realtime).be.an.Object();
-        should(sdk.security).be.an.Object();
-        should(sdk.server).be.an.Object();
+      should(sdk.context).be.a.Function();
+      should(sdk.query).be.a.Function();
+      should(sdk.auth).be.an.Object();
+      should(sdk.bulk).be.an.Object();
+      should(sdk.collection).be.an.Object();
+      should(sdk.document).be.an.Object();
+      should(sdk.index).be.an.Object();
+      should(sdk.ms).be.an.Object();
+      should(sdk.realtime).be.an.Object();
+      should(sdk.security).be.an.Object();
+      should(sdk.server).be.an.Object();
+    });
+
+    describe('accessors.sdk.context', () => {
+      it('should instantiate a new SDK with original request in the protocol', () => {
+        const request = new Request({ controller: 'foo', action: 'bar' }, { user: { _id: 'gordon' } });
+
+        const sdk = context.accessors.sdk.context(request);
+
+        should(sdk.auth._kuzzle.protocol.originalRequest).be.eql(request);
       });
     });
 

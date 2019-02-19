@@ -4,28 +4,25 @@ const
   should = require('should'),
   sinon = require('sinon'),
   Request = require('kuzzle-common-objects').Request,
-  FunnelProtocol = require('../../../../lib/api/core/sdk/funnelProtocol'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock');
+  FunnelProtocol = require('../../../../lib/api/core/sdk/funnelProtocol');
 
 describe('Test: sdk/funnelProtocol', () => {
   let
-    kuzzle,
     request,
+    funnel,
     funnelProtocol;
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
-    kuzzle.funnel.executePluginRequest = sinon.stub().resolves('sdk result');
+    funnel = {};
 
-    kuzzle.repositories.token.verifyToken.resolves({ userId: 'admin' });
-    kuzzle.repositories.user.load.resolves({ _id: 'admin' });
+    funnel.executePluginRequest = sinon.stub().resolves('sdk result');
 
     request = {
       controller: 'foo',
       action: 'bar'
     };
 
-    funnelProtocol = new FunnelProtocol(kuzzle);
+    funnelProtocol = new FunnelProtocol(funnel);
   });
 
   describe('#isReady', () => {
@@ -38,16 +35,12 @@ describe('Test: sdk/funnelProtocol', () => {
     it('should call executePluginRequest with the constructed request', () => {
       return funnelProtocol.query(request)
         .then(() => {
-          should(kuzzle.funnel.executePluginRequest).be.calledOnce();
+          should(funnel.executePluginRequest).be.calledOnce();
 
-          const req = kuzzle.funnel.executePluginRequest.firstCall.args[0];
+          const req = funnel.executePluginRequest.firstCall.args[0];
           should(req).be.an.instanceOf(Request);
           should(req.input.controller).be.equal('foo');
           should(req.input.action).be.equal('bar');
-          should(req.context.user).be.null();
-
-          should(kuzzle.repositories.token.verifyToken).be.calledOnce();
-          should(kuzzle.repositories.user.load).be.calledOnce();
         });
     });
 
@@ -58,19 +51,19 @@ describe('Test: sdk/funnelProtocol', () => {
         });
     });
 
-    it('should set the request user if its a contextualized request', () => {
-      funnelProtocol.requestWithContext = true;
+    it('should set the request user if the protocol is instantiated with a request', () => {
+      const originalRequest = { context: { user: { _id: 'gordon' } } };
+
+      funnelProtocol = new FunnelProtocol(funnel, originalRequest);
 
       return funnelProtocol.query(request)
         .then(() => {
-          should(kuzzle.funnel.executePluginRequest).be.calledOnce();
+          should(funnel.executePluginRequest).be.calledOnce();
 
-          const req = kuzzle.funnel.executePluginRequest.firstCall.args[0];
+          const req = funnel.executePluginRequest.firstCall.args[0];
           should(req).be.an.instanceOf(Request);
           should(req.context.user).not.be.null();
-          should(req.context.user._id).be.equal('admin');
-
-          should(funnelProtocol.requestWithContext).be.false();
+          should(req.context.user._id).be.equal('gordon');
         });
     });
   });
