@@ -18,7 +18,7 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 
 ## General rules and principles we'd like you to follow
 
-* If you plan to add new features to Kuzzle, make sure that this is for a general improvement to benefit a majority of Kuzzle users. If not, consider making a plugin instead (check our [plugin documentation](http://docs.kuzzle.io/plugin-reference/))
+* If you plan to add new features to Kuzzle, make sure that this is for a general improvement to benefit a majority of Kuzzle users. If not, consider making a plugin instead (check our [plugin documentation](https://docs-v2.kuzzle.io/plugins/1/essentials/getting-started/))
 * Follow the [KISS Principle](https://en.wikipedia.org/wiki/KISS_principle)
 * Follow [The Boy Scout Rule](http://programmer.97things.oreilly.com/wiki/index.php/The_Boy_Scout_Rule)
 
@@ -48,7 +48,7 @@ Everytime a modification is detected in the source files, the server is automati
 
 ## Create a plugin
 
-See our [plugins documentation](http://docs.kuzzle.io/plugin-reference/)
+See our [plugins documentation](https://docs-v2.kuzzle.io/plugins/1/essentials/getting-started/)
 
 ## Running Tests
    

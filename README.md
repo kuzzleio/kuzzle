@@ -28,19 +28,19 @@ The easiest way to setup a kuzzle server for Linux-like systems without prerequi
 $ sudo bash -c "$(curl http://get.kuzzle.io/)"
 ```
 
-You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/#docker)
+You can get detailed information about how to [start kuzzle with docker on docs-v2.kuzzle.io](https://docs-v2.kuzzle.io/guide/1/essentials/installing-kuzzle/#docker)
 
 ### Manual install
 
-Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/#manually)
+Check our [complete installation guide on docs-v2.kuzzle.io](https://docs-v2.kuzzle.io/guide/1/essentials/installing-kuzzle/#manual-installation)
 
 ## Quick start with Kuzzle
 
-* [Install and start Kuzzle server](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
-* [Choose a SDK](https://docs.kuzzle.io/sdk-reference/essentials/)
+* [Install and start Kuzzle server](https://docs-v2.kuzzle.io/guide/1/essentials/installing-kuzzle/)
+* [Choose a SDK](https://docs-v2.kuzzle.io/sdk-reference/)
 * Build your application without caring about your backend !
 
-Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/getting-started/)
+Check the [**Getting started page on docs-v2.kuzzle.io**](https://docs-v2.kuzzle.io/guide/1/getting-started/running-kuzzle/)
 
 ### NodeJS Sample
 
@@ -50,8 +50,9 @@ npm install kuzzle-sdk
 
 ```javascript
 const
-    Kuzzle = require('kuzzle-sdk'),
-    kuzzle = new Kuzzle('http://localhost:7512')
+    { Kuzzle, WebSocket } = require('kuzzle-sdk');
+
+const kuzzle = new Kuzzle(new WebSocket('http://localhost:7512'));
 
 const filter = {
     exists: {
@@ -60,25 +61,22 @@ const filter = {
 }
 
 // Subscribe to data changes in an app
-kuzzle
-    .collection('mycollection', 'myindex')
-    .subscribe(filter, function(error, result) {
+kuzzle.subscribe('mycollection', 'myindex', filter,
+  function(error, result) {
         // triggered each time a document is updated !
         console.log('message received from kuzzle:', result)
     })
 
 // Creating a document from another app will notify all subscribers
-kuzzle
-    .collection('mycollection', 'myindex')
-    .createDocument(document)
+kuzzle.document.createDocument('mycollection', 'myindex', document)
 ```
 
 ### Useful links
 
-* [Full documentation](https://docs.kuzzle.io/)
-* [SDK Reference](https://docs.kuzzle.io/sdk-reference/essentials/)
-* [API Documentation](https://docs.kuzzle.io/api-documentation/connecting-to-kuzzle/)  
-* [Data Validation Documentation](https://docs.kuzzle.io/validation-reference/schema/)
+* [Full documentation](https://docs-v2.kuzzle.io/)
+* [SDK Reference](https://docs-v2.kuzzle.io/sdk-reference/)
+* [API Documentation](https://docs-v2.kuzzle.io/api/1/essentials/connecting-to-kuzzle/)  
+* [Data Validation Documentation](https://docs-v2.kuzzle.io/guide/1/datavalidation/introduction/)
 * [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle
