@@ -48,7 +48,7 @@ function sendAction (query, options) {
     };
   }
 
-  const kuzzle = new Kuzzle('websocket', {host: config.host, port: config.port });
+  const kuzzle = new Kuzzle(new WebSocket(config.host, { port: config.port }));
 
   return kuzzle.connect()
     .then(() => {
