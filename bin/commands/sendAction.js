@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-const { Kuzzle } = require('kuzzle-sdk');
+const { Kuzzle, WebSocket } = require('kuzzle-sdk');
 
 /**
  *  Send an action through the API
