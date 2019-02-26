@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-const { Kuzzle } = require('kuzzle-sdk');
+const { Kuzzle, WebSocket } = require('kuzzle-sdk');
 
 /**
  *  Send an action through the API
@@ -48,7 +48,7 @@ function sendAction (query, options) {
     };
   }
 
-  const kuzzle = new Kuzzle('websocket', {host: config.host, port: config.port });
+  const kuzzle = new Kuzzle(new WebSocket(config.host, { port: config.port }));
 
   return kuzzle.connect()
     .then(() => {
