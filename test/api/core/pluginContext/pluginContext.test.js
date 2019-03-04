@@ -4,9 +4,14 @@ const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
+  User = require('../../../../lib/api/core/models/security/user'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
-  Request = require('kuzzle-common-objects').Request,
+  {
+    Request,
+    errors: {
+      PluginImplementationError
+    }
+  } = require('kuzzle-common-objects'),
   _ = require('lodash');
 
 describe('Plugin Context', () => {
@@ -14,7 +19,8 @@ describe('Plugin Context', () => {
   let
     kuzzle,
     context,
-    PluginContext;
+    PluginContext,
+    deprecateStub;
 
   beforeEach(() => {
     mockrequire('../../../../lib/services/internalEngine', function () {
@@ -24,7 +30,14 @@ describe('Plugin Context', () => {
         createCollection: sinon.spy()
       };
     });
-    PluginContext = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+
+    deprecateStub = sinon.stub().returnsArg(0);
+    mockrequire('../../../../lib/util/deprecate', {
+      deprecateProperties: deprecateStub
+    });
+
+    PluginContext = mockrequire.reRequire(
+      '../../../../lib/api/core/plugins/pluginContext');
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
@@ -51,6 +64,9 @@ describe('Plugin Context', () => {
       should(context.constructors.RequestInput).be.a.Function();
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
+
+      should(deprecateStub).calledOnce();
+      should(deprecateStub.firstCall.args[1]).match({Dsl: 'Koncorde'});
 
       should(new context.constructors.Dsl).be.instanceOf(Koncorde);
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
@@ -238,7 +254,7 @@ describe('Plugin Context', () => {
     it('should expose an SDK client accessor', () => {
       const sdk = context.accessors.sdk;
 
-      should(sdk.context).be.a.Function();
+      should(sdk.as).be.a.Function();
       should(sdk.query).be.a.Function();
       should(sdk.auth).be.an.Object();
       should(sdk.bulk).be.an.Object();
@@ -246,18 +262,53 @@ describe('Plugin Context', () => {
       should(sdk.document).be.an.Object();
       should(sdk.index).be.an.Object();
       should(sdk.ms).be.an.Object();
-      should(sdk.realtime).be.an.Object();
+      should(sdk.realtime).be.a.Function();
       should(sdk.security).be.an.Object();
       should(sdk.server).be.an.Object();
+
+      should(() => {
+        sdk.realtime();
+      }).throw(PluginImplementationError);
     });
 
-    describe('accessors.sdk.context', () => {
-      it('should instantiate a new SDK with original request in the protocol', () => {
-        const request = new Request({ controller: 'foo', action: 'bar' }, { user: { _id: 'gordon' } });
+    describe('#accessors.sdk.as', () => {
+      let
+        request,
+        user;
 
-        const sdk = context.accessors.sdk.context(request);
+      beforeEach(() => {
+        user = new User();
+        user._id = 'gordon';
 
-        should(sdk.auth._kuzzle.protocol.originalRequest).be.eql(request);
+        request = new Request({ controller: 'foo', action: 'bar' }, { user });
+      });
+
+      it('should instantiate a new SDK with the User in the FunnelProtocol', () => {
+        const sdk = context.accessors.sdk.as(request.context.user);
+
+        should(sdk.as).be.undefined();
+        should(sdk.query).be.a.Function();
+        should(sdk.auth).be.an.Object();
+        should(sdk.bulk).be.an.Object();
+        should(sdk.collection).be.an.Object();
+        should(sdk.document).be.an.Object();
+        should(sdk.index).be.an.Object();
+        should(sdk.ms).be.an.Object();
+        should(sdk.realtime).be.a.Function();
+        should(sdk.security).be.an.Object();
+        should(sdk.server).be.an.Object();
+
+        should(() => {
+          sdk.realtime();
+        }).throw(PluginImplementationError);
+
+        should(sdk.auth._kuzzle.protocol.user).be.eql(user);
+      });
+
+      it('should throw a PluginImplementationError if the user is not a User object', () => {
+        should(() => {
+          context.accessors.sdk.as({ _id: 'gordon' });
+        }).throw(PluginImplementationError);
       });
     });
 

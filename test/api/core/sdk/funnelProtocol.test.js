@@ -3,7 +3,13 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Request = require('kuzzle-common-objects').Request,
+  {
+    Request,
+    errors: {
+      InternalError
+    }
+  } = require('kuzzle-common-objects'),
+  User = require('../../../../lib/api/core/models/security/user'),
   FunnelProtocol = require('../../../../lib/api/core/sdk/funnelProtocol');
 
 describe('Test: sdk/funnelProtocol', () => {
@@ -23,6 +29,14 @@ describe('Test: sdk/funnelProtocol', () => {
     };
 
     funnelProtocol = new FunnelProtocol(funnel);
+  });
+
+  describe('#constructor', () => {
+    it('should throw an InternalError if the funnel is instantiated without a valid User object', () => {
+      should(() => {
+        new FunnelProtocol(funnel, { _id: 'gordon' });
+      }).throw(InternalError);
+    });
   });
 
   describe('#isReady', () => {
@@ -51,19 +65,16 @@ describe('Test: sdk/funnelProtocol', () => {
         });
     });
 
-    it('should set the request user if the protocol is instantiated with a request', () => {
-      const originalRequest = { context: { user: { _id: 'gordon' } } };
+    it('should execute the request with the provided User if present', () => {
+      funnel.executePluginRequest.resolvesArg(0);
+      const user = new User();
+      user._id = 'gordon';
 
-      funnelProtocol = new FunnelProtocol(funnel, originalRequest);
+      funnelProtocol = new FunnelProtocol(funnel, user);
 
       return funnelProtocol.query(request)
-        .then(() => {
-          should(funnel.executePluginRequest).be.calledOnce();
-
-          const req = funnel.executePluginRequest.firstCall.args[0];
-          should(req).be.an.instanceOf(Request);
-          should(req.context.user).not.be.null();
-          should(req.context.user._id).be.equal('gordon');
+        .then(response => {
+          should(response.result.context.user).be.eql(user);
         });
     });
   });
