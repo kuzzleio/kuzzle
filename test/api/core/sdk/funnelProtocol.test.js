@@ -55,6 +55,7 @@ describe('Test: sdk/funnelProtocol', () => {
           should(req).be.an.instanceOf(Request);
           should(req.input.controller).be.equal('foo');
           should(req.input.action).be.equal('bar');
+          should(req.context.connection.protocol).be.equal('funnel');
         });
     });
 
