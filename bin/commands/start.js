@@ -22,11 +22,31 @@
 /* eslint-disable no-console */
 
 const
+  fs = require('fs'),
   rc = require('rc'),
   ColorOutput = require('./colorOutput');
 
 const
   params = rc('kuzzle');
+
+function loadJson (filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', (error, rawData) => {
+      if (error) {
+        return reject(error);
+      }
+
+      try {
+        const data = JSON.parse(rawData);
+
+        resolve(data);
+      }
+      catch (e) {
+        reject(e);
+      }
+    });
+  });
+}
 
 function commandStart (options) {
   const
@@ -42,7 +62,8 @@ function commandStart (options) {
         return null;
       }
 
-      return kuzzle.janitor.loadMappings(params.mappings)
+      return loadJson(params.mappings)
+        .then(mappings => kuzzle.janitor.loadMappings(mappings))
         .then(() => console.log(cout.ok('[✔] Mappings successfully applied')));
     })
     .then(() => {
@@ -50,7 +71,8 @@ function commandStart (options) {
         return null;
       }
 
-      return kuzzle.janitor.loadFixtures(params.fixtures)
+      return loadJson(params.fixtures)
+        .then(fixtures => kuzzle.janitor.loadFixtures(fixtures))
         .then(() => console.log(cout.ok('[✔] Fixtures successfully loaded')));
     })
     .then(() => {
@@ -58,7 +80,8 @@ function commandStart (options) {
         return null;
       }
 
-      return kuzzle.janitor.loadSecurities(params.securities)
+      return loadJson(params.securities)
+        .then(securities => kuzzle.janitor.loadSecurities(securities))
         .then(() => console.log(cout.ok('[✔] Roles, profiles and users successfully loaded')));
     })
     .then(() => {
