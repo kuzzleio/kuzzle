@@ -346,6 +346,21 @@ describe('PluginsManager.run', () => {
       });
   });
 
+  it('should accept promises that resolve to anything for pipes', () => {
+    plugin.object.pipes = {
+      'foo:bar': 'foo'
+    };
+
+    plugin.object.foo = sinon.stub().resolves({ result: 'flavie' });
+
+    return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(response => {
+        should(plugin.object.foo).be.calledOnce();
+        should(response.result).eql('flavie');
+      });
+  });
+
   it('should attach controller actions with method name', () => {
     plugin.object.controllers = {
       'foo': {
