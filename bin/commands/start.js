@@ -22,31 +22,12 @@
 /* eslint-disable no-console */
 
 const
-  fs = require('fs'),
   rc = require('rc'),
+  loadJson = require('./loadJson'),
   ColorOutput = require('./colorOutput');
 
 const
   params = rc('kuzzle');
-
-function loadJson (filePath) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filePath, 'utf8', (error, rawData) => {
-      if (error) {
-        return reject(error);
-      }
-
-      try {
-        const data = JSON.parse(rawData);
-
-        resolve(data);
-      }
-      catch (e) {
-        reject(e);
-      }
-    });
-  });
-}
 
 function commandStart (options) {
   const
