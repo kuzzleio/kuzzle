@@ -233,7 +233,7 @@ module.exports = {
       backend: 'elasticsearch',
       client: {
         host: 'http://localhost:9200',
-        apiVersion: '5.4'
+        apiVersion: '5.6'
       },
       commonMapping: {
         _kuzzle_info: {
@@ -250,7 +250,8 @@ module.exports = {
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
-      }
+      },
+      dynamicMapping: 'false'
     },
     garbageCollector: {
       cleanInterval: 86400000,
