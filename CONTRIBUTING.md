@@ -50,13 +50,13 @@ Everytime a modification is detected in the source files, the server is automati
 
 The development stack include a endpoint to access Kuzzle API through SSL on port `7443`.  
 
-The certificates are privately signed, using provided CA certificate.  
+The certificates are privately signed, using provided [CA certificate](docker-compose/nginx/kuzzleCA.crt).  
 Domains accepted:
 - localhost
 - *.kuzzle.loc
 
 You'll need to import the CA certificate to your browser and possibly your system local authorities to make it verified.
-Once done, your browser should not complain when reaching https://localhost:7443  
+Once done, your browser should not complain when reaching https://localhost:7443.  
 The CA certificate is here: [docker-compose/nginx/kuzzleCA.crt](docker-compose/nginx/kuzzleCA.crt)
 
 Using node.js, for instance when using the sdk, you'll need to pass the CA cert using the `NODE_EXTRA_CA_CERTS` environment variable:
