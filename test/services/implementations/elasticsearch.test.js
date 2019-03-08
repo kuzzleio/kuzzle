@@ -1293,6 +1293,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.indices.putMapping.resolves({});
 
       request.input.body = {
+        dynamic: 'true',
         properties: {
           city: {type: 'string'}
         }
@@ -1300,7 +1301,9 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.updateMapping(request)
         .then(() => {
-          should(elasticsearch.client.indices.putMapping.firstCall.args[0].body).be.exactly(request.input.body);
+          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
+          should(esRequest.body.dynamic).be.eql('true');
+          should(esRequest.body.properties.city.type).be.eql('string');
         });
     });
 
@@ -1327,6 +1330,30 @@ describe('Test: ElasticSearch service', () => {
           }
           catch(e) { done(e); }
         });
+    });
+
+    it('should not set dynamic property if the field is not present in input', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+
+      request.input.body = {
+        properties: {
+          city: { type: 'string' }
+        }
+      };
+
+      return elasticsearch.updateMapping(request)
+        .then(() => {
+          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
+          should(esRequest.body.dynamic).be.undefined();
+        });
+    });
+
+    it('should throw an error with wrong dynamic property value', () => {
+      request.input.body.dynamic = 'foobar';
+
+      should(() => {
+        elasticsearch.updateMapping(request);
+      }).throwError(BadRequestError);
     });
 
     it('should inject the default mapping', () => {
@@ -1434,7 +1461,6 @@ describe('Test: ElasticSearch service', () => {
             }
           });
         });
-
     });
   });
 
@@ -1558,9 +1584,10 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.createCollection(request)).be.rejectedWith(PreconditionError);
     });
 
-    it('should inject default mapping', () => {
+    it('should inject default mapping and default dynamic policy', () => {
       elasticsearch.client.indices.putMapping.resolves({});
       elasticsearch.kuzzle.indexCache.exists.resolves(true);
+      elasticsearch.config.dynamicMapping = 'strict';
 
       request.input.resource.collection = '%foobar';
 
@@ -1595,6 +1622,7 @@ describe('Test: ElasticSearch service', () => {
               }
             }
           });
+          should(esReq.body['%foobar'].dynamic).be.eql('strict');
         });
     });
 
@@ -1606,6 +1634,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.config.commonMapping = {};
 
       const collectionMapping = {
+        dynamic: 'false',
         properties: {
           gordon:   { type: 'text' },
           freeman:  { type: 'keyword' }
@@ -1617,8 +1646,19 @@ describe('Test: ElasticSearch service', () => {
         .then(() => {
           const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
 
+          should(esReq.body['%foobar'].dynamic).eql(collectionMapping.dynamic);
           should(esReq.body['%foobar'].properties).eql(collectionMapping.properties);
         });
+    });
+
+    it('should throw an error with wrong dynamic property', () => {
+      request.input.body = {
+        dynamic: 'foobar'
+      };
+
+      should(() => {
+        elasticsearch.createCollection(request);
+      }).throwError(BadRequestError);
     });
 
     it('should not overwrite kuzzle commonMapping', () => {
@@ -1657,7 +1697,6 @@ describe('Test: ElasticSearch service', () => {
       return elasticsearch.createCollection(request)
         .then(() => {
           const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
           should(esReq.body['%foobar'].properties).eql({
             gordon:   { type: 'text' },
             freeman:  { type: 'keyword' },
