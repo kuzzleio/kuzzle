@@ -3,8 +3,14 @@ const
   sinon = require('sinon'),
   rewire = require('rewire'),
   CollectionController = rewire('../../../lib/api/controllers/collectionController'),
-  Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  {
+    Request,
+    errors: {
+      BadRequestError,
+      NotFoundError,
+      PreconditionError
+    }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: collection controller', () => {
@@ -85,13 +91,45 @@ describe('Test: collection controller', () => {
   describe('#getSpecifications', () => {
     it('should call internalEngine with the right id', () => {
       kuzzle.internalEngine.get.resolves({_source: {foo: 'bar'}});
+      kuzzle.indexCache.exists.resolves(true);
 
       return collectionController.getSpecifications(request)
         .then(response => {
           should(kuzzle.internalEngine.get).be.calledOnce();
-          should(kuzzle.internalEngine.get).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(kuzzle.internalEngine.get).be.calledWithMatch(
+            'validations',
+            `${index}#${collection}`);
           should(response).match(foo);
         });
+    });
+
+    it('should return a dedicated error if the index does not exist', () => {
+      kuzzle.indexCache.exists.resolves(false);
+
+      return should(collectionController.getSpecifications(request))
+        .rejectedWith(
+          PreconditionError,
+          {message: `The index '${index}' does not exist`});
+    });
+
+    it('should return a dedicated error if the collection does not exist', () => {
+      kuzzle.indexCache.exists.onFirstCall().resolves(true);
+      kuzzle.indexCache.exists.onSecondCall().resolves(false);
+
+      return should(collectionController.getSpecifications(request))
+        .rejectedWith(
+          PreconditionError,
+          {message: `The collection '${collection}' does not exist`});
+    });
+
+    it('should give a meaningful message if there is no specifications', () => {
+      kuzzle.indexCache.exists.resolves(true);
+      kuzzle.internalEngine.get.rejects(new NotFoundError('not found'));
+
+      return should(collectionController.getSpecifications(request))
+        .rejectedWith(
+          NotFoundError,
+          {message: `No specifications defined for index ${index} and collection ${collection}`});
     });
   });
 

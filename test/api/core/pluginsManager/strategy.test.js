@@ -393,6 +393,23 @@ describe('PluginsManager: strategy management', () => {
       });
     });
 
+    it('should reject if the plugin resolves to a non-string kuid', done => {
+      plugin.object.verifyFunction.resolves({kuid: 123});
+      verifyAdapter('foo', 'bar', (err, res, msg) => {
+        try {
+          should(res).be.undefined();
+          should(msg).be.undefined();
+          should(err)
+            .instanceOf(PluginImplementationError)
+            .match({message: /\[some-plugin-name\] Strategy someStrategy: invalid authentication kuid returned: expected a string, got a number/});
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
     it('should resolve to "false" if the plugins refuse the provided credentials', done => {
       plugin.object.verifyFunction.resolves(false);
       verifyAdapter((err, res, msg) => {
