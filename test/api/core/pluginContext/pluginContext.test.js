@@ -14,7 +14,8 @@ describe('Plugin Context', () => {
   let
     kuzzle,
     context,
-    PluginContext;
+    PluginContext,
+    deprecateStub;
 
   beforeEach(() => {
     mockrequire('../../../../lib/services/internalEngine', function () {
@@ -24,7 +25,14 @@ describe('Plugin Context', () => {
         createCollection: sinon.spy()
       };
     });
-    PluginContext = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+
+    deprecateStub = sinon.stub().returnsArg(0);
+    mockrequire('../../../../lib/util/deprecate', {
+      deprecateProperties: deprecateStub
+    });
+
+    PluginContext = mockrequire.reRequire(
+      '../../../../lib/api/core/plugins/pluginContext');
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
@@ -51,6 +59,9 @@ describe('Plugin Context', () => {
       should(context.constructors.RequestInput).be.a.Function();
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
+
+      should(deprecateStub).calledOnce();
+      should(deprecateStub.firstCall.args[1]).match({Dsl: 'Koncorde'});
 
       should(new context.constructors.Dsl).be.instanceOf(Koncorde);
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
