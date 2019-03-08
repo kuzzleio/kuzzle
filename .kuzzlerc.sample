@@ -524,7 +524,7 @@
         // Time to live of a paginated search
         "scrollTTL": "15s"
       },
-      "dynamicMapping": "false"
+      "dynamicMapping": "true"
     }
   },
 

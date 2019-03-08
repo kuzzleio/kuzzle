@@ -251,7 +251,7 @@ module.exports = {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       },
-      dynamicMapping: 'false'
+      dynamicMapping: 'true'
     },
     garbageCollector: {
       cleanInterval: 86400000,
