@@ -262,12 +262,11 @@ describe('Plugin Context', () => {
       should(sdk.document).be.an.Object();
       should(sdk.index).be.an.Object();
       should(sdk.ms).be.an.Object();
-      should(sdk.realtime).be.a.Function();
       should(sdk.security).be.an.Object();
       should(sdk.server).be.an.Object();
 
       should(() => {
-        sdk.realtime();
+        sdk.realtime.subscribe();
       }).throw(PluginImplementationError);
     });
 
@@ -294,12 +293,11 @@ describe('Plugin Context', () => {
         should(sdk.document).be.an.Object();
         should(sdk.index).be.an.Object();
         should(sdk.ms).be.an.Object();
-        should(sdk.realtime).be.a.Function();
         should(sdk.security).be.an.Object();
         should(sdk.server).be.an.Object();
 
         should(() => {
-          sdk.realtime();
+          sdk.realtime.subscribe();
         }).throw(PluginImplementationError);
 
         should(sdk.auth._kuzzle.protocol.user).be.eql(user);
