@@ -17,6 +17,15 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 * **User Management**: login, logout and security rules are no more a burden.
 * **Extensible**: fit Kuzzle to your needs by leveraging the plugin system.
 
+## Kuzzle in production
+
+Kuzzle is production-proof, your applications are [deployed securely in a robust environment](https://kuzzle.io/products/by-features/on-premises/). 
+
+With Kuzzle, it is possible to deploy applications that can serve tens of thousands of users with very good performance.  
+
+We also provide a plugin to deploy a [Kuzzle cluster](https://github.com/kuzzleio/kuzzle-plugin-cluster) that provides horizontal scalability. In addition, its masterless cluster architecture provides high availability for constant uptime.
+
+Check out our [support plans](https://kuzzle.io/pricing/).
 
 ## Installation
 
@@ -42,7 +51,7 @@ Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io
 
 Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
 
-### Node.js Sample
+### Node.js samples
 
 ```bash
 npm install kuzzle-sdk
@@ -55,23 +64,16 @@ const
     WebSocket
   } = require('kuzzle-sdk');
 
+// Connect the SDK to your Kuzzle server with WebSocket protocol
 const kuzzle = new Kuzzle(
   new WebSocket('localhost')
 );
+await kuzzle.connect();
 
-try {
-  await kuzzle.connect();
-
-  // Subscribes to database changes
-  await kuzzle.realtime.subscribe('my-index', 'my-collection', {}, msg => {
-    console.log('Realtime notification received from Kuzzle:', msg);
-  });
-} catch (error) {
-  console.error(error);
-}
-
-// Creating a document from another app will notify all subscribers
-await kuzzle.document.create('my-index', 'my-collection', { document: 'body' });
+// Subscribes to database changes
+await kuzzle.realtime.subscribe('my-index', 'my-collection', {}, msg => {
+  console.log('Realtime notification received from Kuzzle:', msg);
+});
 ```
 
 ### Useful links
@@ -97,13 +99,6 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 * Visit our [blog](https://blog.kuzzle.io/) to be informed about what we are doing
 * Come chat with us on [gitter](https://gitter.im/kuzzleio/kuzzle)
 * Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
-
-## Kuzzle in production
-
-Kuzzle is production-proof, and provides all the business-critical features your need for your business, as
-the scalability, the high-availability (multi-nodes), probes for BI & diagnostic tools.  
-
-Check out our [support plans](https://kuzzle.io/pricing/).
 
 ## License
 
