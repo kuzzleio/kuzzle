@@ -3,6 +3,7 @@ const
     When,
     Then
   } = require('cucumber'),
+  should = require('should'),
   stepUtils = require('../support/stepUtils');
 
 When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (type, index, callback) {
@@ -84,3 +85,34 @@ When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collect
   return stepUtils.getReturn.call(this, 'collectionExists', index, collection, cb);
 });
 
+When('I create a collection {string}:{string}', function (index, collection) {
+  return this.api.createCollection(index, collection);
+});
+
+Then('The dynamic mapping property of {string}:{string} is {string}', function (index, collection, dynamicValue) {
+  return this.api.getCollectionMapping(index, collection)
+    .then(({ result }) => {
+      const expectedValue = dynamicValue === 'the default value' ? this.kuzzleConfig.services.db.dynamic.toString() : dynamicValue;
+
+      should(result[index].mappings[collection].dynamic)
+        .not.be.undefined()
+        .be.eql(expectedValue);
+    });
+});
+
+When('I update the mapping of {string}:{string} with {string}', function (index, collection, rawMapping) {
+  const mapping = eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
+
+  return this.api.updateMapping(index, collection, mapping);
+});
+
+Then('The mapping of {string}:{string} is {string}', function (index, collection, rawMapping) {
+  const mapping = eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
+
+  return this.api.getCollectionMapping(index, collection)
+    .then(({ result }) => {
+      should(result[index].mappings[collection].properties)
+        .not.be.undefined()
+        .be.eql(mapping);
+    });
+});

@@ -17,11 +17,13 @@ describe('Test: core/indexCache', () => {
     kuzzle = new KuzzleMock();
 
     const internalMapping = {
-      foo: {
-        mappings: {
-          bar: 'first',
-          baz: 'second',
-          qux: 'third'
+      properties: {
+        foo: {
+          mappings: {
+            bar: 'first',
+            baz: 'second',
+            qux: 'third'
+          }
         }
       }
     };
@@ -35,14 +37,14 @@ describe('Test: core/indexCache', () => {
   });
 
   describe('#init', () => {
-    it('should initialize the index cache properly', () => {
+    it.only('should initialize the index cache properly', () => {
       kuzzle.internalEngine.getFieldMapping.resolves({});
 
       return indexCache.init()
         .then(() => {
           should(listAliasesStub).be.calledOnce();
-          should(listIndexesStub.calledOnce).be.true();
-          should(listCollectionsStub.calledOnce).be.true();
+          should(listIndexesStub).be.calledOnce();
+          should(listCollectionsStub).be.calledOnce();
           should(indexCache.indexes).be.an.Object().and.have.keys('alias', 'alias2', 'foo');
           should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
           should(indexCache.indexes.alias).be.exactly(indexCache.indexes.foo);

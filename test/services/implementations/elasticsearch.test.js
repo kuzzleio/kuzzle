@@ -1301,9 +1301,10 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.updateMapping(request)
         .then(() => {
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esRequest.body.dynamic).be.eql('true');
-          should(esRequest.body.properties.city.type).be.eql('string');
+          const arg = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(arg.body.properties.city)
+            .be.exactly(request.input.body.properties.city);
         });
     });
 
@@ -1474,7 +1475,7 @@ describe('Test: ElasticSearch service', () => {
         .then(res => {
           should(elasticsearch.esWrapper.getMapping)
             .be.calledOnce()
-            .be.calledWithExactly({ index: 'test', type: 'unit-tests-elasticsearch'});
+            .be.calledWithExactly({ index: 'test', type: 'unit-tests-elasticsearch'}, false);
           should(res).match({foo: 'bar'});
         });
     });

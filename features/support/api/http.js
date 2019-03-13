@@ -287,6 +287,15 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  getCollectionMapping (index, collection) {
+    const options = {
+      url: this.apiPath(`${index}/${collection}/_mapping`),
+      method: 'GET'
+    };
+
+    return this.callApi(options);
+  }
+
   createCredentials (strategy, userId, body) {
     const options = {
       url : this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
@@ -1130,11 +1139,11 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  updateMapping (index) {
+  updateMapping (index, collection, mapping) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_mapping'),
+      url: this.apiPath(this.util.getIndex(index) + '/' + collection || this.world.fakeCollection + '/_mapping'),
       method: 'PUT',
-      body: this.world.mapping
+      body: mapping || this.world.mapping
     };
 
     return this.callApi(options);

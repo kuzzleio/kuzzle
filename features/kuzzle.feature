@@ -1,4 +1,18 @@
 Feature: Kuzzle functional tests
+  Scenario: Create a collection
+    When I create a collection "kuzzle-test-index":"my-collection"
+    Then The dynamic mapping property of "kuzzle-test-index":"my-collection" is "the default value"
+
+  Scenario: Update collection dynamic mapping property
+    When I create a collection "kuzzle-test-index":"my-collection"
+    And I update the mapping of "kuzzle-test-index":"my-collection" with "{ dynamic: 'strict' }"
+    Then The dynamic mapping property of "kuzzle-test-index":"my-collection" is "strict"
+
+  Scenario: Update collection mapping
+    When I create a collection "kuzzle-test-index":"my-collection"
+    And I update the mapping of "kuzzle-test-index":"my-collection" with "{ properties: { age: { type: 'integer' } } }"
+    Then The dynamic mapping property of "kuzzle-test-index":"my-collection" is "the default value"
+    Then The mapping of "kuzzle-test-index":"my-collection" is "{ age: { type: 'integer' } }"
 
   @http
   Scenario: Send a request compressed with gzip
