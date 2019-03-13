@@ -25,60 +25,62 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 The easiest way to setup a kuzzle server for Linux-like systems without prerequisites is to download and run our installation script:
 
 ```bash
-$ sudo bash -c "$(curl http://get.kuzzle.io/)"
+$ sudo bash -c "$(curl https://get.kuzzle.io/)"
 ```
 
-You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/#docker)
+You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#docker)
 
 ### Manual install
 
-Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/#manually)
+Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#manual-installation)
 
 ## Quick start with Kuzzle
 
-* [Install and start Kuzzle server](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
-* [Choose a SDK](https://docs.kuzzle.io/sdk-reference/essentials/)
+* [Install and start Kuzzle server](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle)
+* [Choose a SDK](https://docs.kuzzle.io/sdk-reference/)
 * Build your application without caring about your backend !
 
-Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/getting-started/)
+Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
 
-### NodeJS Sample
+### Node.js Sample
 
 ```bash
 npm install kuzzle-sdk
 ```
 
 ```javascript
-const
-    Kuzzle = require('kuzzle-sdk'),
-    kuzzle = new Kuzzle('http://localhost:7512')
+const 
+  {
+    Kuzzle,
+    WebSocket
+  } = require('kuzzle-sdk');
 
-const filter = {
-    exists: {
-        field: 'message'
-    }
+const kuzzle = new Kuzzle(
+  new WebSocket('localhost')
+);
+
+try {
+  await kuzzle.connect();
+
+  // Subscribes to database changes
+  await kuzzle.realtime.subscribe('my-index', 'my-collection', {}, msg => {
+    console.log('Realtime notification received from Kuzzle:', msg);
+  });
+} catch (error) {
+  console.error(error);
 }
 
-// Subscribe to data changes in an app
-kuzzle
-    .collection('mycollection', 'myindex')
-    .subscribe(filter, function(error, result) {
-        // triggered each time a document is updated !
-        console.log('message received from kuzzle:', result)
-    })
-
 // Creating a document from another app will notify all subscribers
-kuzzle
-    .collection('mycollection', 'myindex')
-    .createDocument(document)
+await kuzzle.document.create('my-index', 'my-collection', { document: 'body' });
 ```
 
 ### Useful links
 
 * [Full documentation](https://docs.kuzzle.io/)
-* [SDK Reference](https://docs.kuzzle.io/sdk-reference/essentials/)
-* [API Documentation](https://docs.kuzzle.io/api-documentation/connecting-to-kuzzle/)  
-* [Data Validation Documentation](https://docs.kuzzle.io/validation-reference/schema/)
+* [SDKs Reference](https://docs.kuzzle.io/sdk-reference/)
+* [API Documentation](https://docs.kuzzle.io/api/1/essentials/connecting-to-kuzzle/)  
+* [Data Validation documentation](https://docs.kuzzle.io/guide/1/datavalidation/introduction/)
+* [Realtime filters documentation](https://docs.kuzzle.io/koncorde/1/essentials/introduction/)
 * [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle
