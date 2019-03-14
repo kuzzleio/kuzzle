@@ -94,29 +94,19 @@ describe('core/httpRouter', () => {
       });
     });
 
-    it('should set the default allow-origin header to "*" if undefined in the config', () => {
-      delete kuzzleMock.config.http.accessControlAllowOrigin;
-      router = new Router(kuzzleMock);
-
-      should(router.defaultHeaders).eql({
-        'content-type': 'application/json',
-        'Accept-Encoding': 'gzip,deflate,identity',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
-        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
-      });
-    });
-
-    it('should take the value of the allow-origin header from the config file, if set', () => {
+    it('should take the value of the CORS headers from the config file, if set', () => {
       kuzzleMock.config.http.accessControlAllowOrigin = 'foobar';
+      kuzzleMock.config.http.accessControlAllowMethods = 'METHOD';
+      kuzzleMock.config.http.accessControlAllowHeaders = 'headers';
+
       router = new Router(kuzzleMock);
 
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
         'Accept-Encoding': 'gzip,deflate,identity',
         'Access-Control-Allow-Origin': 'foobar',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
-        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
+        'Access-Control-Allow-Methods': 'METHOD',
+        'Access-Control-Allow-Headers': 'headers'
       });
     });
   });
