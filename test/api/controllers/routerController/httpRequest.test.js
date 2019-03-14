@@ -20,7 +20,9 @@ describe('Test: routerController.httpRequest', () => {
       config: {
         http: {
           routes: require('../../../../lib/config/httpRoutes'),
-          accessControlAllowOrigin: 'foobar'
+          accessControlAllowOrigin: 'foobar',
+          accessControlAllowMethods: 'GET,HEAD,PUT,POST,OPTIONS',
+          accessControlAllowHeaders: 'headers'
         },
         server: {
           protocols: {
