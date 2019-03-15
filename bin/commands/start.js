@@ -36,31 +36,6 @@ function commandStart (options) {
   console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
-    // fixtures && mapping
-    .then(() => {
-      if (! params.mappings) {
-        return null;
-      }
-
-      return kuzzle.janitor.loadMappings(params.mappings)
-        .then(() => console.log(cout.ok('[✔] Mappings successfully applied')));
-    })
-    .then(() => {
-      if (! params.fixtures) {
-        return null;
-      }
-
-      return kuzzle.janitor.loadFixtures(params.fixtures)
-        .then(() => console.log(cout.ok('[✔] Fixtures successfully loaded')));
-    })
-    .then(() => {
-      if (! params.securities) {
-        return null;
-      }
-
-      return kuzzle.janitor.loadSecurities(params.securities)
-        .then(() => console.log(cout.ok('[✔] Roles, profiles and users successfully loaded')));
-    })
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
