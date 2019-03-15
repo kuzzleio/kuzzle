@@ -41,21 +41,38 @@ describe('/lib/api/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', () => {
-      return kuzzle.start()
+      kuzzle.janitor.loadMappings = sinon.spy();
+      kuzzle.janitor.loadFixtures = sinon.spy();
+      kuzzle.janitor.loadSecurities = sinon.spy();
+      const params = {
+        mappings: {},
+        fixtures: {},
+        securities: {}
+      };
+
+      return kuzzle.start(params)
         .then(() => {
-          should(kuzzle.internalEngine.init).be.calledOnce();
-          should(kuzzle.internalEngine.bootstrap.all).be.calledOnce();
-          should(kuzzle.validation.init).be.calledOnce();
-          should(kuzzle.pluginsManager.init).be.calledOnce();
-          should(kuzzle.pluginsManager.run).be.calledOnce();
-          should(kuzzle.services.init).be.calledOnce();
-          should(kuzzle.indexCache.init).be.calledOnce();
-          should(kuzzle.pluginsManager.trigger).be.called();
-          should(kuzzle.funnel.init).be.calledOnce();
-          should(kuzzle.router.init).be.calledOnce();
-          should(kuzzle.statistics.init).be.calledOnce();
-          should(kuzzle.entryPoints.init).be.calledOnce();
-          should(kuzzle.repositories.init).be.calledOnce();
+          sinon.assert.callOrder(
+            kuzzle.internalEngine.init,
+            kuzzle.internalEngine.bootstrap.all,
+            kuzzle.services.init,
+            kuzzle.validation.init,
+            kuzzle.indexCache.init,
+            kuzzle.funnel.init,
+            kuzzle.repositories.init,
+            kuzzle.janitor.loadMappings,
+            kuzzle.janitor.loadFixtures,
+            kuzzle.pluginsManager.init,
+            kuzzle.pluginsManager.run,
+            kuzzle.pluginsManager.trigger,
+            kuzzle.janitor.loadSecurities,
+            kuzzle.funnel.loadPluginControllers,
+            kuzzle.router.init,
+            kuzzle.statistics.init,
+            kuzzle.validation.curateSpecification,
+            kuzzle.entryPoints.init,
+            kuzzle.pluginsManager.trigger // This one check core:kuzzleStart
+          );
         });
     });
 
