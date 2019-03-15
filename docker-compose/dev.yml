@@ -6,6 +6,15 @@ services:
     ports:
       - "7513:7512"
 
+  nginx:
+    image: nginx:1.15-alpine
+    depends_on:
+      - kuzzle
+    ports:
+      - "7443:7443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+
   kuzzle:
     image: kuzzleio/core-dev
     command: sh -c 'chmod 755 /run.sh && /run.sh'
