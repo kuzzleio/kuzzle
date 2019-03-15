@@ -51,33 +51,11 @@ Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io
 
 Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
 
-### Node.js samples
-
-```bash
-npm install kuzzle-sdk
-```
-
-```javascript
-const 
-  {
-    Kuzzle,
-    WebSocket
-  } = require('kuzzle-sdk');
-
-// Connect the SDK to your Kuzzle server with WebSocket protocol
-const kuzzle = new Kuzzle(
-  new WebSocket('localhost')
-);
-await kuzzle.connect();
-
-// Subscribes to database changes
-await kuzzle.realtime.subscribe('my-index', 'my-collection', {}, msg => {
-  console.log('Realtime notification received from Kuzzle:', msg);
-});
-```
-
 ### Useful links
 
+* [How to run a Kuzzle instance](https://docs.kuzzle.io/guide/1/getting-started/running-kuzzle/)
+* [Basic usage examples](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
+* [Getting started with Node.js](https://docs.kuzzle.io/sdk-reference/js/6/getting-started/node-js/)
 * [Full documentation](https://docs.kuzzle.io/)
 * [SDKs Reference](https://docs.kuzzle.io/sdk-reference/)
 * [API Documentation](https://docs.kuzzle.io/api/1/essentials/connecting-to-kuzzle/)  
