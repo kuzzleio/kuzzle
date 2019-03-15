@@ -19,9 +19,9 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 
 ## Kuzzle in production
 
-Kuzzle is production-proof, your applications are [deployed securely in a robust environment](https://kuzzle.io/products/by-features/on-premises/). 
+Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/products/by-features/on-premises/). 
 
-With Kuzzle, it is possible to deploy applications that can serve tens of thousands of users with very good performance.  
+With Kuzzle, it is possible to deploy applications that can serve tens of thousands of users with very good performances.  
 
 We also provide a plugin to deploy a [Kuzzle cluster](https://github.com/kuzzleio/kuzzle-plugin-cluster) that provides horizontal scalability. In addition, its masterless cluster architecture provides high availability for constant uptime.
 
@@ -58,9 +58,9 @@ Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/gu
 * [Getting started with Node.js](https://docs.kuzzle.io/sdk-reference/js/6/getting-started/node-js/)
 * [Full documentation](https://docs.kuzzle.io/)
 * [SDKs Reference](https://docs.kuzzle.io/sdk-reference/)
-* [API Documentation](https://docs.kuzzle.io/api/1/essentials/connecting-to-kuzzle/)  
-* [Data Validation documentation](https://docs.kuzzle.io/guide/1/datavalidation/introduction/)
-* [Realtime filters documentation](https://docs.kuzzle.io/koncorde/1/essentials/introduction/)
+* [API Documentation](https://docs.kuzzle.io/api)  
+* [Data Validation documentation](https://docs.kuzzle.io/guide/1/datavalidation)
+* [Realtime engine documentation](https://docs.kuzzle.io/koncorde)
 * [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle
