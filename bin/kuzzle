@@ -92,6 +92,23 @@ program
   .description('create a dump of current state of kuzzle')
   .action(require('./commands/dump'));
 
+// $ kuzzle loadMappings
+program
+  .command('loadMappings <file>')
+  .description('load database mappings into Kuzzle')
+  .action(require('./commands/loadMappings'));
+
+// $ kuzzle loadFixtures
+program
+  .command('loadFixtures <file>')
+  .description('load database fixtures into Kuzzle')
+  .action(require('./commands/loadFixtures'));
+
+// $ kuzzle loadSecurities
+program
+  .command('loadSecurities <file>')
+  .description('load roles, profiles and users into Kuzzle')
+  .action(require('./commands/loadSecurities'));
 
 // Run user command
 program.parse(process.argv);

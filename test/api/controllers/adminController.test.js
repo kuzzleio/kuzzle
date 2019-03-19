@@ -27,15 +27,9 @@ describe('Test: admin controller', () => {
     request.input.args.refresh = 'wait_for';
   });
 
-  describe('#base', () => {
+  describe('#constructor', () => {
     it('should inherit the base constructor', () => {
       should(adminController).instanceOf(BaseController);
-    });
-
-    it('should properly override the isAction method', () => {
-      adminController._foobar = () => {};
-      should(adminController.isAction('dump')).be.true();
-      should(adminController.isAction('_foobar')).be.false();
     });
   });
 
@@ -232,4 +226,51 @@ describe('Test: admin controller', () => {
     });
   });
 
+  describe('#loadMappings', () => {
+    beforeEach(() => {
+      request.input.action = 'loadMappings';
+      request.input.body = { city: { seventeen: {} } };
+    });
+
+    it('should call Janitor.loadMappings', () => {
+      return adminController.loadMappings(request)
+        .then(() => {
+          should(kuzzle.janitor.loadMappings)
+            .be.calledOnce()
+            .be.calledWith({ city: { seventeen: {} } });
+        });
+    });
+  });
+
+  describe('#loadFixtures', () => {
+    beforeEach(() => {
+      request.input.action = 'loadFixtures';
+      request.input.body = { city: { seventeen: [] } };
+    });
+
+    it('should call Janitor.loadFixtures', () => {
+      return adminController.loadFixtures(request)
+        .then(() => {
+          should(kuzzle.janitor.loadFixtures)
+            .be.calledOnce()
+            .be.calledWith({ city: { seventeen: [] } });
+        });
+    });
+  });
+
+  describe('#loadSecurities', () => {
+    beforeEach(() => {
+      request.input.action = 'loadSecurities';
+      request.input.body = { gordon: { freeman: [] } };
+    });
+
+    it('should call Janitor.loadSecurities', () => {
+      return adminController.loadSecurities(request)
+        .then(() => {
+          should(kuzzle.janitor.loadSecurities)
+            .be.calledOnce()
+            .be.calledWith({ gordon: { freeman: [] } });
+        });
+    });
+  });
 });
