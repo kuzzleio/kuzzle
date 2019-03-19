@@ -3,13 +3,13 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Request = require('kuzzle-common-objects').Request,
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  ControllerMock = require('../../../mocks/controller.mock'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   {
-    InternalError: KuzzleInternalError,
-    BadRequestError
-  } = require('kuzzle-common-objects').errors;
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects');
 
 describe('funnelController.executePluginRequest', () => {
   let
@@ -20,7 +20,7 @@ describe('funnelController.executePluginRequest', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
-    funnel.controllers.testme = {action: sinon.stub()};
+    funnel.controllers.testme = new ControllerMock(kuzzle);
     originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
   });
@@ -38,15 +38,15 @@ describe('funnelController.executePluginRequest', () => {
   });
 
   it('should execute the request', () => {
-    const
-      rq = new Request({controller: 'testme', action: 'action'}),
-      result = {foo: 'bar'};
-
-    funnel.controllers.testme.action.callsFake(() => Promise.resolve(result));
+    const rq = new Request({controller: 'testme', action: 'succeed'});
 
     return funnel.executePluginRequest(rq)
       .then(res => {
-        should(res).be.equal(result);
+        should(funnel.controllers.testme.succeed)
+          .calledOnce()
+          .calledWith(rq);
+
+        should(res).equal(rq);
       });
   });
 
@@ -55,24 +55,24 @@ describe('funnelController.executePluginRequest', () => {
     kuzzle.adminController.dump = sinon.stub();
     kuzzle.config.dump.enabled = true;
 
-    const
-      rq = new Request({controller: 'testme', action: 'action'}),
-      error = new KuzzleInternalError('foo\nbar');
-
-    funnel.controllers.testme.action.rejects(error);
+    const rq = new Request({controller: 'testme', action: 'fail'});
 
     const callback = () => {
       setTimeout(() => {
-        should(kuzzle.pluginsManager.trigger).be.called();
-        should(kuzzle.adminController.dump).be.called();
-        done();
+        try {
+          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.adminController.dump).be.called();
+          done();
+        } catch (e) {
+          done(e);
+        }
       }, 50);
     };
 
     funnel.executePluginRequest(rq)
-      .then(() => done(new Error('Should not resolves')))
+      .then(() => done(new Error('Should not resolve')))
       .catch (e => {
-        if (e instanceof KuzzleInternalError) {
+        if (e === funnel.controllers.testme.failResult) {
           return callback();
         }
         done(e);
@@ -84,23 +84,23 @@ describe('funnelController.executePluginRequest', () => {
     kuzzle.adminController.dump = sinon.stub();
     kuzzle.config.dump.enabled = false;
 
-    const
-      rq = new Request({controller: 'testme', action: 'action'}),
-      error = new KuzzleInternalError('foo\nbar');
-
-    funnel.controllers.testme.action.rejects(error);
+    const rq = new Request({controller: 'testme', action: 'fail'});
 
     const callback = () => {
       setTimeout(() => {
-        should(kuzzle.adminController.dump).not.be.called();
-        done();
+        try {
+          should(kuzzle.adminController.dump).not.be.called();
+          done();
+        } catch(e) {
+          done(e);
+        }
       }, 50);
     };
 
     funnel.executePluginRequest(rq)
-      .then(() => done(new Error('Should not resolves')))
+      .then(() => done(new Error('Should not resolve')))
       .catch (e => {
-        if (e instanceof KuzzleInternalError) {
+        if (e === funnel.controllers.testme.failResult) {
           return callback();
         }
         done(e);
