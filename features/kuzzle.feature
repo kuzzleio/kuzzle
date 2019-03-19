@@ -380,17 +380,6 @@ Feature: Kuzzle functional tests
     And The token is invalid
 
   @security
-  Scenario: user token deletion
-    Given I create a user "useradmin" with id "useradmin-id"
-    When I log in as useradmin:testpwd expiring in 1h
-    Then I write the document
-    Then I check the JWT Token
-    And The token is valid
-    Then I delete the user "useradmin-id"
-    Then I check the JWT Token
-    And The token is invalid
-
-  @security
   Scenario: refresh token
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
@@ -402,7 +391,16 @@ Feature: Kuzzle functional tests
     And The token is valid
     Then I logout
 
-
+  @security
+  Scenario: user token deletion
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I write the document
+    Then I check the JWT Token
+    And The token is valid
+    Then I delete the user "useradmin-id"
+    Then I check the JWT Token
+    And The token is invalid
 
   @security
   Scenario: create restricted user
