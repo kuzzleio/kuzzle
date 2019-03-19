@@ -391,6 +391,20 @@ Feature: Kuzzle functional tests
     And The token is invalid
 
   @security
+  Scenario: refresh token
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I write the document
+    Then I check the JWT Token
+    And The token is valid
+    Then I refresh the JWT Token
+    And I check the JWT Token
+    And The token is valid
+    Then I logout
+
+
+
+  @security
   Scenario: create restricted user
     Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
 
