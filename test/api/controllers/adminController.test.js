@@ -27,15 +27,9 @@ describe('Test: admin controller', () => {
     request.input.args.refresh = 'wait_for';
   });
 
-  describe('#base', () => {
+  describe('#constructor', () => {
     it('should inherit the base constructor', () => {
       should(adminController).instanceOf(BaseController);
-    });
-
-    it('should properly override the isAction method', () => {
-      adminController._foobar = () => {};
-      should(adminController.isAction('dump')).be.true();
-      should(adminController.isAction('_foobar')).be.false();
     });
   });
 

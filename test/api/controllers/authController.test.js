@@ -45,15 +45,9 @@ describe('Test the auth controller', () => {
     authController = new AuthController(kuzzle);
   });
 
-  describe('#base', () => {
+  describe('#constructor', () => {
     it('should inherit the base constructor', () => {
       should(authController).instanceOf(BaseController);
-    });
-
-    it('should properly override the isAction method', () => {
-      authController._foobar = () => {};
-      should(authController.isAction('login')).be.true();
-      should(authController.isAction('_foobar')).be.false();
     });
   });
 

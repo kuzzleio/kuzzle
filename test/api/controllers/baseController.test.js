@@ -1,11 +1,6 @@
 const
   should = require('should'),
-  BaseController = require('../../../lib/api/controllers/controller'),
-  {
-    errors: {
-      InternalError: KuzzleInternalError
-    }
-  } = require('kuzzle-common-objects');
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('#base controller', () => {
   it('should expose a kuzzle property', () => {
@@ -14,11 +9,13 @@ describe('#base controller', () => {
     should(base).have.properties({kuzzle: 'foobar'});
   });
 
-  it('should throw if the isAction method has not been overridden', () => {
-    const base = new BaseController();
+  it('should initialize its actions list from the constructor', () => {
+    const base = new BaseController('foobar', ['foo', 'bar']);
 
-    should(() => base.isAction('foo')).throw(
-      KuzzleInternalError,
-      {message: 'Call to incomplete controller when invoking the action foo'});
+    base.qux = () => {};
+
+    should(base.isAction('foo')).be.true();
+    should(base.isAction('bar')).be.true();
+    should(base.isAction('qux')).be.false();
   });
 });
