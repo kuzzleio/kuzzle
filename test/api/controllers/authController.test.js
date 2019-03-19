@@ -254,7 +254,7 @@ describe('Test the auth controller', () => {
 
   describe('#refreshToken', () => {
     it('should throw if the user is not authenticated', () => {
-      return should(() => authController.refresh(new Request(
+      return should(() => authController.refreshToken(new Request(
         {},
         {token: {userId: 'anonymous', _id: '-1'}, user: {_id: '-1'}}
       )))
@@ -284,7 +284,7 @@ describe('Test the auth controller', () => {
         }
       );
 
-      return authController.refresh(req)
+      return authController.refreshToken(req)
         .then(response => {
           should(response).eql({
             _id: 'userId',
