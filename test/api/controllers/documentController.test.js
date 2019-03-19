@@ -35,15 +35,9 @@ describe('Test: document controller', () => {
     });
   });
 
-  describe('#base', () => {
+  describe('#constructor', () => {
     it('should inherit the base constructor', () => {
       should(documentController).instanceOf(BaseController);
-    });
-
-    it('should properly override the isAction method', () => {
-      documentController._foobar = () => {};
-      should(documentController.isAction('create')).be.true();
-      should(documentController.isAction('_foobar')).be.false();
     });
   });
 
