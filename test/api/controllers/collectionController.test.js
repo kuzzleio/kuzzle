@@ -36,9 +36,15 @@ describe('Test: collection controller', () => {
     request = new Request(data);
   });
 
-  describe('#constructor', () => {
+  describe('#base', () => {
     it('should inherit the base constructor', () => {
       should(collectionController).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      collectionController._foobar = () => {};
+      should(collectionController.isAction('list')).be.true();
+      should(collectionController.isAction('_foobar')).be.false();
     });
   });
 

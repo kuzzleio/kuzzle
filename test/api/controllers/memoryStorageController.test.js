@@ -124,6 +124,12 @@ describe('Test: memoryStorage controller', () => {
     it('should inherit the base constructor', () => {
       should(msController).instanceOf(BaseController);
     });
+
+    it('should properly override the isAction method', () => {
+      msController._foobar = () => {};
+      should(msController.isAction('flushdb')).be.true();
+      should(msController.isAction('_foobar')).be.false();
+    });
   });
 
   describe('#extractArgumentsFromRequest', () => {

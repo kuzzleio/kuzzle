@@ -30,9 +30,15 @@ describe('Test: index controller', () => {
     request = new Request(data);
   });
 
-  describe('#constructor', () => {
+  describe('#base', () => {
     it('should inherit the base constructor', () => {
       should(indexController).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      indexController._foobar = () => {};
+      should(indexController.isAction('list')).be.true();
+      should(indexController.isAction('_foobar')).be.false();
     });
   });
 

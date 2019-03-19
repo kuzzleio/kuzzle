@@ -22,9 +22,15 @@ describe('Test the bulk controller', () => {
     controller = new BulkController(kuzzle);
   });
 
-  describe('#constructor', () => {
+  describe('#base', () => {
     it('should inherit the base constructor', () => {
       should(controller).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      controller._foobar = () => {};
+      should(controller.isAction('import')).be.true();
+      should(controller.isAction('_foobar')).be.false();
     });
   });
 

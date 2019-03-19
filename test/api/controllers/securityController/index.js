@@ -32,6 +32,14 @@ describe('/api/controllers/security', () => {
     it('should inherit the base constructor', () => {
       should(new SecurityController(kuzzle)).instanceOf(BaseController);
     });
+
+    it('should properly override the isAction method', () => {
+      const securityController = new SecurityController(kuzzle);
+
+      securityController._foobar = () => {};
+      should(securityController.isAction('createUser')).be.true();
+      should(securityController.isAction('_foobar')).be.false();
+    });
   });
 
   describe('#mDelete', () => {

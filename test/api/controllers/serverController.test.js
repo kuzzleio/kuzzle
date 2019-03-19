@@ -28,9 +28,15 @@ describe('Test: server controller', () => {
     request = new Request(data);
   });
 
-  describe('#constructor', () => {
+  describe('#base', () => {
     it('should inherit the base constructor', () => {
       should(serverController).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      serverController._foobar = () => {};
+      should(serverController.isAction('info')).be.true();
+      should(serverController.isAction('_foobar')).be.false();
     });
   });
 

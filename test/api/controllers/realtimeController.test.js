@@ -29,9 +29,15 @@ describe('Test: subscribe controller', () => {
     kuzzle.repositories.user.anonymous = sinon.stub();
   });
 
-  describe('#constructor', () => {
+  describe('#base', () => {
     it('should inherit the base constructor', () => {
       should(realtimeController).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      realtimeController._foobar = () => {};
+      should(realtimeController.isAction('subscribe')).be.true();
+      should(realtimeController.isAction('_foobar')).be.false();
     });
   });
 
