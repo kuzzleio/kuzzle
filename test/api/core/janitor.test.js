@@ -37,32 +37,17 @@ describe('Test: core/janitor', () => {
   });
 
   describe('#loadSecurities', () => {
-    let
-      fsStub;
-
     const
       securities = require('../../mocks/securities.json');
 
-    afterEach(() => {
-      mockrequire.stopAll();
-    });
-
     beforeEach(() => {
-      fsStub = {
-        readFile: sinon.stub()
-      };
-
-      mockrequire('fs-extra', fsStub);
-
       Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
-      janitor = new Janitor(kuzzle);
     });
 
     it('create or replace roles', done => {
-      fsStub.readFile.yields(null, JSON.stringify({ roles: securities.roles }));
       kuzzle.funnel.processRequest.resolves(true);
 
-      janitor.loadSecurities('path')
+      janitor.loadSecurities({ roles: securities.roles })
         .then(() => {
           should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
@@ -78,10 +63,9 @@ describe('Test: core/janitor', () => {
     });
 
     it('create or replace profiles', done => {
-      fsStub.readFile.yields(null, JSON.stringify({ profiles: securities.profiles }));
       kuzzle.funnel.processRequest.resolves(true);
 
-      janitor.loadSecurities('path')
+      janitor.loadSecurities({ profiles: securities.profiles })
         .then(() => {
           should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
@@ -97,10 +81,9 @@ describe('Test: core/janitor', () => {
     });
 
     it('delete then create users', done => {
-      fsStub.readFile.yields(null, JSON.stringify({ users: securities.users }));
       kuzzle.funnel.processRequest.resolves(true);
 
-      janitor.loadSecurities('path')
+      janitor.loadSecurities({ users: securities.users })
         .then(() => {
           should(kuzzle.funnel.processRequest.callCount).be.eql(3);
 
@@ -121,35 +104,20 @@ describe('Test: core/janitor', () => {
   });
 
   describe('#loadFixtures', () => {
-    let
-      fsStub;
-
     const
       fixtures = require('../../mocks/fixtures.json');
 
-    afterEach(() => {
-      mockrequire.stopAll();
-    });
-
     beforeEach(() => {
-      fsStub = {
-        readFile: sinon.stub()
-      };
-
-      mockrequire('fs-extra', fsStub);
-
-      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
       janitor = new Janitor(kuzzle);
     });
 
     it('create index and collection that does not exists', done => {
-      fsStub.readFile.yields(null, JSON.stringify(fixtures));
       const storageEngine = kuzzle.services.list.storageEngine;
       storageEngine.import.onCall(0).resolves(false);
       storageEngine.import.onCall(1).resolves(true);
       storageEngine.import.onCall(2).resolves(false);
 
-      janitor.loadFixtures('path')
+      janitor.loadFixtures(fixtures)
         .then(() => {
           should(storageEngine.import.callCount).be.eql(3);
           should(storageEngine.import.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
@@ -167,35 +135,20 @@ describe('Test: core/janitor', () => {
   });
 
   describe('#loadMappings', () => {
-    let
-      fsStub;
-
     const
       mappings = require('../../mocks/mappings.json');
 
-    afterEach(() => {
-      mockrequire.stopAll();
-    });
-
     beforeEach(() => {
-      fsStub = {
-        readFile: sinon.stub()
-      };
-
-      mockrequire('fs-extra', fsStub);
-
-      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
       janitor = new Janitor(kuzzle);
     });
 
     it('create index and collection that does not exists', done => {
-      fsStub.readFile.yields(null, JSON.stringify(mappings));
       const storageEngine = kuzzle.services.list.storageEngine;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);
 
-      janitor.loadMappings('path')
+      janitor.loadMappings(mappings)
         .then(() => {
           should(storageEngine.indexExists.callCount).be.eql(3);
           should(storageEngine.createIndex.callCount).be.eql(2);
