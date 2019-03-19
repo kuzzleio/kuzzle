@@ -5,8 +5,11 @@ const
   rewire = require('rewire'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   RedisClientMock = require('../../mocks/services/redisClient.mock'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Request = require('kuzzle-common-objects').Request,
+  BaseController = require('../../../lib/api/controllers/controller'),
+  {
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects'),
   MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js');
 
 describe('Test: memoryStorage controller', () => {
@@ -116,6 +119,10 @@ describe('Test: memoryStorage controller', () => {
       allowed.forEach(command => {
         should(msController[command]).be.a.Function();
       });
+    });
+
+    it('should inherit the base constructor', () => {
+      should(msController).instanceOf(BaseController);
     });
   });
 

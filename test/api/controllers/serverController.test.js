@@ -1,8 +1,11 @@
 const
   should = require('should'),
   ServerController = require('../../../lib/api/controllers/serverController'),
-  Request = require('kuzzle-common-objects').Request,
-  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
+  {
+    Request,
+    errors: { ServiceUnavailableError }
+  } = require('kuzzle-common-objects'),
+  BaseController = require('../../../lib/api/controllers/controller'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: server controller', () => {
@@ -23,6 +26,12 @@ describe('Test: server controller', () => {
     kuzzle = new KuzzleMock();
     serverController = new ServerController(kuzzle);
     request = new Request(data);
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(serverController).instanceOf(BaseController);
+    });
   });
 
   describe('#getStats', () => {

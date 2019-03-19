@@ -3,18 +3,20 @@ const
   should = require('should'),
   jwt = require('jsonwebtoken'),
   Bluebird = require('bluebird'),
-  /** @type KuzzleConfiguration */
   AuthController = require('../../../lib/api/controllers/authController'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   Token = require('../../../lib/api/core/models/security/token'),
   User = require('../../../lib/api/core/models/security/user'),
   {
-    UnauthorizedError,
-    BadRequestError,
-    InternalError: KuzzleInternalError,
-    PluginImplementationError
-  } = require('kuzzle-common-objects').errors;
+    Request,
+    errors: {
+      UnauthorizedError,
+      BadRequestError,
+      InternalError: KuzzleInternalError,
+      PluginImplementationError
+    }
+  } = require('kuzzle-common-objects'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test the auth controller', () => {
   let
@@ -41,6 +43,12 @@ describe('Test the auth controller', () => {
     });
 
     authController = new AuthController(kuzzle);
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(authController).instanceOf(BaseController);
+    });
   });
 
   describe('#login', () => {
