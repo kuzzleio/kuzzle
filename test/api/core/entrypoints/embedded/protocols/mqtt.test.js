@@ -10,33 +10,32 @@ const
 
 describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   const moscaOnMock = sinon.stub();
-  moscaOnMock
-    .withArgs('ready')
-    .yields();
-
   const moscaMock = function (config) {
     this.config = config;
     this.on = moscaOnMock;
     this.publish = sinon.spy();
   };
 
-  mockrequire('mosca', {
-    Server: moscaMock
-  });
-  const MqttProtocol = mockrequire.reRequire('../../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt');
-
   let
-    clock,
     entrypoint,
     kuzzle,
-    protocol;
+    protocol,
+    MqttProtocol;
 
   before(() => {
-    clock = sinon.useFakeTimers();
+    moscaOnMock
+      .withArgs('ready')
+      .yields();
+
+    mockrequire('mosca', {
+      Server: moscaMock
+    });
+
+    MqttProtocol = mockrequire.reRequire('../../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt');
   });
 
   after(() => {
-    clock.restore();
+    mockrequire.stopAll();
   });
 
   beforeEach(() => {
@@ -101,7 +100,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
           .be.calledOnce()
           .be.calledWith('packet', 'client');
       }
-
     });
   });
 
@@ -279,7 +277,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
     });
 
     it('should remove the connection', () => {
-      const client = {};
+      const
+        clock = sinon.useFakeTimers(),
+        client = {};
 
       protocol.connections.set(client, {id: 'id'});
       protocol.connectionsById = {
@@ -292,6 +292,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
       should(entrypoint.removeConnection)
         .be.calledOnce()
         .be.calledWith('id');
+
+      clock.restore();
     });
 
   });
