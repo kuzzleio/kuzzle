@@ -1,9 +1,12 @@
 const
   should = require('should'),
   BulkController = require('../../../lib/api/controllers/bulkController'),
-  Request = require('kuzzle-common-objects').Request,
-  PartialError = require('kuzzle-common-objects').errors.PartialError,
-  KuzzleMock = require('../../mocks/kuzzle.mock');
+  {
+    Request,
+    errors: { PartialError }
+  } = require('kuzzle-common-objects'),
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test the bulk controller', () => {
   let
@@ -17,6 +20,18 @@ describe('Test the bulk controller', () => {
     kuzzle = new KuzzleMock();
     stub = kuzzle.services.list.storageEngine.import;
     controller = new BulkController(kuzzle);
+  });
+
+  describe('#base', () => {
+    it('should inherit the base constructor', () => {
+      should(controller).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      controller._foobar = () => {};
+      should(controller.isAction('import')).be.true();
+      should(controller.isAction('_foobar')).be.false();
+    });
   });
 
   it('should trigger the proper methods and resolve to a valid response', () => {

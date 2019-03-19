@@ -3,18 +3,20 @@ const
   should = require('should'),
   jwt = require('jsonwebtoken'),
   Bluebird = require('bluebird'),
-  /** @type KuzzleConfiguration */
   AuthController = require('../../../lib/api/controllers/authController'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   Token = require('../../../lib/api/core/models/security/token'),
   User = require('../../../lib/api/core/models/security/user'),
   {
-    UnauthorizedError,
-    BadRequestError,
-    InternalError: KuzzleInternalError,
-    PluginImplementationError
-  } = require('kuzzle-common-objects').errors;
+    Request,
+    errors: {
+      UnauthorizedError,
+      BadRequestError,
+      InternalError: KuzzleInternalError,
+      PluginImplementationError
+    }
+  } = require('kuzzle-common-objects'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test the auth controller', () => {
   let
@@ -44,6 +46,20 @@ describe('Test the auth controller', () => {
     });
 
     authController = new AuthController(kuzzle);
+
+    return authController.init();
+  });
+
+  describe('#base', () => {
+    it('should inherit the base constructor', () => {
+      should(authController).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      authController._foobar = () => {};
+      should(authController.isAction('login')).be.true();
+      should(authController.isAction('_foobar')).be.false();
+    });
   });
 
   afterEach(() => {
@@ -346,9 +362,13 @@ describe('Test the auth controller', () => {
     });
 
     it('should throw an error if current user is anonymous', () => {
-      should(() => {
-        authController.updateSelf(new Request({body: {foo: 'bar'}}, {token: {userId: '-1'}, user: {_id: '-1'}}));
-      }).throw(UnauthorizedError);
+      const r = new Request(
+        { body: {foo: 'bar'} },
+        { token: {userId: '-1'}, user: {_id: '-1'} });
+
+      should(() => authController.updateSelf(r)).throw(
+        UnauthorizedError,
+        {message: 'You must be authenticated to execute that action'});
     });
   });
 

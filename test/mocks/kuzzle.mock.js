@@ -51,24 +51,13 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.funnel = {
-      controllers: {
-        server: {
-          adminExists: this.sandbox.stub(),
-        },
-        security: {
-          createFirstAdmin: sinon.spy(),
-          deleteUser: sinon.spy(),
-          deleteProfile: sinon.spy(),
-          deleteRole: sinon.spy()
-        }
-      },
-      pluginsControllers: {
-      },
+      controllers: {},
+      pluginsControllers: {},
       init: this.sandbox.spy(),
       loadPluginControllers: this.sandbox.spy(),
       getRequestSlot: this.sandbox.stub().returns(true),
       handleErrorDump: this.sandbox.spy(),
-      execute: this.sandbox.spy(),
+      execute: this.sandbox.stub(),
       mExecute: this.sandbox.stub(),
       processRequest: this.sandbox.stub().resolves(),
       checkRights: this.sandbox.stub(),
@@ -218,7 +207,11 @@ class KuzzleMock extends Kuzzle {
         truncate: sinon.stub().resolves()
       },
       user: {
-        anonymous: this.sandbox.stub().returns({_id: '-1'}),
+        anonymous: this.sandbox.stub().resolves({
+          _id: '-1',
+          name: 'Anonymous',
+          profileIds: ['anonymous']
+        }),
         delete: this.sandbox.stub().usingPromise(Bluebird).resolves(),
         fromDTO: this.sandbox.stub().resolves(),
         load: this.sandbox.stub().resolves(foo),

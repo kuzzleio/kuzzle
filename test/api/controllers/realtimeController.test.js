@@ -3,8 +3,11 @@ const
   sinon = require('sinon'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   RealtimeController = require('../../../lib/api/controllers/realtimeController'),
-  Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError;
+  {
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test: subscribe controller', () => {
   let
@@ -16,8 +19,26 @@ describe('Test: subscribe controller', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     realtimeController = new RealtimeController(kuzzle);
-    request = new Request({index: 'test', collection: 'collection', controller: 'realtime', body: {}}, {user: {_id: '42'}});
+    request = new Request({
+      index: 'test',
+      collection: 'collection',
+      controller: 'realtime',
+      body: {}
+    }, {user: {_id: '42'}});
+
     kuzzle.repositories.user.anonymous = sinon.stub();
+  });
+
+  describe('#base', () => {
+    it('should inherit the base constructor', () => {
+      should(realtimeController).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      realtimeController._foobar = () => {};
+      should(realtimeController.isAction('subscribe')).be.true();
+      should(realtimeController.isAction('_foobar')).be.false();
+    });
   });
 
   describe('#subscribe', () => {

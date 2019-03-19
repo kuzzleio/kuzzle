@@ -3,12 +3,15 @@ const
   should = require('should'),
   sinon = require('sinon'),
   {
-    BadRequestError,
-    PreconditionError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      BadRequestError,
+      PreconditionError
+    }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
-  AdminController = rewire('../../../lib/api/controllers/adminController');
+  AdminController = rewire('../../../lib/api/controllers/adminController'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test: admin controller', () => {
   let
@@ -22,6 +25,18 @@ describe('Test: admin controller', () => {
     adminController = new AdminController(kuzzle);
     request = new Request({ controller: 'admin' });
     request.input.args.refresh = 'wait_for';
+  });
+
+  describe('#base', () => {
+    it('should inherit the base constructor', () => {
+      should(adminController).instanceOf(BaseController);
+    });
+
+    it('should properly override the isAction method', () => {
+      adminController._foobar = () => {};
+      should(adminController.isAction('dump')).be.true();
+      should(adminController.isAction('_foobar')).be.false();
+    });
   });
 
   describe('#resetCache', () => {
