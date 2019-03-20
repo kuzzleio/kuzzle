@@ -364,7 +364,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should replace the old token with the new one', () => {
-      const newT = new Token({_id: '...I got better'})
+      const newT = new Token({_id: '...I got better'});
       tokenManager.refresh(token, newT);
 
       should(tokenManager.tokens.array).have.length(1);
