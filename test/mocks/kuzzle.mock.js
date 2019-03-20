@@ -98,7 +98,10 @@ class KuzzleMock extends Kuzzle {
 
     this.janitor = {
       dump: sinon.stub().resolves(),
-      shutdown: sinon.stub()
+      shutdown: sinon.stub(),
+      loadMappings: sinon.stub().resolves(),
+      loadFixtures: sinon.stub().resolves(),
+      loadSecurities: sinon.stub().resolves()
     };
 
     this.indexCache = {
