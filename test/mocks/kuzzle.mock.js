@@ -232,7 +232,8 @@ class KuzzleMock extends Kuzzle {
         generateToken: this.sandbox.stub().resolves({}),
         expire: this.sandbox.stub().resolves(),
         deleteByUserId: this.sandbox.stub().resolves(),
-        truncate: sinon.stub().resolves()
+        truncate: sinon.stub().resolves(),
+        persistToCache: sinon.stub().resolves()
       }
     };
 
@@ -335,7 +336,8 @@ class KuzzleMock extends Kuzzle {
     this.tokenManager = {
       link: this.sandbox.stub(),
       unlink: this.sandbox.stub(),
-      expire: this.sandbox.stub()
+      expire: this.sandbox.stub(),
+      refresh: this.sandbox.stub()
     };
 
     this.validation = {

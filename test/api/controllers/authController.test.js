@@ -268,17 +268,32 @@ describe('Test the auth controller', () => {
         {},
         {token: {userId: 'anonymous', _id: '-1'}, user: {_id: '-1'}}
       )))
-        .throw(UnauthorizedError);
+        .throw(
+          UnauthorizedError,
+          {message: 'You must be authenticated to execute that action'});
     });
 
-    it('should provide a new jwt and expire current one after the grace period', () => {
-      kuzzle.repositories.token.generateToken.resolves({
+    it('should throw if the token has already been refreshed', () => {
+      return should(() => authController.refreshToken(new Request(
+        {},
+        {
+          token: {userId: 'foo', _id: 'bar', refreshed: true},
+          user: {_id: 'bar'}
+        }
+      )))
+        .throw(UnauthorizedError, {message: 'Invalid token'});
+    });
+
+    it('should provide a new jwt and expire the current one after the grace period', () => {
+      const newToken = {
         _id: '_id',
         jwt: 'new-token',
         userId: 'userId',
         ttl: 'ttl',
         expiresAt: 42
-      });
+      };
+
+      kuzzle.repositories.token.generateToken.resolves(newToken);
 
       const req = new Request(
         { expiresIn: '42h' },
@@ -286,7 +301,8 @@ describe('Test the auth controller', () => {
           token: {
             userId: 'user',
             _id: '_id',
-            jwt: 'jwt'
+            jwt: 'jwt',
+            refreshed: false
           },
           user: {
             _id: 'user'
@@ -303,6 +319,13 @@ describe('Test the auth controller', () => {
             ttl: 'ttl'
           });
 
+          should(req.context.token.refreshed).be.true();
+
+          should(kuzzle.repositories.token.persistToCache)
+            .be.calledWith(
+              req.context.token,
+              {ttl: kuzzle.config.security.jwt.gracePeriod / 1000});
+
           should(kuzzle.repositories.token.generateToken)
             .be.calledWith(
               { _id: 'user' },
@@ -310,14 +333,8 @@ describe('Test the auth controller', () => {
               { expiresIn: '42h' }
             );
 
-          should(kuzzle.repositories.token.expire)
-            .not.be.called();
-
-          clock.tick(kuzzle.config.security.jwt.gracePeriod);
-
-          should(kuzzle.repositories.token.expire)
-            .be.calledOnce()
-            .be.calledWith('jwt');
+          should(kuzzle.tokenManager.refresh)
+            .calledWith(req.context.token, newToken);
         });
     });
 
