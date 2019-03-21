@@ -11,7 +11,8 @@ const
       PreconditionError
     }
   } = require('kuzzle-common-objects'),
-  KuzzleMock = require('../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test: collection controller', () => {
   let
@@ -33,6 +34,12 @@ describe('Test: collection controller', () => {
     engine = kuzzle.services.list.storageEngine;
     collectionController = new CollectionController(kuzzle);
     request = new Request(data);
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(collectionController).instanceOf(BaseController);
+    });
   });
 
   describe('#updateMapping', () => {

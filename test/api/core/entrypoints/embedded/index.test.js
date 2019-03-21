@@ -60,6 +60,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/http', initStub);
     mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/websocket', initStub);
     mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/socketio', initStub);
+    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt', initStub);
 
     mockrequire('http', httpMock);
     mockrequire('winston', {
@@ -120,6 +121,10 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     }
   });
 
+  after(() => {
+    mockrequire.stopAll();
+  });
+
   describe('#dispatch', () => {
     it('should call _notify', () => {
       const data = {foo: 'bar'};
@@ -151,7 +156,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
   describe('#execute', () => {
     it('should call the funnel and log the response', (done) => {
-      kuzzle.funnel.execute = (request, cb) => cb(null, request);
+      kuzzle.funnel.execute.callsFake((request, cb) => cb(null, request));
       entrypoint.logAccess = sinon.spy();
 
       const request = new Request({});
@@ -173,7 +178,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
     it('should try to return an error if one received without any response', (done) => {
       const error = new KuzzleInternalError('test');
-      kuzzle.funnel.execute = (request, cb) => cb(error, request);
+      kuzzle.funnel.execute.callsFake((request, cb) => cb(error, request));
 
       const request = new Request({});
       entrypoint.execute(request, response => {
