@@ -20,15 +20,12 @@ const
 
 describe('Test the auth controller', () => {
   let
-    clock,
     request,
     kuzzle,
     user,
     authController;
 
   beforeEach(() => {
-    clock = sinon.useFakeTimers();
-
     kuzzle = new KuzzleMock();
     kuzzle.config.security.jwt.secret = 'test-secret';
 
@@ -56,8 +53,10 @@ describe('Test the auth controller', () => {
     });
   });
 
-  afterEach(() => {
-    clock.restore();
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(authController).instanceOf(BaseController);
+    });
   });
 
   describe('#login', () => {
