@@ -43,6 +43,14 @@ describe('Test the auth controller', () => {
     });
 
     authController = new AuthController(kuzzle);
+
+    return authController.init();
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(authController).instanceOf(BaseController);
+    });
   });
 
   describe('#constructor', () => {
@@ -286,9 +294,13 @@ describe('Test the auth controller', () => {
     });
 
     it('should throw an error if current user is anonymous', () => {
-      should(() => {
-        authController.updateSelf(new Request({body: {foo: 'bar'}}, {token: {userId: '-1'}, user: {_id: '-1'}}));
-      }).throw(UnauthorizedError);
+      const r = new Request(
+        { body: {foo: 'bar'} },
+        { token: {userId: '-1'}, user: {_id: '-1'} });
+
+      should(() => authController.updateSelf(r)).throw(
+        UnauthorizedError,
+        {message: 'You must be authenticated to execute that action'});
     });
   });
 
