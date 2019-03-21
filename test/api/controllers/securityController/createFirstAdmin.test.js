@@ -17,6 +17,11 @@ describe('Test: security controller - createFirstAdmin', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     adminController = new SecurityController(kuzzle);
+    kuzzle.funnel.controllers = {
+      server: {
+        adminExists: sinon.stub()
+      }
+    };
   });
 
   describe('#createFirstAdmin', () => {
