@@ -53,6 +53,12 @@ describe('Test the auth controller', () => {
     });
   });
 
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(authController).instanceOf(BaseController);
+    });
+  });
+
   describe('#login', () => {
     it('should resolve to a valid jwt token if authentication succeed', () => {
       const token = new Token({
