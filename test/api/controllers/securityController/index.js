@@ -6,14 +6,17 @@ const
   Bluebird = require('bluebird'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
+  BaseController = require('../../../../lib/api/controllers/controller'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController'),
   {
-    BadRequestError,
-    ServiceUnavailableError,
-    InternalError: KuzzleInternalError,
-    PartialError
-  } = require('kuzzle-common-objects').errors;
+    Request,
+    errors: {
+      BadRequestError,
+      ServiceUnavailableError,
+      InternalError: KuzzleInternalError,
+      PartialError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('/api/controllers/security', () => {
   let
@@ -23,6 +26,12 @@ describe('/api/controllers/security', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnelController = new FunnelController(kuzzle);
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(new SecurityController(kuzzle)).instanceOf(BaseController);
+    });
   });
 
   describe('#mDelete', () => {

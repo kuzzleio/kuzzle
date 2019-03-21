@@ -5,13 +5,16 @@ const
   sinon = require('sinon'),
   Bluebird = require('bluebird'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   DocumentController = require('../../../lib/api/controllers/documentController'),
   {
-    InternalError: KuzzleInternalError,
-    NotFoundError,
-    PartialError
-  } = require('kuzzle-common-objects').errors;
+    Request,
+    errors: {
+      InternalError: KuzzleInternalError,
+      NotFoundError,
+      PartialError
+    }
+  } = require('kuzzle-common-objects'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test: document controller', () => {
   const foo = {foo: 'bar'};
@@ -25,7 +28,17 @@ describe('Test: document controller', () => {
     kuzzle = new KuzzleMock();
     engine = kuzzle.services.list.storageEngine;
     documentController = new DocumentController(kuzzle);
-    request = new Request({controller: 'document', index: '%test', collection: 'unit-test-documentController'});
+    request = new Request({
+      controller: 'document',
+      index: '%test',
+      collection: 'unit-test-documentController'
+    });
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(documentController).instanceOf(BaseController);
+    });
   });
 
   describe('#search', () => {
