@@ -69,7 +69,7 @@ describe('InternalEngine', () => {
 
       return kuzzle.internalEngine.search('collection', {
         query: 'query',
-        aggs: 'aggs',
+        aggregations: 'aggregations',
         highlight: 'highlight',
         ignored: true
       })
@@ -79,7 +79,7 @@ describe('InternalEngine', () => {
           should(req).eql({
             type: 'collection',
             body: {
-              aggs: 'aggs',
+              aggregations: 'aggregations',
               query: 'query',
               highlight: 'highlight'
             },
