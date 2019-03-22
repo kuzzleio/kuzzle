@@ -210,7 +210,11 @@ class KuzzleMock extends Kuzzle {
         truncate: sinon.stub().resolves()
       },
       user: {
-        anonymous: this.sandbox.stub().returns({_id: '-1'}),
+        anonymous: this.sandbox.stub().resolves({
+          _id: '-1',
+          name: 'Anonymous',
+          profileIds: ['anonymous']
+        }),
         delete: this.sandbox.stub().usingPromise(Bluebird).resolves(),
         fromDTO: this.sandbox.stub().resolves(),
         load: this.sandbox.stub().resolves(foo),
