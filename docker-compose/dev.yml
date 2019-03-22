@@ -24,6 +24,8 @@ services:
       - "./config/pm2-dev.json:/config/pm2.json"
     cap_add:
       - SYS_PTRACE
+    ulimits:
+      nofile: 65536
     sysctls:
       - net.core.somaxconn=8192
     depends_on:

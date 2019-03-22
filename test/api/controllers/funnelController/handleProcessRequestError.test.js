@@ -3,10 +3,15 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Request = require('kuzzle-common-objects').Request,
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  {BadRequestError, PluginImplementationError} = require('kuzzle-common-objects').errors;
+  {
+    Request,
+    errors: {
+      BadRequestError,
+      PluginImplementationError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('funnelController.processRequest', () => {
   let
@@ -35,8 +40,8 @@ describe('funnelController.processRequest', () => {
       return Promise.resolve(req);
     });
 
-    funnel.handleProcessRequestError(request, request, funnel.pluginsControllers, originalError)
-      .then(() => done('Expected test to fail'))
+    funnel.handleProcessRequestError(request, request, originalError)
+      .then(() => done(new Error('Expected test to fail')))
       .catch(e => {
         try {
           should(e).be.instanceOf(BadRequestError);
@@ -60,18 +65,16 @@ describe('funnelController.processRequest', () => {
 
     kuzzle.pluginsManager.trigger = sinon.stub();
     kuzzle.pluginsManager.trigger.onFirstCall().rejects(originalError);
-    kuzzle.pluginsManager.trigger.onSecondCall().callsFake(() => Promise.resolve().then(() => {
-      throw customError;
-    }));
+    kuzzle.pluginsManager.trigger.onSecondCall().callsFake(
+      () => Promise.resolve().then(() => {
+        throw customError;
+      }));
 
-    return should(
-      funnel.handleProcessRequestError(
-        request,
-        request,
-        funnel.pluginsControllers,
-        originalError
-      )
-    ).rejectedWith(PluginImplementationError, { message: /^custom error.*/ });
+    const res = funnel.handleProcessRequestError(
+      request, request, originalError);
+
+    return should(res).rejectedWith(
+      PluginImplementationError, { message: /^custom error.*/ });
   });
 
 });
