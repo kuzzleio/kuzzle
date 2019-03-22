@@ -119,7 +119,7 @@ describe('Test: security controller - users', () => {
         });
     });
 
-    it('should pass allowed `aggs` and `highlight` arguments', () => {
+    it('should pass allowed `aggregations` and `highlight` arguments', () => {
       kuzzle.repositories.user.search.resolves({
         hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
         total: 2,
@@ -128,14 +128,14 @@ describe('Test: security controller - users', () => {
 
       request = new Request({
         body: {
-          aggs: 'aggs'
+          aggregations: 'aggregations'
         }
       });
 
       return securityController.searchUsers(request)
         .then(() => {
           should(kuzzle.repositories.user.search)
-            .be.calledWith({aggs: 'aggs'}, {});
+            .be.calledWith({aggregations: 'aggregations'}, {});
 
           // highlight only
           return securityController.searchUsers(new Request({
@@ -152,7 +152,7 @@ describe('Test: security controller - users', () => {
           return securityController.searchUsers(new Request({
             body: {
               query: 'query',
-              aggs: 'aggs',
+              aggregations: 'aggregations',
               highlight: 'highlight'
             }
           }));
@@ -160,7 +160,7 @@ describe('Test: security controller - users', () => {
         .then(() => {
           should(kuzzle.repositories.user.search)
             .be.calledWith({
-              aggs: 'aggs',
+              aggregations: 'aggregations',
               highlight: 'highlight',
               query: 'query'
             }, {});
