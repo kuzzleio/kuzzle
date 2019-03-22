@@ -23,7 +23,6 @@
 
 const
   rc = require('rc'),
-  loadJson = require('./loadJson'),
   ColorOutput = require('./colorOutput');
 
 const
