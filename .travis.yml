@@ -4,7 +4,7 @@ jobs:
 # Unit Testing
 # ---------------------------------------
     - stage: "Tests & Linters"
-      if: type = pull_request OR type = cron OR (type = push AND branch =~ ^master|.*-dev$)
+      if: type = pull_request OR type = cron OR (type = push AND branch =~ ^master|.*-dev|.*-stable$)
       name: "Unit Tests & ESLint"
       os: linux
       sudo: required
@@ -28,7 +28,7 @@ jobs:
 # SonarQube
 # ---------------------------------------
     - stage: "Tests & Linters"
-      if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev$)
+      if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$)
       name: "SonarQube"
 
       os: linux
@@ -61,7 +61,7 @@ jobs:
 # Node 6 - x64
 # ---------------------------------------
     - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-dev$) OR (type = pull_request AND branch =~ ^master|.*-dev$) OR type = cron
+      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: "amd64 - Node v6"
 
       os: linux
@@ -88,7 +88,7 @@ jobs:
 # Node 8 - x64
 # ---------------------------------------
     - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-dev$) OR (type = pull_request AND branch =~ ^master|.*-dev$) OR type = cron
+      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: "amd64 - Node v8"
 
       os: linux
@@ -117,7 +117,7 @@ jobs:
     - stage: "Tests & Linters"
       name: "armhf - Node v8"
 
-      if: (type = push AND branch =~ ^master|.*-dev$) OR (type = pull_request AND branch = master) OR type = cron
+      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-stable$) OR type = cron
 
       os: linux
       sudo: required
@@ -145,7 +145,7 @@ jobs:
 # Node 8 - aarch64
 # ---------------------------------------
     - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-dev$) OR (type = pull_request AND branch = master) OR type = cron
+      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-stable$) OR type = cron
       name: "aarch64 - Node v8"
 
       os: linux
@@ -176,7 +176,7 @@ jobs:
 # NPM
 # ---------------------------------------
     - stage: "Deployments"
-      if: type = push AND tag IS present AND branch = master
+      if: type = push AND tag IS present AND branch =~ ^master|.*-stable$
       name: "Deploy on NPM"
 
       os: linux
@@ -200,7 +200,7 @@ jobs:
 # Dockerhub
 # ---------------------------------------
     - stage: "Deployments"
-      if: type = push AND branch =~ ^master|.+-dev$ 
+      if: type = push AND branch =~ ^master|.*-dev|.*-stable$ 
       name: "Build & publish Docker images on Dockerhub"
 
       os: linux
