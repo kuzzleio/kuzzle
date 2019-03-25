@@ -147,7 +147,8 @@ class KuzzleMock extends Kuzzle {
       scroll: this.sandbox.stub().resolves(),
       search: this.sandbox.stub().resolves(),
       update: this.sandbox.stub().resolves(),
-      updateMapping: this.sandbox.stub().resolves(foo)
+      updateMapping: this.sandbox.stub().resolves(foo),
+      applyDefaultMapping: this.sandbox.stub().resolves()
     };
 
     this.once = this.sandbox.stub();
