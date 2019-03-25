@@ -341,4 +341,35 @@ describe('Test: token manager core component', () => {
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
     });
   });
+
+  describe('#refresh', () => {
+    beforeEach(() => {
+      tokenManager.tokens.insert({
+        idx: `${token.expiresAt};${token._id}`,
+        connectionId: 'foo',
+        expiresAt: token.expiresAt,
+        userId: token.userId,
+        rooms: new Set(['bar'])
+      });
+    });
+
+    it('should do nothing if the provided token is not linked', () => {
+      tokenManager.refresh(
+        new Token({_id: 'i am the beyonder'}),
+        new Token({_id: 'i am the mountain'}));
+
+      should(tokenManager.tokens.array).have.length(1);
+      should(tokenManager.tokens.array[0].idx)
+        .eql(`${token.expiresAt};${token._id}`);
+    });
+
+    it('should replace the old token with the new one', () => {
+      const newT = new Token({_id: '...I got better'});
+      tokenManager.refresh(token, newT);
+
+      should(tokenManager.tokens.array).have.length(1);
+      should(tokenManager.tokens.array[0].idx)
+        .eql(`${newT.expiresAt};${newT._id}`);
+    });
+  });
 });

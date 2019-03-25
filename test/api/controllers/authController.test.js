@@ -95,7 +95,7 @@ describe('Test the auth controller', () => {
         });
     });
 
-    it('should handle startegy\'s headers and status code in case of multi-step authentication strategy', () => {
+    it('should handle strategy\'s headers and status code in case of multi-step authentication strategy', () => {
       const redir = {headers: {Location: 'http://github.com'}, statusCode: 302};
 
       kuzzle.passport.authenticate.resolves(redir);
@@ -259,6 +259,84 @@ describe('Test the auth controller', () => {
 
       return should(authController.checkToken(request)).be.rejectedWith(error);
     });
+  });
+
+  describe('#refreshToken', () => {
+    it('should throw if the user is not authenticated', () => {
+      return should(() => authController.refreshToken(new Request(
+        {},
+        {token: {userId: 'anonymous', _id: '-1'}, user: {_id: '-1'}}
+      )))
+        .throw(
+          UnauthorizedError,
+          {message: 'You must be authenticated to execute that action'});
+    });
+
+    it('should throw if the token has already been refreshed', () => {
+      return should(() => authController.refreshToken(new Request(
+        {},
+        {
+          token: {userId: 'foo', _id: 'bar', refreshed: true},
+          user: {_id: 'bar'}
+        }
+      )))
+        .throw(UnauthorizedError, {message: 'Invalid token'});
+    });
+
+    it('should provide a new jwt and expire the current one after the grace period', () => {
+      const newToken = {
+        _id: '_id',
+        jwt: 'new-token',
+        userId: 'userId',
+        ttl: 'ttl',
+        expiresAt: 42
+      };
+
+      kuzzle.repositories.token.generateToken.resolves(newToken);
+
+      const req = new Request(
+        { expiresIn: '42h' },
+        {
+          token: {
+            userId: 'user',
+            _id: '_id',
+            jwt: 'jwt',
+            refreshed: false
+          },
+          user: {
+            _id: 'user'
+          }
+        }
+      );
+
+      return authController.refreshToken(req)
+        .then(response => {
+          should(response).eql({
+            _id: 'userId',
+            jwt: 'new-token',
+            expiresAt: 42,
+            ttl: 'ttl'
+          });
+
+          should(req.context.token.refreshed).be.true();
+
+          should(kuzzle.repositories.token.persistToCache)
+            .be.calledWith(
+              req.context.token,
+              {ttl: kuzzle.config.security.jwt.gracePeriod / 1000});
+
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(
+              { _id: 'user' },
+              req,
+              { expiresIn: '42h' }
+            );
+
+          should(kuzzle.tokenManager.refresh)
+            .calledWith(req.context.token, newToken);
+        });
+    });
+
   });
 
   describe('#updateSelf', () => {
