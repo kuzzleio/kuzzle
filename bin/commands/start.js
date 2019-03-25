@@ -23,7 +23,6 @@
 
 const
   rc = require('rc'),
-  loadJson = require('./loadJson'),
   ColorOutput = require('./colorOutput');
 
 const
@@ -37,39 +36,11 @@ function commandStart (options) {
   console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
 
   kuzzle.start(params)
-    // fixtures && mapping
-    .then(() => {
-      if (! params.mappings) {
-        return null;
-      }
-
-      return loadJson(params.mappings)
-        .then(mappings => kuzzle.janitor.loadMappings(mappings))
-        .then(() => console.log(cout.ok('[✔] Mappings successfully applied')));
-    })
-    .then(() => {
-      if (! params.fixtures) {
-        return null;
-      }
-
-      return loadJson(params.fixtures)
-        .then(fixtures => kuzzle.janitor.loadFixtures(fixtures))
-        .then(() => console.log(cout.ok('[✔] Fixtures successfully loaded')));
-    })
-    .then(() => {
-      if (! params.securities) {
-        return null;
-      }
-
-      return loadJson(params.securities)
-        .then(securities => kuzzle.janitor.loadSecurities(securities))
-        .then(() => console.log(cout.ok('[✔] Roles, profiles and users successfully loaded')));
-    })
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
-          if (!res) {
+          if (res) {
             console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
             console.log(cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.'));
             console.log(cout.notice('    For more information: https://docs.kuzzle.io/guide/essentials/security'));
