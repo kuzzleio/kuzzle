@@ -906,4 +906,10 @@ describe('InternalEngine', () => {
         });
     });
   });
+
+  describe('#applyDefaultMapping', () => {
+    it('should update collection mapping with default mapping');
+
+    it('should preserve existing mapping and returns the updated mapping');
+  });
 });

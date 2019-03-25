@@ -89,7 +89,7 @@ When('I create a collection {string}:{string}', function (index, collection) {
   return this.api.createCollection(index, collection);
 });
 
-Then('The dynamic mapping property of {string}:{string} is {string}', function (index, collection, dynamicValue) {
+Then('The mapping dynamic field of {string}:{string} is {string}', function (index, collection, dynamicValue) {
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
       const expectedValue = dynamicValue === 'the default value' ? this.kuzzleConfig.services.db.dynamic.toString() : dynamicValue;
@@ -106,13 +106,26 @@ When('I update the mapping of {string}:{string} with {string}', function (index,
   return this.api.updateMapping(index, collection, mapping);
 });
 
-Then('The mapping of {string}:{string} is {string}', function (index, collection, rawMapping) {
+Then('The mapping properties field of {string}:{string} is {string}', function (index, collection, rawMapping) {
+  const includeMeta = rawMapping === 'the default value' ? true : false;
+
+  return this.api.getCollectionMapping(index, collection, includeMeta)
+    .then(({ result }) => {
+      const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.db.commonMapping : eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
+
+      should(result[index].mappings[collection].properties)
+        .not.be.undefined()
+        .be.eql(expectedValue);
+    });
+});
+
+Then('The mapping _meta field of {string}:{string} is {string}', function (index, collection, rawMapping) {
   const mapping = eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
 
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
-      should(result[index].mappings[collection].properties)
+      should(result[index].mappings[collection]._meta)
         .not.be.undefined()
-        .be.eql(mapping);
+        .be.eql(mapping._meta);
     });
 });

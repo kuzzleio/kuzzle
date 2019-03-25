@@ -287,9 +287,15 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  getCollectionMapping (index, collection) {
+  getCollectionMapping (index, collection, includeMeta = false) {
+    let url = `${index}/${collection}/_mapping`;
+
+    if (includeMeta) {
+      url += `?includeMeta`;
+    }
+
     const options = {
-      url: this.apiPath(`${index}/${collection}/_mapping`),
+      url: this.apiPath(url),
       method: 'GET'
     };
 

@@ -131,6 +131,10 @@ describe('Test: core/indexCache', () => {
         });
     });
 
+    it('should preserve existing _meta and dynamic in collection mapping');
+
+    it('should inject default value for _meta and dynamic in collection mapping');
+
   });
 
   describe('#initInternal', () => {
@@ -303,6 +307,8 @@ describe('Test: core/indexCache', () => {
         })
         .catch(error => done(error));
     });
+
+    it('should apply default mapping with hotReload to true');
 
     it('should propagate other errors', () => {
       const serviceUnavailableError = new ServiceUnavailableError();

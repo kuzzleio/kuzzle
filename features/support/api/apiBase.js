@@ -169,9 +169,10 @@ class ApiBase {
     return this.send(msg);
   }
 
-  getCollectionMapping (index, collection) {
+  getCollectionMapping (index, collection, includeMeta = false) {
     const
       msg = {
+        includeMeta,
         controller: 'collection',
         action: 'getMapping',
         index,

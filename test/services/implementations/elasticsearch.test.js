@@ -1333,6 +1333,10 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should get existing _meta and dynamic policy for the collection');
+
+    it('should inject default mapping for the index');
+
     it('should not set dynamic property if the field is not present in input', () => {
       elasticsearch.client.indices.putMapping.resolves({});
 
@@ -1584,6 +1588,10 @@ describe('Test: ElasticSearch service', () => {
       request.input.resource.collection = '%foobar';
       return should(elasticsearch.createCollection(request)).be.rejectedWith(PreconditionError);
     });
+
+    it('should inject default mapping for index');
+
+    it('should inject default _meta and dynamic policy');
 
     it('should inject default mapping and default dynamic policy', () => {
       elasticsearch.client.indices.putMapping.resolves({});
