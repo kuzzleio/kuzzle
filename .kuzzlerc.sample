@@ -139,6 +139,9 @@
     //   * expiresIn:
     //      Token default expiration time
     //      (interpreted by https://www.npmjs.com/package/ms)
+    //   * gracePeriod:
+    //      Duration in ms during which a renewed jwt is still
+    //      considered valid
     //   * secret:
     //      String or buffer data containing either the secret for HMAC
     //      algorithms, or the PEM encoded private key for RSA and ECDSA.
@@ -147,6 +150,7 @@
     "jwt": {
       "algorithm": "HS256",
       "expiresIn": "1h",
+      "gracePeriod": 1000,
       "secret": null
     },
     // [default]
