@@ -171,7 +171,6 @@ module.exports = {
           transport: 'console',
           level: 'info',
           stderrLevels: [],
-          format: 'simple',
           silent: true
         }
       ],
