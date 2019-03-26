@@ -930,6 +930,13 @@ class HttpApi {
     });
   }
 
+  refreshToken () {
+    return this.callApi({
+      url: this.apiPath('_refreshToken'),
+      method: 'POST'
+    });
+  }
+
   replace (body, index, collection) {
     const options = {
       url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + body._id + '/_replace'),

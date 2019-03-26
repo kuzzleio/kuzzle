@@ -2,7 +2,7 @@ const
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
-  IndexCache = require.main.require('lib/api/core/indexCache');
+  IndexCache = require('../../../lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
   var

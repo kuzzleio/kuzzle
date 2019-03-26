@@ -3,12 +3,15 @@ const
   should = require('should'),
   sinon = require('sinon'),
   {
-    BadRequestError,
-    PreconditionError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      BadRequestError,
+      PreconditionError
+    }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
-  AdminController = rewire('../../../lib/api/controllers/adminController');
+  AdminController = rewire('../../../lib/api/controllers/adminController'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test: admin controller', () => {
   let
@@ -22,6 +25,12 @@ describe('Test: admin controller', () => {
     adminController = new AdminController(kuzzle);
     request = new Request({ controller: 'admin' });
     request.input.args.refresh = 'wait_for';
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(adminController).instanceOf(BaseController);
+    });
   });
 
   describe('#resetCache', () => {
@@ -217,4 +226,51 @@ describe('Test: admin controller', () => {
     });
   });
 
+  describe('#loadMappings', () => {
+    beforeEach(() => {
+      request.input.action = 'loadMappings';
+      request.input.body = { city: { seventeen: {} } };
+    });
+
+    it('should call Janitor.loadMappings', () => {
+      return adminController.loadMappings(request)
+        .then(() => {
+          should(kuzzle.janitor.loadMappings)
+            .be.calledOnce()
+            .be.calledWith({ city: { seventeen: {} } });
+        });
+    });
+  });
+
+  describe('#loadFixtures', () => {
+    beforeEach(() => {
+      request.input.action = 'loadFixtures';
+      request.input.body = { city: { seventeen: [] } };
+    });
+
+    it('should call Janitor.loadFixtures', () => {
+      return adminController.loadFixtures(request)
+        .then(() => {
+          should(kuzzle.janitor.loadFixtures)
+            .be.calledOnce()
+            .be.calledWith({ city: { seventeen: [] } });
+        });
+    });
+  });
+
+  describe('#loadSecurities', () => {
+    beforeEach(() => {
+      request.input.action = 'loadSecurities';
+      request.input.body = { gordon: { freeman: [] } };
+    });
+
+    it('should call Janitor.loadSecurities', () => {
+      return adminController.loadSecurities(request)
+        .then(() => {
+          should(kuzzle.janitor.loadSecurities)
+            .be.calledOnce()
+            .be.calledWith({ gordon: { freeman: [] } });
+        });
+    });
+  });
 });

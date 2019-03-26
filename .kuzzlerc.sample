@@ -11,8 +11,14 @@
     // * accessControlAllowOrigin:
     //    sets the default Access-Control-Allow-Origin HTTP
     //    header used to send responses to the client
-    //    (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
-    "accessControlAllowOrigin": "*"
+    // * accessControlAllowMethods:
+    //    sets the default Access-Control-Allow-Method header
+    // * accessControlAllowHeaders:
+    //    sets the default Access-Control-Allow-Headers
+    // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+    "accessControlAllowOrigin": "*",
+    "accessControlAllowMethods": "GET,POST,PUT,DELETE,OPTIONS,HEAD",
+    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
   },
 
   // Kuzzle configured limits
@@ -133,6 +139,9 @@
     //   * expiresIn:
     //      Token default expiration time
     //      (interpreted by https://www.npmjs.com/package/ms)
+    //   * gracePeriod:
+    //      Duration in ms during which a renewed jwt is still
+    //      considered valid
     //   * secret:
     //      String or buffer data containing either the secret for HMAC
     //      algorithms, or the PEM encoded private key for RSA and ECDSA.
@@ -141,6 +150,7 @@
     "jwt": {
       "algorithm": "HS256",
       "expiresIn": "1h",
+      "gracePeriod": 1000,
       "secret": null
     },
     // [default]
@@ -291,7 +301,6 @@
           "transport": "console",
           "level": "info",
           "stderrLevels": [],
-          "format": "simple",
           "silent": true
         }
       ],

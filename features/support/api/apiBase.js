@@ -936,6 +936,13 @@ class ApiBase {
     });
   }
 
+  refreshToken () {
+    return this.send({
+      controller: 'auth',
+      action: 'refreshToken'
+    });
+  }
+
   replace (body, index, collection) {
     const
       msg = {
