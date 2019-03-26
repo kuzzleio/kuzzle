@@ -3,18 +3,20 @@ const
   should = require('should'),
   jwt = require('jsonwebtoken'),
   Bluebird = require('bluebird'),
-  /** @type KuzzleConfiguration */
   AuthController = require('../../../lib/api/controllers/authController'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   Token = require('../../../lib/api/core/models/security/token'),
   User = require('../../../lib/api/core/models/security/user'),
   {
-    UnauthorizedError,
-    BadRequestError,
-    InternalError: KuzzleInternalError,
-    PluginImplementationError
-  } = require('kuzzle-common-objects').errors;
+    Request,
+    errors: {
+      UnauthorizedError,
+      BadRequestError,
+      InternalError: KuzzleInternalError,
+      PluginImplementationError
+    }
+  } = require('kuzzle-common-objects'),
+  BaseController = require('../../../lib/api/controllers/controller');
 
 describe('Test the auth controller', () => {
   let
@@ -41,6 +43,20 @@ describe('Test the auth controller', () => {
     });
 
     authController = new AuthController(kuzzle);
+
+    return authController.init();
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(authController).instanceOf(BaseController);
+    });
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(authController).instanceOf(BaseController);
+    });
   });
 
   describe('#login', () => {
@@ -79,7 +95,7 @@ describe('Test the auth controller', () => {
         });
     });
 
-    it('should handle startegy\'s headers and status code in case of multi-step authentication strategy', () => {
+    it('should handle strategy\'s headers and status code in case of multi-step authentication strategy', () => {
       const redir = {headers: {Location: 'http://github.com'}, statusCode: 302};
 
       kuzzle.passport.authenticate.resolves(redir);
@@ -245,6 +261,84 @@ describe('Test the auth controller', () => {
     });
   });
 
+  describe('#refreshToken', () => {
+    it('should throw if the user is not authenticated', () => {
+      return should(() => authController.refreshToken(new Request(
+        {},
+        {token: {userId: 'anonymous', _id: '-1'}, user: {_id: '-1'}}
+      )))
+        .throw(
+          UnauthorizedError,
+          {message: 'You must be authenticated to execute that action'});
+    });
+
+    it('should throw if the token has already been refreshed', () => {
+      return should(() => authController.refreshToken(new Request(
+        {},
+        {
+          token: {userId: 'foo', _id: 'bar', refreshed: true},
+          user: {_id: 'bar'}
+        }
+      )))
+        .throw(UnauthorizedError, {message: 'Invalid token'});
+    });
+
+    it('should provide a new jwt and expire the current one after the grace period', () => {
+      const newToken = {
+        _id: '_id',
+        jwt: 'new-token',
+        userId: 'userId',
+        ttl: 'ttl',
+        expiresAt: 42
+      };
+
+      kuzzle.repositories.token.generateToken.resolves(newToken);
+
+      const req = new Request(
+        { expiresIn: '42h' },
+        {
+          token: {
+            userId: 'user',
+            _id: '_id',
+            jwt: 'jwt',
+            refreshed: false
+          },
+          user: {
+            _id: 'user'
+          }
+        }
+      );
+
+      return authController.refreshToken(req)
+        .then(response => {
+          should(response).eql({
+            _id: 'userId',
+            jwt: 'new-token',
+            expiresAt: 42,
+            ttl: 'ttl'
+          });
+
+          should(req.context.token.refreshed).be.true();
+
+          should(kuzzle.repositories.token.persistToCache)
+            .be.calledWith(
+              req.context.token,
+              {ttl: kuzzle.config.security.jwt.gracePeriod / 1000});
+
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(
+              { _id: 'user' },
+              req,
+              { expiresIn: '42h' }
+            );
+
+          should(kuzzle.tokenManager.refresh)
+            .calledWith(req.context.token, newToken);
+        });
+    });
+
+  });
+
   describe('#updateSelf', () => {
     const opts = {database: {method: 'update'}};
 
@@ -278,9 +372,13 @@ describe('Test the auth controller', () => {
     });
 
     it('should throw an error if current user is anonymous', () => {
-      should(() => {
-        authController.updateSelf(new Request({body: {foo: 'bar'}}, {token: {userId: '-1'}, user: {_id: '-1'}}));
-      }).throw(UnauthorizedError);
+      const r = new Request(
+        { body: {foo: 'bar'} },
+        { token: {userId: '-1'}, user: {_id: '-1'} });
+
+      should(() => authController.updateSelf(r)).throw(
+        UnauthorizedError,
+        {message: 'You must be authenticated to execute that action'});
     });
   });
 

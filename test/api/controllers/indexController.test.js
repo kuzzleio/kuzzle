@@ -2,8 +2,11 @@ const
   should = require('should'),
   sinon = require('sinon'),
   IndexController = require('../../../lib/api/controllers/indexController'),
-  Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  {
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects'),
+  BaseController = require('../../../lib/api/controllers/controller'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: index controller', () => {
@@ -25,6 +28,12 @@ describe('Test: index controller', () => {
 
     indexController = new IndexController(kuzzle);
     request = new Request(data);
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(indexController).instanceOf(BaseController);
+    });
   });
 
   describe('#mDelete', () => {

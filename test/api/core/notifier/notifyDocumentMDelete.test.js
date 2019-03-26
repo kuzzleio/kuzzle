@@ -5,7 +5,7 @@ const
   sinon = require('sinon'),
   Request = require('kuzzle-common-objects').Request,
   Kuzzle = require('../../../mocks/kuzzle.mock'),
-  Notifier = require.main.require('lib/api/core/notifier');
+  Notifier = require('../../../../lib/api/core/notifier');
 
 describe('Test: notifier.notifyDocumentMDelete', () => {
   let

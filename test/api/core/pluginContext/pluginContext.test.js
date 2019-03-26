@@ -4,9 +4,14 @@ const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
+  User = require('../../../../lib/api/core/models/security/user'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
-  Request = require('kuzzle-common-objects').Request,
+  {
+    Request,
+    errors: {
+      PluginImplementationError
+    }
+  } = require('kuzzle-common-objects'),
   _ = require('lodash');
 
 describe('Plugin Context', () => {
@@ -14,7 +19,8 @@ describe('Plugin Context', () => {
   let
     kuzzle,
     context,
-    PluginContext;
+    PluginContext,
+    deprecateStub;
 
   beforeEach(() => {
     mockrequire('../../../../lib/services/internalEngine', function () {
@@ -24,7 +30,14 @@ describe('Plugin Context', () => {
         createCollection: sinon.spy()
       };
     });
-    PluginContext = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+
+    deprecateStub = sinon.stub().returnsArg(0);
+    mockrequire('../../../../lib/util/deprecate', {
+      deprecateProperties: deprecateStub
+    });
+
+    PluginContext = mockrequire.reRequire(
+      '../../../../lib/api/core/plugins/pluginContext');
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
@@ -51,6 +64,9 @@ describe('Plugin Context', () => {
       should(context.constructors.RequestInput).be.a.Function();
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
+
+      should(deprecateStub).calledOnce();
+      should(deprecateStub.firstCall.args[1]).match({Dsl: 'Koncorde'});
 
       should(new context.constructors.Dsl).be.instanceOf(Koncorde);
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
@@ -238,6 +254,7 @@ describe('Plugin Context', () => {
     it('should expose an SDK client accessor', () => {
       const sdk = context.accessors.sdk;
 
+      should(sdk.as).be.a.Function();
       should(sdk.query).be.a.Function();
       should(sdk.auth).be.an.Object();
       should(sdk.bulk).be.an.Object();
@@ -245,217 +262,260 @@ describe('Plugin Context', () => {
       should(sdk.document).be.an.Object();
       should(sdk.index).be.an.Object();
       should(sdk.ms).be.an.Object();
-      should(sdk.realtime).be.an.Object();
       should(sdk.security).be.an.Object();
       should(sdk.server).be.an.Object();
-    });
-  });
 
-  describe('#trigger', () => {
-    it('should trigger a log:error if eventName contains a colon', () => {
-      const trigger = kuzzle.pluginsManager.trigger;
-      context.accessors.trigger('event:with:colons');
-      should(trigger).be.calledWith('log:error');
+      should(() => {
+        sdk.realtime.subscribe();
+      }).throw(PluginImplementationError);
     });
 
-    it('should call trigger with the given event name and payload', () => {
-      const trigger = kuzzle.pluginsManager.trigger;
-      const eventName = 'backHome';
-      const payload = {
-        question: 'whose motorcycle is this?',
-        answer: 'it\'s a chopper, baby.',
-        anotherQuestion: 'whose chopper is this, then?',
-        anotherAnswer: 'it\'s Zed\'s',
-        yetAnotherQuestion: 'who\'s Zed?',
-        yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
-      };
+    describe('#accessors.sdk.as', () => {
+      let
+        request,
+        user;
 
-      context.accessors.trigger(eventName, payload);
-      should(trigger).be.calledWithExactly(`plugin-pluginName:${eventName}`, payload);
+      beforeEach(() => {
+        user = new User();
+        user._id = 'gordon';
+
+        request = new Request({ controller: 'foo', action: 'bar' }, { user });
+      });
+
+      it('should instantiate a new SDK with the User in the FunnelProtocol', () => {
+        const sdk = context.accessors.sdk.as(request.context.user);
+
+        should(sdk.as).be.undefined();
+        should(sdk.query).be.a.Function();
+        should(sdk.auth).be.an.Object();
+        should(sdk.bulk).be.an.Object();
+        should(sdk.collection).be.an.Object();
+        should(sdk.document).be.an.Object();
+        should(sdk.index).be.an.Object();
+        should(sdk.ms).be.an.Object();
+        should(sdk.security).be.an.Object();
+        should(sdk.server).be.an.Object();
+
+        should(() => {
+          sdk.realtime.subscribe();
+        }).throw(PluginImplementationError);
+
+        should(sdk.auth._kuzzle.protocol.user).be.eql(user);
+      });
+
+      it('should throw a PluginImplementationError if the user is not a User object', () => {
+        should(() => {
+          context.accessors.sdk.as({ _id: 'gordon' });
+        }).throw(PluginImplementationError);
+      });
     });
-  });
 
-  describe('#execute', () => {
-    it('should call the callback with a result if everything went well', done => {
-      const
-        request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
-        result = {foo: 'bar'},
-        callback = sinon.spy((err, res) => {
-          try {
-            should(callback).be.calledOnce();
-            should(err).be.null();
+    describe('#trigger', () => {
+      it('should trigger a log:error if eventName contains a colon', () => {
+        const trigger = kuzzle.pluginsManager.trigger;
+        context.accessors.trigger('event:with:colons');
+        should(trigger).be.calledWith('log:error');
+      });
+
+      it('should call trigger with the given event name and payload', () => {
+        const trigger = kuzzle.pluginsManager.trigger;
+        const eventName = 'backHome';
+        const payload = {
+          question: 'whose motorcycle is this?',
+          answer: 'it\'s a chopper, baby.',
+          anotherQuestion: 'whose chopper is this, then?',
+          anotherAnswer: 'it\'s Zed\'s',
+          yetAnotherQuestion: 'who\'s Zed?',
+          yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
+        };
+
+        context.accessors.trigger(eventName, payload);
+        should(trigger).be.calledWithExactly(`plugin-pluginName:${eventName}`, payload);
+      });
+    });
+
+    describe('#execute', () => {
+      it('should call the callback with a result if everything went well', done => {
+        const
+          request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
+          result = {foo: 'bar'},
+          callback = sinon.spy((err, res) => {
+            try {
+              should(callback).be.calledOnce();
+              should(err).be.null();
+              should(res).match(request);
+              should(res.result).be.equal(result);
+              should(kuzzle.funnel.executePluginRequest).calledWith(request);
+              done();
+            }
+            catch(e) {
+              done(e);
+            }
+          });
+
+        kuzzle.funnel.executePluginRequest.resolves(result);
+
+        should(context.accessors.execute(request, callback)).not.be.a.Promise();
+      });
+
+      it('should resolve a Promise with a result if everything went well', () => {
+        const
+          request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
+          result = {foo: 'bar'};
+
+        kuzzle.funnel.executePluginRequest.resolves(result);
+
+        const ret = context.accessors.execute(request);
+
+        should(ret).be.a.Promise();
+
+        return ret
+          .then(res => {
             should(res).match(request);
             should(res.result).be.equal(result);
             should(kuzzle.funnel.executePluginRequest).calledWith(request);
-            done();
-          }
-          catch(e) {
-            done(e);
-          }
-        });
-
-      kuzzle.funnel.executePluginRequest.resolves(result);
-
-      should(context.accessors.execute(request, callback)).not.be.a.Promise();
-    });
-
-    it('should resolve a Promise with a result if everything went well', () => {
-      const
-        request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
-        result = {foo: 'bar'};
-
-      kuzzle.funnel.executePluginRequest.resolves(result);
-
-      const ret = context.accessors.execute(request);
-
-      should(ret).be.a.Promise();
-
-      return ret
-        .then(res => {
-          should(res).match(request);
-          should(res.result).be.equal(result);
-          should(kuzzle.funnel.executePluginRequest).calledWith(request);
-        });
-    });
-
-    it('should call the callback with an error if something went wrong', done => {
-      const
-        request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
-        error = new Error('error'),
-        callback = sinon.spy(
-          (err, res) => {
-            try {
-              should(kuzzle.funnel.executePluginRequest).calledWith(request);
-              should(callback).be.calledOnce();
-              should(err).match(error);
-              should(res).be.undefined();
-              done();
-            }
-            catch(e) {
-              done(e);
-            }
           });
-
-      kuzzle.funnel.executePluginRequest.rejects(error);
-
-      context.accessors.execute(request, callback);
-    });
-
-    it('should reject a Promise with an error if something went wrong', () => {
-      const
-        request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
-        error = new Error('error');
-
-      kuzzle.funnel.executePluginRequest.rejects(error);
-
-      return context.accessors.execute(request)
-        .catch(err => {
-          should(kuzzle.funnel.executePluginRequest).calledWith(request);
-          should(err).match(error);
-        });
-    });
-
-    it('should resolve to an error if no Request object is provided', done => {
-      const
-        callback = sinon.spy(
-          (err, res) => {
-            try {
-              should(kuzzle.funnel.executePluginRequest).not.be.called();
-              should(callback).be.calledOnce();
-              should(err).be.instanceOf(PluginImplementationError);
-              should(err.message).startWith('Invalid argument: a Request object must be supplied');
-              should(res).be.undefined();
-              done();
-            }
-            catch(e) {
-              done(e);
-            }
-          });
-
-      context.accessors.execute({}, callback);
-    });
-
-    it('should reject if no Request object is provided', () => {
-      return should(context.accessors.execute({})).be.rejectedWith(
-        /Invalid argument: a Request object must be supplied/
-      );
-    });
-
-    it('should reject if callback argument is not a function', () => {
-      return should(context.accessors.execute({requestId: 'request'}, 'foo'))
-        .be.rejectedWith({message: /^Invalid argument: Expected callback to be a function, received "string"/});
-
-    });
-  });
-
-  describe('#strategies', () => {
-    it('should allow to add a strategy and link it to its owner plugin', () => {
-      const
-        mockedStrategy = {
-          config: {
-            authenticator: 'foo'
-          }
-        },
-        result = context.accessors.strategies.add('foo', mockedStrategy);
-
-      should(result).be.a.Promise();
-
-      return result
-        .then(() => {
-          should(kuzzle.pluginsManager.registerStrategy).calledWith('pluginName', 'foo', mockedStrategy);
-          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyAdded', {
-            pluginName: 'pluginName',
-            name: 'foo',
-            strategy: mockedStrategy
-          });
-        });
-    });
-
-    it('should reject the promise if the strategy registration throws', () => {
-      const error = new Error('foobar');
-      kuzzle.pluginsManager.registerStrategy.throws(error);
-
-      const result = context.accessors.strategies.add('foo', {
-        config: {
-          authenticator: 'foobar'
-        }
       });
 
-      should(result).be.a.Promise();
+      it('should call the callback with an error if something went wrong', done => {
+        const
+          request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+          error = new Error('error'),
+          callback = sinon.spy(
+            (err, res) => {
+              try {
+                should(kuzzle.funnel.executePluginRequest).calledWith(request);
+                should(callback).be.calledOnce();
+                should(err).match(error);
+                should(res).be.undefined();
+                done();
+              }
+              catch(e) {
+                done(e);
+              }
+            });
 
-      return should(result).be.rejectedWith(error);
-    });
+        kuzzle.funnel.executePluginRequest.rejects(error);
 
-    it('should throw if no authenticator is provided', () => {
+        context.accessors.execute(request, callback);
+      });
 
-      return should(context.accessors.strategies.add('foo', null))
-        .rejectedWith(PluginImplementationError, {message: '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
-    });
+      it('should reject a Promise with an error if something went wrong', () => {
+        const
+          request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+          error = new Error('error');
 
-    it('should allow to remove a strategy', () => {
-      const result = context.accessors.strategies.remove('foo');
+        kuzzle.funnel.executePluginRequest.rejects(error);
 
-      should(result).be.a.Promise();
-
-      return result
-        .then(() => {
-          should(kuzzle.pluginsManager.unregisterStrategy).calledWith('pluginName', 'foo');
-          should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyRemoved', {
-            pluginName: 'pluginName',
-            name: 'foo'
+        return context.accessors.execute(request)
+          .catch(err => {
+            should(kuzzle.funnel.executePluginRequest).calledWith(request);
+            should(err).match(error);
           });
-        });
+      });
+
+      it('should resolve to an error if no Request object is provided', done => {
+        const
+          callback = sinon.spy(
+            (err, res) => {
+              try {
+                should(kuzzle.funnel.executePluginRequest).not.be.called();
+                should(callback).be.calledOnce();
+                should(err).be.instanceOf(PluginImplementationError);
+                should(err.message).startWith('Invalid argument: a Request object must be supplied');
+                should(res).be.undefined();
+                done();
+              }
+              catch(e) {
+                done(e);
+              }
+            });
+
+        context.accessors.execute({}, callback);
+      });
+
+      it('should reject if no Request object is provided', () => {
+        return should(context.accessors.execute({})).be.rejectedWith(
+          /Invalid argument: a Request object must be supplied/
+        );
+      });
+
+      it('should reject if callback argument is not a function', () => {
+        return should(context.accessors.execute({requestId: 'request'}, 'foo'))
+          .be.rejectedWith({message: /^Invalid argument: Expected callback to be a function, received "string"/});
+
+      });
     });
 
-    it('should reject the promise if the strategy removal throws', () => {
-      const error = new Error('foobar');
-      kuzzle.pluginsManager.unregisterStrategy.throws(error);
+    describe('#strategies', () => {
+      it('should allow to add a strategy and link it to its owner plugin', () => {
+        const
+          mockedStrategy = {
+            config: {
+              authenticator: 'foo'
+            }
+          },
+          result = context.accessors.strategies.add('foo', mockedStrategy);
 
-      const result = context.accessors.strategies.remove('foo');
+        should(result).be.a.Promise();
 
-      should(result).be.a.Promise();
+        return result
+          .then(() => {
+            should(kuzzle.pluginsManager.registerStrategy).calledWith('pluginName', 'foo', mockedStrategy);
+            should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyAdded', {
+              pluginName: 'pluginName',
+              name: 'foo',
+              strategy: mockedStrategy
+            });
+          });
+      });
 
-      return should(result).be.rejectedWith(error);
+      it('should reject the promise if the strategy registration throws', () => {
+        const error = new Error('foobar');
+        kuzzle.pluginsManager.registerStrategy.throws(error);
+
+        const result = context.accessors.strategies.add('foo', {
+          config: {
+            authenticator: 'foobar'
+          }
+        });
+
+        should(result).be.a.Promise();
+
+        return should(result).be.rejectedWith(error);
+      });
+
+      it('should throw if no authenticator is provided', () => {
+
+        return should(context.accessors.strategies.add('foo', null))
+          .rejectedWith(PluginImplementationError, {message: '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
+      });
+
+      it('should allow to remove a strategy', () => {
+        const result = context.accessors.strategies.remove('foo');
+
+        should(result).be.a.Promise();
+
+        return result
+          .then(() => {
+            should(kuzzle.pluginsManager.unregisterStrategy).calledWith('pluginName', 'foo');
+            should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyRemoved', {
+              pluginName: 'pluginName',
+              name: 'foo'
+            });
+          });
+      });
+
+      it('should reject the promise if the strategy removal throws', () => {
+        const error = new Error('foobar');
+        kuzzle.pluginsManager.unregisterStrategy.throws(error);
+
+        const result = context.accessors.strategies.remove('foo');
+
+        should(result).be.a.Promise();
+
+        return should(result).be.rejectedWith(error);
+      });
     });
   });
 });

@@ -131,3 +131,20 @@ Then(/^I get the registrated authentication strategies$/, function (callback) {
     .catch(error => callback(error));
 });
 
+Then(/^I refresh the JWT Token$/, function (callback) {
+  this.api.refreshToken()
+    .then(response => {
+      if (response.error) {
+        return callback(new Error(response.error.message));
+      }
+
+      if (!response.result) {
+        return callback(new Error('No result provided'));
+      }
+
+      this.currentToken = {jwt: response.result.jwt};
+      this.currentUser.token = response.result.jwt;
+      callback();
+    })
+    .catch(error => callback(error));
+});

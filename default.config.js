@@ -38,7 +38,9 @@ module.exports = {
    */
   http: {
     routes: require('./lib/config/httpRoutes'),
-    accessControlAllowOrigin: '*'
+    accessControlAllowOrigin: '*',
+    accessControlAllowMethods: 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
+    accessControlAllowHeaders: 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
   },
 
   limits: {
@@ -77,6 +79,7 @@ module.exports = {
     jwt: {
       algorithm: 'HS256',
       expiresIn: '1h',
+      gracePeriod: 1000,
       secret: null
     },
     default: {
@@ -168,7 +171,6 @@ module.exports = {
           transport: 'console',
           level: 'info',
           stderrLevels: [],
-          format: 'simple',
           silent: true
         }
       ],

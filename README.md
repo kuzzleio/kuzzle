@@ -17,6 +17,15 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 * **User Management**: login, logout and security rules are no more a burden.
 * **Extensible**: fit Kuzzle to your needs by leveraging the plugin system.
 
+## Kuzzle in production
+
+Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/products/by-features/on-premises/). 
+
+With Kuzzle, it is possible to deploy applications that can serve tens of thousands of users with very good performances.  
+
+We also provide a plugin to deploy a [Kuzzle cluster](https://github.com/kuzzleio/kuzzle-plugin-cluster) that provides horizontal scalability. In addition, its masterless cluster architecture provides high availability for constant uptime.
+
+Check out our [support plans](https://kuzzle.io/pricing/).
 
 ## Installation
 
@@ -25,60 +34,33 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 The easiest way to setup a kuzzle server for Linux-like systems without prerequisites is to download and run our installation script:
 
 ```bash
-$ sudo bash -c "$(curl http://get.kuzzle.io/)"
+$ sudo bash -c "$(curl https://get.kuzzle.io/)"
 ```
 
-You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/#docker)
+You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#docker)
 
 ### Manual install
 
-Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/#manually)
+Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#manual-installation)
 
 ## Quick start with Kuzzle
 
-* [Install and start Kuzzle server](https://docs.kuzzle.io/guide/essentials/installing-kuzzle/)
-* [Choose a SDK](https://docs.kuzzle.io/sdk-reference/essentials/)
+* [Install and start Kuzzle server](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle)
+* [Choose a SDK](https://docs.kuzzle.io/sdk-reference/)
 * Build your application without caring about your backend !
 
-Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/getting-started/)
-
-### NodeJS Sample
-
-```bash
-npm install kuzzle-sdk
-```
-
-```javascript
-const
-    Kuzzle = require('kuzzle-sdk'),
-    kuzzle = new Kuzzle('http://localhost:7512')
-
-const filter = {
-    exists: {
-        field: 'message'
-    }
-}
-
-// Subscribe to data changes in an app
-kuzzle
-    .collection('mycollection', 'myindex')
-    .subscribe(filter, function(error, result) {
-        // triggered each time a document is updated !
-        console.log('message received from kuzzle:', result)
-    })
-
-// Creating a document from another app will notify all subscribers
-kuzzle
-    .collection('mycollection', 'myindex')
-    .createDocument(document)
-```
+Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
 
 ### Useful links
 
+* [How to run a Kuzzle instance](https://docs.kuzzle.io/guide/1/getting-started/running-kuzzle/)
+* [Basic usage examples](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
+* [Getting started with Node.js](https://docs.kuzzle.io/sdk-reference/js/6/getting-started/node-js/)
 * [Full documentation](https://docs.kuzzle.io/)
-* [SDK Reference](https://docs.kuzzle.io/sdk-reference/essentials/)
-* [API Documentation](https://docs.kuzzle.io/api-documentation/connecting-to-kuzzle/)  
-* [Data Validation Documentation](https://docs.kuzzle.io/validation-reference/schema/)
+* [SDKs Reference](https://docs.kuzzle.io/sdk-reference/)
+* [API Documentation](https://docs.kuzzle.io/api)  
+* [Data Validation documentation](https://docs.kuzzle.io/guide/1/datavalidation)
+* [Realtime engine documentation](https://docs.kuzzle.io/koncorde)
 * [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle
@@ -95,13 +77,6 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 * Visit our [blog](https://blog.kuzzle.io/) to be informed about what we are doing
 * Come chat with us on [gitter](https://gitter.im/kuzzleio/kuzzle)
 * Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
-
-## Kuzzle in production
-
-Kuzzle is production-proof, and provides all the business-critical features your need for your business, as
-the scalability, the high-availability (multi-nodes), probes for BI & diagnostic tools.  
-
-Check out our [support plans](https://kuzzle.io/pricing/).
 
 ## License
 

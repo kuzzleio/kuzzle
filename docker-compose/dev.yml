@@ -6,6 +6,15 @@ services:
     ports:
       - "7513:7512"
 
+  nginx:
+    image: nginx:1.15-alpine
+    depends_on:
+      - kuzzle
+    ports:
+      - "7443:7443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+
   kuzzle:
     image: kuzzleio/core-dev
     command: sh -c 'chmod 755 /run.sh && /run.sh'
@@ -15,6 +24,8 @@ services:
       - "./config/pm2-dev.json:/config/pm2.json"
     cap_add:
       - SYS_PTRACE
+    ulimits:
+      nofile: 65536
     sysctls:
       - net.core.somaxconn=8192
     depends_on:

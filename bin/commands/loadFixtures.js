@@ -19,19 +19,34 @@
  * limitations under the License.
  */
 
-/**
- * @class Token
- */
-class Token {
-  constructor(data = {}) {
-    this._id = data._id || null;
-    this.expiresAt = data.expiresAt || null;
-    this.ttl = data.ttl || null;
-    this.userId = data.userId || null;
-    this.connectionId = data.connectionId || null;
-    this.jwt = data.jwt || null;
-    this.refreshed = Boolean(data.refreshed);
-  }
+/* eslint-disable no-console */
+
+const
+  ColorOutput = require('./colorOutput'),
+  loadJson = require('./loadJson'),
+  sendAction = require('./sendAction');
+
+function commandLoadFixtures (fixturesPath, options) {
+  let
+    opts = options;
+
+  const cout = new ColorOutput(opts);
+
+  return loadJson(fixturesPath)
+    .then(fixtures => sendAction({
+      controller: 'admin',
+      action: 'loadFixtures',
+      refresh: 'wait_for',
+      body: fixtures
+    }, opts))
+    .then(() => {
+      console.log(cout.ok('[✔] Fixtures have been successfully loaded'));
+      process.exit(0);
+    })
+    .catch(err => {
+      console.error(err);
+      process.exit(1);
+    });
 }
 
-module.exports = Token;
+module.exports = commandLoadFixtures;
