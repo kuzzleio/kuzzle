@@ -291,7 +291,7 @@ class HttpApi {
     let url = `${index}/${collection}/_mapping`;
 
     if (includeMeta) {
-      url += `?includeMeta`;
+      url += '?includeMeta=true';
     }
 
     const options = {
@@ -1147,7 +1147,7 @@ class HttpApi {
 
   updateMapping (index, collection, mapping) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + collection || this.world.fakeCollection + '/_mapping'),
+      url: this.apiPath(this.util.getIndex(index) + '/' + (collection || this.world.fakeCollection) + '/_mapping'),
       method: 'PUT',
       body: mapping || this.world.mapping
     };

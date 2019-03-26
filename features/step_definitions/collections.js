@@ -124,6 +124,7 @@ Then('The mapping _meta field of {string}:{string} is {string}', function (index
 
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
+
       should(result[index].mappings[collection]._meta)
         .not.be.undefined()
         .be.eql(mapping._meta);

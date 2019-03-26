@@ -1605,19 +1605,22 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#createCollection', () => {
-    it('should allow creating a new collection', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
+    beforeEach(() => {
       request.input.resource.collection = '%foobar';
 
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch.kuzzle.indexCache.exists
+        .onCall(0).resolves(true)
+        .onCall(1).resolves(false);
+    });
+
+    it('should allow creating a new collection', () => {
       return elasticsearch.createCollection(request);
     });
 
     it('should reject the createCollection promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
       elasticsearch.client.indices.putMapping.rejects(error);
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
 
       return should(
         elasticsearch.createCollection(request)
@@ -1625,10 +1628,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject if index doesn\'t exist', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-
-      request.input.resource.collection = '%foobar';
+      elasticsearch.kuzzle.indexCache.exists.onCall(0).resolves(false);
 
       return should(
         elasticsearch.createCollection(request)
@@ -1637,7 +1637,6 @@ describe('Test: ElasticSearch service', () => {
 
     it('should inject default mapping for index', () => {
       elasticsearch.config.dynamic = 'strict';
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       elasticsearch.kuzzle.indexCache.defaultMappings[index] = {
         foo: { type: 'boolean' },
         _kuzzle_info: {
@@ -1651,7 +1650,6 @@ describe('Test: ElasticSearch service', () => {
           }
         }
       };
-      request.input.resource.collection = '%foobar';
 
       return elasticsearch.createCollection(request)
         .then(() => {
@@ -1675,10 +1673,6 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should create collection with mapping if supplied in the body', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      request.input.resource.collection = '%foobar';
       elasticsearch.config.commonMapping = {};
 
       const collectionMapping = {
@@ -1701,12 +1695,20 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should call updateMapping if the collection already exists', () => {
+      elasticsearch.kuzzle.indexCache.exists.onCall(1).resolves(true);
+      elasticsearch.updateMapping = sinon.stub().resolves({});
+
+      return elasticsearch.createCollection(request)
+        .then(() => {
+          should(elasticsearch.updateMapping).be.calledOnce();
+          should(elasticsearch.kuzzle.indexCache.exists).be.calledTwice();
+          should(elasticsearch.kuzzle.indexCache.exists.getCall(0).args).be.eql([index]);
+          should(elasticsearch.kuzzle.indexCache.exists.getCall(1).args).be.eql([index, '%foobar']);
+        });
+    });
+
     it('should not overwrite kuzzle commonMapping', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      request.input.resource.collection = '%foobar';
-
       elasticsearch.config.commonMapping = {
         gordon: { type: 'text' },
         _kuzzle_info: {
@@ -1755,11 +1757,6 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reuse a previously created common mapping', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      request.input.resource.collection = '%foobar';
-
       kuzzle.indexCache.defaultMappings[index] = {
         gordon: { type: 'text' }
       };
