@@ -61,6 +61,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       listen: sinon.spy(),
       on: sinon.spy()
     };
+    entrypoint.logger = {
+      info: sinon.stub()
+    };
 
     protocol = new HttpProtocol();
   });
