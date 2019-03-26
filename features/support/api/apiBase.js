@@ -169,10 +169,10 @@ class ApiBase {
     return this.send(msg);
   }
 
-  getCollectionMapping (index, collection, includeMeta = false) {
+  getCollectionMapping (index, collection, includeKuzzleInfo = false) {
     const
       msg = {
-        includeMeta,
+        includeKuzzleInfo,
         controller: 'collection',
         action: 'getMapping',
         index,

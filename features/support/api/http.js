@@ -287,11 +287,11 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  getCollectionMapping (index, collection, includeMeta = false) {
+  getCollectionMapping (index, collection, includeKuzzleInfo = false) {
     let url = `${index}/${collection}/_mapping`;
 
-    if (includeMeta) {
-      url += '?includeMeta=true';
+    if (includeKuzzleInfo) {
+      url += '?includeKuzzleInfo=true';
     }
 
     const options = {

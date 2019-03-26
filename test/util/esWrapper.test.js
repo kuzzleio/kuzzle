@@ -103,7 +103,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
 
-    it('should include attribute `_kuzzle_info` when includeMeta is true', () => {
+    it('should include attribute `_kuzzle_info` when includeKuzzleInfo is true', () => {
       const
         mappings = {
           bar: { properties: {

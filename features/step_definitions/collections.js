@@ -107,9 +107,9 @@ When('I update the mapping of {string}:{string} with {string}', function (index,
 });
 
 Then('The mapping properties field of {string}:{string} is {string}', function (index, collection, rawMapping) {
-  const includeMeta = rawMapping === 'the default value' ? true : false;
+  const includeKuzzleInfo = rawMapping === 'the default value' ? true : false;
 
-  return this.api.getCollectionMapping(index, collection, includeMeta)
+  return this.api.getCollectionMapping(index, collection, includeKuzzleInfo)
     .then(({ result }) => {
       const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.db.commonMapping : eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
 
