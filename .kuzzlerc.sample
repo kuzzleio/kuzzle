@@ -501,10 +501,10 @@
     //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
     //   * dynamic:
     //       Default policy against new fields that are not referenced in the collection mapping.
-    //       The value of this configuration will change the way Elasticsearch manages the creation of new fields that are not declared in the collection mapping.
-    //         - "true": Stores the document and updates the collection mapping with the inferred type
-    //         - "false": Stores the document and does not update the collection mapping (fields are not indexed)
-    //         - "strict": Rejects the document
+    //       The value of this configuration will change Elasticsearch behavior on fields that are not declared in the collection mapping.
+    //         - "true": Stores document and update the collection mapping with infered type
+    //         - "false": Stores document and does not update the collection mapping (field are not indexed)
+    //         - "strict": Rejects document
     //       See https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html
     "db": {
       "backend": "elasticsearch",
