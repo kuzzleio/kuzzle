@@ -288,11 +288,7 @@ class HttpApi {
   }
 
   getCollectionMapping (index, collection, includeKuzzleInfo = false) {
-    let url = `${index}/${collection}/_mapping`;
-
-    if (includeKuzzleInfo) {
-      url += '?includeKuzzleInfo=true';
-    }
+    const url = `${index}/${collection}/_mapping?includeKuzzleInfo=${includeKuzzleInfo}`;
 
     const options = {
       url: this.apiPath(url),
@@ -1154,7 +1150,7 @@ class HttpApi {
 
   updateMapping (index, collection, mapping) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + (collection || this.world.fakeCollection) + '/_mapping'),
+      url: `${this.apiPath(this.util.getIndex(index))}/${collection || this.world.fakeCollection}/_mapping`,
       method: 'PUT',
       body: mapping || this.world.mapping
     };
