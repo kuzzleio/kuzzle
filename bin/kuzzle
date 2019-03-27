@@ -110,6 +110,18 @@ program
   .description('load roles, profiles and users into Kuzzle')
   .action(require('./commands/loadSecurities'));
 
+// $ kuzzle indexDump
+program
+  .command('indexDump <index> <path>')
+  .description('dump an entire kuzzle index content')
+  .action(require('./commands/indexDump'));
+
+// $ kuzzle loadIndexDump
+program
+  .command('loadIndexDump <path>')
+  .description('load a previously dumped index')
+  .action(require('./commands/loadIndexDump'));
+
 // Run user command
 program.parse(process.argv);
 

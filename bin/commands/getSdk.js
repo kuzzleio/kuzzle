@@ -19,7 +19,10 @@
  * limitations under the License.
  */
 
-const { Kuzzle, WebSocket } = require('kuzzle-sdk');
+const {
+  Kuzzle,
+  Http
+} = require('kuzzle-sdk');
 
 /**
  *  Instantiate the SDK
@@ -45,7 +48,7 @@ function getSdk (options) {
     };
   }
 
-  const kuzzle = new Kuzzle(new WebSocket(config.host, { port: config.port }));
+  const kuzzle = new Kuzzle(new Http(config.host, { port: config.port }));
 
   return kuzzle.connect()
     .then(() => {
