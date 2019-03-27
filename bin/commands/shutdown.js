@@ -22,20 +22,28 @@
 /* eslint-disable no-console */
 const
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandShutdown (options) {
   const
     cout = new ColorOutput(options);
 
+  let sdk;
+
   console.log(cout.notice('[ℹ] Shutting down...'));
 
-  const query = {
+  const request = {
     controller: 'admin',
     action: 'shutdown'
   };
 
-  return sendAction(query, options)
+  return getSdk(options)
+    .then(response => {
+      sdk = response;
+
+      return null;
+    })
+    .then(() => sdk.query(request))
     .then(() => {
       console.log(cout.ok('[✔] Done'));
       process.exit(0);

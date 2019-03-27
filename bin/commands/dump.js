@@ -23,24 +23,31 @@
 
 const
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandDump (options) {
   const
     cout = new ColorOutput(options);
 
   console.log(cout.notice('[ℹ] Creating dump file...'));
+  let sdk;
 
-  const query = {
+  const request = {
     controller: 'admin',
     action: 'dump',
     suffix: 'cli'
   };
 
-  return sendAction(query, options)
-    .then(request => {
+  return getSdk(options)
+    .then(response => {
+      sdk = response;
+
+      return null;
+    })
+    .then(() => sdk.query(request))
+    .then(response => {
       console.log(cout.ok('[✔] Done!'));
-      console.log('\n' + cout.warn(`[ℹ] Dump has been successfully generated in "${request.result}" folder`));
+      console.log('\n' + cout.warn(`[ℹ] Dump has been successfully generated in "${response.result}" folder`));
       console.log(cout.warn('[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io'));
       process.exit(0);
     })

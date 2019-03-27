@@ -22,17 +22,14 @@
 const { Kuzzle, WebSocket } = require('kuzzle-sdk');
 
 /**
- *  Send an action through the API
+ *  Instantiate the SDK
  *  First log the user if credentials are provided
  *  then send the action to corresponding controller
  *
  *  @param {object} options
- *  @param {string} controller
- *  @param {string} action
- *  @param {object} query
  *  @return {Promise}
  */
-function sendAction (query, options) {
+function getSdk (options) {
   const config = {
     host: options.parent.host || 'localhost',
     port: options.parent.port || 7512
@@ -56,7 +53,7 @@ function sendAction (query, options) {
         return kuzzle.auth.login(config.login.strategy, config.login.credentials);
       }
     })
-    .then(() => kuzzle.query(query));
+    .then(() => kuzzle);
 }
 
-module.exports = sendAction;
+module.exports = getSdk;

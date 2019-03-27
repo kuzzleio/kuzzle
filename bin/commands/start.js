@@ -39,8 +39,8 @@ function commandStart (options) {
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
-        .then(res => {
-          if (!res) {
+        .then(adminExists => {
+          if (!adminExists) {
             console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
             console.log(cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.'));
             console.log(cout.notice('    For more information: https://docs.kuzzle.io/guide/essentials/security'));

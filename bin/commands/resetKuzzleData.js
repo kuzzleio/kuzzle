@@ -26,13 +26,15 @@ const
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandResetKuzzleData (options) {
   const
     cout = new ColorOutput(options);
 
-  let userIsSure = false;
+  let
+    sdk,
+    userIsSure = false;
 
   console.log(cout.warn('[ℹ] You are about to reset Kuzzle configuration and users'));
   console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
@@ -47,12 +49,18 @@ function commandResetKuzzleData (options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    const query = {
+    const request = {
       controller: 'admin',
       action: 'resetKuzzleData'
     };
 
-    return sendAction(query, options)
+    return getSdk(options)
+      .then(response => {
+        sdk = response;
+
+        return null;
+      })
+      .then(() => sdk.query(request))
       .then(() => {
         console.log(cout.ok('[✔] Kuzzle has been successfully reset'));
         process.exit(0);

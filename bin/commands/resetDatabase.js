@@ -26,11 +26,13 @@ const
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandResetDatabase (options) {
   const cout = new ColorOutput(options);
-  let userIsSure = false;
+  let
+    sdk,
+    userIsSure = false;
 
   console.log(cout.warn('[ℹ] You are about to clear all data stored on Kuzzle.'));
   console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
@@ -45,12 +47,18 @@ function commandResetDatabase (options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    const query = {
+    const request = {
       controller: 'admin',
       action: 'resetDatabase'
     };
 
-    return sendAction(query, options)
+    return getSdk(options)
+      .then(response => {
+        sdk = response;
+
+        return null;
+      })
+      .then(() => sdk.query(request))
       .then(() => {
         console.log(cout.ok('[✔] Kuzzle databases have been successfully reset'));
         process.exit(0);

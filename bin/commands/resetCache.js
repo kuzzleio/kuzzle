@@ -26,10 +26,11 @@ const
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandResetCache (database, options) {
   let
+    sdk,
     opts = options,
     db = database,
     userIsSure;
@@ -51,13 +52,19 @@ function commandResetCache (database, options) {
 
   if (userIsSure) {
     console.log(cout.notice('[ℹ] Processing...\n'));
-    const query = {
+    const request = {
       controller: 'admin',
       action: 'resetCache',
       database: db
     };
 
-    return sendAction(query, opts)
+    return getSdk(options)
+      .then(response => {
+        sdk = response;
+
+        return null;
+      })
+      .then(() => sdk.query(request))
       .then(() => {
         console.log(cout.ok(`[✔] Kuzzle cache '${db}' has been successfully reset`));
         process.exit(0);

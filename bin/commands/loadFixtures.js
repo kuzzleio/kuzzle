@@ -24,16 +24,23 @@
 const
   ColorOutput = require('./colorOutput'),
   loadJson = require('./loadJson'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandLoadFixtures (fixturesPath, options) {
   let
+    sdk,
     opts = options;
 
   const cout = new ColorOutput(opts);
 
-  return loadJson(fixturesPath)
-    .then(fixtures => sendAction({
+  return getSdk(options)
+    .then(response => {
+      sdk = response;
+
+      return null;
+    })
+    .then(() => loadJson(fixturesPath))
+    .then(fixtures => sdk.query({
       controller: 'admin',
       action: 'loadFixtures',
       refresh: 'wait_for',
