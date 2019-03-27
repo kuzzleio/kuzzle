@@ -107,7 +107,7 @@ When('I update the mapping of {string}:{string} with {string}', function (index,
 });
 
 Then('The mapping properties field of {string}:{string} is {string}', function (index, collection, rawMapping) {
-  const includeKuzzleInfo = rawMapping === 'the default value' ? true : false;
+  const includeKuzzleInfo = rawMapping === 'the default value';
 
   return this.api.getCollectionMapping(index, collection, includeKuzzleInfo)
     .then(({ result }) => {
