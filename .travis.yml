@@ -176,7 +176,7 @@ jobs:
 # NPM
 # ---------------------------------------
     - stage: "Deployments"
-      if: type = push AND tag IS present AND branch =~ ^master|.*-stable$
+      if: tag IS present
       name: "Deploy on NPM"
 
       os: linux
