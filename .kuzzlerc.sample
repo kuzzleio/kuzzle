@@ -46,7 +46,7 @@
     // * requestsBufferWarningThreshold:
     //      Number of buffered requests after
     //      which Kuzzle will throw 'core:overload' events
-    //      (see http://docs.kuzzle.io/plugin-reference/#core)
+    //      (see https://docs.kuzzle.io/plugins/1/events/core-overload/)
     // * subscriptionConditionsCount
     //      Maximum number of conditions a subscription filter can contain
     //      NB: A condition is either a "simple" operator (anything but and, or and bool)
@@ -542,7 +542,7 @@
   // [validation]
   // Defines the specifications used to validate data.
   // Please refer to the guide for more information.
-  // (http://docs.kuzzle.io/guide/#data-validation)
+  // (https://docs.kuzzle.io/guide/1/datavalidation)
   "validation": {
   },
 

@@ -8,9 +8,13 @@ const
   config = require('../../lib/config'),
   foo = {foo: 'bar'};
 
+let _instance;
+
 class KuzzleMock extends Kuzzle {
   constructor () {
     super();
+
+    _instance = this;
 
     this.sandbox = sinon.createSandbox();
 
@@ -321,6 +325,8 @@ class KuzzleMock extends Kuzzle {
       }
     };
 
+    this.start = sinon.stub().resolves();
+
     this.statistics = {
       completedRequest: this.sandbox.spy(),
       newConnection: this.sandbox.stub(),
@@ -370,6 +376,10 @@ class KuzzleMock extends Kuzzle {
 
   static hash (input) {
     return Kuzzle.hash(input);
+  }
+
+  static instance () {
+    return _instance;
   }
 }
 
