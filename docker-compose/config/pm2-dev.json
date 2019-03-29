@@ -1,10 +1,24 @@
 {
-  "apps": [{
-    "name"         : "KuzzleServer",
-    "script"       : "bin/kuzzle",
-    "args"         : ["start"],
-    "watch"        : ["lib/**/*.js", "default.config.js", "plugins/enabled/**/*.js"],
-    "node_args"    : "--inspect=0.0.0.0:9229",
-    "kill_timeout" : 15000
-  }]
+  "apps": [
+    {
+      "name": "KuzzleServer",
+      "script": "bin/kuzzle",
+      "args": [
+        "start",
+        "--mappings",
+        "/fixtures/mappings.json",
+        "--fixtures",
+        "/fixtures/fixtures.json",
+        "--securities",
+        "/fixtures/securities.json"
+      ],
+      "watch": [
+        "lib/**/*.js",
+        "default.config.js",
+        "plugins/enabled/**/*.js"
+      ],
+      "node_args": "--inspect=0.0.0.0:9229",
+      "kill_timeout": 15000
+    }
+  ]
 }
