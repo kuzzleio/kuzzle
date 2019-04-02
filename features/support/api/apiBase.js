@@ -1293,6 +1293,33 @@ class ApiBase {
       action: 'resetDatabase'
     });
   }
+
+  loadMappings (body) {
+    return this.send({
+      body,
+      controller: 'admin',
+      action: 'loadMappings',
+      refresh: 'wait_for'
+    });
+  }
+
+  loadFixtures (body) {
+    return this.send({
+      body,
+      controller: 'admin',
+      action: 'loadFixtures',
+      refresh: 'wait_for'
+    });
+  }
+
+  loadSecurities (body) {
+    return this.send({
+      body,
+      controller: 'admin',
+      action: 'loadSecurities',
+      refresh: 'wait_for'
+    });
+  }
 }
 
 
