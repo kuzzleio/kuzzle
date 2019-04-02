@@ -31,5 +31,6 @@ module.exports = {
   websocketEmbedded: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7512}\'',
   httpProxy: '--fail-fast --tags "not @realtime" --world-parameters \'{"protocol": "http", "port": 7513}\'',
   socketioProxy: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "socketio", "port": 7513}\'',
-  websocketProxy: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7513}\''
+  websocketProxy: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7513}\'',
+  websocketNoRedis: '--fail-fast --tags "not @redis" --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7512}\''
 };

@@ -64,7 +64,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     hotelClerk.removeCustomerFromAllRooms(context);
 
     should(kuzzle.realtime.remove).be.calledOnce();
-    should(kuzzle.notifier.notifyUser).be.calledOnce();
+    should(kuzzle.notifier.notifyUser).be.calledTwice();
 
     should(kuzzle.notifier.notifyUser.args[0][1]).be.instanceOf(Request);
     should(kuzzle.notifier.notifyUser.args[0][1].input.controller).be.exactly('realtime');
