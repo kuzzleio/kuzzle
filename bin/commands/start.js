@@ -22,20 +22,42 @@
 /* eslint-disable no-console */
 
 const
-  rc = require('rc'),
+  loadJson = require('./loadJson'),
   ColorOutput = require('./colorOutput');
 
-const
-  params = rc('kuzzle');
-
-function commandStart (options) {
+function commandStart (options = {}) {
   const
     kuzzle = new (require('../../lib/api/kuzzle'))(),
-    cout = new ColorOutput(options);
+    cout = new ColorOutput(options),
+    kuzzleParams = {};
 
   console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
 
-  kuzzle.start(params)
+  const promises = [];
+
+  if (options.mappings) {
+    promises.push(loadJson(options.mappings)
+      .then(mappings => {
+        kuzzleParams.mappings = mappings;
+      }));
+  }
+
+  if (options.fixtures) {
+    promises.push(loadJson(options.fixtures)
+      .then(fixtures => {
+        kuzzleParams.fixtures = fixtures;
+      }));
+  }
+
+  if (options.securities) {
+    promises.push(loadJson(options.securities)
+      .then(securities => {
+        kuzzleParams.securities = securities;
+      }));
+  }
+
+  return Promise.all(promises)
+    .then(() => kuzzle.start(kuzzleParams))
     .then(() => {
       console.log(cout.kuz('[✔] Kuzzle server ready'));
       return kuzzle.internalEngine.bootstrap.adminExists()
