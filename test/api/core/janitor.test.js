@@ -94,12 +94,8 @@ describe('Test: core/janitor', () => {
         });
     });
 
-    it('should reject if the roles object is null', () => {
-      return should(janitor.loadSecurities({
-        roles: null,
-        profiles: securities.profiles,
-        users: securities.users
-      }))
+    it('should reject if the securities object is null', () => {
+      return should(janitor.loadSecurities(null))
         .rejectedWith(
           BadRequestError,
           {message: 'Expected \'null\' to be an object'}
@@ -118,18 +114,6 @@ describe('Test: core/janitor', () => {
         );
     });
 
-    it('should reject if the profiles object is null', () => {
-      return should(janitor.loadSecurities({
-        roles: securities.roles,
-        profiles: null,
-        users: securities.users
-      }))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'null\' to be an object'}
-        );
-    });
-
     it('should reject if profiles contains non-object properties', () => {
       return should(janitor.loadSecurities({
         roles: securities.roles,
@@ -139,18 +123,6 @@ describe('Test: core/janitor', () => {
         .rejectedWith(
           BadRequestError,
           {message: 'Expected \'123\' to be an object'}
-        );
-    });
-
-    it('should reject if the users object is null', () => {
-      return should(janitor.loadSecurities({
-        roles: securities.roles,
-        profiles: securities.profiles,
-        users: null
-      }))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'null\' to be an object'}
         );
     });
 
