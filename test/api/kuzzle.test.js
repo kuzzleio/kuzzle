@@ -5,7 +5,7 @@ const
   Kuzzle = rewire('../../lib/api/kuzzle'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
-describe.only('/lib/api/kuzzle.js', () => {
+describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
 
   beforeEach(() => {
