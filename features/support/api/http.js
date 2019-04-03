@@ -1276,6 +1276,36 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  loadMappings (body) {
+    const options = {
+      url : this.apiPath('admin/_loadMappings?refresh=wait_for'),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
+  loadFixtures (body) {
+    const options = {
+      url : this.apiPath('admin/_loadFixtures?refresh=wait_for'),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
+  loadSecurities (body) {
+    const options = {
+      url : this.apiPath('admin/_loadSecurities?refresh=wait_for'),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
   encode(algorithm) {
     checkAlgorithm(algorithm);
     this.encoding = algorithm;

@@ -84,7 +84,7 @@ describe('/lib/api/kuzzle.js', () => {
         processOnSpy = sinon.spy(),
         processRemoveAllListenersSpy = sinon.spy();
 
-      Kuzzle.__with__({
+      return Kuzzle.__with__({
         console: {
           error: sinon.spy()
         },
@@ -117,29 +117,30 @@ describe('/lib/api/kuzzle.js', () => {
 
         kuzzle.config.dump.enabled = true;
 
-        kuzzle.start();
+        return kuzzle.start();
+      })
+        .then(() => {
+          should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly('unhandledRejection');
+          should(processOnSpy.getCall(0).args[0]).be.exactly('unhandledRejection');
 
-        should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly('unhandledRejection');
-        should(processOnSpy.getCall(0).args[0]).be.exactly('unhandledRejection');
+          should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly('uncaughtException');
+          should(processOnSpy.getCall(1).args[0]).be.exactly('uncaughtException');
 
-        should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly('uncaughtException');
-        should(processOnSpy.getCall(1).args[0]).be.exactly('uncaughtException');
+          should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly('SIGQUIT');
+          should(processOnSpy.getCall(2).args[0]).be.exactly('SIGQUIT');
 
-        should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly('SIGQUIT');
-        should(processOnSpy.getCall(2).args[0]).be.exactly('SIGQUIT');
+          should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly('SIGABRT');
+          should(processOnSpy.getCall(3).args[0]).be.exactly('SIGABRT');
 
-        should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly('SIGABRT');
-        should(processOnSpy.getCall(3).args[0]).be.exactly('SIGABRT');
+          should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly('SIGTRAP');
+          should(processOnSpy.getCall(4).args[0]).be.exactly('SIGTRAP');
 
-        should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly('SIGTRAP');
-        should(processOnSpy.getCall(4).args[0]).be.exactly('SIGTRAP');
+          should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly('SIGINT');
+          should(processOnSpy.getCall(5).args[0]).be.exactly('SIGINT');
 
-        should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly('SIGINT');
-        should(processOnSpy.getCall(5).args[0]).be.exactly('SIGINT');
-
-        should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
-        should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
-      });
+          should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
+          should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
+        });
     });
 
     it('should not start if it fails initializing its internal storage', () => {
