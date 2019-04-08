@@ -1,5 +1,4 @@
 Feature: Kuzzle functional tests
-
   @http
   Scenario: Send a request compressed with gzip
     Given a request compressed with "gzip"
@@ -1831,3 +1830,68 @@ Feature: Kuzzle functional tests
     Then I'm able to find a default role with id "admin" equivalent to role "admin"
     And I'm able to find a default role with id "default" equivalent to role "default"
     And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"
+
+  Scenario: Load Mappings
+    Given I load the mappings '{"kuzzle-test-index-new": {"kuzzle-collection-test": {}}}'
+    When I check if index "kuzzle-test-index-new" exists
+    Then The result should match the json true
+    When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index-new"
+    Then The result should match the json true
+    Then I'm able to delete the index named "kuzzle-test-index-new"
+
+  Scenario: Load Fixtures
+    When I load the fixtures
+    """
+    {
+      "kuzzle-test-index": {
+        "kuzzle-collection-test": [
+          {"create": {"_id": "foo"}},
+          {}
+        ]
+      },
+      "kuzzle-test-index-alt": {
+        "kuzzle-collection-test": [
+          {"create": {"_id": "bar"}},
+          {}
+        ]
+      }
+    }
+    """
+    Then I find a document with "foo" in field "_id" in index "kuzzle-test-index"
+    And I find a document with "bar" in field "_id" in index "kuzzle-test-index-alt"
+
+  Scenario: Load Securities
+    When I load the securities
+    """
+    {
+      "roles": {
+        "#prefix#fakeRole": {
+          "controllers": {
+            "*": {
+              "actions": {
+                "*" : true
+              }
+            }
+          }
+        }
+      },
+      "profiles": {
+        "#prefix#fakeProfile": {
+          "policies": [
+            {"roleId": "#prefix#fakeRole"}
+          ]
+        }
+      },
+      "users": {
+        "#prefix#fakeUser": {
+          "content": {
+            "profileIds": ["#prefix#fakeProfile"]
+          }
+        }
+      }
+    }
+    """
+    # the following tests assume the prefix #prefix# automatically
+    Then I'm able to find a role with id "fakeRole"
+    And I'm able to find the profile with id "fakeProfile"
+    And I am able to get the user "fakeUser"

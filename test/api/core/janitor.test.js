@@ -4,7 +4,12 @@ const
   sinon = require('sinon'),
   path = require('path'),
   should = require('should'),
-  PreconditionError = require('kuzzle-common-objects').errors.PreconditionError,
+  {
+    errors: {
+      BadRequestError,
+      PreconditionError
+    }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 function rewireJanitor() {
@@ -37,53 +42,46 @@ describe('Test: core/janitor', () => {
   });
 
   describe('#loadSecurities', () => {
-    const
-      securities = require('../../mocks/securities.json');
+    const securities = require('../../mocks/securities.json');
 
     beforeEach(() => {
       Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
     });
 
-    it('create or replace roles', done => {
+    afterEach(() => {
+      mockrequire.stopAll();
+    });
+
+    it('should create or replace roles', () => {
       kuzzle.funnel.processRequest.resolves(true);
 
-      janitor.loadSecurities({ roles: securities.roles })
+      return janitor.loadSecurities({ roles: securities.roles })
         .then(() => {
           should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createOrReplaceRole');
           should(kuzzle.funnel.processRequest.getCall(0).args[0].input.resource._id).be.eql('driver');
           should(kuzzle.funnel.processRequest.getCall(0).args[0].input.body.controllers.document.actions['*']).be.eql(true);
-
-          done();
-        })
-        .catch(error => {
-          done(error);
         });
     });
 
-    it('create or replace profiles', done => {
+    it('should create or replace profiles', () => {
       kuzzle.funnel.processRequest.resolves(true);
 
-      janitor.loadSecurities({ profiles: securities.profiles })
+      return janitor.loadSecurities({ profiles: securities.profiles })
         .then(() => {
           should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createOrReplaceProfile');
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.resource._id).be.eql('customer');
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.body.policies[0].roleId).be.eql('customer');
-
-          done();
-        })
-        .catch(error => {
-          done(error);
         });
     });
 
-    it('delete then create users', done => {
+    it('should delete then create users', () => {
       kuzzle.funnel.processRequest.resolves(true);
 
-      janitor.loadSecurities({ users: securities.users })
+      return janitor.loadSecurities({ users: securities.users })
         .then(() => {
           should(kuzzle.funnel.processRequest.callCount).be.eql(3);
 
@@ -93,62 +91,100 @@ describe('Test: core/janitor', () => {
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createUser');
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.resource._id).be.eql('gfreeman');
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.body.content.profileIds).be.eql(['driver']);
-
-          done();
-        })
-        .catch(error => {
-          done(error);
         });
     });
 
+    it('should reject if the securities object is null', () => {
+      return should(janitor.loadSecurities(null))
+        .rejectedWith(
+          BadRequestError,
+          {message: 'Expected \'null\' to be an object'}
+        );
+    });
+
+    it('should reject if roles contains non-object properties', () => {
+      return should(janitor.loadSecurities({
+        roles: { foo: 123},
+        profiles: securities.profiles,
+        users: securities.users
+      }))
+        .rejectedWith(
+          BadRequestError,
+          {message: 'Expected \'123\' to be an object'}
+        );
+    });
+
+    it('should reject if profiles contains non-object properties', () => {
+      return should(janitor.loadSecurities({
+        roles: securities.roles,
+        profiles: { foo: 123},
+        users: securities.users
+      }))
+        .rejectedWith(
+          BadRequestError,
+          {message: 'Expected \'123\' to be an object'}
+        );
+    });
+
+    it('should reject if users contains non-object properties', () => {
+      return should(janitor.loadSecurities({
+        roles: securities.roles,
+        profiles: securities.profiles,
+        users: { foo: 123},
+      }))
+        .rejectedWith(
+          BadRequestError,
+          {message: 'Expected \'123\' to be an object'}
+        );
+    });
   });
 
   describe('#loadFixtures', () => {
-    const
-      fixtures = require('../../mocks/fixtures.json');
+    const fixtures = require('../../mocks/fixtures.json');
 
     beforeEach(() => {
       janitor = new Janitor(kuzzle);
     });
 
-    it('create index and collection that does not exists', done => {
+    it('create index and collection that does not exists', () => {
       const storageEngine = kuzzle.services.list.storageEngine;
       storageEngine.import.onCall(0).resolves(false);
       storageEngine.import.onCall(1).resolves(true);
       storageEngine.import.onCall(2).resolves(false);
 
-      janitor.loadFixtures(fixtures)
+      return janitor.loadFixtures(fixtures)
         .then(() => {
           should(storageEngine.import.callCount).be.eql(3);
           should(storageEngine.import.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
           should(storageEngine.import.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
           should(storageEngine.import.getCall(0).args[0].input.body.bulkData[1]).be.eql({ name: 'alyx' });
-
           should(storageEngine.refreshIndex.callCount).be.eql(3);
-
-          done();
-        })
-        .catch(error => {
-          done(error);
         });
+    });
+
+    it('should reject if fixtures contain non-object properties', () => {
+      return should(janitor.loadFixtures({foo: 123}))
+        .rejectedWith(
+          BadRequestError,
+          {message: 'Expected \'123\' to be an object'}
+        );
     });
   });
 
   describe('#loadMappings', () => {
-    const
-      mappings = require('../../mocks/mappings.json');
+    const mappings = require('../../mocks/mappings.json');
 
     beforeEach(() => {
       janitor = new Janitor(kuzzle);
     });
 
-    it('create index and collection that does not exists', done => {
+    it('create index and collection that does not exists', () => {
       const storageEngine = kuzzle.services.list.storageEngine;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);
 
-      janitor.loadMappings(mappings)
+      return janitor.loadMappings(mappings)
         .then(() => {
           should(storageEngine.indexExists.callCount).be.eql(3);
           should(storageEngine.createIndex.callCount).be.eql(2);
@@ -161,12 +197,15 @@ describe('Test: core/janitor', () => {
           should(storageEngine.refreshIndex.callCount).be.eql(3);
 
           should(kuzzle.indexCache.add.callCount).be.eql(3);
-
-          done();
-        })
-        .catch(error => {
-          done(error);
         });
+    });
+
+    it('should reject if a mapping contains non-object properties', () => {
+      return should(janitor.loadMappings({foo: 123}))
+        .rejectedWith(
+          BadRequestError,
+          {message: 'Expected \'123\' to be an object'}
+        );
     });
   });
 
