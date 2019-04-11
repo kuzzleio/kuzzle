@@ -68,7 +68,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
 
     should(kuzzle.realtime.remove).be.calledOnce();
 
-    should(kuzzle.notifier.notifyUser).not.be.called();
+    should(kuzzle.notifier.notifyUser).be.calledOnce();
 
     should(hotelClerk.roomsCount).be.eql(1);
 
@@ -93,7 +93,7 @@ describe('Test: hotelClerk.removeSubscription', () => {
       .be.calledOnce()
       .be.calledWith(unsubscribeRequest.input.body.roomId);
 
-    should(kuzzle.notifier.notifyUser).not.be.called();
+    should(kuzzle.notifier.notifyUser).be.calledOnce();
 
     should(hotelClerk.rooms).be.an.Object().and.be.empty();
     should(hotelClerk.customers).be.an.Object().and.be.empty();

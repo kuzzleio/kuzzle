@@ -294,6 +294,8 @@ Feature: Kuzzle functional tests
   Scenario: Count how many subscription on a room
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
     Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
+    # a little time for cluster replication
+    And I wait 0.1s
     Then I can count "2" subscription
 
   @realtime
@@ -350,6 +352,7 @@ Feature: Kuzzle functional tests
   @realtime
   Scenario: get list of subscriptions
     Given A room subscription listening to "lastName" having value "Hopper"
+    And I wait 0.1s
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
 
