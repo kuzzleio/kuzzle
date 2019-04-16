@@ -63,7 +63,7 @@ function dumpCollectionPart (results, bulkDocuments) {
 
 function dumpCollection (sdk, index, collection, directoryPath) {
   const
-    filename = `${directoryPath}/${index}-${collection}-dump.json`,
+    filename = `${directoryPath}/${index}--${collection}--dump.json`,
     options = {
       scroll: '10m',
       size: 500

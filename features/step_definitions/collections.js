@@ -83,4 +83,3 @@ When(/^I check if index "(.*?)" exists$/, function (index, cb) {
 When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collection, index, cb) {
   return stepUtils.getReturn.call(this, 'collectionExists', index, collection, cb);
 });
-
