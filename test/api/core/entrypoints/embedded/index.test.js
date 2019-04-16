@@ -104,7 +104,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
     entrypoint = new EntryPoint(kuzzle);
 
-    Object.defineProperty(entrypoint, 'log', {
+    Object.defineProperty(entrypoint, 'logger', {
       enumerable: true,
       value: {
         info: sinon.spy(),
@@ -611,18 +611,23 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       entrypoint.logger = {
         info: sinon.spy()
       };
+      entrypoint.anonymousUserId = '-1';
     });
 
-    it('should trigger an warn log if no connection could be found', () => {
-      entrypoint.logAccess(new Request({controller: 'controller', action: 'action'}, {connectionId: '-1'}));
+    it('should use the request context if the connection has dropped', () => {
+      const request = new Request(
+        {controller: 'controller', action: 'action'},
+        {
+          connectionId: '-1',
+          token: { userId: '-1' },
+          protocol: 'foobar'
+        });
 
-      should(kuzzle.pluginsManager.trigger)
-        .be.calledOnce()
-        .be.calledWith('log:warn', '[access log] No connection retrieved for connection id: -1 on controller:action\n' +
-        'Most likely, the connection was closed before the response was received.');
+      entrypoint.logAccess(request);
 
       should(entrypoint.logger.info)
-        .have.callCount(0);
+        .calledOnce()
+        .calledWithMatch(/^- - \(anonymous\) \[.*?\] "DO \/controller\/action FOOBAR" \d{3} \d{3} - -$/);
     });
 
     it('should forward the params to the logger when using "logstash" format output', () => {
@@ -715,7 +720,28 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         .be.calledWithMatch(/^1\.1\.1\.1 - foo \[/);
     });
 
-    it('should log a warning if the user could not be extracted from http headers', () => {
+    it('should extract the user from a JWT', () => {
+      const
+        connection = {
+          protocol: 'websocket',
+          headers: {
+          },
+          ips: ['ip']
+        },
+        request = new Request({
+          controller: 'controller',
+          action: 'action',
+          jwt: 'token.eyJfaWQiOiJmb28ifQ==' // base64("{'_id':'foo'}")
+        }, {connection});
+
+      entrypoint.logAccess(request);
+
+      should(entrypoint.logger.info)
+        .be.calledOnce()
+        .be.calledWithMatch(/^ip - foo \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action WEBSOCKET" \d+ \d+ - -$/);
+    });
+
+    it('should handle the case of a user that cannot be extracted from http headers', () => {
       const
         connection = {
           protocol: 'HTTP/1.0',
@@ -742,15 +768,12 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
       entrypoint.logAccess(request, extra);
 
-      should(kuzzle.pluginsManager.trigger)
-        .be.calledOnce()
-        .be.calledWith('log:warn', 'Unable to extract user from authorization header: Bearer invalid');
       should(entrypoint.logger.info)
         .be.calledOnce()
         .be.calledWithMatch(/^ip - - \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "GET url HTTP\/1.0" 300 113 - -$/);
     });
 
-    it('should log a warning if the user could not be extracted from jwt token', () => {
+    it('should handle the case of a user that cannot be extracted from a jwt', () => {
       const
         connection = {
           protocol: 'websocket',
@@ -782,9 +805,33 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
       entrypoint.logAccess(request);
 
-      should(kuzzle.pluginsManager.trigger)
+      should(entrypoint.logger.info)
         .be.calledOnce()
-        .be.calledWith('log:warn', 'Unable to extract user from jwt token: invalid');
+        .be.calledWithMatch(/^ip - - \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection\/id\?timestamp=timestamp&requestId=requestId&foo=bar WEBSOCKET" 200 86 - -$/);
+    });
+
+    it('should use the already verified user from the request, if available', () => {
+      const request = new Request({
+        controller: 'controller',
+        action: 'action',
+        index: 'index',
+        collection: 'collection'
+      }, {
+        token: {
+          userId: 'foobar'
+        },
+        connection: {
+          protocol: 'websocket',
+          headers: {},
+          ips: ['ip']
+        }
+      });
+
+      entrypoint.logAccess(request);
+
+      should(entrypoint.logger.info)
+        .be.calledOnce()
+        .be.calledWithMatch(/^ip - foobar \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection WEBSOCKET" 102 295 - -$/);
     });
   });
 

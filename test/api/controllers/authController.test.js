@@ -172,7 +172,8 @@ describe('Test the auth controller', () => {
         jwt: signedToken
       }, {
         connectionId: 'papagaya',
-        token: t
+        token: t,
+        user: { _id: 'foo' }
       });
     });
 
@@ -190,6 +191,14 @@ describe('Test the auth controller', () => {
       kuzzle.repositories.token.expire.rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(KuzzleInternalError);
+    });
+
+    it('should throw if invoked by an anonymous user', () => {
+      request.context.user._id = '-1';
+
+      should(() => authController.logout(request)).throw(
+        UnauthorizedError,
+        {message: 'You must be authenticated to execute that action'});
     });
   });
 

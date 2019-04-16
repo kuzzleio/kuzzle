@@ -22,6 +22,7 @@ services:
       - "..:/var/app"
       - "./scripts/run-dev.sh:/run.sh"
       - "./config/pm2-dev.json:/config/pm2.json"
+      - "./fixtures:/fixtures"
     cap_add:
       - SYS_PTRACE
     ulimits:
