@@ -6,20 +6,20 @@ Feature: Kuzzle functional tests
 
   Scenario: Update collection mapping: dynamic field
     When I create a collection "kuzzle-test-index":"my-collection2"
-    And I update the mapping of "kuzzle-test-index":"my-collection2" with "{ dynamic: 'strict' }"
+    And I update the mapping of "kuzzle-test-index":"my-collection2" with '{ "dynamic": "strict" }'
     Then The mapping dynamic field of "kuzzle-test-index":"my-collection2" is "strict"
 
   Scenario: Update collection mapping: properties field
     When I create a collection "kuzzle-test-index":"my-collection3"
-    And I update the mapping of "kuzzle-test-index":"my-collection3" with "{ properties: { age: { type: 'integer' } } }"
+    And I update the mapping of "kuzzle-test-index":"my-collection3" with '{ "properties": { "age": { "type": "integer" } } }'
     Then The mapping dynamic field of "kuzzle-test-index":"my-collection3" is "the default value"
-    Then The mapping properties field of "kuzzle-test-index":"my-collection3" is "{ age: { type: 'integer' } }"
+    Then The mapping properties field of "kuzzle-test-index":"my-collection3" is '{ "age": { "type": "integer" } }'
 
   Scenario: Update collection mapping: _meta field
     When I create a collection "kuzzle-test-index":"my-collection4"
-    And I update the mapping of "kuzzle-test-index":"my-collection4" with "{ _meta: { nepali: 'liia meh ry' } }"
-    And I update the mapping of "kuzzle-test-index":"my-collection4" with "{ properties: { age: { type: 'integer' } } }"
-    Then The mapping _meta field of "kuzzle-test-index":"my-collection4" is "{ _meta: { nepali: 'liia meh ry' } }"
+    And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "_meta": { "nepali": "liia meh ry" } }'
+    And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "properties": { "age": { "type": "integer" } } }'
+    Then The mapping _meta field of "kuzzle-test-index":"my-collection4" is '{ "_meta": { "nepali": "liia meh ry" } }'
 
   @http
   Scenario: Send a request compressed with gzip

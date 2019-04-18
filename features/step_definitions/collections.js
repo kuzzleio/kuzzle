@@ -101,7 +101,7 @@ Then('The mapping dynamic field of {string}:{string} is {string}', function (ind
 });
 
 When('I update the mapping of {string}:{string} with {string}', function (index, collection, rawMapping) {
-  const mapping = eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
+  const mapping = JSON.parse(rawMapping);
 
   return this.api.updateMapping(index, collection, mapping);
 });
@@ -111,7 +111,7 @@ Then('The mapping properties field of {string}:{string} is {string}', function (
 
   return this.api.getCollectionMapping(index, collection, includeKuzzleInfo)
     .then(({ result }) => {
-      const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.db.commonMapping : eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
+      const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.db.commonMapping : JSON.parse(rawMapping);
 
       should(result[index].mappings[collection].properties)
         .not.be.undefined()
@@ -120,7 +120,7 @@ Then('The mapping properties field of {string}:{string} is {string}', function (
 });
 
 Then('The mapping _meta field of {string}:{string} is {string}', function (index, collection, rawMapping) {
-  const mapping = eval(`() => (${rawMapping})`)(); // eslint-disable-line no-eval
+  const mapping = JSON.parse(rawMapping);
 
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
