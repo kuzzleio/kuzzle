@@ -3,7 +3,12 @@ const
   should = require('should'),
   sinon = require('sinon'),
   EntryPoint = require('../../../../../../lib/api/core/entrypoints/embedded'),
-  KuzzleMock = require('../../../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
+  {
+    errors: {
+      InternalError: KuzzleInternalError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
   let
@@ -29,6 +34,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     protocol = new WebSocketProtocol();
   });
 
+  afterEach(() => {
+    clearInterval(protocol.heartbeatInterval);
+    mockrequire.stopAll();
+  });
+
   describe('#init', () => {
     it('should do nothing if the protocol is not enabled', () => {
       entrypoint.config.protocols.websocket.enabled = false;
@@ -37,17 +47,55 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(protocol.server).be.null();
     });
 
+    it('should throw if the heartbeat value is not set to a valid value', () => {
+      for (const value of [null, 'foo', {}, [], 3.14159, true, -42, undefined]) {
+        const
+          ep = new EntryPoint(kuzzle),
+          wsp = new WebSocketProtocol();
+
+        ep.config.protocols.websocket.heartbeat = value;
+
+        should(() => wsp.init(ep)).throw(
+          KuzzleInternalError,
+          {message: `WebSocket: invalid heartbeat value ${value}`});
+      }
+    });
+
+    it('should start a heartbeat if asked to', () => {
+      const
+        clock = sinon.useFakeTimers(),
+        heartbeatSpy = sinon.stub(protocol, '_doHeartbeat');
+
+      entrypoint.config.protocols.websocket.heartbeat = 1000;
+
+      protocol.init(entrypoint);
+      should(protocol.heartbeatInterval).not.be.null();
+      should(heartbeatSpy).not.be.called();
+
+      clock.tick(1000);
+
+      should(heartbeatSpy).be.calledOnce();
+
+      clock.tick(1000);
+
+      should(heartbeatSpy).be.calledTwice();
+    });
+
+    it('should disable heartbeats if set to 0', () => {
+      entrypoint.config.protocols.websocket.heartbeat = 0;
+      protocol.init(entrypoint);
+      should(protocol.heartbeatInterval).be.null();
+    });
+
     it('should launch a websocket server and bind events to it', () => {
       protocol.onConnection = sinon.spy();
       protocol.onServerError = sinon.spy();
 
       protocol.init(entrypoint);
 
-      should(protocol.entryPoint)
-        .eql(entrypoint);
-
-      should(WebSocketServer)
-        .be.calledOnce();
+      should(protocol.entryPoint).eql(entrypoint);
+      should(protocol.heartbeatInterval).not.be.null();
+      should(WebSocketServer).be.calledOnce();
 
       const server = WebSocketServer.firstCall.returnValue;
       should(server.on)
@@ -75,7 +123,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       protocol.onServerError('test');
       should(kuzzle.pluginsManager.trigger)
         .be.calledOnce()
-        .be.calledWith('log:error', '[websocket] An error has occured "undefined":\nundefined');
+        .be.calledWith(
+          'log:error',
+          '[websocket] An error has occured "undefined":\nundefined');
     });
   });
 
@@ -136,14 +186,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
           channels: []
         });
 
+      should(onClientSpy.callCount).eql(4);
       should(onClientSpy)
-        .be.calledThrice()
         .be.calledWith('close')
         .be.calledWith('error')
-        .be.calledWith('message');
+        .be.calledWith('message')
+        .be.calledWith('pong');
 
       {
-        const onCloseH = onClientSpy.firstCall.args[1];
+        const onCloseH = onClientSpy.getCall(0).args[1];
 
         onCloseH('test');
         should(protocol.onClientDisconnection)
@@ -152,7 +203,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       }
 
       {
-        const onErrorH = onClientSpy.secondCall.args[1];
+        const onErrorH = onClientSpy.getCall(1).args[1];
 
         onErrorH('anotherone');
         should(protocol.onClientDisconnection)
@@ -160,12 +211,20 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       }
 
       {
-        const onMessageH = onClientSpy.thirdCall.args[1];
+        const onMessageH = onClientSpy.getCall(2).args[1];
 
         onMessageH('test');
         should(protocol.onClientMessage)
           .be.calledOnce()
           .be.calledWith(connection, 'test');
+      }
+
+      {
+        const onPongH = onClientSpy.getCall(3).args[1];
+
+        protocol.connectionPool[connection.id].alive = false;
+        onPongH();
+        should(protocol.connectionPool[connection.id].alive).be.true();
       }
     });
 
@@ -442,4 +501,34 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     });
   });
 
+  describe('#_doHeartbeat', () => {
+    it('should terminate dead sockets, and mark others as dead', () => {
+      protocol.connectionPool = {
+        ahAhAhAhStayinAliveStayinAlive: {
+          alive: true,
+          socket: { terminate: sinon.spy(), ping: sinon.spy() }
+        },
+        dead: {
+          alive: false,
+          socket: { terminate: sinon.spy(), ping: sinon.spy() }
+        },
+        ahAhAhAhStayinAliiiiiiiiive: {
+          alive: true,
+          socket: { terminate: sinon.spy(), ping: sinon.spy() }
+        }
+      };
+
+      protocol._doHeartbeat();
+
+      for (const id of ['ahAhAhAhStayinAliveStayinAlive', 'ahAhAhAhStayinAliiiiiiiiive']) {
+        should(protocol.connectionPool[id].alive).be.false();
+        should(protocol.connectionPool[id].socket.terminate).not.be.called();
+        should(protocol.connectionPool[id].socket.ping).be.calledOnce();
+      }
+
+      should(protocol.connectionPool.dead.alive).be.false();
+      should(protocol.connectionPool.dead.socket.terminate).be.calledOnce();
+      should(protocol.connectionPool.dead.socket.ping).not.be.called();
+    });
+  });
 });

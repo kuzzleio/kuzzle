@@ -376,8 +376,14 @@
         // value of Access-Control-Allow-Origin header to answer the upgrade request
         "origins": "*:*"
       },
+      // * enabled:
+      //    Set to true to enable WebSocket support
+      // * heartbeat:
+      //    The time, in milliseconds, between the server's PING requests.
+      //    Setting this value to 0 disables PING/PONG requests entirely.
       "websocket": {
-        "enabled": true
+        "enabled": true,
+        "heartbeat": 60000
       }
     }
   },
