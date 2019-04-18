@@ -79,6 +79,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       clock.tick(1000);
 
       should(heartbeatSpy).be.calledTwice();
+
+      clock.restore();
     });
 
     it('should disable heartbeats if set to 0', () => {
