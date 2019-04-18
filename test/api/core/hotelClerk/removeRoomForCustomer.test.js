@@ -68,8 +68,9 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     should(hotelClerk.roomsCount).be.eql(0);
     should(hotelClerk.rooms).be.an.Object().and.be.empty();
 
-    // should not notify since nobody else is listening
-    should(kuzzle.notifier.notifyUser).not.be.called();
+    // should still notify even if nobody is listening for cluster mode
+    should(kuzzle.notifier.notifyUser)
+      .be.calledOnce();
   });
 
   it('should remove the room from the customer list and keep other existing rooms', () => {
@@ -91,8 +92,9 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     should(hotelClerk.rooms.anotherRoom).not.be.undefined();
     should(hotelClerk.roomsCount).be.eql(1);
 
-    // should not notify since nobody else is listening
-    should(kuzzle.notifier.notifyUser).not.be.called();
+    // should still notify even if nobody is listening for cluster mode
+    should(kuzzle.notifier.notifyUser)
+      .be.calledOnce();
   });
 
   it('should remove a customer and notify other users in the room', () => {

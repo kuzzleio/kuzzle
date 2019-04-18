@@ -970,12 +970,14 @@ describe('Test: ElasticSearch service', () => {
       const
         refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
 
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       elasticsearch.client.bulk.resolves({});
       const getMappingResult = {
         [index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([
+        {alias: 'alias', index}
+      ]);
 
       request.input.body = {
         bulkData: [
@@ -983,7 +985,7 @@ describe('Test: ElasticSearch service', () => {
           {firstName: 'foo'},
           {index: {_id: 2, _type: collection, _index: index}},
           {firstName: 'bar'},
-          {update: {_id: 1, _type: collection, _index: index}},
+          {update: {_id: 1, _type: collection, _index: 'alias'}},
           {doc: {firstName: 'foobar'}},
           {delete: {_id: 2, _type: collection, _index: index}}
         ]
@@ -997,18 +999,20 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should add metadata to documents', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       elasticsearch.client.bulk.resolves({});
       const getMappingResult = {
         [index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([
+        {alias: 'alias', index}
+      ]);
 
       request.input.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
           {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
+          {index: {_id: 2, _type: collection, _index: 'alias'}},
           {firstName: 'bar'},
           {create: {_id: 3, _type: collection, _index: index}},
           {firstName: 'gordon'},
@@ -1055,6 +1059,7 @@ describe('Test: ElasticSearch service', () => {
         [index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([]);
 
       request.input.body = {
         bulkData: []
@@ -1084,7 +1089,6 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should raise a "Partial Error" response for bulk data import with some errors', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       elasticsearch.client.bulk.resolves({
         errors: true,
         items: [
@@ -1096,6 +1100,9 @@ describe('Test: ElasticSearch service', () => {
         [index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([
+        {alias: 'alias', index}
+      ]);
 
       request.input.body = {
         bulkData: [
@@ -1103,7 +1110,7 @@ describe('Test: ElasticSearch service', () => {
           {firstName: 'foo'},
           {index: {_id: 2, _type: collection, _index: index}},
           {firstName: 'bar'},
-          {update: {_id: 12, _type: collection, _index: index}},
+          {update: {_id: 12, _type: collection, _index: 'alias'}},
           {doc: {firstName: 'foobar'}},
           {update: {_id: 212, _type: collection, _index: index}},
           {doc: {firstName: 'foobar'}}
@@ -1120,7 +1127,6 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should override the type with the collection if one has been specified in the request', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       elasticsearch.client.bulk.resolves({
         items: [
           {index: {_id: 1, _index: index, _type: collection}},
@@ -1134,6 +1140,9 @@ describe('Test: ElasticSearch service', () => {
         indexAlt: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([
+        {alias: 'alias', index}
+      ]);
 
       request.input.body = {
         bulkData: [
@@ -1141,7 +1150,7 @@ describe('Test: ElasticSearch service', () => {
           {firstName: 'foo'},
           {index: {_id: 2, _index: 'indexAlt'}},
           {firstName: 'bar'},
-          {update: {_id: 1, _index: index}},
+          {update: {_id: 1, _index: 'alias'}},
           {doc: {firstName: 'foobar'}},
           {delete: {_id: 2, _index: 'indexAlt'}}
         ]
@@ -1156,7 +1165,7 @@ describe('Test: ElasticSearch service', () => {
             {firstName: 'foo'},
             {index: {_id: 2, _index: 'indexAlt', _type: collection}},
             {firstName: 'bar'},
-            {update: {_id: 1, _index: index, _type: collection}},
+            {update: {_id: 1, _index: 'alias', _type: collection}},
             {doc: {firstName: 'foobar'}},
             {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
           ]);
@@ -1171,6 +1180,7 @@ describe('Test: ElasticSearch service', () => {
         [index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([]);
 
       request.input.body = {
         bulkData: [
@@ -1190,7 +1200,6 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if bulk data try to write into internal index', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       request.input.body = {
         bulkData: [
           {index: {_id: 1, _index: index}},
@@ -1207,6 +1216,7 @@ describe('Test: ElasticSearch service', () => {
         [kuzzle.internalEngine.index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([]);
 
       elasticsearch.client.bulk.resolves({});
 
@@ -1214,20 +1224,18 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if body contains no bulkData parameter', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       request.input.body.bulkData = null;
       return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no type has been provided, locally or globally', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       request.input.resource.collection = null;
 
       request.input.body = {
         bulkData: [
           {index: {_id: 1, _type: collection, _index: index}},
           {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
+          {index: {_id: 2, _type: collection, _index: 'alias'}},
           {firstName: 'bar'},
           {update: {_id: 1, _index: index}},
           {doc: {firstName: 'foobar'}},
@@ -1240,12 +1248,14 @@ describe('Test: ElasticSearch service', () => {
         [index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([
+        {alias: 'alias', index}
+      ]);
 
       return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should return a rejected promise if no index has been provided, locally or globally', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       request.input.resource.index = null;
 
       request.input.body = {
@@ -1265,12 +1275,16 @@ describe('Test: ElasticSearch service', () => {
         [index]: { mappings: { [collection]: {} } }
       };
       elasticsearch.client.indices.getMapping.resolves(getMappingResult);
+      elasticsearch.client.cat.aliases.resolves([
+        {alias: 'alias', index}
+      ]);
 
-      return should(elasticsearch.import(request)).be.rejected();
+      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should rejected if index and/or collection don\'t exist', () => {
       elasticsearch.client.indices.getMapping.resolves({});
+      elasticsearch.client.cat.aliases.resolves([]);
       request.input.resource.index = null;
 
       request.input.body = {

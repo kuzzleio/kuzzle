@@ -59,6 +59,7 @@ AfterAll(function () {
 
 After(function () {
   return this.api.truncateCollection()
+    .then(() => this.api.truncateCollection(this.fakeAltIndex))
     .then(() => this.api.refreshIndex(this.fakeIndex))
     .then(() => this.api.disconnect());
 });

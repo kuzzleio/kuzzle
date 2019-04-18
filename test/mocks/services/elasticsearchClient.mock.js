@@ -25,6 +25,7 @@ class ElasticsearchClientMock {
     this.scroll = sinon.stub().resolves();
 
     this.cat = {
+      aliases: sinon.stub().resolves(),
       indices: sinon.stub().resolves()
     };
 
