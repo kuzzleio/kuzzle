@@ -288,7 +288,7 @@ class HttpApi {
   }
 
   getCollectionMapping (index, collection, includeKuzzleInfo = false) {
-    const url = `${index}/${collection}/_mapping?includeKuzzleInfo=${includeKuzzleInfo}`;
+    const url = `${index}/${collection}/_mapping${includeKuzzleInfo ? '?includeKuzzleInfo' : ''}`;
 
     const options = {
       url: this.apiPath(url),
