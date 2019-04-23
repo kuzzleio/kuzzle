@@ -57,7 +57,7 @@
     "uws": "10.148.0",
     "validator": "^10.11.0",
     "winston": "^3.2.1",
-    "winston-elasticsearch": "^0.7.8",
+    "winston-elasticsearch": "0.7.8",
     "winston-syslog": "^2.1.0",
     "winston-transport": "^4.3.0"
   },
