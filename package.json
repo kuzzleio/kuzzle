@@ -57,7 +57,7 @@
     "uws": "10.148.0",
     "validator": "^10.11.0",
     "winston": "^3.2.1",
-    "winston-elasticsearch": "^0.7.9",
+    "winston-elasticsearch": "^0.7.8",
     "winston-syslog": "^2.1.0",
     "winston-transport": "^4.3.0"
   },
@@ -70,7 +70,7 @@
     "cucumber": "^5.1.0",
     "eslint": "^5.15.3",
     "minimist": "1.2.0",
-    "mocha": "6.0.2",
+    "mocha": "^6.1.4",
     "mock-require": "^3.0.3",
     "mqtt": "^2.18.8",
     "nyc": "^13.3.0",
