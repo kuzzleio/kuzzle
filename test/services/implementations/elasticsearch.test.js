@@ -30,7 +30,7 @@ describe('Test: ElasticSearch service', () => {
     documentAda,
     filter,
     filterAfterActiveAdded,
-    rawKuzzleInfo;
+    rawKuzzleMeta;
 
   beforeEach(() => {
     // prevents embarking _kuzzle_info data from previous tests
@@ -87,7 +87,7 @@ describe('Test: ElasticSearch service', () => {
       aggs: {}
     };
 
-    rawKuzzleInfo = {
+    rawKuzzleMeta = {
       query: {
         bool: {
           filter: {
@@ -574,7 +574,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.count(request)
         .then(() => {
-          should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
+          should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleMeta);
         });
     });
 
@@ -583,14 +583,14 @@ describe('Test: ElasticSearch service', () => {
 
       request.input.body = {};
       request.input.body = {query: {foo: 'bar'}};
-      rawKuzzleInfo.query.bool.must = request.input.body.query;
+      rawKuzzleMeta.query.bool.must = request.input.body.query;
 
       return elasticsearch.count(request)
         .then(() => {
           should(elasticsearch.client.count)
             .be.calledOnce();
 
-          should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleInfo);
+          should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleMeta);
         });
     });
 

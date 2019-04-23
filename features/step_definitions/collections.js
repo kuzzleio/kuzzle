@@ -107,9 +107,9 @@ When('I update the mapping of {string}:{string} with {string}', function (index,
 });
 
 Then('The mapping properties field of {string}:{string} is {string}', function (index, collection, rawMapping) {
-  const includeKuzzleInfo = rawMapping === 'the default value';
+  const includeKuzzleMeta = rawMapping === 'the default value';
 
-  return this.api.getCollectionMapping(index, collection, includeKuzzleInfo)
+  return this.api.getCollectionMapping(index, collection, includeKuzzleMeta)
     .then(({ result }) => {
       const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.db.commonMapping : JSON.parse(rawMapping);
 
