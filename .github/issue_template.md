@@ -1,5 +1,5 @@
 <!--- If you have a question about Kuzzle usage, please use Stackoverflow instead >
-<!--- https://stackoverflow.com/questions/ask >
+<!--- Post here and we will respond https://stackoverflow.com/questions/ask >
 <!--- Github issues are limited to bug and features requests >
 
 
