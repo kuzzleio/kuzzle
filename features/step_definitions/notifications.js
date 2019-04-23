@@ -21,7 +21,7 @@ Then(/^I should receive a ?(.*?) notification with field ?(.*?) equal to "([^"]*
       } else {
         callbackAsync('No notification received');
       }
-    }, 20);
+    }, 100);
   };
 
   async.retry(20, main, err => {
