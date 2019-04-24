@@ -1,6 +1,6 @@
 <!--- If you have a question about Kuzzle usage, please use Stackoverflow instead >
 <!--- Post here and we will respond https://stackoverflow.com/questions/ask >
-<!--- Github issues are limited to bug and features requests >
+<!--- Github issues are limited to bugs and features requests >
 
 
 <!--- Provide a general summary of the issue in the Title above -->
