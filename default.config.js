@@ -202,7 +202,8 @@ module.exports = {
         origins: '*:*'
       },
       websocket: {
-        enabled: true
+        enabled: true,
+        heartbeat: 60000
       }
     }
   },
