@@ -1,3 +1,8 @@
+<!--- If you have a question about Kuzzle usage, please use Stackoverflow instead >
+<!--- Post here and we will respond https://stackoverflow.com/questions/ask >
+<!--- Github issues are limited to bugs and features requests >
+
+
 <!--- Provide a general summary of the issue in the Title above -->
 
 ## Expected Behavior
@@ -23,3 +28,6 @@
 <!--- How has this issue affected you? What are you trying to accomplish? -->
 <!--- Providing context helps us come up with a solution that is most useful in the real world -->
 <!--- Include NodeJS version, SDK version, Kuzzle version, ElasticSearch version, ... -->
+Kuzzle version:
+Node.js version:
+SDK version:
