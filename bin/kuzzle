@@ -29,86 +29,115 @@
  */
 const program = require('commander');
 
-program
-  .version(require('../package.json').version)
-  .option('-p, --port <port>', 'Kuzzle port number', parseInt)
-  .option('-h, --host <host>', 'Kuzzle host')
-  .option('-U, --username <username>', 'Admin username')
-  .option('-P, --password <password>', 'Admin password')
-  .option('-d, --debug', 'make errors more verbose')
-  .option('-C, --noColors', 'do not use ANSI coloring');
+program.version(require('../package.json').version).usage('[command] --help');
+
+const bindOption = cmd =>
+  cmd
+    .option('-p, --port <port>', 'Kuzzle port number', parseInt)
+    .option('-h, --host <host>', 'Kuzzle host')
+    .option('-U, --username <username>', 'Admin username')
+    .option('-P, --password <password>', 'Admin password')
+    .option('-d, --debug', 'make errors more verbose')
+    .option('-C, --noColors', 'do not use ANSI coloring');
 
 // $ kuzzle createFirstAdmin
-program
-  .command('createFirstAdmin')
-  .description('create the first administrator user')
-  .action(require('./commands/createFirstAdmin'));
+bindOption(
+  program
+    .command('createFirstAdmin')
+    .description('create the first administrator user')
+    .action(require('./commands/createFirstAdmin'))
+);
 
 // $ kuzzle clearCache
-program
-  .command('clearCache')
-  .description('clear internal caches in Redis')
-  .action(require('./commands/resetCache'));
+bindOption(
+  program
+    .command('clearCache')
+    .description('clear internal caches in Redis')
+    .action(require('./commands/resetCache'))
+);
 
 // $ kuzzle reset
-program
-  .command('reset')
-  .description('reset all users, profiles, roles and documents validation specifications')
-  .option('--noint', 'non interactive mode')
-  .action(require('./commands/resetKuzzleData'));
+bindOption(
+  program
+    .command('reset')
+    .description(
+      'reset all users, profiles, roles and documents validation specifications'
+    )
+    .option('--noint', 'non interactive mode')
+    .action(require('./commands/resetKuzzleData'))
+);
 
 // $ kuzzle resetSecurity
-program
-  .command('resetSecurity')
-  .description('reset all users, profiles and roles')
-  .option('--noint', 'non interactive mode')
-  .action(require('./commands/resetSecurity'));
+bindOption(
+  program
+    .command('resetSecurity')
+    .description('reset all users, profiles and roles')
+    .option('--noint', 'non interactive mode')
+    .action(require('./commands/resetSecurity'))
+);
 
 // $ kuzzle resetDatabase
-program
-  .command('resetDatabase')
-  .description('remove all data stored on Kuzzle')
-  .option('--noint', 'non interactive mode')
-  .action(require('./commands/resetDatabase'));
+bindOption(
+  program
+    .command('resetDatabase')
+    .description('remove all data stored on Kuzzle')
+    .option('--noint', 'non interactive mode')
+    .action(require('./commands/resetDatabase'))
+);
 
 // $ kuzzle shutdown
-program
-  .command('shutdown')
-  .description('gracefully exits after processing remaining requests')
-  .action(require('./commands/shutdown'));
+bindOption(
+  program
+    .command('shutdown')
+    .description('gracefully exits after processing remaining requests')
+    .action(require('./commands/shutdown'))
+);
 
 // $ kuzzle start
-program
-  .command('start')
-  .description('start a Kuzzle instance')
-  .option('    --fixtures <file>', 'import data from file')
-  .option('    --mappings <file>', 'apply mappings from file')
-  .option('    --securities <file>', 'import roles, profiles and users from file')
-  .action(require('./commands/start'));
+bindOption(
+  program
+    .command('start')
+    .description('start a Kuzzle instance')
+    .option('    --fixtures <file>', 'import data from file')
+    .option('    --mappings <file>', 'apply mappings from file')
+    .option(
+      '    --securities <file>',
+      'import roles, profiles and users from file'
+    )
+    .action(require('./commands/start'))
+);
 
 // $ kuzzle dump
-program
-  .command('dump')
-  .description('create a dump of current state of kuzzle')
-  .action(require('./commands/dump'));
+bindOption(
+  program
+    .command('dump')
+    .description('create a dump of current state of kuzzle')
+    .action(require('./commands/dump'))
+);
 
 // $ kuzzle loadMappings
-program
-  .command('loadMappings <file>')
-  .description('load database mappings into Kuzzle')
-  .action(require('./commands/loadMappings'));
+bindOption(
+  program
+    .command('loadMappings <file>')
+    .description('load database mappings into Kuzzle')
+    .action(require('./commands/loadMappings'))
+);
 
 // $ kuzzle loadFixtures
-program
-  .command('loadFixtures <file>')
-  .description('load database fixtures into Kuzzle')
-  .action(require('./commands/loadFixtures'));
+bindOption(
+  program
+    .command('loadFixtures <file>')
+    .description('load database fixtures into Kuzzle')
+    .action(require('./commands/loadFixtures'))
+);
 
 // $ kuzzle loadSecurities
-program
-  .command('loadSecurities <file>')
-  .description('load roles, profiles and users into Kuzzle')
-  .action(require('./commands/loadSecurities'));
+bindOption(
+  program
+    .command('loadSecurities <file>')
+    .description('load roles, profiles and users into Kuzzle')
+    .action(require('./commands/loadSecurities'))
+);
 
 // Run user command
 program.parse(process.argv);

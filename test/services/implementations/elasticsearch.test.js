@@ -1017,8 +1017,12 @@ describe('Test: ElasticSearch service', () => {
           {create: {_id: 3, _type: collection, _index: index}},
           {firstName: 'gordon'},
           {update: {_id: 1, _type: collection, _index: index}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _type: collection, _index: index}}
+          {doc: {firstName: 'foobar'}, upsert: {firstName: 'john'}},
+          {delete: {_id: 2, _type: collection, _index: index}},
+          // this update triggers a crash if the case of an update without
+          // "doc" nor "upsert" is submitted
+          {update: {_id: 42}},
+          {script: 'can I has a cheezburgscript?'}
         ]
       };
 
@@ -1048,6 +1052,13 @@ describe('Test: ElasticSearch service', () => {
           should(body[7].doc._kuzzle_info).be.type('object');
           should(body[7].doc._kuzzle_info.updater).be.exactly('test');
           should(body[7].doc._kuzzle_info.updatedAt).not.be.null();
+          should(body[7].upsert._kuzzle_info).be.type('object');
+          should(body[7].upsert._kuzzle_info.updater).be.exactly('test');
+          should(body[7].upsert._kuzzle_info.updatedAt).not.be.null();
+
+          // Bulk action: script update
+          // (just verifying that this hasn't been filtered)
+          should(body[10].script).eql('can I has a cheezburgscript?');
         });
     });
 
