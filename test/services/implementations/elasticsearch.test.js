@@ -1529,6 +1529,8 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should forward the request to elasticseach wrapper', () => {
+      request.input.args.includeKuzzleMeta = false;
+
       return elasticsearch.getMapping(request)
         .then(res => {
           should(elasticsearch.esWrapper.getMapping)
