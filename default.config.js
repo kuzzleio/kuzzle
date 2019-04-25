@@ -253,7 +253,8 @@ module.exports = {
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
-      }
+      },
+      dynamic: 'true'
     },
     garbageCollector: {
       cleanInterval: 86400000,

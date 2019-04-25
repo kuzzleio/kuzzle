@@ -58,7 +58,7 @@ describe('Test: ElasticSearch Wrapper', () => {
         });
     });
 
-    it('should allow exclude attribute `_kuzzle_info` from the returned mapping', () => {
+    it('should exclude attribute `_kuzzle_info` from the returned mapping', () => {
       const
         mappings = {
           bar: {properties: {
@@ -102,5 +102,26 @@ describe('Test: ElasticSearch Wrapper', () => {
 
       return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
+
+    it('should include attribute `_kuzzle_info` when includeKuzzleMeta is true', () => {
+      const
+        mappings = {
+          bar: { properties: {
+            foo: 'bar',
+            _kuzzle_info: { kuzzle: 'meta', data: 'mapping' }
+          }}
+        };
+
+      client.indices.getMapping.returns(Bluebird.resolve({ foo: { mappings }}));
+
+      return esWrapper.getMapping(mappingRequest, true)
+        .then(result => {
+          should(result.foo.mappings.bar.properties).match({foo: 'bar'});
+          should(result.foo.mappings.bar.properties._kuzzle_info)
+            .not.be.undefined()
+            .be.eql(mappings.bar.properties._kuzzle_info);
+        });
+    });
+
   });
 });

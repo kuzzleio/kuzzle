@@ -836,7 +836,7 @@ describe('InternalEngine', () => {
         .then(res => {
           should(kuzzle.internalEngine.esWrapper.getMapping)
             .be.calledOnce()
-            .be.calledWithExactly(data);
+            .be.calledWithExactly(data, false);
           should(res).match({foo: 'bar'});
         });
     });
@@ -903,6 +903,134 @@ describe('InternalEngine', () => {
           catch(error) {
             return Bluebird.reject(error);
           }
+        });
+    });
+  });
+
+  describe('#applyDefaultMapping', () => {
+    let
+      getMappingResponse,
+      commonMapping,
+      index,
+      collection;
+
+    beforeEach(() => {
+      index = 'test-index';
+      collection = 'test-collection';
+
+      commonMapping = {
+        _kuzzle_info: {
+          properties: {
+            active:     { type: 'boolean' },
+            author:     { type: 'keyword' },
+            createdAt:  { type: 'date' },
+            updatedAt:  { type: 'date' },
+            updater:    { type: 'keyword' },
+            deletedAt:  { type: 'date' }
+          }
+        }
+      };
+
+      getMappingResponse = {
+        [index]: {
+          mappings: {
+            [collection]: {}
+          }
+        }
+      };
+
+      kuzzle.internalEngine.updateMapping = sinon.stub().resolves();
+      kuzzle.internalEngine.getMapping = sinon.stub().resolves(getMappingResponse);
+    });
+
+    it('should update collection mapping with default mapping', () => {
+      return kuzzle.internalEngine.applyDefaultMapping(index, collection, commonMapping)
+        .then(defaultMapping => {
+          should(defaultMapping).match({
+            _kuzzle_info: {
+              properties: {
+                active:     { type: 'boolean' },
+                author:     { type: 'keyword' },
+                createdAt:  { type: 'date' },
+                updatedAt:  { type: 'date' },
+                updater:    { type: 'keyword' },
+                deletedAt:  { type: 'date' }
+              }
+            }
+          });
+
+          should(kuzzle.internalEngine.updateMapping)
+            .be.calledOnce()
+            .be.calledWithExactly(collection, {
+              [collection]: {
+                dynamic: true,
+                _meta: {},
+                properties: {
+                  _kuzzle_info: {
+                    properties: {
+                      active:     { type: 'boolean' },
+                      author:     { type: 'keyword' },
+                      createdAt:  { type: 'date' },
+                      updatedAt:  { type: 'date' },
+                      updater:    { type: 'keyword' },
+                      deletedAt:  { type: 'date' }
+                    }
+                  }
+                }
+              }
+            }, index);
+        });
+    });
+
+    it('should preserve existing mapping and returns the updated mapping', () => {
+      getMappingResponse[index].mappings[collection] = {
+        dynamic: 'strict',
+        _meta: { gordon: 'freeman' },
+        properties: {
+          foo: { type: 'boolean' },
+          _kuzzle_info: {
+            properties: {
+              author: { type: 'text' }
+            }
+          }
+        }
+      };
+
+      return kuzzle.internalEngine.applyDefaultMapping(index, collection, commonMapping)
+        .then(defaultMapping => {
+          should(defaultMapping).match({
+            _kuzzle_info: {
+              properties: {
+                active:     { type: 'boolean' },
+                author:     { type: 'text' },
+                createdAt:  { type: 'date' },
+                updatedAt:  { type: 'date' },
+                updater:    { type: 'keyword' },
+                deletedAt:  { type: 'date' }
+              }
+            }
+          });
+
+          should(kuzzle.internalEngine.updateMapping)
+            .be.calledOnce()
+            .be.calledWithExactly(collection, {
+              [collection]: {
+                dynamic: 'strict',
+                _meta: { gordon: 'freeman' },
+                properties: {
+                  _kuzzle_info: {
+                    properties: {
+                      active:     { type: 'boolean' },
+                      author:     { type: 'text' },
+                      createdAt:  { type: 'date' },
+                      updatedAt:  { type: 'date' },
+                      updater:    { type: 'keyword' },
+                      deletedAt:  { type: 'date' }
+                    }
+                  }
+                }
+              }
+            }, index);
         });
     });
   });

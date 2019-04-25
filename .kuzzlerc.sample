@@ -506,6 +506,13 @@
     //       Elasticsearch constructor options. Use this field to specify your Elasticsearch config options, this object
     //       is passed through to the Elasticsearch constructor and can contain all options/keys outlined here:
     //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
+    //   * dynamic:
+    //       Default policy against new fields that are not referenced in the collection mapping.
+    //       The value of this configuration will change Elasticsearch behavior on fields that are not declared in the collection mapping.
+    //         - "true": Stores document and update the collection mapping with infered type
+    //         - "false": Stores document and does not update the collection mapping (field are not indexed)
+    //         - "strict": Rejects document
+    //       See https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html
     "db": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
@@ -532,7 +539,8 @@
         "onUpdateConflictRetries": 0,
         // Time to live of a paginated search
         "scrollTTL": "15s"
-      }
+      },
+      "dynamic": "true"
     }
   },
 
