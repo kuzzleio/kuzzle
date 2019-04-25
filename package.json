@@ -70,7 +70,7 @@
     "cucumber": "^5.1.0",
     "eslint": "^5.15.3",
     "minimist": "1.2.0",
-    "mocha": "6.0.2",
+    "mocha": "^6.1.4",
     "mock-require": "^3.0.3",
     "mqtt": "^2.18.8",
     "nyc": "^13.3.0",
