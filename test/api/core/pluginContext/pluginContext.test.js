@@ -445,6 +445,14 @@ describe('Plugin Context', () => {
           .be.rejectedWith({message: /^Invalid argument: Expected callback to be a function, received "string"/});
 
       });
+
+      it('should reject if trying to call the realtime controller', () => {
+        return should(context.accessors.execute(new Request({
+          controller: 'realtime',
+          action: 'publish'
+        })))
+          .be.rejectedWith(/Realtime controller is not available in plugins\. You should use plugin hooks instead/);
+      });
     });
 
     describe('#strategies', () => {
