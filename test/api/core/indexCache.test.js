@@ -30,8 +30,8 @@ describe('Test: core/indexCache', () => {
     listIndexesStub = kuzzle.internalEngine.listIndexes.resolves(['foo']);
     listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
     getMappingStub = kuzzle.internalEngine.getMapping.resolves(internalMapping);
-    kuzzle.internalEngine.getFieldMapping.resolves({});
     indexCache = new IndexCache(kuzzle);
+    kuzzle.internalEngine.applyDefaultMapping.resolves(indexCache.commonMapping);
   });
 
   describe('#init', () => {
@@ -41,8 +41,8 @@ describe('Test: core/indexCache', () => {
       return indexCache.init()
         .then(() => {
           should(listAliasesStub).be.calledOnce();
-          should(listIndexesStub.calledOnce).be.true();
-          should(listCollectionsStub.calledOnce).be.true();
+          should(listIndexesStub).be.calledOnce();
+          should(listCollectionsStub).be.calledOnce();
           should(indexCache.indexes).be.an.Object().and.have.keys('alias', 'alias2', 'foo');
           should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
           should(indexCache.indexes.alias).be.exactly(indexCache.indexes.foo);
@@ -50,85 +50,16 @@ describe('Test: core/indexCache', () => {
         });
     });
 
-    it('should inject the default mapping if none found', () => {
+    it('should apply default mapping for collections', () => {
       return indexCache.init()
         .then(() => {
-          should(kuzzle.internalEngine.updateMapping)
+          should(kuzzle.internalEngine.applyDefaultMapping)
             .be.calledThrice();
 
-          should(indexCache.defaultMappings.foo)
-            .eql(indexCache.commonMapping);
+          should(indexCache.defaultMappings.foo._kuzzle_info)
+            .eql(indexCache.commonMapping._kuzzle_info);
         });
     });
-
-    it('should re-inject the existing mapping if one found', () => {
-      kuzzle.internalEngine.getFieldMapping
-        .resolves({
-          foo: {
-            mappings: {
-              baz: {
-                '_kuzzle_info.updater': {
-                  mapping: {
-                    some: 'mapping'
-                  }
-                }
-              }
-            }
-          }
-        });
-
-      return indexCache.init()
-        .then(() => {
-          should(indexCache.defaultMappings.foo).eql({
-            _kuzzle_info: {
-              properties: Object.assign({}, indexCache.commonMapping._kuzzle_info.properties, {some: 'mapping'})
-            }
-          });
-
-          for (const collection of ['bar', 'baz', 'qux']) {
-            should(kuzzle.internalEngine.updateMapping)
-              .be.calledWithMatch(collection, {
-                properties: {
-                  _kuzzle_info: {
-                    properties: {
-                      some: 'mapping'
-                    }
-                  }
-                }
-              });
-          }
-        });
-    });
-
-    it('should inject kuzzle_info mapping for known fields only', () => {
-      kuzzle.internalEngine.getFieldMapping
-        .resolves({
-          foo: {
-            mappings: {
-              baz: {
-                '_kuzzle_info.unknown': {
-                  mapping: {
-                    some: 'mapping'
-                  }
-                }
-              }
-            }
-          }
-        });
-
-      return indexCache.init()
-        .then(() => {
-          should(indexCache.defaultMappings.foo).eql(indexCache.commonMapping);
-
-          for (const collection of ['bar', 'baz', 'qux']) {
-            should(kuzzle.internalEngine.updateMapping)
-              .be.calledWithMatch(collection, {
-                properties: indexCache.commonMapping
-              });
-          }
-        });
-    });
-
   });
 
   describe('#initInternal', () => {
@@ -251,15 +182,13 @@ describe('Test: core/indexCache', () => {
 
     it('should resolve with true and update the cache and apply mapping if the collection exists in ES but not in Kuzzle', done => {
       kuzzle.services.list.storageEngine.collectionExists.resolves(true);
-      kuzzle.internalEngine.updateMapping.reset();
-      kuzzle.internalEngine.updateMapping.resolves();
       indexCache.add('index1');
 
       indexCache.exists('index1', 'collection1')
         .then(result => {
           should(result).be.true();
           should(indexCache.indexes.index1).be.eql(['collection1']);
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
+          should(kuzzle.internalEngine.applyDefaultMapping).be.calledOnce();
           done();
         })
         .catch(error => done(error));

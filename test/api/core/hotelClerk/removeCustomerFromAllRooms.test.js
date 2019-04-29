@@ -64,13 +64,6 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     hotelClerk.removeCustomerFromAllRooms(context);
 
     should(kuzzle.realtime.remove).be.calledOnce();
-    should(kuzzle.notifier.notifyUser).be.calledOnce();
-
-    should(kuzzle.notifier.notifyUser.args[0][1]).be.instanceOf(Request);
-    should(kuzzle.notifier.notifyUser.args[0][1].input.controller).be.exactly('realtime');
-    should(kuzzle.notifier.notifyUser.args[0][1].input.action).be.exactly('unsubscribe');
-    should(kuzzle.notifier.notifyUser.args[0][1].input.resource.index).be.exactly(index);
-    should(kuzzle.notifier.notifyUser.args[0][2]).be.exactly('out');
 
     should(hotelClerk.rooms)
       .match({
@@ -93,6 +86,18 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
       });
 
     should(hotelClerk.roomsCount).be.eql(1);
+  });
+
+  it('should notify the unsubscriptions', () => {
+    hotelClerk.removeCustomerFromAllRooms(context);
+
+    should(kuzzle.notifier.notifyUser).be.calledTwice();
+
+    should(kuzzle.notifier.notifyUser.args[0][1]).be.instanceOf(Request);
+    should(kuzzle.notifier.notifyUser.args[0][1].input.controller).be.exactly('realtime');
+    should(kuzzle.notifier.notifyUser.args[0][1].input.action).be.exactly('unsubscribe');
+    should(kuzzle.notifier.notifyUser.args[0][1].input.resource.index).be.exactly(index);
+    should(kuzzle.notifier.notifyUser.args[0][2]).be.exactly('out');
   });
 
   it('should log an error if a problem occurs while unsubscribing', function () {

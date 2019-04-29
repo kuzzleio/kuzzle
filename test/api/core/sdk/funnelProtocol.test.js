@@ -78,5 +78,13 @@ describe('Test: sdk/funnelProtocol', () => {
           should(response.result.context.user).be.eql(user);
         });
     });
+
+    it('should reject if trying to call the realtime controller', () => {
+      return should(funnelProtocol.query({
+        controller: 'realtime',
+        action: 'publish'
+      }))
+        .be.rejectedWith(/Realtime controller is not available in plugins\. You should use plugin hooks instead/);
+    });
   });
 });

@@ -169,6 +169,19 @@ class ApiBase {
     return this.send(msg);
   }
 
+  getCollectionMapping (index, collection, includeKuzzleMeta = false) {
+    const
+      msg = {
+        includeKuzzleMeta,
+        controller: 'collection',
+        action: 'getMapping',
+        index,
+        collection
+      };
+
+    return this.send(msg);
+  }
+
   createCredentials (strategy, userId, body) {
     return this.send({
       controller: 'security',
@@ -1158,14 +1171,14 @@ class ApiBase {
     });
   }
 
-  updateMapping (index) {
+  updateMapping (index, collection, mapping) {
     const
       msg = {
         controller: 'collection',
-        collection: this.world.fakeCollection,
+        collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'updateMapping',
-        body: this.world.mapping
+        body: mapping || this.world.mapping
       };
 
     return this.send(msg);
