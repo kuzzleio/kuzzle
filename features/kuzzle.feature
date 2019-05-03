@@ -1,4 +1,22 @@
 Feature: Kuzzle functional tests
+
+  @security
+  Scenario: List collection with restriction
+    Given I create a new role "restrictedRole" with id "restrictedRole"
+    And I create a new profile "restrictedProfile" with id "restrictedProfile"
+    And I create a user "restrictedUser" with id "restrictedUser-id"
+    When I log in as restrictedUser:password expiring in 1h
+    And I list "stored" data collections in index "kuzzle-test-index"
+    Then I can not find a stored collection kuzzle-collection-test-alt
+
+  @security
+  Scenario: List index with restriction
+    Given I create a new role "restrictedRole" with id "restrictedRole"
+    And I create a new profile "restrictedProfile" with id "restrictedProfile"
+    And I create a user "restrictedUser" with id "restrictedUser-id"
+    When I log in as restrictedUser:password expiring in 1h
+    Then I'm not able to find the index named "kuzzle-test-index-alt" in index list
+
   Scenario: Create a collection
     When I create a collection "kuzzle-test-index":"my-collection1"
     Then The mapping properties field of "kuzzle-test-index":"my-collection1" is "the default value"

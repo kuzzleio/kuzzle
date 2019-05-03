@@ -199,6 +199,20 @@ describe('Test: index controller', () => {
   });
 
   describe('#list', () => {
+    beforeEach(() => {
+      request.context.user = request.context.user || {
+        getRights: sinon.stub().resolves({
+          'right-id-1': {
+            controller: '*',
+            action: '*',
+            collection: '*',
+            index: '*',
+            value: 'allowed'
+          }  
+        })
+      };
+    });
+
     it('should fulfill with a response object', () => {
       return indexController.list(request)
         .then(response => {
@@ -210,6 +224,34 @@ describe('Test: index controller', () => {
     it('should reject an error in case of error', () => {
       kuzzle.services.list.storageEngine.listIndexes.rejects(new Error('foobar'));
       return should(indexController.list(request)).be.rejected();
+    });
+
+    it('should filter unauthorized indexes conforming with profile rights', () => {
+      kuzzle.services.list.storageEngine.listIndexes.resolves({ indexes: ['nepal', 'vietnam']});
+      const userRights = {
+        'right-id-1': {
+          controller: '*',
+          action: '*',
+          collection: 'bandipur',
+          index: 'nepal',
+          value: 'allowed'
+        },
+        'user-right-2': {
+          controller: '*',
+          action: '*',
+          collection: 'pokhara',
+          index: 'nepal',
+          value: 'allowed'
+        }
+      };
+      request.context.user = {
+        getRights: sinon.stub().resolves(userRights)
+      };
+
+      return indexController.list(request)
+        .then(response => {
+          should(response.indexes).be.eql(['nepal']);
+        });
     });
   });
 

@@ -231,6 +231,34 @@ class KWorld {
             }
           }
         }
+      },
+      restrictedRole: {
+        controllers: {
+          auth: {
+            actions: {
+              getCurrentUser: true,
+              getMyCredentials: true,
+              getMyRights: true,
+              logout: true
+            }
+          },
+          collection: {
+            actions: {
+              getMapping: true,
+              list: true
+            }
+          },
+          document: {
+            actions: {
+              '*': true
+            }
+          },
+          index: {
+            actions: {
+              list: true
+            }
+          }
+        }
       }
     };
 
@@ -306,6 +334,14 @@ class KWorld {
       },
       anonymousfoo: {
         policies: [{roleId: 'anonymous'}, {roleId: this.idPrefix +'foo'}]
+      },
+      restrictedProfile: {
+        policies: [
+          {
+            roleId: this.idPrefix + 'restrictedRole',
+            restrictedTo: [{ index: this.fakeIndex, collections: [this.fakeCollection] }]
+          }
+        ]
       }
     };
 
@@ -438,7 +474,18 @@ class KWorld {
           },
           profileIds: [null]
         }
-      }
+      },
+      restrictedUser: {
+        content: {
+          profileIds: [this.idPrefix + 'restrictedProfile']
+        },
+        credentials: {
+          local: {
+            username: this.idPrefix + 'restrictedUser',
+            password: 'password'
+          }
+        }
+      },
     };
 
     this.credentials = {

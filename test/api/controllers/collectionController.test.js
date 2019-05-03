@@ -397,13 +397,24 @@ describe('Test: collection controller', () => {
 
   describe('#list', () => {
     beforeEach(() => {
+      request.input.resource.index = 'index';
+      request.context.user = request.context.user || {
+        getRights: sinon.stub().resolves({
+          'right-id-1': {
+            controller: '*',
+            action: '*',
+            collection: '*',
+            index: '*',
+            value: 'allowed'
+          }  
+        })
+      };
+  
       kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['foo']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
     it('should resolve to a full collections list', () => {
-      request = new Request({index: 'index'});
-
       return collectionController.list(request)
         .then(response => {
           should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
@@ -416,7 +427,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should reject the request if an invalid "type" argument is provided', () => {
-      request = new Request({index: 'index', type: 'foo'});
+      request.input.args.type = 'foo';
 
       return should(() => {
         collectionController.list(request);
@@ -424,7 +435,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should only return stored collections with type = stored', () => {
-      request = new Request({index: 'index', type: 'stored'});
+      request.input.args.type = 'stored';
 
       return collectionController.list(request)
         .then(response => {
@@ -436,7 +447,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should only return realtime collections with type = realtime', () => {
-      request = new Request({index: 'index', type: 'realtime'});
+      request.input.args.type = 'realtime';
 
       return collectionController.list(request)
         .then(response => {
@@ -448,7 +459,8 @@ describe('Test: collection controller', () => {
     });
 
     it('should return a portion of the collection list if from and size are specified', () => {
-      request = new Request({index: 'index', type: 'all', from: 2, size: 3});
+      request.input.args.from = 2;
+      request.input.args.size = 3;
       kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
@@ -467,7 +479,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should return a portion of the collection list if from is specified', () => {
-      request = new Request({index: 'index', type: 'all', from: 8});
+      request.input.args.from = 8;
       kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
@@ -485,7 +497,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should return a portion of the collection list if size is specified', () => {
-      request = new Request({index: 'index', type: 'all', size: 2});
+      request.input.args.size = 2;
       kuzzle.services.list.storageEngine.listCollections.resolves({
         collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
       });
@@ -504,16 +516,57 @@ describe('Test: collection controller', () => {
         });
     });
 
+    it('should returns only collections not restricted by profiles', () => {
+      request.input.resource.index = 'nepal';
+      kuzzle.services.list.storageEngine.listCollections.resolves({
+        collections: {stored: ['bandipur', 'sauraha', 'namobuddha']}
+      });
+      kuzzle.hotelClerk.getRealtimeCollections.returns(['pokhara', 'butwal']);
+
+      const userRights = {
+        'right-id-1': {
+          controller: '*',
+          action: '*',
+          collection: 'bandipur',
+          index: 'nepal',
+          value: 'allowed'
+        },
+        'user-right-2': {
+          controller: '*',
+          action: '*',
+          collection: 'pokhara',
+          index: 'nepal',
+          value: 'allowed'
+        },
+        'user-right-3': {
+          controller: '*',
+          action: '*',
+          collection: 'ho chi minh',
+          index: 'vietnam',
+          value: 'allowed'
+        }
+      };
+      request.context.user = {
+        getRights: sinon.stub().resolves(userRights)
+      };
+
+      return collectionController.list(request)
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response.collections).be.deepEqual([
+            {name: 'bandipur', type: 'stored'},
+            {name: 'pokhara', type: 'realtime'}
+          ]);
+        });
+    });
 
     it('should reject an error if getting stored collections fails', () => {
       kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
-      request = new Request({index: 'index', type: 'stored'});
       return should(collectionController.list(request)).be.rejected();
     });
 
     it('should reject an error if getting all collections fails', () => {
       kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
-      request = new Request({index: 'index', type: 'all'});
       return should(collectionController.list(request)).be.rejected();
     });
   });

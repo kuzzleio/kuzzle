@@ -38,16 +38,19 @@ Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, coll
       return callback('Collection list is empty, expected collections to be listed');
     }
   }
-
   if (this.result.collections.filter(item => item.type === type && item.name === collection).length !== 0) {
     if (not) {
       return callback('Expected collection ' + collection + ' not to appear in the collection list');
     }
 
-    return callback();
-  }
+    callback();
+  } else {
+    if (not) {
+      return callback();
+    }
 
-  callback('Expected to find the collection <' + collection + '> in this collections list: ' + JSON.stringify(this.result.collections));
+    callback('Expected to find the collection <' + collection + '> in this collections list: ' + JSON.stringify(this.result.collections));
+  }
 });
 
 Then(/^I change the mapping(?: in index "([^"]*)")?$/, function (index, callback) {
