@@ -18,9 +18,33 @@ const
   sinon = require('sinon'),
   Bluebird = require('bluebird');
 
+class FakeProtocol { 
+  constructor (name) { 
+    this.name = name; 
+    this.init = sinon.stub().resolves(true);
+  }
+}  
+
+class FakeHttpProtocol extends FakeProtocol {
+  constructor () { super('http'); }
+}
+class FakeWebSocketProtocol extends FakeProtocol {
+  constructor () { super('websocket'); }
+}
+class FakeSocketIOProtocol extends FakeProtocol {
+  constructor () { super('socketio'); }
+}
+class FakeMqttProtocol extends FakeProtocol {
+  constructor () { super('mqtt'); }
+}
+
 describe('lib/core/api/core/entrypoints/embedded/index', () => {
   let
     kuzzle,
+    HttpMock,
+    WebSocketMock,
+    SocketIOMock,
+    MqttMock,
     httpMock,
     EntryPoint,
     entrypoint,
@@ -45,7 +69,10 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    const initStub = function () { this.init = sinon.stub(); };
+    HttpMock = FakeHttpProtocol;
+    WebSocketMock = FakeWebSocketProtocol;
+    SocketIOMock = FakeSocketIOProtocol;
+    MqttMock = FakeMqttProtocol;
 
     httpMock = {
       createServer: sinon.stub().returns({
@@ -57,10 +84,10 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     winstonTransportFile = sinon.spy();
     winstonTransportSyslog = sinon.spy();
 
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/http', initStub);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/websocket', initStub);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/socketio', initStub);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt', initStub);
+    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/http', HttpMock);
+    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/websocket', WebSocketMock);
+    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/socketio', SocketIOMock);
+    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt', MqttMock);
 
     mockrequire('http', httpMock);
     mockrequire('winston', {
@@ -97,7 +124,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       resolve: sinon.stub().resolves(),
       timeout: sinon.stub().resolves(),
       catch: sinon.stub().resolves(),
-      then: sinon.stub().resolves()
+      then: sinon.stub().resolves(),
+      all: Bluebird.all
     });
 
     EntryPoint = mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
@@ -112,6 +140,11 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         error: sinon.spy()
       }
     });
+
+    // HttpMock.prototype.init = sinon.stub().resolves(true);
+    // WebSocketMock.prototype.init = sinon.stub().resolves(true);
+    // SocketIOMock.prototype.init = sinon.stub().resolves(true);
+    // MqttMock.prototype.init = sinon.stub().resolves(true);
   });
 
   afterEach(() => {
@@ -222,7 +255,22 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
           should(entrypoint.protocols.http.init).be.calledOnce();
           should(entrypoint.protocols.websocket.init).be.calledOnce();
           should(entrypoint.protocols.socketio.init).be.calledOnce();
+          should(entrypoint.protocols.mqtt.init).be.calledOnce();
           should(entrypoint.loadMoreProtocols).be.calledOnce();
+          should(Object.keys(entrypoint.protocols)).be.length(4);
+        });
+    });
+
+    it('should not load disabled protocols', () => {
+      MqttMock.prototype.init = sinon.stub().resolves(false);
+
+      return entrypoint.init()
+        .then(() => {
+          should(entrypoint.protocols.http.init).be.calledOnce();
+          should(entrypoint.protocols.websocket.init).be.calledOnce();
+          should(entrypoint.protocols.socketio.init).be.calledOnce();
+          should(Object.keys(entrypoint.protocols)).be.length(3);
+          should(entrypoint.protocols.mqtt).be.undefined();
         });
     });
 
