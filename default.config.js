@@ -171,7 +171,7 @@ module.exports = {
           transport: 'console',
           level: 'info',
           stderrLevels: [],
-          silent: true
+          silent: false
         }
       ],
       accessLogFormat: 'combined',
@@ -203,6 +203,7 @@ module.exports = {
       },
       websocket: {
         enabled: true,
+        idleTimeout: 0,
         heartbeat: 60000
       }
     }
