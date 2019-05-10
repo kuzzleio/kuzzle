@@ -64,10 +64,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
     it('should return false if the protocol is disabled', () => {
       entrypoint.config.protocols.mqtt.enabled = false;
 
-      return protocol.init(entrypoint)
-        .then(enabled => {
-          should(enabled).be.false();
-        });
+      return should(protocol.init(entrypoint)).fulfilledWith(false);
     });
 
     it('should attach events', () => {
