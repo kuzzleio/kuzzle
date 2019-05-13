@@ -352,7 +352,6 @@ class KuzzleMock extends Kuzzle {
       curateSpecification: this.sandbox.stub().resolves(),
       isValidSpecification: this.sandbox.stub().resolves({isValid: false}),
       validate: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-      validationPromise: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
       addType: this.sandbox.spy()
     };
 
