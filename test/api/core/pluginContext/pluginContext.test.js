@@ -222,7 +222,7 @@ describe('Plugin Context', () => {
       const validation = context.accessors.validation;
 
       should(validation.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
-      should(validation.validate).be.eql(kuzzle.validation.validationPromise.bind(kuzzle.validation));
+      should(validation.validate).be.eql(kuzzle.validation.validate.bind(kuzzle.validation));
     });
 
     it('should expose an API execution accessor', () => {
