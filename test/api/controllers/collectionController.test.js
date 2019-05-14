@@ -227,6 +227,8 @@ describe('Test: collection controller', () => {
     it('should create or replace specifications', () => {
       index = 'myindex';
       collection = 'mycollection';
+      request.input.resource.index = index;
+      request.input.resource.collection = collection;
       request.input.body = {
         myindex: {
           mycollection: {
@@ -256,6 +258,80 @@ describe('Test: collection controller', () => {
     });
 
     it('should rejects and do not create or replace specifications if the specs are wrong', () => {
+      index = 'myindex';
+      collection = 'mycollection';
+      request.input.resource.index = index;
+      request.input.resource.collection = collection;
+      request.input.body = {
+        myindex: {
+          mycollection: {
+            strict: true,
+            fields: {
+              myField: {
+                mandatory: true,
+                type: 'bad bad',
+                defaultValue: 42
+              }
+            }
+          }
+        }
+      };
+
+      kuzzle.validation.isValidSpecification.resolves({
+        isValid: false,
+        errors: ['bad bad is a bad type !']
+      });
+
+      return collectionController.updateSpecifications(request)
+        .catch(error => {
+          should(kuzzle.pluginsManager.trigger).be.calledOnce();
+          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
+          should(kuzzle.internalEngine.refresh).not.be.called();
+          should(kuzzle.validation.curateSpecification).not.be.called();
+          should(kuzzle.internalEngine.createOrReplace).not.be.called();
+
+          should(error).be.an.instanceOf(BadRequestError);
+          should(error.message).be.exactly('Some errors with provided specifications.');
+          should(error.details).match([ 'bad bad is a bad type !' ]);
+        });
+    });
+
+    it('should create or replace specifications when requested with deprecated way', () => {
+      request.input.resource.index = undefined;
+      request.input.resource.collection = undefined;
+      index = 'myindex';
+      collection = 'mycollection';
+      request.input.body = {
+        myindex: {
+          mycollection: {
+            strict: true,
+            fields: {
+              myField: {
+                mandatory: true,
+                type: 'integer',
+                defaultValue: 42
+              }
+            }
+          }
+        }
+      };
+
+      kuzzle.validation.isValidSpecification.resolves({isValid: true});
+      kuzzle.validation.curateSpecification.resolves();
+
+      return collectionController.updateSpecifications(request)
+        .then(response => {
+          should(kuzzle.internalEngine.refresh).be.calledOnce();
+          should(kuzzle.validation.curateSpecification).be.called();
+          should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
+          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(response).match(request.input.body);
+        });
+    });
+
+    it('should rejects and do not create or replace specifications if the specs are wrong when requested with deprecated way', () => {
+      request.input.resource.index = undefined;
+      request.input.resource.collection = undefined;
       index = 'myindex';
       collection = 'mycollection';
       request.input.body = {
@@ -295,6 +371,78 @@ describe('Test: collection controller', () => {
 
   describe('#validateSpecifications', () => {
     it('should call the right functions and respond with the right response', () => {
+      request.input.resource.index = 'myindex';
+      request.input.resource.collection = 'mycollection';
+      request.input.body = {
+        strict: true,
+        fields: {
+          myField: {
+            mandatory: true,
+            type: 'integer',
+            defaultValue: 42
+          }
+        }
+      };
+
+      CollectionController.__set__({
+        createSpecificationList: sinon.stub().resolves({
+          _id: 'indexcollection',
+          _source: {
+            validation: 'validation',
+            index: 'index',
+            collection: 'collection'
+          }
+        }),
+        validateSpecificationList: sinon.stub().resolves({valid: true})
+      });
+
+      return collectionController.validateSpecifications(request)
+        .then(response => {
+          should(response).match({valid: true});
+        });
+    });
+
+    it('should call the right functions and respond with the right response if there is an error', () => {
+      const errorResponse = {
+        valid: false,
+        details: ['bad bad is a bad type'],
+        message: 'Some error message'
+      };
+
+      request.input.resource.index = 'myindex';
+      request.input.resource.collection = 'mycollection';
+      request.input.body = {
+        strict: true,
+        fields: {
+          myField: {
+            mandatory: true,
+            type: 'bad bad',
+            defaultValue: 42
+          }
+        }
+      };
+
+      CollectionController.__set__({
+        createSpecificationList: sinon.stub().resolves({
+          _id: 'indexcollection',
+          _source: {
+            validation: 'validation',
+            index: 'index',
+            collection: 'collection'
+          }
+        }),
+        validateSpecificationList: sinon.stub().resolves(errorResponse)
+      });
+
+      return collectionController.validateSpecifications(request)
+        .then(response => {
+          should(response).match(errorResponse);
+        });
+    });
+
+    it('should call the right functions and respond with the right response when requested with deprecated way', () => {
+      request.input.resource.index = undefined;
+      request.input.resource.collection = undefined;
       request.input.body = {
         myindex: {
           mycollection: {
@@ -328,7 +476,9 @@ describe('Test: collection controller', () => {
         });
     });
 
-    it('should call the right functions and respond with the right response if there is an error', () => {
+    it('should call the right functions and respond with the right response if there is an error when requested with deprecated way', () => {
+      request.input.resource.index = undefined;
+      request.input.resource.collection = undefined;
       const errorResponse = {
         valid: false,
         details: ['bad bad is a bad type'],
