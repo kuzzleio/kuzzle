@@ -21,7 +21,6 @@ const
 class FakeProtocol { 
   constructor (name) { 
     this.name = name; 
-    this.init = sinon.stub().resolves(true);
   }
 }  
 
@@ -141,10 +140,10 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       }
     });
 
-    // HttpMock.prototype.init = sinon.stub().resolves(true);
-    // WebSocketMock.prototype.init = sinon.stub().resolves(true);
-    // SocketIOMock.prototype.init = sinon.stub().resolves(true);
-    // MqttMock.prototype.init = sinon.stub().resolves(true);
+    HttpMock.prototype.init = sinon.stub().resolves(true);
+    WebSocketMock.prototype.init = sinon.stub().resolves(true);
+    SocketIOMock.prototype.init = sinon.stub().resolves(true);
+    MqttMock.prototype.init = sinon.stub().resolves(true);
   });
 
   afterEach(() => {
