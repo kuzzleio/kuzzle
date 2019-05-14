@@ -121,6 +121,23 @@ describe('funnelController.processRequest', () => {
       });
   });
 
+  it('should throw if a plugin action returns a non-serializable response', () => {
+    const
+      controller = 'fakePlugin/controller',
+      request = new Request({controller, action: 'succeed'}),
+      unserializable = {};
+    unserializable.self = unserializable;
+
+    funnel.pluginsControllers[controller].succeed.resolves(unserializable);
+
+    return funnel.processRequest(request)
+      .then(() => { throw new Error('Expected test to fail'); })
+      .catch(e => {
+        should(e).be.an.instanceOf(PluginImplementationError);
+        should(e.message).startWith('Unable to serialize response. Are you trying to return the request?');
+      });
+  });
+
   it('should resolve the promise if everything is ok', () => {
     const request = new Request({
       controller: 'fakeController',
