@@ -171,6 +171,35 @@ jobs:
         - docker-compose -f .ci/test-aarch64.yml run kuzzle
 
 # ---------------------------------------
+# Node 8 - Redis 3
+# ---------------------------------------
+    - stage: "Tests & Linters"
+      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
+      name: "Node 8 - Redis 3"
+
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
+
+      cache:
+        directories:
+          - $HOME/.pm2 
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=8
+        - REDIS_VERSION=3.2
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
+
+
+# ---------------------------------------
 # Node 8 - Redis 4
 # ---------------------------------------
     - stage: "Tests & Linters"
@@ -190,34 +219,6 @@ jobs:
         - DOCKER_COMPOSE_VERSION=1.9.0
         - NODE_LTS=8
         - REDIS_VERSION=4.0.14
-        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
-
-      before_install:
-        - sudo sysctl -w vm.max_map_count=262144
-
-      script:
-        - docker-compose -f .ci/test.yml run kuzzle
-
-# ---------------------------------------
-# Node 8 - Redis 5
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
-      name: "Node 8 - Redis 5"
-
-      os: linux
-      sudo: required
-      language: minimal
-      services: docker
-
-      cache:
-        directories:
-          - $HOME/.pm2 
-
-      env:
-        - DOCKER_COMPOSE_VERSION=1.9.0
-        - NODE_LTS=8
-        - REDIS_VERSION=latest
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
       before_install:
