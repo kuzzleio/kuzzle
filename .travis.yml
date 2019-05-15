@@ -1,10 +1,12 @@
 jobs:
   include:
+
 # ---------------------------------------
-# Unit Testing
+# Unit Tests & Linters
 # ---------------------------------------
-    - stage: "Tests & Linters"
-      if: type = pull_request OR type = cron OR (type = push AND branch =~ ^master|.*-dev|.*-stable$)
+
+    - stage: "Unit Tests & Linters"
+      if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: "Unit Tests & ESLint"
       os: linux
       sudo: required
@@ -24,11 +26,8 @@ jobs:
       after_script:
         - npm run codecov
 
-# ---------------------------------------
-# SonarQube
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$)
+    - stage: "Unit Tests & Linters"
+      if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: "SonarQube"
 
       os: linux
@@ -56,13 +55,12 @@ jobs:
         - bash .ci/sonar.sh
 
 # ---------------------------------------
-# Functionnal Testing
+# Integration tests
 # ---------------------------------------
-# Node 6 - x64
-# ---------------------------------------
-    - stage: "Tests & Linters"
+
+    - stage: "Integration tests"
       if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
-      name: "amd64 - Node v6"
+      name: "Node.js 6"
 
       os: linux
       sudo: required
@@ -84,12 +82,9 @@ jobs:
       script:
         - docker-compose -f .ci/test.yml run kuzzle
 
-# ---------------------------------------
-# Node 8 - x64
-# ---------------------------------------
-    - stage: "Tests & Linters"
+    - stage: "Integration tests"
       if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-      name: "amd64 - Node v8"
+      name: "Node.js 8"
 
       os: linux
       sudo: required
@@ -112,12 +107,13 @@ jobs:
         - docker-compose -f .ci/test.yml run kuzzle
 
 # ---------------------------------------
-# Node 8 - armhf
+# Cross-plateform tests
 # ---------------------------------------
-    - stage: "Tests & Linters"
-      name: "armhf - Node v8"
 
-      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
+    - stage: "Cross-plateform tests"
+      name: "Linux ARMHF"
+
+      if: type = cron
 
       os: linux
       sudo: required
@@ -141,12 +137,9 @@ jobs:
         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-armhf ./.ci/scripts/install-armhf-deps.sh
         - docker-compose -f .ci/test-armhf.yml run kuzzle
 
-# ---------------------------------------
-# Node 8 - aarch64
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
-      name: "aarch64 - Node v8"
+    - stage: "Cross-plateform tests"
+      if: type = cron
+      name: "Linux ARM64"
 
       os: linux
       sudo: required
@@ -171,11 +164,12 @@ jobs:
         - docker-compose -f .ci/test-aarch64.yml run kuzzle
 
 # ---------------------------------------
-# Node 8 - Redis 3
+# Redis Tests
 # ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
-      name: "Node 8 - Redis 3"
+
+    - stage: "Redis tests"
+      if: type = cron
+      name: "Redis 3"
 
       os: linux
       sudo: required
@@ -198,13 +192,9 @@ jobs:
       script:
         - docker-compose -f .ci/test.yml run kuzzle
 
-
-# ---------------------------------------
-# Node 8 - Redis 4
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
-      name: "Node 8 - Redis 4"
+    - stage: "Redis old versions tests"
+      if: type = cron
+      name: "Redis 4"
 
       os: linux
       sudo: required
@@ -228,13 +218,12 @@ jobs:
         - docker-compose -f .ci/test.yml run kuzzle
 
 # ---------------------------------------
-# Deploy
+# Deployments
 # ---------------------------------------
-# NPM
-# ---------------------------------------
+
     - stage: "Deployments"
       if: tag IS present AND type != cron
-      name: "Deploy on NPM"
+      name: "NPM.js"
 
       os: linux
       sudo: required
@@ -253,12 +242,9 @@ jobs:
           branch: master
           tags: true
 
-# ---------------------------------------
-# Dockerhub
-# ---------------------------------------
     - stage: "Deployments"
       if: type = push AND branch =~ ^master|.*-dev|.*-stable$ 
-      name: "Build & publish Docker images on Dockerhub"
+      name: "Dockerhub"
 
       os: linux
       sudo: required
