@@ -1,6 +1,6 @@
 --bail
 --require should-sinon
---reporter dot
+--reporter spec
 --recursive
 --slow 2000
 --timeout 10000
