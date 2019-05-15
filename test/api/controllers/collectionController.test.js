@@ -225,10 +225,8 @@ describe('Test: collection controller', () => {
 
   describe('#updateSpecifications', () => {
     it('should create or replace specifications', () => {
-      index = 'myindex';
-      collection = 'mycollection';
-      request.input.resource.index = index;
-      request.input.resource.collection = collection;
+      request.input.resource.index = 'myindex';
+      request.input.resource.collection = 'mycollection';
       request.input.body = {
         myindex: {
           mycollection: {
@@ -252,16 +250,14 @@ describe('Test: collection controller', () => {
           should(kuzzle.internalEngine.refresh).be.calledOnce();
           should(kuzzle.validation.curateSpecification).be.called();
           should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
-          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', 'myindex#mycollection');
           should(response).match(request.input.body);
         });
     });
 
     it('should rejects and do not create or replace specifications if the specs are wrong', () => {
-      index = 'myindex';
-      collection = 'mycollection';
-      request.input.resource.index = index;
-      request.input.resource.collection = collection;
+      request.input.resource.index = 'myindex';
+      request.input.resource.collection = 'mycollection';
       request.input.body = {
         myindex: {
           mycollection: {
@@ -284,8 +280,9 @@ describe('Test: collection controller', () => {
 
       return collectionController.updateSpecifications(request)
         .catch(error => {
-          should(kuzzle.pluginsManager.trigger).be.calledOnce();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledOnce()
+            .be.calledWith('validation:error', 'Some errors with provided specifications.');
           should(kuzzle.internalEngine.refresh).not.be.called();
           should(kuzzle.validation.curateSpecification).not.be.called();
           should(kuzzle.internalEngine.createOrReplace).not.be.called();
@@ -323,8 +320,9 @@ describe('Test: collection controller', () => {
         .then(response => {
           should(kuzzle.internalEngine.refresh).be.calledOnce();
           should(kuzzle.validation.curateSpecification).be.called();
-          should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
-          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', `${index}#${collection}`);
+          should(kuzzle.internalEngine.createOrReplace)
+            .be.calledOnce()
+            .be.calledWithMatch('validations', `${index}#${collection}`);
           should(response).match(request.input.body);
         });
     });
@@ -384,21 +382,29 @@ describe('Test: collection controller', () => {
         }
       };
 
+      const specifications = [{
+        _id: 'indexcollection',
+        _source: {
+          validation: 'validation',
+          index: 'index',
+          collection: 'collection'
+        }
+      }];
+
+      const createSpecificationList = sinon.stub().resolves(specifications);
+      const validateSpecificationList = sinon.stub().resolves({valid: true});
+
       CollectionController.__set__({
-        createSpecificationList: sinon.stub().resolves({
-          _id: 'indexcollection',
-          _source: {
-            validation: 'validation',
-            index: 'index',
-            collection: 'collection'
-          }
-        }),
-        validateSpecificationList: sinon.stub().resolves({valid: true})
+        createSpecificationList,
+        validateSpecificationList
       });
 
       return collectionController.validateSpecifications(request)
         .then(response => {
           should(response).match({valid: true});
+          should(validateSpecificationList)
+            .be.calledOnce()
+            .be.calledWith(kuzzle.validation, specifications);
         });
     });
 
@@ -422,21 +428,27 @@ describe('Test: collection controller', () => {
         }
       };
 
+      const specifications = [{
+        _id: 'indexcollection',
+        _source: {
+          validation: 'validation',
+          index: 'index',
+          collection: 'collection'
+        }
+      }];
+
+      const createSpecificationList = sinon.stub().resolves(specifications);
+      const validateSpecificationList = sinon.stub().resolves(errorResponse);
+
       CollectionController.__set__({
-        createSpecificationList: sinon.stub().resolves({
-          _id: 'indexcollection',
-          _source: {
-            validation: 'validation',
-            index: 'index',
-            collection: 'collection'
-          }
-        }),
-        validateSpecificationList: sinon.stub().resolves(errorResponse)
+        createSpecificationList,
+        validateSpecificationList
       });
 
       return collectionController.validateSpecifications(request)
         .then(response => {
           should(response).match(errorResponse);
+          should(validateSpecificationList).be.calledOnce();
         });
     });
 
@@ -458,21 +470,29 @@ describe('Test: collection controller', () => {
         }
       };
 
+      const specifications = [{
+        _id: 'indexcollection',
+        _source: {
+          validation: 'validation',
+          index: 'index',
+          collection: 'collection'
+        }
+      }];
+
+      const createSpecificationList = sinon.stub().resolves(specifications);
+      const validateSpecificationList = sinon.stub().resolves({valid: true});
+
       CollectionController.__set__({
-        createSpecificationList: sinon.stub().resolves({
-          _id: 'indexcollection',
-          _source: {
-            validation: 'validation',
-            index: 'index',
-            collection: 'collection'
-          }
-        }),
-        validateSpecificationList: sinon.stub().resolves({valid: true})
+        createSpecificationList,
+        validateSpecificationList
       });
 
       return collectionController.validateSpecifications(request)
         .then(response => {
           should(response).match({valid: true});
+          should(validateSpecificationList)
+            .be.calledOnce()
+            .be.calledWith(kuzzle.validation, specifications);
         });
     });
 
@@ -500,21 +520,27 @@ describe('Test: collection controller', () => {
         }
       };
 
+      const specifications = [{
+        _id: 'indexcollection',
+        _source: {
+          validation: 'validation',
+          index: 'index',
+          collection: 'collection'
+        }
+      }];
+
+      const createSpecificationList = sinon.stub().resolves(specifications);
+      const validateSpecificationList = sinon.stub().resolves(errorResponse);
+
       CollectionController.__set__({
-        createSpecificationList: sinon.stub().resolves({
-          _id: 'indexcollection',
-          _source: {
-            validation: 'validation',
-            index: 'index',
-            collection: 'collection'
-          }
-        }),
-        validateSpecificationList: sinon.stub().resolves(errorResponse)
+        createSpecificationList,
+        validateSpecificationList
       });
 
       return collectionController.validateSpecifications(request)
         .then(response => {
           should(response).match(errorResponse);
+          should(validateSpecificationList).be.calledOnce();
         });
     });
   });
