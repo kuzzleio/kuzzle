@@ -4,7 +4,7 @@ jobs:
 # Unit Testing
 # ---------------------------------------
     - stage: "Tests & Linters"
-      if: type = pull_request OR type = cron OR type = push
+      if: type = pull_request OR type = cron OR (type = push AND branch =~ ^master|.*-dev|.*-stable$)
       name: "Unit Tests & ESLint"
       os: linux
       sudo: required
