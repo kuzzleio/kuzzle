@@ -4,7 +4,6 @@ const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   { IncomingMessage } = require('http'),
   EntryPoint = require(`${root}/lib/api/core/entrypoints/embedded`),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
@@ -56,52 +55,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         .then(enabled => {
           should(protocol.server).be.null();
           should(enabled).be.false();
-        });
-    });
-
-    it('should throw if the heartbeat value is not set to a valid value', () => {
-      const
-        values = [null, 'foo', {}, [], 3.14159, true, -42, undefined],
-        promises = [],
-        ep = new EntryPoint(kuzzle),
-        wsp = new WebSocketProtocol();
-
-      for (const heartbeat of values) {
-        ep.config.protocols.websocket.heartbeat = heartbeat;
-        promises.push(
-          should(wsp.init(ep)).rejectedWith(
-            {message: /WebSocket: invalid heartbeat value /}));
-      }
-
-      return Bluebird.all(promises)
-        .finally(() => {
-          clearInterval(wsp.heartbeatInterval);
-          clearInterval(wsp.idleSweepInterval);
-          clearInterval(wsp.activityInterval);
-        });
-    });
-
-    it('should start a heartbeat if asked to', () => {
-      const
-        clock = sinon.useFakeTimers(),
-        heartbeatSpy = sinon.stub(protocol, '_doHeartbeat');
-
-      entrypoint.config.protocols.websocket.heartbeat = 1000;
-
-      return protocol.init(entrypoint)
-        .then(() => {
-          should(protocol.heartbeatInterval).not.be.null();
-          should(heartbeatSpy).not.be.called();
-
-          clock.tick(1000);
-
-          should(heartbeatSpy).be.calledOnce();
-
-          clock.tick(1000);
-
-          should(heartbeatSpy).be.calledTwice();
-
-          clock.restore();
         });
     });
 
@@ -205,8 +158,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
           headers: request.headers
         });
 
-      const connection = protocol.entryPoint.newConnection.firstCall.args[0];
-      should(protocol.connectionPool.get(connection.id))
+      const
+        connection = protocol.entryPoint.newConnection.firstCall.args[0],
+        pooledConnection = protocol.connectionPool.get(connection.id);
+
+      should(pooledConnection)
         .match({
           socket,
           alive: true,
@@ -248,11 +204,23 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       }
 
       {
-        const onPongH = onClientSpy.getCall(3).args[1];
+        const onPingH = onClientSpy.getCall(3).args[1];
 
-        protocol.connectionPool.get(connection.id).alive = false;
+        pooledConnection.alive = false;
+        pooledConnection.lastActivity = -1;
+        onPingH();
+        should(pooledConnection.alive).be.true();
+        should(pooledConnection.lastActivity).eql(protocol.activityTimestamp);
+      }
+
+      {
+        const onPongH = onClientSpy.getCall(4).args[1];
+
+        pooledConnection.alive = false;
+        pooledConnection.lastActivity = -1;
         onPongH();
-        should(protocol.connectionPool.get(connection.id).alive).be.true();
+        should(pooledConnection.alive).be.true();
+        should(pooledConnection.lastActivity).eql(protocol.activityTimestamp);
       }
     });
 
@@ -444,7 +412,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(protocol.channels).be.empty();
     });
 
-    it('should link the connection to the channel', () => {
+    it('should link the connection to a new channel', () => {
       const connection = {
         id: 'connectionId',
         alive: true,
@@ -457,6 +425,34 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(protocol.channels)
         .deepEqual(new Map([['channel', new Set(['connectionId'])]]));
       should(connection.channels).deepEqual(new Set(['channel']));
+    });
+
+    it('should add a connection to an existing channel', () => {
+      const
+        connection1 = {
+          id: 'connectionId',
+          alive: true,
+          channels: new Set()
+        },
+        connection2 = {
+          id: 'connectionId2',
+          alive: true,
+          channels: new Set(['foo'])
+        };
+
+      protocol.connectionPool.set(connection1.id, connection1);
+      protocol.connectionPool.set(connection2.id, connection2);
+
+      protocol.joinChannel('channel', connection1.id);
+      protocol.joinChannel('channel', connection2.id);
+
+      should(protocol.channels)
+        .deepEqual(new Map([
+          ['channel', new Set(['connectionId', 'connectionId2'])]
+        ]));
+
+      should(connection1.channels).deepEqual(new Set(['channel']));
+      should(connection2.channels).deepEqual(new Set(['foo', 'channel']));
     });
   });
 
@@ -487,6 +483,17 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         .deepEqual(new Set(['foo']));
     });
 
+    it('should remove an unused channel entry', () => {
+      protocol.channels = new Map([
+        ['channel', new Set(['connectionId'])]
+      ]);
+
+      protocol.leaveChannel('channel', 'connectionId');
+
+      should(protocol.channels.has('channel')).be.false();
+      should(protocol.connectionPool.get('connectionId').channels)
+        .deepEqual(new Set(['foo']));
+    });
   });
 
   describe('#disconnect', () => {
@@ -524,7 +531,55 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     });
   });
 
-  describe('#_doHeartbeat', () => {
+  describe('#Heartbeat', () => {
+    it('should throw if the heartbeat value is not set to a valid value', () => {
+      const
+        values = [null, 'foo', {}, [], 3.14159, true, -42, undefined],
+        promises = [];
+
+      for (const heartbeat of values) {
+        const
+          ep = new EntryPoint(kuzzle),
+          wsp = new WebSocketProtocol();
+
+        ep.config.protocols.websocket.heartbeat = heartbeat;
+        promises.push(
+          should(wsp.init(ep)).rejectedWith(
+            {message: /WebSocket: invalid heartbeat value /})
+            .then(() => {
+              clearInterval(wsp.heartbeatInterval);
+              clearInterval(wsp.idleSweepInterval);
+              clearInterval(wsp.activityInterval);
+            }));
+      }
+
+      return Promise.all(promises);
+    });
+
+    it('should start a heartbeat if asked to', () => {
+      const
+        clock = sinon.useFakeTimers(),
+        heartbeatSpy = sinon.stub(protocol, '_doHeartbeat');
+
+      entrypoint.config.protocols.websocket.heartbeat = 1000;
+
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.heartbeatInterval).not.be.null();
+          should(heartbeatSpy).not.be.called();
+
+          clock.tick(1000);
+
+          should(heartbeatSpy).be.calledOnce();
+
+          clock.tick(1000);
+
+          should(heartbeatSpy).be.calledTwice();
+
+          clock.restore();
+        });
+    });
+
     it('should terminate dead sockets, and mark others as dead', () => {
       const Connection = function (alive, lastActivity) {
         return {
@@ -571,6 +626,91 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(activeConnection.alive).be.true();
       should(activeConnection.socket.terminate).not.be.called();
       should(activeConnection.socket.ping).not.be.called();
+    });
+  });
+
+  describe('#IdleTimeout', () => {
+    it('should throw if the idleTimeout value is not set to a valid value', () => {
+      const
+        values = [null, 'foo', {}, [], 3.14159, true, -42, undefined],
+        promises = [];
+
+      for (const idleTimeout of values) {
+        const
+          ep = new EntryPoint(kuzzle),
+          wsp = new WebSocketProtocol();
+
+        ep.config.protocols.websocket.idleTimeout = idleTimeout;
+
+        promises.push(
+          should(wsp.init(ep)).rejectedWith(
+            {message: /WebSocket: invalid idleTimeout value /})
+            .then(() => {
+              clearInterval(wsp.heartbeatInterval);
+              clearInterval(wsp.idleSweepInterval);
+              clearInterval(wsp.activityInterval);
+            }));
+      }
+
+      return Promise.all(promises);
+    });
+
+    it('should start an idleTimeout sweep if asked to', () => {
+      const
+        clock = sinon.useFakeTimers(),
+        idleTimeoutSpy = sinon.stub(protocol, '_sweepIdleSockets');
+
+      entrypoint.config.protocols.websocket.idleTimeout = 1000;
+
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.idleTimeoutInterval).not.be.null();
+          should(idleTimeoutSpy).not.be.called();
+
+          clock.tick(protocol.idleSweepDelay);
+
+          should(idleTimeoutSpy).be.calledOnce();
+
+          clock.tick(protocol.idleSweepDelay);
+
+          should(idleTimeoutSpy).be.calledTwice();
+
+          clock.restore();
+        });
+    });
+
+    it('should terminate inactive sockets', () => {
+      const
+        now = Date.now(),
+        Connection = function (lastActivity) {
+          return {
+            lastActivity,
+            socket: {
+              terminate: sinon.stub()
+            }
+          };
+        };
+
+      protocol.idleTimeout = 1000;
+
+      protocol.connectionPool = new Map([
+        ['ahAhAhAhStayinAliveStayinAlive', new Connection(now)],
+        ['dead', new Connection(now - protocol.idleTimeout - 1)],
+        ['ahAhAhAhStayinAliiiiiiiiive', new Connection(now - protocol.idleTimeout)]
+      ]);
+
+      protocol._sweepIdleSockets();
+
+      // active sockets are unaffected
+      for (const id of [
+        'ahAhAhAhStayinAliveStayinAlive',
+        'ahAhAhAhStayinAliiiiiiiiive'
+      ]) {
+        should(protocol.connectionPool.get(id).socket.terminate).not.called();
+      }
+
+      // inactive sockets are terminated
+      should(protocol.connectionPool.get('dead').socket.terminate).calledOnce();
     });
   });
 });
