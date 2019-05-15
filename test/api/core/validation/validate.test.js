@@ -45,7 +45,7 @@ describe('Test: validation.validate', () => {
     getStrictnessStub.reset();
   });
 
-  describe('#validationPromise', () => {
+  describe('#validate', () => {
     it('should return a validation if the specification is empty', () => {
       const
         verbose = false,
@@ -63,7 +63,7 @@ describe('Test: validation.validate', () => {
 
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
-      return validation.validationPromise(request, verbose)
+      return validation.validate(request, verbose)
         .then(result => {
           should(result).be.deepEqual(request);
           should(validation.recurseFieldValidation.callCount).be.eql(1);
@@ -83,7 +83,7 @@ describe('Test: validation.validate', () => {
 
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
-      return validation.validationPromise(request, verbose)
+      return validation.validate(request, verbose)
         .then(result => {
           should(result).be.eql(request);
           should(validation.recurseFieldValidation.callCount).be.eql(0);
@@ -107,7 +107,7 @@ describe('Test: validation.validate', () => {
 
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
-      return validation.validationPromise(request, verbose)
+      return validation.validate(request, verbose)
         .then(result => {
           should(result).be.deepEqual({errorMessages: {}, valid: true});
           should(validation.recurseFieldValidation.callCount).be.eql(1);
@@ -144,7 +144,7 @@ describe('Test: validation.validate', () => {
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
       sinon.stub(validation.koncorde, 'test').returns([filterId, 'anotherFilter']);
 
-      return validation.validationPromise(request, verbose)
+      return validation.validate(request, verbose)
         .then(result => {
           should(result).be.deepEqual(request);
           should(validation.recurseFieldValidation.callCount).be.eql(1);
@@ -182,7 +182,7 @@ describe('Test: validation.validate', () => {
 
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
 
-      return validation.validationPromise(request, verbose)
+      return validation.validate(request, verbose)
         .then((result) => {
           should(result).be.deepEqual(request);
           should(validation.recurseFieldValidation.callCount).be.eql(1);
@@ -214,11 +214,11 @@ describe('Test: validation.validate', () => {
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
-      return should(validation.validationPromise(request, verbose))
+      return should(validation.validate(request, verbose))
         .be.rejectedWith(error);
     });
 
-    it('should return an unvalid status when validator validation fails', () => {
+    it('should return an invalid status when validator validation fails', () => {
       const
         filterId = 'someFilter',
         verbose = false,
@@ -237,7 +237,7 @@ describe('Test: validation.validate', () => {
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
       Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
-      return should(validation.validationPromise(request, verbose))
+      return should(validation.validate(request, verbose))
         .be.rejectedWith('The document does not match validation filters.');
     });
 
@@ -246,6 +246,8 @@ describe('Test: validation.validate', () => {
         error = new BadRequestError('strictness'),
         verbose = false,
         request = new Request({index, collection});
+
+      error.details = {field: 'field'};
 
       validation.specification = {
         [index]: {
@@ -260,8 +262,8 @@ describe('Test: validation.validate', () => {
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
-      return should(validation.validationPromise(request, verbose))
-        .be.rejectedWith('The document validation is strict; it can not add unspecified sub-fields.');
+      return should(validation.validate(request, verbose))
+        .be.rejectedWith('The document validation is strict. Cannot add unspecified sub-field "field"');
     });
 
     it('should intercept a strictness error and set the message accordingly', () => {
@@ -271,6 +273,8 @@ describe('Test: validation.validate', () => {
         manageErrorMessageStub = sinon.stub(),
         verbose = true,
         request = new Request({index, collection});
+
+      error.details = {field: 'field'};
 
       validation.specification = {
         [index]: {
@@ -284,7 +288,7 @@ describe('Test: validation.validate', () => {
 
       Validation.__set__('manageErrorMessage', manageErrorMessageStub);
 
-      return validation.validationPromise(request, verbose)
+      return validation.validate(request, verbose)
         .then(result => {
           should(result).be.deepEqual({errorMessages: {}, valid: false});
           should(recurseFieldValidationStub.callCount).be.eql(1);
@@ -294,7 +298,7 @@ describe('Test: validation.validate', () => {
           should(recurseFieldValidationStub.args[0][3]).be.eql({});
           should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
           should(manageErrorMessageStub.callCount).be.eql(1);
-          should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict; it can not add unspecified sub-fields.');
+          should(manageErrorMessageStub.args[0][2]).be.eql('The document validation is strict. Cannot add unspecified sub-field "field"');
         });
     });
 
@@ -317,7 +321,7 @@ describe('Test: validation.validate', () => {
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
       Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
 
-      return should(validation.validationPromise(request, verbose))
+      return should(validation.validate(request, verbose))
         .be.rejectedWith(error);
     });
 
@@ -334,7 +338,7 @@ describe('Test: validation.validate', () => {
 
       validation.specification = {};
 
-      return validation.validationPromise(request, verbose)
+      return validation.validate(request, verbose)
         .then(result => {
           should(result).be.eql(request);
           should(kuzzle.services.list.storageEngine.get).calledOnce();
@@ -860,10 +864,10 @@ describe('Test: validation.validate', () => {
 
       typeValidateStub
         .onFirstCall().returns(true)
-        .onSecondCall().throws({message: 'strictness'});
+        .onSecondCall().throws({message: 'strictness', details: {field: 'field'}});
 
       should(validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, true)).be.false();
-      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['The field is set to "strict"; cannot add unspecified subField.']}}}});
+      should(errorMessages).be.deepEqual({fieldScope: {children: {aField: {messages: ['The field is set to "strict"; cannot add unspecified sub-field "field".']}}}});
     });
   });
 });
