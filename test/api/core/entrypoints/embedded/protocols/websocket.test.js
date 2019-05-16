@@ -667,15 +667,19 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
           should(protocol.idleTimeoutInterval).not.be.null();
           should(idleTimeoutSpy).not.be.called();
 
-          clock.tick(protocol.idleSweepDelay);
+          clock.tick(protocol.idleTimeout);
 
           should(idleTimeoutSpy).be.calledOnce();
 
-          clock.tick(protocol.idleSweepDelay);
+          clock.tick(protocol.idleTimeout);
 
           should(idleTimeoutSpy).be.calledTwice();
 
           clock.restore();
+        })
+        .catch(e => {
+          clock.restore();
+          throw e;
         });
     });
 
@@ -696,7 +700,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       protocol.connectionPool = new Map([
         ['ahAhAhAhStayinAliveStayinAlive', new Connection(now)],
         ['dead', new Connection(now - protocol.idleTimeout - 1)],
-        ['ahAhAhAhStayinAliiiiiiiiive', new Connection(now - protocol.idleTimeout)]
+        ['ahAhAhAhStayinAliiiiiiiiive', new Connection(now - protocol.idleTimeout + 100)]
       ]);
 
       protocol._sweepIdleSockets();
