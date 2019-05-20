@@ -55,21 +55,25 @@ When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([
     .catch(error => callback(no ? null : error));
 });
 
-Then(/^I put a (not )?valid specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, index, collection, callback) {
+Then(/^I put a (not )?valid (deprecated)? ?specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, isDeprecated, index, collection, callback) {
   const
     idx = index ? index : this.fakeIndex,
     coll = collection ? collection : this.fakeCollection,
-    specifications = {
+    specifications = not ? notValidSpecifications : validSpecifications,
+    body = !isDeprecated ? specifications : {
       [idx]: {
-        [coll]: not ? notValidSpecifications : validSpecifications
+        [coll]: specifications
       }
     };
 
-  this.api.updateSpecifications(specifications)
-    .then(body => {
-      this.statusCode = body.status;
+  this.api.updateSpecifications(
+    isDeprecated ? null : idx,
+    isDeprecated ? null : coll,
+    body)
+    .then(_body => {
+      this.statusCode = _body.status;
       if (not) {
-        return callback(new Error(JSON.stringify(body)));
+        return callback(new Error(JSON.stringify(_body)));
       }
       return callback();
     })
@@ -86,7 +90,7 @@ Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function
   if (this.statusCode !== 200) {
     if (noError) {
       if (inBody) {
-        // we should always have a 200 response status, error whould be in the response body
+      // we should always have a 200 response status, error whould be in the response body
         return callback(new Error('Status code is ' + this.statusCode + ', but 200 was expected'));
       }
       return callback();
@@ -108,20 +112,24 @@ Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function
   return callback();
 });
 
-When(/^I post a(n in)? ?valid specification$/, {}, function(not, callback) {
+When(/^I post a(n in)? ?valid (deprecated)? ?specification$/, {}, function(not, isDeprecated, callback) {
   const
     index = this.fakeIndex,
     collection = this.fakeCollection,
-    specifications = {
+    specifications = not ? notValidSpecifications : validSpecifications,
+    body = !isDeprecated ? specifications : {
       [index]: {
-        [collection]: not ? notValidSpecifications : validSpecifications
+        [collection]: specifications
       }
     };
 
-  this.api.validateSpecifications(specifications)
-    .then(body => {
-      this.statusCode = body.status;
-      this.body = body;
+  this.api.validateSpecifications(
+    isDeprecated ? null : index,
+    isDeprecated ? null : collection,
+    body)
+    .then(_body => {
+      this.statusCode = _body.status;
+      this.body = _body;
 
       // an invalid specification is not a bad request, the request may go well despite of an invalid spec
       // according to this, we should always have a 200 status if no other internal nor access error occure
