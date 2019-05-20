@@ -1223,10 +1223,10 @@ class ApiBase {
     });
   }
 
-  updateSpecifications (specifications) {
+  updateSpecifications (index, collection, specifications) {
     return this.send({
-      index: null,
-      collection: null,
+      index,
+      collection,
       controller: 'collection',
       action : 'updateSpecifications',
       body: specifications
@@ -1267,10 +1267,10 @@ class ApiBase {
     });
   }
 
-  validateSpecifications (specifications) {
+  validateSpecifications (index, collection, specifications) {
     return this.send({
-      index: null,
-      collection: null,
+      index,
+      collection,
       controller: 'collection',
       action : 'validateSpecifications',
       body: specifications
