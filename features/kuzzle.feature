@@ -1775,12 +1775,21 @@ Feature: Kuzzle functional tests
     Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    Then I put a not valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And There is an error message
+    Then I put a valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
+    And There is no error message
+
 
   @validation
   Scenario: Validation - validateSpecification
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
+    Then There is an error message in the response body
+    When I post a valid deprecated specification
+    Then There is no error message
+    When I post an invalid deprecated specification
     Then There is an error message in the response body
 
   @validation
