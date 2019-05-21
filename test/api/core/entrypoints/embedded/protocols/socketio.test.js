@@ -34,50 +34,56 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
   describe('#init', () => {
     it ('should do nothing if the protocol is disabled', () => {
       entrypoint.config.protocols.socketio.enabled = false;
-      protocol.init(entrypoint);
-      should(protocol.io).be.null();
+
+      return protocol.init(entrypoint)
+        .then(enabled => {
+          should(enabled).be.false();
+          should(protocol.io).be.null();
+        });
     });
 
     it('should create the socket and attach events', () => {
       protocol.onConnection = sinon.spy();
       protocol.onServerError = sinon.spy();
 
-      protocol.init(entrypoint);
+      return protocol.init(entrypoint)
+        .then(() => {
 
-      should(protocol.io.set).be.calledOnce();
-      should(protocol.io.on).be.calledTwice();
-
-      {
-        const onConnectionH = protocol.io.on.firstCall.args[1];
-        onConnectionH('test');
-        should(protocol.onConnection)
-          .be.calledOnce()
-          .be.calledWith('test');
-      }
-
-      {
-        const onErrorH = protocol.io.on.secondCall.args[1];
-        onErrorH('test');
-        should(protocol.onServerError)
-          .be.calledOnce()
-          .be.calledWith('test');
-      }
+          should(protocol.io.set).be.calledOnce();
+          should(protocol.io.on).be.calledTwice();
+          {
+            const onConnectionH = protocol.io.on.firstCall.args[1];
+            onConnectionH('test');
+            should(protocol.onConnection)
+              .be.calledOnce()
+              .be.calledWith('test');
+          }
+    
+          {
+            const onErrorH = protocol.io.on.secondCall.args[1];
+            onErrorH('test');
+            should(protocol.onServerError)
+              .be.calledOnce()
+              .be.calledWith('test');
+          }    
+        });
     });
-
   });
 
   describe('#onServerError', () => {
     it('should just log the error', () => {
       const error = new Error('test');
 
-      protocol.init(entrypoint);
-      protocol.onServerError(error);
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.onServerError(error);
 
-      should(kuzzle.pluginsManager.trigger)
-        .be.calledWith('log:error');
-
-      should(kuzzle.pluginsManager.trigger.firstCall.args[1])
-        .startWith('[socketio] An error has occured');
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledWith('log:error');
+    
+          should(kuzzle.pluginsManager.trigger.firstCall.args[1])
+            .startWith('[socketio] An error has occured');  
+        });
     });
   });
 
@@ -98,9 +104,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
       entrypoint.newConnection = sinon.spy();
 
-      protocol.init(entrypoint);
-      protocol.onClientDisconnection = sinon.spy();
-      protocol.onClientMessage = sinon.spy();
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.onClientDisconnection = sinon.spy();
+          protocol.onClientMessage = sinon.spy();    
+        });
     });
 
     it('should register the new connection', () => {
@@ -140,17 +148,19 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
   describe('#onClientDisconnection', () => {
     it('should delete the connection', () => {
       entrypoint.clients.connectionId = {};
-      protocol.init(entrypoint);
 
-      protocol.sockets = {
-        connectionId: {}
-      };
-
-      protocol.onClientDisconnection('connectionId');
-      should(protocol.sockets)
-        .be.empty();
-      should(entrypoint.clients)
-        .be.empty();
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.sockets = {
+            connectionId: {}
+          };
+    
+          protocol.onClientDisconnection('connectionId');
+          should(protocol.sockets)
+            .be.empty();
+          should(entrypoint.clients)
+            .be.empty();    
+        });
     });
   });
 
@@ -169,10 +179,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
       };
       entrypoint.execute = sinon.spy();
 
-      protocol.init(entrypoint);
-      protocol.sockets = {
-        connectionId: {}
-      };
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.sockets = {
+            connectionId: {}
+          };    
+        });
     });
 
     it('should do nothing if the connection is unknown', () => {
@@ -218,25 +230,26 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
   describe('#broadcast', () => {
     it('should emit to all channels', () => {
-      protocol.init(entrypoint);
-
-      const data = {
-        channels: [
-          'ch1',
-          'ch2',
-          'ch4',
-          'ch6'
-        ],
-        payload: 'test'
-      };
-
-      protocol.broadcast(data);
-
-      should(socketEmitStub)
-        .be.calledWith('ch1', 'test')
-        .be.calledWith('ch2', 'test')
-        .be.calledWith('ch4', 'test')
-        .be.calledWith('ch6', 'test');
+      return protocol.init(entrypoint)
+        .then(() => {
+          const data = {
+            channels: [
+              'ch1',
+              'ch2',
+              'ch4',
+              'ch6'
+            ],
+            payload: 'test'
+          };
+    
+          protocol.broadcast(data);
+    
+          should(socketEmitStub)
+            .be.calledWith('ch1', 'test')
+            .be.calledWith('ch2', 'test')
+            .be.calledWith('ch4', 'test')
+            .be.calledWith('ch6', 'test');    
+        });
     });
   });
 

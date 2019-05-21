@@ -1188,9 +1188,9 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  updateSpecifications (specifications) {
+  updateSpecifications (index, collection, specifications) {
     const options = {
-      url: this.apiPath('_specifications'),
+      url: this.apiPath(index ? `${index}/${collection}/_specifications` : '_specifications'),
       method: 'PUT',
       body: specifications
     };
@@ -1238,9 +1238,9 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  validateSpecifications (specifications) {
+  validateSpecifications (index, collection, specifications) {
     const options = {
-      url: this.apiPath('_validateSpecifications'),
+      url: this.apiPath(index ? `${index}/${collection}/_validateSpecifications` : '_validateSpecifications'),
       method: 'POST',
       body: specifications
     };
