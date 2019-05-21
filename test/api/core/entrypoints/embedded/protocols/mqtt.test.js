@@ -58,48 +58,56 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
     };
 
     protocol = new MqttProtocol();
-    return protocol.init(entrypoint);
   });
 
-  describe('#init', () => {
+  describe('#init', () => {    
+    it('should return false if the protocol is disabled', () => {
+      entrypoint.config.protocols.mqtt.enabled = false;
+
+      return should(protocol.init(entrypoint)).fulfilledWith(false);
+    });
+
     it('should attach events', () => {
-      protocol.onConnection = sinon.spy();
-      protocol.onDisconnection = sinon.spy();
-      protocol.onMessage = sinon.spy();
-
-      should(protocol.server.on)
-        .be.calledWith('clientConnected')
-        .be.calledWith('clientDisconnecting')
-        .be.calledWith('clientDisconnected')
-        .be.calledWith('published');
-
-      {
-        const cb = protocol.server.on.getCall(1).args[1];
-        cb('test');
-        should(protocol.onConnection)
-          .be.calledOnce()
-          .be.calledWith('test');
-      }
-      {
-        const cb = protocol.server.on.getCall(2).args[1];
-        cb('test');
-        should(protocol.onDisconnection)
-          .be.calledOnce()
-          .be.calledWith('test');
-      }
-      {
-        const cb = protocol.server.on.getCall(3).args[1];
-        cb('test');
-        should(protocol.onDisconnection)
-          .be.calledTwice();
-      }
-      {
-        const cb = protocol.server.on.getCall(4).args[1];
-        cb('packet', 'client');
-        should(protocol.onMessage)
-          .be.calledOnce()
-          .be.calledWith('packet', 'client');
-      }
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.onConnection = sinon.stub();
+          protocol.onDisconnection = sinon.spy();
+          protocol.onMessage = sinon.spy();
+          
+          should(protocol.server.on)
+            .be.calledWith('clientConnected')
+            .be.calledWith('clientDisconnecting')
+            .be.calledWith('clientDisconnected')
+            .be.calledWith('published');
+    
+          {
+            const cb = protocol.server.on.getCall(1).args[1];
+            cb('test');
+            should(protocol.onConnection)
+              .be.calledOnce()
+              .be.calledWith('test');
+          }
+          {
+            const cb = protocol.server.on.getCall(2).args[1];
+            cb('test');
+            should(protocol.onDisconnection)
+              .be.calledOnce()
+              .be.calledWith('test');
+          }
+          {
+            const cb = protocol.server.on.getCall(3).args[1];
+            cb('test');
+            should(protocol.onDisconnection)
+              .be.calledTwice();
+          }
+          {
+            const cb = protocol.server.on.getCall(4).args[1];
+            cb('packet', 'client');
+            should(protocol.onMessage)
+              .be.calledOnce()
+              .be.calledWith('packet', 'client');
+          }    
+        });
     });
   });
 
@@ -108,7 +116,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
       auth;
 
     beforeEach(() => {
-      auth = Bluebird.promisify(protocol.server.authorizePublish);
+      return protocol.init(entrypoint)
+        .then(() => {
+          auth = Bluebird.promisify(protocol.server.authorizePublish);
+        });
     });
 
     it('should restrict to the requestTopic if allowPubSub is set to false', () => {
@@ -157,7 +168,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
       auth;
 
     beforeEach(() => {
-      auth = Bluebird.promisify(protocol.server.authorizeSubscribe);
+      return protocol.init(entrypoint)
+        .then(() => {
+          auth = Bluebird.promisify(protocol.server.authorizeSubscribe);
+        });
     });
 
     it('should allow any topic different than the request one, provided it does not contain any wildcard', () => {
@@ -184,6 +198,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   });
 
   describe('#broadcast', () => {
+    beforeEach(() => {
+      return protocol.init(entrypoint);
+    });
+
     it('should dispatch data to all channels', () => {
       protocol.broadcast({
         payload: 'payload',
@@ -245,6 +263,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   });
 
   describe('#onConnection', () => {
+    beforeEach(() => {
+      return protocol.init(entrypoint);
+    });
+
     it('should register new connections', () => {
       const client = {
         connection: {
@@ -269,6 +291,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   });
 
   describe('#onDisconnection', () => {
+    beforeEach(() => {
+      return protocol.init(entrypoint);
+    });
+
     it('should do nothing if the connection is unknown', () => {
       protocol.onDisconnection({});
 
@@ -299,6 +325,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   });
 
   describe('#onMessage', () => {
+    beforeEach(() => {
+      return protocol.init(entrypoint);
+    });
+
     it('should do nothing if topic is not the request one of if the payload is not valid', () => {
       // invalid topic
       protocol.onMessage({
@@ -355,7 +385,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
           options: {
             connection: {
               id: 'id',
-              protocol: protocol.protocol
+              protocol: protocol.name
             }
           }
         });
@@ -415,6 +445,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   });
 
   describe('#_respond', () => {
+    beforeEach(() => {
+      return protocol.init(entrypoint);
+    });
+
     it('should broadcast if in development mode', () => {
       const client = {
         forward: sinon.spy()
