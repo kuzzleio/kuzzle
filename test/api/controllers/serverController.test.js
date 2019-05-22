@@ -117,7 +117,7 @@ describe('Test: server controller', () => {
         should(e).be.instanceOf(ExternalServiceError);
         should(e.errorName).be.eql('api-server-elasticsearch_down');
         should(e.code).be.eql(1);
-        should(e.message).be.eql(`ElasticSearch is down : {"status":"red"}`);
+        should(e.message).be.eql('ElasticSearch is down : ' + '{"status":"red"}');
       }
     });
   });
@@ -161,7 +161,7 @@ describe('Test: server controller', () => {
             .be.calledOnce()
             .be.calledWith('elasticsearch_down', '{"status":"red"}');
           should(() => {
-            serverController.throw('elasticsearch_down', '{"status":"red"}')
+            serverController.throw('elasticsearch_down', '{"status":"red"}');
           }).throw(ExternalServiceError);
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
