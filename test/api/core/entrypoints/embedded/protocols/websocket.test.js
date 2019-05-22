@@ -43,21 +43,22 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     it('should do nothing if the protocol is not enabled', () => {
       entrypoint.config.protocols.websocket.enabled = false;
 
-      protocol.init(entrypoint);
-      should(protocol.server).be.null();
+      return protocol.init(entrypoint)
+        .then(enabled => {
+          should(protocol.server).be.null();
+          should(enabled).be.false();
+        });
     });
 
     it('should throw if the heartbeat value is not set to a valid value', () => {
-      for (const value of [null, 'foo', {}, [], 3.14159, true, -42, undefined]) {
+      for (const heartbeat of [null, 'foo', {}, [], 3.14159, true, -42, undefined]) {
         const
           ep = new EntryPoint(kuzzle),
           wsp = new WebSocketProtocol();
 
-        ep.config.protocols.websocket.heartbeat = value;
-
-        should(() => wsp.init(ep)).throw(
-          KuzzleInternalError,
-          {message: `WebSocket: invalid heartbeat value ${value}`});
+        ep.config.protocols.websocket.heartbeat = heartbeat;
+        
+        should(wsp.init(ep)).be.rejectedWith(KuzzleInternalError);
       }
     });
 
@@ -68,66 +69,73 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
       entrypoint.config.protocols.websocket.heartbeat = 1000;
 
-      protocol.init(entrypoint);
-      should(protocol.heartbeatInterval).not.be.null();
-      should(heartbeatSpy).not.be.called();
-
-      clock.tick(1000);
-
-      should(heartbeatSpy).be.calledOnce();
-
-      clock.tick(1000);
-
-      should(heartbeatSpy).be.calledTwice();
-
-      clock.restore();
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.heartbeatInterval).not.be.null();
+          should(heartbeatSpy).not.be.called();
+    
+          clock.tick(1000);
+    
+          should(heartbeatSpy).be.calledOnce();
+    
+          clock.tick(1000);
+    
+          should(heartbeatSpy).be.calledTwice();
+    
+          clock.restore();    
+        });
     });
 
     it('should disable heartbeats if set to 0', () => {
       entrypoint.config.protocols.websocket.heartbeat = 0;
-      protocol.init(entrypoint);
-      should(protocol.heartbeatInterval).be.null();
+
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.heartbeatInterval).be.null();
+        });
     });
 
     it('should launch a websocket server and bind events to it', () => {
       protocol.onConnection = sinon.spy();
       protocol.onServerError = sinon.spy();
 
-      protocol.init(entrypoint);
-
-      should(protocol.entryPoint).eql(entrypoint);
-      should(protocol.heartbeatInterval).not.be.null();
-      should(WebSocketServer).be.calledOnce();
-
-      const server = WebSocketServer.firstCall.returnValue;
-      should(server.on)
-        .be.calledTwice()
-        .be.calledWith('connection')
-        .be.calledWith('error');
-
-      const onConnectH = server.on.firstCall.args[1];
-      onConnectH('test');
-      should(protocol.onConnection)
-        .be.calledOnce()
-        .be.calledWith('test');
-
-      const onErrorH = server.on.secondCall.args[1];
-      onErrorH('test');
-      should(protocol.onServerError)
-        .be.calledOnce();
-
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.entryPoint).eql(entrypoint);
+          should(protocol.heartbeatInterval).not.be.null();
+          should(WebSocketServer).be.calledOnce();
+    
+          const server = WebSocketServer.firstCall.returnValue;
+          should(server.on)
+            .be.calledTwice()
+            .be.calledWith('connection')
+            .be.calledWith('error');
+    
+          const onConnectH = server.on.firstCall.args[1];
+          onConnectH('test');
+          should(protocol.onConnection)
+            .be.calledOnce()
+            .be.calledWith('test');
+    
+          const onErrorH = server.on.secondCall.args[1];
+          onErrorH('test');
+          should(protocol.onServerError)
+            .be.calledOnce();    
+        });
     });
   });
 
   describe('#onServerError', () => {
     it('should forward the error to kuzzle logger', () => {
-      protocol.init(entrypoint);
-      protocol.onServerError('test');
-      should(kuzzle.pluginsManager.trigger)
-        .be.calledOnce()
-        .be.calledWith(
-          'log:error',
-          '[websocket] An error has occured "undefined":\nundefined');
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.onServerError('test');
+          should(kuzzle.pluginsManager.trigger)
+            .be.calledOnce()
+            .be.calledWith(
+              'log:error',
+              '[websocket] An error has occured "undefined":\nundefined');    
+        });
     });
   });
 
@@ -155,8 +163,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         }
       };
 
-      protocol.init(entrypoint);
-      protocol.entryPoint.newConnection = sinon.spy();
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.entryPoint.newConnection = sinon.spy();
+        });
     });
 
     it('should do nothing if the request is for socketio', () => {
@@ -175,7 +185,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(protocol.entryPoint.newConnection)
         .be.calledOnce()
         .be.calledWithMatch({
-          protocol: protocol.protocol,
+          protocol: protocol.name,
           ips: ['1.1.1.1', '2.2.2.2', 'ip'],
           headers: request.headers
         });
@@ -234,25 +244,27 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
   describe('#onClientDisconnection', () => {
     beforeEach(() => {
-      protocol.init(entrypoint);
-      protocol.connectionPool = {
-        connectionId: {
-          id: 'connectionId',
-          channels: ['c1', 'c2', 'c3']
-        }
-      };
-
-      protocol.channels = {
-        c1: {
-          count: 3
-        },
-        c2: {
-          count: 1
-        },
-        c3: {
-          count: 2
-        }
-      };
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.connectionPool = {
+            connectionId: {
+              id: 'connectionId',
+              channels: ['c1', 'c2', 'c3']
+            }
+          };
+    
+          protocol.channels = {
+            c1: {
+              count: 3
+            },
+            c2: {
+              count: 1
+            },
+            c3: {
+              count: 2
+            }
+          };    
+        });
     });
 
     it('should remove the client from its subscriptions', () => {
@@ -286,13 +298,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         maxRequestSize: Infinity
       };
 
-      protocol.init(entrypoint);
-      protocol.connectionPool = {
-        connectionId: {
-          id: 'connectionId'
-        }
-      };
-      protocol._send = sinon.spy();
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.connectionPool = {
+            connectionId: {
+              id: 'connectionId'
+            }
+          };
+          protocol._send = sinon.spy();    
+        });
     });
 
     it('should do nothing if no data is given or if the connection is unknown', () => {
@@ -344,8 +358,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
   describe('#broadcast', () => {
     beforeEach(() => {
-      protocol.init(entrypoint);
-      protocol._send = sinon.spy();
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol._send = sinon.spy();
+        });
     });
 
     it('should send the message to all clients registered to the message channels', () => {

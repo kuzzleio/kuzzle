@@ -54,7 +54,7 @@ services:
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
 
   redis:
-    image: redis:3.2
+    image: redis:${REDIS_VERSION:-5}
 
   elasticsearch:
     image: kuzzleio/elasticsearch:5.6.10

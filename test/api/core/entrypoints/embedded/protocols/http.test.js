@@ -80,55 +80,61 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     it('should throw if an invalid maxRequestSize parameter is set', () => {
       entrypoint.config.maxRequestSize = 'invalid';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid "maxRequestSize" parameter value: expected a numeric value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid "maxRequestSize" parameter value: expected a numeric value');
     });
 
     it('should throw if an invalid maxFormFileSize parameter is set', () => {
       entrypoint.config.protocols.http.maxFormFileSize = 'invalid';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "maxFormFileSize" parameter value: expected a numeric value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid HTTP "maxFormFileSize" parameter value: expected a numeric value');
     });
 
     it('should throw if an invalid maxEncodingLayers parameter is set', () => {
       entrypoint.config.protocols.http.maxEncodingLayers = 'invalid';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "maxEncodingLayers" parameter value: expected a numeric value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid HTTP "maxEncodingLayers" parameter value: expected a numeric value');
     });
 
     it('should throw if an invalid allowCompression parameter is set', () => {
       entrypoint.config.protocols.http.allowCompression = 'foobar';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "allowCompression" parameter value: expected a boolean value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid HTTP "allowCompression" parameter value: expected a boolean value');
     });
 
     it('should configure the zlib decoders', () => {
-      protocol.init(entrypoint);
-
-      should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
-      should(protocol.decoders.gzip).eql(zlibstub.createGunzip);
-      should(protocol.decoders.deflate).eql(zlibstub.createInflate);
-      should(protocol.decoders.identity).be.a.Function();
-      should(protocol.decoders.identity('foobar')).eql(null);
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
+          should(protocol.decoders.gzip).eql(zlibstub.createGunzip);
+          should(protocol.decoders.deflate).eql(zlibstub.createInflate);
+          should(protocol.decoders.identity).be.a.Function();
+          should(protocol.decoders.identity('foobar')).eql(null);              
+        });
     });
 
     it('should set decoders with throwables if compression is disabled', () => {
       const message = 'Compression support is disabled';
-
       entrypoint.config.protocols.http.allowCompression = false;
-      protocol.init(entrypoint);
 
-      should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
-      should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
-      should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
-      should(protocol.decoders.identity).be.a.Function();
-
-      should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
-      should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
-      should(protocol.decoders.identity('foobar')).eql(null);
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
+          should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
+          should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
+          should(protocol.decoders.identity).be.a.Function();
+    
+          should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
+          should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
+          should(protocol.decoders.identity('foobar')).eql(null);    
+        });
     });
 
     describe('#onRequest', () => {
@@ -170,12 +176,13 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           unpipe: sinon.spy()
         };
 
-        protocol.init(entrypoint);
+        return protocol.init(entrypoint)
+          .then(() => {
+            onRequest = protocol.server.on.firstCall.args[1];
 
-        onRequest = protocol.server.on.firstCall.args[1];
-
-        protocol._replyWithError = sinon.spy();
-        protocol._sendRequest = sinon.spy();
+            protocol._replyWithError = sinon.spy();
+            protocol._sendRequest = sinon.spy();
+          });
       });
 
       it('should complain if the request is too big', () => {
@@ -431,7 +438,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             some: 'value'
           }
         };
-        protocol.init(entrypoint);
+        return protocol.init(entrypoint);
       });
 
       it('should call kuzzle http router and send the client the response back', () => {
@@ -644,7 +651,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   describe('#_replyWithError', () => {
     beforeEach(() => {
       entrypoint.logAccess = sinon.spy();
-      protocol.init(entrypoint);
+      return protocol.init(entrypoint);
     });
 
     it('should log the access and reply with error', () => {
