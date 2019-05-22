@@ -9,7 +9,8 @@ const
     Request,
     errors: {
       BadRequestError,
-      PluginImplementationError
+      PluginImplementationError,
+      UnauthorizedError
     }
   } = require('kuzzle-common-objects');
 
@@ -52,6 +53,32 @@ describe('funnelController.processRequest', () => {
           done(err);
         }
       });
+  });
+
+  it('triggers request:onUnauthorized event when bad credentials are provided', () => {
+    const
+      originalError = new UnauthorizedError('wrong username or password'),
+      request = new Request({
+        controller: 'auth',
+        action: 'login',
+        body: {
+          username: 'test',
+          passwrod: 'test'
+        }
+      });
+
+    originalError.status = 401;
+    kuzzle.pluginsManager.trigger = sinon.stub();
+    kuzzle.pluginsManager.trigger.onFirstCall().rejects(originalError);
+    kuzzle.pluginsManager.trigger.withArgs('request:onUnauthorized').callsFake(
+      () => Promise.resolve().then(() => {
+        throw originalError;
+      }));
+    const res = funnel.handleProcessRequestError(
+      request, request, originalError);
+
+    return should(res).rejectedWith(
+      UnauthorizedError, { message: /^wrong username or password.*/, status: 401 });
   });
 
   it('wraps plugin developer error in a PluginImplementationError', () => {
