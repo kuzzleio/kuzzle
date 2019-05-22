@@ -41,6 +41,32 @@ class ApiBase {
     return this.send(msg);
   }
 
+  bulkMWrite (index, collection, body) {
+    const
+      msg = {
+        controller: 'bulk',
+        collection: collection || this.world.fakeCollection,
+        index: index || this.world.fakeIndex,
+        action: 'mWrite',
+        body
+      };
+
+    return this.send(msg);
+  }
+
+  bulkWrite (index, collection, body) {
+    const
+      msg = {
+        controller: 'bulk',
+        collection: collection || this.world.fakeCollection,
+        index: index || this.world.fakeIndex,
+        action: 'write',
+        body
+      };
+
+    return this.send(msg);
+  }
+
   collectionExists (index, collection) {
     return this.send({
       index,

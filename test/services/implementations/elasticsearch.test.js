@@ -2306,7 +2306,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#mcreateOrReplace', () => {
+  describe('#mcreateOrReplace', () => {
     const metadata = {
       active: true,
       author: 'test',

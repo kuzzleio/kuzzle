@@ -1,4 +1,28 @@
 Feature: Kuzzle functional tests
+  Scenario: Bulk mWrite
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I use bulk:mWrite action with
+    """
+    {
+      "documents": [
+        { "body": { "name": "Maedhros" } },
+        { "body": { "name": "Maglor" } },
+        { "body": { "name": "Celegorm" } },
+        { "body": { "name": "Caranthis" } },
+        { "body": { "name": "Curufin" } },
+        { "body": { "name": "Amrod" } },
+        { "body": { "name": "Amras" } }
+      ]
+    }
+    """
+    Then I count 7 documents
+    And The documents does not have kuzzle metadata
+
+  Scenario: Bulk write
+    When I use bulk:write action with '{ "name": "Feanor", "_kuzzle_info": { "author": "Tolkien" } }'
+    Then I count 1 documents
+    And The documents have the following kuzzle metadata '{ "author": "Tolkien" }'
+
   Scenario: Create a collection
     When I create a collection "kuzzle-test-index":"my-collection1"
     Then The mapping properties field of "kuzzle-test-index":"my-collection1" is "the default value"

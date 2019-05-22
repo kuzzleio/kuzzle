@@ -1,4 +1,5 @@
 const
+  should = require('should'),
   {
     Then,
     When
@@ -116,3 +117,35 @@ When(/^I do a global bulk import$/, function (callback) {
     });
 });
 
+When('I use bulk:mWrite action with', function (bodyRaw) {
+  const body = JSON.parse(bodyRaw);
+
+  return this.api.bulkMWrite(this.index, this.collection, body);
+});
+
+When('I use bulk:write action with {string}', function (bodyRaw) {
+  const body = JSON.parse(bodyRaw);
+
+  return this.api.bulkWrite(this.index, this.collection, body);
+});
+
+
+Then('The documents does not have kuzzle metadata', function () {
+  return this.api.search({}, this.index, this.collection, { size: 100 })
+    .then(({ result }) => {
+      for (const hit of result.hits) {
+        should(hit._source._kuzzle_info).be.undefined();
+      }
+    });
+});
+
+Then('The documents have the following kuzzle metadata {string}', function (metadatRaw) {
+  const metadata = JSON.parse(metadatRaw);
+
+  return this.api.search({}, this.index, this.collection, { size: 100 })
+    .then(({ result }) => {
+      for (const hit of result.hits) {
+        should(hit._source._kuzzle_info).match(metadata);
+      }
+    });
+});
