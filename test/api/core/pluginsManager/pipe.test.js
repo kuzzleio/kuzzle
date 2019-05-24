@@ -24,7 +24,10 @@ describe('pluginsManager.pipe', () => {
     const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
     kuzzle = new KuzzleMock();
+    kuzzle.emit.restore();
+    kuzzle.pipe.restore();
     pluginsManager = new PluginsManager(kuzzle);
+    kuzzle.pluginsManager = pluginsManager;
   });
 
   it('should trigger hooks with wildcard event', done => {
@@ -67,7 +70,7 @@ describe('pluginsManager.pipe', () => {
 
     pluginsManager.run()
       .then(() => {
-        pluginsManager.trigger('foo:beforeBar');
+        kuzzle.emit('foo:beforeBar');
       });
   });
 
@@ -89,7 +92,7 @@ describe('pluginsManager.pipe', () => {
 
     pluginsManager.run()
       .then(() => {
-        pluginsManager.trigger('foo:afterBar');
+        kuzzle.emit('foo:afterBar');
       });
   });
 
@@ -110,7 +113,7 @@ describe('pluginsManager.pipe', () => {
     }];
 
     return pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => kuzzle.pipe('foo:bar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
       });
@@ -133,7 +136,7 @@ describe('pluginsManager.pipe', () => {
     }];
 
     return pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:beforeBar'))
+      .then(() => kuzzle.pipe('foo:beforeBar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
       });
@@ -156,7 +159,7 @@ describe('pluginsManager.pipe', () => {
     }];
 
     return pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:afterBar'))
+      .then(() => kuzzle.pipe('foo:afterBar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
       });
@@ -184,7 +187,7 @@ describe('pluginsManager.pipe', () => {
 
     pluginsManager.registerPipe(pluginMock, 50, 200, 'foo:bar', 'myFunc');
 
-    return should(pluginsManager.pipe('foo:bar')).rejectedWith(
+    return should(kuzzle.pipe('foo:bar')).rejectedWith(
       PluginImplementationError,
       {message: /^Plugin foo pipe for event 'foo:bar' threw a non-Kuzzle error: Error: foobar.*/});
   });
