@@ -106,7 +106,7 @@ describe('Test plugins manager trigger', () => {
       }
     }];
 
-    pluginsManager.run()
+    return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:bar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
@@ -129,7 +129,7 @@ describe('Test plugins manager trigger', () => {
       }
     }];
 
-    pluginsManager.run()
+    return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:beforeBar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
@@ -152,7 +152,7 @@ describe('Test plugins manager trigger', () => {
       }
     }];
 
-    pluginsManager.run()
+    return pluginsManager.run()
       .then(() => pluginsManager.trigger('foo:afterBar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
