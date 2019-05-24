@@ -225,7 +225,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -244,7 +244,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(ForbiddenError);
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -264,7 +264,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -284,7 +284,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -304,7 +304,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -339,7 +339,7 @@ describe('Test: repositories/profileRepository', () => {
             .be.calledWith('foo');
           should(profileRepository.profiles)
             .not.have.property('foo');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('core:profileRepository:delete', {_id: 'foo'});
         });
@@ -400,7 +400,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError).and.match({message: 'Missing profile id'});
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -417,7 +417,7 @@ describe('Test: repositories/profileRepository', () => {
             .be.exactly(testProfile);
           should(profileRepository.profiles.foo)
             .be.exactly(testProfile);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('core:profileRepository:save', {_id: testProfile._id, policies: testProfile.policies});
         });

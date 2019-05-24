@@ -2028,16 +2028,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should not block execution if the index cannot be refreshed', () => {
-      const
-        error = new Error('Mocked error'),
-        pluginSpy = kuzzle.pluginsManager.trigger;
+      const error = new Error('Mocked error');
 
       elasticsearch.client.indices.refresh.rejects(error);
       elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(pluginSpy.calledWith('log:error')).be.true();
+          should(kuzzle.emit).calledWith('log:error');
           should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({ foo: 'bar' });
           return null;

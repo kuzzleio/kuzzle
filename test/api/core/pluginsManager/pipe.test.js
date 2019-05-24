@@ -9,8 +9,10 @@ const
     }
   } = require('kuzzle-common-objects');
 
-describe('Test plugins manager trigger', () => {
-  let pluginsManager;
+describe('pluginsManager.pipe', () => {
+  let
+    kuzzle,
+    pluginsManager;
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
@@ -19,7 +21,8 @@ describe('Test plugins manager trigger', () => {
     mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
     const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
-    pluginsManager = new PluginsManager(new KuzzleMock());
+    kuzzle = new KuzzleMock();
+    pluginsManager = new PluginsManager(kuzzle);
   });
 
   it('should trigger hooks with wildcard event', done => {
@@ -40,7 +43,7 @@ describe('Test plugins manager trigger', () => {
 
     pluginsManager.run()
       .then(() => {
-        pluginsManager.trigger('foo:bar');
+        kuzzle.emit('foo:bar');
       });
   });
 
@@ -66,7 +69,7 @@ describe('Test plugins manager trigger', () => {
 
     pluginsManager.registerPipe(pluginMock, 50, 200, 'foo:bar', 'myFunc');
 
-    return should(pluginsManager.trigger('foo:bar')).rejectedWith(
+    return should(pluginsManager.pipe('foo:bar')).rejectedWith(
       PluginImplementationError,
       {message: /^Plugin foo pipe for event 'foo:bar' threw a non-Kuzzle error: Error: foobar.*/});
   });
