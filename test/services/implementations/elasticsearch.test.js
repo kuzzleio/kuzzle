@@ -6,15 +6,17 @@ const
   sinon = require('sinon'),
   rewire = require('rewire'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   {
-    BadRequestError,
-    NotFoundError,
-    KuzzleError,
-    PreconditionError,
-    ExternalServiceError,
-    SizeLimitError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      BadRequestError,
+      NotFoundError,
+      KuzzleError,
+      PreconditionError,
+      ExternalServiceError,
+      SizeLimitError
+    }
+  } = require('kuzzle-common-objects'),
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
@@ -2435,17 +2437,30 @@ describe('Test: ElasticSearch service', () => {
 
     it('should prevent updating documents to a non-existing index or collection', () => {
       elasticsearch.kuzzle.indexCache.exists.resolves(false);
-      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+      request.input.body = {
+        documents: [
+          {_id: 'foo', body: {foo: 'bar'}},
+          {_id: 'bar', body: {bar: 'foo'}}
+        ]
+      };
 
-      return should(elasticsearch.mupdate(request)).rejectedWith(PreconditionError);
+      return should(elasticsearch.mupdate(request))
+        .rejectedWith(PreconditionError);
     });
 
     it('should abort if the number of documents exceeds the configured limit', () => {
       elasticsearch.kuzzle.indexCache.exists.resolves(true);
       kuzzle.config.limits.documentsWriteCount = 1;
-      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+      request.input.body = {
+        documents: [
+          {_id: 'foo', body: {foo: 'bar'}},
+          {_id: 'bar', body: {bar: 'foo'}}
+        ]
+      };
 
-      return should(elasticsearch.mupdate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mupdate(request)).rejectedWith(
+        SizeLimitError,
+        {message: 'Number of documents exceeds the server configured value (1)'});
     });
 
     it('should bulk import documents to be updated', () => {
@@ -2455,11 +2470,32 @@ describe('Test: ElasticSearch service', () => {
         took: 30,
         errors: false,
         items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 201}}
+          {
+            index: {
+              _id: 'foo',
+              status: 201,
+              get: {
+                _source: {foo: 'bar', leftalone: true, _kuzzle_info: metadata}
+              }
+            }
+          },
+          {
+            index: {
+              _id: 'bar',
+              status: 201,
+              get: {
+                _source: {bar: 'foo', leftalone: true, _kuzzle_info: metadata}
+              }
+            }
+          }
         ]
       });
-      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
+      request.input.body = {
+        documents: [
+          {_id: 'foo', body: {foo: 'bar'}},
+          {_id: 'bar', body: {bar: 'foo'}}
+        ]
+      };
 
       return elasticsearch.mupdate(request)
         .then(result => {
@@ -2475,14 +2511,22 @@ describe('Test: ElasticSearch service', () => {
           });
           should(result.error).be.an.Array().and.be.empty();
           should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201},
-            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 201}
+            {
+              _id: 'foo',
+              _source: {foo: 'bar', leftalone: true, _kuzzle_info: metadata},
+              _meta: metadata,
+              status: 201
+            },
+            {
+              _id: 'bar',
+              _source: {bar: 'foo', leftalone: true, _kuzzle_info: metadata},
+              _meta: metadata,
+              status: 201
+            }
           ]);
 
           should(result.result[0]._meta.updatedAt).be.approximately(now, 100);
           should(result.result[1]._meta.updatedAt).be.approximately(now, 100);
-          should(result.result[0]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
-          should(result.result[1]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
         });
     });
 
