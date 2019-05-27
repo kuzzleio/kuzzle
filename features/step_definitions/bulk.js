@@ -129,6 +129,11 @@ When('I use bulk:write action with {string}', function (bodyRaw) {
   return this.api.bulkWrite(this.index, this.collection, body);
 });
 
+When('I use bulk:write action with id {string} and content {string}', function (id, bodyRaw) {
+  const body = JSON.parse(bodyRaw);
+
+  return this.api.bulkWrite(this.index, this.collection, body, id);
+});
 
 Then('The documents does not have kuzzle metadata', function () {
   return this.api.search({}, this.index, this.collection, { size: 100 })
@@ -148,4 +153,8 @@ Then('The documents have the following kuzzle metadata {string}', function (meta
         should(hit._source._kuzzle_info).match(metadata);
       }
     });
+});
+
+Then('I can found a document {string}', function (documentId) {
+  return this.api.get(documentId, this.index, this.collection);
 });

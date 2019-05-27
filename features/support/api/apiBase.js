@@ -54,13 +54,14 @@ class ApiBase {
     return this.send(msg);
   }
 
-  bulkWrite (index, collection, body) {
+  bulkWrite (index, collection, body, _id = null) {
     const
       msg = {
         controller: 'bulk',
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'write',
+        _id,
         body
       };
 
@@ -500,11 +501,11 @@ class ApiBase {
     return this.send(msg);
   }
 
-  get (id, index) {
+  get (id, index, collection) {
     const
       msg = {
         controller: 'document',
-        collection: this.world.fakeCollection,
+        collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'get',
         _id: id

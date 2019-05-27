@@ -168,9 +168,15 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  bulkWrite (index, collection, body) {
+  bulkWrite (index, collection, body, _id = null) {
+    let url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/_write`;
+
+    if (_id) {
+      url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/${_id}/_write`
+    }
+
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_write'),
+      url: this.apiPath(url),
       method: 'POST',
       body
     };

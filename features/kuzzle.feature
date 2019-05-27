@@ -19,9 +19,16 @@ Feature: Kuzzle functional tests
     And The documents does not have kuzzle metadata
 
   Scenario: Bulk write
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
     When I use bulk:write action with '{ "name": "Feanor", "_kuzzle_info": { "author": "Tolkien" } }'
     Then I count 1 documents
     And The documents have the following kuzzle metadata '{ "author": "Tolkien" }'
+
+  Scenario: Bulk write with _id
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I use bulk:write action with id "wandered" and content '{ "name": "Feanor" }'
+    Then I count 1 documents
+    And I can found a document "wandered"
 
   Scenario: Create a collection
     When I create a collection "kuzzle-test-index":"my-collection1"
