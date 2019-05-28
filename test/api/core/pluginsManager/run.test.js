@@ -61,10 +61,8 @@ describe('PluginsManager.run', () => {
     pluginMock.expects('bar').never();
 
     return pluginsManager.run()
-      .then(() => {
-        kuzzle.emit('foo:bar');
-        pluginMock.verify();
-      });
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => pluginMock.verify());
   });
 
   it('should attach event hook with function', () => {
@@ -78,9 +76,8 @@ describe('PluginsManager.run', () => {
     };
 
     return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
       .then(() => {
-        kuzzle.emit('foo:bar');
-
         should(bar).be.calledOnce();
         should(foo).not.be.called();
       });
@@ -101,10 +98,8 @@ describe('PluginsManager.run', () => {
     pluginMock.expects('baz').never();
 
     return pluginsManager.run()
-      .then(() => {
-        kuzzle.emit('foo:bar');
-        pluginMock.verify();
-      });
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => pluginMock.verify());
   });
 
   it('should attach multi-target hook with function', () => {
@@ -119,9 +114,8 @@ describe('PluginsManager.run', () => {
     };
 
     return pluginsManager.run()
+      .then(() => pluginsManager.trigger('foo:bar'))
       .then(() => {
-        kuzzle.emit('foo:bar');
-
         should(bar).be.calledOnce();
         should(foo).be.calledOnce();
         should(baz).not.be.called();
@@ -142,10 +136,8 @@ describe('PluginsManager.run', () => {
     pluginMock.expects('bar').never();
 
     return pluginsManager.run()
-      .then(() => {
-        kuzzle.emit('foo:bar');
-        pluginMock.verify();
-      });
+      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => pluginMock.verify());
   });
 
   it('should throw if a hook target is not a function and not a method name', () => {
