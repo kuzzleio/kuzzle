@@ -366,9 +366,21 @@ describe('Test: ElasticSearch service', () => {
           should(data.index).be.exactly(index);
           should(data.type).be.exactly(collection);
           should(data.body).be.exactly(documentAda);
+          should(data.body._kuzzle_info).not.be.undefined();
           should(data.id).be.exactly(createdDocumentId);
-
           should(refreshIndexSpy.calledOnce).be.true();
+        });
+    });
+
+    it('should not inject meta if specified', () => {
+      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+      elasticsearch.client.index.resolves({});
+      request.input.resource._id = createdDocumentId;
+
+      return elasticsearch.createOrReplace(request, false)
+        .then(() => {
+          const data = elasticsearch.client.index.firstCall.args[0];
+          should(data.body._kuzzle_info).be.undefined();
         });
     });
 
@@ -2355,6 +2367,26 @@ describe('Test: ElasticSearch service', () => {
           should(result.result[1]._meta.createdAt).be.approximately(now, 100);
           should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
           should(result.result[1]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+        });
+    });
+
+    it('should not inject kuzzle meta when specified', () => {
+      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+      elasticsearch.client.bulk.resolves({
+        took: 30,
+        errors: false,
+        items: [
+          {index: {_id: 'foo', status: 201}},
+          {index: {_id: 'bar', status: 201}}
+        ]
+      });
+      request.input.body = {documents: [{_id: 'foobar', body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+
+      return elasticsearch.mcreateOrReplace(request, false)
+        .then(() => {
+          const esRequest = elasticsearch.client.bulk.args[0][0];
+          should(esRequest.body[1]._kuzzle_info).be.undefined();
+          should(esRequest.body[3]._kuzzle_info).be.undefined();
         });
     });
 
