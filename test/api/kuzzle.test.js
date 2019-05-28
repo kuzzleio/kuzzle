@@ -48,18 +48,18 @@ describe('/lib/api/kuzzle.js', () => {
         should(e).be.instanceOf(ExternalServiceError);
         should(e.errorName).be.eql('api-server-elasticsearch_down');
         should(e.code).be.eql(1);
-        should(e.message).be.eql('ElasticSearch is down : ' + '{"status":"red"}');
+        should(e.message).be.eql('ElasticSearch is down : {"status":"red"}');
       }
     });
 
     it('should throw an KuzzleInternalError with default name, msg and code', () => {
       try {
-        kuzzle.throw('api', 'fake-subdomain', 'fake-error');
+        kuzzle.throw('api', 'fake-subdomain', 'fake-error', '{"status":"error"}');
       } catch (e) {
         should(e).be.instanceOf(KuzzleError);
         should(e.errorName).be.eql('Undocumented error');
         should(e.code).be.eql(0);
-        should(e.message).be.eql('A KuzzleError occured : Undocumented error');
+        should(e.message).be.eql('An error occured : {"status":"error"}');
       }
     });
 
@@ -70,7 +70,7 @@ describe('/lib/api/kuzzle.js', () => {
         should(e).be.instanceOf(KuzzleError);
         should(e.errorName).be.eql('Undocumented error');
         should(e.code).be.eql(0);
-        should(e.message).be.eql('A KuzzleError occured : Undocumented error');
+        should(e.message).be.eql('An error occured');
       }
     });
   });
