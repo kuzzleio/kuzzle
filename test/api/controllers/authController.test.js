@@ -73,7 +73,7 @@ describe('Test the auth controller', () => {
 
       return authController.login(request)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).calledWith('auth:strategyAuthenticated', {strategy: 'mockup', content: user});
+          should(kuzzle.pipe).calledWith('auth:strategyAuthenticated', {strategy: 'mockup', content: user});
           should(response).match({
             _id: 'foobar',
             jwt: 'bar',
@@ -85,11 +85,15 @@ describe('Test the auth controller', () => {
     });
 
     it('should modify the result according to auth:strategyAuthenticated pipe events', () => {
-      kuzzle.pluginsManager.trigger = sinon.stub().withArgs('auth:strategyAuthenticated').returns({strategy: 'foobar', content: {foo: 'bar'}});
+      kuzzle.pipe
+        .withArgs('auth:strategyAuthenticated')
+        .returns({strategy: 'foobar', content: {foo: 'bar'}});
 
       return authController.login(request)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).calledWith('auth:strategyAuthenticated', {strategy: 'mockup', content: user});
+          should(kuzzle.pipe).calledWith(
+            'auth:strategyAuthenticated',
+            {strategy: 'mockup', content: user});
           should(response).match({foo: 'bar'});
           should(kuzzle.repositories.token.generateToken).not.be.called();
         });
@@ -102,7 +106,7 @@ describe('Test the auth controller', () => {
 
       return authController.login(request)
         .then(response => {
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.pipe).not.be.called();
           should(response.headers.Location).be.equal('http://github.com');
           should(response.statusCode).be.equal(302);
           should(request.status).be.equal(302);

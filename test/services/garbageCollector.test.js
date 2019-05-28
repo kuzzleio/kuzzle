@@ -57,12 +57,12 @@ describe('Test: GarbageCollector service', () => {
 
       return gc.run()
         .then(() => {
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.pipe).not.be.called();
 
           kuzzle.funnel.overloaded = false;
           clock.tick(oneDay);
 
-          should(kuzzle.pluginsManager.trigger).called();
+          should(kuzzle.pipe).called();
           return null;
         });
     });
@@ -135,7 +135,7 @@ describe('Test: GarbageCollector service', () => {
 
       return gc.run()
         .then(ids => {
-          should(kuzzle.pluginsManager.trigger).be.calledWith('log:error', error);
+          should(kuzzle.emit).be.calledWith('log:error', error);
 
           should(ids)
             .be.eql({ids: [
@@ -150,8 +150,8 @@ describe('Test: GarbageCollector service', () => {
     it('should trigger a pipe event before starting and after finishing', () => {
       return gc.run()
         .then(() => {
-          should(kuzzle.pluginsManager.trigger).be.calledWith('gc:start');
-          should(kuzzle.pluginsManager.trigger).be.calledWith('gc:end', {ids: []});
+          should(kuzzle.pipe).be.calledWith('gc:start');
+          should(kuzzle.emit).be.calledWith('gc:end', {ids: []});
         });
     });
 
@@ -160,15 +160,17 @@ describe('Test: GarbageCollector service', () => {
 
       return gc.run()
         .then(() => {
-          kuzzle.pluginsManager.trigger.resetHistory();
+          kuzzle.pipe.resetHistory();
 
           for (let i = 0; i < 23; i++) {
             clock.tick(oneHour);
-            should(kuzzle.pluginsManager.trigger).not.be.called();
+            should(kuzzle.pipe).not.be.called();
           }
 
           clock.tick(oneHour);
-          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.pipe)
+            .calledOnce()
+            .calledWith('gc:start');
 
           return null;
         });
@@ -179,10 +181,10 @@ describe('Test: GarbageCollector service', () => {
 
       return gc.run()
         .then(() => {
-          kuzzle.pluginsManager.trigger.resetHistory();
+          kuzzle.pipe.resetHistory();
 
           clock.tick(oneHour);
-          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.pipe).be.called();
 
           return null;
         });
