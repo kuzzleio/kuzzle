@@ -203,14 +203,12 @@ describe('Plugin Context', () => {
         'warn',
         'error'
       ].forEach(level => {
-        should(context.log[level])
-          .be.an.instanceOf(Function);
+        should(context.log[level]).be.an.instanceOf(Function);
 
         context.log[level]('test');
 
-        should(kuzzle.pluginsManager.trigger)
-          .have.callCount(++triggerCalled);
-        should(kuzzle.pluginsManager.trigger.getCall(triggerCalled -1))
+        should(kuzzle.emit).have.callCount(++triggerCalled);
+        should(kuzzle.emit.getCall(triggerCalled -1))
           .be.calledWithExactly('log:' + level, 'test');
       });
 
@@ -312,25 +310,25 @@ describe('Plugin Context', () => {
 
     describe('#trigger', () => {
       it('should trigger a log:error if eventName contains a colon', () => {
-        const trigger = kuzzle.pluginsManager.trigger;
         context.accessors.trigger('event:with:colons');
-        should(trigger).be.calledWith('log:error');
+        should(kuzzle.emit).be.calledWith('log:error');
       });
 
       it('should call trigger with the given event name and payload', () => {
-        const trigger = kuzzle.pluginsManager.trigger;
-        const eventName = 'backHome';
-        const payload = {
-          question: 'whose motorcycle is this?',
-          answer: 'it\'s a chopper, baby.',
-          anotherQuestion: 'whose chopper is this, then?',
-          anotherAnswer: 'it\'s Zed\'s',
-          yetAnotherQuestion: 'who\'s Zed?',
-          yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
-        };
+        const
+          eventName = 'backHome',
+          payload = {
+            question: 'whose motorcycle is this?',
+            answer: 'it\'s a chopper, baby.',
+            anotherQuestion: 'whose chopper is this, then?',
+            anotherAnswer: 'it\'s Zed\'s',
+            yetAnotherQuestion: 'who\'s Zed?',
+            yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
+          };
 
         context.accessors.trigger(eventName, payload);
-        should(trigger).be.calledWithExactly(`plugin-pluginName:${eventName}`, payload);
+        should(kuzzle.pipe)
+          .be.calledWithExactly(`plugin-pluginName:${eventName}`, payload);
       });
     });
 
@@ -470,7 +468,7 @@ describe('Plugin Context', () => {
         return result
           .then(() => {
             should(kuzzle.pluginsManager.registerStrategy).calledWith('pluginName', 'foo', mockedStrategy);
-            should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyAdded', {
+            should(kuzzle.pipe).calledWith('core:auth:strategyAdded', {
               pluginName: 'pluginName',
               name: 'foo',
               strategy: mockedStrategy
@@ -507,7 +505,7 @@ describe('Plugin Context', () => {
         return result
           .then(() => {
             should(kuzzle.pluginsManager.unregisterStrategy).calledWith('pluginName', 'foo');
-            should(kuzzle.pluginsManager.trigger).calledWith('core:auth:strategyRemoved', {
+            should(kuzzle.pipe).calledWith('core:auth:strategyRemoved', {
               pluginName: 'pluginName',
               name: 'foo'
             });

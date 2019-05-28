@@ -34,9 +34,9 @@ describe('funnelController.processRequest', () => {
 
     should(() => funnel.processRequest(request))
       .throw(BadRequestError, {message: 'Unknown controller null'});
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onError', request);
     should(kuzzle.statistics.startRequest).not.be.called();
   });
@@ -48,9 +48,9 @@ describe('funnelController.processRequest', () => {
       .throw(BadRequestError, {
         message: 'No corresponding action null in controller fakeController'
       });
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onError', request);
     should(kuzzle.statistics.startRequest).not.be.called();
   });
@@ -65,11 +65,11 @@ describe('funnelController.processRequest', () => {
       .throw(BadRequestError, {
         message: 'No corresponding action create in controller fakeController'
       });
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onError', request);
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('fakeController:errorCreate', request);
     should(kuzzle.statistics.startRequest).not.be.called();
   });
@@ -83,11 +83,11 @@ describe('funnelController.processRequest', () => {
       .throw(BadRequestError, {
         message: `No corresponding action create in controller ${controller}`
       });
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('request:onError', request);
-    should(kuzzle.pluginsManager.trigger)
+    should(kuzzle.pipe)
       .not.calledWith('fakePlugin/controller:errorCreate', request);
     should(kuzzle.statistics.startRequest).not.be.called();
   });
@@ -106,11 +106,11 @@ describe('funnelController.processRequest', () => {
           should(e).be.instanceOf(PluginImplementationError);
           should(e.message).startWith(
             `Unexpected return value from action ${controller}/succeed: expected a Promise`);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .not.calledWith('request:onSuccess', request);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith('request:onError', request);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith(`${controller}:errorSucceed`, request);
           should(kuzzle.statistics.startRequest).be.called();
           done();
@@ -147,15 +147,15 @@ describe('funnelController.processRequest', () => {
     return funnel.processRequest(request)
       .then(response => {
         should(response).be.exactly(request);
-        should(kuzzle.pluginsManager.trigger)
+        should(kuzzle.pipe)
           .calledWith('fakeController:beforeSucceed');
-        should(kuzzle.pluginsManager.trigger)
+        should(kuzzle.pipe)
           .calledWith('fakeController:afterSucceed');
-        should(kuzzle.pluginsManager.trigger)
+        should(kuzzle.pipe)
           .calledWith('request:onSuccess', request);
-        should(kuzzle.pluginsManager.trigger)
+        should(kuzzle.pipe)
           .not.calledWith('request:onError', request);
-        should(kuzzle.pluginsManager.trigger)
+        should(kuzzle.pipe)
           .not.calledWith('fakeController:errorSucceed', request);
         should(kuzzle.statistics.startRequest).be.called();
         should(kuzzle.statistics.completedRequest).be.called();
@@ -175,15 +175,15 @@ describe('funnelController.processRequest', () => {
         try {
           should(e).be.instanceOf(KuzzleInternalError);
           should(e.message).be.eql('rejected action');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith('fakeController:beforeFail');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .not.be.calledWith('fakeController:afterFail');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .not.calledWith('request:onSuccess', request);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith('request:onError', request);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith('fakeController:errorFail', request);
           should(kuzzle.statistics.startRequest).be.called();
           should(kuzzle.statistics.completedRequest).not.be.called();
@@ -209,15 +209,15 @@ describe('funnelController.processRequest', () => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
           should(e.message).startWith('foobar');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith(`${controller}:beforeFail`);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .not.be.calledWith(`${controller}:afterFail`);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .not.calledWith('request:onSuccess', request);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith('request:onError', request);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe)
             .calledWith('fakePlugin/controller:errorFail', request);
           should(kuzzle.statistics.startRequest).be.called();
           should(kuzzle.statistics.completedRequest).not.be.called();

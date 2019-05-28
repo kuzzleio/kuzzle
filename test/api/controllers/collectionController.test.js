@@ -280,9 +280,6 @@ describe('Test: collection controller', () => {
 
       return collectionController.updateSpecifications(request)
         .catch(error => {
-          should(kuzzle.pluginsManager.trigger)
-            .be.calledOnce()
-            .be.calledWith('validation:error', 'Some errors with provided specifications.');
           should(kuzzle.internalEngine.refresh).not.be.called();
           should(kuzzle.validation.curateSpecification).not.be.called();
           should(kuzzle.internalEngine.createOrReplace).not.be.called();
@@ -354,8 +351,6 @@ describe('Test: collection controller', () => {
 
       return collectionController.updateSpecifications(request)
         .catch(error => {
-          should(kuzzle.pluginsManager.trigger).be.calledOnce();
-          should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('validation:error', 'Some errors with provided specifications.');
           should(kuzzle.internalEngine.refresh).not.be.called();
           should(kuzzle.validation.curateSpecification).not.be.called();
           should(kuzzle.internalEngine.createOrReplace).not.be.called();

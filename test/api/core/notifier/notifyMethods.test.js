@@ -57,7 +57,7 @@ describe('notify methods', () => {
       async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.dispatch).not.be.called();
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           cb();
         }
         catch(e) {
@@ -107,8 +107,8 @@ describe('notify methods', () => {
             result: content
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match([
+          should(kuzzle.emit.callCount).be.eql(1);
+          should(kuzzle.emit.getCall(0).args).match([
             'core:notify:document',
             {
               rooms: ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'],
@@ -119,8 +119,9 @@ describe('notify methods', () => {
               request: request.serialize()
             }
           ]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:document', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(2).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pipe.callCount).be.eql(2);
+          should(kuzzle.pipe.getCall(0).args).match(['notify:document', notification]);
+          should(kuzzle.pipe.getCall(1).args).match(['notify:dispatch', notification]);
           cb();
         }
         catch (e) {
@@ -213,8 +214,8 @@ describe('notify methods', () => {
             result: content
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(3);
-          should(kuzzle.pluginsManager.trigger.getCall(0).args).match([
+          should(kuzzle.emit.callCount).be.eql(1);
+          should(kuzzle.emit.getCall(0).args).match([
             'core:notify:user',
             {
               room: 'matchingSome',
@@ -223,8 +224,9 @@ describe('notify methods', () => {
               request: request.serialize()
             }
           ]);
-          should(kuzzle.pluginsManager.trigger.getCall(1).args).match(['notify:user', notification]);
-          should(kuzzle.pluginsManager.trigger.getCall(2).args).match(['notify:dispatch', notification]);
+          should(kuzzle.pipe.callCount).be.eql(2);
+          should(kuzzle.pipe.getCall(0).args).match(['notify:user', notification]);
+          should(kuzzle.pipe.getCall(1).args).match(['notify:dispatch', notification]);
           cb();
         }
         catch (e) {
@@ -241,7 +243,7 @@ describe('notify methods', () => {
       async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.dispatch).not.be.called();
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.pipe).not.be.called();
           cb();
         }
         catch(e) {
@@ -256,7 +258,7 @@ describe('notify methods', () => {
       async.retry({times: 20, interval: 20}, cb => {
         try {
           should(kuzzle.entryPoints.dispatch).not.be.called();
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.pipe).not.be.called();
           cb();
         }
         catch(e) {
@@ -288,8 +290,8 @@ describe('notify methods', () => {
             info: 'This is an automated server notification'
           });
 
-          should(kuzzle.pluginsManager.trigger.callCount).be.eql(2);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.pipe.callCount).be.eql(2);
+          should(kuzzle.pipe)
             .be.calledWith('notify:server', notification)
             .be.calledWith('notify:dispatch', notification);
           cb();
