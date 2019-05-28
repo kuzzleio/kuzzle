@@ -109,19 +109,6 @@ describe('Test: server controller', () => {
     });
   });
 
-  describe('#throw', () => {
-    it('should throw an ExternalServiceError with right name, msg and code', () => {
-      try {
-        serverController.throw('elasticsearch_down', '{"status":"red"}');
-      } catch (e) {
-        should(e).be.instanceOf(ExternalServiceError);
-        should(e.errorName).be.eql('api-server-elasticsearch_down');
-        should(e.code).be.eql(1);
-        should(e.message).be.eql('ElasticSearch is down : ' + '{"status":"red"}');
-      }
-    });
-  });
-
   describe('#healthCheck', () => {
     beforeEach(() => {
       kuzzle.services.list.storageEngine.getInfos.resolves({status: 'green'});
@@ -160,9 +147,6 @@ describe('Test: server controller', () => {
           should(serverController.throw)
             .be.calledOnce()
             .be.calledWith('elasticsearch_down', '{"status":"red"}');
-          should(() => {
-            serverController.throw('elasticsearch_down', '{"status":"red"}');
-          }).throw(ExternalServiceError);
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');

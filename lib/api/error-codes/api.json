@@ -1,5 +1,4 @@
 {
-  "api": {
     "code": 1,
     "subdomains": {
       "server": {
@@ -23,5 +22,4 @@
         }
       }
     }
-  }
 }

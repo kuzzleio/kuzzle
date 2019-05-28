@@ -3,6 +3,9 @@ const
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
+  {
+    errors: { KuzzleError, ExternalServiceError }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
@@ -35,6 +38,41 @@ describe('/lib/api/kuzzle.js', () => {
   it('should build a kuzzle server object with emit and listen event', done => {
     kuzzle.on('event', done);
     kuzzle.emit('event');
+  });
+
+  describe('#throw', () => {
+    it('should throw an ExternalServiceError with right name, msg and code', () => {
+      try {
+        kuzzle.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}');
+      } catch (e) {
+        should(e).be.instanceOf(ExternalServiceError);
+        should(e.errorName).be.eql('api-server-elasticsearch_down');
+        should(e.code).be.eql(1);
+        should(e.message).be.eql('ElasticSearch is down : ' + '{"status":"red"}');
+      }
+    });
+
+    it('should throw an KuzzleInternalError with default name, msg and code', () => {
+      try {
+        kuzzle.throw('api', 'fake-subdomain', 'fake-error');
+      } catch (e) {
+        should(e).be.instanceOf(KuzzleError);
+        should(e.errorName).be.eql('Undocumented error');
+        should(e.code).be.eql(0);
+        should(e.message).be.eql('A KuzzleError occured : Undocumented error');
+      }
+    });
+
+    it('should throw an KuzzleInternalError with default name, msg and code', () => {
+      try {
+        kuzzle.throw('api', 'server', 'fake-error');
+      } catch (e) {
+        should(e).be.instanceOf(KuzzleError);
+        should(e.errorName).be.eql('Undocumented error');
+        should(e.code).be.eql(0);
+        should(e.message).be.eql('A KuzzleError occured : Undocumented error');
+      }
+    });
   });
 
   describe('#start', () => {
