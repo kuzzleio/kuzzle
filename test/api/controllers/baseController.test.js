@@ -20,7 +20,7 @@ describe('#base controller', () => {
     should(base.isAction('qux')).be.false();
   });
 
-  describe('#ensureBooleanFlag', () => {
+  describe('#tryGetBoolean', () => {
     let
       baseController,
       request;
@@ -43,26 +43,26 @@ describe('#base controller', () => {
     });
 
     it('set the flag value to true if present in http', () => {
-      baseController.ensureBooleanFlag(request, 'input.args.doha');
+      const param = baseController.tryGetBoolean(request, 'args.doha');
 
-      should(request.input.args.doha).be.eql(true);
+      should(param).be.eql(true);
     });
 
     it('set the flag value to false if not present in http', () => {
       delete request.input.args.doha;
 
-      baseController.ensureBooleanFlag(request, 'input.args.doha');
+      const param = baseController.tryGetBoolean(request, 'args.doha');
 
-      should(request.input.args.doha).be.eql(false);
+      should(param).be.eql(false);
     });
 
     it('does not nothing if the flag is already a boolean with other protocols', () => {
       request.context.connection.protocol = 'ws';
       request.input.args.doha = true;
 
-      baseController.ensureBooleanFlag(request, 'input.args.doha');
+      const param = baseController.tryGetBoolean(request, 'args.doha');
 
-      should(request.input.args.doha).be.eql(true);
+      should(param).be.eql(true);
     });
 
     it('throw an error if flag is not a boolean with other protocols', done => {
@@ -70,7 +70,7 @@ describe('#base controller', () => {
       request.input.args.doha = 'hamad';
 
       try {
-        baseController.ensureBooleanFlag(request, 'input.args.doha');
+        baseController.tryGetBoolean(request, 'args.doha');
         done(new Error('Should throw BadRequestError'));
       } catch (error) {
         should(error).be.instanceOf(BadRequestError);

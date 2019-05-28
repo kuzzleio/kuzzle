@@ -11,8 +11,10 @@ const
     Request: KuzzleRequest
   } = require('kuzzle-common-objects');
 
-describe('Test plugins manager trigger', () => {
-  let pluginsManager;
+describe('pluginsManager.pipe', () => {
+  let
+    kuzzle,
+    pluginsManager;
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
@@ -21,7 +23,11 @@ describe('Test plugins manager trigger', () => {
     mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
     const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
-    pluginsManager = new PluginsManager(new KuzzleMock());
+    kuzzle = new KuzzleMock();
+    kuzzle.emit.restore();
+    kuzzle.pipe.restore();
+    pluginsManager = new PluginsManager(kuzzle);
+    kuzzle.pluginsManager = pluginsManager;
   });
 
   it('should trigger hooks with wildcard event', done => {
@@ -42,7 +48,7 @@ describe('Test plugins manager trigger', () => {
 
     pluginsManager.run()
       .then(() => {
-        pluginsManager.trigger('foo:bar');
+        kuzzle.emit('foo:bar');
       });
   });
 
@@ -64,7 +70,7 @@ describe('Test plugins manager trigger', () => {
 
     pluginsManager.run()
       .then(() => {
-        pluginsManager.trigger('foo:beforeBar');
+        kuzzle.emit('foo:beforeBar');
       });
   });
 
@@ -86,7 +92,7 @@ describe('Test plugins manager trigger', () => {
 
     pluginsManager.run()
       .then(() => {
-        pluginsManager.trigger('foo:afterBar');
+        kuzzle.emit('foo:afterBar');
       });
   });
 
@@ -107,7 +113,7 @@ describe('Test plugins manager trigger', () => {
     }];
 
     return pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:bar'))
+      .then(() => kuzzle.pipe('foo:bar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
       });
@@ -130,7 +136,7 @@ describe('Test plugins manager trigger', () => {
     }];
 
     return pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:beforeBar'))
+      .then(() => kuzzle.pipe('foo:beforeBar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
       });
@@ -153,7 +159,7 @@ describe('Test plugins manager trigger', () => {
     }];
 
     return pluginsManager.run()
-      .then(() => pluginsManager.trigger('foo:afterBar'))
+      .then(() => kuzzle.pipe('foo:afterBar'))
       .then(() => {
         should(pluginsManager.plugins[0].object.myFunc).be.calledOnce();
       });
@@ -181,7 +187,7 @@ describe('Test plugins manager trigger', () => {
 
     pluginsManager.registerPipe(pluginMock, 50, 200, 'foo:bar', 'myFunc');
 
-    return should(pluginsManager.trigger('foo:bar')).rejectedWith(
+    return should(kuzzle.pipe('foo:bar')).rejectedWith(
       PluginImplementationError,
       {message: /^Plugin foo pipe for event 'foo:bar' threw a non-Kuzzle error: Error: foobar.*/});
   });

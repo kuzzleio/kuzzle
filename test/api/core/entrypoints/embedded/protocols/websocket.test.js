@@ -102,7 +102,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       return protocol.init(entrypoint)
         .then(() => {
           protocol.onServerError('test');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith(
               'log:error',

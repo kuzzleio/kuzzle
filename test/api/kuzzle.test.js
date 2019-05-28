@@ -25,18 +25,16 @@ describe('/lib/api/kuzzle.js', () => {
       'repositories',
       'services',
       'statistics',
-      'validation'
+      'validation',
+      'emit'
     ].forEach(k => {
       kuzzle[k] = mock[k];
     });
   });
 
-  it('should construct a kuzzle server object with emit and listen event', (done) => {
-    kuzzle.on('event', () => {
-      done();
-    });
-
-    kuzzle.emit('event', {});
+  it('should build a kuzzle server object with emit and listen event', done => {
+    kuzzle.on('event', done);
+    kuzzle.emit('event');
   });
 
   describe('#start', () => {
@@ -44,6 +42,7 @@ describe('/lib/api/kuzzle.js', () => {
       kuzzle.janitor.loadMappings = sinon.spy();
       kuzzle.janitor.loadFixtures = sinon.spy();
       kuzzle.janitor.loadSecurities = sinon.spy();
+
       const params = {
         mappings: {},
         fixtures: {},
@@ -64,15 +63,15 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.janitor.loadFixtures,
             kuzzle.pluginsManager.init,
             kuzzle.pluginsManager.run,
-            kuzzle.pluginsManager.trigger, // log:info, services init
-            kuzzle.pluginsManager.trigger, // log:info, load securities
+            kuzzle.emit, // log:info, services init
+            kuzzle.emit, // log:info, load securities
             kuzzle.janitor.loadSecurities,
             kuzzle.funnel.loadPluginControllers,
             kuzzle.router.init,
             kuzzle.statistics.init,
             kuzzle.validation.curateSpecification,
             kuzzle.entryPoints.init,
-            kuzzle.pluginsManager.trigger // core:kuzzleStart
+            kuzzle.emit // core:kuzzleStart
           );
         });
     });
@@ -156,7 +155,7 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.pluginsManager.run).not.be.called();
           should(kuzzle.services.init).not.be.called();
           should(kuzzle.indexCache.init).not.be.called();
-          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.emit).be.called();
           should(kuzzle.funnel.init).not.be.called();
           should(kuzzle.router.init).not.be.called();
           should(kuzzle.statistics.init).not.be.called();

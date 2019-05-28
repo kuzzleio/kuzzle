@@ -13,7 +13,7 @@ const
   WSClientMock = require('../../mocks/services/ws.mock'),
   WSServerMock = require('../../mocks/services/ws.server.mock'),
   BrokerFactory = rewire('../../../lib/services/broker'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  { errors: { InternalError } } = require('kuzzle-common-objects'),
   WSBrokerClient = require('../../../lib/services/broker/wsBrokerClient'),
   WSBrokerClientRewire = rewire('../../../lib/services/broker/wsBrokerClient'),
   WSBrokerServer = require('../../../lib/services/broker/wsBrokerServer');
@@ -26,24 +26,22 @@ describe('Test: Internal broker', () => {
     kuzzle;
 
   before(() => {
+    clock = sinon.useFakeTimers(Date.now());
+  });
+
+  beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.config.services.internalBroker = {
       host: 'host',
       port: 'port',
       retryInterval: 1000
     };
-
-    clock = sinon.useFakeTimers(Date.now());
-  });
-
-  beforeEach(() =>{
-    kuzzle.pluginsManager.trigger = sinon.stub();
-    sandbox.restore();
   });
 
   after(() => {
     clock.restore();
     mockrequire.stopAll();
+    sandbox.restore();
   });
 
   describe('Internal broker general constructor', () => {
@@ -73,7 +71,10 @@ describe('Test: Internal broker', () => {
       };
 
       /** @type InternalBroker */
-      client = new InternalBroker(kuzzle, {client: true}, kuzzle.config.services.internalBroker);
+      client = new InternalBroker(
+        kuzzle,
+        {client: true},
+        kuzzle.config.services.internalBroker);
       client.ws = () => new WSClientMock(server.wss);
 
       return Bluebird.all([
@@ -97,13 +98,15 @@ describe('Test: Internal broker', () => {
     let client;
 
     beforeEach(() => {
-      server = new WSBrokerServer('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager);
+      server = new WSBrokerServer(
+        'internalBroker', kuzzle.config.services.internalBroker, kuzzle);
       server.ws = cb => {
         server.wss = new WSServerMock();
         cb();
       };
 
-      client = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager, true);
+      client = new WSBrokerClient(
+        'internalBroker', kuzzle.config.services.internalBroker, kuzzle, true);
       client.ws = () => new WSClientMock(server.wss);
     });
 
@@ -161,8 +164,9 @@ describe('Test: Internal broker', () => {
             should(client.client.socket.on.getCall(6)).be.calledWith('error');
 
             // triggers
-            should(kuzzle.pluginsManager.trigger.callCount).be.exactly(1);
-            should(kuzzle.pluginsManager.trigger.firstCall).be.calledWith('internalBroker:connected', client.server.address);
+            should(kuzzle.emit.callCount).be.exactly(1);
+            should(kuzzle.emit.firstCall).be.calledWith(
+              'internalBroker:connected', client.server.address);
           });
       });
 
@@ -316,20 +320,21 @@ describe('Test: Internal broker', () => {
     });
 
     describe('#send & broadcast', () => {
-      beforeEach(() => Bluebird.all([server.init(),client.init()]));
+      beforeEach(() => {
+        return Bluebird.all([server.init(),client.init()])
+          .then(() => kuzzle.emit.resetHistory());
+      });
 
       it('should log an error if no client socket is set', () => {
         client = {
+          kuzzle,
           client: {},
-          eventName: 'test',
-          pluginsManager: {
-            trigger: sinon.spy()
-          }
+          eventName: 'test'
         };
 
         WSBrokerClientRewire.__get__('emit')(client);
 
-        should(client.pluginsManager.trigger)
+        should(kuzzle.emit)
           .be.calledOnce()
           .be.calledWith('log:error', 'No socket for broker test');
       });
@@ -377,7 +382,8 @@ describe('Test: Internal broker', () => {
 
       it('on open, should re-register if some callbacks were attached', () => {
         const
-          newClient = new WSBrokerClient('internalBroker', kuzzle.config.services.internalBroker, kuzzle.pluginsManager),
+          newClient = new WSBrokerClient(
+            'internalBroker', kuzzle.config.services.internalBroker, kuzzle),
           cb = sinon.stub();
 
         newClient.ws = () => new WSClientMock(server.wss);
@@ -400,12 +406,13 @@ describe('Test: Internal broker', () => {
       });
 
       it('on open, should trigger a warning if the client was already connected', () => {
-        const
-          socket = client.client.socket;
+        const socket = client.client.socket;
 
         socket.emit('open', 1);
 
-        should(client.pluginsManager.trigger).be.calledWith('log:warn', '[internalBroker] Node is connected while it was previously already.');
+        should(client.kuzzle.emit).be.calledWith(
+          'log:warn',
+          '[internalBroker] A node opened an already open connection');
       });
 
       it('on close event should try to reconnect', () => {
@@ -679,7 +686,7 @@ describe('Test: Internal broker', () => {
 
     beforeEach(() => {
       /** @type InternalBroker */
-      server = new WSBrokerServerRewire('internalBroker', {}, kuzzle.pluginsManager);
+      server = new WSBrokerServerRewire('internalBroker', {}, kuzzle);
       ws = server.ws;
       server.ws = cb => {
         server.wss = new WSServerMock();
@@ -687,9 +694,9 @@ describe('Test: Internal broker', () => {
       };
       server.onErrorHandlers = [];
 
-      client1 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle.pluginsManager);
-      client2 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle.pluginsManager);
-      client3 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle.pluginsManager);
+      client1 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle);
+      client2 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle);
+      client3 = new WSBrokerClient('internalBroker', {host: 'host', port: 42}, kuzzle);
       client1.ws = client2.ws = client3.ws = () => new WSClientMock(server.wss);
 
       return Bluebird.all([
@@ -735,16 +742,16 @@ describe('Test: Internal broker', () => {
       afterEach(() => mockrequire.stopAll());
 
       it('should trigger an error if no valid connection option is given', () => {
-        return should(() => {
-          ws.call(server, () => {});
-        })
-          .throw(InternalError, {message: 'Invalid configuration provided for internalBroker. "port" must be provided.'});
+        return should(() => ws.call(server, () => {}))
+          .throw(
+            InternalError,
+            {message: 'Invalid configuration provided for internalBroker. "port" must be provided.'});
       });
 
       it('should create a TCP host:port based Websocket server', () => {
         const cb = sinon.spy();
 
-        server = new WSBrokerServerRewire('broker', {host: 'host', port: 'port'}, kuzzle.pluginsManager);
+        server = new WSBrokerServerRewire('broker', {host: 'host', port: 'port'}, kuzzle);
         server.ws(cb);
 
         should(WSBrokerServerRewire.__get__('http.createServer'))
@@ -769,7 +776,7 @@ describe('Test: Internal broker', () => {
       it('should create a TCP port based Websocket server', () => {
         const cb = sinon.spy();
 
-        server = new WSBrokerServerRewire('broker', {port: 'port'}, kuzzle.pluginsManager);
+        server = new WSBrokerServerRewire('broker', {port: 'port'}, kuzzle);
         server.ws(cb);
 
         const httpServer = WSBrokerServerRewire.__get__('http.createServer').firstCall.returnValue;
@@ -788,8 +795,8 @@ describe('Test: Internal broker', () => {
 
         return server.init()
           .then(() => {
-            should(server.pluginsManager.trigger)
-              .be.calledWith('log:warn', 'Internal broker disabled by configuration');
+            should(server.kuzzle.emit).be.calledWith(
+              'log:warn', 'Internal broker disabled by configuration');
           });
       });
 
@@ -838,7 +845,7 @@ describe('Test: Internal broker', () => {
         const response = server.broadcast('test', {foo: 'bar'}, client2.client.socket);
 
         should(response).be.exactly(0);
-        should(kuzzle.pluginsManager.trigger.lastCall).be.calledWith('log:error', error);
+        should(kuzzle.emit.lastCall).be.calledWith('log:error', error);
       });
 
     });
@@ -935,7 +942,6 @@ describe('Test: Internal broker', () => {
     });
 
     describe('#waitForClients', () => {
-
       it('should return a fulfilled promise if some clients are already connected to the room', () => {
         server.rooms = { test: true };
 
@@ -1109,7 +1115,8 @@ describe('Test: Internal broker', () => {
           should(removeClientSpy).be.calledOnce();
           should(removeClientSpy).be.calledWith(server, clientSocket);
 
-          should(kuzzle.pluginsManager.trigger.lastCall).be.calledWith('log:info', 'client disconnected [1] test');
+          should(kuzzle.emit.lastCall).be.calledWith(
+            'log:info', 'client disconnected [1] test');
         });
       });
 
@@ -1122,8 +1129,8 @@ describe('Test: Internal broker', () => {
 
         serverSocket.emit('error', error);
 
-        should(server.pluginsManager.trigger).have.callCount(4);
-        should(server.pluginsManager.trigger.lastCall).be.calledWith('log:error');
+        should(server.kuzzle.emit).have.callCount(4);
+        should(server.kuzzle.emit.lastCall).be.calledWith('log:error');
         should(server.onErrorHandlers[0]).be.calledOnce();
       });
     });

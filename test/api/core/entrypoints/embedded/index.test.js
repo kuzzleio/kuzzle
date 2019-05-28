@@ -292,7 +292,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
           throw new Error('should not happen');
         })
         .catch(() => {
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('log:error', error);
         });
@@ -490,7 +490,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       should(entrypoint.protocols.protocol.joinChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledWith('log:error', '[join] protocol protocol failed: test');
     });
   });
@@ -529,7 +529,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       should(entrypoint.protocols.protocol.leaveChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledWith('log:error', '[leave channel] protocol protocol failed: test');
     });
 
@@ -911,7 +911,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         .be.calledOnce()
         .be.calledWith('data');
 
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledOnce()
         .be.calledWith('log:error');
     });
@@ -946,7 +946,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         content: 'data'
       });
 
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledOnce()
         .be.calledWith('log:error');
     });
