@@ -33,7 +33,7 @@ describe('funnelController.executePluginRequest', () => {
       .catch(err => {
         should(err).be.instanceOf(BadRequestError);
         should(err.message).be.eql('Unknown controller foo');
-        should(kuzzle.pluginsManager.trigger).not.be.called();
+        should(kuzzle.emit).not.be.called();
       });
   });
 
@@ -60,7 +60,7 @@ describe('funnelController.executePluginRequest', () => {
     const callback = () => {
       setTimeout(() => {
         try {
-          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.emit).be.called();
           should(kuzzle.adminController.dump).be.called();
           done();
         } catch (e) {

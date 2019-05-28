@@ -57,7 +57,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
           wsp = new WebSocketProtocol();
 
         ep.config.protocols.websocket.heartbeat = heartbeat;
-        
+
         should(wsp.init(ep)).be.rejectedWith(KuzzleInternalError);
       }
     });
@@ -73,16 +73,16 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         .then(() => {
           should(protocol.heartbeatInterval).not.be.null();
           should(heartbeatSpy).not.be.called();
-    
+
           clock.tick(1000);
-    
+
           should(heartbeatSpy).be.calledOnce();
-    
+
           clock.tick(1000);
-    
+
           should(heartbeatSpy).be.calledTwice();
-    
-          clock.restore();    
+
+          clock.restore();
         });
     });
 
@@ -104,23 +104,23 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
           should(protocol.entryPoint).eql(entrypoint);
           should(protocol.heartbeatInterval).not.be.null();
           should(WebSocketServer).be.calledOnce();
-    
+
           const server = WebSocketServer.firstCall.returnValue;
           should(server.on)
             .be.calledTwice()
             .be.calledWith('connection')
             .be.calledWith('error');
-    
+
           const onConnectH = server.on.firstCall.args[1];
           onConnectH('test');
           should(protocol.onConnection)
             .be.calledOnce()
             .be.calledWith('test');
-    
+
           const onErrorH = server.on.secondCall.args[1];
           onErrorH('test');
           should(protocol.onServerError)
-            .be.calledOnce();    
+            .be.calledOnce();
         });
     });
   });
@@ -130,11 +130,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       return protocol.init(entrypoint)
         .then(() => {
           protocol.onServerError('test');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith(
               'log:error',
-              '[websocket] An error has occured "undefined":\nundefined');    
+              '[websocket] An error has occured "undefined":\nundefined');
         });
     });
   });
@@ -252,7 +252,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
               channels: ['c1', 'c2', 'c3']
             }
           };
-    
+
           protocol.channels = {
             c1: {
               count: 3
@@ -263,7 +263,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
             c3: {
               count: 2
             }
-          };    
+          };
         });
     });
 
@@ -305,7 +305,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
               id: 'connectionId'
             }
           };
-          protocol._send = sinon.spy();    
+          protocol._send = sinon.spy();
         });
     });
 

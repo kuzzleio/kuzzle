@@ -12,13 +12,21 @@ describe('Test the bulk controller', () => {
   let
     controller,
     kuzzle,
-    foo = {foo: 'bar'},
-    request = new Request({controller: 'bulk', collection: 'unit-test-bulkController', body: {bulkData: 'fake'}}),
-    stub;
+    storageEngine,
+    foo = { foo: 'bar'},
+    request;
 
   beforeEach(() => {
+    request = new Request({
+      controller: 'bulk',
+      collection: 'unit-test-bulkController',
+      index: 'unit-test-bulkController'
+    });
+
     kuzzle = new KuzzleMock();
-    stub = kuzzle.services.list.storageEngine.import;
+
+    storageEngine = kuzzle.services.list.storageEngine;
+
     controller = new BulkController(kuzzle);
   });
 
@@ -28,27 +36,102 @@ describe('Test the bulk controller', () => {
     });
   });
 
-  it('should trigger the proper methods and resolve to a valid response', () => {
-    return controller.import(request)
-      .then(response => {
-        const engine = kuzzle.services.list.storageEngine;
+  describe('#import', () => {
+    beforeEach(() => {
+      request.input.action = 'bulk';
+      request.input.body = { bulkData: 'fake' };
+    });
 
-        should(engine.import).be.calledOnce();
-        should(engine.import).be.calledWith(request);
+    it('should trigger the proper methods and resolve to a valid response', () => {
+      return controller.import(request)
+        .then(response => {
+          should(storageEngine.import)
+            .be.calledOnce()
+            .be.calledWith(request);
 
-        should(response).be.instanceof(Object);
-        should(response).match(foo);
-      });
+          should(response).be.instanceof(Object);
+          should(response).match(foo);
+        });
+    });
+
+    it('should handle partial errors', () => {
+      storageEngine.import.resolves({partialErrors: ['foo', 'bar']});
+
+      return controller.import(request)
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(request.status).be.eql(206);
+          should(request.error).be.instanceOf(PartialError);
+        });
+    });
   });
 
-  it('should handle partial errors', () => {
-    stub.returns(Promise.resolve({partialErrors: ['foo', 'bar']}));
+  describe('#write', () => {
+    beforeEach(() => {
+      request.input.action = 'write';
+      request.input.body = { name: 'Feanor', silmarils: 3 };
+    });
 
-    return controller.import(request)
-      .then(response => {
-        should(response).be.instanceof(Object);
-        should(request.status).be.eql(206);
-        should(request.error).be.instanceOf(PartialError);
-      });
+    it('should createOrReplace the document without injecting meta', () => {
+      return controller.write(request)
+        .then(() => {
+          should(kuzzle.notifier.notifyDocumentCreate).not.be.called();
+          should(kuzzle.notifier.notifyDocumentReplace).not.be.called();
+          should(storageEngine.createOrReplace)
+            .be.calledOnce()
+            .be.calledWith(request, false);
+        });
+    });
+
+    it('should notify if its specified', () => {
+      request.input.args.notify = true;
+
+      return controller.write(request)
+        .then(() => {
+          should(kuzzle.notifier.notifyDocumentReplace).be.called();
+          should(storageEngine.createOrReplace)
+            .be.calledOnce()
+            .be.calledWith(request, false);
+        });
+    });
+  });
+
+  describe('#mWrite', () => {
+    beforeEach(() => {
+      request.input.action = 'write';
+      request.input.body = {
+        documents: [
+          { name: 'Maedhros' },
+          { name: 'Maglor' },
+          { name: 'Celegorm' },
+          { name: 'Caranthis' },
+          { name: 'Curufin' },
+          { name: 'Amrod' },
+          { name: 'Amras' }
+        ]
+      };
+    });
+
+    it('should mcreateOrReplace the document without injecting meta', () => {
+      return controller.mWrite(request)
+        .then(() => {
+          should(kuzzle.notifier.notifyDocumentMChanges).not.be.called();
+          should(storageEngine.mcreateOrReplace)
+            .be.calledOnce()
+            .be.calledWith(request, false);
+        });
+    });
+
+    it('should notify if its specified', () => {
+      request.input.args.notify = true;
+
+      return controller.mWrite(request)
+        .then(() => {
+          should(kuzzle.notifier.notifyDocumentMChanges).be.called();
+          should(storageEngine.mcreateOrReplace)
+            .be.calledOnce()
+            .be.calledWith(request, false);
+        });
+    });
   });
 });

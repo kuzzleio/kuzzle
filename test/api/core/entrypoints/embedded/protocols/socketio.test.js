@@ -58,14 +58,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
               .be.calledOnce()
               .be.calledWith('test');
           }
-    
+
           {
             const onErrorH = protocol.io.on.secondCall.args[1];
             onErrorH('test');
             should(protocol.onServerError)
               .be.calledOnce()
               .be.calledWith('test');
-          }    
+          }
         });
     });
   });
@@ -78,11 +78,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
         .then(() => {
           protocol.onServerError(error);
 
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledWith('log:error');
-    
-          should(kuzzle.pluginsManager.trigger.firstCall.args[1])
-            .startWith('[socketio] An error has occured');  
+
+          should(kuzzle.emit.firstCall.args[1])
+            .startWith('[socketio] An error has occured');
         });
     });
   });
@@ -107,7 +107,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
       return protocol.init(entrypoint)
         .then(() => {
           protocol.onClientDisconnection = sinon.spy();
-          protocol.onClientMessage = sinon.spy();    
+          protocol.onClientMessage = sinon.spy();
         });
     });
 
@@ -154,12 +154,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
           protocol.sockets = {
             connectionId: {}
           };
-    
+
           protocol.onClientDisconnection('connectionId');
           should(protocol.sockets)
             .be.empty();
           should(entrypoint.clients)
-            .be.empty();    
+            .be.empty();
         });
     });
   });
@@ -183,7 +183,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
         .then(() => {
           protocol.sockets = {
             connectionId: {}
-          };    
+          };
         });
     });
 
@@ -241,14 +241,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
             ],
             payload: 'test'
           };
-    
+
           protocol.broadcast(data);
-    
+
           should(socketEmitStub)
             .be.calledWith('ch1', 'test')
             .be.calledWith('ch2', 'test')
             .be.calledWith('ch4', 'test')
-            .be.calledWith('ch6', 'test');    
+            .be.calledWith('ch6', 'test');
         });
     });
   });

@@ -106,7 +106,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
     hotelClerk.removeCustomerFromAllRooms(context);
 
-    should(kuzzle.pluginsManager.trigger).be.calledWith('log:error', error);
+    should(kuzzle.emit).be.calledWith('log:error', error);
 
     // the room should be removed from the hotel clerk even if Koncorde fails
     should(hotelClerk.roomsCount).be.eql(1);

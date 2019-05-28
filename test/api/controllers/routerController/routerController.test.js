@@ -43,18 +43,18 @@ describe('Test: routerController', () => {
       const context = new RequestContext({connection: {protocol}});
       routerController.newConnection(context);
 
-      should(kuzzle.pluginsManager.trigger).be.calledOnce();
-      should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.pluginsManager.trigger.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
+      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
     });
 
     it('should return an error if no protocol is provided', () => {
       const context = new RequestContext({connection: {id: connectionId}});
       routerController.newConnection(context);
 
-      should(kuzzle.pluginsManager.trigger).be.calledOnce();
-      should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.pluginsManager.trigger.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
+      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
     });
   });
 
@@ -75,9 +75,9 @@ describe('Test: routerController', () => {
 
       should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
       should(kuzzle.statistics.dropConnection).not.be.called();
-      should(kuzzle.pluginsManager.trigger).be.calledOnce();
-      should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.pluginsManager.trigger.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
+      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
     });
 
     it('should return an error if no connectionId is provided', () => {
@@ -85,9 +85,9 @@ describe('Test: routerController', () => {
       routerController.connections[connectionId] = context;
       routerController.removeConnection(context);
 
-      should(kuzzle.pluginsManager.trigger).be.calledOnce();
-      should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.pluginsManager.trigger.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
+      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
     });
 
     it('should return an error if no protocol is provided', () => {
@@ -95,9 +95,9 @@ describe('Test: routerController', () => {
       routerController.connections[connectionId] = context;
       routerController.removeConnection(context);
 
-      should(kuzzle.pluginsManager.trigger).be.calledOnce();
-      should(kuzzle.pluginsManager.trigger.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.pluginsManager.trigger.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
+      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
     });
   });
 

@@ -22,6 +22,12 @@ class KuzzleMock extends Kuzzle {
     this.config = _.merge({}, config);
     this.config.server.entryPoints.proxy = true;
 
+    // emit + pipe mocks
+    this.sandbox.stub(this, 'pipe').callsFake(
+      (...args) => Bluebird.resolve(args[1]));
+
+    this.sandbox.spy(this, 'emit');
+
     this.realtime = {
       test: this.sandbox.stub().returns([]),
       register: this.sandbox.stub().resolves(),
@@ -175,7 +181,7 @@ class KuzzleMock extends Kuzzle {
       plugins: {},
       run: this.sandbox.stub().resolves(),
       getPluginsDescription: this.sandbox.stub().returns({}),
-      trigger: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[1])),
+      pipe: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[1])),
       listStrategies: this.sandbox.stub().returns([]),
       getStrategyFields: this.sandbox.stub().resolves(),
       getStrategyMethod: this.sandbox.stub().returns(this.sandbox.stub()),

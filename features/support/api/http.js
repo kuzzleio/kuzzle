@@ -158,6 +158,32 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  bulkMWrite (index, collection, body) {
+    const options = {
+      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mWrite'),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
+  bulkWrite (index, collection, body, _id = null) {
+    let url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/_write`;
+
+    if (_id) {
+      url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/${_id}/_write`;
+    }
+
+    const options = {
+      url: this.apiPath(url),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
   /**
    * @param options
    * @return {Promise.<IncomingMessage>}
