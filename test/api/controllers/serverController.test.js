@@ -114,7 +114,6 @@ describe('Test: server controller', () => {
       kuzzle.services.list.storageEngine.getInfos.resolves({status: 'green'});
     });
 
-
     it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
       return serverController.healthCheck(request)
         .then(response => {
