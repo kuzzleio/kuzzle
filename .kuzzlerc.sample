@@ -2,8 +2,8 @@
   // -------------------------------------------------------------------------
   // Kuzzle configuration sample file
   //
-  // You can copy this file to a valid [rc](https://github.com/dominictarr/rc)
-  // file location to customize Kuzzle configuration
+  // You can copy this file to a valid rc file location to customize Kuzzle
+  // configuration (see https://github.com/dominictarr/rc)
   // -------------------------------------------------------------------------
 
   // The HTTP section lets you configure how Kuzzle should handle HTTP requests
@@ -86,7 +86,7 @@
   },
 
   // The plugins section lets you define plugins behaviors
-  // (see http://kuzzle.io/guide/#plugins)
+  // (see https://docs.kuzzle.io/guide/1/essentials/plugins/)
   "plugins": {
     // [Common]
     //   * bootstrapLockTimeout
@@ -138,8 +138,8 @@
     // users/_createRestricted
     "restrictedProfileIds": ["default"],
     // [jwt]
-    // configuration for npm
-    // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
+    // configuration for the npm package jsonwebtoken
+    // (see https://github.com/auth0/node-jsonwebtoken)
     //
     //   * algorithm:
     //      hash/encryption method used to sign the token
@@ -515,7 +515,7 @@
     //       Elasticsearch config options, this object is passed through to the
     //       Elasticsearch constructor and can contain all options/keys outlined
     //       here:
-    //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
+    //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-configuration.html
     //   * dynamic:
     //       Default policy against new fields that are not referenced in the
     //       collection mapping.
@@ -526,7 +526,7 @@
     //         - "false": Stores document and does not update the collection
     //           mapping (field are not indexed)
     //         - "strict": Rejects document
-    //       See https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html
+    //       See https://www.elastic.co/guide/en/elasticsearch/reference/5.6/dynamic-mapping.html
     "db": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
