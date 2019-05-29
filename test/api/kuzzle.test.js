@@ -4,7 +4,7 @@ const
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
   {
-    errors: { KuzzleError, ExternalServiceError }
+    errors: { InternalError, ExternalServiceError }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
@@ -54,23 +54,23 @@ describe('/lib/api/kuzzle.js', () => {
 
     it('should throw an KuzzleInternalError with default name, msg and code', () => {
       try {
-        kuzzle.throw('api', 'fake-subdomain', 'fake-error', '{"status":"error"}');
+        kuzzle.throw('api', 'server', 'fake_error', '{"status":"error"}');
       } catch (e) {
-        should(e).be.instanceOf(KuzzleError);
-        should(e.errorName).be.eql('Undocumented error');
+        should(e).be.instanceOf(InternalError);
+        should(e.errorName).be.eql('api-server-fake_error');
         should(e.code).be.eql(0);
-        should(e.message).be.eql('An error occured : {"status":"error"}');
+        should(e.message).be.eql('Internal Error : Cannot find error in config file. {"status":"error"}');
       }
     });
 
     it('should throw an KuzzleInternalError with default name, msg and code', () => {
       try {
-        kuzzle.throw('api', 'server', 'fake-error');
+        kuzzle.throw();
       } catch (e) {
-        should(e).be.instanceOf(KuzzleError);
-        should(e.errorName).be.eql('Undocumented error');
+        should(e).be.instanceOf(InternalError);
+        should(e.errorName).be.eql('undefined-undefined-undefined');
         should(e.code).be.eql(0);
-        should(e.message).be.eql('An error occured');
+        should(e.message).be.eql('Internal Error : Cannot find error in config file.  ');
       }
     });
   });

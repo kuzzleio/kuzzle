@@ -1,0 +1,25 @@
+{
+  "code": 1,
+  "subdomains": {
+    "server": {
+      "code": 1,
+      "errors": {
+        "elasticsearch_down": {
+          "code": 1,
+          "message": "ElasticSearch is down : %s",
+          "class": "ExternalServiceError"
+        }
+      }
+    },
+    "document": {
+      "code": 2,
+      "errors": {
+        "not_exist": {
+          "code": 1,
+          "message": "The document does not exist : %s",
+          "class": "NotFoundError"
+        }
+      }
+    }
+  }
+}
