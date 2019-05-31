@@ -4,7 +4,6 @@ about: Create a bug report to help us improve
 title: ''
 labels: bug
 assignees: ''
-
 ---
 
 <!--- If you have a question about Kuzzle usage, please use Stackoverflow instead >
