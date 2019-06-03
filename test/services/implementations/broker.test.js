@@ -7,7 +7,7 @@ const
   sinon = require('sinon'),
   sandbox = sinon.createSandbox(),
   should = require('should'),
-  WS = require('uws'),
+  WS = require('ws'),
   CircularList = require('easy-circular-list'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   WSClientMock = require('../../mocks/services/ws.mock'),
@@ -129,7 +129,7 @@ describe('Test: Internal broker', () => {
       it('should construct a WS client', () => {
         const WSStub = sandbox.stub();
 
-        mockrequire('uws', WSStub);
+        mockrequire('ws', WSStub);
         mockrequire.reRequire('../../../lib/services/broker/wsBrokerClient');
 
         const WSClient = rewire('../../../lib/services/broker/wsBrokerClient');
@@ -731,7 +731,7 @@ describe('Test: Internal broker', () => {
           })
         });
 
-        mockrequire('uws', {
+        mockrequire('ws', {
           Server: sinon.spy(WSServerMock)
         });
 
