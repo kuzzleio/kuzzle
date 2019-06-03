@@ -203,6 +203,7 @@ module.exports = {
       },
       websocket: {
         enabled: true,
+        idleTimeout: 0,
         heartbeat: 60000
       }
     }

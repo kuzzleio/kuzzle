@@ -1,5 +1,7 @@
 'use strict';
 
+const root = '../../../../../';
+
 const
   {
     Request,
@@ -11,7 +13,7 @@ const
     }
   } = require('kuzzle-common-objects'),
   path = require('path'),
-  KuzzleMock = require('../../../../mocks/kuzzle.mock'),
+  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
@@ -83,10 +85,11 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     winstonTransportFile = sinon.spy();
     winstonTransportSyslog = sinon.spy();
 
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/http', HttpMock);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/websocket', WebSocketMock);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/socketio', SocketIOMock);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt', MqttMock);
+    const embeddedPath = `${root}/lib/api/core/entrypoints/embedded`;
+    mockrequire(`${embeddedPath}/protocols/http`, HttpMock);
+    mockrequire(`${embeddedPath}/protocols/websocket`, WebSocketMock);
+    mockrequire(`${embeddedPath}/protocols/socketio`, SocketIOMock);
+    mockrequire(`${embeddedPath}/protocols/mqtt`, MqttMock);
 
     mockrequire('http', httpMock);
     mockrequire('winston', {
@@ -101,15 +104,16 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     mockrequire('winston-syslog', winstonTransportSyslog);
 
     // Disables unnecessary console warnings
-    AbstractManifest = rewire('../../../../../lib/api/core/abstractManifest');
+    AbstractManifest = rewire(`${root}/lib/api/core/abstractManifest`);
     AbstractManifest.__set__({ console: { warn: sinon.stub() }});
-    mockrequire('../../../../../lib/api/core/abstractManifest', AbstractManifest);
+    mockrequire(`${root}/lib/api/core/abstractManifest`, AbstractManifest);
 
-    Manifest = rewire('../../../../../lib/api/core/entrypoints/embedded/manifest');
+    Manifest = rewire(`${embeddedPath}/manifest`);
     Manifest.__set__({ console: { warn: sinon.stub() }});
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/manifest', Manifest);
+    mockrequire(`${embeddedPath}/manifest`, Manifest);
 
-    // Bluebird.map forces a different context, preventing rewire to mock "require"
+    // Bluebird.map forces a different context, preventing rewire to mock
+    // "require"
     mockrequire('bluebird', {
       map: (arr, fn) => Promise.all(arr.map(e => {
         let result;
@@ -127,7 +131,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       all: Bluebird.all
     });
 
-    EntryPoint = mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
+    EntryPoint = mockrequire.reRequire(embeddedPath);
 
     entrypoint = new EntryPoint(kuzzle);
 
@@ -140,10 +144,9 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       }
     });
 
-    HttpMock.prototype.init = sinon.stub().resolves(true);
-    WebSocketMock.prototype.init = sinon.stub().resolves(true);
-    SocketIOMock.prototype.init = sinon.stub().resolves(true);
-    MqttMock.prototype.init = sinon.stub().resolves(true);
+    for (const Class of [HttpMock, WebSocketMock, SocketIOMock, MqttMock]) {
+      Class.prototype.init = sinon.stub().resolves(true);
+    }
   });
 
   afterEach(() => {
