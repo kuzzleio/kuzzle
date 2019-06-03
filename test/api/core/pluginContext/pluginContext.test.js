@@ -84,6 +84,12 @@ describe('Plugin Context', () => {
       should(repository.update).be.a.Function();
     });
 
+    it('should expose secrets from vault', () => {
+      should(context.secrets)
+        .not.be.undefined()
+        .match({ accessKey: 'the cake is a lie' });
+    })
+
     describe('#Request', () => {
       it('should throw when trying to instantiate a Request object without providing any data', () => {
         should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
