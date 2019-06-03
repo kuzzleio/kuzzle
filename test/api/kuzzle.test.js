@@ -42,36 +42,39 @@ describe('/lib/api/kuzzle.js', () => {
 
   describe('#throw', () => {
     it('should throw an ExternalServiceError with right name, msg and code', () => {
-      try {
-        kuzzle.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}');
-      } catch (e) {
-        should(e).be.instanceOf(ExternalServiceError);
-        should(e.errorName).be.eql('api-server-elasticsearch_down');
-        should(e.code).be.eql(1);
-        should(e.message).be.eql('ElasticSearch is down: {"status":"red"}');
-      }
+      should(() => kuzzle.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
+        .throw(
+          ExternalServiceError,
+          {
+            errorName: 'api-server-elasticsearch_down',
+            code: 1,
+            message: 'ElasticSearch is down: {"status":"red"}'
+          }
+        );
     });
 
     it('should throw an KuzzleInternalError with default name, msg and code', () => {
-      try {
-        kuzzle.throw('api', 'server', 'fake_error', '{"status":"error"}');
-      } catch (e) {
-        should(e).be.instanceOf(InternalError);
-        should(e.errorName).be.eql('api-server-fake_error');
-        should(e.code).be.eql(0);
-        should(e.message).be.eql('Internal Error : Cannot find error in config file. {"status":"error"}');
-      }
+      should(() => kuzzle.throw('api', 'server', 'fake_error', '{"status":"error"}'))
+        .throw(
+          InternalError,
+          {
+            errorName: 'api-server-fake_error',
+            code: 0,
+            message: 'Internal Error : Cannot find error in config file. {"status":"error"}'
+          }
+        );
     });
 
     it('should throw an KuzzleInternalError with default name, msg and code', () => {
-      try {
-        kuzzle.throw();
-      } catch (e) {
-        should(e).be.instanceOf(InternalError);
-        should(e.errorName).be.eql('undefined-undefined-undefined');
-        should(e.code).be.eql(0);
-        should(e.message).be.eql('Internal Error : Cannot find error in config file.  ');
-      }
+      should(() => kuzzle.throw())
+        .throw(
+          InternalError,
+          {
+            errorName: 'undefined-undefined-undefined',
+            code: 0,
+            message: 'Internal Error : Cannot find error in config file.  '
+          }
+        );
     });
   });
 
