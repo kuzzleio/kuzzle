@@ -48,7 +48,7 @@ describe('/lib/api/kuzzle.js', () => {
         should(e).be.instanceOf(ExternalServiceError);
         should(e.errorName).be.eql('api-server-elasticsearch_down');
         should(e.code).be.eql(1);
-        should(e.message).be.eql('ElasticSearch is down : {"status":"red"}');
+        should(e.message).be.eql('ElasticSearch is down: {"status":"red"}');
       }
     });
 

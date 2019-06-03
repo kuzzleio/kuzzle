@@ -6,7 +6,7 @@
       "errors": {
         "elasticsearch_down": {
           "code": 1,
-          "message": "ElasticSearch is down : %s",
+          "message": "ElasticSearch is down: %s",
           "class": "ExternalServiceError"
         }
       }
@@ -16,7 +16,7 @@
       "errors": {
         "not_exist": {
           "code": 1,
-          "message": "The document does not exist : %s",
+          "message": "The document does not exist: %s",
           "class": "NotFoundError"
         }
       }
