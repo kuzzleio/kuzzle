@@ -262,12 +262,6 @@ class KuzzleMock extends Kuzzle {
       }
     };
 
-    this.vault = {
-      secrets: {
-        accessKey: 'the cake is a lie'
-      }
-    };
-
     this.services = {
       init: this.sandbox.stub().resolves(),
       list: {
