@@ -14,10 +14,8 @@ describe('Test: vault core component', () => {
 
   beforeEach(() => {
     config = {
-      security: {
-        jwt: {
-          secret: 'the cake is a lie'
-        }
+      server: {
+        vaultSeed: 'the cake is a lie'
       }
     };
 
@@ -40,7 +38,7 @@ describe('Test: vault core component', () => {
     process.env.KUZZLE_VAULT_KEY = 'the spoon does not exists';
 
     fsMock = {
-      existsSync: sinon.stub(),
+      existsSync: sinon.stub().returns(true),
       readFile: sinon.stub().yields(null, JSON.stringify(encryptedSecrets))
     };
 
@@ -55,27 +53,28 @@ describe('Test: vault core component', () => {
   });
 
   describe('#init', () => {
-    it('does nothing if KUZZLE_VAULT_KEY is not present', () => {
-      delete process.env.KUZZLE_VAULT_KEY;
-      vault = new Vault();
+    it('does nothing if vaultKey and secret file are not present', () => {
+      fsMock.existsSync.returns(false);
 
       return vault.init()
         .then(() => {
-          should(vault.encryptedSecretsFile).be.undefined();
+          should(vault.encryptedSecretsFile).be.eql('../../../config/secrets.enc.json');
           should(vault.vaultKeyHash).be.undefined();
           should(vault.cipherIV).be.undefined();
-          should(vault.secrets).be.eql({});
+          should(vault.secrets).match({});
         });
     });
 
-    it('rejects if KUZZLE_VAULT_KEY and the secret file is not present', () => {
-      fsMock.existsSync.returns(false);
+    it('rejects if vaultKey is not present and the secret file is present', () => {
+      return should(vault.init()).be.rejected();
+    });
 
+    it('rejects if vaultKey is present and the secret file is not present', () => {
       return should(vault.init()).be.rejected();
     });
 
     it('reads the secret file and store decrypted secrets', () => {
-      fsMock.existsSync.returns(true);
+      vault.prepareCrypto();
 
       return vault.init()
         .then(() => {
@@ -84,6 +83,24 @@ describe('Test: vault core component', () => {
           should(vault.cipherIV).be.eql('the cake is a li');
           should(vault.secrets).match(clearSecrets);
         });
+    });
+  });
+
+  describe('#prepareCrypto', () => {
+    it('takes the key in parameter if specified', () => {
+      vault.prepareCrypto('i am the key');
+
+      should(vault.vaultKey).be.eql('i am the key');
+      should(vault.vaultKeyHash).not.be.undefined();
+      should(vault.cipherIV).be.eql('the cake is a li');
+    });
+
+    it('takes KUZZLE_VAULT_KEY environment variable is vaultKey is not specified', () => {
+      vault.prepareCrypto();
+
+      should(vault.vaultKey).be.eql('the spoon does not exists');
+      should(vault.vaultKeyHash).not.be.undefined();
+      should(vault.cipherIV).be.eql('the cake is a li');
     });
   });
 });
