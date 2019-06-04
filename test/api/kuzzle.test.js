@@ -60,7 +60,7 @@ describe('/lib/api/kuzzle.js', () => {
           {
             errorName: 'api-server-fake_error',
             code: 0,
-            message: 'Internal Error : Cannot find error in config file. {"status":"error"}'
+            message: 'Unknown error: api-server-fake_error'
           }
         );
     });
@@ -72,7 +72,7 @@ describe('/lib/api/kuzzle.js', () => {
           {
             errorName: 'undefined-undefined-undefined',
             code: 0,
-            message: 'Internal Error : Cannot find error in config file.  '
+            message: 'Unknown error: undefined-undefined-undefined'
           }
         );
     });
