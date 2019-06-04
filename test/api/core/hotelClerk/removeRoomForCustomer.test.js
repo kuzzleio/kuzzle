@@ -3,9 +3,14 @@ const
   should = require('should'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
-  Request = require('kuzzle-common-objects').Request,
-  RequestContext = require('kuzzle-common-objects').models.RequestContext;
+  {
+    Request,
+    models: { RequestContext },
+    errors: {
+      NotFoundError,
+      InternalError: KuzzleInternalError
+    }
+  } = require('kuzzle-common-objects');
 
 describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
   let
@@ -41,36 +46,59 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
 
   });
 
-  it('should throw if the room cannot be found', () => {
-    return should(() => hotelClerk._removeRoomForCustomer(requestContext, 'idontexist'))
-      .throw(NotFoundError);
+  it('should reject if the customer cannot be found', () => {
+    return hotelClerk._removeRoomForCustomer(requestContext, 'idontexist')
+      .should.be.rejectedWith(
+        NotFoundError,
+        {message: 'Unsubscribe error: no subscription found for that user'});
   });
 
-  it('should throw if the customer did not subscribe to the room', () => {
+  it('should reject if the customer did not subscribe to the room', done => {
     hotelClerk.customers.connectionId = {};
-    should(() => hotelClerk._removeRoomForCustomer(requestContext, 'roomId')).throw(NotFoundError);
-    should(hotelClerk.rooms.roomId).not.be.undefined();
-    should(hotelClerk.roomsCount).be.eql(1);
-    should(kuzzle.notifier.notifyUser).not.be.called();
+
+    hotelClerk._removeRoomForCustomer(requestContext, 'roomId')
+      .then(() => done(new Error('expected a promise rejection')))
+      .catch(err => {
+        try {
+          should(err).be.instanceOf(NotFoundError);
+          should(err.message).eql('Unsubscribe error: not subscribed to roomId');
+          should(hotelClerk.rooms.roomId).not.be.undefined();
+          should(hotelClerk.roomsCount).be.eql(1);
+          should(kuzzle.notifier.notifyUser).not.be.called();
+          done();
+        } catch(e) {
+          done(e);
+        }
+      });
+  });
+
+  it('should reject if the room does not exist', () => {
+    hotelClerk.customers.connectionId = {nowhere: null};
+
+    return hotelClerk._removeRoomForCustomer(requestContext, 'nowhere', false)
+      .should.be.rejectedWith(
+        KuzzleInternalError,
+        {message: 'Unsubscribe error: room nowhere not found'});
   });
 
   it('should remove the room from the customer list and remove the connection entry if empty', () => {
     hotelClerk.customers.connectionId = {roomId: null};
 
-    const response = hotelClerk._removeRoomForCustomer(requestContext, 'roomId', false);
-    should(hotelClerk.customers).be.empty();
+    return hotelClerk._removeRoomForCustomer(requestContext, 'roomId', false)
+      .then(response => {
+        should(hotelClerk.customers).be.empty();
 
-    should(hotelClerk._removeRoomFromRealtimeEngine)
-      .be.calledOnce()
-      .be.calledWith('roomId');
+        should(hotelClerk._removeRoomFromRealtimeEngine)
+          .be.calledOnce()
+          .be.calledWith('roomId');
 
-    should(response).be.eql('roomId');
-    should(hotelClerk.roomsCount).be.eql(0);
-    should(hotelClerk.rooms).be.an.Object().and.be.empty();
+        should(response).be.eql('roomId');
+        should(hotelClerk.roomsCount).be.eql(0);
+        should(hotelClerk.rooms).be.an.Object().and.be.empty();
 
-    // should still notify even if nobody is listening for cluster mode
-    should(kuzzle.notifier.notifyUser)
-      .be.calledOnce();
+        // should still notify even if nobody is listening for cluster mode
+        should(kuzzle.notifier.notifyUser).be.calledOnce();
+      });
   });
 
   it('should remove the room from the customer list and keep other existing rooms', () => {
@@ -82,19 +110,20 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     hotelClerk.rooms.anotherRoom = {};
     hotelClerk.roomsCount = 2;
 
-    hotelClerk._removeRoomForCustomer(requestContext, 'roomId', false);
-    should(hotelClerk.customers.connectionId)
-      .eql({
-        anotherRoom: null
+    return hotelClerk._removeRoomForCustomer(requestContext, 'roomId', false)
+      .then(() => {
+        should(hotelClerk.customers.connectionId)
+          .eql({
+            anotherRoom: null
+          });
+
+        should(hotelClerk.rooms.roomId).be.undefined();
+        should(hotelClerk.rooms.anotherRoom).not.be.undefined();
+        should(hotelClerk.roomsCount).be.eql(1);
+
+        // should still notify even if nobody is listening for cluster mode
+        should(kuzzle.notifier.notifyUser).be.calledOnce();
       });
-
-    should(hotelClerk.rooms.roomId).be.undefined();
-    should(hotelClerk.rooms.anotherRoom).not.be.undefined();
-    should(hotelClerk.roomsCount).be.eql(1);
-
-    // should still notify even if nobody is listening for cluster mode
-    should(kuzzle.notifier.notifyUser)
-      .be.calledOnce();
   });
 
   it('should remove a customer and notify other users in the room', () => {
@@ -105,14 +134,17 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
 
     hotelClerk.rooms.roomId.customers.add('foobar');
 
-    hotelClerk._removeRoomForCustomer(requestContext, 'roomId');
+    return hotelClerk._removeRoomForCustomer(requestContext, 'roomId')
+      .then(() => {
+        should(hotelClerk.rooms.roomId).not.be.undefined();
+        should(hotelClerk.rooms.roomId.customers.size).be.eql(1);
+        should(hotelClerk.rooms.roomId.customers.has('foobar')).be.true();
+        should(hotelClerk.rooms.roomId.customers.has(requestContext.connectionId))
+          .be.false();
 
-    should(hotelClerk.rooms.roomId).not.be.undefined();
-    should(hotelClerk.rooms.roomId.customers.size).be.eql(1);
-    should(hotelClerk.rooms.roomId.customers.has('foobar')).be.true();
-    should(hotelClerk.rooms.roomId.customers.has(requestContext.connectionId)).be.false();
-
-    should(hotelClerk.roomsCount).be.eql(1);
-    should(kuzzle.notifier.notifyUser).calledWithMatch('roomId', sinon.match.instanceOf(Request), 'out', {count: 1});
+        should(hotelClerk.roomsCount).be.eql(1);
+        should(kuzzle.notifier.notifyUser).calledWithMatch(
+          'roomId', sinon.match.instanceOf(Request), 'out', {count: 1});
+      });
   });
 });
