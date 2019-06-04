@@ -3,8 +3,7 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
-  Request = require('kuzzle-common-objects').Request,
+  { Request } = require('kuzzle-common-objects'),
   Kuzzle = require('../../../mocks/kuzzle.mock'),
   Notifier = require('../../../../lib/api/core/notifier');
 
@@ -32,18 +31,21 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       }
     });
 
-    notifier.notifyDocument = sinon.stub();
+    sinon.stub(notifier, 'notifyDocument').resolves();
   });
 
   it('should notify subscribers when an updated document entered their scope', () => {
+    const {_id, index, collection} = request.input.resource;
+
     kuzzle.realtime.test.returns(['foo']);
-    kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({
-      _id: request.input.resource._id,
+    kuzzle.services.list.storageEngine.get.resolves({
+      _id,
       _source: {foo: 'bar'},
       _meta: request.input.body._kuzzle_info
-    }));
+    });
 
-    kuzzle.services.list.internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
+    kuzzle.services.list.internalCache.get.resolves(
+      JSON.stringify(['foo', 'bar']));
 
     return notifier.notifyDocumentUpdate(request)
       .then(() => {
@@ -51,29 +53,34 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
         should(kuzzle.realtime.test)
           .calledOnce()
-          .calledWith('foo', 'bar', {foo: 'bar'}, request.input.resource._id);
+          .calledWith('foo', 'bar', {foo: 'bar'}, _id);
 
         should(notifier.notifyDocument.callCount).be.eql(2);
-        should(notifier.notifyDocument.getCall(0)).calledWith(['foo'], request, 'in', 'done', 'update', {
-          _meta: {canIhas: 'cheezburgers?'},
-          _source: {foo: 'bar'},
-          _id: request.input.resource._id
-        });
+        should(notifier.notifyDocument.getCall(0)).calledWith(
+          ['foo'],
+          request,
+          'in',
+          'done',
+          'update',
+          {
+            _id,
+            _meta: {canIhas: 'cheezburgers?'},
+            _source: {foo: 'bar'}
+          });
 
-        should(notifier.notifyDocument.getCall(1)).calledWith(['bar'], request, 'out', 'done', 'update', {
-          _id: request.input.resource._id
-        });
+        should(notifier.notifyDocument.getCall(1)).calledWith(
+          ['bar'], request, 'out', 'done', 'update', { _id });
 
         should(kuzzle.services.list.internalCache.get)
           .calledOnce()
-          .calledWith(`{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`);
+          .calledWith(`{notif/${index}/${collection}}/${_id}`);
 
         should(kuzzle.services.list.internalCache.del).not.be.called();
 
         should(kuzzle.services.list.internalCache.setex)
           .calledOnce()
           .calledWith(
-            `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`,
+            `{notif/${index}/${collection}}/${_id}`,
             kuzzle.config.limits.subscriptionDocumentTTL,
             JSON.stringify(['foo']));
       });
@@ -81,16 +88,19 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
   context('with a subscriptionDocumentTTL set to 0', () => {
     it('should set internalCache with no TTL', () => {
+      const {_id, index, collection} = request.input.resource;
+
       kuzzle.config.limits.subscriptionDocumentTTL = 0;
 
       kuzzle.realtime.test.returns(['foo']);
-      kuzzle.services.list.storageEngine.get.returns(Bluebird.resolve({
-        _id: request.input.resource._id,
+      kuzzle.services.list.storageEngine.get.resolves({
+        _id,
         _source: {foo: 'bar'},
         _meta: request.input.body._kuzzle_info
-      }));
+      });
 
-      kuzzle.services.list.internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
+      kuzzle.services.list.internalCache.get.resolves(
+        JSON.stringify(['foo', 'bar']));
 
       return notifier.notifyDocumentUpdate(request)
         .then(() => {
@@ -99,7 +109,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           should(kuzzle.services.list.internalCache.set)
             .calledOnce()
             .calledWith(
-              `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`,
+              `{notif/${index}/${collection}}/${_id}`,
               JSON.stringify(['foo']));
         });
     });
