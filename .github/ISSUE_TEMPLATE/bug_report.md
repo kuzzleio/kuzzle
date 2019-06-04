@@ -1,5 +1,14 @@
+---
+name: Bug report
+about: Create a bug report to help us improve
+title: ''
+labels: bug
+assignees: ''
+---
+
 <!--- If you have a question about Kuzzle usage, please use Stackoverflow instead >
 <!--- Post here and we will respond https://stackoverflow.com/questions/ask >
+<!--- Don't hesitate to ping us on Gitter when your question is posted >
 <!--- Github issues are limited to bugs and features requests >
 
 
