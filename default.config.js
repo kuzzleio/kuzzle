@@ -155,6 +155,7 @@ module.exports = {
   },
 
   server: {
+    vaultSeed: '764c1afa2988981a',
     entryPoints: {
       embedded: true,
       proxy: false

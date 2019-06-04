@@ -139,6 +139,28 @@ bindOption(
     .action(require('./commands/loadSecurities'))
 );
 
+// $ kuzzle encryptSecrets
+bindOption(
+  program
+    .command('encryptSecrets <file>')
+    .option('    --vault-key <vaultKey>', 'Vault key used to encrypt secrets')
+    .option('    --outputFile <outputFile>', 'Output file to write encrypted secrets')
+    .description('encrypt a secrets file with the provided key')
+    .action(require('./commands/encryptSecrets'))
+);
+
+// $ kuzzle decryptSecrets
+bindOption(
+  program
+    .command('decryptSecrets <file>')
+    .option('    --vault-key <vaultKey>', 'Vault key used to decrypt secrets')
+    .option('    --outputFile <outputFile>', 'Output file to write decrypted secrets')
+    .option('    --noint', 'non interactive mode')
+    .description('decrypt a secrets file with the provided key')
+    .action(require('./commands/decryptSecrets'))
+);
+
+
 // Run user command
 program.parse(process.argv);
 
