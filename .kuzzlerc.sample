@@ -2,8 +2,8 @@
   // -------------------------------------------------------------------------
   // Kuzzle configuration sample file
   //
-  // You can copy this file to a valid [rc](https://github.com/dominictarr/rc)
-  // file location to customize Kuzzle configuration
+  // You can copy this file to a valid rc file location to customize Kuzzle
+  // configuration (see https://github.com/dominictarr/rc)
   // -------------------------------------------------------------------------
 
   // The HTTP section lets you configure how Kuzzle should handle HTTP requests
@@ -49,24 +49,31 @@
     //      (see https://docs.kuzzle.io/plugins/1/events/core-overload/)
     // * subscriptionConditionsCount
     //      Maximum number of conditions a subscription filter can contain
-    //      NB: A condition is either a "simple" operator (anything but and, or and bool)
-    //      or a boolean condition that contains only simple operators.
+    //      NB: A condition is either a "simple" operator (anything but "and",
+    //          "or" and "bool"), or a boolean condition that contains only
+    //          simple operators.
     // * subscriptionMinterms
     //      Maximum number of minterms (AND) clauses after the filters are
     //      transformed in their Canonical Disjunctive Normal Form (CDNF).
     //      Set to 0 for no limit.
     // * subscriptionRooms
     //      Maximum number of different subscription rooms
-    //      (i.e. different index+collection+filters subscription configurations)
+    //      (i.e. different index+collection+filters subscription
+    //      configurations)
     //      Depends primarily on available memory.
     //      If set to 0, an unlimited number of rooms can be created
     // * subscriptionDocumentTTL
-    //      Maximum time (in seconds) a document will be kept in cache for real-time subscriptions.
-    //      This cache is used to notify subscriber when a document enters or leaves a scope after an update.
+    //      Maximum time (in seconds) a document will be kept in cache for
+    //      real-time subscriptions.
+    //      This cache is used to notify subscriber when a document enters or
+    //      leaves a scope after an update.
     //      By default, subscriptions will be kept 72 hours.
-    //      /!\ Please note that keeping subscriptions over a long period of time may result in memory overuse. /!\
+    //      /!\ Please note that keeping subscriptions over a long period of
+    //      /!\ time may result in memory overuse.
     //      If set to 0, the subscription will be kept in cache forever.
-    //      /!\ Setting the property to 0 will lead to a memory leak if documents enter a real-time subscription scope and never exit that scope. /!\
+    //      /!\ Setting the property to 0 will lead to a memory leak if
+    //      /!\ documents enter a real-time subscription scope and never exit
+    //      /!\ that scope.
     "concurrentRequests": 50,
     "documentsFetchCount": 10000,
     "documentsWriteCount": 200,
@@ -79,7 +86,7 @@
   },
 
   // The plugins section lets you define plugins behaviors
-  // (see http://kuzzle.io/guide/#plugins)
+  // (see https://docs.kuzzle.io/guide/1/essentials/plugins/)
   "plugins": {
     // [Common]
     //   * bootstrapLockTimeout
@@ -131,8 +138,8 @@
     // users/_createRestricted
     "restrictedProfileIds": ["default"],
     // [jwt]
-    // configuration for npm
-    // [jsonwebtoken package](https://github.com/auth0/node-jsonwebtoken)
+    // configuration for the npm package jsonwebtoken
+    // (see https://github.com/auth0/node-jsonwebtoken)
     //
     //   * algorithm:
     //      hash/encryption method used to sign the token
@@ -292,8 +299,8 @@
     //       for more information on transports configuration.
     //   * accessLogFormat:
     //       Access log format.
-    //       Currently supported are "combined" (=Apache combined logs format) and
-    //       "logstash".
+    //       Currently supported are "combined" (=Apache combined logs format)
+    //       and "logstash".
     //       "logstash" will output the whole request input to JSON, ready to
     //       be consumed by logstash agent.
     //   * accessLogIpOffset:
@@ -340,7 +347,8 @@
         // * allowCompression:
         //    Enable support for compressed requests, using the
         //    Content-Encoding header
-        //    Currently supported compression algorithms: gzip, deflate, identity
+        //    Currently supported compression algorithms:
+        //      gzip, deflate, identity
         //    Note: "identity" is always an accepted value, even if
         //    compression support is disabled
         "enabled": true,
@@ -424,8 +432,8 @@
     },
 
     // [internalCache]
-    // The cache service relies on Redis
-    // sample settings for Redis service (see also https://github.com/luin/ioredis):
+    // The cache service relies on Redis sample settings for Redis service
+    // (see also https://github.com/luin/ioredis)
     //
     // 1. using a single Redis database:
     //   node:
@@ -523,16 +531,22 @@
     // The default database layer is Elasticsearch and it is
     // currently the only database layer we support.
     //   * client:
-    //       Elasticsearch constructor options. Use this field to specify your Elasticsearch config options, this object
-    //       is passed through to the Elasticsearch constructor and can contain all options/keys outlined here:
-    //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/configuration.html
+    //       Elasticsearch constructor options. Use this field to specify your
+    //       Elasticsearch config options, this object is passed through to the
+    //       Elasticsearch constructor and can contain all options/keys outlined
+    //       here:
+    //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-configuration.html
     //   * dynamic:
-    //       Default policy against new fields that are not referenced in the collection mapping.
-    //       The value of this configuration will change Elasticsearch behavior on fields that are not declared in the collection mapping.
-    //         - "true": Stores document and update the collection mapping with infered type
-    //         - "false": Stores document and does not update the collection mapping (field are not indexed)
+    //       Default policy against new fields that are not referenced in the
+    //       collection mapping.
+    //       The value of this configuration will change Elasticsearch behavior
+    //       on fields that are not declared in the collection mapping.
+    //         - "true": Stores document and update the collection mapping with
+    //           infered type
+    //         - "false": Stores document and does not update the collection
+    //           mapping (field are not indexed)
     //         - "strict": Rejects document
-    //       See https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html
+    //       See https://www.elastic.co/guide/en/elasticsearch/reference/5.6/dynamic-mapping.html
     "db": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
