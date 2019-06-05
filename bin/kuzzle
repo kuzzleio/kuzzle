@@ -160,14 +160,6 @@ bindOption(
     .action(require('./commands/decryptSecrets'))
 );
 
-// $ kuzzle vaultSeed
-bindOption(
-  program
-    .command('vaultSeed')
-    .description('Generate a new random vault seed')
-    .action(require('./commands/vaultSeed'))
-);
-
 // Run user command
 program.parse(process.argv);
 

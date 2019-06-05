@@ -6,19 +6,12 @@ const
 describe('Test: vault core component', () => {
   let
     fsMock,
-    config,
     clearSecrets,
     encryptedSecrets,
     Vault,
     vault;
 
   beforeEach(() => {
-    config = {
-      server: {
-        vaultSeed: 'the cake is a lie'
-      }
-    };
-
     clearSecrets = {
       aws: {
         keyId: 'key id',
@@ -29,10 +22,10 @@ describe('Test: vault core component', () => {
 
     encryptedSecrets = {
       aws: {
-        keyId: '5a93f3f45f286b93299f6646c72e3003',
-        secretKey: '1d7b2fa9820b8a14a2c457f4a71d06c3'
+        keyId: 'a47de7426fbcb8904290e376f147bc73.8e4b35be62ecbc53',
+        secretKey: '595b8ef58496a3bc472c457cc3ed3a04.62fe750c9570af14'
       },
-      deep: { nested: { value: 'fa78a612dad25afa3c432d572be82895' } }
+      deep: { nested: { value: '2900758dc274c9892f42327c8435e1f0.57cb3aeee1c31f49' } }
     };
 
     process.env.KUZZLE_VAULT_KEY = 'the spoon does not exists';
@@ -45,7 +38,7 @@ describe('Test: vault core component', () => {
     mockRequire('fs', fsMock);
     Vault = mockRequire.reRequire('../../../lib/api/core/vault');
 
-    vault = new Vault(config);
+    vault = new Vault();
   });
 
   afterEach(() => {
@@ -60,7 +53,6 @@ describe('Test: vault core component', () => {
         .then(() => {
           should(vault.encryptedSecretsFile).be.eql('../../../config/secrets.enc.json');
           should(vault.vaultKeyHash).be.undefined();
-          should(vault.cipherIV).be.undefined();
           should(vault.secrets).match({});
         });
     });
@@ -80,7 +72,6 @@ describe('Test: vault core component', () => {
         .then(() => {
           should(vault.encryptedSecretsFile).not.be.undefined();
           should(vault.vaultKeyHash).not.be.undefined();
-          should(vault.cipherIV).be.eql('the cake is a li');
           should(vault.secrets).match(clearSecrets);
         });
     });
@@ -92,7 +83,6 @@ describe('Test: vault core component', () => {
 
       should(vault.vaultKey).be.eql('i am the key');
       should(vault.vaultKeyHash).not.be.undefined();
-      should(vault.cipherIV).be.eql('the cake is a li');
     });
 
     it('takes KUZZLE_VAULT_KEY environment variable is vaultKey is not specified', () => {
@@ -100,7 +90,6 @@ describe('Test: vault core component', () => {
 
       should(vault.vaultKey).be.eql('the spoon does not exists');
       should(vault.vaultKeyHash).not.be.undefined();
-      should(vault.cipherIV).be.eql('the cake is a li');
     });
   });
 });

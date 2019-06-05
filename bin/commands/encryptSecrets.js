@@ -24,7 +24,6 @@
 const
   fs = require('fs'),
   path = require('path'),
-  config = require('../../lib/config'),
   Vault = require('../../lib/api/core/vault'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput');
@@ -60,7 +59,7 @@ function commandEncryptSecrets (secretsFile, options) {
 
   console.log(cout.notice('[ℹ] Encrypting secrets...\n'));
 
-  const vault = new Vault(config);
+  const vault = new Vault();
 
   vault.prepareCrypto(options.vaultKey);
 
