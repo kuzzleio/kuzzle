@@ -172,7 +172,7 @@ class HttpApi {
     let url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/_write`;
 
     if (_id) {
-      url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/${_id}/_write`;
+      url += `?_id=${_id}`;
     }
 
     const options = {
