@@ -52,5 +52,5 @@ plugins/enabled/*
 
 #secrets files
 config/secrets.json
-features/fixtures/secrets.json
-features/fixtures/secrets.enc.json
+config/testsecrets.json
+config/testsecrets.enc.json

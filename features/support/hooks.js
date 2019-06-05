@@ -9,7 +9,6 @@ const
     Before,
     BeforeAll
   } = require('cucumber'),
-  fs = require('fs'),
   Bluebird = require('bluebird'),
   Http = require('./api/http'),
   World = require('./world');

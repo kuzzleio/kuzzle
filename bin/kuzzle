@@ -100,10 +100,9 @@ bindOption(
     .description('start a Kuzzle instance')
     .option('    --fixtures <file>', 'import data from file')
     .option('    --mappings <file>', 'apply mappings from file')
-    .option(
-      '    --securities <file>',
-      'import roles, profiles and users from file'
-    )
+    .option('    --securities <file>', 'import roles, profiles and users from file')
+    .option('    --vault-key <vaultKey>', 'Vault key used to decrypt secrets')
+    .option('    --secrets-file <secretsFile>', 'Output file to write decrypted secrets')
     .action(require('./commands/start'))
 );
 

@@ -1,10 +1,10 @@
 Feature: Kuzzle functional tests
   Scenario: CLI: encrypt and decrypt secrets
-    When I have a file "features/fixtures/secrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-    And I use the CLI command 'encryptSecrets features/fixtures/secrets.json --vault-key azerty --outputFile features/fixtures/secrets.enc.json'
-    Then A file "features/fixtures/secrets.enc.json" exists
-    When I use the CLI command 'decryptSecrets features/fixtures/secrets.enc.json --noint --vault-key azerty --outputFile features/fixtures/secrets.json'
-    Then A file "features/fixtures/secrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
+    When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
+    And I use the CLI command 'encryptSecrets config/testsecrets.json --vault-key azerty --outputFile config/testsecrets.enc.json'
+    Then A file "config/testsecrets.enc.json" exists
+    When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
+    Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
 
   Scenario: Bulk mWrite
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
