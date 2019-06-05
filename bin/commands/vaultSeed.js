@@ -22,7 +22,6 @@
 /* eslint-disable no-console */
 
 const
-  fs = require('fs'),
   Vault = require('../../lib/api/core/vault'),
   ColorOutput = require('./colorOutput');
 
@@ -34,7 +33,7 @@ function commandVaultSeed (options) {
   const vaultSeed = Vault.generateSeed();
 
   console.log(cout.ok(`[✔] Your new vault seed is '${vaultSeed}'`));
-  console.log(cout.ok(`Put in in your .kuzzlerc file under the 'server.vaultKey' entry.`));
+  console.log(cout.ok('Put in in your .kuzzlerc file under the \'server.vaultKey\' entry.'));
 }
 
 module.exports = commandVaultSeed;

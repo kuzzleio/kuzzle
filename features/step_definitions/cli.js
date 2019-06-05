@@ -17,7 +17,8 @@ When('I use the CLI command {string}', function (cliCommand) {
   execSync(`./bin/kuzzle ${cliCommand}`);
 });
 
-Then(/A file "([\w\.\/-]+)" exists( and contain '(.*)')?/, function (filePath, rawContent) {
+/* eslint-disable no-useless-escape */
+Then(/A file "([\w\./-]+)" exists( and contain '(.*)')?/, function (filePath, rawContent) {
   should(fs.existsSync(filePath)).be.eql(true);
 
   if (rawContent) {
