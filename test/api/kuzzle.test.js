@@ -122,7 +122,8 @@ describe('/lib/api/kuzzle.js', () => {
           'remoteActionsController',
           'repositories',
           'services',
-          'statistics'
+          'statistics',
+          'vault'
         ].forEach(k => {
           kuzzle[k] = mock[k];
         });

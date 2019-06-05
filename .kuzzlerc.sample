@@ -260,7 +260,7 @@
     // [vaultSeed]
     // Initialization vector used to encrypt secrets
     // Random seed can be generated with: bin/kuzzle vaultSeed
-    "vaultSeed": '764c1afa2988981a',
+    "vaultSeed": "764c1afa2988981a",
 
     // [proxy]
     // A Kuzzle proxy can be used to forward requests to Kuzzle.
