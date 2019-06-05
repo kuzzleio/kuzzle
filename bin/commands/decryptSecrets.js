@@ -73,7 +73,7 @@ function commandDecryptSecrets (encryptedSecretsFile, options) {
 
     console.log(cout.ok(`[✔] Secrets successfully encrypted: ${outputFile}`));
   } catch (error) {
-    console.log(cout.error(`[ℹ] Can not encrypt secret file: ${error.message}`));
+    console.error(cout.error(`[ℹ] Can not encrypt secret file: ${error.message}`));
     process.exit(1);
   }
 }
