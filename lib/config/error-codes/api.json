@@ -72,7 +72,7 @@
         "token_force_expire": {
           "code": 1,
           "message": "Error while forcing token expiration",
-          "class": "KuzzleInternalError"
+          "class": "InternalError"
         },
         "invalid_token": {
           "code": 2,
