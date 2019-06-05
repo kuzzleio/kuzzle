@@ -23,8 +23,10 @@
 
 const
   fs = require('fs'),
+  path = require('path'),
   config = require('../../lib/config'),
   Vault = require('../../lib/api/core/vault'),
+  readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput');
 
 function commandEncryptSecrets (secretsFile, options) {
@@ -35,9 +37,25 @@ function commandEncryptSecrets (secretsFile, options) {
     process.exit(1);
   }
 
-  let outputFile = options.outputFile;
+  let
+    userIsSure,
+    outputFile = options.outputFile;
+
   if (!options.outputFile) {
-    outputFile = `${secretsFile.split('.json')[0]}.enc.json`;
+    outputFile = `${path.dirname(secretsFile)}/${path.basename(secretsFile, '.json')}.enc.json`;
+  }
+
+  if (fs.existsSync(outputFile) && !options.noint) {
+    console.log(cout.warn(`[ℹ] You are going to overwrite the following file: ${outputFile}`));
+    userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
+  } else {
+    // non-interactive mode
+    userIsSure = true;
+  }
+
+  if (!userIsSure) {
+    console.log(cout.notice('[ℹ] Aborted'));
+    process.exit(1);
   }
 
   console.log(cout.notice('[ℹ] Encrypting secrets...\n'));

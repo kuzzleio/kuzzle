@@ -144,6 +144,7 @@ bindOption(
     .command('encryptSecrets <file>')
     .option('    --vault-key <vaultKey>', 'Vault key used to encrypt secrets')
     .option('    --outputFile <outputFile>', 'Output file to write encrypted secrets')
+    .option('    --noint', 'non interactive mode')
     .description('encrypt a secrets file with the provided key')
     .action(require('./commands/encryptSecrets'))
 );

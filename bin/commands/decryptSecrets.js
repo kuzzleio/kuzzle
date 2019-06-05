@@ -23,6 +23,7 @@
 
 const
   fs = require('fs'),
+  path = require('path'),
   config = require('../../lib/config'),
   Vault = require('../../lib/api/core/vault'),
   readlineSync = require('readline-sync'),
@@ -36,17 +37,18 @@ function commandDecryptSecrets (encryptedSecretsFile, options) {
     process.exit(1);
   }
 
-  let outputFile = options.outputFile;
+  let
+    userIsSure,
+    outputFile = options.outputFile;
+
   if (!options.outputFile) {
-    outputFile = `${encryptedSecretsFile.split('.enc')[0]}.json`;
+    outputFile = `${path.dirname(encryptedSecretsFile)}/${path.basename(encryptedSecretsFile, '.enc.json')}.json`;
   }
 
-  console.log(cout.warn(`[ℹ] You are going to overwrite the following file: ${outputFile}`));
-
-  if (!options.noint) {
+  if (fs.existsSync(outputFile) && !options.noint) {
+    console.log(cout.warn(`[ℹ] You are going to overwrite the following file: ${outputFile}`));
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
-  }
-  else {
+  } else {
     // non-interactive mode
     userIsSure = true;
   }
