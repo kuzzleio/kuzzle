@@ -175,8 +175,7 @@ describe('Test: subscribe controller', () => {
             should(kuzzle.notifier.publish).be.calledOnce();
             should(kuzzle.notifier.publish).be.calledWith(request);
 
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
+            should(response).match({published: true});
 
             return Promise.resolve();
           }

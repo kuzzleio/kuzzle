@@ -378,15 +378,11 @@ describe('Test: document controller', () => {
             should(engine.createOrReplace).be.calledOnce();
             should(engine.createOrReplace).be.calledWith(request);
 
-            should(kuzzle.indexCache.add).be.calledOnce();
-            should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
-
             should(kuzzle.notifier.notifyDocumentReplace).be.calledOnce();
             should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(request);
 
             sinon.assert.callOrder(
               engine.createOrReplace,
-              kuzzle.indexCache.add,
               kuzzle.notifier.notifyDocumentReplace
             );
 
