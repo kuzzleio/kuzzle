@@ -9,6 +9,7 @@ describe('Test: vault core component', () => {
     clearSecrets,
     encryptedSecrets,
     Vault,
+    assertStub,
     vault;
 
   beforeEach(() => {
@@ -35,7 +36,16 @@ describe('Test: vault core component', () => {
       readFile: sinon.stub().yields(null, JSON.stringify(encryptedSecrets))
     };
 
+    assertStub = sinon.spy((...args) => {
+      const [ assertion, message ] = args;
+
+      if (Boolean(assertion) === false) {
+        throw new Error(message);
+      }
+    });
+
     mockRequire('fs', fsMock);
+    mockRequire('assert', assertStub);
     Vault = mockRequire.reRequire('../../../lib/api/core/vault');
 
     vault = new Vault();
@@ -46,7 +56,12 @@ describe('Test: vault core component', () => {
   });
 
   describe('#init', () => {
+    beforeEach(() => {
+      vault.vaultKey = 'the spoon does not exists';
+    });
+
     it('does nothing if vaultKey and secret file are not present', () => {
+      delete vault.vaultKey;
       fsMock.existsSync.returns(false);
 
       return vault.init()
@@ -58,11 +73,27 @@ describe('Test: vault core component', () => {
     });
 
     it('rejects if vaultKey is not present and the secret file is present', () => {
-      return should(vault.init()).be.rejected();
+      delete vault.vaultKey;
+
+      should(() => {
+        vault.init();
+      }).throw();
+
+      should(assertStub)
+        .be.calledOnce()
+        .be.calledWith(false, 'A secrets file is present and no vault key can be found. Aborting.');
     });
 
     it('rejects if vaultKey is present and the secret file is not present', () => {
-      return should(vault.init()).be.rejected();
+      fsMock.existsSync.returns(false);
+
+      should(() => {
+        vault.init();
+      }).throw();
+
+      should(assertStub)
+        .be.calledTwice()
+        .be.calledWith(false, 'A vault key is present and no secrets file can be found. Aborting.');
     });
 
     it('reads the secret file and store decrypted secrets', () => {
