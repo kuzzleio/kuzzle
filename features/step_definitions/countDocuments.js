@@ -3,7 +3,6 @@ const
     Then
   } = require('cucumber'),
   _ = require('lodash'),
-  should = require('should'),
   async = require('async');
 
 Then(/^I count ([\d]*) documents(?: in index "([^"]*)"(:"([\w-]+)")?)?$/, function (number, index, collection, callback) {
