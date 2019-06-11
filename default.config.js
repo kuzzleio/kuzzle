@@ -202,7 +202,9 @@ module.exports = {
         origins: '*:*'
       },
       websocket: {
-        enabled: true
+        enabled: true,
+        idleTimeout: 0,
+        heartbeat: 60000
       }
     }
   },
@@ -252,7 +254,8 @@ module.exports = {
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
-      }
+      },
+      dynamic: 'true'
     },
     garbageCollector: {
       cleanInterval: 86400000,

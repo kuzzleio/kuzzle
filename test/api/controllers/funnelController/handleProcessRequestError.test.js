@@ -2,7 +2,6 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   {
@@ -32,9 +31,8 @@ describe('funnelController.processRequest', () => {
         action: 'fail',
       });
 
-    kuzzle.pluginsManager.trigger = sinon.stub();
-    kuzzle.pluginsManager.trigger.onFirstCall().rejects(originalError);
-    kuzzle.pluginsManager.trigger.onSecondCall().callsFake((_, req) => {
+    kuzzle.pipe.onFirstCall().rejects(originalError);
+    kuzzle.pipe.onSecondCall().callsFake((_, req) => {
       req.setError(customError);
 
       return Promise.resolve(req);
@@ -63,9 +61,8 @@ describe('funnelController.processRequest', () => {
         action: 'fail',
       });
 
-    kuzzle.pluginsManager.trigger = sinon.stub();
-    kuzzle.pluginsManager.trigger.onFirstCall().rejects(originalError);
-    kuzzle.pluginsManager.trigger.onSecondCall().callsFake(
+    kuzzle.pipe.onFirstCall().rejects(originalError);
+    kuzzle.pipe.onSecondCall().callsFake(
       () => Promise.resolve().then(() => {
         throw customError;
       }));

@@ -225,7 +225,7 @@ describe('Test: repositories/roleRepository', () => {
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
           should(e.message).be.exactly('admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.');
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -248,7 +248,7 @@ describe('Test: repositories/roleRepository', () => {
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
           should(e.message).be.exactly('The role "test" cannot be deleted since it is used by some profile.');
-          should(kuzzle.pluginsManager.trigger).not.be.called();
+          should(kuzzle.emit).not.be.called();
           done();
         })
         .catch(e => {
@@ -271,7 +271,7 @@ describe('Test: repositories/roleRepository', () => {
             .be.calledWith('foo');
           should(roleRepository.roles)
             .not.have.property('foo');
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('core:roleRepository:delete', {_id: 'foo'});
         });
@@ -432,7 +432,7 @@ describe('Test: repositories/roleRepository', () => {
           should(roleRepository.persistToDatabase)
             .be.calledOnce()
             .be.calledWith(role);
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('core:roleRepository:save', {_id: 'test', controllers: controllers});
         });

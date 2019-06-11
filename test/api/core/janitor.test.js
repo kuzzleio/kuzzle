@@ -190,9 +190,9 @@ describe('Test: core/janitor', () => {
           should(storageEngine.createIndex.callCount).be.eql(2);
           should(storageEngine.createIndex.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
 
-          should(storageEngine.updateMapping.callCount).be.eql(3);
-          should(storageEngine.updateMapping.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
-          should(storageEngine.updateMapping.getCall(0).args[0].input.body.properties).be.eql({ name: { type: 'text' } });
+          should(storageEngine.createCollection.callCount).be.eql(3);
+          should(storageEngine.createCollection.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
+          should(storageEngine.createCollection.getCall(0).args[0].input.body.properties).be.eql({ name: { type: 'text' } });
 
           should(storageEngine.refreshIndex.callCount).be.eql(3);
 

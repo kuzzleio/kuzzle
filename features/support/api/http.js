@@ -158,6 +158,32 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  bulkMWrite (index, collection, body) {
+    const options = {
+      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mWrite'),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
+  bulkWrite (index, collection, body, _id = null) {
+    let url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/_write`;
+
+    if (_id) {
+      url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/${_id}/_write`;
+    }
+
+    const options = {
+      url: this.apiPath(url),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
   /**
    * @param options
    * @return {Promise.<IncomingMessage>}
@@ -282,6 +308,17 @@ class HttpApi {
     const options = {
       url: this.apiPath(`${index}/${collection}`),
       method: 'PUT'
+    };
+
+    return this.callApi(options);
+  }
+
+  getCollectionMapping (index, collection, includeKuzzleMeta = false) {
+    const url = `${index}/${collection}/_mapping${includeKuzzleMeta ? '?includeKuzzleMeta' : ''}`;
+
+    const options = {
+      url: this.apiPath(url),
+      method: 'GET'
     };
 
     return this.callApi(options);
@@ -1137,11 +1174,11 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  updateMapping (index) {
+  updateMapping (index, collection, mapping) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_mapping'),
+      url: `${this.apiPath(this.util.getIndex(index))}/${collection || this.world.fakeCollection}/_mapping`,
       method: 'PUT',
-      body: this.world.mapping
+      body: mapping || this.world.mapping
     };
 
     return this.callApi(options);
@@ -1177,9 +1214,9 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  updateSpecifications (specifications) {
+  updateSpecifications (index, collection, specifications) {
     const options = {
-      url: this.apiPath('_specifications'),
+      url: this.apiPath(index ? `${index}/${collection}/_specifications` : '_specifications'),
       method: 'PUT',
       body: specifications
     };
@@ -1227,9 +1264,9 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  validateSpecifications (specifications) {
+  validateSpecifications (index, collection, specifications) {
     const options = {
-      url: this.apiPath('_validateSpecifications'),
+      url: this.apiPath(index ? `${index}/${collection}/_validateSpecifications` : '_validateSpecifications'),
       method: 'POST',
       body: specifications
     };

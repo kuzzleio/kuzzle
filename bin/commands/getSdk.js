@@ -34,16 +34,16 @@ const {
  */
 function getSdk (options) {
   const config = {
-    host: options.parent.host || 'localhost',
-    port: options.parent.port || 7512
+    host: options.host || 'localhost',
+    port: options.port || 7512
   };
 
-  if (options.parent.username && options.parent.password) {
+  if (options.username && options.password) {
     config.login = {
       strategy: 'local',
       credentials: {
-        username: options.parent.username,
-        password: options.parent.password
+        username: options.username,
+        password: options.password
       }
     };
   }

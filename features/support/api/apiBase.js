@@ -41,6 +41,33 @@ class ApiBase {
     return this.send(msg);
   }
 
+  bulkMWrite (index, collection, body) {
+    const
+      msg = {
+        controller: 'bulk',
+        collection: collection || this.world.fakeCollection,
+        index: index || this.world.fakeIndex,
+        action: 'mWrite',
+        body
+      };
+
+    return this.send(msg);
+  }
+
+  bulkWrite (index, collection, body, _id = null) {
+    const
+      msg = {
+        controller: 'bulk',
+        collection: collection || this.world.fakeCollection,
+        index: index || this.world.fakeIndex,
+        action: 'write',
+        _id,
+        body
+      };
+
+    return this.send(msg);
+  }
+
   collectionExists (index, collection) {
     return this.send({
       index,
@@ -162,6 +189,19 @@ class ApiBase {
       msg = {
         controller: 'collection',
         action: 'create',
+        index,
+        collection
+      };
+
+    return this.send(msg);
+  }
+
+  getCollectionMapping (index, collection, includeKuzzleMeta = false) {
+    const
+      msg = {
+        includeKuzzleMeta,
+        controller: 'collection',
+        action: 'getMapping',
         index,
         collection
       };
@@ -461,11 +501,11 @@ class ApiBase {
     return this.send(msg);
   }
 
-  get (id, index) {
+  get (id, index, collection) {
     const
       msg = {
         controller: 'document',
-        collection: this.world.fakeCollection,
+        collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'get',
         _id: id
@@ -1158,14 +1198,14 @@ class ApiBase {
     });
   }
 
-  updateMapping (index) {
+  updateMapping (index, collection, mapping) {
     const
       msg = {
         controller: 'collection',
-        collection: this.world.fakeCollection,
+        collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'updateMapping',
-        body: this.world.mapping
+        body: mapping || this.world.mapping
       };
 
     return this.send(msg);
@@ -1210,10 +1250,10 @@ class ApiBase {
     });
   }
 
-  updateSpecifications (specifications) {
+  updateSpecifications (index, collection, specifications) {
     return this.send({
-      index: null,
-      collection: null,
+      index,
+      collection,
       controller: 'collection',
       action : 'updateSpecifications',
       body: specifications
@@ -1254,10 +1294,10 @@ class ApiBase {
     });
   }
 
-  validateSpecifications (specifications) {
+  validateSpecifications (index, collection, specifications) {
     return this.send({
-      index: null,
-      collection: null,
+      index,
+      collection,
       controller: 'collection',
       action : 'validateSpecifications',
       body: specifications
