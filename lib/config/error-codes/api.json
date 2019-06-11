@@ -39,7 +39,7 @@
           "message": "Search cannot fetch more documents than the server configured limit ( %s ).",
           "class": "SizeLimitError"
         },
-        "scrollId_missing": {
+        "missing_scroll_id": {
           "code": 4,
           "message": "Scroll must specify a 'scrollId' argument.",
           "class": "BadRequestError"
