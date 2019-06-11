@@ -2,12 +2,18 @@ const
   {
     Then
   } = require('cucumber'),
+  _ = require('lodash'),
   async = require('async');
 
-Then(/^I count ([\d]*) documents(?: in index "([^"]*)")?$/, function (number, index, callback) {
+Then(/^I count ([\d]*) documents(?: in index "([^"]*)"(:"([\w\-]+)")?)?$/, function (number, index, collection, callback) {
   var main = function (callbackAsync) {
     setTimeout(() => {
-      this.api.count({}, index)
+      if (_.isFunction(collection)) {
+        callback = collection;
+        collection = undefined;
+      }
+
+      this.api.count({}, index, collection)
         .then(body => {
           if (body.result.count !== parseInt(number)) {
             callbackAsync('No correct value for count. Expected ' + number + ', got ' + body.result.count);
@@ -75,3 +81,9 @@ Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)(?: in index "(
   });
 });
 
+Then('I count {int} documents in collection {string}:{string}', function (count, index, collection) {
+  return this.api.count({}, index, collection)
+    .then(({ result }) => {
+      should(result.count).be.eql(count);
+    });
+});

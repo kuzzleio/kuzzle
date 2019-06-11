@@ -33,12 +33,30 @@ function importCollection (sdk, cout, dumpFiles) {
 
   const bulkData = JSON.parse(fs.readFileSync(dumpFiles[0]));
 
+  if (bulkData.length === 0) {
+    console.log(cout.notice(`[ℹ] File ${dumpFiles[0]} is empty. Skip import.`));
+
+    return importCollection(sdk, cout, dumpFiles.slice(1));
+  }
+
   return sdk.bulk.import(bulkData)
     .then(() => {
       console.log(cout.ok(`[✔] Dump file ${dumpFiles[0]} imported`));
 
-      return importCollection(sdk, cout, dumpFiles.slice(1));
-    });
+      return null;
+    })
+    .catch(error => {
+      console.log(cout.warn(`[ℹ] Error importing ${dumpFiles[0]}`));
+      if (error.status === 206) {
+        for (const err of error.errors) {
+          console.log(`  ${err.error.reason}`);
+        }
+      } else {
+        console.log(error.message);
+      }
+      return null;
+    })
+    .then(() => importCollection(sdk, cout, dumpFiles.slice(1)));
 }
 
 function loadIndexDump (dumpDirectory, options) {
@@ -49,12 +67,12 @@ function loadIndexDump (dumpDirectory, options) {
 
   return getSdk(options)
     .then(sdk => {
+      console.log(cout.ok(`[✔] Start importing dump from ${dumpDirectory}`));
       const dumpFiles = fs.readdirSync(dumpDirectory).map(f => `${dumpDirectory}/${f}`);
 
       return importCollection(sdk, cout, dumpFiles);
     })
     .then(() => {
-      console.log(cout.ok('[✔] Index dump has been successfully loaded'));
       process.exit(0);
     })
     .catch(err => {
