@@ -130,7 +130,7 @@ class ApiBase {
         body: query
       };
 
-      return this.send(msg);
+    return this.send(msg);
   }
 
   countSubscription () {

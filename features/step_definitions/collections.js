@@ -85,7 +85,7 @@ When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collect
   return stepUtils.getReturn.call(this, 'collectionExists', index, collection, cb);
 });
 
-When(/I create a collection "([\w\-]+)":"([\w\-]+)"( with "([\d]+)" documents)?/, function (index, collection, countRaw) {
+When(/I create a collection "([\w-]+)":"([\w-]+)"( with "([\d]+)" documents)?/, function (index, collection, countRaw) {
   return this.api.createCollection(index, collection)
     .then(() => {
       const
