@@ -53,26 +53,14 @@ describe('/lib/api/kuzzle.js', () => {
         );
     });
 
-    it('should throw an KuzzleInternalError with default name, msg and code', () => {
+    it('should throw an InternalError with default name, msg and code', () => {
       should(() => kuzzle.throw('api', 'server', 'fake_error', '{"status":"error"}'))
         .throw(
           InternalError,
           {
-            errorName: 'api-server-fake_error',
-            code: 0,
-            message: 'Unknown error: api-server-fake_error'
-          }
-        );
-    });
-
-    it('should throw an KuzzleInternalError with default name, msg and code', () => {
-      should(() => kuzzle.throw())
-        .throw(
-          InternalError,
-          {
-            errorName: 'undefined-undefined-undefined',
-            code: 0,
-            message: 'Unknown error: undefined-undefined-undefined'
+            errorName: 'internal-unexpected-unknown_error',
+            code: 1,
+            message: 'Unknown error: {"status":"error"}'
           }
         );
     });

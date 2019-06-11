@@ -34,11 +34,6 @@
           "message": "Search on multiple collections is not available.",
           "class": "BadRequestError"
         },
-        "limit_fetch_documents": {
-          "code": 3,
-          "message": "Search cannot fetch more documents than the server configured limit ( %s ).",
-          "class": "SizeLimitError"
-        },
         "missing_scroll_id": {
           "code": 4,
           "message": "Missing 'scrollId' argument.",
@@ -124,18 +119,13 @@
           "message": "Forbidden action [ %s / %s / %s / %s ] for user %s",
           "class": "ForbiddenError"
         },
-        "unable_serialize_response": {
-          "code": 4,
-          "message": "Unable to serialize response. Are you trying to return the request?",
-          "class": "PluginImplementationError"
-        },
         "unknown_controller": {
-          "code": 5,
+          "code": 4,
           "message": "Unknown controller %s",
           "class": "BadRequestError"
         },
         "unknown_action": {
-          "code": 6,
+          "code": 5,
           "message": "No corresponding action %s in controller %s",
           "class": "BadRequestError"
         }

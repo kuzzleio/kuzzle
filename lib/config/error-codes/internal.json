@@ -1,0 +1,25 @@
+{
+  "code": 0,
+  "subdomains": {
+    "unexpected": {
+      "code": 0,
+      "errors": {
+        "unknown_error": {
+          "code": 1,
+          "message": "Unknown error: %s",
+          "class": "InternalError"
+        }
+      }
+    },
+    "external_services": {
+      "code": 1,
+      "errors": {
+        "service_unavailable": {
+          "code": 1,
+          "message": "Service unavailable: %s",
+          "class": "ExternalServiceError"
+        }
+      }
+    }
+  }
+}
