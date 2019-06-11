@@ -122,7 +122,7 @@
         "insufficient_permissions": {
           "code": 3,
           "message": "Forbidden action [ %s / %s / %s / %s ] for user %s",
-          "class": "UnauthorizedError"
+          "class": "ForbiddenError"
         },
         "unable_serialize_response": {
           "code": 4,
