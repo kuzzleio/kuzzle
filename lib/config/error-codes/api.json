@@ -19,7 +19,7 @@
     "document": {
       "code": 2,
       "errors": {
-        "not_exist": {
+        "not_found": {
           "code": 1,
           "message": "The document does not exist: %s",
           "class": "NotFoundError"
