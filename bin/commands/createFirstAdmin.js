@@ -91,7 +91,7 @@ function commandCreateFirstAdmin (options) {
     })
     .then(() => sdk.server.adminExists())
     .then(adminExists => {
-      if (adminExists.result.exists) {
+      if (adminExists) {
         console.log('An administrator account already exists.');
         process.exit(0);
       }
