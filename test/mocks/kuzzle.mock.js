@@ -363,6 +363,17 @@ class KuzzleMock extends Kuzzle {
       addType: this.sandbox.spy()
     };
 
+    this.vault = {
+      init: this.sandbox.stub(),
+      prepareCrypto: this.sandbox.stub(),
+      secrets: {
+        aws: {
+          secretKeyId: 'the cake is a lie'
+        },
+        kuzzleApi: 'the spoon does not exist'
+      }
+    };
+
     {
       const
         mockProto = Object.getPrototypeOf(this),

@@ -52,6 +52,7 @@ services:
       - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
       - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
+      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
 
   redis:
     image: redis:${REDIS_VERSION:-5}
