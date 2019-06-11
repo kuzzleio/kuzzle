@@ -157,16 +157,16 @@ class KuzzleMock extends Kuzzle {
 
     this.notifier = {
       init: this.sandbox.spy(),
-      notifyUser: this.sandbox.spy(),
-      notifyServer: this.sandbox.spy(),
-      notifyDocument: this.sandbox.spy(),
-      notifyDocumentCreate: this.sandbox.spy(),
-      notifyDocumentMDelete: this.sandbox.spy(),
-      notifyDocumentReplace: this.sandbox.spy(),
-      notifyDocumentUpdate: this.sandbox.spy(),
+      notifyUser: this.sandbox.stub().resolves(),
+      notifyServer: this.sandbox.stub().resolves(),
+      notifyDocument: this.sandbox.stub().resolves(),
+      notifyDocumentCreate: this.sandbox.stub().resolves(),
+      notifyDocumentMDelete: this.sandbox.stub().resolves(),
+      notifyDocumentReplace: this.sandbox.stub().resolves(),
+      notifyDocumentUpdate: this.sandbox.stub().resolves(),
       publish: this.sandbox.stub().resolves(foo),
-      notifyDocumentMCreate: this.sandbox.spy(),
-      notifyDocumentMChanges: this.sandbox.spy()
+      notifyDocumentMCreate: this.sandbox.stub().resolves(),
+      notifyDocumentMChanges: this.sandbox.stub().resolves()
     };
 
     this.passport = {
@@ -359,6 +359,17 @@ class KuzzleMock extends Kuzzle {
       isValidSpecification: this.sandbox.stub().resolves({isValid: false}),
       validate: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
       addType: this.sandbox.spy()
+    };
+
+    this.vault = {
+      init: this.sandbox.stub(),
+      prepareCrypto: this.sandbox.stub(),
+      secrets: {
+        aws: {
+          secretKeyId: 'the cake is a lie'
+        },
+        kuzzleApi: 'the spoon does not exist'
+      }
     };
 
     {

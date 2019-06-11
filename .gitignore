@@ -49,3 +49,8 @@ plugins/available/*
 plugins/enabled/*
 !plugins/enabled/kuzzle-plugin-auth-passport-local
 !plugins/enabled/kuzzle-plugin-logger
+
+#secrets files
+config/secrets.json
+config/testsecrets.json
+config/testsecrets.enc.json
