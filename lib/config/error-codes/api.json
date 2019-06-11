@@ -137,7 +137,7 @@
         "unknown_action": {
           "code": 6,
           "message": "No corresponding action %s in controller %s",
-          "class": "PluginImplementationError"
+          "class": "BadRequestError"
         }
       }
     }
