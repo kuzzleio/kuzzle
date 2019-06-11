@@ -44,7 +44,7 @@
           "message": "Scroll must specify a 'scrollId' argument.",
           "class": "BadRequestError"
         },
-        "limit_gets_number": {
+        "get_limit_reached": {
           "code": 5,
           "message": "Number of gets to perform exceeds the server configured value ( %s )",
           "class": "SizeLimitError"
