@@ -41,7 +41,7 @@
         },
         "missing_scroll_id": {
           "code": 4,
-          "message": "Scroll must specify a 'scrollId' argument.",
+          "message": "Missing 'scrollId' argument.",
           "class": "BadRequestError"
         },
         "get_limit_reached": {
