@@ -89,6 +89,19 @@ When('I create a collection {string}:{string}', function (index, collection) {
   return this.api.createCollection(index, collection);
 });
 
+When('I create {string} documents in {string}:{string}', function (countRaw, index, collection) {
+  const
+    promises = [],
+    count = parseInt(countRaw);
+
+  for (let i = 0; i < count; ++i) {
+    promises.push(this.api.create({ number: `doc-${i}` }, index, collection));
+  }
+
+  return Promise.all(promises);
+});
+
+
 Then('The mapping dynamic field of {string}:{string} is {string}', function (index, collection, dynamicValue) {
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {

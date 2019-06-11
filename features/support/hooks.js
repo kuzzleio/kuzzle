@@ -39,29 +39,32 @@ BeforeAll(function () {
 
 // after last
 AfterAll(function () {
-  const
-    promises = [],
-    world = new World({parameters: parseWorldParameters()}),
-    http = new Http(world);
+  // const
+  //   promises = [],
+  //   world = new World({parameters: parseWorldParameters()}),
+  //   http = new Http(world);
 
-  for (const index of [
-    world.fakeIndex,
-    world.fakeAltIndex,
-    world.fakeNewIndex
-  ]) {
-    promises.push(http.deleteIndex(index)
-      .catch(() => true));
-    promises.push(http.setAutoRefresh(index, false));
-  }
+  // for (const index of [
+  //   world.fakeIndex,
+  //   world.fakeAltIndex,
+  //   world.fakeNewIndex
+  // ]) {
+  //   promises.push(http.deleteIndex(index)
+  //     .catch(() => true));
+  //   promises.push(http.setAutoRefresh(index, false));
+  // }
 
-  return Bluebird.all(promises);
+  // return Bluebird.all(promises);
 });
 
-After(function () {
+Before(function () {
   return this.api.truncateCollection()
     .then(() => this.api.truncateCollection(this.fakeAltIndex))
-    .then(() => this.api.refreshIndex(this.fakeIndex))
-    .then(() => this.api.disconnect());
+    .then(() => this.api.refreshIndex(this.fakeIndex));
+})
+
+After(function () {
+  return this.api.disconnect();
 });
 
 After({tags: '@realtime'}, function () {
