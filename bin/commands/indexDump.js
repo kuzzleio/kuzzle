@@ -100,7 +100,7 @@ function dumpIndex (sdk, cout, index, directoryPath) {
     });
 }
 
-function commandDumpIndex (index, directoryPath, options) {
+function commandIndexDump (index, directoryPath, options) {
   let
     opts = options;
 
@@ -118,4 +118,4 @@ function commandDumpIndex (index, directoryPath, options) {
     });
 }
 
-module.exports = commandDumpIndex;
+module.exports = commandIndexDump;

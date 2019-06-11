@@ -13,7 +13,7 @@ Feature: Kuzzle functional tests
     And I create an index named "kuzzle-test-index"
     When I create a collection "kuzzle-test-index":"noldor"
     And I create a collection "kuzzle-test-index":"angband"
-    And I use the CLI command 'loadIndexDump ./index-dump'
+    And I use the CLI command 'indexRestore ./index-dump'
     And I refresh the index "kuzzle-test-index"
     Then I count 5 documents in index "kuzzle-test-index":"noldor"
     Then I count 3 documents in index "kuzzle-test-index":"angband"

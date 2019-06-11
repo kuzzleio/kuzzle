@@ -59,7 +59,7 @@ function importCollection (sdk, cout, dumpFiles) {
     .then(() => importCollection(sdk, cout, dumpFiles.slice(1)));
 }
 
-function loadIndexDump (dumpDirectory, options) {
+function indexRestore (dumpDirectory, options) {
   let
     opts = options;
 
@@ -81,4 +81,4 @@ function loadIndexDump (dumpDirectory, options) {
     });
 }
 
-module.exports = loadIndexDump;
+module.exports = indexRestore;

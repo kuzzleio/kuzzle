@@ -164,16 +164,16 @@ bindOption(
 bindOption(
   program
     .command('indexDump <index> <path>')
-    .description('dump an entire kuzzle index content')
+    .description('dump an entire index in specified directory')
     .action(require('./commands/indexDump'))
 );
 
-// $ kuzzle loadIndexDump
+// $ kuzzle restoreIndex
 bindOption(
   program
-  .command('loadIndexDump <path>')
-  .description('load a previously dumped index')
-  .action(require('./commands/loadIndexDump'))
+  .command('indexRestore <path>')
+  .description('restore the content of a previously dumped index')
+  .action(require('./commands/indexRestore'))
 );
 
 // Run user command
