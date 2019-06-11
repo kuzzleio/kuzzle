@@ -109,7 +109,7 @@
     "funnel": {
       "code": 6,
       "errors": {
-        "kuzzle_server_overloaded": {
+        "server_overloaded": {
           "code": 1,
           "message": "Request discarded: Kuzzle Server is temporarily overloaded",
           "class": "ServiceUnavailableError"
