@@ -109,7 +109,7 @@ Then(/^I'm able to delete the index named "([^"]*)"$/, function (index, callback
     .catch(error => callback(error));
 });
 
-Then(/^I refresh the index( ".*?")?$/, function (index, callback) {
+Then(/^I refresh the index( "(.+)")?$/, function (index, callback) {
   var
     idx = index ? index : this.fakeIndex;
 
@@ -162,4 +162,3 @@ Then(/^I check the autoRefresh status(?: on the index "(.*?)")?$/, function (ind
       return body;
     });
 });
-

@@ -4,6 +4,7 @@ const
     Then
   } = require('cucumber'),
   { execSync } = require('child_process'),
+  _ = require('lodash'),
   fs = require('fs'),
   should = require('should');
 
@@ -25,5 +26,18 @@ Then(/A file "([\w\./-]+)" exists( and contain '(.*)')?/, function (filePath, ra
     const expectedContent = JSON.parse(rawContent);
     const fileContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     should(fileContent).match(expectedContent);
+  }
+});
+
+Then('a file {string} contain an array of {string} documents', function (filePath, countRaw) {
+  const
+    content = JSON.parse(fs.readFileSync(filePath, 'utf-8')),
+    count = parseInt(countRaw);
+
+  should(_.isArray(content)).be.eql(true);
+  should(content.length).be.eql(count);
+
+  for (const document of content) {
+    should(_.isPlainObject(document)).be.eql(true);
   }
 });

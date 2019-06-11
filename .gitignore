@@ -54,3 +54,6 @@ plugins/enabled/*
 config/secrets.json
 config/testsecrets.json
 config/testsecrets.enc.json
+
+#tests files
+index-dump/*

@@ -1,14 +1,14 @@
 Feature: Kuzzle functional tests
 
   Scenario: CLI: dump index
-    When I create a collection "kuzzle-test-index":"noldor"
-    And I create "5" documents in "kuzzle-test-index":"noldor"
-    When I create a collection "kuzzle-test-index":"angbang"
-    And I create "3" documents in "kuzzle-test-index":"noldor"
+    When I create a collection "kuzzle-test-index":"noldor" with "5" documents
+    And I create a collection "kuzzle-test-index":"angbang" with "3" documents
+    And I refresh the index "kuzzle-test-index"
     And I use the CLI command 'indexDump kuzzle-test-index ./index-dump'
-    Then I should have a directory "./index-dump"
-    Then I should have a file "./index-dump/kuzzle-test-index--noldor--dump.json"
-    Then I should have a file "./index-dump/kuzzle-test-index--angbang--dump.json"
+    Then A file "index-dump/kuzzle-test-index--noldor--dump.json" exists
+    And A file "index-dump/kuzzle-test-index--angbang--dump.json" exists
+    And a file "index-dump/kuzzle-test-index--noldor--dump.json" contain an array of "10" documents
+    And a file "index-dump/kuzzle-test-index--angbang--dump.json" contain an array of "6" documents
 
 #   Scenario: CLI: encrypt and decrypt secrets
 #     When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
