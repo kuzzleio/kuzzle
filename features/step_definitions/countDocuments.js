@@ -81,10 +81,3 @@ Then(/^I count ([\d]*) documents with "([^"]*)" in field "([^"]*)(?: in index "(
     callback();
   });
 });
-
-Then('I count {int} documents in collection {string}:{string}', function (count, index, collection) {
-  return this.api.count({}, index, collection)
-    .then(({ result }) => {
-      should(result.count).be.eql(count);
-    });
-});

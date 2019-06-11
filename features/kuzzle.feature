@@ -7,8 +7,8 @@ Feature: Kuzzle functional tests
     And I use the CLI command 'indexDump kuzzle-test-index ./index-dump'
     Then A file "index-dump/kuzzle-test-index--noldor--dump.json" exists
     And A file "index-dump/kuzzle-test-index--angband--dump.json" exists
-    And a file "index-dump/kuzzle-test-index--noldor--dump.json" contain an array of "10" documents
-    And a file "index-dump/kuzzle-test-index--angband--dump.json" contain an array of "6" documents
+    And a file "index-dump/kuzzle-test-index--noldor--dump.json" contain an array of 10 documents
+    And a file "index-dump/kuzzle-test-index--angband--dump.json" contain an array of 6 documents
     When I'm able to delete the index named "kuzzle-test-index"
     And I create an index named "kuzzle-test-index"
     When I create a collection "kuzzle-test-index":"noldor"

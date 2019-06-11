@@ -29,10 +29,9 @@ Then(/A file "([\w\./-]+)" exists( and contain '(.*)')?/, function (filePath, ra
   }
 });
 
-Then('a file {string} contain an array of {string} documents', function (filePath, countRaw) {
+Then('a file {string} contain an array of {int} documents', function (filePath, count) {
   const
-    content = JSON.parse(fs.readFileSync(filePath, 'utf-8')),
-    count = parseInt(countRaw);
+    content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
   should(_.isArray(content)).be.eql(true);
   should(content.length).be.eql(count);
