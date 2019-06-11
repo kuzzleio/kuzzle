@@ -62,7 +62,7 @@
         "database_not_found": {
           "code": 1,
           "message": "Database %s not found",
-          "class": "BadRequestError"
+          "class": "NotFoundError"
         }
       }
     },
