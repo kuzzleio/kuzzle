@@ -164,7 +164,7 @@ bindOption(
 bindOption(
   program
     .command('indexDump <index> <path>')
-    .description('dump an entire index in specified directory')
+    .description('dump an entire index in the specified directory')
     .action(require('./commands/indexDump'))
 );
 
