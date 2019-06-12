@@ -21,6 +21,8 @@ jobs:
       sudo: required
       language: node_js
 
+      cache: npm
+
       node_js:
         - "8"
 
@@ -43,15 +45,13 @@ jobs:
       sudo: required
       language: node_js
 
+      cache: npm
+
       node_js:
         - "8"
 
       addons:
         sonarqube: true
-
-      cache:
-        directories: 
-          - $HOME/.sonar/cache
 
       env:
         # SonarQube Token
@@ -67,9 +67,9 @@ jobs:
 # Integration tests
 # ---------------------------------------
 
-    - stage: "Integration tests"
+    - stage: Integration tests
       if: type = cron OR type = push AND branch =~ ^master|.*-stable
-      name: "Node.js 6"
+      name: Node.js 6
 
       os: linux
       sudo: required
@@ -106,7 +106,7 @@ jobs:
         - docker-compose -f .ci/test.yml run kuzzle
 
     - stage: Integration tests
-      if: type = pull_request OR type = cron OR type = push AND branch =~ ^master|.*-stable$
+      if: type = cron OR type = push AND branch =~ ^master|.*-stable$
       name: Node.js 10
 
       sudo: required
