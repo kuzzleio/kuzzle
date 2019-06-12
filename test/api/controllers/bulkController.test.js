@@ -1,4 +1,5 @@
 const
+  sinon = require('sinon'),
   should = require('should'),
   BulkController = require('../../../lib/api/controllers/bulkController'),
   {
@@ -56,6 +57,7 @@ describe('Test the bulk controller', () => {
 
     it('should handle partial errors', () => {
       storageEngine.import.resolves({partialErrors: ['foo', 'bar']});
+      controller.getError = sinon.stub().returns(new PartialError);
 
       return controller.import(request)
         .then(response => {

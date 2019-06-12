@@ -6,6 +6,7 @@ const
     Request,
     errors: {
       BadRequestError,
+      NotFoundError,
       PreconditionError
     }
   } = require('kuzzle-common-objects'),
@@ -52,15 +53,16 @@ describe('Test: admin controller', () => {
         .catch(error => done(error));
     });
 
-    it('should raise an error if database does not exist', done => {
+    it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
-
+      adminController.throw = sinon.stub().throws(new NotFoundError());
       try {
         adminController.resetCache(request);
-        done(new Error('Should not resolves'));
+        should(AdminController.throw)
+        .be.calledOnce
+        .be.calledWith('database_not_found', 'city17');
       } catch (e) {
-        should(e).be.instanceOf(BadRequestError);
-        done();
+        should(e).be.instanceOf(NotFoundError);
       }
     });
   });
@@ -208,10 +210,16 @@ describe('Test: admin controller', () => {
     it('should throw an error if shutdown is in progress', () => {
       AdminController.__set__('_locks', { shutdown: true });
       adminController = new AdminController(kuzzle);
+      adminController.throw = sinon.stub().throws(new PreconditionError());
 
-      return should(() => {
+      try {
         adminController.shutdown(request);
-      }).throw(PreconditionError);
+        should(adminController.throw)
+        .be.calledOnce
+        .be.calledWith('precondition', 'Kuzzle is already shutting down.');
+      } catch (e) {
+        should(e).be.instanceOf(PreconditionError);
+      }
     });
 
     it('should send a SIGTERM', done => {

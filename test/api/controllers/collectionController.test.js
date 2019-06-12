@@ -112,16 +112,19 @@ describe('Test: collection controller', () => {
 
     it('should return a dedicated error if the index does not exist', () => {
       kuzzle.indexCache.exists.resolves(false);
-
+      
       return should(collectionController.getSpecifications(request))
         .rejectedWith(
           PreconditionError,
           {message: `The index '${index}' does not exist`});
     });
 
-    it('should return a dedicated error if the collection does not exist', () => {
+    it.only('should return a dedicated error if the collection does not exist', () => {
       kuzzle.indexCache.exists.onFirstCall().resolves(true);
       kuzzle.indexCache.exists.onSecondCall().resolves(false);
+      collectionController.throw = sinon.stub().throws(new PreconditionError());
+      collectionController.getError = sinon.stub().returns(new PreconditionError);
+
 
       return should(collectionController.getSpecifications(request))
         .rejectedWith(

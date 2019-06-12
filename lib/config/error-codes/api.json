@@ -58,6 +58,11 @@
           "code": 1,
           "message": "Database %s not found",
           "class": "NotFoundError"
+        },
+        "precondition": {
+          "code": 2,
+          "message": "%s",
+          "class": "PreconditionError"
         }
       }
     },
@@ -66,12 +71,12 @@
       "errors": {
         "token_force_expire": {
           "code": 1,
-          "message": "Error while forcing token expiration",
+          "message": "Error while forcing token expiration.",
           "class": "InternalError"
         },
         "invalid_token": {
           "code": 2,
-          "message": "Invalid token",
+          "message": "Invalid token.",
           "class": "UnauthorizedError"
         }
       }
@@ -79,12 +84,12 @@
     "collection": {
       "code": 5,
       "errors": {
-        "index_not_exist": {
+        "index_not_exists": {
           "code": 1,
           "message": "The index %s does not exist",
           "class": "PreconditionError"
         },
-        "collection_not_exist": {
+        "collection_not_exists": {
           "code": 2,
           "message": "The collection %s does not exist",
           "class": "PreconditionError"
@@ -127,6 +132,181 @@
         "unknown_action": {
           "code": 5,
           "message": "No corresponding action %s in controller %s",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "bulk": {
+      "code": 7,
+      "errors": {
+        "document_creations_failed": {
+          "code": 1,
+          "message": "Some document creations failed: %s",
+          "class": "PartialError"
+        },
+        "data_not_imported": {
+          "code": 2,
+          "message": "Some data was not imported: %s",
+          "class": "PartialError"
+        }
+      }
+    },
+    "security": {
+      "code": 8,
+      "errors": {
+        "role_not_found": {
+          "code": 1,
+          "message": "Role with id %s not found",
+          "class": "NotFoundError"
+        },
+        "profile_not_found": {
+          "code": 2,
+          "message": "Profile with id %s not found",
+          "class": "PartialError"
+        },
+        "user_not_found": {
+          "code": 3,
+          "message": "User with id %s not found",
+          "class": "PartialError"
+        },
+        "admin_exists": {
+          "code": 4,
+          "message": "Admin user is already set",
+          "class": "KuzzleError"
+        },
+        "cant_create_creds": {
+          "code": 5,
+          "message": "Cannot create credentials: unknown kuid %s",
+          "class": "BadRequestError"
+        },
+        "cant_update_creds": {
+          "code": 6,
+          "message": "Cannot update credentials: unknown kuid %s",
+          "class": "BadRequestError"
+        },
+        "delete_limit_reached": {
+          "code": 7,
+          "message": "Number of delete to perform exceeds the server configured value %s",
+          "class": "BadRequestError"
+        },
+        "security_mdelete": {
+          "code": 8,
+          "message": "security:mDelete %s Error(s) deleting %s items`, %s",
+          "class": "BadRequestError"
+        },
+        "search_page_size_reached": {
+          "code": 9,
+          "message": "Search page size exceeds server configured documents limit %s",
+          "class": "SizeLimitError"
+        },
+        "cant_update_non_existing": {
+          "code": 10,
+          "message": "Cannot update non-existing %s %s",
+          "class": "NotFoundError"
+        },
+        "user_already_exists": {
+          "code": 11,
+          "message": "User %s already exists",
+          "class": "PreconditionError"
+        },
+        "unknown_strategy": {
+          "code": 12,
+          "message": "Strategy %s is not a known strategy",
+          "class": "BadRequestError"
+        },
+        "creds_on_non_existing_user": {
+          "code": 13,
+          "message": "Internal database inconsistency detected: existing credentials found on non-existing user %s",
+          "class": "InternalError"
+        }
+      }
+    },
+    "memory_storage": {
+      "code": 9,
+      "errors": {
+        "match_parameter": {
+          "code": 1,
+          "message": "Invalid match parameter",
+          "class": "BadRequestError"
+        },
+        "limit_parameter": {
+          "code": 2,
+          "message": "Invalid limit parameter",
+          "class": "BadRequestError"
+        },
+        "empty_points_list": {
+          "code": 3,
+          "message": "Cannot add an empty points list",
+          "class": "BadRequestError"
+        },
+        "points_parameter": {
+          "code": 4,
+          "message": "Invalid points parameter",
+          "class": "BadRequestError"
+        },
+        "entries_parameter": {
+          "code": 5,
+          "message": "Invalid entries parameter",
+          "class": "BadRequestError"
+        },
+        "aggregate_parameter": {
+          "code": 6,
+          "message": "Invalid aggregate parameter",
+          "class": "BadRequestError"
+        },
+        "float_expected": {
+          "code": 7,
+          "message": "Invalid value for parameter %s : float expected.",
+          "class": "BadRequestError"
+        },
+        "integer_expected": {
+          "code": 8,
+          "message": "Invalid value for parameter %s : float expected.",
+          "class": "BadRequestError"
+        },
+        "zero_source_key": {
+          "code": 9,
+          "message": "At least 1 source key must be provided",
+          "class": "BadRequestError"
+        },
+        "zero_score_member_pair": {
+          "code": 10,
+          "message": "At least 1 score/member pair must be provided",
+          "class": "BadRequestError"
+        },
+        "too_much_score_member_pair": {
+          "code": 11,
+          "message": "No more than 1 score/member pair can be specified when the 'incr' option is set.",
+          "class": "BadRequestError"
+        },
+        "invalid_score_member_pair": {
+          "code": 12,
+          "message": "Invalid score/member pair argument.",
+          "class": "BadRequestError"
+        },
+        "missing_argument": {
+          "code": 13,
+          "message": "Missing argument %s.",
+          "class": "BadRequestError"
+        },
+        "non_scalar_value": {
+          "code": 14,
+          "message": "Accepts only scalar values (number, string).",
+          "class": "BadRequestError"
+        },
+        "nx_xx_exclusive_opts": {
+          "code": 15,
+          "message": "NX and XX options are mutually exclusive.",
+          "class": "BadRequestError"
+        },
+        "ex_px_exclusive_opts": {
+          "code": 16,
+          "message": "EX and PX options are mutually exclusive.",
+          "class": "BadRequestError"
+        },
+        "direction_argument": {
+          "code": 17,
+          "message": "Invalid direction argument (expected: ASC or DESC).",
           "class": "BadRequestError"
         }
       }

@@ -191,7 +191,7 @@ describe('Test the auth controller', () => {
 
     it('should emit an error if the token cannot be expired', () => {
       const error = new Error('Mocked error');
-
+      authController.getError = sinon.stub().returns(new KuzzleInternalError());
       kuzzle.repositories.token.expire.rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(KuzzleInternalError);
@@ -286,6 +286,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should throw if the token has already been refreshed', () => {
+      authController.throw = sinon.stub().throws(new UnauthorizedError());
       return should(() => authController.refreshToken(new Request(
         {},
         {
@@ -293,7 +294,7 @@ describe('Test the auth controller', () => {
           user: {_id: 'bar'}
         }
       )))
-        .throw(UnauthorizedError, {message: 'Invalid token'});
+        .throw(UnauthorizedError);
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {
