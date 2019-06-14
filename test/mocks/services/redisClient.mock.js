@@ -1,5 +1,5 @@
 const
-  EventEmitter = require('eventemitter2').EventEmitter2,
+  EventEmitter = require('eventemitter3'),
   IORedis = require('ioredis'),
   getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands,
   Bluebird = require('bluebird');
@@ -10,7 +10,7 @@ const
  */
 class RedisClientMock extends EventEmitter {
   constructor (err) {
-    super({verboseMemoryLeak: true});
+    super();
 
     this.getBuiltinCommands = getBuiltinCommands;
 
@@ -46,7 +46,7 @@ class RedisClientMock extends EventEmitter {
         this.emit('end', true);
       }, 50);
     };
-    Stream.prototype = new EventEmitter({verboseMemoryLeak: true});
+    Stream.prototype = new EventEmitter();
 
     return new Stream();
   }

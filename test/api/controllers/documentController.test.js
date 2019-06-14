@@ -223,7 +223,7 @@ describe('Test: document controller', () => {
       return documentController.create(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
 
             should(kuzzle.notifier.publish).be.calledOnce();
             should(kuzzle.notifier.publish).be.calledWith(request);
@@ -370,7 +370,7 @@ describe('Test: document controller', () => {
       return documentController.createOrReplace(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
 
             should(kuzzle.notifier.publish).be.calledOnce();
             should(kuzzle.notifier.publish).be.calledWith(request);
@@ -378,15 +378,11 @@ describe('Test: document controller', () => {
             should(engine.createOrReplace).be.calledOnce();
             should(engine.createOrReplace).be.calledWith(request);
 
-            should(kuzzle.indexCache.add).be.calledOnce();
-            should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
-
             should(kuzzle.notifier.notifyDocumentReplace).be.calledOnce();
             should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(request);
 
             sinon.assert.callOrder(
               engine.createOrReplace,
-              kuzzle.indexCache.add,
               kuzzle.notifier.notifyDocumentReplace
             );
 
@@ -412,7 +408,7 @@ describe('Test: document controller', () => {
       return documentController.createOrReplace(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
 
             should(kuzzle.notifier.publish).be.calledOnce();
             should(kuzzle.notifier.publish).be.calledWith(request);
@@ -445,7 +441,7 @@ describe('Test: document controller', () => {
       return documentController.update(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
 
             should(engine.update).be.calledOnce();
             should(engine.update).be.calledWith(request);
@@ -480,7 +476,7 @@ describe('Test: document controller', () => {
       return documentController.replace(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
 
             should(kuzzle.notifier.publish).be.calledOnce();
             should(kuzzle.notifier.publish).be.calledWith(request);
@@ -617,13 +613,13 @@ describe('Test: document controller', () => {
       request.input.body = {};
 
       kuzzle.validation = {
-        validationPromise: sinon.stub().returns(Bluebird.resolve(expected))
+        validate: sinon.stub().returns(Bluebird.resolve(expected))
       };
 
       return documentController.validate(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
             should(response).be.instanceof(Object);
             should(response).match(expected);
 
@@ -656,12 +652,12 @@ describe('Test: document controller', () => {
       request.input.resource._id = 'document-id';
       request.input.body = {};
 
-      kuzzle.validation.validationPromise = sinon.stub().returns(Bluebird.resolve(expected));
+      kuzzle.validation.validate = sinon.stub().returns(Bluebird.resolve(expected));
 
       return documentController.validate(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
             should(response).be.instanceof(Object);
             should(response).match(expected);
 

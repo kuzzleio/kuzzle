@@ -158,6 +158,32 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  bulkMWrite (index, collection, body) {
+    const options = {
+      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mWrite'),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
+  bulkWrite (index, collection, body, _id = null) {
+    let url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/_write`;
+
+    if (_id) {
+      url += `?_id=${_id}`;
+    }
+
+    const options = {
+      url: this.apiPath(url),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
   /**
    * @param options
    * @return {Promise.<IncomingMessage>}
@@ -1188,9 +1214,9 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  updateSpecifications (specifications) {
+  updateSpecifications (index, collection, specifications) {
     const options = {
-      url: this.apiPath('_specifications'),
+      url: this.apiPath(index ? `${index}/${collection}/_specifications` : '_specifications'),
       method: 'PUT',
       body: specifications
     };
@@ -1238,9 +1264,9 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  validateSpecifications (specifications) {
+  validateSpecifications (index, collection, specifications) {
     const options = {
-      url: this.apiPath('_validateSpecifications'),
+      url: this.apiPath(index ? `${index}/${collection}/_validateSpecifications` : '_validateSpecifications'),
       method: 'POST',
       body: specifications
     };

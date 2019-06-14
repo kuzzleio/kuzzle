@@ -1,14 +1,12 @@
+const root = '../../../../../..';
+
 const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  EntryPoint = require('../../../../../../lib/api/core/entrypoints/embedded'),
-  KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
-  {
-    errors: {
-      InternalError: KuzzleInternalError
-    }
-  } = require('kuzzle-common-objects');
+  { IncomingMessage } = require('http'),
+  EntryPoint = require(`${root}/lib/api/core/entrypoints/embedded`),
+  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
 
 describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
   let
@@ -16,6 +14,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     entrypoint,
     WebSocketProtocol,
     WebSocketServer,
+    WebSocketSender,
     protocol;
 
   beforeEach(() => {
@@ -25,17 +24,26 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     WebSocketServer = sinon.spy(function () {
       this.on = sinon.spy();
     });
-    mockrequire('uws', {
-      Server: WebSocketServer
+
+    WebSocketSender = {
+      frame: sinon.stub().returnsArg(0)
+    };
+
+    mockrequire('ws', {
+      Server: WebSocketServer,
+      Sender: WebSocketSender
     });
 
-    WebSocketProtocol = mockrequire.reRequire('../../../../../../lib/api/core/entrypoints/embedded/protocols/websocket');
+    WebSocketProtocol = mockrequire.reRequire(
+      `${root}/lib/api/core/entrypoints/embedded/protocols/websocket`);
 
     protocol = new WebSocketProtocol();
   });
 
   afterEach(() => {
     clearInterval(protocol.heartbeatInterval);
+    clearInterval(protocol.idleSweepInterval);
+    clearInterval(protocol.activityInterval);
     mockrequire.stopAll();
   });
 
@@ -43,91 +51,63 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     it('should do nothing if the protocol is not enabled', () => {
       entrypoint.config.protocols.websocket.enabled = false;
 
-      protocol.init(entrypoint);
-      should(protocol.server).be.null();
-    });
-
-    it('should throw if the heartbeat value is not set to a valid value', () => {
-      for (const value of [null, 'foo', {}, [], 3.14159, true, -42, undefined]) {
-        const
-          ep = new EntryPoint(kuzzle),
-          wsp = new WebSocketProtocol();
-
-        ep.config.protocols.websocket.heartbeat = value;
-
-        should(() => wsp.init(ep)).throw(
-          KuzzleInternalError,
-          {message: `WebSocket: invalid heartbeat value ${value}`});
-      }
-    });
-
-    it('should start a heartbeat if asked to', () => {
-      const
-        clock = sinon.useFakeTimers(),
-        heartbeatSpy = sinon.stub(protocol, '_doHeartbeat');
-
-      entrypoint.config.protocols.websocket.heartbeat = 1000;
-
-      protocol.init(entrypoint);
-      should(protocol.heartbeatInterval).not.be.null();
-      should(heartbeatSpy).not.be.called();
-
-      clock.tick(1000);
-
-      should(heartbeatSpy).be.calledOnce();
-
-      clock.tick(1000);
-
-      should(heartbeatSpy).be.calledTwice();
-
-      clock.restore();
+      return protocol.init(entrypoint)
+        .then(enabled => {
+          should(protocol.server).be.null();
+          should(enabled).be.false();
+        });
     });
 
     it('should disable heartbeats if set to 0', () => {
       entrypoint.config.protocols.websocket.heartbeat = 0;
-      protocol.init(entrypoint);
-      should(protocol.heartbeatInterval).be.null();
+
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.heartbeatInterval).be.null();
+        });
     });
 
     it('should launch a websocket server and bind events to it', () => {
       protocol.onConnection = sinon.spy();
       protocol.onServerError = sinon.spy();
 
-      protocol.init(entrypoint);
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.entryPoint).eql(entrypoint);
+          should(protocol.heartbeatInterval).not.be.null();
+          should(WebSocketServer).be.calledOnce();
 
-      should(protocol.entryPoint).eql(entrypoint);
-      should(protocol.heartbeatInterval).not.be.null();
-      should(WebSocketServer).be.calledOnce();
+          const server = WebSocketServer.firstCall.returnValue;
+          should(server.on)
+            .be.calledTwice()
+            .be.calledWith('connection')
+            .be.calledWith('error');
 
-      const server = WebSocketServer.firstCall.returnValue;
-      should(server.on)
-        .be.calledTwice()
-        .be.calledWith('connection')
-        .be.calledWith('error');
+          const onConnectH = server.on.firstCall.args[1];
+          onConnectH('test');
+          should(protocol.onConnection)
+            .be.calledOnce()
+            .be.calledWith('test');
 
-      const onConnectH = server.on.firstCall.args[1];
-      onConnectH('test');
-      should(protocol.onConnection)
-        .be.calledOnce()
-        .be.calledWith('test');
-
-      const onErrorH = server.on.secondCall.args[1];
-      onErrorH('test');
-      should(protocol.onServerError)
-        .be.calledOnce();
-
+          const onErrorH = server.on.secondCall.args[1];
+          onErrorH('test');
+          should(protocol.onServerError)
+            .be.calledOnce();
+        });
     });
   });
 
   describe('#onServerError', () => {
     it('should forward the error to kuzzle logger', () => {
-      protocol.init(entrypoint);
-      protocol.onServerError('test');
-      should(kuzzle.pluginsManager.trigger)
-        .be.calledOnce()
-        .be.calledWith(
-          'log:error',
-          '[websocket] An error has occured "undefined":\nundefined');
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.onServerError('test');
+          should(kuzzle.emit)
+            .be.calledOnce()
+            .be.calledWith(
+              'log:error',
+              '[websocket] An error has occured "undefined":\nundefined');
+        });
     });
   });
 
@@ -142,21 +122,19 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
       socket = {
         on: onClientSpy,
-        close: sinon.stub(),
-        _socket: {
-          remoteAddress: 'ip'
-        }
+        close: sinon.stub()
       };
 
-      request = {
-        headers: {
-          'X-Foo': 'bar',
-          'x-forwarded-for': '1.1.1.1,2.2.2.2'
-        }
-      };
+      request = new IncomingMessage();
+      Object.assign(request, {
+        socket: { remoteAddress: 'ip' },
+        headers: { 'X-Foo': 'bar', 'x-forwarded-for': '1.1.1.1,2.2.2.2' }
+      });
 
-      protocol.init(entrypoint);
-      protocol.entryPoint.newConnection = sinon.spy();
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.entryPoint.newConnection = sinon.spy();
+        });
     });
 
     it('should do nothing if the request is for socketio', () => {
@@ -175,24 +153,28 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(protocol.entryPoint.newConnection)
         .be.calledOnce()
         .be.calledWithMatch({
-          protocol: protocol.protocol,
-          ips: ['1.1.1.1', '2.2.2.2', 'ip'],
+          protocol: protocol.name,
+          ips: ['ip', '1.1.1.1', '2.2.2.2'],
           headers: request.headers
         });
 
-      const connection = protocol.entryPoint.newConnection.firstCall.args[0];
-      should(protocol.connectionPool[connection.id])
+      const
+        connection = protocol.entryPoint.newConnection.firstCall.args[0],
+        pooledConnection = protocol.connectionPool.get(connection.id);
+
+      should(pooledConnection)
         .match({
-          alive: true,
           socket,
-          channels: []
+          alive: true,
+          channels: new Set()
         });
 
-      should(onClientSpy.callCount).eql(4);
+      should(onClientSpy.callCount).eql(5);
       should(onClientSpy)
         .be.calledWith('close')
         .be.calledWith('error')
         .be.calledWith('message')
+        .be.calledWith('ping')
         .be.calledWith('pong');
 
       {
@@ -222,11 +204,23 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       }
 
       {
-        const onPongH = onClientSpy.getCall(3).args[1];
+        const onPingH = onClientSpy.getCall(3).args[1];
 
-        protocol.connectionPool[connection.id].alive = false;
+        pooledConnection.alive = false;
+        pooledConnection.lastActivity = -1;
+        onPingH();
+        should(pooledConnection.alive).be.true();
+        should(pooledConnection.lastActivity).eql(protocol.activityTimestamp);
+      }
+
+      {
+        const onPongH = onClientSpy.getCall(4).args[1];
+
+        pooledConnection.alive = false;
+        pooledConnection.lastActivity = -1;
         onPongH();
-        should(protocol.connectionPool[connection.id].alive).be.true();
+        should(pooledConnection.alive).be.true();
+        should(pooledConnection.lastActivity).eql(protocol.activityTimestamp);
       }
     });
 
@@ -234,40 +228,32 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
   describe('#onClientDisconnection', () => {
     beforeEach(() => {
-      protocol.init(entrypoint);
-      protocol.connectionPool = {
-        connectionId: {
-          id: 'connectionId',
-          channels: ['c1', 'c2', 'c3']
-        }
-      };
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.connectionPool = new Map([
+            ['connectionId', {
+              id: 'connectionId',
+              channels: new Set(['c1', 'c2', 'c3'])
+            }]
+          ]);
 
-      protocol.channels = {
-        c1: {
-          count: 3
-        },
-        c2: {
-          count: 1
-        },
-        c3: {
-          count: 2
-        }
-      };
+          protocol.channels = new Map([
+            ['c1', new Set(['foo', 'connectionId', 'bar'])],
+            ['c2', new Set(['connectionId'])],
+            ['c3', new Set(['connectionId'])]
+          ]);
+        });
     });
 
     it('should remove the client from its subscriptions', () => {
       entrypoint.clients.connectionId = {};
       protocol.onClientDisconnection('connectionId');
 
-      should(entrypoint.clients)
-        .be.empty();
+      should(entrypoint.clients).be.empty();
 
-      should(protocol.channels)
-        .match({
-          c1: {
-            count: 2
-          }
-        });
+      should(protocol.channels).deepEqual(new Map([
+        ['c1', new Set(['foo', 'bar'])]
+      ]));
     });
   });
 
@@ -286,20 +272,18 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         maxRequestSize: Infinity
       };
 
-      protocol.init(entrypoint);
-      protocol.connectionPool = {
-        connectionId: {
-          id: 'connectionId'
-        }
-      };
-      protocol._send = sinon.spy();
+      return protocol.init(entrypoint)
+        .then(() => {
+          protocol.connectionPool = new Map([
+            ['connectionId', { id: 'connectionId' } ]
+          ]);
+          protocol._send = sinon.spy();
+        });
     });
 
     it('should do nothing if no data is given or if the connection is unknown', () => {
       protocol.onClientMessage({id: 'foo'});
-
-      should(entrypoint.execute)
-        .have.callCount(0);
+      should(entrypoint.execute).have.callCount(0);
     });
 
     it('should call entrypoint execute', () => {
@@ -307,11 +291,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
       protocol.onClientMessage(connection, data);
 
-      should(entrypoint.execute)
-        .be.calledOnce();
+      should(entrypoint.execute).be.calledOnce();
 
-      const request = entrypoint.execute.firstCall.args[0];
-      const cb = entrypoint.execute.firstCall.args[1];
+      const [request, cb] = entrypoint.execute.firstCall.args;
 
       should(request.serialize())
         .match({
@@ -331,8 +313,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
         cb(result);
 
-        should(result.content.room)
-          .eql('test');
+        should(result.content.room).eql('test');
 
         should(protocol._send)
           .be.calledOnce()
@@ -344,28 +325,34 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
   describe('#broadcast', () => {
     beforeEach(() => {
-      protocol.init(entrypoint);
-      protocol._send = sinon.spy();
+      return protocol.init(entrypoint)
+        .then(() => {
+          const socketMock = function () {
+            return {
+              _sender: {
+                sendFrame: sinon.stub()
+              }
+            };
+          };
+
+          protocol.connectionPool = new Map([
+            ['cx1', {alive: true, socket: new socketMock()}],
+            ['cx2', {alive: true, socket: new socketMock()}],
+            ['cx3', {alive: true, socket: new socketMock()}],
+            ['cx4', {alive: true, socket: new socketMock()}],
+          ]);
+
+          protocol.channels = new Map([
+            ['c1', new Set(['cx1', 'cx2', 'cx3'])],
+            ['c2', new Set(['cx1', 'cx3'])],
+            ['c3', new Set(['cx2', 'cx3', 'cx4'])]
+          ]);
+
+        });
     });
 
     it('should send the message to all clients registered to the message channels', () => {
-      protocol.channels = {
-        c1: {
-          cx1: true,
-          cx2: true,
-          cx3: true
-        },
-        c2: {
-          cx1: true,
-          cx3: true
-        },
-        c3: {
-          cx2: true,
-          cx3: true,
-          cx4: true
-        }
-      };
-
+      let frame;
       const data = {
         channels: ['c1', 'c3', 'c4'],
         payload: {foo: 'bar'}
@@ -373,13 +360,23 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
 
       protocol.broadcast(data);
 
-      should(protocol._send)
-        .be.calledWith('cx1', JSON.stringify(Object.assign(data.payload, {room: 'c1'})))
-        .be.calledWith('cx2', JSON.stringify(Object.assign(data.payload, {room: 'c1'})))
-        .be.calledWith('cx3', JSON.stringify(Object.assign(data.payload, {room: 'c1'})))
-        .be.calledWith('cx2', JSON.stringify(Object.assign(data.payload, {room: 'c3'})))
-        .be.calledWith('cx3', JSON.stringify(Object.assign(data.payload, {room: 'c3'})))
-        .be.calledWith('cx4', JSON.stringify(Object.assign(data.payload, {room: 'c3'})));
+      // channel: c1
+      data.payload.room = 'c1';
+      frame = Buffer.from(JSON.stringify(data.payload));
+
+      for (const connId of ['cx1', 'cx2', 'cx3']) {
+        should(protocol.connectionPool.get(connId).socket._sender.sendFrame)
+          .calledWith(frame);
+      }
+
+      // channel: c3
+      data.payload.room = 'c3';
+      frame = Buffer.from(JSON.stringify(data.payload));
+
+      for (const connId of ['cx2', 'cx3', 'cx4']) {
+        should(protocol.connectionPool.get(connId).socket._sender.sendFrame)
+          .calledWith(frame);
+      }
     });
   });
 
@@ -396,9 +393,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       protocol.notify(data);
 
       should(protocol._send)
-        .be.calledWith('connectionId', JSON.stringify(Object.assign({}, data.payload, {room: 'c1'})))
-        .be.calledWith('connectionId', JSON.stringify(Object.assign({}, data.payload, {room: 'c3'})))
-        .be.calledWith('connectionId', JSON.stringify(Object.assign({}, data.payload, {room: 'c4'})));
+        .be.calledWith(
+          'connectionId',
+          JSON.stringify(Object.assign({}, data.payload, {room: 'c1'})))
+        .be.calledWith(
+          'connectionId',
+          JSON.stringify(Object.assign({}, data.payload, {room: 'c3'})))
+        .be.calledWith(
+          'connectionId',
+          JSON.stringify(Object.assign({}, data.payload, {room: 'c4'})));
     });
   });
 
@@ -406,131 +409,316 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     it('should do nothing if the connection is unknonwn', () => {
       protocol.joinChannel('channel', 'foo');
 
-      should(protocol.channels)
-        .be.empty();
+      should(protocol.channels).be.empty();
     });
 
-    it('should link the connection to the channel', () => {
+    it('should link the connection to a new channel', () => {
       const connection = {
         id: 'connectionId',
         alive: true,
-        channels: []
+        channels: new Set()
       };
-      protocol.connectionPool[connection.id] = connection;
 
+      protocol.connectionPool.set(connection.id, connection);
       protocol.joinChannel('channel', connection.id);
 
       should(protocol.channels)
-        .match({
-          channel: {
-            connectionId: true,
-            count: 1
-          }
-        });
+        .deepEqual(new Map([['channel', new Set(['connectionId'])]]));
+      should(connection.channels).deepEqual(new Set(['channel']));
+    });
 
-      should(connection.channels)
-        .eql(['channel']);
+    it('should add a connection to an existing channel', () => {
+      const
+        connection1 = {
+          id: 'connectionId',
+          alive: true,
+          channels: new Set()
+        },
+        connection2 = {
+          id: 'connectionId2',
+          alive: true,
+          channels: new Set(['foo'])
+        };
+
+      protocol.connectionPool.set(connection1.id, connection1);
+      protocol.connectionPool.set(connection2.id, connection2);
+
+      protocol.joinChannel('channel', connection1.id);
+      protocol.joinChannel('channel', connection2.id);
+
+      should(protocol.channels)
+        .deepEqual(new Map([
+          ['channel', new Set(['connectionId', 'connectionId2'])]
+        ]));
+
+      should(connection1.channels).deepEqual(new Set(['channel']));
+      should(connection2.channels).deepEqual(new Set(['foo', 'channel']));
     });
   });
 
   describe('#leaveChannel', () => {
     beforeEach(() => {
-      protocol.connectionPool = {
-        connectionId: {
-          alive: true,
-          channels: ['foo', 'channel']
-        }
-      };
-      protocol.channels = {
-        channel: {
-          count: 5,
-          connectionId: true
-        }
-      };
+      protocol.connectionPool = new Map([
+        ['connectionId', {alive: true, channels: new Set(['foo', 'channel'])}]
+      ]);
+
+      protocol.channels = new Map([
+        ['channel', new Set(['foo', 'bar', 'baz', 'connectionId', 'qux'])]
+      ]);
     });
 
     it('should do nothing if the connection is unknonw', () => {
-      protocol.leaveChannel('channel', 'foo');
+      protocol.leaveChannel('channel', 'unknown');
 
-      should(protocol.channels.channel.count)
-        .eql(5);
+      should(protocol.channels.get('channel')).have.size(5);
     });
 
     it('should unsubscribe the client', () => {
       protocol.leaveChannel('channel', 'connectionId');
 
-      should(protocol.channels.channel.count)
-        .eql(4);
-      should(protocol.connectionPool.connectionId.channels)
-        .eql(['foo']);
+      should(protocol.channels.get('channel'))
+        .have.size(4)
+        .and.deepEqual(new Set(['foo', 'bar', 'baz', 'qux']));
+      should(protocol.connectionPool.get('connectionId').channels)
+        .deepEqual(new Set(['foo']));
     });
 
+    it('should remove an unused channel entry', () => {
+      protocol.channels = new Map([
+        ['channel', new Set(['connectionId'])]
+      ]);
+
+      protocol.leaveChannel('channel', 'connectionId');
+
+      should(protocol.channels.has('channel')).be.false();
+      should(protocol.connectionPool.get('connectionId').channels)
+        .deepEqual(new Set(['foo']));
+    });
   });
 
   describe('#disconnect', () => {
     it('should close the connection', () => {
-      protocol.connectionPool = {
-        connectionId: {
-          socket: {
-            close: sinon.spy()
-          }
-        }
-      };
+      protocol.connectionPool = new Map([
+        ['connectionId', { socket: { close: sinon.spy() } } ]
+      ]);
 
       protocol.disconnect('connectionId', 'test');
 
-      should(protocol.connectionPool.connectionId.socket.close)
+      should(protocol.connectionPool.get('connectionId').socket.close)
         .be.calledWith(1011, 'test');
     });
   });
 
   describe('#_send', () => {
     it('should send the message', () => {
-      protocol.connectionPool = {
-        connectionId: {
-          alive: true,
-          socket: {
-            OPEN: 'open',
-            readyState: 'open',
-            send: sinon.spy()
+      protocol.connectionPool = new Map([
+        [
+          'connectionId',
+          {
+            alive: true,
+            socket: {
+              OPEN: 'open',
+              readyState: 'open',
+              send: sinon.spy()
+            }
           }
-        }
-      };
+        ]
+      ]);
 
       protocol._send('connectionId', 'test');
-      should(protocol.connectionPool.connectionId.socket.send)
+      should(protocol.connectionPool.get('connectionId').socket.send)
         .be.calledWith('test');
     });
   });
 
-  describe('#_doHeartbeat', () => {
-    it('should terminate dead sockets, and mark others as dead', () => {
-      protocol.connectionPool = {
-        ahAhAhAhStayinAliveStayinAlive: {
-          alive: true,
-          socket: { terminate: sinon.spy(), ping: sinon.spy() }
-        },
-        dead: {
-          alive: false,
-          socket: { terminate: sinon.spy(), ping: sinon.spy() }
-        },
-        ahAhAhAhStayinAliiiiiiiiive: {
-          alive: true,
-          socket: { terminate: sinon.spy(), ping: sinon.spy() }
-        }
-      };
+  describe('#Heartbeat', () => {
+    it('should throw if the heartbeat value is not set to a valid value', () => {
+      const
+        values = [null, 'foo', {}, [], 3.14159, true, -42, undefined],
+        promises = [];
 
-      protocol._doHeartbeat();
+      for (const heartbeat of values) {
+        const
+          ep = new EntryPoint(kuzzle),
+          wsp = new WebSocketProtocol();
 
-      for (const id of ['ahAhAhAhStayinAliveStayinAlive', 'ahAhAhAhStayinAliiiiiiiiive']) {
-        should(protocol.connectionPool[id].alive).be.false();
-        should(protocol.connectionPool[id].socket.terminate).not.be.called();
-        should(protocol.connectionPool[id].socket.ping).be.calledOnce();
+        ep.config.protocols.websocket.heartbeat = heartbeat;
+        promises.push(
+          should(wsp.init(ep)).rejectedWith(
+            {message: /WebSocket: invalid heartbeat value /})
+            .then(() => {
+              clearInterval(wsp.heartbeatInterval);
+              clearInterval(wsp.idleSweepInterval);
+              clearInterval(wsp.activityInterval);
+            }));
       }
 
-      should(protocol.connectionPool.dead.alive).be.false();
-      should(protocol.connectionPool.dead.socket.terminate).be.calledOnce();
-      should(protocol.connectionPool.dead.socket.ping).not.be.called();
+      return Promise.all(promises);
+    });
+
+    it('should start a heartbeat if asked to', () => {
+      const
+        clock = sinon.useFakeTimers(),
+        heartbeatSpy = sinon.stub(protocol, '_doHeartbeat');
+
+      entrypoint.config.protocols.websocket.heartbeat = 1000;
+
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.heartbeatInterval).not.be.null();
+          should(heartbeatSpy).not.be.called();
+
+          clock.tick(1000);
+
+          should(heartbeatSpy).be.calledOnce();
+
+          clock.tick(1000);
+
+          should(heartbeatSpy).be.calledTwice();
+
+          clock.restore();
+        });
+    });
+
+    it('should terminate dead sockets, and mark others as dead', () => {
+      const Connection = function (alive, lastActivity) {
+        return {
+          alive,
+          lastActivity,
+          socket: {
+            terminate: sinon.stub(),
+            ping: sinon.stub()
+          }
+        };
+      };
+
+      protocol.connectionPool = new Map([
+        ['ahAhAhAhStayinAliveStayinAlive', new Connection(true, 0)],
+        ['dead', new Connection(false, 0)],
+        ['ahAhAhAhStayinAliiiiiiiiive', new Connection(true, 0)],
+        ['active', new Connection(true, Date.now())]
+      ]);
+
+      protocol.config.heartbeat = 1000;
+      protocol._doHeartbeat();
+
+      // inactive sockets are pinged
+      for (const id of [
+        'ahAhAhAhStayinAliveStayinAlive',
+        'ahAhAhAhStayinAliiiiiiiiive'
+      ]) {
+        const connection = protocol.connectionPool.get(id);
+
+        should(connection.alive).be.false();
+        should(connection.socket.terminate).not.be.called();
+        should(connection.socket.ping).be.calledOnce();
+      }
+
+      // dead sockets are terminated
+      const deadConnection = protocol.connectionPool.get('dead');
+
+      should(deadConnection.alive).be.false();
+      should(deadConnection.socket.terminate).be.calledOnce();
+      should(deadConnection.socket.ping).not.be.called();
+
+      // active sockets are unaffected
+      const activeConnection = protocol.connectionPool.get('active');
+
+      should(activeConnection.alive).be.true();
+      should(activeConnection.socket.terminate).not.be.called();
+      should(activeConnection.socket.ping).not.be.called();
+    });
+  });
+
+  describe('#IdleTimeout', () => {
+    it('should throw if the idleTimeout value is not set to a valid value', () => {
+      const
+        values = [null, 'foo', {}, [], 3.14159, true, -42, undefined],
+        promises = [];
+
+      for (const idleTimeout of values) {
+        const
+          ep = new EntryPoint(kuzzle),
+          wsp = new WebSocketProtocol();
+
+        ep.config.protocols.websocket.idleTimeout = idleTimeout;
+
+        promises.push(
+          should(wsp.init(ep)).rejectedWith(
+            {message: /WebSocket: invalid idleTimeout value /})
+            .then(() => {
+              clearInterval(wsp.heartbeatInterval);
+              clearInterval(wsp.idleSweepInterval);
+              clearInterval(wsp.activityInterval);
+            }));
+      }
+
+      return Promise.all(promises);
+    });
+
+    it('should start an idleTimeout sweep if asked to', () => {
+      const
+        clock = sinon.useFakeTimers(),
+        idleTimeoutSpy = sinon.stub(protocol, '_sweepIdleSockets');
+
+      entrypoint.config.protocols.websocket.idleTimeout = 1000;
+
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(protocol.idleTimeoutInterval).not.be.null();
+          should(idleTimeoutSpy).not.be.called();
+
+          clock.tick(protocol.config.idleTimeout);
+
+          should(idleTimeoutSpy).be.calledOnce();
+
+          clock.tick(protocol.config.idleTimeout);
+
+          should(idleTimeoutSpy).be.calledTwice();
+
+          clock.restore();
+        })
+        .catch(e => {
+          clock.restore();
+          throw e;
+        });
+    });
+
+    it('should terminate inactive sockets', () => {
+      const
+        now = Date.now(),
+        Connection = function (lastActivity) {
+          return {
+            lastActivity,
+            socket: {
+              terminate: sinon.stub()
+            }
+          };
+        };
+
+      protocol.config.idleTimeout = 1000;
+
+      protocol.connectionPool = new Map([
+        ['ahAhAhAhStayinAliveStayinAlive', new Connection(now)],
+        ['dead', new Connection(now - protocol.config.idleTimeout - 1)],
+        [
+          'ahAhAhAhStayinAliiiiiiiiive',
+          new Connection(now - protocol.config.idleTimeout + 100)
+        ]
+      ]);
+
+      protocol._sweepIdleSockets();
+
+      // active sockets are unaffected
+      for (const id of [
+        'ahAhAhAhStayinAliveStayinAlive',
+        'ahAhAhAhStayinAliiiiiiiiive'
+      ]) {
+        should(protocol.connectionPool.get(id).socket.terminate).not.called();
+      }
+
+      // inactive sockets are terminated
+      should(protocol.connectionPool.get('dead').socket.terminate).calledOnce();
     });
   });
 });

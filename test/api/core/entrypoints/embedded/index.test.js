@@ -1,5 +1,7 @@
 'use strict';
 
+const root = '../../../../../';
+
 const
   {
     Request,
@@ -11,16 +13,39 @@ const
     }
   } = require('kuzzle-common-objects'),
   path = require('path'),
-  KuzzleMock = require('../../../../mocks/kuzzle.mock'),
+  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
   Bluebird = require('bluebird');
 
+class FakeProtocol {
+  constructor (name) {
+    this.name = name;
+  }
+}
+
+class FakeHttpProtocol extends FakeProtocol {
+  constructor () { super('http'); }
+}
+class FakeWebSocketProtocol extends FakeProtocol {
+  constructor () { super('websocket'); }
+}
+class FakeSocketIOProtocol extends FakeProtocol {
+  constructor () { super('socketio'); }
+}
+class FakeMqttProtocol extends FakeProtocol {
+  constructor () { super('mqtt'); }
+}
+
 describe('lib/core/api/core/entrypoints/embedded/index', () => {
   let
     kuzzle,
+    HttpMock,
+    WebSocketMock,
+    SocketIOMock,
+    MqttMock,
     httpMock,
     EntryPoint,
     entrypoint,
@@ -45,7 +70,10 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    const initStub = function () { this.init = sinon.stub(); };
+    HttpMock = FakeHttpProtocol;
+    WebSocketMock = FakeWebSocketProtocol;
+    SocketIOMock = FakeSocketIOProtocol;
+    MqttMock = FakeMqttProtocol;
 
     httpMock = {
       createServer: sinon.stub().returns({
@@ -57,10 +85,11 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     winstonTransportFile = sinon.spy();
     winstonTransportSyslog = sinon.spy();
 
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/http', initStub);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/websocket', initStub);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/socketio', initStub);
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt', initStub);
+    const embeddedPath = `${root}/lib/api/core/entrypoints/embedded`;
+    mockrequire(`${embeddedPath}/protocols/http`, HttpMock);
+    mockrequire(`${embeddedPath}/protocols/websocket`, WebSocketMock);
+    mockrequire(`${embeddedPath}/protocols/socketio`, SocketIOMock);
+    mockrequire(`${embeddedPath}/protocols/mqtt`, MqttMock);
 
     mockrequire('http', httpMock);
     mockrequire('winston', {
@@ -75,15 +104,16 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     mockrequire('winston-syslog', winstonTransportSyslog);
 
     // Disables unnecessary console warnings
-    AbstractManifest = rewire('../../../../../lib/api/core/abstractManifest');
+    AbstractManifest = rewire(`${root}/lib/api/core/abstractManifest`);
     AbstractManifest.__set__({ console: { warn: sinon.stub() }});
-    mockrequire('../../../../../lib/api/core/abstractManifest', AbstractManifest);
+    mockrequire(`${root}/lib/api/core/abstractManifest`, AbstractManifest);
 
-    Manifest = rewire('../../../../../lib/api/core/entrypoints/embedded/manifest');
+    Manifest = rewire(`${embeddedPath}/manifest`);
     Manifest.__set__({ console: { warn: sinon.stub() }});
-    mockrequire('../../../../../lib/api/core/entrypoints/embedded/manifest', Manifest);
+    mockrequire(`${embeddedPath}/manifest`, Manifest);
 
-    // Bluebird.map forces a different context, preventing rewire to mock "require"
+    // Bluebird.map forces a different context, preventing rewire to mock
+    // "require"
     mockrequire('bluebird', {
       map: (arr, fn) => Promise.all(arr.map(e => {
         let result;
@@ -97,10 +127,11 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       resolve: sinon.stub().resolves(),
       timeout: sinon.stub().resolves(),
       catch: sinon.stub().resolves(),
-      then: sinon.stub().resolves()
+      then: sinon.stub().resolves(),
+      all: Bluebird.all
     });
 
-    EntryPoint = mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
+    EntryPoint = mockrequire.reRequire(embeddedPath);
 
     entrypoint = new EntryPoint(kuzzle);
 
@@ -112,6 +143,10 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         error: sinon.spy()
       }
     });
+
+    for (const Class of [HttpMock, WebSocketMock, SocketIOMock, MqttMock]) {
+      Class.prototype.init = sinon.stub().resolves(true);
+    }
   });
 
   afterEach(() => {
@@ -222,7 +257,22 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
           should(entrypoint.protocols.http.init).be.calledOnce();
           should(entrypoint.protocols.websocket.init).be.calledOnce();
           should(entrypoint.protocols.socketio.init).be.calledOnce();
+          should(entrypoint.protocols.mqtt.init).be.calledOnce();
           should(entrypoint.loadMoreProtocols).be.calledOnce();
+          should(Object.keys(entrypoint.protocols)).be.length(4);
+        });
+    });
+
+    it('should not load disabled protocols', () => {
+      MqttMock.prototype.init = sinon.stub().resolves(false);
+
+      return entrypoint.init()
+        .then(() => {
+          should(entrypoint.protocols.http.init).be.calledOnce();
+          should(entrypoint.protocols.websocket.init).be.calledOnce();
+          should(entrypoint.protocols.socketio.init).be.calledOnce();
+          should(Object.keys(entrypoint.protocols)).be.length(3);
+          should(entrypoint.protocols.mqtt).be.undefined();
         });
     });
 
@@ -242,7 +292,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
           throw new Error('should not happen');
         })
         .catch(() => {
-          should(kuzzle.pluginsManager.trigger)
+          should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('log:error', error);
         });
@@ -440,7 +490,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       should(entrypoint.protocols.protocol.joinChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledWith('log:error', '[join] protocol protocol failed: test');
     });
   });
@@ -479,7 +529,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       should(entrypoint.protocols.protocol.leaveChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledWith('log:error', '[leave channel] protocol protocol failed: test');
     });
 
@@ -861,7 +911,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         .be.calledOnce()
         .be.calledWith('data');
 
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledOnce()
         .be.calledWith('log:error');
     });
@@ -896,7 +946,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         content: 'data'
       });
 
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledOnce()
         .be.calledWith('log:error');
     });

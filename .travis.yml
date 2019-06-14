@@ -1,10 +1,12 @@
 jobs:
   include:
+
 # ---------------------------------------
-# Unit Testing
+# Unit Tests & Linters
 # ---------------------------------------
-    - stage: "Tests & Linters"
-      if: type = pull_request OR type = cron OR (type = push AND branch =~ ^master|.*-dev|.*-stable$)
+
+    - stage: "Unit Tests & Linters"
+      if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: "Unit Tests & ESLint"
       os: linux
       sudo: required
@@ -24,11 +26,8 @@ jobs:
       after_script:
         - npm run codecov
 
-# ---------------------------------------
-# SonarQube
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$)
+    - stage: "Unit Tests & Linters"
+      if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: "SonarQube"
 
       os: linux
@@ -56,13 +55,12 @@ jobs:
         - bash .ci/sonar.sh
 
 # ---------------------------------------
-# Functionnal Testing
+# Integration tests
 # ---------------------------------------
-# Node 6 - x64
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-      name: "amd64 - Node v6"
+
+    - stage: "Integration tests"
+      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
+      name: "Node.js 6"
 
       os: linux
       sudo: required
@@ -84,12 +82,9 @@ jobs:
       script:
         - docker-compose -f .ci/test.yml run kuzzle
 
-# ---------------------------------------
-# Node 8 - x64
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-      name: "amd64 - Node v8"
+    - stage: "Integration tests"
+      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
+      name: "Node.js 8"
 
       os: linux
       sudo: required
@@ -112,12 +107,13 @@ jobs:
         - docker-compose -f .ci/test.yml run kuzzle
 
 # ---------------------------------------
-# Node 8 - armhf
+# Cross-plateform tests
 # ---------------------------------------
-    - stage: "Tests & Linters"
-      name: "armhf - Node v8"
 
-      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-stable$) OR type = cron
+    - stage: "Cross-plateform tests"
+      name: "Linux ARMHF"
+
+      if: type = cron
 
       os: linux
       sudo: required
@@ -141,12 +137,9 @@ jobs:
         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-armhf ./.ci/scripts/install-armhf-deps.sh
         - docker-compose -f .ci/test-armhf.yml run kuzzle
 
-# ---------------------------------------
-# Node 8 - aarch64
-# ---------------------------------------
-    - stage: "Tests & Linters"
-      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR (type = pull_request AND branch =~ ^master|.*-stable$) OR type = cron
-      name: "aarch64 - Node v8"
+    - stage: "Cross-plateform tests"
+      if: type = cron
+      name: "Linux ARM64"
 
       os: linux
       sudo: required
@@ -171,13 +164,66 @@ jobs:
         - docker-compose -f .ci/test-aarch64.yml run kuzzle
 
 # ---------------------------------------
-# Deploy
+# Redis Tests
 # ---------------------------------------
-# NPM
+
+    - stage: "Redis tests"
+      if: type = cron
+      name: "Redis 3"
+
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
+
+      cache:
+        directories:
+          - $HOME/.pm2 
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=8
+        - REDIS_VERSION=3.2
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
+
+    - stage: "Redis tests"
+      if: type = cron
+      name: "Redis 4"
+
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
+
+      cache:
+        directories:
+          - $HOME/.pm2 
+
+      env:
+        - DOCKER_COMPOSE_VERSION=1.9.0
+        - NODE_LTS=8
+        - REDIS_VERSION=4.0.14
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
+
 # ---------------------------------------
+# Deployments
+# ---------------------------------------
+
     - stage: "Deployments"
-      if: tag IS present
-      name: "Deploy on NPM"
+      if: tag IS present AND type != cron
+      name: "NPM.js"
 
       os: linux
       sudo: required
@@ -196,12 +242,9 @@ jobs:
           branch: master
           tags: true
 
-# ---------------------------------------
-# Dockerhub
-# ---------------------------------------
     - stage: "Deployments"
       if: type = push AND branch =~ ^master|.*-dev|.*-stable$ 
-      name: "Build & publish Docker images on Dockerhub"
+      name: "Dockerhub"
 
       os: linux
       sudo: required
@@ -210,3 +253,13 @@ jobs:
 
       script:
         - MODE=production bash build-docker-images.sh
+
+# ---------------------------------------
+# Notifications
+# ---------------------------------------
+notifications:
+  slack:
+    rooms:
+    - secure: "nx2W8a0wTPUfMFfR0TQxoA+M0ExUAJxIBy1AfKRlJXHaXN3al+SjLNXDU/OdplN9doae8BhcpHJBLiCDfQFY5Wmmbuxq2wAWhrPduIMPZFttBuxkoWkAbrhzYPsk5t7vERrJbSAynNbKeVL1gj7zitStJxzJzT2Z8y//9KYwXty3hPMJei2R1GCLTIOYp0ddq1Uu02Sdhkg07IO+bCrv5q6NFOpnx27SjYEBIOX66bVnGUcUzrbFQM1WToHwFHU3ylZUbj+zJHu+njj9SNTaoR7nIl6oedHCtloagTxyqjLQ0k3E9O4D5fuVvanKDAnLXrlPHWwNoEjffUMQ/b8OtTpgjB6pTr8Xu5oMN4tb5AbofdFOYIyumhHEN7Yt9t1sI6mYMEPu8GfAUTNHS41QfJakGRjYWOMoWQD4sOwRi8VRx+wOkvGSF75wsIrRM30qOkU4cXjoe44My7OkJKycz5AlvR8Drow5d8FO7N4C8olNM4MyP1Ofs2ulXYVEXEXV9NxuRIpcejx8UUZfBNjHnLsAjgq4sWyey22vTxIlmzc1dN3AngiScNdU7u2emZVBmC9VSLN2hAduA1y7HxESpqxd7+9v8qKxeSYw2j1V1sh2nvOvKah2Y61erDWjOI/eAxQPnT/uF4yoHC3dFnW9j9tCej0vZ0PeIBCUIKb5mx8="
+    on_success: never
+    on_failure: always

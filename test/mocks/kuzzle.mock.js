@@ -22,6 +22,12 @@ class KuzzleMock extends Kuzzle {
     this.config = _.merge({}, config);
     this.config.server.entryPoints.proxy = true;
 
+    // emit + pipe mocks
+    this.sandbox.stub(this, 'pipe').callsFake(
+      (...args) => Bluebird.resolve(args[1]));
+
+    this.sandbox.spy(this, 'emit');
+
     this.realtime = {
       test: this.sandbox.stub().returns([]),
       register: this.sandbox.stub().resolves(),
@@ -151,16 +157,16 @@ class KuzzleMock extends Kuzzle {
 
     this.notifier = {
       init: this.sandbox.spy(),
-      notifyUser: this.sandbox.spy(),
-      notifyServer: this.sandbox.spy(),
-      notifyDocument: this.sandbox.spy(),
-      notifyDocumentCreate: this.sandbox.spy(),
-      notifyDocumentMDelete: this.sandbox.spy(),
-      notifyDocumentReplace: this.sandbox.spy(),
-      notifyDocumentUpdate: this.sandbox.spy(),
+      notifyUser: this.sandbox.stub().resolves(),
+      notifyServer: this.sandbox.stub().resolves(),
+      notifyDocument: this.sandbox.stub().resolves(),
+      notifyDocumentCreate: this.sandbox.stub().resolves(),
+      notifyDocumentMDelete: this.sandbox.stub().resolves(),
+      notifyDocumentReplace: this.sandbox.stub().resolves(),
+      notifyDocumentUpdate: this.sandbox.stub().resolves(),
       publish: this.sandbox.stub().resolves(foo),
-      notifyDocumentMCreate: this.sandbox.spy(),
-      notifyDocumentMChanges: this.sandbox.spy()
+      notifyDocumentMCreate: this.sandbox.stub().resolves(),
+      notifyDocumentMChanges: this.sandbox.stub().resolves()
     };
 
     this.passport = {
@@ -175,7 +181,7 @@ class KuzzleMock extends Kuzzle {
       plugins: {},
       run: this.sandbox.stub().resolves(),
       getPluginsDescription: this.sandbox.stub().returns({}),
-      trigger: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[1])),
+      pipe: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[1])),
       listStrategies: this.sandbox.stub().returns([]),
       getStrategyFields: this.sandbox.stub().resolves(),
       getStrategyMethod: this.sandbox.stub().returns(this.sandbox.stub()),
@@ -352,8 +358,18 @@ class KuzzleMock extends Kuzzle {
       curateSpecification: this.sandbox.stub().resolves(),
       isValidSpecification: this.sandbox.stub().resolves({isValid: false}),
       validate: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-      validationPromise: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
       addType: this.sandbox.spy()
+    };
+
+    this.vault = {
+      init: this.sandbox.stub(),
+      prepareCrypto: this.sandbox.stub(),
+      secrets: {
+        aws: {
+          secretKeyId: 'the cake is a lie'
+        },
+        kuzzleApi: 'the spoon does not exist'
+      }
     };
 
     {
