@@ -3,8 +3,11 @@
 const
   should = require('should'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
+  DocumentController = require('../../../../lib/api/controllers/documentController'),
+  mockrequire = require('mock-require'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   ControllerMock = require('../../../mocks/controller.mock'),
+  ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
   {
     Request,
     errors: {
@@ -17,16 +20,32 @@ const
 describe('funnelController.processRequest', () => {
   let
     kuzzle,
-    funnel;
+    funnel,
+    pluginsManager;
 
   beforeEach(() => {
+    mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
+    mockrequire.reRequire('../../../../lib/services/internalEngine');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
+    mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
+    const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
 
+    kuzzle.emit.restore();
+    pluginsManager = new PluginsManager(kuzzle);
+    kuzzle.pluginsManager = pluginsManager;
+
     // inject fake controllers for unit tests
     funnel.controllers.fakeController = new ControllerMock(kuzzle);
+    funnel.controllers.document = new DocumentController(kuzzle);
     funnel.pluginsControllers['fakePlugin/controller'] =
       new ControllerMock(kuzzle);
+  });
+
+  afterEach(() => {
+    mockrequire.stopAll();
   });
 
   it('should throw if no controller is specified', () => {
@@ -229,4 +248,51 @@ describe('funnelController.processRequest', () => {
         }
       });
   });
+
+  it('should update the query documents with alias pipe', done => {
+    kuzzle.pipe.restore();
+
+    pluginsManager.plugins = [{
+      object: {
+        init: () => {},
+        pipes: {
+          'request:document:beforeWrite': ({ documents, request }) => {
+            should(documents[0]._id).equal(null);
+
+            documents[0]._id = 'foobar';
+
+            return Promise.resolve({ documents, request });
+          },
+          'document:beforeCreate': (request) => {
+            should(request.input.resource._id).equal('foobar');
+
+            done();
+            return Promise.resolve(request);
+          },
+        },
+        myFunc: done
+      },
+      config: {},
+      activated: true,
+      manifest: {
+        name: 'foo'
+      }
+    }];
+
+    const request = new Request({
+      controller: 'document',
+      action: 'create',
+      index: 'foo',
+      collection: 'bar',
+      body: {
+        foo: 'bar',
+      }
+    });
+
+    pluginsManager.run()
+      .then(() => {
+        funnel.processRequest(request);
+      });
+  });
+
 });
