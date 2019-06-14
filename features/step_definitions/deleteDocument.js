@@ -74,7 +74,6 @@ Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (d
       callback();
     })
     .catch(function (error) {
-      console.log(error);
       callback(error);
     });
 });
