@@ -17,12 +17,6 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 * **User Management**: login, logout and security rules are no more a burden.
 * **Extensible**: fit Kuzzle to your needs by leveraging the plugin system.
 
-## Get trained by the creators of Kuzzle :zap:
-
-Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.  
-Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.  
-:point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
-
 ## Kuzzle in production
 
 Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/products/by-features/on-premises/). 
@@ -43,30 +37,30 @@ The easiest way to setup a kuzzle server for Linux-like systems without prerequi
 $ sudo bash -c "$(curl https://get.kuzzle.io/)"
 ```
 
-You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/core/1/guides/essentials/installing-kuzzle#docker)
+You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#docker)
 
 ### Manual install
 
-Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/core/1/guides/essentials/installing-kuzzle/#manual-installation)
+Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#manual-installation)
 
 ## Quick start with Kuzzle
 
-* [Install and start Kuzzle server](https://docs.kuzzle.io/core/1/guides/essentials/installing-kuzzle/)
-* [Choose a SDK](https://docs.kuzzle.io/sdk)
+* [Install and start Kuzzle server](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle)
+* [Choose a SDK](https://docs.kuzzle.io/sdk-reference/)
 * Build your application without caring about your backend !
 
-Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/core/1/guides/getting-started/first-steps/)
+Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
 
 ### Useful links
 
-* [How to run a Kuzzle instance](https://docs.kuzzle.io/core/1/guides/getting-started/running-kuzzle/)
-* [Basic usage examples](https://docs.kuzzle.io/core/1/guides/getting-started/first-steps/)
-* [Getting started with Node.js](https://docs.kuzzle.io/sdk/js/6/getting-started/node-js/)
+* [How to run a Kuzzle instance](https://docs.kuzzle.io/guide/1/getting-started/running-kuzzle/)
+* [Basic usage examples](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
+* [Getting started with Node.js](https://docs.kuzzle.io/sdk-reference/js/6/getting-started/node-js/)
 * [Full documentation](https://docs.kuzzle.io/)
-* [SDKs Reference](https://docs.kuzzle.io/sdk)
-* [API Documentation](https://docs.kuzzle.io/core/1/api)  
-* [Realtime engine documentation](https://docs.kuzzle.io/core/1/guides/essentials/real-time/)
-* [Data Validation documentation](https://docs.kuzzle.io/core/1/guides/cookbooks/datavalidation/introduction/)
+* [SDKs Reference](https://docs.kuzzle.io/sdk-reference/)
+* [API Documentation](https://docs.kuzzle.io/api)  
+* [Data Validation documentation](https://docs.kuzzle.io/guide/1/datavalidation)
+* [Realtime engine documentation](https://docs.kuzzle.io/koncorde)
 * [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle
