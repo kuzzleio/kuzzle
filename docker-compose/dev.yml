@@ -52,9 +52,10 @@ services:
       - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
       - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
+      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
 
   redis:
-    image: redis:3.2
+    image: redis:${REDIS_VERSION:-5}
 
   elasticsearch:
     image: kuzzleio/elasticsearch:5.6.10

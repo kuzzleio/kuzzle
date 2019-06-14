@@ -25,25 +25,22 @@ describe('/lib/api/kuzzle.js', () => {
       'repositories',
       'services',
       'statistics',
-      'validation'
+      'validation',
+      'emit',
+      'vault',
+      'janitor'
     ].forEach(k => {
       kuzzle[k] = mock[k];
     });
   });
 
-  it('should construct a kuzzle server object with emit and listen event', (done) => {
-    kuzzle.on('event', () => {
-      done();
-    });
-
-    kuzzle.emit('event', {});
+  it('should build a kuzzle server object with emit and listen event', done => {
+    kuzzle.on('event', done);
+    kuzzle.emit('event');
   });
 
   describe('#start', () => {
     it('should init the components in proper order', () => {
-      kuzzle.janitor.loadMappings = sinon.spy();
-      kuzzle.janitor.loadFixtures = sinon.spy();
-      kuzzle.janitor.loadSecurities = sinon.spy();
       const params = {
         mappings: {},
         fixtures: {},
@@ -55,6 +52,8 @@ describe('/lib/api/kuzzle.js', () => {
           sinon.assert.callOrder(
             kuzzle.internalEngine.init,
             kuzzle.internalEngine.bootstrap.all,
+            kuzzle.vault.prepareCrypto,
+            kuzzle.vault.init,
             kuzzle.services.init,
             kuzzle.validation.init,
             kuzzle.indexCache.init,
@@ -64,16 +63,29 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.janitor.loadFixtures,
             kuzzle.pluginsManager.init,
             kuzzle.pluginsManager.run,
-            kuzzle.pluginsManager.trigger, // log:info, services init
-            kuzzle.pluginsManager.trigger, // log:info, load securities
+            kuzzle.emit, // log:info, services init
+            kuzzle.emit, // log:info, load securities
             kuzzle.janitor.loadSecurities,
             kuzzle.funnel.loadPluginControllers,
             kuzzle.router.init,
             kuzzle.statistics.init,
             kuzzle.validation.curateSpecification,
             kuzzle.entryPoints.init,
-            kuzzle.pluginsManager.trigger // core:kuzzleStart
+            kuzzle.emit // core:kuzzleStart
           );
+        });
+    });
+
+    it('should call vault with params from the CLI', () => {
+      const params = {
+        vaultKey: 'the spoon does not exists',
+        secretsFile: 'config/secrets.json'
+      };
+
+      return kuzzle.start(params)
+        .then(() => {
+          should(kuzzle.vault.prepareCrypto).be.calledWith('the spoon does not exists');
+          should(kuzzle.vault.init).be.calledWith('config/secrets.json');
         });
     });
 
@@ -110,7 +122,8 @@ describe('/lib/api/kuzzle.js', () => {
           'remoteActionsController',
           'repositories',
           'services',
-          'statistics'
+          'statistics',
+          'vault'
         ].forEach(k => {
           kuzzle[k] = mock[k];
         });
@@ -156,7 +169,7 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.pluginsManager.run).not.be.called();
           should(kuzzle.services.init).not.be.called();
           should(kuzzle.indexCache.init).not.be.called();
-          should(kuzzle.pluginsManager.trigger).be.called();
+          should(kuzzle.emit).be.called();
           should(kuzzle.funnel.init).not.be.called();
           should(kuzzle.router.init).not.be.called();
           should(kuzzle.statistics.init).not.be.called();

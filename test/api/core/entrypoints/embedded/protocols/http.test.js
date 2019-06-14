@@ -1,17 +1,22 @@
+const root = '../../../../../..';
+
 const
   mockrequire = require('mock-require'),
-  HttpFormDataStream = require('../../../../../../lib/api/core/entrypoints/embedded/service/httpFormDataStream'),
-  EntryPoint = require('../../../../../../lib/api/core/entrypoints/embedded'),
-  KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
+  HttpFormDataStream = require(`${root}/lib/api/core/entrypoints/embedded/service/httpFormDataStream`),
+  EntryPoint = require(`${root}/lib/api/core/entrypoints/embedded`),
+  ClientConnection = require(`${root}/lib/api/core/entrypoints/embedded/clientConnection`),
+  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
-    KuzzleError,
-    SizeLimitError,
-    BadRequestError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      KuzzleError,
+      SizeLimitError,
+      BadRequestError
+    }
+  } = require('kuzzle-common-objects'),
   should = require('should'),
   sinon = require('sinon'),
-  Writable = require('stream').Writable;
+  { Writable } = require('stream');
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   const
@@ -80,55 +85,61 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     it('should throw if an invalid maxRequestSize parameter is set', () => {
       entrypoint.config.maxRequestSize = 'invalid';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid "maxRequestSize" parameter value: expected a numeric value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid "maxRequestSize" parameter value: expected a numeric value');
     });
 
     it('should throw if an invalid maxFormFileSize parameter is set', () => {
       entrypoint.config.protocols.http.maxFormFileSize = 'invalid';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "maxFormFileSize" parameter value: expected a numeric value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid HTTP "maxFormFileSize" parameter value: expected a numeric value');
     });
 
     it('should throw if an invalid maxEncodingLayers parameter is set', () => {
       entrypoint.config.protocols.http.maxEncodingLayers = 'invalid';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "maxEncodingLayers" parameter value: expected a numeric value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid HTTP "maxEncodingLayers" parameter value: expected a numeric value');
     });
 
     it('should throw if an invalid allowCompression parameter is set', () => {
       entrypoint.config.protocols.http.allowCompression = 'foobar';
 
-      return should(() => protocol.init(entrypoint))
-        .throw('Invalid HTTP "allowCompression" parameter value: expected a boolean value');
+      return should(
+        protocol.init(entrypoint)
+      ).be.rejectedWith('Invalid HTTP "allowCompression" parameter value: expected a boolean value');
     });
 
     it('should configure the zlib decoders', () => {
-      protocol.init(entrypoint);
-
-      should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
-      should(protocol.decoders.gzip).eql(zlibstub.createGunzip);
-      should(protocol.decoders.deflate).eql(zlibstub.createInflate);
-      should(protocol.decoders.identity).be.a.Function();
-      should(protocol.decoders.identity('foobar')).eql(null);
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
+          should(protocol.decoders.gzip).eql(zlibstub.createGunzip);
+          should(protocol.decoders.deflate).eql(zlibstub.createInflate);
+          should(protocol.decoders.identity).be.a.Function();
+          should(protocol.decoders.identity('foobar')).eql(null);
+        });
     });
 
     it('should set decoders with throwables if compression is disabled', () => {
       const message = 'Compression support is disabled';
-
       entrypoint.config.protocols.http.allowCompression = false;
-      protocol.init(entrypoint);
 
-      should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
-      should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
-      should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
-      should(protocol.decoders.identity).be.a.Function();
+      return protocol.init(entrypoint)
+        .then(() => {
+          should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
+          should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
+          should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
+          should(protocol.decoders.identity).be.a.Function();
 
-      should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
-      should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
-      should(protocol.decoders.identity('foobar')).eql(null);
+          should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
+          should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
+          should(protocol.decoders.identity('foobar')).eql(null);
+        });
     });
 
     describe('#onRequest', () => {
@@ -170,12 +181,13 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           unpipe: sinon.spy()
         };
 
-        protocol.init(entrypoint);
+        return protocol.init(entrypoint)
+          .then(() => {
+            onRequest = protocol.server.on.firstCall.args[1];
 
-        onRequest = protocol.server.on.firstCall.args[1];
-
-        protocol._replyWithError = sinon.spy();
-        protocol._sendRequest = sinon.spy();
+            protocol._replyWithError = sinon.spy();
+            protocol._sendRequest = sinon.spy();
+          });
       });
 
       it('should complain if the request is too big', () => {
@@ -187,19 +199,19 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(protocol._replyWithError)
           .be.calledOnce()
-          .be.calledWithMatch(/^[0-9a-w-]+$/, {
-            url: request.url,
-            method: request.method
-          },
-          response,
-          {message: 'Maximum HTTP request size exceeded'});
+          .be.calledWithMatch(
+            sinon.match.instanceOf(ClientConnection),
+            { url: request.url, method: request.method },
+            response,
+            {message: 'Maximum HTTP request size exceeded'});
       });
 
       it('should handle json content', done => {
         request.headers['content-type'] = 'application/json charset=utf-8';
 
-        protocol._sendRequest = (connectionId, resp, payload) => {
+        protocol._sendRequest = (connection, resp, payload) => {
           try {
+            should(connection).be.instanceOf(ClientConnection);
             should(payload.content).eql('chunk1chunk2chunk3');
             done();
           }
@@ -241,12 +253,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(request.pipe).not.called();
         should(protocol._replyWithError)
           .be.calledOnce()
-          .be.calledWithMatch(/^[0-9a-w-]+$/, {
-            url: request.url,
-            method: request.method
-          },
-          response,
-          {message: 'Too many encodings'});
+          .be.calledWithMatch(
+            sinon.match.instanceOf(ClientConnection),
+            { url: request.url, method: request.method },
+            response,
+            {message: 'Too many encodings'});
       });
 
       it('should reject if an unknown compression algorithm is provided', () => {
@@ -256,12 +267,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(protocol._replyWithError)
           .be.calledOnce()
-          .be.calledWithMatch(/^[0-9a-w-]+$/, {
-            url: request.url,
-            method: request.method
-          },
-          response,
-          {message: 'Unsupported compression algorithm "foobar"'});
+          .be.calledWithMatch(
+            sinon.match.instanceOf(ClientConnection),
+            { url: request.url, method: request.method },
+            response,
+            {message: 'Unsupported compression algorithm "foobar"'});
       });
 
       it('should handle chain pipes properly to match multi-layered compression', () => {
@@ -285,7 +295,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       });
 
       it('should handle valid x-www-form-urlencoded request', done => {
-        protocol._sendRequest = (connectionId, resp, payload) => {
+        protocol._sendRequest = (connection, resp, payload) => {
+          should(connection).instanceOf(ClientConnection);
           should(payload.content).be.empty('');
           should(payload.json.foo).be.exactly('bar');
           should(payload.json.baz).be.exactly('1234');
@@ -304,7 +315,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       });
 
       it('should handle valid multipart/form-data request', done => {
-        protocol._sendRequest = (connectionId, resp, payload) => {
+        protocol._sendRequest = (connection, resp, payload) => {
+          should(connection).instanceOf(ClientConnection);
           should(payload.content).be.empty('');
           should(payload.json.foo).be.exactly('bar');
           should(payload.json.baz.filename).be.exactly('test-multipart.txt');
@@ -330,7 +342,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         onRequest(request, response);
 
         should(request.pipe).calledOnce().calledWith(gunzipMock);
-        should(gunzipMock.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
+        should(gunzipMock.pipe)
+          .calledOnce()
+          .calledWith(sinon.match.instanceOf(Writable));
         const writable = gunzipMock.pipe.firstCall.args[0];
 
         sinon.spy(writable, 'removeAllListeners');
@@ -341,7 +355,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         writable.on('error', error => {
           try {
-            should(error).instanceOf(SizeLimitError).match({message: 'Maximum HTTP request size exceeded'});
+            should(error)
+              .instanceOf(SizeLimitError)
+              .match({message: 'Maximum HTTP request size exceeded'});
 
             // called automatically when a pipe rejects a callback, but not
             // by our mock obviously
@@ -350,25 +366,25 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             should(request.unpipe).calledOnce();
             should(request.removeAllListeners).calledOnce();
             // should-sinon is outdated, so we cannot use it with calledAfter :-(
-            should(request.removeAllListeners.calledAfter(request.unpipe)).be.true();
+            should(request.removeAllListeners.calledAfter(request.unpipe))
+              .be.true();
             should(request.resume).calledOnce();
-            should(request.resume.calledAfter(request.removeAllListeners)).be.true();
+            should(request.resume.calledAfter(request.removeAllListeners))
+              .be.true();
             should(writable.removeAllListeners).calledOnce();
             should(writable.end).calledOnce();
-            should(writable.end.calledAfter(writable.removeAllListeners)).be.true();
+            should(writable.end.calledAfter(writable.removeAllListeners))
+              .be.true();
 
             // pipes should be closed manually
             should(gunzipMock.close).calledOnce();
 
             should(protocol._replyWithError)
-              .be.calledWithMatch(/^[0-9a-z-]+$/, {
-                url: request.url,
-                method: request.method
-              },
-              response,
-              {
-                message: 'Maximum HTTP request size exceeded'
-              });
+              .be.calledWithMatch(
+                sinon.match.instanceOf(ClientConnection),
+                { url: request.url, method: request.method },
+                response,
+                { message: 'Maximum HTTP request size exceeded' });
             done();
           } catch (e) {
             done(e);
@@ -386,14 +402,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(request.resume).be.calledOnce();
         should(protocol._replyWithError)
           .be.calledOnce()
-          .be.calledWithMatch(/^[0-9a-w-]+$/, {
-            url: request.url,
-            method: request.method
-          },
-          response,
-          {
-            message: 'Unsupported content type: foo/bar'
-          });
+          .be.calledWithMatch(
+            sinon.match.instanceOf(ClientConnection),
+            { url: request.url, method: request.method },
+            response,
+            { message: 'Unsupported content type: foo/bar' });
       });
 
       it('should reply with error if the binary file size sent exceeds the maxFormFileSize', () => {
@@ -431,33 +444,30 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             some: 'value'
           }
         };
-        protocol.init(entrypoint);
+        return protocol.init(entrypoint);
       });
 
       it('should call kuzzle http router and send the client the response back', () => {
-        protocol._sendRequest('connectionId', response, payload);
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        should(kuzzle.router.http.route)
-          .be.calledWith(payload);
+        should(kuzzle.router.http.route).be.calledWith(payload);
 
-        const cb = kuzzle.router.http.route.firstCall.args[1];
-        const result = new Request({});
-        result.setResult('content', {
-          status: 444,
-          headers: {
-            'x-foo': 'bar'
-          }
-        });
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
+
+        result.setResult(
+          'content',
+          {
+            status: 444,
+            headers: { 'x-foo': 'bar' }
+          });
 
         cb(result);
 
-        should(response.setHeader)
-          .be.calledOnce()
-          .be.calledWith('x-foo', 'bar');
-
         should(response.writeHead)
           .be.calledOnce()
-          .be.calledWith(444);
+          .be.calledWithMatch(444, { 'x-foo': 'bar' });
 
         const expected = {
           requestId: 'requestId',
@@ -477,11 +487,13 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       });
 
       it('should output buffer raw result', () => {
-        protocol._sendRequest('connectionId', response, payload);
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const cb = kuzzle.router.http.route.firstCall.args[1];
-        const content = Buffer.from('test');
-        const result = new Request({});
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          content = Buffer.from('test'),
+          result = new Request({});
+
         result.setResult(content, {
           raw: true,
           status: 444
@@ -492,16 +504,17 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         // Buffer.from(content) !== content
         const sent = response.end.firstCall.args[0];
 
-        should(content.toString())
-          .eql(sent.toString());
+        should(content.toString()).eql(sent.toString());
       });
 
       it('should output a stringified buffer as a raw buffer result', () => {
-        protocol._sendRequest('connectionId', response, payload);
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const content = JSON.parse(JSON.stringify(Buffer.from('test')));
-        const result = new Request({});
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          content = JSON.parse(JSON.stringify(Buffer.from('test'))),
+          result = new Request({});
+
         result.setResult(content, {
           raw: true,
           status: 444
@@ -511,17 +524,17 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         const sent = response.end.firstCall.args[0];
 
-        should(sent)
-          .be.an.instanceof(Buffer);
-        should(sent.toString())
-          .eql('test');
+        should(sent).be.an.instanceof(Buffer);
+        should(sent.toString()).eql('test');
       });
 
       it('should output serialized JS objects marked as raw', () => {
-        protocol._sendRequest('connectionId', response, payload);
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const result = new Request({});
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
+
         result.setResult([{foo: 'bar'}], {
           raw: true
         });
@@ -533,10 +546,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       });
 
       it('should output scalar content as-is if marked as raw', () => {
-        protocol._sendRequest('connectionId', response, payload);
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const result = new Request({});
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
+
         result.setResult('content', {
           raw: true
         });
@@ -550,11 +565,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       it('should compress the outgoing message with deflate if asked to', () => {
         payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, deflate, baz'};
-        protocol._sendRequest('connectionId', response, payload);
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
 
-        const result = new Request({});
         result.setResult('content', {});
 
         cb(result);
@@ -565,12 +581,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       });
 
       it('should compress the outgoing message with gzip if asked to', () => {
-        payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, gzip, baz'};
-        protocol._sendRequest('connectionId', response, payload);
+        payload.headers = {
+          'accept-encoding': 'identity, foo, bar, identity, qux, gzip, baz'
+        };
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
 
-        const result = new Request({});
         result.setResult('content', {});
 
         cb(result);
@@ -581,12 +600,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       });
 
       it('should not compress if no suitable algorithm is found within the accept-encoding list', () => {
-        payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, baz'};
-        protocol._sendRequest('connectionId', response, payload);
+        payload.headers = {
+          'accept-encoding': 'identity, foo, bar, identity, qux, baz'
+        };
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
 
-        const result = new Request({});
         result.setResult('content', {});
 
         cb(result);
@@ -597,12 +619,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       });
 
       it('should prefer gzip over deflate if both algorithm are accepted', () => {
-        payload.headers = {'accept-encoding': 'deflate,deflate,DEFLATE,dEfLaTe, GZiP, DEFLATE,deflate'};
-        protocol._sendRequest('connectionId', response, payload);
+        payload.headers = {
+          'accept-encoding': 'deflate,deflate,DEFLATE,dEfLaTe, GZiP, DEFLATE,deflate'
+        };
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
 
-        const result = new Request({});
         result.setResult('content', {});
 
         cb(result);
@@ -616,23 +641,26 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         payload.headers = {'accept-encoding': 'gzip'};
         zlibstub.gzip.yields(new Error('foobar'));
         sinon.stub(protocol, '_replyWithError');
-        protocol._sendRequest('connectionId', response, payload);
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
 
-        const cb = kuzzle.router.http.route.firstCall.args[1];
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
 
-        const result = new Request({});
         result.setResult('content', {});
 
         cb(result);
 
         should(protocol._replyWithError)
           .be.calledOnce()
-          .be.calledWithMatch('connectionId',
+          .be.calledWithMatch(
+            {id: 'connectionId'},
             payload,
             response,
             {message: 'foobar'});
 
-        should(protocol._replyWithError.firstCall.args[3]).be.instanceOf(BadRequestError);
+        should(protocol._replyWithError.firstCall.args[3])
+          .be.instanceOf(BadRequestError);
         should(response.setHeader).calledWith('Content-Encoding', 'gzip');
         should(zlibstub.deflate).not.called();
         should(zlibstub.gzip).calledOnce();
@@ -644,25 +672,25 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   describe('#_replyWithError', () => {
     beforeEach(() => {
       entrypoint.logAccess = sinon.spy();
-      protocol.init(entrypoint);
+      return protocol.init(entrypoint);
     });
 
     it('should log the access and reply with error', () => {
       const
-        error = new KuzzleError('test'),
+        error = new KuzzleError('test', 123),
         connectionId = 'connectionId',
         payload = {requestId: 'foobar'};
-      error.status = 123;
 
       const expected = (new Request(payload, {connectionId, error})).serialize();
 
       // likely to be different, and we do not care about it
       delete expected.data.timestamp;
 
-      protocol._replyWithError(connectionId, payload, response, error);
+      protocol._replyWithError({id: connectionId}, payload, response, error);
 
       should(entrypoint.logAccess).be.calledOnce();
-      should(entrypoint.logAccess.firstCall.args[0].serialize()).match(expected);
+      should(entrypoint.logAccess.firstCall.args[0].serialize())
+        .match(expected);
 
       should(response.writeHead)
         .be.calledOnce()
@@ -670,7 +698,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods' : 'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Length, Content-Encoding, X-Kuzzle-Volatile'
+          'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile'
         });
     });
 
@@ -680,7 +708,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       entrypoint.clients.connectionId = {};
 
-      protocol._replyWithError('connectionId', {}, response, error);
+      protocol._replyWithError({id: 'connectionId'}, {}, response, error);
 
       should(entrypoint.clients).be.empty();
     });

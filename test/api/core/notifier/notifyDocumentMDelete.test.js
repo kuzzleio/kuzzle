@@ -3,7 +3,7 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Request = require('kuzzle-common-objects').Request,
+  { Request } = require('kuzzle-common-objects'),
   Kuzzle = require('../../../mocks/kuzzle.mock'),
   Notifier = require('../../../../lib/api/core/notifier');
 

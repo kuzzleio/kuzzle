@@ -223,9 +223,9 @@ describe('core/httpRouter', () => {
         });
 
         should(result.input.headers).match(rq.headers);
-        should(kuzzleMock.pluginsManager.trigger).be.calledOnce();
-        should(kuzzleMock.pluginsManager.trigger).be.calledWith('http:options', sinon.match.instanceOf(Request));
-        should(kuzzleMock.pluginsManager.trigger.firstCall.args[1].input.headers.foo).eql('bar');
+        should(kuzzleMock.pipe).be.calledOnce();
+        should(kuzzleMock.pipe).be.calledWith('http:options', sinon.match.instanceOf(Request));
+        should(kuzzleMock.pipe.firstCall.args[1].input.headers.foo).eql('bar');
       });
     });
 

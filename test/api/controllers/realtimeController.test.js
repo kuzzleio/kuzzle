@@ -170,13 +170,12 @@ describe('Test: subscribe controller', () => {
       return realtimeController.publish(request)
         .then(response => {
           try {
-            should(kuzzle.validation.validationPromise).be.calledOnce();
+            should(kuzzle.validation.validate).be.calledOnce();
 
             should(kuzzle.notifier.publish).be.calledOnce();
             should(kuzzle.notifier.publish).be.calledWith(request);
 
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
+            should(response).match({published: true});
 
             return Promise.resolve();
           }

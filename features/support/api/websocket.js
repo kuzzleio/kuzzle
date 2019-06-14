@@ -1,7 +1,7 @@
 const
   Bluebird = require('bluebird'),
   WsApiBase = require('./websocketBase'),
-  Ws = require('uws');
+  Ws = require('ws');
 
 class WebSocketApi extends WsApiBase {
 

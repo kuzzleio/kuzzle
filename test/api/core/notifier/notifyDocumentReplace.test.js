@@ -1,7 +1,7 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Request = require('kuzzle-common-objects').Request,
+  { Request } = require('kuzzle-common-objects'),
   Kuzzle = require('../../../mocks/kuzzle.mock'),
   Notifier = require('../../../../lib/api/core/notifier');
 
@@ -14,7 +14,8 @@ describe('Test: notifier.notifyDocumentReplace', () => {
   beforeEach(() => {
     kuzzle = new Kuzzle();
     notifier = new Notifier(kuzzle);
-    notifier.notifyDocument = sinon.stub();
+
+    sinon.stub(notifier, 'notifyDocument').resolves();
 
     request = new Request({
       controller: 'write',
@@ -39,31 +40,30 @@ describe('Test: notifier.notifyDocumentReplace', () => {
 
     return notifier.notifyDocumentReplace(request)
       .then(() => {
+        const {_id, index, collection} = request.input.resource;
+
         should(notifier.notifyDocument.callCount).be.eql(2);
 
         should(notifier.notifyDocument.getCall(0))
           .calledWith(['foo'], request, 'in', 'done', 'replace', {
+            _id,
             _meta: {'can I has': 'cheezburgers?'},
-            _id: request.input.resource._id,
             _source: {foo: 'bar', _kuzzle_info: {'can I has': 'cheezburgers?'}}
           });
 
         should(notifier.notifyDocument.getCall(1))
-          .calledWith(['bar'], request, 'out', 'done', 'replace', {
-            _id: request.input.resource._id
-          });
+          .calledWith(['bar'], request, 'out', 'done', 'replace', { _id });
 
         should(internalCache.get.callCount).be.eql(1);
-        should(internalCache.get.getCall(0)).calledWith(
-          `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`
-        );
+        internalCache.get.getCall(0)
+          .should.be.calledWith(`{notif/${index}/${collection}}/${_id}`);
 
         should(internalCache.del).not.be.called();
 
         should(internalCache.setex)
           .calledOnce()
           .calledWith(
-            `{notif/${request.input.resource.index}/${request.input.resource.collection}}/${request.input.resource._id}`,
+            `{notif/${index}/${collection}}/${_id}`,
             kuzzle.config.limits.subscriptionDocumentTTL,
             JSON.stringify(['foo']));
       });

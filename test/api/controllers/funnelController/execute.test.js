@@ -86,7 +86,7 @@ describe('funnelController.execute', () => {
 
       funnel.execute(request, () => {});
 
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledTwice()
         .be.calledWith('core:overload');
     });
@@ -96,7 +96,7 @@ describe('funnelController.execute', () => {
       funnel.lastWarningTime = Date.now() - 501;
       funnel.execute(request, () => {});
 
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .be.calledTwice()
         .be.calledWith('core:overload');
     });
@@ -110,7 +110,7 @@ describe('funnelController.execute', () => {
       setTimeout(() => funnel.execute(request, () => {}), 499);
       clock.tick(510);
 
-      should(kuzzle.pluginsManager.trigger)
+      should(kuzzle.emit)
         .have.callCount(0);
     });
   });

@@ -32,14 +32,14 @@ describe('Test: routerController.httpRequest', () => {
           }
         }
       },
+      pipe: function (event, request) {
+        triggerSpy(event, request);
+        return Promise.resolve(request);
+      },
       pluginsManager: {
         routes: [
           {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
-        ],
-        trigger: function (event, request) {
-          triggerSpy(event, request);
-          return Promise.resolve(request);
-        }
+        ]
       },
       funnel: {
         execute: function (request, cb) {
@@ -66,7 +66,7 @@ describe('Test: routerController.httpRequest', () => {
     triggerSpy = sinon.stub();
   });
 
-  it('should register GET routes from the config/httpRoutes file', (done) => {
+  it('should register GET routes from the config/httpRoutes file', done => {
     httpRequest.url = '/ms/_getrange/someId?start=start&end=end';
     httpRequest.method = 'GET';
 

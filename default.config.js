@@ -80,6 +80,7 @@ module.exports = {
       algorithm: 'HS256',
       expiresIn: '1h',
       gracePeriod: 1000,
+      maxTTL: -1,
       secret: null
     },
     default: {
@@ -203,6 +204,7 @@ module.exports = {
       },
       websocket: {
         enabled: true,
+        idleTimeout: 0,
         heartbeat: 60000
       }
     }
