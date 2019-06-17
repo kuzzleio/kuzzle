@@ -26,7 +26,9 @@ describe('/lib/api/kuzzle.js', () => {
       'services',
       'statistics',
       'validation',
-      'emit'
+      'emit',
+      'vault',
+      'janitor'
     ].forEach(k => {
       kuzzle[k] = mock[k];
     });
@@ -39,10 +41,6 @@ describe('/lib/api/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', () => {
-      kuzzle.janitor.loadMappings = sinon.spy();
-      kuzzle.janitor.loadFixtures = sinon.spy();
-      kuzzle.janitor.loadSecurities = sinon.spy();
-
       const params = {
         mappings: {},
         fixtures: {},
@@ -54,6 +52,8 @@ describe('/lib/api/kuzzle.js', () => {
           sinon.assert.callOrder(
             kuzzle.internalEngine.init,
             kuzzle.internalEngine.bootstrap.all,
+            kuzzle.vault.prepareCrypto,
+            kuzzle.vault.init,
             kuzzle.services.init,
             kuzzle.validation.init,
             kuzzle.indexCache.init,
@@ -73,6 +73,19 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.entryPoints.init,
             kuzzle.emit // core:kuzzleStart
           );
+        });
+    });
+
+    it('should call vault with params from the CLI', () => {
+      const params = {
+        vaultKey: 'the spoon does not exists',
+        secretsFile: 'config/secrets.json'
+      };
+
+      return kuzzle.start(params)
+        .then(() => {
+          should(kuzzle.vault.prepareCrypto).be.calledWith('the spoon does not exists');
+          should(kuzzle.vault.init).be.calledWith('config/secrets.json');
         });
     });
 
@@ -109,7 +122,8 @@ describe('/lib/api/kuzzle.js', () => {
           'remoteActionsController',
           'repositories',
           'services',
-          'statistics'
+          'statistics',
+          'vault'
         ].forEach(k => {
           kuzzle[k] = mock[k];
         });

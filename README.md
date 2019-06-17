@@ -17,6 +17,13 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 * **User Management**: login, logout and security rules are no more a burden.
 * **Extensible**: fit Kuzzle to your needs by leveraging the plugin system.
 
+## Get trained by the creators of Kuzzle :zap:
+
+Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.  
+Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.  
+:point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
+
+
 ## Kuzzle in production
 
 Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/products/by-features/on-premises/). 

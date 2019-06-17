@@ -24,6 +24,7 @@ RUN  set -x \
        libfontconfig \
        libkrb5-dev \
        libzmq3-dev \
+       procps \
        wget \
   && tar xf /tmp/node-v$NODE_VERSION-linux-x64.tar.gz -C /opt/ \
   && rm /tmp/node-v$NODE_VERSION-linux-x64.tar.gz \
