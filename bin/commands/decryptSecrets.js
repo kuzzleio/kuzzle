@@ -70,9 +70,9 @@ function commandDecryptSecrets (encryptedSecretsFile, options) {
 
     fs.writeFileSync(outputFile, JSON.stringify(secrets, null, 2));
 
-    console.log(cout.ok(`[✔] Secrets successfully encrypted: ${outputFile}`));
+    console.log(cout.ok(`[✔] Secrets successfully decrypted: ${outputFile}`));
   } catch (error) {
-    console.error(cout.error(`[ℹ] Can not encrypt secret file: ${error.message}`));
+    console.error(cout.error(`[ℹ] Can not decrypt secret file: ${error.message}`));
     process.exit(1);
   }
 }
