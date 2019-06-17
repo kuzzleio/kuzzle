@@ -1,7 +1,6 @@
 const
-  async = require('async'),
   should = require('should'),
-  Request = require('kuzzle-common-objects').Request,
+  { Request } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Notifier = require('../../../../lib/api/core/notifier'),
   Notification = require('../../../../lib/api/core/models/notifications');
@@ -51,45 +50,40 @@ describe('notify methods', () => {
   });
 
   describe('#notifyDocument', () => {
-    it('should do nothing if the provided rooms list is empty', done => {
-      notifier.notifyDocument([], request, 'scope', 'state', 'action', { some: 'content'});
-
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
+    it('should do nothing if the provided rooms list is empty', () => {
+      return notifier
+        .notifyDocument(
+          [], request, 'scope', 'state', 'action', { some: 'content'})
+        .then(() => {
           should(kuzzle.entryPoints.dispatch).not.be.called();
           should(kuzzle.emit).not.be.called();
-          cb();
-        }
-        catch(e) {
-          cb(e);
-        }
-      }, done);
+        });
     });
 
-    it('should notify the right channels', done => {
+    it('should notify the right channels', () => {
       const content = {some: 'content'};
-      notifier.notifyDocument(
-        ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'],
-        request,
-        'out',
-        'pending',
-        'action',
-        content
-      );
 
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
-          should(kuzzle.entryPoints.dispatch).calledOnce();
+      return notifier
+        .notifyDocument(
+          ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'],
+          request,
+          'out',
+          'pending',
+          'action',
+          content)
+        .then(() => {
+          const dispatch = kuzzle.entryPoints.dispatch;
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('broadcast');
+          should(dispatch).calledOnce();
+          should(dispatch.firstCall.args[0]).be.eql('broadcast');
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
-            .match(['matching_all', 'matching_out', 'matching_pending', 'always']);
+          should(dispatch.firstCall.args[1].channels).match(
+            ['matching_all', 'matching_out', 'matching_pending', 'always']);
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[1].payload)
-            .be.instanceof(Notification.Document);
+          should(dispatch.firstCall.args[1].payload).be.instanceof(
+            Notification.Document);
 
-          const notification = kuzzle.entryPoints.dispatch.firstCall.args[1].payload;
+          const notification = dispatch.firstCall.args[1].payload;
 
           should(notification).match({
             status: 200,
@@ -111,7 +105,12 @@ describe('notify methods', () => {
           should(kuzzle.emit.getCall(0).args).match([
             'core:notify:document',
             {
-              rooms: ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'],
+              rooms: [
+                'matchingSome',
+                'nonMatching',
+                'alwaysMatching',
+                'IAMERROR'
+              ],
               scope: 'out',
               state: 'pending',
               action: 'action',
@@ -120,85 +119,65 @@ describe('notify methods', () => {
             }
           ]);
           should(kuzzle.pipe.callCount).be.eql(2);
-          should(kuzzle.pipe.getCall(0).args).match(['notify:document', notification]);
-          should(kuzzle.pipe.getCall(1).args).match(['notify:dispatch', notification]);
-          cb();
-        }
-        catch (e) {
-          cb(e);
-        }
-      }, done);
+
+          should(kuzzle.pipe.getCall(0).args).match(
+            ['notify:document', notification]);
+
+          should(kuzzle.pipe.getCall(1).args).match(
+            ['notify:dispatch', notification]);
+        });
     });
 
-    it('should not notify if no channel match the provided scope/state arguments', done => {
+    it('should not notify if no channel match the provided scope/state arguments', () => {
       const content = {some: 'content'};
-      notifier.notifyDocument(
-        ['nonMatching', 'IAMERROR'],
-        request,
-        'not a state',
-        'not a scope',
-        'action',
-        content
-      );
 
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
+      return notifier
+        .notifyDocument(
+          ['nonMatching', 'IAMERROR'],
+          request,
+          'not a state',
+          'not a scope',
+          'action',
+          content)
+        .then(() => {
           should(kuzzle.entryPoints.dispatch).not.be.called();
-          cb();
-        }
-        catch(e) {
-          cb(e);
-        }
-      }, done);
+        });
     });
   });
 
   describe('#notifyUser', () => {
-    it('should ignore non-existing rooms', done => {
-      notifier.notifyUser('IAMERROR', request, 'all', {});
-
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
+    it('should ignore non-existing rooms', () => {
+      return notifier.notifyUser('IAMERROR', request, 'all', {})
+        .then(() => {
           should(kuzzle.entryPoints.dispatch).not.be.called();
-          cb();
-        }
-        catch(e) {
-          cb(e);
-        }
-      }, done);
+        });
     });
 
-    it('should not notify if no channel match the provided arguments', done => {
-      notifier.notifyUser('nonMatching', request, 'all', {});
-
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
+    it('should not notify if no channel match the provided arguments', () => {
+      return notifier.notifyUser('nonMatching', request, 'all', {})
+        .then(() => {
           should(kuzzle.entryPoints.dispatch).not.be.called();
-          cb();
-        }
-        catch(e) {
-          cb(e);
-        }
-      }, done);
+        });
     });
 
-    it('should notify the right channels', done => {
+    it('should notify the right channels', () => {
       const content = {some: 'content'};
-      notifier.notifyUser('matchingSome', request, 'out' , content);
 
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
-          should(kuzzle.entryPoints.dispatch).calledOnce();
+      return notifier.notifyUser('matchingSome', request, 'out' , content)
+        .then(() => {
+          const dispatch = kuzzle.entryPoints.dispatch;
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('broadcast');
+          should(dispatch).calledOnce();
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
+          should(dispatch.firstCall.args[0]).be.eql('broadcast');
+
+          should(dispatch.firstCall.args[1].channels)
             .match(['matching_all', 'matching_userOut']);
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[1].payload)
+          should(dispatch.firstCall.args[1].payload)
             .be.instanceof(Notification.User);
 
-          const notification = kuzzle.entryPoints.dispatch.firstCall.args[1].payload;
+          const notification = dispatch.firstCall.args[1].payload;
 
           should(notification).match({
             status: 200,
@@ -225,63 +204,49 @@ describe('notify methods', () => {
             }
           ]);
           should(kuzzle.pipe.callCount).be.eql(2);
-          should(kuzzle.pipe.getCall(0).args).match(['notify:user', notification]);
-          should(kuzzle.pipe.getCall(1).args).match(['notify:dispatch', notification]);
-          cb();
-        }
-        catch (e) {
-          cb(e);
-        }
-      }, done);
+
+          should(kuzzle.pipe.getCall(0).args).match(
+            ['notify:user', notification]);
+
+          should(kuzzle.pipe.getCall(1).args).match(
+            ['notify:dispatch', notification]);
+        });
     });
   });
 
   describe('#notifyServer', () => {
-    it('should do nothing if the provided rooms list is empty', done => {
-      notifier.notifyServer([], 'foobar', 'type', 'message');
-
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
+    it('should do nothing if the provided rooms list is empty', () => {
+      return notifier.notifyServer([], 'foobar', 'type', 'message')
+        .then(() => {
           should(kuzzle.entryPoints.dispatch).not.be.called();
           should(kuzzle.pipe).not.be.called();
-          cb();
-        }
-        catch(e) {
-          cb(e);
-        }
-      }, done);
+        });
     });
 
-    it('should ignore non-existing rooms', done => {
-      notifier.notifyServer(['IAMERROR'], 'foobar', 'type', 'message');
-
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
+    it('should ignore non-existing rooms', () => {
+      return notifier.notifyServer(['IAMERROR'], 'foobar', 'type', 'message')
+        .then(() => {
           should(kuzzle.entryPoints.dispatch).not.be.called();
           should(kuzzle.pipe).not.be.called();
-          cb();
-        }
-        catch(e) {
-          cb(e);
-        }
-      }, done);
+        });
     });
 
-    it('should notify on all subscribed channels', done => {
-      notifier.notifyServer(['nonMatching', 'alwaysMatching'], 'foobar', 'type', 'message');
+    it('should notify on all subscribed channels', () => {
+      return notifier
+        .notifyServer(
+          ['nonMatching', 'alwaysMatching'], 'foobar', 'type', 'message')
+        .then(() => {
+          const dispatch = kuzzle.entryPoints.dispatch;
+          should(dispatch).calledOnce();
 
-      async.retry({times: 20, interval: 20}, cb => {
-        try {
-          should(kuzzle.entryPoints.dispatch).calledOnce();
+          should(dispatch.firstCall.args[0]).be.eql('notify');
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[0]).be.eql('notify');
+          should(dispatch.firstCall.args[1].connectionId).be.eql('foobar');
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[1].connectionId).be.eql('foobar');
+          should(dispatch.firstCall.args[1].channels).match(
+            ['foobar', 'always']);
 
-          should(kuzzle.entryPoints.dispatch.firstCall.args[1].channels)
-            .match(['foobar', 'always']);
-
-          const notification = kuzzle.entryPoints.dispatch.firstCall.args[1].payload;
+          const notification = dispatch.firstCall.args[1].payload;
 
           should(notification).match({
             status: 200,
@@ -294,12 +259,7 @@ describe('notify methods', () => {
           should(kuzzle.pipe)
             .be.calledWith('notify:server', notification)
             .be.calledWith('notify:dispatch', notification);
-          cb();
-        }
-        catch (e) {
-          cb(e);
-        }
-      }, done);
+        });
     });
   });
 });

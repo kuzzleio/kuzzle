@@ -210,20 +210,31 @@ describe('Test: token manager core component', () => {
         }
       };
 
-      tokenManager.link(new Token({_id: 'bar', expiresAt: now + 1000000}), 'connectionId1', 'roomId1');
-      tokenManager.link(new Token({_id: 'foo', expiresAt: now - 1000}), 'connectionId2', 'roomId2');
+      tokenManager.link(
+        new Token({_id: 'bar', expiresAt: now + 1000000}),
+        'connectionId1',
+        'roomId1');
+      tokenManager.link(
+        new Token({_id: 'foo', expiresAt: now - 1000}),
+        'connectionId2',
+        'roomId2');
 
       runTimerStub.resetHistory();
-      tokenManager.checkTokensValidity();
+      return tokenManager.checkTokensValidity()
+        .then(() => {
+          should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
+          should(kuzzle.notifier.notifyServer)
+            .be.calledOnce()
+            .be.calledWith(
+              ['room1', 'room2'],
+              'connectionId2',
+              'TokenExpired',
+              'Authentication Token Expired');
 
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
-      should(kuzzle.notifier.notifyServer)
-        .be.calledOnce()
-        .be.calledWith(['room1', 'room2'], 'connectionId2', 'TokenExpired', 'Authentication Token Expired');
-
-      should(tokenManager.tokens.array.length).be.eql(1);
-      should(tokenManager.tokens.array[0]._id).be.eql('bar');
-      should(runTimerStub).be.calledOnce();
+          should(tokenManager.tokens.array.length).be.eql(1);
+          should(tokenManager.tokens.array[0]._id).be.eql('bar');
+          should(runTimerStub).be.calledOnce();
+        });
     });
 
     it('should behave correctly if the token does not match any subscription', () => {

@@ -192,7 +192,7 @@ jobs:
       script:
         - docker-compose -f .ci/test.yml run kuzzle
 
-    - stage: "Redis old versions tests"
+    - stage: "Redis tests"
       if: type = cron
       name: "Redis 4"
 
@@ -260,6 +260,6 @@ jobs:
 notifications:
   slack:
     rooms:
-    - secure: "MlWnTEJwmn4Wq6sH2PRfrLRPhwIiqPUNB9AuulKKXheTfY74zHvlCe0TAUM5x8IaccJT4GKG7tnpLU4ujzNyL4AbqzCkUjZvaq2+NT1YJ4xJ2AXe4NDjuj8Cr0GyeotJA6FMHLAyDtGbVvuomktUp49pL7+QbG5kcUMtZ2wQ1swfWlk9zf8xH4lpO7Nyd96xXj7fpZaWGM06VCloJ45wxLmvUOEY5nDEoZ0LyOFyH8zx4WuNZH7jkp0JFQwiuFp+VpyPhnynBcMyyUi7rlrJxfqD3XfffQ0foE1TH2S5TuWZ3IuMjZUaxZ0xNA42hVfmvPLGppLoNNuaL1rPsVHSvSNWkdAKbFQDhi/O3PskOFKiMzXkPgSFNY4CyHiCVI78s3Gi1qWK9StD/Pzu1vs7mWFh7ysQeDZnrK1sz/IDA/sZPfF4ZK6ZKCYqGOZtH3wuc8AsGcyrgigT1cRxlXUblI8z0Phu1D3gCETCpqrcngT6cxlpy/PnBm3upLE1dfN/1OzBP+wwGgblLmAN47O5HsA4R76VNR6gJ55A5hwdGmLqe4Vc0yUE5EC88OfnSZ3YHSqNTjF7gko4hsoRNqPZBon7WX0HQwo0SjO8HyzW+kOVzMcTt6Csbdt1j96Jo/AqQNrl4HNXLXdRJzQAsSUtlUSe4UPS5GIKHQns0Cffvls="
+    - secure: "nx2W8a0wTPUfMFfR0TQxoA+M0ExUAJxIBy1AfKRlJXHaXN3al+SjLNXDU/OdplN9doae8BhcpHJBLiCDfQFY5Wmmbuxq2wAWhrPduIMPZFttBuxkoWkAbrhzYPsk5t7vERrJbSAynNbKeVL1gj7zitStJxzJzT2Z8y//9KYwXty3hPMJei2R1GCLTIOYp0ddq1Uu02Sdhkg07IO+bCrv5q6NFOpnx27SjYEBIOX66bVnGUcUzrbFQM1WToHwFHU3ylZUbj+zJHu+njj9SNTaoR7nIl6oedHCtloagTxyqjLQ0k3E9O4D5fuVvanKDAnLXrlPHWwNoEjffUMQ/b8OtTpgjB6pTr8Xu5oMN4tb5AbofdFOYIyumhHEN7Yt9t1sI6mYMEPu8GfAUTNHS41QfJakGRjYWOMoWQD4sOwRi8VRx+wOkvGSF75wsIrRM30qOkU4cXjoe44My7OkJKycz5AlvR8Drow5d8FO7N4C8olNM4MyP1Ofs2ulXYVEXEXV9NxuRIpcejx8UUZfBNjHnLsAjgq4sWyey22vTxIlmzc1dN3AngiScNdU7u2emZVBmC9VSLN2hAduA1y7HxESpqxd7+9v8qKxeSYw2j1V1sh2nvOvKah2Y61erDWjOI/eAxQPnT/uF4yoHC3dFnW9j9tCej0vZ0PeIBCUIKb5mx8="
     on_success: never
     on_failure: always

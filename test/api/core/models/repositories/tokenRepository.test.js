@@ -10,6 +10,7 @@ const
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
   TokenRepository = require('../../../../../lib/api/core/models/repositories/tokenRepository'),
   {
+    BadRequestError,
     InternalError: KuzzleInternalError,
     UnauthorizedError
   } = require('kuzzle-common-objects').errors;
@@ -197,6 +198,53 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.generateToken(user, request))
         .be.rejectedWith(KuzzleInternalError, {message: 'Unable to generate token for unknown user'});
+    });
+
+    it('should allow a big ttl if no maxTTL is set', () => {
+      const user = new User();
+      user._id = 'id';
+
+      const request = new Request({}, {
+        user,
+        connectionId: 'connectionId'
+      });
+
+      return tokenRepository.generateToken(user, request, {expiresIn: '1000y'})
+        .then(token => {
+          should(token).be.an.instanceOf(Token);
+        });
+    });
+
+    it('should allow a ttl lower than the maxTTL', () => {
+      const user = new User();
+      user._id = 'id';
+
+      const request = new Request({}, {
+        user,
+        connectionId: 'connectionId'
+      });
+
+      kuzzle.config.security.jwt.maxTTL = 42000;
+
+      return tokenRepository.generateToken(user, request, {expiresIn: '30s'})
+        .then(token => {
+          should(token).be.an.instanceOf(Token);
+        });
+    });
+
+    it('should reject if the ttl exceeds the maxTTL', () => {
+      const user = new User();
+      user._id = 'id';
+
+      const request = new Request({}, {
+        user,
+        connectionId: 'connectionId'
+      });
+
+      kuzzle.config.security.jwt.maxTTL = 42000;
+
+      return should(tokenRepository.generateToken(user, request, {expiresIn: '1m'}))
+        .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
     });
   });
 
