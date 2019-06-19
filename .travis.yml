@@ -41,7 +41,7 @@ jobs:
         sonarqube: true
 
       cache:
-        directories: 
+        directories:
           - $HOME/.sonar/cache
 
       env:
@@ -69,7 +69,7 @@ jobs:
 
       cache:
         directories:
-          - $HOME/.pm2 
+          - $HOME/.pm2
 
       env:
         - DOCKER_COMPOSE_VERSION=1.9.0
@@ -93,7 +93,7 @@ jobs:
 
       cache:
         directories:
-          - $HOME/.pm2 
+          - $HOME/.pm2
 
       env:
         - DOCKER_COMPOSE_VERSION=1.9.0
@@ -122,7 +122,7 @@ jobs:
 
       cache:
         directories:
-          - $HOME/.pm2 
+          - $HOME/.pm2
 
       env:
         - DOCKER_COMPOSE_VERSION=1.9.0
@@ -148,7 +148,7 @@ jobs:
 
       cache:
         directories:
-          - $HOME/.pm2 
+          - $HOME/.pm2
 
       env:
         - DOCKER_COMPOSE_VERSION=1.9.0
@@ -178,7 +178,7 @@ jobs:
 
       cache:
         directories:
-          - $HOME/.pm2 
+          - $HOME/.pm2
 
       env:
         - DOCKER_COMPOSE_VERSION=1.9.0
@@ -203,7 +203,7 @@ jobs:
 
       cache:
         directories:
-          - $HOME/.pm2 
+          - $HOME/.pm2
 
       env:
         - DOCKER_COMPOSE_VERSION=1.9.0
@@ -227,7 +227,10 @@ jobs:
 
       os: linux
       sudo: required
-      language: minimal
+      language: node_js
+
+      node_js:
+        - "8"
 
       script:
         - echo "Deploying Kuzzle on NPM"
@@ -243,7 +246,7 @@ jobs:
           tags: true
 
     - stage: "Deployments"
-      if: type = push AND branch =~ ^master|.*-dev|.*-stable$ 
+      if: type = push AND branch =~ ^master|.*-dev|.*-stable$
       name: "Dockerhub"
 
       os: linux
