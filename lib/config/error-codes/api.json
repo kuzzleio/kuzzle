@@ -189,12 +189,12 @@
           "message": "Number of delete to perform exceeds the server configured value %s",
           "class": "BadRequestError"
         },
-        "security_mdelete": {
+        "mdelete": {
           "code": 8,
           "message": "security:mDelete %s Error(s) deleting %s items`, %s",
           "class": "BadRequestError"
         },
-        "search_page_size_reached": {
+        "search_page_size_limit_reached": {
           "code": 9,
           "message": "Search page size exceeds server configured documents limit %s",
           "class": "SizeLimitError"
@@ -234,7 +234,7 @@
           "message": "Invalid limit parameter",
           "class": "BadRequestError"
         },
-        "empty_points_list": {
+        "add_empty_points_list": {
           "code": 3,
           "message": "Cannot add an empty points list",
           "class": "BadRequestError"

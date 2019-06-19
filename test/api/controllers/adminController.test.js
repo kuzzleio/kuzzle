@@ -56,12 +56,13 @@ describe('Test: admin controller', () => {
     it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
       adminController.throw = sinon.stub().throws(new NotFoundError());
+
       try {
         adminController.resetCache(request);
-        should(AdminController.throw)
-        .be.calledOnce
-        .be.calledWith('database_not_found', 'city17');
       } catch (e) {
+        should(adminController.throw)
+          .be.calledOnce()
+          .be.calledWith('database_not_found', 'city17');
         should(e).be.instanceOf(NotFoundError);
       }
     });
@@ -214,10 +215,10 @@ describe('Test: admin controller', () => {
 
       try {
         adminController.shutdown(request);
-        should(adminController.throw)
-        .be.calledOnce
-        .be.calledWith('precondition', 'Kuzzle is already shutting down.');
       } catch (e) {
+        should(adminController.throw)
+          .be.calledOnce()
+          .be.calledWith('precondition', 'Kuzzle is already shutting down.');
         should(e).be.instanceOf(PreconditionError);
       }
     });

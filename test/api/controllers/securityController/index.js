@@ -2,6 +2,7 @@
 
 const
   rewire = require('rewire'),
+  sinon = require('sinon'),
   should = require('should'),
   Bluebird = require('bluebird'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
@@ -109,10 +110,15 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
-
-      return should(() => {
+      kuzzle.throw.throws(new BadRequestError());
+      try {
         mDelete(kuzzle, 'type', request);
-      }).throw('Number of delete to perform exceeds the server configured value (1)');
+      } catch (e) {
+        should(kuzzle.throw)
+          .be.calledOnce()
+          .be.calledWith('api', 'security', 'delete_limit_reached', 1);
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
     it('should return the input ids if everything went fine', () => {

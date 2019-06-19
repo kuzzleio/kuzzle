@@ -8,7 +8,8 @@ const
     errors: {
       BadRequestError,
       NotFoundError,
-      PreconditionError
+      PreconditionError,
+      SizeLimitError
     }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
@@ -112,24 +113,27 @@ describe('Test: collection controller', () => {
 
     it('should return a dedicated error if the index does not exist', () => {
       kuzzle.indexCache.exists.resolves(false);
-      
-      return should(collectionController.getSpecifications(request))
-        .rejectedWith(
-          PreconditionError,
-          {message: `The index '${index}' does not exist`});
+      collectionController.throw = sinon.stub().throws(new PreconditionError());
+
+      return collectionController.getSpecifications(request)
+        .catch(() => {
+          should(collectionController.throw)
+            .be.calledOnce()
+            .be.calledWith('index_not_exists', index);
+        });
     });
 
-    it.only('should return a dedicated error if the collection does not exist', () => {
+    it('should return a dedicated error if the collection does not exist', () => {
       kuzzle.indexCache.exists.onFirstCall().resolves(true);
       kuzzle.indexCache.exists.onSecondCall().resolves(false);
       collectionController.throw = sinon.stub().throws(new PreconditionError());
-      collectionController.getError = sinon.stub().returns(new PreconditionError);
 
-
-      return should(collectionController.getSpecifications(request))
-        .rejectedWith(
-          PreconditionError,
-          {message: `The collection '${collection}' does not exist`});
+      return collectionController.getSpecifications(request)
+        .catch(() => {
+          should(collectionController.throw)
+            .be.calledOnce()
+            .be.calledWith('collection_not_exists', collection);
+        });
     });
 
     it('should give a meaningful message if there is no specifications', () => {
@@ -149,9 +153,16 @@ describe('Test: collection controller', () => {
       request.input.args.from = 0;
       request.input.args.size = 20;
       request.input.action = 'searchSpecifications';
+      collectionController.throw = sinon.stub().throws(new SizeLimitError());
 
-      return should(() => collectionController.searchSpecifications(request))
-        .throw('Search page size exceeds server configured documents limit (1)');
+      try {
+        collectionController.searchSpecifications(request);
+      } catch (e) {
+        should(collectionController.throw)
+          .be.calledOnce()
+          .be.calledWith('search_page_size', 1);
+        should(e).be.instanceOf(SizeLimitError);
+      }
     });
 
     it('should call internalEngine with the right data', () => {
@@ -591,10 +602,16 @@ describe('Test: collection controller', () => {
 
     it('should reject the request if an invalid "type" argument is provided', () => {
       request = new Request({index: 'index', type: 'foo'});
+      collectionController.throw = sinon.stub().throws(new BadRequestError());
 
-      return should(() => {
+      try {
         collectionController.list(request);
-      }).throw(BadRequestError);
+      } catch (e) {
+        should(collectionController.throw)
+          .be.calledOnce()
+          .be.calledWith('invalid_type_argument', 'foo');
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
     it('should only return stored collections with type = stored', () => {

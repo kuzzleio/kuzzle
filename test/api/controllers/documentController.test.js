@@ -52,28 +52,48 @@ describe('Test: document controller', () => {
 
     it('should throw an error if index contains a comma', () => {
       request.input.resource.index = '%test,anotherIndex';
+      request.input.action = 'search';
+      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
 
-      return should(() => {
-        request.input.action = 'search';
+      try {
         documentController.search(request);
-      }).throw('Search on multiple indexes is not available.');
+      } catch (e) {
+        should(documentController.throw)
+          .be.calledOnce()
+          .be.calledWith('search_on_multiple_indexes');
+        should(e).be.instanceOf(KuzzleInternalError);
+      }
     });
 
     it('should throw an error if collection contains a comma', () => {
       request.input.resource.collection = 'unit-test-documentController,anotherCollection';
+      request.input.action = 'search';
+      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
 
-      return should(() => {
-        request.input.action = 'search';
+      try {
         documentController.search(request);
-      }).throw('Search on multiple collections is not available.');
+      } catch (e) {
+        should(documentController.throw)
+          .be.calledOnce()
+          .be.calledWith('search_on_multiple_collections');
+        should(e).be.instanceOf(KuzzleInternalError);
+      }
     });
 
     it('should throw an error if the size argument exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.size = 10;
       request.input.action = 'search';
+      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
 
-      return should(() => documentController.search(request)).throw('Search cannot fetch more documents than the server configured limit (1)');
+      try {
+        documentController.search(request);
+      } catch (e) {
+        should(documentController.throw)
+          .be.calledOnce()
+          .be.calledWith('get_limit_reached', 1);
+        should(e).be.instanceOf(KuzzleInternalError);
+      }
     });
 
     it('should reject an error in case of error', () => {
@@ -185,12 +205,17 @@ describe('Test: document controller', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.body = {ids: ['anId', 'anotherId']};
       kuzzle.services.list.storageEngine.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
+      request.input.action = 'mGet';
+      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
 
-      return should(() => {
-        request.input.action = 'mGet';
-
+      try {
         documentController.mGet(request);
-      }).throw('Number of gets to perform exceeds the server configured value (1)');
+      } catch (e) {
+        should(documentController.throw)
+          .be.calledOnce()
+          .be.calledWith('get_limit_reached', 1);
+        should(e).be.instanceOf(KuzzleInternalError);
+      }
     });
   });
 
@@ -284,6 +309,7 @@ describe('Test: document controller', () => {
         ]
       };
 
+      documentController.getError = sinon.stub().returns(new PartialError());
       return documentController.mCreate(request)
         .then(result => {
           should(result).match({hits: ['created'], total: 1});
@@ -555,9 +581,13 @@ describe('Test: document controller', () => {
       });
 
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
+      documentController.getError = sinon.stub().returns(new PartialError);
 
       return documentController.mDelete(request)
         .then(result => {
+          should(documentController.getError)
+            .be.calledOnce()
+            .be.calledWith('some_creation_failed', ['anotherDocumentId'])
           should(result).match(['documentId']);
           should(request.error).be.instanceOf(PartialError);
           should(request.status).be.eql(206);

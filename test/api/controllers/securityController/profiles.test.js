@@ -214,6 +214,9 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
       kuzzle.repositories.profile.load.resolves(null);
+      sinon.spy(securityController, 'getError');
+      kuzzle.getError.returns(new NotFoundError());
+
       return should(securityController.getProfile(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
     });
   });
@@ -310,8 +313,16 @@ describe('Test: security controller - profiles', () => {
       request = new Request({body: {roles: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
-
-      return should(() => securityController.searchProfiles(request)).throw(SizeLimitError);
+      kuzzle.throw.throws(new SizeLimitError());
+       
+      try { 
+        securityController.searchProfiles(request)
+      } catch (e) {
+        should(kuzzle.throw)
+          .be.calledOnce()
+          .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
+      should(e).be.instanceOf(SizeLimitError);
+      };
     });
 
     it('should reject an error in case of error', () => {
@@ -505,8 +516,15 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject NotFoundError on a getProfileRights call with a bad id', () => {
       kuzzle.repositories.profile.load.resolves(null);
+      securityController.throw = sinon.stub().throws(new NotFoundError());
 
-      return should(securityController.getProfileRights(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
+      return securityController.getProfileRights(new Request({_id: 'test'}))
+        .catch ((e) => {
+          should(securityController.throw)
+            .be.calledOnce()
+            .be.calledWith('profile_not_found', 'test');
+          should(e).be.instanceOf(NotFoundError);
+        });
     });
   });
 

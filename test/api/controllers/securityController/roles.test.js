@@ -181,8 +181,16 @@ describe('Test: security controller - roles', () => {
       request = new Request({body: {policies: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
+      kuzzle.throw.throws(new SizeLimitError());
 
-      return should(() => securityController.searchRoles(request)).throw(SizeLimitError);
+      try {
+        securityController.searchRoles(request)
+      } catch (e) {
+        should(kuzzle.throw)
+          .be.calledOnce()
+          .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
+        should(e).be.instanceOf(SizeLimitError);
+      };
     });
 
     it('should reject an error in case of error', () => {

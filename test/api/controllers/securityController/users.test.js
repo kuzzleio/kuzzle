@@ -75,6 +75,8 @@ describe('Test: security controller - users', () => {
 
     it('should reject with NotFoundError when the user is not found', () => {
       kuzzle.repositories.user.load.resolves(null);
+      sinon.spy(securityController, 'getError');
+      kuzzle.getError.returns(new NotFoundError());
 
       return should(securityController.getUser(new Request({_id: 'i.dont.exist'})))
         .be.rejectedWith(NotFoundError);
@@ -176,7 +178,16 @@ describe('Test: security controller - users', () => {
         size: 10
       });
 
-      return should(() => securityController.searchUsers(request)).throw(SizeLimitError);
+      kuzzle.throw.throws(new SizeLimitError());
+
+      try {
+        securityController.searchUsers(request)
+      } catch (e) {
+        should(kuzzle.throw)
+          .be.calledOnce()
+          .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
+        should(e).be.instanceOf(SizeLimitError);
+      };
     });
 
     it('should reject an error in case of error', () => {
@@ -332,13 +343,19 @@ describe('Test: security controller - users', () => {
 
     it('should reject an error if user already exists', () => {
       kuzzle.repositories.user.load.resolves({_id: 'test'});
+      kuzzle.throw.throws(new PreconditionError());
 
-      return should(securityController.createUser(new Request({
+      return securityController.createUser(new Request({
         _id: 'test',
         body: {
           content: {name: 'John Doe', profileIds: ['anonymous']}
         }
-      }))).be.rejectedWith(PreconditionError);
+      })).catch ((e) => {
+        should(kuzzle.throw)
+          .be.calledOnce()
+          .be.calledWith('api', 'security', 'user_alreay_exists', 'test');
+        should(e).be.instanceOf(PreconditionError);
+      });
     });
 
     it('should throw an error if no profile is given', () => {
@@ -390,10 +407,16 @@ describe('Test: security controller - users', () => {
     it('should reject an error if a strategy is unknown', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
+      kuzzle.throw.throws(new BadRequestError());
       request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
 
-      return should(securityController.createUser(request)).be.rejectedWith(BadRequestError);
+      return securityController.createUser(request)
+        .catch ((e) => {
+          should(kuzzle.throw)
+            .be.calledOnce()
+            .be.calledWith('api', 'security', 'unknown_strategy', 'unknownStrategy');
+          should(e).be.instanceOf(BadRequestError);
+        });
     });
 
     it('should reject an error if credentials don\'t validate the strategy', () => {
@@ -414,12 +437,18 @@ describe('Test: security controller - users', () => {
     it('should reject if credentials already exist on the provided user id', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
+      kuzzle.throw.throws(new KuzzleInternalError());
       kuzzle.pluginsManager.getStrategyMethod
         .withArgs('someStrategy', 'exists')
         .returns(sinon.stub().resolves(true));
 
-      return should(securityController.createUser(request)).be.rejectedWith(KuzzleInternalError);
+      return securityController.createUser(request)
+        .catch ((e) => {
+          should(kuzzle.throw)
+            .be.calledOnce()
+            .be.calledWith('api', 'security', 'creds_on_non_existing_user', 'test');
+          should(e).be.instanceOf(KuzzleInternalError);
+        });
     });
 
     it('should throw an error and rollback if credentials don\'t create properly', done => {
@@ -668,6 +697,8 @@ describe('Test: security controller - users', () => {
 
     it('should return an error if the user is not found', () => {
       kuzzle.repositories.user.load.resolves(null);
+      sinon.spy(securityController, 'getError');
+      kuzzle.getError.returns(new NotFoundError());
 
       return should(securityController.replaceUser(new Request({_id: 'i.dont.exist', body: {profileIds: ['anonymous']}}))).be.rejectedWith(NotFoundError);
     });
@@ -748,7 +779,15 @@ describe('Test: security controller - users', () => {
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
       kuzzle.repositories.user.load.resolves(null);
-      return should(securityController.getUserRights(new Request({_id: 'i.dont.exist'}))).be.rejectedWith(NotFoundError);
+      securityController.throw = sinon.stub().throws(new NotFoundError());
+
+      return securityController.getUserRights(new Request({ _id: 'i.dont.exist' }))
+        .catch((e) => {
+          should(securityController.throw)
+            .be.calledOnce()
+            .be.calledWith('user_not_found', 'i.dont.exist');
+          should(e).be.instanceOf(NotFoundError);
+        });
     });
   });
 

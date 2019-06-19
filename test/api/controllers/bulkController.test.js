@@ -61,6 +61,9 @@ describe('Test the bulk controller', () => {
 
       return controller.import(request)
         .then(response => {
+          should(controller.getError)
+            .be.calledOnce()
+            .be.calledWith('document_creations_failed', response.partialErrors);
           should(response).be.instanceof(Object);
           should(request.status).be.eql(206);
           should(request.error).be.instanceOf(PartialError);
