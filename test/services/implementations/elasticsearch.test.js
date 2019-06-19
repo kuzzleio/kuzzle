@@ -1323,7 +1323,8 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.client.bulk.resolves({});
 
-      return should(elasticsearch.import(request)).be.rejectedWith(PreconditionError);
+      return should(elasticsearch.import(request))
+        .be.rejectedWith(PreconditionError, {message: 'Index "test" and/or collection "unit-tests-elasticsearch" don\'t exist'});
     });
   });
 
