@@ -222,7 +222,10 @@ jobs:
 
       os: linux
       sudo: required
-      language: minimal
+      language: node_js
+
+      node_js:
+        - "8"
 
       script:
         - echo "Deploying Kuzzle on NPM"
