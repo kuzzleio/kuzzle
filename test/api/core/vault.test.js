@@ -75,6 +75,7 @@ describe('Test: vault core component', () => {
 
   describe('#init', () => {
     beforeEach(() => {
+      vault.defaultSecretsFile = 'config/secrets.enc.json';
       vault.vaultKey = 'the spoon does not exists';
     });
 
@@ -84,7 +85,7 @@ describe('Test: vault core component', () => {
 
       return vault.init()
         .then(() => {
-          should(vault.encryptedSecretsFile).be.eql('../../../config/secrets.enc.json');
+          should(vault.encryptedSecretsFile).be.eql('config/secrets.enc.json');
           should(vault.vaultKeyHash).be.undefined();
           should(vault.secrets).match({});
         });
