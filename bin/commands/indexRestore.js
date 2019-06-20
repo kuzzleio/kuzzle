@@ -34,7 +34,7 @@ function importCollection (sdk, cout, dumpFiles) {
   const bulkData = JSON.parse(fs.readFileSync(dumpFiles[0]));
 
   if (bulkData.length === 0) {
-    console.log(cout.notice(`[ℹ] File ${dumpFiles[0]} is empty. Skip import.`));
+    console.log(cout.notice(`[ℹ] File ${dumpFiles[0]} is empty. Skipping import.`));
 
     return importCollection(sdk, cout, dumpFiles.slice(1));
   }
