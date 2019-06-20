@@ -24,22 +24,34 @@
 const
   fs = require('fs'),
   ColorOutput = require('./colorOutput'),
+  StreamArray = require('stream-json/streamers/StreamArray'),
+  { Writable } = require('stream');
   getSdk = require('./getSdk');
 
+  // https://stackoverflow.com/questions/42896447/parse-large-json-file-in-nodejs-and-handle-each-object-independently/42897498
 function importCollection (sdk, cout, dumpFiles) {
+  console.log("1")
   if (dumpFiles.length === 0) {
-    return null;
+    return Promise.resolve(null);
   }
 
-  const bulkData = JSON.parse(fs.readFileSync(dumpFiles[0]));
+  const
+    fileStream = fs.createReadStream(dumpFiles[0]),
+    jsonStream = StreamArray.withParser(),
+    processingStream = new Writable({
+      write({ bulkData }, encoding, next) {
+        console.log(bulkData);
+        next();
+      },
+      objectMode: true
+    });
 
-  if (bulkData.length === 0) {
-    console.log(cout.notice(`[ℹ] File ${dumpFiles[0]} is empty. Skipping import.`));
+  fileStream.pipe(jsonStream.input);
+  jsonStream.pipe(processingStream);
+  processingStream.on('finish', () => console.log('All done'));
 
-    return importCollection(sdk, cout, dumpFiles.slice(1));
-  }
-
-  return sdk.bulk.import(bulkData)
+  const doImport = bulkData => {
+    return sdk.bulk.import(bulkData)
     .then(() => {
       console.log(cout.ok(`[✔] Dump file ${dumpFiles[0]} imported`));
 
@@ -55,6 +67,7 @@ function importCollection (sdk, cout, dumpFiles) {
       return null;
     })
     .then(() => importCollection(sdk, cout, dumpFiles.slice(1)));
+  };
 }
 
 function indexRestore (dumpDirectory, options) {
