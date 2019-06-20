@@ -39,12 +39,7 @@ function commandDump (options) {
   };
 
   return getSdk(options)
-    .then(response => {
-      sdk = response;
-
-      return null;
-    })
-    .then(() => sdk.query(request))
+    .then(sdk => sdk.query(request))
     .then(response => {
       console.log(cout.ok('[✔] Done!'));
       console.log('\n' + cout.warn(`[ℹ] Dump has been successfully generated in "${response.result}" folder`));

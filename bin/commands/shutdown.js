@@ -38,12 +38,7 @@ function commandShutdown (options) {
   };
 
   return getSdk(options)
-    .then(response => {
-      sdk = response;
-
-      return null;
-    })
-    .then(() => sdk.query(request))
+    .then(sdk => sdk.query(request))
     .then(() => {
       console.log(cout.ok('[✔] Done'));
       process.exit(0);

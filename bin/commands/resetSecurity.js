@@ -55,12 +55,7 @@ function commandResetSecurity (options) {
     };
 
     return getSdk(options)
-      .then(response => {
-        sdk = response;
-
-        return null;
-      })
-      .then(() => sdk.query(request))
+      .then(sdk => sdk.query(request))
       .then(() => {
         console.log(cout.ok('[✔] Kuzzle users, profiles and roles have been successfully reset'));
         process.exit(0);
