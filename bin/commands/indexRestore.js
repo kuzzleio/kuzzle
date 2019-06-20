@@ -46,11 +46,9 @@ function importCollection (sdk, cout, dumpFiles) {
       return null;
     })
     .catch(error => {
-      console.log(cout.warn(`[ℹ] Error importing ${dumpFiles[0]}`));
+      console.log(cout.warn(`[ℹ] Error importing ${dumpFiles[0]}. See errors in 'index-restore-errors.json'`));
       if (error.status === 206) {
-        for (const err of error.errors) {
-          console.log(`  ${err.error.reason}`);
-        }
+        fs.writeFileSync('./index-restore-errors.json', JSON.stringify(error.errors, null, 2));
       } else {
         console.log(error.message);
       }
