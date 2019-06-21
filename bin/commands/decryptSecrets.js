@@ -34,11 +34,6 @@ function commandDecryptSecrets (file, options) {
     encryptedSecretsFile = file || process.env.KUZZLE_SECRETS_FILE || vault.defaultEncryptedSecretsFile,
     cout = new ColorOutput(options);
 
-  if (!encryptedSecretsFile) {
-    console.log(cout.error('[ℹ] You must provide the secrets file with encryptSecrets <file> or in KUZZLE_SECRETS_FILE environment variable'));
-    process.exit(1);
-  }
-
   if (!options.vaultKey && !process.env.KUZZLE_VAULT_KEY) {
     console.log(cout.error('[ℹ] You must provide the vault key with --vault-key <key> or in KUZZLE_VAULT_KEY environment variable'));
     process.exit(1);
