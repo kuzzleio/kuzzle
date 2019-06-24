@@ -53,7 +53,7 @@ describe('Test: document controller', () => {
     it('should throw an error if index contains a comma', () => {
       request.input.resource.index = '%test,anotherIndex';
       request.input.action = 'search';
-      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
+      documentController.throw = sinon.spy();
 
       try {
         documentController.search(request);
@@ -61,14 +61,13 @@ describe('Test: document controller', () => {
         should(documentController.throw)
           .be.calledOnce()
           .be.calledWith('search_on_multiple_indexes');
-        should(e).be.instanceOf(KuzzleInternalError);
       }
     });
 
     it('should throw an error if collection contains a comma', () => {
       request.input.resource.collection = 'unit-test-documentController,anotherCollection';
       request.input.action = 'search';
-      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
+      documentController.throw = sinon.spy();
 
       try {
         documentController.search(request);
@@ -76,7 +75,6 @@ describe('Test: document controller', () => {
         should(documentController.throw)
           .be.calledOnce()
           .be.calledWith('search_on_multiple_collections');
-        should(e).be.instanceOf(KuzzleInternalError);
       }
     });
 
@@ -84,7 +82,7 @@ describe('Test: document controller', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.size = 10;
       request.input.action = 'search';
-      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
+      documentController.throw = sinon.spy();
 
       try {
         documentController.search(request);
@@ -92,7 +90,6 @@ describe('Test: document controller', () => {
         should(documentController.throw)
           .be.calledOnce()
           .be.calledWith('get_limit_reached', 1);
-        should(e).be.instanceOf(KuzzleInternalError);
       }
     });
 
@@ -206,7 +203,7 @@ describe('Test: document controller', () => {
       request.input.body = {ids: ['anId', 'anotherId']};
       kuzzle.services.list.storageEngine.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
       request.input.action = 'mGet';
-      documentController.throw = sinon.stub().throws(new KuzzleInternalError());
+      documentController.throw = sinon.spy();
 
       try {
         documentController.mGet(request);
@@ -214,7 +211,6 @@ describe('Test: document controller', () => {
         should(documentController.throw)
           .be.calledOnce()
           .be.calledWith('get_limit_reached', 1);
-        should(e).be.instanceOf(KuzzleInternalError);
       }
     });
   });

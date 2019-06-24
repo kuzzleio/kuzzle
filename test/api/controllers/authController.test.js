@@ -286,7 +286,7 @@ describe('Test the auth controller', () => {
     });
 
     it('should throw if the token has already been refreshed', () => {
-      authController.throw = sinon.stub().throws(new UnauthorizedError());
+      authController.throw = sinon.spy();
 
       try {
         authController.refreshToken(new Request(
@@ -300,7 +300,6 @@ describe('Test the auth controller', () => {
         should(authController.throw)
           .be.calledOnce()
           .be.calledWith('invalid_token');
-        should(e).be.instanceOf(UnauthorizedError);
       }
     });
 

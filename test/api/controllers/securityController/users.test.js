@@ -771,14 +771,13 @@ describe('Test: security controller - users', () => {
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
       kuzzle.repositories.user.load.resolves(null);
-      securityController.throw = sinon.stub().throws(new NotFoundError());
+      securityController.throw = sinon.spy();
 
       return securityController.getUserRights(new Request({ _id: 'i.dont.exist' }))
         .catch((e) => {
           should(securityController.throw)
             .be.calledOnce()
             .be.calledWith('user_not_found', 'i.dont.exist');
-          should(e).be.instanceOf(NotFoundError);
         });
     });
   });

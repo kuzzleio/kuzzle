@@ -4,10 +4,6 @@ const
   sinon = require('sinon'),
   {
     Request,
-    errors: {
-      NotFoundError,
-      PreconditionError
-    }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
@@ -54,7 +50,7 @@ describe('Test: admin controller', () => {
 
     it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
-      adminController.throw = sinon.stub().throws(new NotFoundError());
+      adminController.throw = sinon.spy();
 
       try {
         adminController.resetCache(request);
@@ -62,7 +58,6 @@ describe('Test: admin controller', () => {
         should(adminController.throw)
           .be.calledOnce()
           .be.calledWith('database_not_found', 'city17');
-        should(e).be.instanceOf(NotFoundError);
       }
     });
   });
@@ -210,7 +205,7 @@ describe('Test: admin controller', () => {
     it('should throw an error if shutdown is in progress', () => {
       AdminController.__set__('_locks', { shutdown: true });
       adminController = new AdminController(kuzzle);
-      adminController.throw = sinon.stub().throws(new PreconditionError());
+      adminController.throw = sinon.spy();
 
       try {
         adminController.shutdown(request);
@@ -218,7 +213,6 @@ describe('Test: admin controller', () => {
         should(adminController.throw)
           .be.calledOnce()
           .be.calledWith('precondition', 'Kuzzle is already shutting down.');
-        should(e).be.instanceOf(PreconditionError);
       }
     });
 
