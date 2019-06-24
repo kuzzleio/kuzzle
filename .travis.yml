@@ -1,3 +1,12 @@
+stages:
+  - Unit Tests & Linters
+  - Integration tests
+  - name: Cross-platform tests
+    if: type = cron
+  - name: Redis tests
+    if: type = cron
+  - Deployments
+
 jobs:
   include:
 
@@ -5,12 +14,14 @@ jobs:
 # Unit Tests & Linters
 # ---------------------------------------
 
-    - stage: "Unit Tests & Linters"
+    - stage: Unit Tests & Linters
       if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-      name: "Unit Tests & ESLint"
+      name: Unit Tests & ESLint
       os: linux
       sudo: required
       language: node_js
+
+      cache: npm
 
       node_js:
         - "8"
@@ -26,16 +37,13 @@ jobs:
       after_script:
         - npm run codecov
 
-    - stage: "Unit Tests & Linters"
+    - stage: Unit Tests & Linters
       if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-      name: "SonarQube"
+      name: SonarQube
 
       os: linux
       sudo: required
-      language: node_js
-
-      node_js:
-        - "8"
+      language: java
 
       addons:
         sonarqube: true
@@ -48,9 +56,6 @@ jobs:
         # SonarQube Token
         secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
 
-      install:
-        - npm install --silent --only=dev
-
       script:
         - bash .ci/sonar.sh
 
@@ -58,21 +63,16 @@ jobs:
 # Integration tests
 # ---------------------------------------
 
-    - stage: "Integration tests"
-      if: (type = push AND branch =~ ^master|.*-stable$) OR type = cron
-      name: "Node.js 6"
+    - stage: Integration tests
+      if: type = cron OR type = push AND branch =~ ^master|.*-stable
+      name: Node.js 6
 
       os: linux
       sudo: required
       language: minimal
       services: docker
 
-      cache:
-        directories:
-          - $HOME/.pm2
-
       env:
-        - DOCKER_COMPOSE_VERSION=1.9.0
         - NODE_LTS=6
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
@@ -82,21 +82,16 @@ jobs:
       script:
         - docker-compose -f .ci/test.yml run kuzzle
 
-    - stage: "Integration tests"
-      if: (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-      name: "Node.js 8"
+    - stage: Integration tests
+      if: type = cron OR type = push AND branch =~ ^master|.*-dev|.*-stable
+      name: Node.js 8
 
       os: linux
       sudo: required
       language: minimal
       services: docker
 
-      cache:
-        directories:
-          - $HOME/.pm2
-
       env:
-        - DOCKER_COMPOSE_VERSION=1.9.0
         - NODE_LTS=8
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
@@ -106,13 +101,31 @@ jobs:
       script:
         - docker-compose -f .ci/test.yml run kuzzle
 
+    - stage: Integration tests
+      if: type = cron OR type = push AND branch =~ ^master|.*-stable$
+      name: Node.js 10
+
+      sudo: required
+      language: minimal
+      services: docker
+
+      env:
+        - NODE_LTS=10
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH" != "master" ]; then echo ":develop"; fi)
+
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
+
+
 # ---------------------------------------
-# Cross-plateform tests
+# Cross-platform tests
 # ---------------------------------------
 
-    - stage: "Cross-plateform tests"
-      name: "Linux ARMHF"
-
+    - stage: Cross-platform tests
+      name: Linux ARMHF
       if: type = cron
 
       os: linux
@@ -120,12 +133,7 @@ jobs:
       language: minimal
       services: docker
 
-      cache:
-        directories:
-          - $HOME/.pm2
-
       env:
-        - DOCKER_COMPOSE_VERSION=1.9.0
         - NODE_LTS=8
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
@@ -137,21 +145,16 @@ jobs:
         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-armhf ./.ci/scripts/install-armhf-deps.sh
         - docker-compose -f .ci/test-armhf.yml run kuzzle
 
-    - stage: "Cross-plateform tests"
+    - stage: Cross-platform tests
       if: type = cron
-      name: "Linux ARM64"
+      name: Linux ARM64
 
       os: linux
       sudo: required
       language: minimal
       services: docker
 
-      cache:
-        directories:
-          - $HOME/.pm2
-
       env:
-        - DOCKER_COMPOSE_VERSION=1.9.0
         - NODE_LTS=8
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
@@ -167,21 +170,15 @@ jobs:
 # Redis Tests
 # ---------------------------------------
 
-    - stage: "Redis tests"
-      if: type = cron
-      name: "Redis 3"
+    - stage: Redis tests
+      name: Redis 3
 
       os: linux
       sudo: required
       language: minimal
       services: docker
 
-      cache:
-        directories:
-          - $HOME/.pm2
-
       env:
-        - DOCKER_COMPOSE_VERSION=1.9.0
         - NODE_LTS=8
         - REDIS_VERSION=3.2
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
@@ -192,21 +189,15 @@ jobs:
       script:
         - docker-compose -f .ci/test.yml run kuzzle
 
-    - stage: "Redis tests"
-      if: type = cron
-      name: "Redis 4"
+    - stage: Redis tests
+      name: Redis 4
 
       os: linux
       sudo: required
       language: minimal
       services: docker
 
-      cache:
-        directories:
-          - $HOME/.pm2
-
       env:
-        - DOCKER_COMPOSE_VERSION=1.9.0
         - NODE_LTS=8
         - REDIS_VERSION=4.0.14
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
@@ -221,9 +212,9 @@ jobs:
 # Deployments
 # ---------------------------------------
 
-    - stage: "Deployments"
+    - stage: Deployments
       if: tag IS present AND type != cron
-      name: "NPM.js"
+      name: NPM.js
 
       os: linux
       sudo: required
@@ -245,9 +236,9 @@ jobs:
           branch: master
           tags: true
 
-    - stage: "Deployments"
-      if: type = push AND branch =~ ^master|.*-dev|.*-stable$
-      name: "Dockerhub"
+    - stage: Deployments
+      if: type = push AND branch =~ ^master|.*-dev|.*-stable$ 
+      name: Dockerhub
 
       os: linux
       sudo: required
