@@ -5,7 +5,6 @@ const
   {
     Request,
     errors: {
-      BadRequestError,
       NotFoundError,
       PreconditionError
     }

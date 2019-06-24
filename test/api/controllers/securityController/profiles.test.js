@@ -9,8 +9,7 @@ const
   Request = require('kuzzle-common-objects').Request,
   {
     BadRequestError,
-    NotFoundError,
-    SizeLimitError
+    NotFoundError
   } = require('kuzzle-common-objects').errors,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 

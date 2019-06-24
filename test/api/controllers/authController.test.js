@@ -289,19 +289,19 @@ describe('Test the auth controller', () => {
       authController.throw = sinon.stub().throws(new UnauthorizedError());
 
       try {
-          authController.refreshToken(new Request(
+        authController.refreshToken(new Request(
           {},
           {
             token: { userId: 'foo', _id: 'bar', refreshed: true },
             user: { _id: 'bar' }
           }
-        ))
-        } catch (e) {
-          should(authController.throw)
+        ));
+      } catch (e) {
+        should(authController.throw)
           .be.calledOnce()
           .be.calledWith('invalid_token');
-          should(e).be.instanceOf(UnauthorizedError);
-        }
+        should(e).be.instanceOf(UnauthorizedError);
+      }
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {

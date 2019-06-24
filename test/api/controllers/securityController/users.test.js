@@ -10,9 +10,7 @@ const
   {
     BadRequestError,
     NotFoundError,
-    InternalError: KuzzleInternalError,
     PluginImplementationError,
-    SizeLimitError,
     PreconditionError,
   } = require('kuzzle-common-objects').errors,
   SecurityController = rewire('../../../../lib/api/controllers/securityController'),
@@ -408,7 +406,7 @@ describe('Test: security controller - users', () => {
       request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
 
       return securityController.createUser(request)
-        .catch ((e) => {
+        .catch (() => {
           should(errorsManager.throw)
             .be.calledOnce()
             .be.calledWith('api', 'security', 'unknown_strategy', 'unknownStrategy');
@@ -439,7 +437,7 @@ describe('Test: security controller - users', () => {
         .returns(sinon.stub().resolves(true));
 
       return securityController.createUser(request)
-        .catch ((e) => {
+        .catch (() => {
           should(errorsManager.throw)
             .be.calledOnce()
             .be.calledWith('api', 'security', 'creds_on_non_existing_user', 'test');

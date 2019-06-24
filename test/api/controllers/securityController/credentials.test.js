@@ -120,7 +120,7 @@ describe('Test: security controller - credentials', () => {
       });
 
       kuzzle.repositories.user.load.resolves(null);
-      securityController.throw = sinon.stub().throws(new BadRequestError('Cannot update credentials: unknown kuid "someUserId"'))
+      securityController.throw = sinon.stub().throws(new BadRequestError('Cannot update credentials: unknown kuid "someUserId"'));
       return should(securityController.updateCredentials(request))
         .rejectedWith(BadRequestError, {message: 'Cannot update credentials: unknown kuid "someUserId"'});
     });
