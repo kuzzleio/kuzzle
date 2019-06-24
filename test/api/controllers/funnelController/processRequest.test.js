@@ -256,7 +256,7 @@ describe('funnelController.processRequest', () => {
       object: {
         init: () => {},
         pipes: {
-          'database:beforeWrite': ({ documents, request }) => {
+          'generic:document:beforeWrite': ({ documents, request }) => {
             should(documents[0]._id).equal(null);
 
             documents[0]._id = 'foobar';

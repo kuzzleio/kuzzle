@@ -24,7 +24,7 @@ describe('funnelController.processRequest', () => {
 
     funnel.performDocumentAlias(request, 'before');
     const args = kuzzle.pipe.getCall(0).args;
-    should(args[0]).equal('database:beforeWrite');
+    should(args[0]).equal('generic:document:beforeWrite');
     should(args[1].documents).be.type('object');
     should(args[1].request).be.type('object');
   });
@@ -37,7 +37,7 @@ describe('funnelController.processRequest', () => {
 
     funnel.performDocumentAlias(request, 'after');
     const args = kuzzle.pipe.getCall(0).args;
-    should(args[0]).equal('database:afterWrite');
+    should(args[0]).equal('generic:document:afterWrite');
     should(args[1].documents).be.type('object');
     should(args[1].request).be.type('object');
   });
