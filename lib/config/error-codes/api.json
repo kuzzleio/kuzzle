@@ -114,7 +114,7 @@
           "message": "Request discarded: Kuzzle Server is temporarily overloaded",
           "class": "ServiceUnavailableError"
         },
-        "anonymous_user": {
+        "anonymous_user_permissions": {
           "code": 2,
           "message": "Unauthorized action [ %s / %s / %s / %s ] for anonymous user",
           "class": "UnauthorizedError"
@@ -264,12 +264,12 @@
           "message": "Invalid value for parameter %s : float expected.",
           "class": "BadRequestError"
         },
-        "zero_source_key": {
+        "no_source_key": {
           "code": 9,
           "message": "At least 1 source key must be provided",
           "class": "BadRequestError"
         },
-        "zero_score_member_pair": {
+        "no_score_member_pair": {
           "code": 10,
           "message": "At least 1 score/member pair must be provided",
           "class": "BadRequestError"
