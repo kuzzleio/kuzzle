@@ -2,6 +2,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   rewire = require('rewire'),
+  errorsManager = require('../../lib/config/error-codes/throw'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
   {
     errors: { 
@@ -51,7 +52,8 @@ describe('/lib/api/kuzzle.js', () => {
 
   describe('#throw', () => {
     it('should throw an ExternalServiceError with right name, msg and code', () => {
-      should(() => kuzzle.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
+
+      should(() => errorsManager.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
         .throw(
           ExternalServiceError,
           {
@@ -63,7 +65,8 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw an InternalError with default name, msg and code', () => {
-      should(() => kuzzle.throw('api', 'server', 'fake_error', '{"status":"error"}'))
+
+      should(() => errorsManager.throw('api', 'server', 'fake_error', '{"status":"error"}'))
         .throw(
           InternalError,
           {
