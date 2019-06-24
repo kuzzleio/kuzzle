@@ -515,7 +515,7 @@ describe('Test: security controller - profiles', () => {
       securityController.throw = sinon.spy();
 
       return securityController.getProfileRights(new Request({_id: 'test'}))
-        .catch ((e) => {
+        .catch (() => {
           should(securityController.throw)
             .be.calledOnce()
             .be.calledWith('profile_not_found', 'test');

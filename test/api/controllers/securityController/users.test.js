@@ -774,7 +774,7 @@ describe('Test: security controller - users', () => {
       securityController.throw = sinon.spy();
 
       return securityController.getUserRights(new Request({ _id: 'i.dont.exist' }))
-        .catch((e) => {
+        .catch(() => {
           should(securityController.throw)
             .be.calledOnce()
             .be.calledWith('user_not_found', 'i.dont.exist');

@@ -7,9 +7,7 @@ const
     Request,
     errors: {
       BadRequestError,
-      NotFoundError,
-      PreconditionError,
-      SizeLimitError
+      NotFoundError
     }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
