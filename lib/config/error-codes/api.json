@@ -1,6 +1,16 @@
 {
   "code": 1,
   "subdomains": {
+    "base": {
+      "code": 1,
+      "errors": {
+        "invalid_value_type": {
+          "code": 1,
+          "message": "Invalid '%s' value (%s): boolean expected",
+          "class": "BadRequestError"
+        }
+      }
+    },
     "server": {
       "code": 1,
       "errors": {
