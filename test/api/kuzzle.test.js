@@ -2,7 +2,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   rewire = require('rewire'),
-  errorsManager = require('../../lib/config/error-codes/throw'),
+  { throw: throwError } = require('../../lib/config/error-codes/throw'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
   {
     errors: { 
@@ -51,9 +51,10 @@ describe('/lib/api/kuzzle.js', () => {
   });
 
   describe('#throw', () => {
+    
     it('should throw an ExternalServiceError with right name, msg and code', () => {
-
-      should(() => errorsManager.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
+    
+      should(() => throwError('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
         .throw(
           ExternalServiceError,
           {
@@ -66,7 +67,7 @@ describe('/lib/api/kuzzle.js', () => {
 
     it('should throw an InternalError with default name, msg and code', () => {
 
-      should(() => errorsManager.throw('api', 'server', 'fake_error', '{"status":"error"}'))
+      should(() => throwError('api', 'server', 'fake_error', '{"status":"error"}'))
         .throw(
           InternalError,
           {
@@ -78,7 +79,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw an NotFoundError with default name, msg and code', () => {
-      should(() => kuzzle.throw('api', 'admin', 'database_not_found', 'fake_database'))
+      should(() => throwError('api', 'admin', 'database_not_found', 'fake_database'))
         .throw(
           NotFoundError,
           {
@@ -90,7 +91,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw a PreconditionError with default name, msg and code', () => {
-      should(() => kuzzle.throw('api', 'admin', 'precondition', 'Kuzzle is already shutting down.'))
+      should(() => throwError('api', 'admin', 'precondition', 'Kuzzle is already shutting down.'))
         .throw(
           PreconditionError,
           {
@@ -102,7 +103,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw an UnauthorizedError with default name, msg and code', () => {
-      should(() => kuzzle.throw('api', 'auth', 'invalid_token'))
+      should(() => throwError('api', 'auth', 'invalid_token'))
         .throw(
           UnauthorizedError,
           {
@@ -114,7 +115,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw a PartialError with default name, msg and code', () => {
-      should(() => kuzzle.throw('api', 'bulk', 'document_creations_failed', ['foo', 'bar']))
+      should(() => throwError('api', 'bulk', 'document_creations_failed', ['foo', 'bar']))
         .throw(
           PartialError,
           {

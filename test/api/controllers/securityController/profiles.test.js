@@ -4,6 +4,7 @@ const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
+  errorsManager = require('../../../../lib/config/error-codes/throw'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   {
@@ -215,7 +216,6 @@ describe('Test: security controller - profiles', () => {
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
       kuzzle.repositories.profile.load.resolves(null);
       sinon.spy(securityController, 'getError');
-      kuzzle.getError.returns(new NotFoundError());
 
       return should(securityController.getProfile(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
     });
@@ -313,16 +313,13 @@ describe('Test: security controller - profiles', () => {
       request = new Request({body: {roles: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
-      kuzzle.throw.throws(new SizeLimitError());
-       
-      try { 
-        securityController.searchProfiles(request)
-      } catch (e) {
-        should(kuzzle.throw)
+      errorsManager.throw = sinon.spy();
+
+      return securityController.searchProfiles(request).catch(() => {
+        should(errorsManager.throw)
           .be.calledOnce()
           .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
-      should(e).be.instanceOf(SizeLimitError);
-      };
+      });
     });
 
     it('should reject an error in case of error', () => {

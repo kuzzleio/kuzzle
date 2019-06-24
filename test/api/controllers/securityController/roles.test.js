@@ -9,7 +9,8 @@ const
   Request = require('kuzzle-common-objects').Request,
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
-  SecurityController = rewire('../../../../lib/api/controllers/securityController');
+  SecurityController = rewire('../../../../lib/api/controllers/securityController'),
+  errorsManager = require('../../../../lib/config/error-codes/throw');
 
 describe('Test: security controller - roles', () => {
   let
@@ -181,16 +182,13 @@ describe('Test: security controller - roles', () => {
       request = new Request({body: {policies: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
-      kuzzle.throw.throws(new SizeLimitError());
+      errorsManager.throw = sinon.spy();
 
-      try {
-        securityController.searchRoles(request)
-      } catch (e) {
-        should(kuzzle.throw)
+      return securityController.searchRoles(request).catch(() => {
+        should(errorsManager.throw)
           .be.calledOnce()
           .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
-        should(e).be.instanceOf(SizeLimitError);
-      };
+      });
     });
 
     it('should reject an error in case of error', () => {

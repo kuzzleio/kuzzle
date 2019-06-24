@@ -17,7 +17,8 @@ const
       InternalError: KuzzleInternalError,
       PartialError
     }
-  } = require('kuzzle-common-objects');
+  } = require('kuzzle-common-objects'),
+  errorsManager = require('../../../../lib/config/error-codes/throw');
 
 describe('/api/controllers/security', () => {
   let
@@ -110,11 +111,11 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
-      kuzzle.throw.throws(new BadRequestError());
+      errorsManager.throw = sinon.spy();
       try {
         mDelete(kuzzle, 'type', request);
       } catch (e) {
-        should(kuzzle.throw)
+        should(errorsManager.throw)
           .be.calledOnce()
           .be.calledWith('api', 'security', 'delete_limit_reached', 1);
         should(e).be.instanceOf(BadRequestError);

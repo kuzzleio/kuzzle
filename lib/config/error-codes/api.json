@@ -162,12 +162,12 @@
         "profile_not_found": {
           "code": 2,
           "message": "Profile with id %s not found",
-          "class": "PartialError"
+          "class": "NotFoundError"
         },
         "user_not_found": {
           "code": 3,
           "message": "User with id %s not found",
-          "class": "PartialError"
+          "class": "NotFoundError"
         },
         "admin_exists": {
           "code": 4,
