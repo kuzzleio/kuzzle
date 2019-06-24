@@ -191,8 +191,8 @@
         },
         "mdelete": {
           "code": 8,
-          "message": "security:mDelete %s Error(s) deleting %s items`, %s",
-          "class": "BadRequestError"
+          "message": "security:mDelete %s Error(s) deleting %s items, %s",
+          "class": "PartialError"
         },
         "search_page_size_limit_reached": {
           "code": 9,

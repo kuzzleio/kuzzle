@@ -167,10 +167,10 @@ describe('/api/controllers/security', () => {
         .then(() => {
           should(request.error)
             .be.an.instanceOf(PartialError);
-
           should(request.error.errors)
             .be.an.Array()
             .and.have.length(1);
+            console.log(request.error.code);
           should(request.error.errors[0])
             .match(new KuzzleInternalError(error));
         });
