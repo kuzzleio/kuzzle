@@ -271,7 +271,7 @@
         },
         "integer_expected": {
           "code": 8,
-          "message": "Invalid value for parameter %s : float expected.",
+          "message": "Invalid value for parameter %s: integer expected.",
           "class": "BadRequestError"
         },
         "no_source_key": {
