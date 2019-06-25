@@ -11,8 +11,7 @@ const
     BadRequestError,
     NotFoundError,
     SizeLimitError
-  } = require('kuzzle-common-objects').errors,
-  errorsManager = require('../../../../lib/config/error-codes/throw');
+  } = require('kuzzle-common-objects').errors;
 
 describe('Test: hotelClerk.addSubscription', () => {
   let
@@ -112,7 +111,6 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should reject with an error if no index is provided', () => {
     request.input.resource.index = null;
-    errorsManager.getError = sinon.spy();
     return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
   });
 
@@ -193,7 +191,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
   });
 
-  it('should reject the subscription if the number of minterms exeeeds the configured limit', () => {
+  it('should reject the subscription if the number of minterms exeeds the configured limit', () => {
     kuzzle.config.limits.subscriptionMinterms = 8;
 
     const normalized = [];
@@ -207,14 +205,13 @@ describe('Test: hotelClerk.addSubscription', () => {
       collection: 'collection',
       id: 'foobar',
     }));
-
     return hotelClerk.addSubscription(request)
       .then(() => {throw new Error('should not happen');})
       .catch(error => {
         should(error)
           .be.an.instanceof(SizeLimitError);
         should(error.message)
-          .eql('Unable to subscribe: maximum number of minterms exceeded (max 8, received 9)');
+          .eql('Unable to subscribe: maximum number of minterms exceeded (max 8, received 9).');
       });
   });
 
