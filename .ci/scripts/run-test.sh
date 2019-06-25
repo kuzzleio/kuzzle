@@ -8,6 +8,8 @@ if [ "$NODE_LTS" = "6" ]; then
   NODE_VERSION=$NODE_6_VERSION
 elif [ "$NODE_LTS" = "8" ]; then
   NODE_VERSION=$NODE_8_VERSION
+elif [ "$NODE_LTS" = "10" ]; then
+  NODE_VERSION=$NODE_10_VERSION
 else
   echo "Unsupported Node LTS: $NODE_LTS"
   exit 1
