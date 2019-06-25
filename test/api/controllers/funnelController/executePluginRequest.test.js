@@ -32,7 +32,7 @@ describe('funnelController.executePluginRequest', () => {
       .then(() => Promise.reject(new Error('Should not resolve')))
       .catch(err => {
         should(err).be.instanceOf(BadRequestError);
-        should(err.message).be.eql('Unknown controller foo');
+        should(err.message).be.eql('Unknown controller foo.');
         should(kuzzle.emit).not.be.called();
       });
   });

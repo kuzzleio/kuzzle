@@ -74,7 +74,7 @@ describe('#base controller', () => {
         done(new Error('Should throw BadRequestError'));
       } catch (error) {
         should(error).be.instanceOf(BadRequestError);
-        should(error.message).be.eql('Invalid \'doha\' value (hamad): boolean expected');
+        should(error.message).be.eql('Invalid \'doha\' value (hamad).');
         done();
       }
     });

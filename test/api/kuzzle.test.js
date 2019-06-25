@@ -60,7 +60,7 @@ describe('/lib/api/kuzzle.js', () => {
           {
             errorName: 'api-server-elasticsearch_down',
             code: 1,
-            message: 'ElasticSearch is down: {"status":"red"}'
+            message: 'ElasticSearch is down: {"status":"red"}.'
           }
         );
     });
@@ -85,19 +85,19 @@ describe('/lib/api/kuzzle.js', () => {
           {
             errorName: 'api-admin-database_not_found',
             code: 1,
-            message: 'Database fake_database not found'
+            message: 'Database fake_database not found.'
           }
         );
     });
 
     it('should throw a PreconditionError with default name, msg and code', () => {
-      should(() => throwError('api', 'admin', 'precondition', 'Kuzzle is already shutting down.'))
+      should(() => throwError('api', 'admin', 'action_locked', 'Kuzzle is already shutting down'))
         .throw(
           PreconditionError,
           {
-            errorName: 'api-admin-precondition',
+            errorName: 'api-admin-action_locked',
             code: 2,
-            message: 'Kuzzle is already shutting down.'
+            message: 'Lock action error: Kuzzle is already shutting down.'
           }
         );
     });
@@ -122,7 +122,7 @@ describe('/lib/api/kuzzle.js', () => {
             errorName: 'api-bulk-document_creations_failed',
             errors: ['foo', 'bar'],
             code: 1,
-            message: 'Some document creations failed: foo,bar'
+            message: 'Some document creations failed: foo,bar.'
           }
         );
     });
