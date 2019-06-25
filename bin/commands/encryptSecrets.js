@@ -31,7 +31,7 @@ const
 function commandEncryptSecrets (file, options) {
   const
     vault = new Vault(),
-    secretsFile = file || process.env.KUZZLE_CLEAR_SECRETS_FILE || vault.defaultSecretsFile,
+    secretsFile = file || vault.defaultSecretsFile,
     cout = new ColorOutput(options);
 
   if (!options.vaultKey && !process.env.KUZZLE_VAULT_KEY) {
