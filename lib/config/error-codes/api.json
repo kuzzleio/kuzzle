@@ -196,7 +196,7 @@
         },
         "delete_limit_reached": {
           "code": 7,
-          "message": "Number of delete to perform exceeds the server configured value %s",
+          "message": "The number of deletes to perform exceeds the server configured value %s",
           "class": "BadRequestError"
         },
         "mdelete": {
