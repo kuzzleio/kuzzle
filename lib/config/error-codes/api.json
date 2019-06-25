@@ -266,7 +266,7 @@
         },
         "float_expected": {
           "code": 7,
-          "message": "Invalid value for parameter %s : float expected.",
+          "message": "Invalid value for parameter %s: float expected.",
           "class": "BadRequestError"
         },
         "integer_expected": {
