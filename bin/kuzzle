@@ -152,7 +152,7 @@ bindOption(
 // $ kuzzle decryptSecrets
 bindOption(
   program
-    .command('decryptSecrets [file]>')
+    .command('decryptSecrets [file]')
     .option('    --vault-key <vaultKey>', 'Vault key used to decrypt secrets')
     .option('    --outputFile <outputFile>', 'Output file to write decrypted secrets')
     .option('    --noint', 'non interactive mode')
