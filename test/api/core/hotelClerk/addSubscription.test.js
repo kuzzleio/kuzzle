@@ -11,7 +11,8 @@ const
     BadRequestError,
     NotFoundError,
     SizeLimitError
-  } = require('kuzzle-common-objects').errors;
+  } = require('kuzzle-common-objects').errors,
+  errorsManager = require('../../../../lib/config/error-codes/throw');
 
 describe('Test: hotelClerk.addSubscription', () => {
   let
@@ -111,7 +112,7 @@ describe('Test: hotelClerk.addSubscription', () => {
 
   it('should reject with an error if no index is provided', () => {
     request.input.resource.index = null;
-
+    errorsManager.getError = sinon.spy();
     return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
   });
 
