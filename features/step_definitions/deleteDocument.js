@@ -66,7 +66,7 @@ Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (d
         callback(response.error.message);
         return false;
       }
-      else if(response.error === null && withErrors) {
+      else if(!response.error && withErrors) {
         callback('Should get partial error');
         return false;
       }
