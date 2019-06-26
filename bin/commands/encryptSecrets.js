@@ -28,8 +28,11 @@ const
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput');
 
-function commandEncryptSecrets (secretsFile, options) {
-  const cout = new ColorOutput(options);
+function commandEncryptSecrets (file, options) {
+  const
+    vault = new Vault(),
+    secretsFile = file || vault.defaultSecretsFile,
+    cout = new ColorOutput(options);
 
   if (!options.vaultKey && !process.env.KUZZLE_VAULT_KEY) {
     console.log(cout.error('[ℹ] You must provide the vault key with --vault-key <key> or in KUZZLE_VAULT_KEY environment variable'));
@@ -41,7 +44,7 @@ function commandEncryptSecrets (secretsFile, options) {
     outputFile = options.outputFile;
 
   if (!options.outputFile) {
-    outputFile = `${path.dirname(secretsFile)}/${path.basename(secretsFile, '.json')}.enc.json`;
+    outputFile = path.resolve(`${path.dirname(secretsFile)}/${path.basename(secretsFile, '.json')}.enc.json`);
   }
 
   if (fs.existsSync(outputFile) && !options.noint) {
@@ -58,8 +61,6 @@ function commandEncryptSecrets (secretsFile, options) {
   }
 
   console.log(cout.notice('[ℹ] Encrypting secrets...\n'));
-
-  const vault = new Vault();
 
   vault.prepareCrypto(options.vaultKey);
 
