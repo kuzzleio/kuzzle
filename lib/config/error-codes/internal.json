@@ -110,6 +110,21 @@
           "class": "InternalError"
         }
       }
+    },
+    "vault": {
+      "code": 4,
+      "errors": {
+        "decrypt_secrets": {
+          "code": 1,
+          "message": "Cannot decrypt secrets: %s.",
+          "class": "InternalError"
+        },
+        "vault_key_not_found": {
+          "code": 2,
+          "message": "Cannot find vault key. Aborting.",
+          "class": "NotFoundError"
+        }
+      }
     }
   }
 }
