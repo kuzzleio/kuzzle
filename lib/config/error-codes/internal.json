@@ -85,6 +85,31 @@
           "class": "InternalError"
         }
       }
+    },
+    "janitor": {
+      "code": 3,
+      "errors": {
+        "import_data" : {
+          "code": 1,
+          "message" : "Some data was not imported for %s/%s (%s/%s).",
+          "class": "PartialError"
+        },
+        "dump_already_generated": {
+          "code": 2,
+          "message": "A dump is already being generated. Skipping.",
+          "class": "PreconditionError"
+        },
+        "dump_generation_disabled": {
+          "code": 3,
+          "message": "Dump generation is disabled.",
+          "class": "PreconditionError"
+        },
+        "reading_log_directory": {
+          "code": 4,
+          "message": "... error reading log directory.",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }
