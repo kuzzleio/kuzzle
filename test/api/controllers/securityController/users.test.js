@@ -17,10 +17,12 @@ const
   errorsManager = require('../../../../lib/config/error-codes/throw');
 
 describe('Test: security controller - users', () => {
+
   let
     kuzzle,
     request,
-    securityController;
+    securityController,
+    errorsManagerthrow;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -28,6 +30,11 @@ describe('Test: security controller - users', () => {
     request = new Request({controller: 'security'});
     kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {users: {properties: {}}}}});
     kuzzle.internalEngine.get.resolves({});
+    errorsManagerthrow = sinon.spy(errorsManager, 'throw');
+  });
+
+  afterEach(() => {
+    errorsManagerthrow.restore();
   });
 
   describe('#updateUserMapping', () => {
@@ -82,6 +89,7 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#searchUsers', () => {
+
     it('should return a valid responseObject', () => {
       request = new Request({
         body: { query: {foo: 'bar' }},
@@ -175,14 +183,14 @@ describe('Test: security controller - users', () => {
         from: 0,
         size: 10
       });
-
-      errorsManager.throw = sinon.spy();
-
-      return securityController.searchUsers(request).catch(() => {
-        should(errorsManager.throw)
+      
+      try {
+        securityController.searchUsers(request);
+      } catch (e) {
+        should(errorsManagerthrow)
           .be.calledOnce()
           .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
-      });
+      }
     });
 
     it('should reject an error in case of error', () => {

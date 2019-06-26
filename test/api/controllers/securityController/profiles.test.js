@@ -266,6 +266,16 @@ describe('Test: security controller - profiles', () => {
   });
 
   describe('#searchProfiles', () => {
+    let errorsManagerthrow;
+
+    beforeEach(() => {
+      errorsManagerthrow = sinon.spy(errorsManager, 'throw');
+    });
+
+    afterEach(() => {
+      errorsManagerthrow.restore();
+    });
+
     it('should return an object containing an array of profiles on searchProfile call', () => {
       kuzzle.repositories.profile.searchProfiles.resolves({hits: [{_id: 'test'}]});
 
@@ -312,13 +322,14 @@ describe('Test: security controller - profiles', () => {
       request = new Request({body: {roles: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
-      errorsManager.throw = sinon.spy();
 
-      return securityController.searchProfiles(request).catch(() => {
-        should(errorsManager.throw)
+      try {
+        securityController.searchProfiles(request);
+      } catch (e) {
+        should(errorsManagerthrow)
           .be.calledOnce()
           .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
-      });
+      }
     });
 
     it('should reject an error in case of error', () => {

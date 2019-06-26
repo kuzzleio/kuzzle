@@ -158,6 +158,16 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#searchRoles', () => {
+    let errorsManagerthrow;
+
+    beforeEach(() => {
+      errorsManagerthrow = sinon.spy(errorsManager, 'throw');
+    });
+
+    afterEach(() => {
+      errorsManagerthrow.restore();
+    });
+    
     it('should return response with an array of roles on searchRole call', () => {
       kuzzle.repositories.role.searchRole.resolves({
         hits: [{_id: 'test'}],

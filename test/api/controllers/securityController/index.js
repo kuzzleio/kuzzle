@@ -111,7 +111,7 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
-      errorsManager.throw = sinon.spy();
+      errorsManager.throw = sinon.spy(errorsManager, 'throw');
       try {
         mDelete(kuzzle, 'type', request);
       } catch (e) {
@@ -119,6 +119,7 @@ describe('/api/controllers/security', () => {
           .be.calledOnce()
           .be.calledWith('api', 'security', 'delete_limit_reached', 1);
         should(e).be.instanceOf(BadRequestError);
+        errorsManager.throw.restore();
       }
     });
 
