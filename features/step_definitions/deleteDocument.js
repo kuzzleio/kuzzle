@@ -62,11 +62,11 @@ Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (d
   this.api.mDelete({ids: documents})
     .then(response => {
       
-      if (response.error !== null && !withErrors) {
+      if (response.error && !withErrors) {
         callback(response.error.message);
         return false;
       }
-      else if(response.error === null && withErrors) {
+      else if(!response.error && withErrors) {
         callback('Should get partial error');
         return false;
       }
