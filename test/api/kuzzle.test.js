@@ -65,7 +65,7 @@ describe('/lib/api/kuzzle.js', () => {
           {
             errorName: 'internal-unexpected-unknown_error',
             code: 1,
-            message: 'Unknown error: {"status":"error"}'
+            message: 'Unknown error: {"status":"error"}.'
           }
         );
     });
