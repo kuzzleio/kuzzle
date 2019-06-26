@@ -191,7 +191,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
   });
 
-  it('should reject the subscription if the number of minterms exeeds the configured limit', () => {
+  it('should reject the subscription if the number of minterms exceeds the configured limit', () => {
     kuzzle.config.limits.subscriptionMinterms = 8;
 
     const normalized = [];
