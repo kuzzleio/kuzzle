@@ -256,21 +256,20 @@ describe('funnelController.processRequest', () => {
       object: {
         init: () => {},
         pipes: {
-          'generic:document:beforeWrite': ({ documents, request }) => {
+          'generic:document:beforeWrite': function hello(documents) {
             should(documents[0]._id).equal(null);
-
+      
             documents[0]._id = 'foobar';
-
-            return Promise.resolve({ documents, request });
+      
+            return Promise.resolve(documents);
           },
           'document:beforeCreate': (request) => {
             should(request.input.resource._id).equal('foobar');
-
+  
             done();
             return Promise.resolve(request);
           },
         },
-        myFunc: done
       },
       config: {},
       activated: true,

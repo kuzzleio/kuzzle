@@ -24,9 +24,10 @@ describe('funnelController.processRequest', () => {
 
     funnel.performDocumentAlias(request, 'before');
     const args = kuzzle.pipe.getCall(0).args;
+
     should(args[0]).equal('generic:document:beforeWrite');
-    should(args[1].documents).be.type('object');
-    should(args[1].request).be.type('object');
+    should(args[1]).be.type('object');
+    should(args[2]).be.type('object');
   });
 
   it('should trigger document after alias pipe', () => {
@@ -38,8 +39,8 @@ describe('funnelController.processRequest', () => {
     funnel.performDocumentAlias(request, 'after');
     const args = kuzzle.pipe.getCall(0).args;
     should(args[0]).equal('generic:document:afterWrite');
-    should(args[1].documents).be.type('object');
-    should(args[1].request).be.type('object');
+    should(args[1]).be.type('object');
+    should(args[2]).be.type('object');
   });
 
   it('should not trigger document before alias pipe', () => {
