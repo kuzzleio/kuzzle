@@ -1,4 +1,5 @@
 const
+  path = require('path'),
   should = require('should'),
   sinon = require('sinon'),
   mockRequire = require('mock-require');
@@ -85,7 +86,7 @@ describe('Test: vault core component', () => {
 
       return vault.init()
         .then(() => {
-          should(vault.encryptedSecretsFile).be.eql('config/secrets.enc.json');
+          should(vault.encryptedSecretsFile).be.eql(path.resolve('config/secrets.enc.json'));
           should(vault.vaultKeyHash).be.undefined();
           should(vault.secrets).match({});
         });
