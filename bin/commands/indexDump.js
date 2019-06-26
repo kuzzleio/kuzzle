@@ -25,6 +25,8 @@ const
   fs = require('fs'),
   ColorOutput = require('./colorOutput'),
   path = require('path'),
+  ndjson = require('ndjson'),
+  Bluebird = require('bluebird'),
   getSdk = require('./getSdk');
 
 //@TODO use 'recursive: true' with node.js 10
@@ -40,50 +42,56 @@ function mkdirp (fullPath) {
   }
 }
 
-function dumpCollectionPart (results, bulkDocuments) {
+function addWrite(stream, data) {
+  return () => (
+    new Promise(resolve => stream.write(data, () => resolve()))
+  );
+}
+
+function dumpCollectionPart (results, ndjsonStream) {
   if (!results) {
-    return null;
+    return Promise.resolve(null);
   }
 
+  const promises = [];
+
   for (const hit of results.hits) {
-    bulkDocuments.push({
+    promises.push(addWrite(ndjsonStream, {
       create: {
         _id: hit._id,
         _index: hit._index,
         _type: hit._type
       }
-    });
-
+    }));
     delete hit._source._kuzzle_info;
-    bulkDocuments.push(hit._source);
+    promises.push(addWrite(ndjsonStream, hit._source));
   }
 
-  return results.next()
-    .then(nextResults => dumpCollectionPart(nextResults, bulkDocuments));
+  return Bluebird.each(promises, promise => promise())
+    .then(() => results.next())
+    .then(nextResults => dumpCollectionPart(nextResults, ndjsonStream));
 }
 
 function dumpCollection (sdk, index, collection, directoryPath) {
   const
-    filename = `${directoryPath}/${index}--${collection}--dump.json`,
+    filename = `${directoryPath}/${index}--${collection}--dump.jsonl`,
+    writeStream = fs.createWriteStream(filename),
+    ndjsonStream = ndjson.serialize(),
     options = {
       scroll: '10m',
       size: 500
-    },
-    bulkDocuments = [];
+    };
 
+  ndjsonStream.on('data', line => writeStream.write(line));
+
+  const waitWrite = new Promise(resolve => ndjsonStream.on('finish', resolve));
 
   return sdk.document.search(index, collection, {}, options)
-    .then(results => dumpCollectionPart(results, bulkDocuments))
+    .then(results => dumpCollectionPart(results, ndjsonStream))
     .then(() => {
-      return new Promise((resolve, reject) => {
-        fs.writeFile(filename, JSON.stringify(bulkDocuments, null, 2), error => {
-          if (error) {
-            return reject(error);
-          }
+      ndjsonStream.end();
 
-          resolve();
-        });
-      });
+      return waitWrite;
     });
 }
 
@@ -94,10 +102,14 @@ function dumpIndex (sdk, cout, index, directoryPath) {
 
   return sdk.collection.list(index)
     .then(({ collections }) => {
-      return Promise.all(collections.map(collection => {
-        return dumpCollection(sdk, index, collection.name, directoryPath)
-          .then(() => console.log(cout.ok(`[✔] Collection ${index}:${collection.name} dumped`)));
-      }));
+      const promises = collections.map(collection => {
+        return () => (
+          dumpCollection(sdk, index, collection.name, directoryPath)
+            .then(() => console.log(cout.ok(`[✔] Collection ${index}:${collection.name} dumped`)))
+        );
+      });
+
+      return Bluebird.each(promises, promise => promise());
     });
 }
 
