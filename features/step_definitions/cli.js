@@ -40,7 +40,7 @@ Then('a file {string} contain {int} documents', function (filePath, count) {
       .on('finish', () => {
         should(content.length).be.eql(count);
 
-        for (const document of content) {
+        for (const document of content.slice(1)) {
           should(document).be.type('object');
           should(document.body).be.type('object');
           should(document._id).be.type('string');

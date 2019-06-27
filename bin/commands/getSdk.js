@@ -21,7 +21,8 @@
 
 const {
   Kuzzle,
-  Http
+  Http,
+  WebSocket
 } = require('kuzzle-sdk');
 
 /**
@@ -32,7 +33,7 @@ const {
  *  @param {object} options
  *  @return {Promise}
  */
-function getSdk (options) {
+function getSdk (options, protocol = 'http') {
   const config = {
     host: options.host || 'localhost',
     port: options.port || 7512
@@ -48,7 +49,14 @@ function getSdk (options) {
     };
   }
 
-  const kuzzle = new Kuzzle(new Http(config.host, { port: config.port }));
+  let networkProtocol;
+  if (protocol === 'http') {
+    networkProtocol = new Http(config.host, { port: config.port });
+  } else {
+    networkProtocol = new WebSocket(config.host, { port: config.port });
+  }
+
+  const kuzzle = new Kuzzle(networkProtocol);
 
   return kuzzle.connect()
     .then(() => {

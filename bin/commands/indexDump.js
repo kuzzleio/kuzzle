@@ -55,6 +55,11 @@ function dumpCollectionPart (results, ndjsonStream) {
 
   const promises = [];
 
+  promises.push(addWrite(ndjsonStream, {
+    index: results._request.index,
+    collection: results._request.collection
+  }));
+
   for (const hit of results.hits) {
     promises.push(addWrite(ndjsonStream, {
       _id: hit._id,
@@ -114,7 +119,7 @@ function commandIndexDump (index, directoryPath, options) {
 
   const cout = new ColorOutput(opts);
 
-  return getSdk(options)
+  return getSdk(options, 'websocket')
     .then(sdk => indexDump(sdk, cout, index, directoryPath))
     .then(() => {
       console.log(cout.ok(`\n[✔] Index ${index} successfully dumped`));

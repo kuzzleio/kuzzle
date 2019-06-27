@@ -58,27 +58,35 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
   };
 
   return new Promise(resolve => {
-    let documents = [];
+    let
+      headerSkipped = false,
+      documents = [];
 
     const readStream = fs.createReadStream(dumpFile)
       .pipe(ndjson.parse())
       .on('data', obj => {
-        documents.push(obj);
+        if (headerSkipped) {
+          documents.push(obj);
 
-        if (documents.length / 2 === batchSize) {
-          mWriteRequest.documents = documents;
-          documents = [];h
+          if (documents.length / 2 === batchSize) {
+            mWriteRequest.body.documents = documents;
+            documents = [];h
 
-          readStream.pause();
+            readStream.pause();
 
-          sdk.query(mWriteRequest)
-            .then(() => readStream.resume())
-            .catch(error => handleError(cout, dumpFile, error));
+            sdk.query(mWriteRequest)
+              .then(() => readStream.resume())
+              .catch(error => handleError(cout, dumpFile, error));
+          }
+        } else {
+          headerSkipped = true;
+          mWriteRequest.index = obj.index;
+          mWriteRequest.collection = obj.collection;
         }
       })
       .on('end', () => {
         if (documents.length > 0) {
-          mWriteRequest.documents = documents;
+          mWriteRequest.body.documents = documents;
 
           sdk.query(mWriteRequest)
             .catch(error => handleError(cout, dumpFile, error))
@@ -98,7 +106,7 @@ function indexRestore (dumpDirectory, options) {
     batchSize = options.batchSize || 200,
     cout = new ColorOutput(opts);
 
-  return getSdk(options)
+  return getSdk(options, 'websocket')
     .then(sdk => {
       console.log(cout.ok(`[✔] Start importing dump from ${dumpDirectory}`));
       const dumpFiles = fs.readdirSync(dumpDirectory).map(f => `${dumpDirectory}/${f}`);
