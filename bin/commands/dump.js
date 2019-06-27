@@ -30,7 +30,6 @@ function commandDump (options) {
     cout = new ColorOutput(options);
 
   console.log(cout.notice('[ℹ] Creating dump file...'));
-  let sdk;
 
   const request = {
     controller: 'admin',

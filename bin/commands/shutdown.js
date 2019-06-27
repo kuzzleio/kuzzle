@@ -28,8 +28,6 @@ function commandShutdown (options) {
   const
     cout = new ColorOutput(options);
 
-  let sdk;
-
   console.log(cout.notice('[ℹ] Shutting down...'));
 
   const request = {

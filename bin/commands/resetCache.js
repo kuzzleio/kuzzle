@@ -30,7 +30,6 @@ const
 
 function commandResetCache (database, options) {
   let
-    sdk,
     opts = options,
     db = database,
     userIsSure;

@@ -30,9 +30,7 @@ const
 
 function commandResetDatabase (options) {
   const cout = new ColorOutput(options);
-  let
-    sdk,
-    userIsSure = false;
+  let userIsSure = false;
 
   console.log(cout.warn('[ℹ] You are about to clear all data stored on Kuzzle.'));
   console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));

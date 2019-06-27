@@ -24,64 +24,83 @@
 const
   fs = require('fs'),
   ColorOutput = require('./colorOutput'),
-  StreamArray = require('stream-json/streamers/StreamArray'),
-  { Writable } = require('stream');
+  ndjson = require('ndjson'),
+  Bluebird = require('bluebird'),
   getSdk = require('./getSdk');
 
-  // https://stackoverflow.com/questions/42896447/parse-large-json-file-in-nodejs-and-handle-each-object-independently/42897498
-function importCollection (sdk, cout, dumpFiles) {
-  console.log("1")
-  if (dumpFiles.length === 0) {
-    return Promise.resolve(null);
-  }
+function handleError(cout, dumpFile, error) {
+  if (error.status === 206) {
+    const
+      errorFile = `${dumpFile.split('.').slice(0, -1).join('.')}-errors.jsonl`,
+      writeStream = fs.createWriteStream(errorFile, { flags: 'a' }),
+      serialize = ndjson.serialize();
 
-  const
-    fileStream = fs.createReadStream(dumpFiles[0]),
-    jsonStream = StreamArray.withParser(),
-    processingStream = new Writable({
-      write({ bulkData }, encoding, next) {
-        console.log(bulkData);
-        next();
-      },
-      objectMode: true
+    serialize.on('data', line => {
+      writeStream.write(line);
     });
 
-  fileStream.pipe(jsonStream.input);
-  jsonStream.pipe(processingStream);
-  processingStream.on('finish', () => console.log('All done'));
+    for (const partialError of error.errors) {
+      serialize.write(partialError);
+    }
 
-  const doImport = bulkData => {
-    return sdk.bulk.import(bulkData)
-    .then(() => {
-      console.log(cout.ok(`[✔] Dump file ${dumpFiles[0]} imported`));
+    serialize.end();
+    console.log(cout.warn(`[ℹ] Error importing ${dumpFile}. See errors in ${errorFile}`));
+  } else {
+    console.log(error.message);
+  }
+}
 
-      return null;
-    })
-    .catch(error => {
-      console.log(cout.warn(`[ℹ] Error importing ${dumpFiles[0]}. See errors in 'index-restore-errors.json'`));
-      if (error.status === 206) {
-        fs.writeFileSync('./index-restore-errors.json', JSON.stringify(error.errors, null, 2));
-      } else {
-        console.log(error.message);
-      }
-      return null;
-    })
-    .then(() => importCollection(sdk, cout, dumpFiles.slice(1)));
-  };
+function importCollection(sdk, cout, batchSize, dumpFile) {
+  return new Promise(resolve => {
+    let documents = [];
+
+    const readStream = fs.createReadStream(dumpFile)
+      .pipe(ndjson.parse())
+      .on('data', obj => {
+        documents.push(obj);
+
+        if (documents.length / 2 === batchSize) {
+          const bulk = documents;
+          documents = [];
+          readStream.pause();
+
+          sdk.bulk.import(bulk)
+            .then(() => readStream.resume())
+            .catch(error => handleError(cout, dumpFile, error));
+        }
+      })
+      .on('end', () => {
+        if (documents.length > 0) {
+          sdk.bulk.import(documents)
+            .catch(error => handleError(cout, dumpFile, error))
+            .then(() => resolve());
+        }
+      });
+  });
 }
 
 function indexRestore (dumpDirectory, options) {
   let
     opts = options;
 
-  const cout = new ColorOutput(opts);
+  const
+    batchSize = options.batchSize || 200,
+    cout = new ColorOutput(opts);
 
   return getSdk(options)
     .then(sdk => {
       console.log(cout.ok(`[✔] Start importing dump from ${dumpDirectory}`));
       const dumpFiles = fs.readdirSync(dumpDirectory).map(f => `${dumpDirectory}/${f}`);
 
-      return importCollection(sdk, cout, dumpFiles);
+      const promises = dumpFiles.map(dumpFile => {
+        return () => (
+          importCollection(sdk, cout, batchSize, dumpFile)
+            .then(() => console.log(cout.ok(`[✔] Dump file ${dumpFile} imported`)))
+            .catch(error => console.log(error))
+        );
+      });
+
+      return Bluebird.each(promises, promise => promise());
     })
     .then(() => {
       process.exit(0);

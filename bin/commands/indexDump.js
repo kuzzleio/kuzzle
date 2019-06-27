@@ -95,7 +95,7 @@ function dumpCollection (sdk, index, collection, directoryPath) {
     });
 }
 
-function dumpIndex (sdk, cout, index, directoryPath) {
+function indexDump (sdk, cout, index, directoryPath) {
   console.log(cout.notice(`Dumping index ${index} in ${directoryPath} ...`));
 
   mkdirp(directoryPath);
@@ -120,7 +120,7 @@ function commandIndexDump (index, directoryPath, options) {
   const cout = new ColorOutput(opts);
 
   return getSdk(options)
-    .then(sdk => dumpIndex(sdk, cout, index, directoryPath))
+    .then(sdk => indexDump(sdk, cout, index, directoryPath))
     .then(() => {
       console.log(cout.ok(`\n[✔] Index ${index} successfully dumped`));
       process.exit(0);

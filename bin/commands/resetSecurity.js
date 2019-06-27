@@ -32,9 +32,7 @@ function commandResetSecurity (options) {
   const
     cout = new ColorOutput(options);
 
-  let
-    sdk,
-    userIsSure = false;
+  let userIsSure = false;
 
   console.log(cout.warn('[ℹ] You are about to clear all created users, profiles and roles.'));
   console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));

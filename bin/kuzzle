@@ -168,10 +168,11 @@ bindOption(
     .action(require('./commands/indexDump'))
 );
 
-// $ kuzzle restoreIndex
+// $ kuzzle indexRestore
 bindOption(
   program
   .command('indexRestore <path>')
+  .option('    --batch-size <batchSize>', 'Maximum batch size (see limits.documentsWriteCount config)')
   .description('restore the content of a previously dumped index')
   .action(require('./commands/indexRestore'))
 );
