@@ -51,6 +51,12 @@ function handleError(cout, dumpFile, error) {
 }
 
 function importCollection(sdk, cout, batchSize, dumpFile) {
+  const mWriteRequest = {
+    controller: 'bulk',
+    action: 'mWrite',
+    body: {}
+  };
+
   return new Promise(resolve => {
     let documents = [];
 
@@ -60,20 +66,25 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
         documents.push(obj);
 
         if (documents.length / 2 === batchSize) {
-          const bulk = documents;
-          documents = [];
+          mWriteRequest.documents = documents;
+          documents = [];h
+
           readStream.pause();
 
-          sdk.bulk.import(bulk)
+          sdk.query(mWriteRequest)
             .then(() => readStream.resume())
             .catch(error => handleError(cout, dumpFile, error));
         }
       })
       .on('end', () => {
         if (documents.length > 0) {
-          sdk.bulk.import(documents)
+          mWriteRequest.documents = documents;
+
+          sdk.query(mWriteRequest)
             .catch(error => handleError(cout, dumpFile, error))
             .then(() => resolve());
+        } else {
+          resolve();
         }
       });
   });

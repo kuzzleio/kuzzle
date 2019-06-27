@@ -6,6 +6,7 @@ const
   { execSync } = require('child_process'),
   _ = require('lodash'),
   fs = require('fs'),
+  ndjson = require('ndjson'),
   should = require('should');
 
 When('I have a file {string} containing {string}', function (filePath, rawContent) {
@@ -29,14 +30,24 @@ Then(/A file "([\w\./-]+)" exists( and contain '(.*)')?/, function (filePath, ra
   }
 });
 
-Then('a file {string} contain an array of {int} documents', function (filePath, count) {
-  const
-    content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+Then('a file {string} contain {int} documents', function (filePath, count) {
+  const content = [];
 
-  should(_.isArray(content)).be.eql(true);
-  should(content.length).be.eql(count);
+  return new Promise(resolve => {
+    fs.createReadStream(filePath)
+      .pipe(ndjson.parse())
+      .on('data', obj => content.push(obj))
+      .on('finish', () => {
+        should(content.length).be.eql(count);
 
-  for (const document of content) {
-    should(_.isPlainObject(document)).be.eql(true);
-  }
+        for (const document of content) {
+          should(document).be.type('object');
+          should(document.body).be.type('object');
+          should(document._id).be.type('string');
+          should(document.body._kuzzle_info).be.type('object');
+        }
+
+        resolve();
+      });
+    });
 });

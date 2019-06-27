@@ -57,14 +57,9 @@ function dumpCollectionPart (results, ndjsonStream) {
 
   for (const hit of results.hits) {
     promises.push(addWrite(ndjsonStream, {
-      create: {
-        _id: hit._id,
-        _index: hit._index,
-        _type: hit._type
-      }
+      _id: hit._id,
+      body: hit._source
     }));
-    delete hit._source._kuzzle_info;
-    promises.push(addWrite(ndjsonStream, hit._source));
   }
 
   return Bluebird.each(promises, promise => promise())
