@@ -43,6 +43,7 @@ jobs:
 
       os: linux
       sudo: required
+      language: java
 
       addons:
         sonarqube: true
