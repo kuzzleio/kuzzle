@@ -40,10 +40,12 @@ jobs:
     - stage: Unit Tests & Linters
       if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: SonarQube
-
       os: linux
       sudo: required
-      language: java
+      language: nodejs
+
+      node_js:
+        - "8"
 
       addons:
         sonarqube: true
