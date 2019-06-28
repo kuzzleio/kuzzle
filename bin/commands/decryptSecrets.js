@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   fs = require('fs'),
   path = require('path'),
@@ -35,7 +33,7 @@ function commandDecryptSecrets (file, options) {
     cout = new ColorOutput(options);
 
   if (!options.vaultKey && !process.env.KUZZLE_VAULT_KEY) {
-    console.log(cout.error('[ℹ] You must provide the vault key with --vault-key <key> or in KUZZLE_VAULT_KEY environment variable'));
+    cout.error('[ℹ] You must provide the vault key with --vault-key <key> or in KUZZLE_VAULT_KEY environment variable');
     process.exit(1);
   }
 
@@ -48,7 +46,7 @@ function commandDecryptSecrets (file, options) {
   }
 
   if (fs.existsSync(outputFile) && !options.noint) {
-    console.log(cout.warn(`[ℹ] You are going to overwrite the following file: ${outputFile}`));
+    cout.warn(`[ℹ] You are going to overwrite the following file: ${outputFile}`);
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
   } else {
     // non-interactive mode
@@ -56,11 +54,11 @@ function commandDecryptSecrets (file, options) {
   }
 
   if (!userIsSure) {
-    console.log(cout.notice('[ℹ] Aborted'));
+    cout.notice('[ℹ] Aborted');
     process.exit(1);
   }
 
-  console.log(cout.notice('[ℹ] Decrypting secrets...\n'));
+  cout.notice('[ℹ] Decrypting secrets...\n');
 
   vault.prepareCrypto(options.vaultKey);
 
@@ -71,9 +69,9 @@ function commandDecryptSecrets (file, options) {
 
     fs.writeFileSync(outputFile, JSON.stringify(secrets, null, 2));
 
-    console.log(cout.ok(`[✔] Secrets successfully decrypted: ${path.resolve(outputFile)}`));
+    cout.ok(`[✔] Secrets successfully decrypted: ${path.resolve(outputFile)}`);
   } catch (error) {
-    console.error(cout.error(`[ℹ] Can not decrypt secret file: ${error.message}`));
+    cout.error(`[ℹ] Can not decrypt secret file: ${error.message}`);
     process.exit(1);
   }
 }

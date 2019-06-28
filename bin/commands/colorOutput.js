@@ -21,18 +21,49 @@
 
 const clc = require('cli-color');
 
+function noop(str) {
+  return str;
+}
+
 class ColorOutput {
   constructor (opts) {
     // /!\ "opts" might be a string
-    const noColors = typeof opts === 'object' && opts.parent && opts.parent.noColors;
+    const noColors =
+      typeof opts === 'object' &&
+      opts.parent &&
+      opts.parent.noColors;
 
-    this.error = string => noColors ? string : clc.red(string);
-    this.warn = string => noColors ? string : clc.yellow(string);
-    this.notice = string => noColors ? string : clc.cyanBright(string);
-    this.ok = string => noColors ? string: clc.green.bold(string);
-    this.question = string => noColors ? string : clc.whiteBright(string);
-    this.kuz = string => noColors ? string : clc.greenBright.bold(string);
+    this.format = {
+      error: noColors ? noop : clc.red,
+      warn: noColors ? noop : clc.yellow,
+      notice: noColors ? noop : clc.cyanBright,
+      ok: noColors ? noop : clc.green.bold,
+      question: noColors ? noop : clc.whiteBright
+    };
   }
+
+  /* eslint-disable no-console */
+  error(str) {
+    console.error(this.format.error(str));
+  }
+
+  warn(str) {
+    console.warn(this.format.warn(str));
+  }
+
+  notice(str) {
+    console.log(this.format.notice(str));
+  }
+
+  question(str) {
+    console.log(this.format.question(str));
+  }
+
+  ok(str) {
+    console.log(this.format.ok(str));
+  }
+
+  /* eslint-enable no-console */
 }
 
 module.exports = ColorOutput;
