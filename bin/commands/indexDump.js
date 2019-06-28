@@ -81,10 +81,7 @@ function dumpCollection (sdk, index, collection, directoryPath) {
 
   const waitWrite = new Promise(resolve => ndjsonStream.on('finish', resolve));
 
-  return addWrite(ndjsonStream, {
-    index: results._request.index,
-    collection: results._request.collection
-  })
+  return addWrite(ndjsonStream, { index, collection })
     .then(() => sdk.document.search(index, collection, {}, options))
     .then(results => dumpCollectionPart(results, ndjsonStream))
     .then(() => {
