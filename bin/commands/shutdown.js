@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
 const
   ColorOutput = require('./colorOutput'),
   sendAction = require('./sendAction');
@@ -28,7 +27,7 @@ function commandShutdown (options) {
   const
     cout = new ColorOutput(options);
 
-  console.log(cout.notice('[ℹ] Shutting down...'));
+  cout.notice('[ℹ] Shutting down...');
 
   const query = {
     controller: 'admin',
@@ -37,11 +36,11 @@ function commandShutdown (options) {
 
   return sendAction(query, options)
     .then(() => {
-      console.log(cout.ok('[✔] Done'));
+      cout.ok('[✔] Done');
       process.exit(0);
     })
     .catch(err => {
-      console.error(err);
+      cout.error(err);
       process.exit(1);
     });
 }

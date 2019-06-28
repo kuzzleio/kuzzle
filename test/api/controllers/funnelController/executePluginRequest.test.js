@@ -60,7 +60,7 @@ describe('funnelController.executePluginRequest', () => {
     const callback = () => {
       setTimeout(() => {
         try {
-          should(kuzzle.emit).be.called();
+          should(kuzzle.log.error).be.calledOnce();
           should(kuzzle.janitor.dump).be.called();
           done();
         } catch (e) {

@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   rc = require('rc'),
   params = rc('kuzzle'),
@@ -34,8 +32,8 @@ function commandResetKuzzleData (options) {
 
   let userIsSure = false;
 
-  console.log(cout.warn('[ℹ] You are about to reset Kuzzle configuration and users'));
-  console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
+  cout.warn('[ℹ] You are about to reset Kuzzle configuration and users');
+  cout.warn('[ℹ] This operation cannot be undone.\n');
 
   if (!params.noint) {
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
@@ -46,7 +44,7 @@ function commandResetKuzzleData (options) {
   }
 
   if (userIsSure) {
-    console.log(cout.notice('[ℹ] Processing...\n'));
+    cout.notice('[ℹ] Processing...\n');
     const query = {
       controller: 'admin',
       action: 'resetKuzzleData'
@@ -54,16 +52,16 @@ function commandResetKuzzleData (options) {
 
     return sendAction(query, options)
       .then(() => {
-        console.log(cout.ok('[✔] Kuzzle has been successfully reset'));
+        cout.ok('[✔] Kuzzle has been successfully reset');
         process.exit(0);
       })
       .catch(err => {
-        console.error(err);
+        cout.error(err);
         process.exit(1);
       });
   }
 
-  console.log(cout.notice('[ℹ] Aborted'));
+  cout.notice('[ℹ] Aborted');
 }
 
 module.exports = commandResetKuzzleData;

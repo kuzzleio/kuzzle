@@ -6,7 +6,7 @@ const
   rewire = require('rewire'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  { PluginImplementationError } = require('kuzzle-common-objects').errors;
+  { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
 
 describe('PluginsManager', () => {
   let
@@ -27,7 +27,6 @@ describe('PluginsManager', () => {
     };
     Manifest = rewire('../../../../lib/api/core/plugins/manifest');
     Manifest.__set__({
-      console: { warn: sinon.stub() },
       fs: manifestFsStub
     });
   });
