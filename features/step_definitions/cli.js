@@ -4,7 +4,6 @@ const
     Then
   } = require('cucumber'),
   { execSync } = require('child_process'),
-  _ = require('lodash'),
   fs = require('fs'),
   ndjson = require('ndjson'),
   should = require('should');
@@ -49,5 +48,5 @@ Then('a file {string} contain {int} documents', function (filePath, count) {
 
         resolve();
       });
-    });
+  });
 });

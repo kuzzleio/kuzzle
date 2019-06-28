@@ -70,7 +70,7 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
 
           if (documents.length / 2 === batchSize) {
             mWriteRequest.body.documents = documents;
-            documents = [];h
+            documents = [];
 
             readStream.pause();
 
