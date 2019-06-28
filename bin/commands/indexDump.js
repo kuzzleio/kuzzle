@@ -55,11 +55,6 @@ function dumpCollectionPart (results, ndjsonStream) {
 
   const promises = [];
 
-  promises.push(addWrite(ndjsonStream, {
-    index: results._request.index,
-    collection: results._request.collection
-  }));
-
   for (const hit of results.hits) {
     promises.push(addWrite(ndjsonStream, {
       _id: hit._id,
@@ -86,7 +81,11 @@ function dumpCollection (sdk, index, collection, directoryPath) {
 
   const waitWrite = new Promise(resolve => ndjsonStream.on('finish', resolve));
 
-  return sdk.document.search(index, collection, {}, options)
+  return addWrite(ndjsonStream, {
+    index: results._request.index,
+    collection: results._request.collection
+  })
+    .then(() => sdk.document.search(index, collection, {}, options))
     .then(results => dumpCollectionPart(results, ndjsonStream))
     .then(() => {
       ndjsonStream.end();
