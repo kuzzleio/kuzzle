@@ -49,8 +49,6 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     httpMock,
     EntryPoint,
     entrypoint,
-    AbstractManifest,
-    Manifest,
     winstonTransportConsole,
     winstonTransportFile,
     winstonTransportElasticsearch,
@@ -102,15 +100,6 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     });
     mockrequire('winston-elasticsearch', winstonTransportElasticsearch);
     mockrequire('winston-syslog', winstonTransportSyslog);
-
-    // Disables unnecessary console warnings
-    AbstractManifest = rewire(`${root}/lib/api/core/abstractManifest`);
-    AbstractManifest.__set__({ console: { warn: sinon.stub() }});
-    mockrequire(`${root}/lib/api/core/abstractManifest`, AbstractManifest);
-
-    Manifest = rewire(`${embeddedPath}/manifest`);
-    Manifest.__set__({ console: { warn: sinon.stub() }});
-    mockrequire(`${embeddedPath}/manifest`, Manifest);
 
     // Bluebird.map forces a different context, preventing rewire to mock
     // "require"
@@ -292,9 +281,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
           throw new Error('should not happen');
         })
         .catch(() => {
-          should(kuzzle.emit)
-            .be.calledOnce()
-            .be.calledWith('log:error', error);
+          should(kuzzle.log.error).calledOnce().calledWith(error);
         });
     });
   });
@@ -393,34 +380,42 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
           prettyPrint: 'prettyPrint',
           depth: 'depth',
           showLevel: 'showLevel'
-        }],
-        Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded'),
-        errorStub = sinon.stub();
+        }];
 
-      Rewired.__with__({
-        console: {
-          error: errorStub
-        }
-      })(() => {
-        const rewiredProxy = new Rewired(kuzzle);
+      entrypoint.config.logs.transports = [Object.assign({}, config)];
+      entrypoint.config.logs.transports.push(Object.assign({}, config));
 
-        rewiredProxy.config.logs.transports = [Object.assign({}, config)];
-        rewiredProxy.config.logs.transports.push(Object.assign({}, config));
+      entrypoint.config.logs.transports[0].transport = 'foobar';
+      Object.assign(entrypoint.config.logs.transports[0], {
+        index: 'index',
+        indexPrefix: 'indexPrefix',
+        indexSuffixPattern: 'indexSuffixPattern',
+        messageType: 'messageType',
+        ensureMappingTemplate: 'ensureMappingTemplate',
+        mappingTemplate: 'mappingTemplate',
+        flushInterval: 'flushInterval',
+        clientOpts: 'clientOpts'
+      });
 
-        rewiredProxy.config.logs.transports[0].transport = 'foobar';
-        Object.assign(rewiredProxy.config.logs.transports[0], {
-          index: 'index',
-          indexPrefix: 'indexPrefix',
-          indexSuffixPattern: 'indexSuffixPattern',
-          messageType: 'messageType',
-          ensureMappingTemplate: 'ensureMappingTemplate',
-          mappingTemplate: 'mappingTemplate',
-          flushInterval: 'flushInterval',
-          clientOpts: 'clientOpts'
-        });
+      entrypoint.config.logs.transports[1].transport = 'syslog';
+      Object.assign(entrypoint.config.logs.transports[1], {
+        host: 'host',
+        port: 'port',
+        protocol: 'protocol',
+        path: 'path',
+        pid: 'pid',
+        facility: 'facility',
+        localhost: 'localhost',
+        type: 'type',
+        app_name: 'app_name',
+        eol: 'eol'
+      });
 
-        rewiredProxy.config.logs.transports[1].transport = 'syslog';
-        Object.assign(rewiredProxy.config.logs.transports[1], {
+      entrypoint.initLogger();
+
+      should(winstonTransportSyslog)
+        .be.calledOnce()
+        .be.calledWithMatch({
           host: 'host',
           port: 'port',
           protocol: 'protocol',
@@ -432,25 +427,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
           app_name: 'app_name',
           eol: 'eol'
         });
-
-        rewiredProxy.initLogger();
-
-        should(winstonTransportSyslog)
-          .be.calledOnce()
-          .be.calledWithMatch({
-            host: 'host',
-            port: 'port',
-            protocol: 'protocol',
-            path: 'path',
-            pid: 'pid',
-            facility: 'facility',
-            localhost: 'localhost',
-            type: 'type',
-            app_name: 'app_name',
-            eol: 'eol'
-          });
-        should(errorStub).calledWith('Failed to initialize logger transport "foobar": unsupported transport. Skipped.');
-      });
+      should(kuzzle.log.error)
+        .calledWith('Failed to initialize logger transport "foobar": unsupported transport. Skipped.');
     });
   });
 
@@ -490,8 +468,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       should(entrypoint.protocols.protocol.joinChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
-      should(kuzzle.emit)
-        .be.calledWith('log:error', '[join] protocol protocol failed: test');
+      should(kuzzle.log.error)
+        .be.calledWith('[join] protocol protocol failed: test');
     });
   });
 
@@ -529,8 +507,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       should(entrypoint.protocols.protocol.leaveChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
-      should(kuzzle.emit)
-        .be.calledWith('log:error', '[leave channel] protocol protocol failed: test');
+      should(kuzzle.log.error)
+        .be.calledWith('[leave channel] protocol protocol failed: test');
     });
 
   });
@@ -911,9 +889,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         .be.calledOnce()
         .be.calledWith('data');
 
-      should(kuzzle.emit)
-        .be.calledOnce()
-        .be.calledWith('log:error');
+      should(kuzzle.log.error).be.calledOnce();
     });
   });
 
@@ -946,10 +922,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         content: 'data'
       });
 
-      should(kuzzle.emit)
-        .be.calledOnce()
-        .be.calledWith('log:error');
+      should(kuzzle.log.error).be.calledOnce();
     });
-
   });
 });
