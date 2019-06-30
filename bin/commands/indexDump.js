@@ -53,7 +53,7 @@ function dumpCollectionPart (results, ndjsonStream) {
     return Promise.resolve(null);
   }
 
-  const promises = [];
+  let promises = [];
 
   for (const hit of results.hits) {
     promises.push(addWrite(ndjsonStream, {
@@ -63,8 +63,16 @@ function dumpCollectionPart (results, ndjsonStream) {
   }
 
   return Bluebird.each(promises, promise => promise())
-    .then(() => results.next())
-    .then(nextResults => dumpCollectionPart(nextResults, ndjsonStream));
+    .then(() => {
+      promises = null;
+
+      return results.next()
+    })
+    .then(nextResults => {
+      results = null;
+
+      dumpCollectionPart(nextResults, ndjsonStream)
+    });
 }
 
 function dumpCollection (sdk, index, collection, directoryPath) {
