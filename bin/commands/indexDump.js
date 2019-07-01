@@ -66,12 +66,12 @@ function dumpCollectionPart (results, ndjsonStream) {
     .then(() => {
       promises = null;
 
-      return results.next()
+      return results.next();
     })
     .then(nextResults => {
       results = null;
 
-      dumpCollectionPart(nextResults, ndjsonStream)
+      return dumpCollectionPart(nextResults, ndjsonStream);
     });
 }
 
