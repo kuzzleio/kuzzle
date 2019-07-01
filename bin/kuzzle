@@ -26,10 +26,8 @@ function requireCommand(commandName) {
 
   try {
     requiredModule = require(`./commands/node6/${commandName}`);
-    console.log(`load node6 ${commandName}`);
   } catch (error) {
     requiredModule = require(`./commands/${commandName}`);
-    console.log(`load node8 ${commandName}`);
   }
 
   return requiredModule;

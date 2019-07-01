@@ -26,7 +26,6 @@ const
   ColorOutput = require('./colorOutput'),
   path = require('path'),
   ndjson = require('ndjson'),
-  Bluebird = require('bluebird'),
   getSdk = require('./getSdk');
 
 //@TODO use 'recursive: true' with node.js 10
@@ -42,96 +41,76 @@ function mkdirp (fullPath) {
   }
 }
 
-function addWrite(stream, data) {
-  return () => (
-    new Promise(resolve => stream.write(data, () => resolve()))
-  );
+function writeData(stream, data) {
+  return new Promise(resolve => stream.write(data, () => resolve()));
 }
 
-const coroutine = Bluebird.coroutine(function* (ndjsonStream, results) {
-  let promises = [];
-
-  for (const hit of results.hits) {
-    promises.push(addWrite(ndjsonStream, {
-      _id: hit._id,
-      body: hit._source
-    }));
-  }
-
-  return yield Bluebird.each(promises, promise => promise())
-    .then(() => results.next())
-});
-
-function dumpCollectionPart (results, ndjsonStream) {
-  if (!results) {
-    return Promise.resolve(null);
-  }
-
-  while (results) {
-    results = coroutine(ndjsonStream, results);
-  }
-
-  return Promise.resolve();
-}
-
-function dumpCollection (sdk, index, collection, directoryPath) {
+async function dumpCollection (sdk, index, collection, directoryPath) {
   const
     filename = `${directoryPath}/${index}--${collection}--data.jsonl`,
     writeStream = fs.createWriteStream(filename),
+    waitWrite = new Promise(resolve => writeStream.on('finish', resolve)),
     ndjsonStream = ndjson.serialize(),
     options = {
       scroll: '10m',
-      size: 500
+      size: 10000
     };
 
   ndjsonStream.on('data', line => writeStream.write(line));
 
-  const waitWrite = new Promise(resolve => ndjsonStream.on('finish', resolve));
+  await writeData(ndjsonStream, { index, collection });
+  let
+    promises = [],
+    results = await sdk.document.search(index, collection, {}, options);
 
-  return addWrite(ndjsonStream, { index, collection })()
-    .then(() => sdk.document.search(index, collection, {}, options))
-    .then(results => dumpCollectionPart(results, ndjsonStream))
-    .then(() => {
-      ndjsonStream.end();
+  do {
+    process.stdout.write(`  ${results.fetched}/${results.total} documents dumped`);
+    process.stdout.write('\r');
 
-      return waitWrite;
-    });
+    for (const hit of results.hits) {
+      promises.push(writeData(ndjsonStream, {
+        _id: hit._id,
+        body: hit._source
+      }));
+    }
+
+    await Promise.all(promises);
+  } while (results = await results.next());
+
+  ndjsonStream.end();
+  writeStream.end();
+
+  return waitWrite;
 }
 
-function indexDump (sdk, cout, index, directoryPath) {
+async function indexDump (sdk, cout, index, directoryPath) {
   console.log(cout.notice(`Dumping index ${index} in ${directoryPath} ...`));
 
   mkdirp(directoryPath);
 
-  return sdk.collection.list(index)
-    .then(({ collections }) => {
-      const promises = collections.map(collection => {
-        return () => (
-          dumpCollection(sdk, index, collection.name, directoryPath)
-            .then(() => console.log(cout.ok(`[✔] Collection ${index}:${collection.name} dumped`)))
-        );
-      });
+  const { collections } = await sdk.collection.list(index);
 
-      return Bluebird.each(promises, promise => promise());
-    });
+  for (const collection of collections) {
+    await dumpCollection(sdk, index, collection.name, directoryPath);
+    console.log(cout.ok(`[✔] Collection ${index}:${collection.name} dumped`));
+  }
 }
 
-function commandIndexDump (index, directoryPath, options) {
-  let
-    opts = options;
+async function commandIndexDump (index, directoryPath, options) {
+  const
+    opts = options,
+    cout = new ColorOutput(opts);
 
-  const cout = new ColorOutput(opts);
+  try {
+    const sdk = await getSdk(options, 'websocket');
+    await indexDump(sdk, cout, index, directoryPath);
 
-  return getSdk(options, 'websocket')
-    .then(sdk => indexDump(sdk, cout, index, directoryPath))
-    .then(() => {
-      console.log(cout.ok(`\n[✔] Index ${index} successfully dumped`));
-      process.exit(0);
-    })
-    .catch(err => {
-      console.error(err);
-      process.exit(1);
-    });
+    console.log(cout.ok(`\n[✔] Index ${index} successfully dumped`));
+    process.exit(0);
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
 }
 
 module.exports = commandIndexDump;

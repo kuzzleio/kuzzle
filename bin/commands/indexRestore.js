@@ -59,6 +59,7 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
 
   return new Promise(resolve => {
     let
+      total = 0,
       headerSkipped = false,
       documents = [];
 
@@ -68,14 +69,20 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
         if (headerSkipped) {
           documents.push(obj);
 
-          if (documents.length / 2 === batchSize) {
+          if (documents.length === batchSize) {
             mWriteRequest.body.documents = documents;
             documents = [];
 
             readStream.pause();
 
             sdk.query(mWriteRequest)
-              .then(() => readStream.resume())
+              .then(() => {
+                total += mWriteRequest.body.documents.length;
+                process.stdout.write(`  ${total} documents imported`);
+                process.stdout.write('\r');
+
+                readStream.resume();
+              })
               .catch(error => handleError(cout, dumpFile, error));
           }
         } else {
@@ -98,7 +105,7 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
   });
 }
 
-function indexRestore (dumpDirectory, options) {
+async function indexRestore (dumpDirectory, options) {
   let
     opts = options;
 
@@ -106,28 +113,25 @@ function indexRestore (dumpDirectory, options) {
     batchSize = options.batchSize || 200,
     cout = new ColorOutput(opts);
 
-  return getSdk(options, 'websocket')
-    .then(sdk => {
-      console.log(cout.ok(`[✔] Start importing dump from ${dumpDirectory}`));
-      const dumpFiles = fs.readdirSync(dumpDirectory).map(f => `${dumpDirectory}/${f}`);
+  const sdk = await getSdk(options, 'websocket')
 
-      const promises = dumpFiles.map(dumpFile => {
-        return () => (
-          importCollection(sdk, cout, batchSize, dumpFile)
-            .then(() => console.log(cout.ok(`[✔] Dump file ${dumpFile} imported`)))
-            .catch(error => console.log(error))
-        );
-      });
+  console.log(cout.ok(`[✔] Start importing dump from ${dumpDirectory}`));
 
-      return Bluebird.each(promises, promise => promise());
-    })
-    .then(() => {
-      process.exit(0);
-    })
-    .catch(err => {
-      console.error(err);
-      process.exit(1);
-    });
+  const dumpFiles = fs.readdirSync(dumpDirectory).map(f => `${dumpDirectory}/${f}`);
+
+  try {
+    for (const dumpFile of dumpFiles) {
+      await importCollection(sdk, cout, batchSize, dumpFile);
+
+      console.log(cout.ok(`[✔] Dump file ${dumpFile} imported`));
+    }
+
+    process.exit(0);
+  } catch (error) {
+    console.log(cout.warn(`[ℹ] Error importing ${dumpFile}: ${error.message}`));
+
+    process.exit(1);
+  }
 }
 
 module.exports = indexRestore;
