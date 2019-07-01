@@ -5,10 +5,10 @@ Feature: Kuzzle functional tests
     And I create a collection "kuzzle-test-index":"angband" with "3" documents
     And I refresh the index "kuzzle-test-index"
     And I use the CLI command 'indexDump kuzzle-test-index ./index-dump'
-    Then A file "index-dump/kuzzle-test-index--noldor--dump.jsonl" exists
-    And A file "index-dump/kuzzle-test-index--angband--dump.jsonl" exists
-    And a file "index-dump/kuzzle-test-index--noldor--dump.jsonl" contain 6 documents
-    And a file "index-dump/kuzzle-test-index--angband--dump.jsonl" contain 4 documents
+    Then A file "index-dump/kuzzle-test-index--noldor--data.jsonl" exists
+    And A file "index-dump/kuzzle-test-index--angband--data.jsonl" exists
+    And a file "index-dump/kuzzle-test-index--noldor--data.jsonl" contain 6 documents
+    And a file "index-dump/kuzzle-test-index--angband--data.jsonl" contain 4 documents
     When I'm able to delete the index named "kuzzle-test-index"
     And I create an index named "kuzzle-test-index"
     When I create a collection "kuzzle-test-index":"noldor"

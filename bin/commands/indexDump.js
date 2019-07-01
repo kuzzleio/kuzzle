@@ -77,7 +77,7 @@ function dumpCollectionPart (results, ndjsonStream) {
 
 function dumpCollection (sdk, index, collection, directoryPath) {
   const
-    filename = `${directoryPath}/${index}--${collection}--dump.jsonl`,
+    filename = `${directoryPath}/${index}--${collection}--data.jsonl`,
     writeStream = fs.createWriteStream(filename),
     ndjsonStream = ndjson.serialize(),
     options = {
