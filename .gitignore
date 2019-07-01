@@ -57,3 +57,6 @@ config/testsecrets.enc.json
 
 #tests files
 index-dump/*
+
+#Node.js 6 compat
+bin/commands/node6/*

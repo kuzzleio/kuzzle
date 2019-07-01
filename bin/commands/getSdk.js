@@ -33,7 +33,7 @@ const {
  *  @param {object} options
  *  @return {Promise}
  */
-function getSdk (options, protocol = 'http') {
+function getSdk (options = {}, protocol = 'http') {
   const config = {
     host: options.host || 'localhost',
     port: options.port || 7512

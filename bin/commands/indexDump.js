@@ -48,11 +48,7 @@ function addWrite(stream, data) {
   );
 }
 
-function dumpCollectionPart (results, ndjsonStream) {
-  if (!results) {
-    return Promise.resolve(null);
-  }
-
+const coroutine = Bluebird.coroutine(function* (ndjsonStream, results) {
   let promises = [];
 
   for (const hit of results.hits) {
@@ -62,17 +58,20 @@ function dumpCollectionPart (results, ndjsonStream) {
     }));
   }
 
-  return Bluebird.each(promises, promise => promise())
-    .then(() => {
-      promises = null;
+  return yield Bluebird.each(promises, promise => promise())
+    .then(() => results.next())
+});
 
-      return results.next();
-    })
-    .then(nextResults => {
-      results = null;
+function dumpCollectionPart (results, ndjsonStream) {
+  if (!results) {
+    return Promise.resolve(null);
+  }
 
-      return dumpCollectionPart(nextResults, ndjsonStream);
-    });
+  while (results) {
+    results = coroutine(ndjsonStream, results);
+  }
+
+  return Promise.resolve();
 }
 
 function dumpCollection (sdk, index, collection, directoryPath) {

@@ -28,7 +28,7 @@ const
   ColorOutput = require('./colorOutput'),
   getSdk = require('./getSdk');
 
-function commandResetCache (database, options) {
+function commandClearCache (database, options) {
   let
     opts = options,
     db = database,
@@ -72,4 +72,4 @@ function commandResetCache (database, options) {
   console.log(cout.notice('[ℹ] Aborted'));
 }
 
-module.exports = commandResetCache;
+module.exports = commandClearCache;

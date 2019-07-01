@@ -8,17 +8,24 @@
     "kuzzle": "./bin/kuzzle"
   },
   "scripts": {
+    "postinstall": "npm run build-cli",
     "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing",
     "unit-testing": "nyc --reporter=text-summary --reporter=lcov mocha",
     "functional-testing": "bash features/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features"
+    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
+    "build-cli": "node bin/build-cli.js"
   },
   "directories": {
     "lib": "lib"
   },
   "dependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.4",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "@babel/runtime": "^7.4.4",
     "async": "^2.6.2",
     "bluebird": "^3.5.5",
     "bufferutil": "^4.0.1",
