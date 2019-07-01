@@ -14,7 +14,7 @@
     "functional-testing": "bash features/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
+    "lint": "eslint --max-warnings=0 ./lib ./test ./features",
     "build-cli": "node bin/build-cli.js"
   },
   "directories": {

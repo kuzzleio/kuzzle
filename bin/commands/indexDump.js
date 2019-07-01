@@ -45,7 +45,7 @@ function writeData(stream, data) {
   return new Promise(resolve => stream.write(data, () => resolve()));
 }
 
-async function dumpCollection (sdk, index, collection, directoryPath) {
+async function dumpCollection (sdk, index, collection, batchSize, directoryPath) {
   const
     filename = `${directoryPath}/${index}--${collection}--data.jsonl`,
     writeStream = fs.createWriteStream(filename),
@@ -53,7 +53,7 @@ async function dumpCollection (sdk, index, collection, directoryPath) {
     ndjsonStream = ndjson.serialize(),
     options = {
       scroll: '10m',
-      size: 10000
+      size: batchSize
     };
 
   ndjsonStream.on('data', line => writeStream.write(line));
@@ -83,7 +83,7 @@ async function dumpCollection (sdk, index, collection, directoryPath) {
   return waitWrite;
 }
 
-async function indexDump (sdk, cout, index, directoryPath) {
+async function indexDump (sdk, cout, index, batchSize, directoryPath) {
   console.log(cout.notice(`Dumping index ${index} in ${directoryPath} ...`));
 
   mkdirp(directoryPath);
@@ -91,19 +91,20 @@ async function indexDump (sdk, cout, index, directoryPath) {
   const { collections } = await sdk.collection.list(index);
 
   for (const collection of collections) {
-    await dumpCollection(sdk, index, collection.name, directoryPath);
+    await dumpCollection(sdk, index, collection.name, batchSize, directoryPath);
     console.log(cout.ok(`[✔] Collection ${index}:${collection.name} dumped`));
   }
 }
 
 async function commandIndexDump (index, directoryPath, options) {
   const
+    batchSize = options.batchSize || 10000,
     opts = options,
     cout = new ColorOutput(opts);
 
   try {
     const sdk = await getSdk(options, 'websocket');
-    await indexDump(sdk, cout, index, directoryPath);
+    await indexDump(sdk, cout, index, batchSize, directoryPath);
 
     console.log(cout.ok(`\n[✔] Index ${index} successfully dumped`));
     process.exit(0);

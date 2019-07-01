@@ -176,6 +176,7 @@ bindOption(
 bindOption(
   program
     .command('indexDump <index> <path>')
+    .option('    --batch-size <batchSize>', 'Maximum batch size (see limits.documentsFetchCount config)')
     .description('dump an entire index in the specified directory')
     .action(requireCommand('indexDump'))
 );
