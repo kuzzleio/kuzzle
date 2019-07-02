@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   ColorOutput = require('./colorOutput'),
   loadJson = require('./loadJson'),
@@ -47,11 +45,11 @@ function commandLoadSecurities (securitiesPath, options) {
       body: securities
     }, opts))
     .then(() => {
-      console.log(cout.ok('[✔] Securities have been successfully loaded'));
+      cout.ok('[✔] Securities have been successfully loaded');
       process.exit(0);
     })
     .catch(err => {
-      console.error(err);
+      cout.error(err);
       process.exit(1);
     });
 }

@@ -315,12 +315,9 @@ describe('PluginsManager.run', () => {
       return pluginsManager.run()
         .then(() => kuzzle.pipe('foo:bar'))
         .then(() => {
-          should(fooStub)
-            .be.calledOnce();
-          should(kuzzle.emit)
-            .be.calledWithMatch(
-              'log:warn',
-              /Plugin pipe .*? exceeded [0-9]*ms to execute\./);
+          should(fooStub).be.calledOnce();
+          should(kuzzle.log.warn)
+            .calledWithMatch(/Plugin pipe .*? exceeded [0-9]*ms to execute\./);
 
           kuzzle.config.plugins.common.pipeWarnTime = warnTime;
         });

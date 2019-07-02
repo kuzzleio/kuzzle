@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   ColorOutput = require('./colorOutput'),
   getSdk = require('./getSdk');
@@ -29,7 +27,7 @@ function commandDump (options) {
   const
     cout = new ColorOutput(options);
 
-  console.log(cout.notice('[ℹ] Creating dump file...'));
+  cout.notice('[ℹ] Creating dump file...');
 
   const request = {
     controller: 'admin',
@@ -37,16 +35,15 @@ function commandDump (options) {
     suffix: 'cli'
   };
 
-  return getSdk(options)
-    .then(sdk => sdk.query(request))
-    .then(response => {
-      console.log(cout.ok('[✔] Done!'));
-      console.log('\n' + cout.warn(`[ℹ] Dump has been successfully generated in "${response.result}" folder`));
-      console.log(cout.warn('[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io'));
+  return sendAction(request, options)
+    .then(request => {
+      cout.ok('[✔] Done!');
+      cout.notice(`[ℹ] A dump report has been successfully generated in the "${request.result}" folder`);
+      cout.notice('[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io');
       process.exit(0);
     })
     .catch(err => {
-      console.log(cout.error(`[✖] ${err}`));
+      cout.error(`[✖] ${err}`);
       process.exit(1);
     });
 }

@@ -2050,7 +2050,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(kuzzle.emit).calledWith('log:error');
+          should(kuzzle.log.error).calledOnce();
           should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({ foo: 'bar' });
           return null;
