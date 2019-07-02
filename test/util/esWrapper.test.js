@@ -212,11 +212,16 @@ describe('Test: ElasticSearch Wrapper', () => {
     });
 
     it('should skip empty indexes without mappings', () => {
-      client.indices.getMapping.resolves({ foo: {} });
+      client.indices.getMapping.resolves({
+        foo: {},
+        qux: { mappings: { bar: { properties: {} } } }
+      });
 
       return esWrapper.getMapping({index: 'alias', type: 'bar'}, true)
         .then(result => {
-          should(result).be.an.Object().and.be.empty();
+          should(result).be.an.Object().and.eql({
+            qux: { mappings: { bar: { properties: {} } } }
+          });
         });
     });
   });
