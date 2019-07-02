@@ -42,7 +42,14 @@ function mkdirp (fullPath) {
 }
 
 function writeData(stream, data) {
-  return new Promise(resolve => stream.write(data, () => resolve()));
+  return new Promise(resolve => {
+    if (! stream.write(data)) {
+      stream.once('drain', resolve);
+    }
+    else {
+      resolve();
+    }
+  });
 }
 
 async function dumpCollection (sdk, index, collection, batchSize, directoryPath) {
@@ -56,25 +63,30 @@ async function dumpCollection (sdk, index, collection, batchSize, directoryPath)
       size: batchSize
     };
 
+  writeStream.on('error', error => {
+    throw error;
+  });
+
   ndjsonStream.on('data', line => writeStream.write(line));
 
   await writeData(ndjsonStream, { index, collection });
-  let
-    promises = [],
-    results = await sdk.document.search(index, collection, {}, options);
+
+  let results = await sdk.document.search(index, collection, {}, options);
 
   do {
     process.stdout.write(`  ${results.fetched}/${results.total} documents dumped`);
     process.stdout.write('\r');
 
     for (const hit of results.hits) {
-      promises.push(writeData(ndjsonStream, {
+      const document = {
         _id: hit._id,
         body: hit._source
-      }));
-    }
+      };
 
-    await Promise.all(promises);
+      if (!ndjsonStream.write(document)) {
+        await new Promise(resolve => ndjsonStream.once('drain', resolve));
+      }
+    }
   } while (results = await results.next());
 
   ndjsonStream.end();
