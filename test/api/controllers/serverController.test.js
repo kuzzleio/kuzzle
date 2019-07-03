@@ -1,9 +1,10 @@
 const
   should = require('should'),
+  sinon = require('sinon'),
   ServerController = require('../../../lib/api/controllers/serverController'),
   {
     Request,
-    errors: { ServiceUnavailableError }
+    errors: { ServiceUnavailableError, ExternalServiceError }
   } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/controller'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -111,6 +112,7 @@ describe('Test: server controller', () => {
   describe('#healthCheck', () => {
     beforeEach(() => {
       kuzzle.services.list.storageEngine.getInfos.resolves({status: 'green'});
+      serverController.getError = sinon.stub().returns(new ServiceUnavailableError());
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
@@ -139,9 +141,13 @@ describe('Test: server controller', () => {
 
     it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
       kuzzle.services.list.storageEngine.getInfos.resolves({status: 'red'});
-
+      serverController.throw = sinon.stub().throws(new ExternalServiceError());
+      
       return serverController.healthCheck(request)
         .then(response => {
+          should(serverController.throw)
+            .be.calledOnce()
+            .be.calledWith('elasticsearch_down', '{"status":"red"}');
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
