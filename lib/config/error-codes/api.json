@@ -1,0 +1,135 @@
+{
+  "code": 1,
+  "subdomains": {
+    "server": {
+      "code": 1,
+      "errors": {
+        "elasticsearch_down": {
+          "code": 1,
+          "message": "ElasticSearch is down: %s",
+          "class": "ExternalServiceError"
+        },
+        "service_unavailable": {
+          "code": 2,
+          "message": "Error : %s",
+          "class": "ServiceUnavailableError"
+        }
+      }
+    },
+    "document": {
+      "code": 2,
+      "errors": {
+        "not_found": {
+          "code": 1,
+          "message": "The document does not exist: %s",
+          "class": "NotFoundError"
+        },
+        "search_on_multiple_indexes": {
+          "code": 2,
+          "message": "Search on multiple indexes is not available.",
+          "class": "BadRequestError"
+        },
+        "search_on_multiple_collections": {
+          "code": 3,
+          "message": "Search on multiple collections is not available.",
+          "class": "BadRequestError"
+        },
+        "missing_scroll_id": {
+          "code": 4,
+          "message": "Missing 'scrollId' argument.",
+          "class": "BadRequestError"
+        },
+        "get_limit_reached": {
+          "code": 5,
+          "message": "Number of gets to perform exceeds the server configured value ( %s )",
+          "class": "SizeLimitError"
+        },
+        "creation_failed": {
+          "code": 6,
+          "message": "Some document creations failed : %s",
+          "class": "PartialError"
+        }
+      }
+    },
+    "admin": {
+      "code": 3,
+      "errors": {
+        "database_not_found": {
+          "code": 1,
+          "message": "Database %s not found",
+          "class": "NotFoundError"
+        }
+      }
+    },
+    "auth": {
+      "code": 4,
+      "errors": {
+        "token_force_expire": {
+          "code": 1,
+          "message": "Error while forcing token expiration",
+          "class": "InternalError"
+        },
+        "invalid_token": {
+          "code": 2,
+          "message": "Invalid token",
+          "class": "UnauthorizedError"
+        }
+      }
+    },
+    "collection": {
+      "code": 5,
+      "errors": {
+        "index_not_exist": {
+          "code": 1,
+          "message": "The index %s does not exist",
+          "class": "PreconditionError"
+        },
+        "collection_not_exist": {
+          "code": 2,
+          "message": "The collection %s does not exist",
+          "class": "PreconditionError"
+        },
+        "search_page_size": {
+          "code": 3,
+          "message": "Search page size exceeds server configured documents limit ( %s )",
+          "class": "SizeLimitError"
+        },
+        "invalid_type_argument": {
+          "code": 4,
+          "message": "Must specify a valid type argument; Expected: 'all', 'stored' or 'realtime'; Received: %s",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "funnel": {
+      "code": 6,
+      "errors": {
+        "server_overloaded": {
+          "code": 1,
+          "message": "Request discarded: Kuzzle Server is temporarily overloaded",
+          "class": "ServiceUnavailableError"
+        },
+        "anonymous_user": {
+          "code": 2,
+          "message": "Unauthorized action [ %s / %s / %s / %s ] for anonymous user",
+          "class": "UnauthorizedError"
+        },
+        "insufficient_permissions": {
+          "code": 3,
+          "message": "Forbidden action [ %s / %s / %s / %s ] for user %s",
+          "class": "ForbiddenError"
+        },
+        "unknown_controller": {
+          "code": 4,
+          "message": "Unknown controller %s",
+          "class": "BadRequestError"
+        },
+        "unknown_action": {
+          "code": 5,
+          "message": "No corresponding action %s in controller %s",
+          "class": "BadRequestError"
+        }
+      }
+    }
+  }
+}
