@@ -96,7 +96,7 @@ async function dumpCollection (sdk, index, collection, batchSize, directoryPath)
 }
 
 async function indexDump (sdk, cout, index, batchSize, directoryPath) {
-  console.log(cout.notice(`Dumping index ${index} in ${directoryPath} ...`));
+  cout.notice(`Dumping index ${index} in ${directoryPath} ...`);
 
   mkdirp(directoryPath);
 
@@ -104,7 +104,7 @@ async function indexDump (sdk, cout, index, batchSize, directoryPath) {
 
   for (const collection of collections) {
     await dumpCollection(sdk, index, collection.name, batchSize, directoryPath);
-    console.log(cout.ok(`[✔] Collection ${index}:${collection.name} dumped`));
+    cout.ok(`[✔] Collection ${index}:${collection.name} dumped`);
   }
 }
 
@@ -118,7 +118,7 @@ async function commandIndexDump (index, directoryPath, options) {
     const sdk = await getSdk(options, 'websocket');
     await indexDump(sdk, cout, index, batchSize, directoryPath);
 
-    console.log(cout.ok(`\n[✔] Index ${index} successfully dumped`));
+    cout.ok(`\n[✔] Index ${index} successfully dumped`);
     process.exit(0);
   } catch (error) {
     console.error(error);

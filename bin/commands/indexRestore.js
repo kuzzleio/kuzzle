@@ -33,7 +33,7 @@ function handleError(cout, dumpFile, error) {
     const
       errorFile = `${dumpFile.split('.').slice(0, -1).join('.')}-errors.jsonl`,
       writeStream = fs.createWriteStream(errorFile, { flags: 'a' }),
-      serialize = ndjson.serialize();
+      serialize = ndjson.serialize().pipe(writeStream)
 
     serialize.on('data', line => {
       writeStream.write(line);
@@ -44,9 +44,9 @@ function handleError(cout, dumpFile, error) {
     }
 
     serialize.end();
-    console.log(cout.warn(`[ℹ] Error importing ${dumpFile}. See errors in ${errorFile}`));
+    cout.warn(`[ℹ] Error importing ${dumpFile}. See errors in ${errorFile}`);
   } else {
-    console.log(error.message);
+    cout.warn(error.message);
   }
 }
 
@@ -76,14 +76,17 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
             readStream.pause();
 
             sdk.query(mWriteRequest)
+              .catch(error => {
+                handleError(cout, dumpFile, error);
+                readStream.resume();
+              })
               .then(() => {
                 total += mWriteRequest.body.documents.length;
-                process.stdout.write(`  ${total} documents imported`);
+                process.stdout.write(`  ${total} documents handled`);
                 process.stdout.write('\r');
 
                 readStream.resume();
-              })
-              .catch(error => handleError(cout, dumpFile, error));
+              });
           }
         } else {
           headerSkipped = true;
@@ -97,7 +100,13 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
 
           sdk.query(mWriteRequest)
             .catch(error => handleError(cout, dumpFile, error))
-            .then(() => resolve());
+            .then(() => {
+              total += mWriteRequest.body.documents.length;
+              process.stdout.write(`  ${total} documents handled`);
+              process.stdout.write('\r');
+
+              resolve()
+            });
         } else {
           resolve();
         }
@@ -115,7 +124,7 @@ async function indexRestore (dumpDirectory, options) {
 
   const sdk = await getSdk(options, 'websocket')
 
-  console.log(cout.ok(`[✔] Start importing dump from ${dumpDirectory}`));
+  cout.ok(`[✔] Start importing dump from ${dumpDirectory}`);
 
   const dumpFiles = fs.readdirSync(dumpDirectory).map(f => `${dumpDirectory}/${f}`);
 
@@ -123,12 +132,12 @@ async function indexRestore (dumpDirectory, options) {
     for (const dumpFile of dumpFiles) {
       await importCollection(sdk, cout, batchSize, dumpFile);
 
-      console.log(cout.ok(`[✔] Dump file ${dumpFile} imported`));
+      cout.ok(`[✔] Dump file ${dumpFile} imported`);
     }
 
     process.exit(0);
   } catch (error) {
-    console.log(cout.warn(`[ℹ] Error importing ${dumpFile}: ${error.message}`));
+    cout.warn(`[ℹ] Error importing ${dumpFile}: ${error.message}`);
 
     process.exit(1);
   }
