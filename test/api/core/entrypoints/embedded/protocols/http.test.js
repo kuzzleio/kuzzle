@@ -677,16 +677,16 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
     it('should log the access and reply with error', () => {
       const
-        error = new KuzzleError('test', 123),
+        kerr = new KuzzleError('test', 123),
         connectionId = 'connectionId',
         payload = {requestId: 'foobar'};
 
-      const expected = (new Request(payload, {connectionId, error})).serialize();
+      const expected = (new Request(payload, {connectionId, kerr})).serialize();
 
       // likely to be different, and we do not care about it
       delete expected.data.timestamp;
 
-      protocol._replyWithError({id: connectionId}, payload, response, error);
+      protocol._replyWithError({id: connectionId}, payload, response, kerr);
 
       should(entrypoint.logAccess).be.calledOnce();
       should(entrypoint.logAccess.firstCall.args[0].serialize())
@@ -711,6 +711,22 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       protocol._replyWithError({id: 'connectionId'}, {}, response, error);
 
       should(entrypoint.clients).be.empty();
+    });
+  });
+
+  describe('#_createWritableStream', () => {
+    beforeEach(() => {
+      return protocol.init(entrypoint);
+    });
+
+    it('should throw if Content-Type HTTP header is invalid', () => {
+      const request = { headers: { 'content-type': 'application/toto'}};
+      try {
+        protocol._createWritableStream(request, {});
+      } catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+        should(e.message).be.equals('Unsupported content type: application/toto');
+      }
     });
   });
 });
