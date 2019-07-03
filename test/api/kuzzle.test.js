@@ -2,7 +2,11 @@ const
   sinon = require('sinon'),
   should = require('should'),
   rewire = require('rewire'),
+  errorsManager = require('../../lib/config/error-codes/throw'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
+  {
+    errors: { InternalError, ExternalServiceError }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
@@ -39,6 +43,34 @@ describe('/lib/api/kuzzle.js', () => {
   it('should build a kuzzle server object with emit and listen event', done => {
     kuzzle.on('event', done);
     kuzzle.emit('event');
+  });
+
+  describe('#throw', () => {
+    it('should throw an ExternalServiceError with right name, msg and code', () => {
+
+      should(() => errorsManager.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
+        .throw(
+          ExternalServiceError,
+          {
+            errorName: 'api-server-elasticsearch_down',
+            code: 1,
+            message: 'ElasticSearch is down: {"status":"red"}'
+          }
+        );
+    });
+
+    it('should throw an InternalError with default name, msg and code', () => {
+
+      should(() => errorsManager.throw('api', 'server', 'fake_error', '{"status":"error"}'))
+        .throw(
+          InternalError,
+          {
+            errorName: 'internal-unexpected-unknown_error',
+            code: 1,
+            message: 'Unknown error: {"status":"error"}.'
+          }
+        );
+    });
   });
 
   describe('#start', () => {

@@ -50,7 +50,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     return hotelClerk._removeRoomForCustomer(requestContext, 'idontexist')
       .should.be.rejectedWith(
         NotFoundError,
-        {message: 'Unsubscribe error: no subscription found for that user'});
+        {message: 'Unsubscribe error: no subscription found for that user.'});
   });
 
   it('should reject if the customer did not subscribe to the room', done => {
@@ -61,7 +61,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
       .catch(err => {
         try {
           should(err).be.instanceOf(NotFoundError);
-          should(err.message).eql('Unsubscribe error: not subscribed to roomId');
+          should(err.message).eql('Unsubscribe error: not subscribed to roomId.');
           should(hotelClerk.rooms.roomId).not.be.undefined();
           should(hotelClerk.roomsCount).be.eql(1);
           should(kuzzle.notifier.notifyUser).not.be.called();
@@ -78,7 +78,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     return hotelClerk._removeRoomForCustomer(requestContext, 'nowhere', false)
       .should.be.rejectedWith(
         KuzzleInternalError,
-        {message: 'Unsubscribe error: room nowhere not found'});
+        {message: 'Unsubscribe error: room nowhere not found.'});
   });
 
   it('should remove the room from the customer list and remove the connection entry if empty', () => {
