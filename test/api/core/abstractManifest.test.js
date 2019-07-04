@@ -1,14 +1,12 @@
 const
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  sinon = require('sinon'),
   rewire = require('rewire'),
-  { PluginImplementationError } = require('kuzzle-common-objects').errors;
+  { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
 
 describe('AbstractManifest class', () => {
   const
     kuzzle = new KuzzleMock(),
-    consoleStub = { warn: sinon.stub() },
     pluginPath = 'foo/bar',
     defaultKuzzleVersion = '>=1.0.0 <2.0.0';
   let Manifest;
@@ -24,11 +22,6 @@ describe('AbstractManifest class', () => {
 
   beforeEach(() => {
     Manifest = rewire('../../../lib/api/core/abstractManifest');
-    Manifest.__set__({ console: consoleStub });
-  });
-
-  afterEach(() => {
-    consoleStub.warn.resetHistory();
   });
 
   it('should throw if no manifest.json is found', () => {
@@ -53,7 +46,7 @@ describe('AbstractManifest class', () => {
     mockRequireManifest({name: 'foobar'})(() => {
       const manifest = new Manifest(kuzzle, pluginPath);
       manifest.load();
-      should(consoleStub.warn)
+      should(kuzzle.log.warn)
         .calledOnce()
         .calledWith(`[${pluginPath}/manifest.json] No "kuzzleVersion" property found: assuming the target is Kuzzle v1`);
       should(manifest).match({
