@@ -60,7 +60,7 @@ jobs:
 # ---------------------------------------
 
     - stage: Integration tests
-      if: type = cron OR type = push AND branch =~ ^master|.*-stable
+      if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: Node.js 6
 
       os: linux
