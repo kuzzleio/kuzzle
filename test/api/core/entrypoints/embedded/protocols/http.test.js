@@ -9,7 +9,6 @@ const
   {
     Request,
     errors: {
-      KuzzleError,
       SizeLimitError,
       BadRequestError
     }
