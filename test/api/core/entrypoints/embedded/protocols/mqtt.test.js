@@ -6,7 +6,8 @@ const
   KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
   {
     BadRequestError
-  } = require('kuzzle-common-objects').errors;
+  } = require('kuzzle-common-objects').errors,
+  errorMatcher = require('../../../../../util/errorMatcher');
 
 describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
   const moscaOnMock = sinon.stub();
@@ -60,7 +61,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
     protocol = new MqttProtocol();
   });
 
-  describe('#init', () => {    
+  describe('#init', () => {
     it('should return false if the protocol is disabled', () => {
       entrypoint.config.protocols.mqtt.enabled = false;
 
@@ -73,13 +74,13 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
           protocol.onConnection = sinon.stub();
           protocol.onDisconnection = sinon.spy();
           protocol.onMessage = sinon.spy();
-          
+
           should(protocol.server.on)
             .be.calledWith('clientConnected')
             .be.calledWith('clientDisconnecting')
             .be.calledWith('clientDisconnected')
             .be.calledWith('published');
-    
+
           {
             const cb = protocol.server.on.getCall(1).args[1];
             cb('test');
@@ -106,7 +107,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
             should(protocol.onMessage)
               .be.calledOnce()
               .be.calledWith('packet', 'client');
-          }    
+          }
         });
     });
   });
@@ -398,26 +399,36 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
     });
 
     it('should respond with an error if the payload cannot be parsed', () => {
-      protocol._respond = sinon.spy();
+      const nodeEnv = process.env.NODE_ENV;
 
-      const client = {
-        id: 'clientId',
-        forward: sinon.spy()
-      };
-      protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
+      for (const env of ['production', '', 'development']) {
+        process.env.NODE_ENV = env;
+        protocol._respond = sinon.spy();
 
-      protocol.onMessage({
-        topic: protocol.config.requestTopic,
-        payload: Buffer.from('invalid')
-      }, client);
+        const client = {
+          id: 'clientId',
+          forward: sinon.spy()
+        };
+        protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
 
-      should(protocol._respond)
-        .be.calledOnce()
-        .be.calledWith(client);
+        protocol.onMessage({
+          topic: protocol.config.requestTopic,
+          payload: Buffer.from('invalid')
+        }, client);
 
-      const response = protocol._respond.firstCall.args[1];
-      should(response.content.error)
-        .be.an.instanceOf(BadRequestError);
+
+        const matcher = errorMatcher.fromMessage(
+          'BadRequestError',
+          'Unexpected token i in JSON at position 0');
+
+        should(protocol._respond)
+          .be.calledOnce()
+          .be.calledWith(client, sinon.match(matcher));
+
+        protocol._respond.resetHistory();
+      }
+
+      process.env.NODE_ENV = nodeEnv;
     });
 
     it('should respond with an error if the requestId is not a string', () => {
