@@ -103,11 +103,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       return protocol.init(entrypoint)
         .then(() => {
           protocol.onServerError('test');
-          should(kuzzle.emit)
+          should(kuzzle.log.error)
             .be.calledOnce()
-            .be.calledWith(
-              'log:error',
-              '[websocket] An error has occured "undefined":\nundefined');
+            .be.calledWith('[websocket] An error has occured "undefined":\nundefined');
         });
     });
   });

@@ -135,7 +135,7 @@ describe('Test: GarbageCollector service', () => {
 
       return gc.run()
         .then(ids => {
-          should(kuzzle.emit).be.calledWith('log:error', error);
+          should(kuzzle.log.error).be.calledWith(error);
 
           should(ids)
             .be.eql({ids: [

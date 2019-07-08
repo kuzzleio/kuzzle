@@ -87,7 +87,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, () => {});
 
       should(kuzzle.emit)
-        .be.calledTwice()
+        .be.calledOnce()
         .be.calledWith('core:overload');
     });
 
@@ -97,7 +97,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, () => {});
 
       should(kuzzle.emit)
-        .be.calledTwice()
+        .be.calledOnce()
         .be.calledWith('core:overload');
     });
 

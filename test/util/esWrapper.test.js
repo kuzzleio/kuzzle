@@ -4,8 +4,11 @@ const
   Bluebird = require('bluebird'),
   should = require('should'),
   {
-    ExternalServiceError,
-  } = require('kuzzle-common-objects').errors,
+    errors: {
+      ExternalServiceError,
+      BadRequestError
+    }
+  } = require('kuzzle-common-objects'),
   ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
   ESWrapper = require('../../lib/util/esWrapper');
 
@@ -16,8 +19,7 @@ describe('Test: ElasticSearch Wrapper', () => {
 
   describe('#formatESError', () => {
     it('should convert any unknown error to a ExternalServiceError instance', () => {
-      const
-        error = new Error('test');
+      const error = new Error('test');
 
       error.displayName = 'foobar';
 
@@ -25,6 +27,18 @@ describe('Test: ElasticSearch Wrapper', () => {
 
       should(formatted).be.instanceOf(ExternalServiceError);
       should(formatted.message).be.eql('test');
+    });
+
+    it('should not overwrite the previous stacktrace', () => {
+      const
+        error = new Error('[illegal_argument_exception] object mapping foo can\'t be changed from nested to non-nested'),
+        stacktrace = JSON.stringify(error.stack);
+      error.displayName = 'BadRequest';
+
+      const formatted = esWrapper.formatESError(error);
+
+      should(formatted).be.instanceOf(BadRequestError);
+      should(JSON.stringify(formatted.stack)).eql(stacktrace);
     });
   });
 

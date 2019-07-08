@@ -28,6 +28,15 @@ class KuzzleMock extends Kuzzle {
 
     this.sandbox.spy(this, 'emit');
 
+    this.log = {
+      error: this.sandbox.stub(),
+      warn: this.sandbox.stub(),
+      info: this.sandbox.stub(),
+      silly: this.sandbox.stub(),
+      debug: this.sandbox.stub(),
+      verbose: this.sandbox.stub()
+    };
+
     this.realtime = {
       test: this.sandbox.stub().returns([]),
       register: this.sandbox.stub().resolves(),
@@ -333,6 +342,8 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.start = sinon.stub().resolves();
+
+    this.getError = sinon.stub().returns({});
 
     this.statistics = {
       completedRequest: this.sandbox.spy(),
