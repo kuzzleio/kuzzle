@@ -31,7 +31,6 @@ function commandResetDatabase (options) {
   let userIsSure = false;
 
   cout.warn('[ℹ] You are about to clear all data stored on Kuzzle.');
-
   cout.warn('[ℹ] This operation cannot be undone.\n');
 
   if (!params.noint) {

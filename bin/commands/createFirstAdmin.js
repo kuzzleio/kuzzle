@@ -93,7 +93,7 @@ function commandCreateFirstAdmin (options) {
     .then(adminExists => {
       if (adminExists) {
         cout.error('An administrator account already exists.');
-        process.exit(0);
+        process.exit(1);
       }
 
       return getUserName();
@@ -114,7 +114,7 @@ function commandCreateFirstAdmin (options) {
     .then(response => {
       if (!response) {
         cout.error('Abort.');
-        process.exit(0);
+        process.exit(1);
       }
 
       const adminUser = {
