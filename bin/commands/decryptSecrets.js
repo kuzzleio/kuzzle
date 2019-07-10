@@ -25,13 +25,12 @@ const
   semver = require('semver'),
   fs = require('fs'),
   path = require('path'),
-  Vault = require('../../lib/api/core/vault'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput');
 
 let Vault;
 
-if (!semver.satisfies(process.version, '>= 8.0.0')) {
+if (semver.satisfies(process.version, '>= 8.0.0')) {
   Vault = require('../../lib/api/core/vault');
 } else {
   // node6 compatible commands are one level deeper

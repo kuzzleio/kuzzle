@@ -60,7 +60,8 @@ async function dumpCollection (sdk, index, collection, batchSize, directoryPath)
     ndjsonStream = ndjson.serialize(),
     options = {
       scroll: '10m',
-      size: batchSize
+      size: batchSize,
+      includeTrash: true
     };
 
   writeStream.on('error', error => {
