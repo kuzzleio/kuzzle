@@ -45,6 +45,7 @@ AfterAll(function () {
     http = new Http(world);
 
   for (const index of [
+    'tolkien',
     world.fakeIndex,
     world.fakeAltIndex,
     world.fakeNewIndex
