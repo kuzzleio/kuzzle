@@ -13,6 +13,13 @@ assignees: ''
 
 ## Feature description
 
+<!--- Describe the functionality as you would need it -->
+
 ## Example usecase
 
+<!--- Give a concrete case example or this feature would help you develop a better application or solve a problem -->
+
 ## Possible solution (optional)
+
+<!--- Give an example of how you would like to use the feature -->
+<!--- You can put a sample Kuzzle query, sample code, etc. -->
