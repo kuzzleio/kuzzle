@@ -154,11 +154,12 @@ describe('PluginsManager.run', () => {
 
     it('should throw if a hook target is not a function and not a method name', () => {
       plugin.object.hooks = {
-        'foo:bar': 'foo'
+        'foo:bar': 'fou'
       };
 
-      return should(pluginsManager.run())
-        .be.rejectedWith(PluginImplementationError);
+      plugin.object.foo = () => {};
+
+      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
     });
   });
 
@@ -261,11 +262,12 @@ describe('PluginsManager.run', () => {
 
     it('should throw if a pipe target is not a function and not a method name', () => {
       plugin.object.pipes = {
-        'foo:bar': 'foo'
+        'foo:bar': 'fou'
       };
 
-      return should(pluginsManager.run())
-        .be.rejectedWith(PluginImplementationError);
+      plugin.object.foo = () => {};
+
+      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
     });
 
     it('should attach pipes event and reject if an attached function return an error', () => {
@@ -488,13 +490,14 @@ describe('PluginsManager.run', () => {
       plugin.object.controllers = {
         'foo': {
           'actionName': 'functionName',
-          'anotherActionName': 'does not exist'
+          'anotherActionName': 'fou'
         }
       };
 
       plugin.object.functionName = () => {};
+      plugin.object.foo = () => {};
 
-      should(pluginsManager.run()).be.rejected();
+      should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
     });
 
     it('should not add an invalid route to the API', () => {
@@ -522,7 +525,7 @@ describe('PluginsManager.run', () => {
             {verb: 'posk', url: '/bar', controller: 'foo', action: 'bar'}
           ];
 
-         return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "post"/ });
+          return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "post"/ });
         })
         .then(() => {
           plugin.object.routes = [
@@ -536,7 +539,7 @@ describe('PluginsManager.run', () => {
             {verb: 'get', url: '/bar/:name', controller: 'fou', action: 'bar'}
           ];
 
-          return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ })
+          return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
         })
         .then(() => {
           plugin.object.routes = [
