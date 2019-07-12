@@ -1,22 +1,24 @@
 Feature: Kuzzle functional tests
 
   Scenario: CLI: dump and restore index
-    When I create a collection "kuzzle-test-index":"noldor" with "5" documents
-    And I create a collection "kuzzle-test-index":"angband" with "3" documents
-    And I refresh the index "kuzzle-test-index"
-    And I use the CLI command 'indexDump kuzzle-test-index ./index-dump'
-    Then A file "index-dump/kuzzle-test-index--noldor--data.jsonl" exists
-    And A file "index-dump/kuzzle-test-index--angband--data.jsonl" exists
-    And a file "index-dump/kuzzle-test-index--noldor--data.jsonl" contain 6 documents
-    And a file "index-dump/kuzzle-test-index--angband--data.jsonl" contain 4 documents
-    When I'm able to delete the index named "kuzzle-test-index"
-    And I create an index named "kuzzle-test-index"
-    When I create a collection "kuzzle-test-index":"noldor"
-    And I create a collection "kuzzle-test-index":"angband"
+    And I create an index named "tolkien"
+    When I create a collection "tolkien":"noldor" with "5" documents
+    And I create a collection "tolkien":"angband" with "3" documents
+    And I refresh the index "tolkien"
+    And I use the CLI command 'indexDump tolkien ./index-dump'
+    Then A file "index-dump/tolkien--noldor--data.jsonl" exists
+    And A file "index-dump/tolkien--angband--data.jsonl" exists
+    And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
+    And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
+    When I'm able to delete the index named "tolkien"
+    And I create an index named "tolkien"
+    When I create a collection "tolkien":"noldor"
+    And I create a collection "tolkien":"angband"
     And I use the CLI command 'indexRestore ./index-dump'
-    And I refresh the index "kuzzle-test-index"
-    Then I count 5 documents in index "kuzzle-test-index":"noldor"
-    Then I count 3 documents in index "kuzzle-test-index":"angband"
+    And I refresh the index "tolkien"
+    Then I count 5 documents in index "tolkien":"noldor"
+    Then I count 3 documents in index "tolkien":"angband"
+    Then I'm able to delete the index named "tolkien"
 
   Scenario: CLI: encrypt and decrypt secrets
     When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
