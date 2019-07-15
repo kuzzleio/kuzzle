@@ -150,7 +150,7 @@ class HttpApi {
 
   serverPublicApi () {
     const options = {
-      url: '/public_api',
+      url: this.apiPath('/_publicApi'),
       method: 'GET'
     };
 
