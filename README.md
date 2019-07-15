@@ -84,6 +84,7 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 * Visit our [blog](https://blog.kuzzle.io/) to be informed about what we are doing
 * Come chat with us on [gitter](https://gitter.im/kuzzleio/kuzzle)
 * Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
+* Check out our [public roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap) and vote for the upcoming features
 
 ## License
 
