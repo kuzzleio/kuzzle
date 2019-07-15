@@ -1,12 +1,12 @@
 'use strict';
 
 const
-  Bluebird = require('bluebird'),
   should = require('should'),
   {
     errors: {
       ExternalServiceError,
-      BadRequestError
+      BadRequestError,
+      NotFoundError
     }
   } = require('kuzzle-common-objects'),
   ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
@@ -63,7 +63,7 @@ describe('Test: ElasticSearch Wrapper', () => {
           bar: {properties: {}}
         };
 
-      client.indices.getMapping.returns(Bluebird.resolve({foo: {mappings}}));
+      client.indices.getMapping.resolves({foo: {mappings}});
 
       return esWrapper.getMapping(mappingRequest)
         .then(result => {
@@ -75,13 +75,19 @@ describe('Test: ElasticSearch Wrapper', () => {
     it('should exclude attribute `_kuzzle_info` from the returned mapping', () => {
       const
         mappings = {
-          bar: {properties: {
-            foo: 'bar',
-            _kuzzle_info: {it: 'should', not: 'be', exposed: ['to', 'the', 'final', 'client']}
-          }}
+          bar: {
+            properties: {
+              foo: 'bar',
+              _kuzzle_info: {
+                it: 'should',
+                not: 'be',
+                exposed: ['to', 'the', 'final', 'client']
+              }
+            }
+          }
         };
 
-      client.indices.getMapping.returns(Bluebird.resolve({foo: {mappings}}));
+      client.indices.getMapping.resolves({foo: {mappings}});
 
       return esWrapper.getMapping(mappingRequest)
         .then(result => {
@@ -91,23 +97,31 @@ describe('Test: ElasticSearch Wrapper', () => {
     });
 
     it('should return a rejected promise if there is no mapping found', () => {
-      client.indices.getMapping.returns(Bluebird.resolve({
+      client.indices.getMapping.resolves({
         foobar: {
-          mappings: {bar: {
-            propeties: {foo: 'bar'}
+          mappings: {qux: {
+            properties: {foo: 'bar'}
           }}
         }
-      }));
-      should(esWrapper.getMapping(mappingRequest)).be.rejected();
+      });
 
-      client.indices.getMapping.returns(Bluebird.resolve({
-        foo: {
-          mappings: {foobar: {
-            propeties: {foo: 'bar'}
-          }}
-        }
-      }));
-      should(esWrapper.getMapping(mappingRequest)).be.rejected();
+      return should(esWrapper.getMapping(mappingRequest))
+        .be.rejectedWith(
+          NotFoundError,
+          {message: `No mapping found for index "${mappingRequest.index}"`})
+        .then(() => {
+          client.indices.getMapping.resolves({
+            foo: {
+              mappings: {foobar: {
+                properties: {foo: 'bar'}
+              }}
+            }
+          });
+
+          return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(
+            NotFoundError,
+            {message: `No mapping found for index "${mappingRequest.index}"`});
+        });
     });
 
     it('should reject the getMapping promise if elasticsearch throws an error', () => {
@@ -126,7 +140,7 @@ describe('Test: ElasticSearch Wrapper', () => {
           }}
         };
 
-      client.indices.getMapping.returns(Bluebird.resolve({ foo: { mappings }}));
+      client.indices.getMapping.resolves({ foo: { mappings }});
 
       return esWrapper.getMapping(mappingRequest, true)
         .then(result => {
@@ -137,5 +151,78 @@ describe('Test: ElasticSearch Wrapper', () => {
         });
     });
 
+    it('should handle multi-indexes responses (can happen on index aliases)', () => {
+      const mappings = {
+        bar: {
+          properties: {
+            foo: 'bar',
+            _kuzzle_info: 'foobar'
+          }
+        }
+      };
+
+      client.indices.getMapping.resolves({
+        foo: { mappings },
+        bar: { mappings },
+        baz: { mappings }
+      });
+
+      return esWrapper.getMapping({index: 'alias', type: 'bar'}, true)
+        .then(result => {
+          for (const index of ['foo', 'bar', 'baz']) {
+            should(result[index].mappings.bar.properties).match({foo: 'bar'});
+            should(result[index].mappings.bar.properties._kuzzle_info)
+              .not.be.undefined()
+              .be.eql(mappings.bar.properties._kuzzle_info);
+          }
+        });
+    });
+
+    it('should filter unrelated collections from multi-indexes responses', () => {
+      const mappings = {
+        bar: {
+          properties: {
+            foo: 'bar',
+            _kuzzle_info: 'foobar'
+          }
+        },
+        qux: {
+          properties: {
+            foo: 'bar'
+          }
+        }
+      };
+
+      client.indices.getMapping.resolves({
+        foo: { mappings },
+        bar: { mappings },
+        baz: { mappings }
+      });
+
+      return esWrapper.getMapping({index: 'alias', type: 'bar'}, true)
+        .then(result => {
+          for (const index of ['foo', 'bar', 'baz']) {
+            should(result[index].mappings.bar.properties).match({foo: 'bar'});
+            should(result[index].mappings.bar.properties._kuzzle_info)
+              .not.be.undefined()
+              .be.eql(mappings.bar.properties._kuzzle_info);
+            should(result[index].mappings.qux).be.undefined();
+          }
+        });
+    });
+
+    it('should skip empty indexes without mappings', () => {
+      client.indices.getMapping.resolves({
+        foo: {},
+        qux: { mappings: { bar: { properties: {} } } }
+      });
+
+      return esWrapper.getMapping({index: 'alias', type: 'bar'}, true)
+        .then(result => {
+          should(result).be.an.Object().and.eql({
+            qux: { mappings: { bar: { properties: {} } } }
+          });
+        });
+    });
   });
 });
