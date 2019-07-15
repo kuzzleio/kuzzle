@@ -284,7 +284,7 @@
           "message": "At least 1 score/member pair must be provided.",
           "class": "BadRequestError"
         },
-        "too_much_score_member_pair": {
+        "too_many_score_member_pairs": {
           "code": 11,
           "message": "No more than 1 score/member pair can be specified when the 'incr' option is set.",
           "class": "BadRequestError"
