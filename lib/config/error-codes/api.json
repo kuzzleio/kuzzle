@@ -99,7 +99,7 @@
           "message": "The index %s does not exist.",
           "class": "PreconditionError"
         },
-        "collection_not_exists": {
+        "collection_does_not_exist": {
           "code": 2,
           "message": "The collection %s does not exist.",
           "class": "PreconditionError"
