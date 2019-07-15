@@ -94,7 +94,7 @@
     "collection": {
       "code": 5,
       "errors": {
-        "index_not_exists": {
+        "index_does_not_exist": {
           "code": 1,
           "message": "The index %s does not exist.",
           "class": "PreconditionError"
