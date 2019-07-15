@@ -2,7 +2,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   rewire = require('rewire'),
-  { throw: throwError } = require('../../lib/config/error-codes/throw'),
+  errorsManager = require('../../lib/config/error-codes/throw'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
   {
     errors: { 
@@ -13,10 +13,6 @@ const
       PartialError,
       UnauthorizedError
     }
-  errorsManager = require('../../lib/config/error-codes/throw'),
-  Kuzzle = rewire('../../lib/api/kuzzle'),
-  {
-    errors: { InternalError, ExternalServiceError }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
@@ -84,7 +80,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw an NotFoundError with default name, msg and code', () => {
-      should(() => throwError('api', 'admin', 'database_not_found', 'fake_database'))
+      should(() => errorsManager.throw('api', 'admin', 'database_not_found', 'fake_database'))
         .throw(
           NotFoundError,
           {
@@ -96,7 +92,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw a PreconditionError with default name, msg and code', () => {
-      should(() => throwError('api', 'admin', 'action_locked', 'Kuzzle is already shutting down'))
+      should(() => errorsManager.throw('api', 'admin', 'action_locked', 'Kuzzle is already shutting down'))
         .throw(
           PreconditionError,
           {
@@ -108,7 +104,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw an UnauthorizedError with default name, msg and code', () => {
-      should(() => throwError('api', 'auth', 'invalid_token'))
+      should(() => errorsManager.throw('api', 'auth', 'invalid_token'))
         .throw(
           UnauthorizedError,
           {
@@ -120,7 +116,7 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw a PartialError with default name, msg and code', () => {
-      should(() => throwError('api', 'bulk', 'document_creations_failed', ['foo', 'bar']))
+      should(() => errorsManager.throw('api', 'bulk', 'document_creations_failed', ['foo', 'bar']))
         .throw(
           PartialError,
           {

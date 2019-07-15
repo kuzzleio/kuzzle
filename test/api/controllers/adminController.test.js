@@ -48,16 +48,15 @@ describe('Test: admin controller', () => {
         .catch(error => done(error));
     });
 
-    it('should raise an error if database does not exist', () => {
+    it('should raise an error if database does not exist', done => {
       request.input.args.database = 'city17';
       adminController.throw = sinon.spy();
 
       try {
         adminController.resetCache(request);
+        done(adminController.throw('database_not_found', 'city17'));
       } catch (e) {
-        should(adminController.throw)
-          .be.calledOnce()
-          .be.calledWith('database_not_found', 'city17');
+        done(e);
       }
     });
   });
@@ -202,17 +201,16 @@ describe('Test: admin controller', () => {
       AdminController.__set__('_locks', { shutdown: null });
     });
 
-    it('should throw an error if shutdown is in progress', () => {
+    it('should throw an error if shutdown is in progress', done => {
       AdminController.__set__('_locks', { shutdown: true });
       adminController = new AdminController(kuzzle);
       adminController.throw = sinon.spy();
 
       try {
         adminController.shutdown(request);
+        done(adminController.throw('precondition', 'Kuzzle is already shutting down.'));
       } catch (e) {
-        should(adminController.throw)
-          .be.calledOnce()
-          .be.calledWith('precondition', 'Kuzzle is already shutting down.');
+        done(e);
       }
     });
 
