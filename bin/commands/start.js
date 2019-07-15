@@ -31,7 +31,7 @@ function commandStart (options = {}) {
     kuzzle = new (require('../../lib/api/kuzzle'))();
   } else {
     // node6 compatible commands are one level deeper
-    kuzzle = new (require('../../../lib/api/kuzzle'))()
+    kuzzle = new (require('../../../lib/api/kuzzle'))();
   }
 
   const

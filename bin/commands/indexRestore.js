@@ -25,7 +25,6 @@ const
   fs = require('fs'),
   ColorOutput = require('./colorOutput'),
   ndjson = require('ndjson'),
-  Bluebird = require('bluebird'),
   getSdk = require('./getSdk');
 
 function handleError(cout, dumpFile, error) {
@@ -48,6 +47,7 @@ function handleError(cout, dumpFile, error) {
   } else {
     cout.warn(error.message);
   }
+  process.exit(1);
 }
 
 function importCollection(sdk, cout, batchSize, dumpFile) {

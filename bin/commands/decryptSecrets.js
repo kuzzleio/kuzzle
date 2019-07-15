@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-
-
 const
   semver = require('semver'),
   fs = require('fs'),
@@ -36,7 +34,6 @@ if (semver.satisfies(process.version, '>= 8.0.0')) {
   // node6 compatible commands are one level deeper
   Vault = require('../../../lib/api/core/vault');
 }
-
 
 function commandDecryptSecrets (file, options) {
   const
