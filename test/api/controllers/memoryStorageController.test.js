@@ -5,7 +5,7 @@ const
   rewire = require('rewire'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   RedisClientMock = require('../../mocks/services/redisClient.mock'),
-  BaseController = require('../../../lib/api/controllers/controller'),
+  BaseController = require('../../../lib/api/controllers/baseController'),
   {
     Request,
     errors: { BadRequestError }

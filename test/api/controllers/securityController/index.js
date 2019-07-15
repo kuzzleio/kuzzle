@@ -6,7 +6,7 @@ const
   Bluebird = require('bluebird'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  BaseController = require('../../../../lib/api/controllers/controller'),
+  BaseController = require('../../../../lib/api/controllers/baseController'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController'),
   {
     Request,

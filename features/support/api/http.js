@@ -148,6 +148,15 @@ class HttpApi {
     return encodeURI(this.baseUri + '/' + path);
   }
 
+  serverPublicApi () {
+    const options = {
+      url: '/public_api',
+      method: 'GET'
+    };
+
+    return this.callApi(options);
+  }
+
   bulkImport (bulk, index) {
     const options = {
       url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_bulk'),
