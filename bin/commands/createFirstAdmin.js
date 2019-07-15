@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
@@ -31,7 +29,7 @@ const
 let cout;
 
 function getUserName () {
-  const username = readlineSync.question(cout.question('\n[❓] First administrator account name\n'));
+  const username = readlineSync.question(cout.format.question('\n[❓] First administrator account name\n'));
 
   if (username.length === 0) {
     return getUserName();
@@ -41,16 +39,16 @@ function getUserName () {
 }
 
 function getPassword () {
-  const password = readlineSync.question(cout.question('\n[❓] First administrator account password\n'),
+  const password = readlineSync.question(cout.format.question('\n[❓] First administrator account password\n'),
     {hideEchoBack: true}
   );
 
-  const confirmation = readlineSync.question(cout.question('Please confirm your password\n'),
+  const confirmation = readlineSync.question(cout.format.question('Please confirm your password\n'),
     {hideEchoBack: true}
   );
 
   if (password !== confirmation) {
-    console.log(cout.error('[✖] Passwords do not match.'));
+    cout.error('[✖] Passwords do not match.');
     return getPassword();
   }
 
@@ -58,7 +56,9 @@ function getPassword () {
 }
 
 function shouldWeResetRoles () {
-  return Bluebird.resolve(readlineSync.keyInYN(cout.question('[❓] Restrict rights of the default and anonymous roles?')));
+  return Bluebird.resolve(
+    readlineSync.keyInYN(
+      cout.format.question('[❓] Restrict rights of the default and anonymous roles?')));
 }
 
 function confirm (username, resetRoles) {
@@ -69,7 +69,7 @@ function confirm (username, resetRoles) {
   }
 
   msg += '.\nConfirm? ';
-  return Bluebird.resolve(readlineSync.keyInYN(cout.question(msg)));
+  return Bluebird.resolve(readlineSync.keyInYN(cout.format.question(msg)));
 }
 
 function commandCreateFirstAdmin (options) {
@@ -89,7 +89,7 @@ function commandCreateFirstAdmin (options) {
   return sendAction(action, options)
     .then(adminExists => {
       if (adminExists.result.exists) {
-        console.log('An administrator account already exists.');
+        cout.error('An administrator account already exists.');
         process.exit(0);
       }
 
@@ -110,7 +110,7 @@ function commandCreateFirstAdmin (options) {
     })
     .then(response => {
       if (!response) {
-        console.log(cout.warn('Aborting'));
+        cout.error('Abort.');
         process.exit(0);
       }
 
@@ -133,18 +133,18 @@ function commandCreateFirstAdmin (options) {
       return sendAction(query, options);
     })
     .then(() => {
-      console.log(cout.ok(`[✔] "${username}" administrator account created`));
+      cout.ok(`[✔] "${username}" administrator account created`);
 
       if (resetRoles) {
-        console.log(cout.ok('[✔] Rights restriction applied to the following roles: '));
-        console.log(cout.ok('   - default'));
-        console.log(cout.ok('   - anonymous'));
+        cout.ok('[✔] Rights restriction applied to the following roles: ');
+        cout.ok('   - default');
+        cout.ok('   - anonymous');
       }
 
       process.exit(0);
     })
     .catch(err => {
-      console.error(cout.error(err.message));
+      cout.error(err.message);
       process.exit(1);
     });
 }

@@ -6,7 +6,8 @@ const
   sinon = require('sinon'),
   { IncomingMessage } = require('http'),
   EntryPoint = require(`${root}/lib/api/core/entrypoints/embedded`),
-  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
+  errorMatcher = require(`${root}/test/util/errorMatcher`);
 
 describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
   let
@@ -102,11 +103,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       return protocol.init(entrypoint)
         .then(() => {
           protocol.onServerError('test');
-          should(kuzzle.emit)
+          should(kuzzle.log.error)
             .be.calledOnce()
-            .be.calledWith(
-              'log:error',
-              '[websocket] An error has occured "undefined":\nundefined');
+            .be.calledWith('[websocket] An error has occured "undefined":\nundefined');
         });
     });
   });
@@ -284,6 +283,29 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
     it('should do nothing if no data is given or if the connection is unknown', () => {
       protocol.onClientMessage({id: 'foo'});
       should(entrypoint.execute).have.callCount(0);
+    });
+
+    it('should handle invalid messages format', () => {
+      const nodeEnv = process.env.NODE_ENV;
+      // depending on NODE_ENV, errors can have a stacktrace or not
+      ['development', '', 'production'].forEach(env => {
+        process.env.NODE_ENV = env;
+
+        protocol.onClientMessage(connection, 'ohnoes');
+
+        const matcher = errorMatcher.fromMessage(
+          'BadRequestError',
+          'Unexpected token o in JSON at position 0');
+
+        should(entrypoint.execute).not.be.called();
+        should(protocol._send)
+          .calledOnce()
+          .calledWith(connection.id, sinon.match(matcher));
+
+        protocol._send.resetHistory();
+      });
+
+      process.env.NODE_ENV = nodeEnv;
     });
 
     it('should call entrypoint execute', () => {

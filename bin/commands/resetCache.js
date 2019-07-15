@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   rc = require('rc'),
   params = rc('kuzzle'),
@@ -42,15 +40,15 @@ function commandResetCache (database, options) {
   const cout = new ColorOutput(opts);
 
   if (db === 'memoryStorage') {
-    console.log(cout.warn('[ℹ] You are about to clear Kuzzle memoryStorage database.'));
-    console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
-    userIsSure = params.noint || readlineSync.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ') === 'I am sure';
+    cout.warn('[ℹ] You are about to clear Kuzzle memoryStorage database.');
+    cout.warn('[ℹ] This operation cannot be undone.\n');
+    userIsSure = params.noint || readlineSync.question(cout.format.question('[❓] Are you sure? If so, please type "I am sure" (if not just press [Enter]): ')) === 'I am sure';
   } else {
-    userIsSure = readlineSync.keyInYN(cout.question('[❓] Do you want to clear Kuzzle internal cache?'));
+    userIsSure = readlineSync.keyInYN(cout.format.question('[❓] Do you want to clear Kuzzle internal cache?'));
   }
 
   if (userIsSure) {
-    console.log(cout.notice('[ℹ] Processing...\n'));
+    cout.notice('[ℹ] Processing...\n');
     const query = {
       controller: 'admin',
       action: 'resetCache',
@@ -59,16 +57,16 @@ function commandResetCache (database, options) {
 
     return sendAction(query, opts)
       .then(() => {
-        console.log(cout.ok(`[✔] Kuzzle cache '${db}' has been successfully reset`));
+        cout.ok(`[✔] Kuzzle cache '${db}' has been successfully reset`);
         process.exit(0);
       })
       .catch(err => {
-        console.error(err);
+        cout.error(err);
         process.exit(1);
       });
   }
 
-  console.log(cout.notice('[ℹ] Aborted'));
+  cout.notice('[ℹ] Aborted');
 }
 
 module.exports = commandResetCache;

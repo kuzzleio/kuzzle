@@ -40,17 +40,13 @@ jobs:
     - stage: Unit Tests & Linters
       if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: SonarQube
-
       os: linux
+      dist: trusty
       sudo: required
       language: java
 
       addons:
         sonarqube: true
-
-      cache:
-        directories:
-          - $HOME/.sonar/cache
 
       env:
         # SonarQube Token
@@ -64,7 +60,7 @@ jobs:
 # ---------------------------------------
 
     - stage: Integration tests
-      if: type = cron OR type = push AND branch =~ ^master|.*-stable
+      if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
       name: Node.js 6
 
       os: linux

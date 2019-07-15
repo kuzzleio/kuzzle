@@ -748,12 +748,12 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.update.rejects(esError);
 
       elasticsearch.update(request)
-        .catch((error) => {
+        .catch(error => {
           try{
             should(error).be.instanceOf(NotFoundError);
             should(error.message).be.equal('Index "banana" does not exist, please create it first');
-            should(error.internalError).eql(esError);
-            should(error.service).be.equal('elasticsearch');
+            should(error.stack.replace(/^.*?\n/, ''))
+              .eql(esError.stack.replace(/^.*?\n/, ''));
             should(elasticsearch.client.update.firstCall.args[0].id).be.null();
             done();
           }
@@ -2050,7 +2050,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(kuzzle.emit).calledWith('log:error');
+          should(kuzzle.log.error).calledOnce();
           should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({ foo: 'bar' });
           return null;

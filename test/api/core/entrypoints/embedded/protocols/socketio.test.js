@@ -78,10 +78,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
         .then(() => {
           protocol.onServerError(error);
 
-          should(kuzzle.emit)
-            .be.calledWith('log:error');
-
-          should(kuzzle.emit.firstCall.args[1])
+          should(kuzzle.log.error).calledOnce();
+          should(kuzzle.log.error.firstCall.args[0])
             .startWith('[socketio] An error has occured');
         });
     });

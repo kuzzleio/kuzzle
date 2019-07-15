@@ -2,30 +2,28 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
-  rewire = require('rewire');
+  rewire = require('rewire'),
+  Kuzzle = require('../mocks/kuzzle.mock');
 
 describe('Test: Deprecate util', () => {
   let
     Deprecate,
     object,
+    kuzzle,
     deprecatedObject,
-    processStub,
-    consoleStub;
+    processStub;
 
   beforeEach(() => {
-    consoleStub = Object.assign(console, {
-      warn: sinon.stub()
-    });
     processStub = Object.assign(process, {
       env: Object.assign(process.env, {
         NODE_ENV: 'development'
       })
     });
 
+    kuzzle = new Kuzzle();
+
     Deprecate = rewire('../../lib/util/deprecate');
 
-    Deprecate.__set__('console', consoleStub);
     Deprecate.__set__('process', processStub);
 
     object = {
@@ -34,7 +32,8 @@ describe('Test: Deprecate util', () => {
       leet: 1337,
       '1337': 'leet'
     };
-    deprecatedObject = Deprecate.deprecateProperties(object, {
+
+    deprecatedObject = Deprecate.deprecateProperties(kuzzle.log, object, {
       foo: 'FOO',
       leet: null,
       '1337': { message: 'gig' }
@@ -63,19 +62,19 @@ describe('Test: Deprecate util', () => {
       something = deprecatedObject.leet;
 
       should(something).not.be.undefined();
-      should(consoleStub.warn.callCount).be.eql(4);
-      should(consoleStub.warn.getCall(0).args[0]).be.eql('DEPRECATION WARNING');
-      should(consoleStub.warn.getCall(1).args[0]).be.eql('Use of \'foo\' property is deprecated. Please, use \'FOO\' instead.');
-      should(consoleStub.warn.getCall(3).args[0]).be.eql('Use of \'leet\' property is deprecated.');
+      should(kuzzle.log.warn.callCount).be.eql(4);
+      should(kuzzle.log.warn.getCall(0).args[0]).be.eql('DEPRECATION WARNING');
+      should(kuzzle.log.warn.getCall(1).args[0]).be.eql('Use of \'foo\' property is deprecated. Please, use \'FOO\' instead.');
+      should(kuzzle.log.warn.getCall(3).args[0]).be.eql('Use of \'leet\' property is deprecated.');
     });
 
     it('should print custom deprecation warning', () => {
       let something = deprecatedObject['1337'];
 
       should(something).not.be.undefined();
-      should(consoleStub.warn).be.calledTwice();
-      should(consoleStub.warn.getCall(0).args[0]).be.eql('DEPRECATION WARNING');
-      should(consoleStub.warn.getCall(1).args[0]).be.eql('gig');
+      should(kuzzle.log.warn).be.calledTwice();
+      should(kuzzle.log.warn.getCall(0).args[0]).be.eql('DEPRECATION WARNING');
+      should(kuzzle.log.warn.getCall(1).args[0]).be.eql('gig');
     });
   });
 });

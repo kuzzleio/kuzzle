@@ -5,7 +5,7 @@ const
   rewire = require('rewire'),
   mockrequire = require('mock-require'),
   AbstractManifest = require('../../../../lib/api/core/abstractManifest'),
-  { PluginImplementationError } = require('kuzzle-common-objects').errors;
+  { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
 
 class AbstractManifestStub extends AbstractManifest {
   load() {}
@@ -13,8 +13,6 @@ class AbstractManifestStub extends AbstractManifest {
 
 describe('Plugins manifest class', () => {
   const
-    kuzzle = new KuzzleMock(),
-    consoleStub = { warn: sinon.stub() },
     fsStub = {
       accessSync: sinon.stub(),
       constants: {
@@ -22,20 +20,19 @@ describe('Plugins manifest class', () => {
       }
     },
     pluginPath = 'foo/bar';
-  let Manifest;
+  let
+    kuzzle,
+    Manifest;
 
   beforeEach(() => {
+    kuzzle = new KuzzleMock();
     mockrequire('../../../../lib/api/core/abstractManifest', AbstractManifestStub);
     mockrequire.reRequire('../../../../lib/api/core/abstractManifest');
     Manifest = rewire('../../../../lib/api/core/plugins/manifest');
-    Manifest.__set__({
-      console: consoleStub,
-      fs: fsStub
-    });
+    Manifest.__set__({ fs: fsStub });
   });
 
   afterEach(() => {
-    consoleStub.warn.resetHistory();
     mockrequire.stopAll();
   });
 
@@ -58,7 +55,7 @@ describe('Plugins manifest class', () => {
         return m.endsWith(`${pluginPath}/package.json`) ? packagejson : require(m);
       })(() => {
         manifest.load();
-        should(consoleStub.warn)
+        should(kuzzle.log.warn)
           .calledOnce()
           .calledWith(`[${pluginPath}] Plugins without a manifest.json file are deprecated.`);
 
@@ -107,7 +104,7 @@ describe('Plugins manifest class', () => {
         return m.endsWith(`${pluginPath}/package.json`) ? packagejson : require(m);
       })(() => {
         manifest.load();
-        should(consoleStub.warn)
+        should(kuzzle.log.warn)
           .calledOnce()
           .calledWith(`[${pluginPath}] Plugins without a manifest.json file are deprecated.`);
 

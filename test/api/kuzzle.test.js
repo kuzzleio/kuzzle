@@ -13,34 +13,40 @@ const
       PartialError,
       UnauthorizedError
     }
+  errorsManager = require('../../lib/config/error-codes/throw'),
+  Kuzzle = rewire('../../lib/api/kuzzle'),
+  {
+    errors: { InternalError, ExternalServiceError }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
+  const mockedProperties = [
+    'entryPoints',
+    'funnel',
+    'router',
+    'indexCache',
+    'internalEngine',
+    'notifier',
+    'gc',
+    'pluginsManager',
+    'adminController',
+    'repositories',
+    'services',
+    'statistics',
+    'validation',
+    'emit',
+    'vault',
+    'janitor',
+    'log'
+  ];
 
   beforeEach(() => {
     const mock = new KuzzleMock();
     kuzzle = new Kuzzle();
 
-    [
-      'entryPoints',
-      'funnel',
-      'router',
-      'indexCache',
-      'internalEngine',
-      'notifier',
-      'gc',
-      'pluginsManager',
-      'adminController',
-      'repositories',
-      'services',
-      'statistics',
-      'validation',
-      'emit',
-      'vault',
-      'janitor'
-    ].forEach(k => {
+    mockedProperties.forEach(k => {
       kuzzle[k] = mock[k];
     });
   });
@@ -51,10 +57,9 @@ describe('/lib/api/kuzzle.js', () => {
   });
 
   describe('#throw', () => {
-    
     it('should throw an ExternalServiceError with right name, msg and code', () => {
-    
-      should(() => throwError('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
+
+      should(() => errorsManager.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
         .throw(
           ExternalServiceError,
           {
@@ -67,7 +72,7 @@ describe('/lib/api/kuzzle.js', () => {
 
     it('should throw an InternalError with default name, msg and code', () => {
 
-      should(() => throwError('api', 'server', 'fake_error', '{"status":"error"}'))
+      should(() => errorsManager.throw('api', 'server', 'fake_error', '{"status":"error"}'))
         .throw(
           InternalError,
           {
@@ -152,8 +157,8 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.janitor.loadFixtures,
             kuzzle.pluginsManager.init,
             kuzzle.pluginsManager.run,
-            kuzzle.emit, // log:info, services init
-            kuzzle.emit, // log:info, load securities
+            kuzzle.log.info, // services init
+            kuzzle.log.info, // load securities
             kuzzle.janitor.loadSecurities,
             kuzzle.funnel.loadPluginControllers,
             kuzzle.router.init,
@@ -186,9 +191,6 @@ describe('/lib/api/kuzzle.js', () => {
         processRemoveAllListenersSpy = sinon.spy();
 
       return Kuzzle.__with__({
-        console: {
-          error: sinon.spy()
-        },
         process: {
           exit: processExitSpy,
           on: processOnSpy,
@@ -199,21 +201,7 @@ describe('/lib/api/kuzzle.js', () => {
         mock = new KuzzleMock();
         kuzzle = new Kuzzle();
 
-        [
-          'entryPoints',
-          'funnel',
-          'router',
-          'indexCache',
-          'internalEngine',
-          'notifier',
-          'gc',
-          'pluginsManager',
-          'remoteActionsController',
-          'repositories',
-          'services',
-          'statistics',
-          'vault'
-        ].forEach(k => {
+        mockedProperties.forEach(k => {
           kuzzle[k] = mock[k];
         });
 
@@ -258,12 +246,12 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.pluginsManager.run).not.be.called();
           should(kuzzle.services.init).not.be.called();
           should(kuzzle.indexCache.init).not.be.called();
-          should(kuzzle.emit).be.called();
           should(kuzzle.funnel.init).not.be.called();
           should(kuzzle.router.init).not.be.called();
           should(kuzzle.statistics.init).not.be.called();
           should(kuzzle.entryPoints.init).not.be.called();
           should(kuzzle.repositories.init).not.be.called();
+          should(kuzzle.log.error).be.called();
         });
     });
   });

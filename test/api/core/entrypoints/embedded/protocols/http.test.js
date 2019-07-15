@@ -9,14 +9,14 @@ const
   {
     Request,
     errors: {
-      KuzzleError,
       SizeLimitError,
       BadRequestError
     }
   } = require('kuzzle-common-objects'),
   should = require('should'),
   sinon = require('sinon'),
-  { Writable } = require('stream');
+  { Writable } = require('stream'),
+  errorMatcher = require(`${root}/test/util/errorMatcher`);
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   const
@@ -486,6 +486,43 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           .be.calledWith(Buffer.from(JSON.stringify(expected, undefined, 2)));
       });
 
+      it('should remove error stack traces if not in development', () => {
+        const nodeEnv = process.env.NODE_ENV;
+
+        for (const env of ['production', '', 'development']) {
+          process.env.NODE_ENV = env;
+
+          protocol._sendRequest({id: 'connectionId'}, response, payload);
+
+          should(kuzzle.router.http.route).be.calledWith(payload);
+
+          const
+            cb = kuzzle.router.http.route.firstCall.args[1],
+            result = new Request({});
+
+          result.setError(new BadRequestError('foobar'));
+
+          cb(result);
+
+          should(response.writeHead)
+            .be.calledOnce()
+            .be.calledWithMatch(400, result.response.headers);
+
+          const matcher = errorMatcher.fromMessage(
+            'BadRequestError',
+            'foobar');
+
+          should(response.end)
+            .be.calledOnce()
+            .be.calledWith(sinon.match(matcher));
+
+          response.writeHead.resetHistory();
+          response.end.resetHistory();
+        }
+
+        process.env.NODE_ENV = nodeEnv;
+      });
+
       it('should output buffer raw result', () => {
         protocol._sendRequest({id: 'connectionId'}, response, payload);
 
@@ -561,6 +598,22 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(response.end)
           .be.calledOnce()
           .be.calledWithExactly(Buffer.from('content'));
+      });
+
+      it('should send a 0-length-content response if marked as raw and content is null', () => {
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
+
+        result.setResult(null, {
+          raw : true
+        });
+
+        cb(result);
+
+        should(response.end).be.calledWith(Buffer.from(''));
+        should(result.response.headers['Content-Length']).be.eql('0');
       });
 
       it('should compress the outgoing message with deflate if asked to', () => {
@@ -677,29 +730,50 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
     it('should log the access and reply with error', () => {
       const
-        error = new KuzzleError('test', 123),
         connectionId = 'connectionId',
-        payload = {requestId: 'foobar'};
+        payload = {requestId: 'foobar'},
+        nodeEnv = process.env.NODE_ENV;
 
-      const expected = (new Request(payload, {connectionId, error})).serialize();
+      for (const env of ['production', '', 'development']) {
+        process.env.NODE_ENV = env;
 
-      // likely to be different, and we do not care about it
-      delete expected.data.timestamp;
+        const
+          kerr = new BadRequestError('test'),
+          matcher = errorMatcher.fromMessage(
+            'BadRequestError',
+            'test'),
+          expected = (new Request(payload, {connectionId, kerr})).serialize();
 
-      protocol._replyWithError({id: connectionId}, payload, response, error);
+        // likely to be different, and we do not care about it
+        delete expected.data.timestamp;
 
-      should(entrypoint.logAccess).be.calledOnce();
-      should(entrypoint.logAccess.firstCall.args[0].serialize())
-        .match(expected);
+        protocol._replyWithError({id: connectionId}, payload, response, kerr);
 
-      should(response.writeHead)
-        .be.calledOnce()
-        .be.calledWith(123, {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods' : 'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile'
-        });
+        should(entrypoint.logAccess).be.calledOnce();
+        should(entrypoint.logAccess.firstCall.args[0].serialize())
+          .match(expected);
+
+        should(response.writeHead)
+          .be.calledOnce()
+          .be.calledWith(
+            kerr.status,
+            {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods' : 'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile'
+            });
+
+        should(response.end)
+          .calledOnce()
+          .calledWith(sinon.match(matcher));
+
+        entrypoint.logAccess.resetHistory();
+        response.writeHead.resetHistory();
+        response.end.resetHistory();
+      }
+
+      process.env.NODE_ENV = nodeEnv;
     });
 
     it('should remove pending request from clients', () => {
@@ -711,6 +785,22 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       protocol._replyWithError({id: 'connectionId'}, {}, response, error);
 
       should(entrypoint.clients).be.empty();
+    });
+  });
+
+  describe('#_createWritableStream', () => {
+    beforeEach(() => {
+      return protocol.init(entrypoint);
+    });
+
+    it('should throw if Content-Type HTTP header is invalid', () => {
+      const request = { headers: { 'content-type': 'application/toto'}};
+      try {
+        protocol._createWritableStream(request, {});
+      } catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+        should(e.message).be.equals('Unsupported content type: application/toto');
+      }
     });
   });
 });
