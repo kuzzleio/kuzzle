@@ -85,8 +85,19 @@ When(/I check if collection "(.*?)" exists on index "(.*?)"$/, function (collect
   return stepUtils.getReturn.call(this, 'collectionExists', index, collection, cb);
 });
 
-When('I create a collection {string}:{string}', function (index, collection) {
-  return this.api.createCollection(index, collection);
+When(/I create a collection "([\w-]+)":"([\w-]+)"( with "([\d]+)" documents)?/, function (index, collection, countRaw) {
+  return this.api.createCollection(index, collection)
+    .then(() => {
+      const
+        promises = [],
+        count = parseInt(countRaw);
+
+      for (let i = 0; i < count; ++i) {
+        promises.push(this.api.create({ number: `doc-${i}` }, index, collection));
+      }
+
+      return Promise.all(promises);
+    });
 });
 
 Then('The mapping dynamic field of {string}:{string} is {string}', function (index, collection, dynamicValue) {

@@ -20,6 +20,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const semver = require('semver');
+
+function requireCommand(commandName) {
+  let requiredModule;
+
+  if (semver.satisfies(process.version, '>= 8.0.0')) {
+    requiredModule = require(`./commands/${commandName}`);
+  } else {
+    // node6 compatible commands are one level deeper
+    requiredModule = require(`./commands/node6/${commandName}`);
+  }
+
+  return requiredModule;
+}
 
 /**
  * This is the main entry when you type kuzzle start command
@@ -45,7 +59,7 @@ bindOption(
   program
     .command('createFirstAdmin')
     .description('create the first administrator user')
-    .action(require('./commands/createFirstAdmin'))
+    .action(requireCommand('createFirstAdmin'))
 );
 
 // $ kuzzle clearCache
@@ -53,7 +67,7 @@ bindOption(
   program
     .command('clearCache')
     .description('clear internal caches in Redis')
-    .action(require('./commands/resetCache'))
+    .action(requireCommand('clearCache'))
 );
 
 // $ kuzzle reset
@@ -64,7 +78,7 @@ bindOption(
       'reset all users, profiles, roles and documents validation specifications'
     )
     .option('--noint', 'non interactive mode')
-    .action(require('./commands/resetKuzzleData'))
+    .action(requireCommand('resetKuzzleData'))
 );
 
 // $ kuzzle resetSecurity
@@ -73,7 +87,7 @@ bindOption(
     .command('resetSecurity')
     .description('reset all users, profiles and roles')
     .option('--noint', 'non interactive mode')
-    .action(require('./commands/resetSecurity'))
+    .action(requireCommand('resetSecurity'))
 );
 
 // $ kuzzle resetDatabase
@@ -82,7 +96,7 @@ bindOption(
     .command('resetDatabase')
     .description('remove all data stored on Kuzzle')
     .option('--noint', 'non interactive mode')
-    .action(require('./commands/resetDatabase'))
+    .action(requireCommand('resetDatabase'))
 );
 
 // $ kuzzle shutdown
@@ -90,7 +104,7 @@ bindOption(
   program
     .command('shutdown')
     .description('gracefully exits after processing remaining requests')
-    .action(require('./commands/shutdown'))
+    .action(requireCommand('shutdown'))
 );
 
 // $ kuzzle start
@@ -103,7 +117,7 @@ bindOption(
     .option('    --securities <file>', 'import roles, profiles and users from file')
     .option('    --vault-key <vaultKey>', 'Vault key used to decrypt secrets')
     .option('    --secrets-file <secretsFile>', 'Output file to write decrypted secrets')
-    .action(require('./commands/start'))
+    .action(requireCommand('start'))
 );
 
 // $ kuzzle dump
@@ -111,7 +125,7 @@ bindOption(
   program
     .command('dump')
     .description('create a dump of current state of kuzzle')
-    .action(require('./commands/dump'))
+    .action(requireCommand('dump'))
 );
 
 // $ kuzzle loadMappings
@@ -119,7 +133,7 @@ bindOption(
   program
     .command('loadMappings <file>')
     .description('load database mappings into Kuzzle')
-    .action(require('./commands/loadMappings'))
+    .action(requireCommand('loadMappings'))
 );
 
 // $ kuzzle loadFixtures
@@ -127,7 +141,7 @@ bindOption(
   program
     .command('loadFixtures <file>')
     .description('load database fixtures into Kuzzle')
-    .action(require('./commands/loadFixtures'))
+    .action(requireCommand('loadFixtures'))
 );
 
 // $ kuzzle loadSecurities
@@ -135,7 +149,7 @@ bindOption(
   program
     .command('loadSecurities <file>')
     .description('load roles, profiles and users into Kuzzle')
-    .action(require('./commands/loadSecurities'))
+    .action(requireCommand('loadSecurities'))
 );
 
 // $ kuzzle encryptSecrets
@@ -146,7 +160,7 @@ bindOption(
     .option('    --outputFile <outputFile>', 'Output file to write encrypted secrets')
     .option('    --noint', 'non interactive mode')
     .description('encrypt a secrets file with the provided key')
-    .action(require('./commands/encryptSecrets'))
+    .action(requireCommand('encryptSecrets'))
 );
 
 // $ kuzzle decryptSecrets
@@ -157,7 +171,25 @@ bindOption(
     .option('    --outputFile <outputFile>', 'Output file to write decrypted secrets')
     .option('    --noint', 'non interactive mode')
     .description('decrypt a secrets file with the provided key')
-    .action(require('./commands/decryptSecrets'))
+    .action(requireCommand('decryptSecrets'))
+);
+
+// $ kuzzle indexDump
+bindOption(
+  program
+    .command('indexDump <index> <path>')
+    .option('    --batch-size <batchSize>', 'Maximum batch size (see limits.documentsFetchCount config)')
+    .description('dump an entire index in the specified directory')
+    .action(requireCommand('indexDump'))
+);
+
+// $ kuzzle indexRestore
+bindOption(
+  program
+  .command('indexRestore <path>')
+  .option('    --batch-size <batchSize>', 'Maximum batch size (see limits.documentsWriteCount config)')
+  .description('restore the content of a previously dumped index')
+  .action(requireCommand('indexRestore'))
 );
 
 // Run user command

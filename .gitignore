@@ -56,3 +56,9 @@ config/testsecrets.json
 config/testsecrets.enc.json
 
 config/kuzzlerc
+
+#tests files
+index-dump/*
+
+#Node.js 6 compat
+bin/commands/node6/*
