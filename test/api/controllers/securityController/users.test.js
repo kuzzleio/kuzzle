@@ -11,18 +11,18 @@ const
     BadRequestError,
     NotFoundError,
     PluginImplementationError,
+    SizeLimitError,
     PreconditionError,
+    InternalError: KuzzleInternalError
   } = require('kuzzle-common-objects').errors,
-  SecurityController = rewire('../../../../lib/api/controllers/securityController'),
-  errorsManager = require('../../../../lib/config/error-codes/throw');
+  SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
 
   let
     kuzzle,
     request,
-    securityController,
-    errorsManagerthrow;
+    securityController;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -30,11 +30,6 @@ describe('Test: security controller - users', () => {
     request = new Request({controller: 'security'});
     kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {users: {properties: {}}}}});
     kuzzle.internalEngine.get.resolves({});
-    errorsManagerthrow = sinon.spy(errorsManager, 'throw');
-  });
-
-  afterEach(() => {
-    errorsManagerthrow.restore();
   });
 
   describe('#updateUserMapping', () => {
@@ -184,13 +179,7 @@ describe('Test: security controller - users', () => {
         size: 10
       });
       
-      try {
-        securityController.searchUsers(request);
-      } catch (e) {
-        should(errorsManagerthrow)
-          .be.calledOnce()
-          .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
-      }
+      return should(() => securityController.searchUsers(request)).throw(SizeLimitError);
     });
 
     it('should reject an error in case of error', () => {
@@ -346,19 +335,13 @@ describe('Test: security controller - users', () => {
 
     it('should reject an error if user already exists', () => {
       kuzzle.repositories.user.load.resolves({_id: 'test'});
-      errorsManager.throw = sinon.spy();
 
-      return securityController.createUser(new Request({
+      return should(securityController.createUser(new Request({
         _id: 'test',
         body: {
-          content: {name: 'John Doe', profileIds: ['anonymous']}
+          content: { name: 'John Doe', profileIds: ['anonymous'] }
         }
-      })).catch ((e) => {
-        should(errorsManager.throw)
-          .be.calledOnce()
-          .be.calledWith('api', 'security', 'user_alreay_exists', 'test');
-        should(e).be.instanceOf(PreconditionError);
-      });
+      }))).be.rejectedWith(PreconditionError);
     });
 
     it('should throw an error if no profile is given', () => {
@@ -410,15 +393,9 @@ describe('Test: security controller - users', () => {
     it('should reject an error if a strategy is unknown', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-      errorsManager.throw = sinon.spy();
       request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
 
-      return securityController.createUser(request)
-        .catch (() => {
-          should(errorsManager.throw)
-            .be.calledOnce()
-            .be.calledWith('api', 'security', 'unknown_strategy', 'unknownStrategy');
-        });
+      return should(securityController.createUser(request)).be.rejectedWith(BadRequestError);
     });
 
     it('should reject an error if credentials don\'t validate the strategy', () => {
@@ -439,17 +416,11 @@ describe('Test: security controller - users', () => {
     it('should reject if credentials already exist on the provided user id', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-      errorsManager.throw = sinon.spy();
       kuzzle.pluginsManager.getStrategyMethod
         .withArgs('someStrategy', 'exists')
         .returns(sinon.stub().resolves(true));
 
-      return securityController.createUser(request)
-        .catch (() => {
-          should(errorsManager.throw)
-            .be.calledOnce()
-            .be.calledWith('api', 'security', 'creds_on_non_existing_user', 'test');
-        });
+      return should(securityController.createUser(request)).be.rejectedWith(KuzzleInternalError);
     });
 
     it('should throw an error and rollback if credentials don\'t create properly', done => {

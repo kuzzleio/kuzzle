@@ -32,6 +32,11 @@ describe('Test: hotelClerk.removeRooms', () => {
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.realtime = new Koncorde();
     context = {connectionId, token: {userId: ''}, user: {_id: ''}};
+    
+  });
+
+  afterEach(() => {
+    
   });
 
   it('should reject an error if there is no subscription on this index', () => {
@@ -42,7 +47,7 @@ describe('Test: hotelClerk.removeRooms', () => {
       collection: collection1,
       body: {}
     }, context);
-
+      
     return should(() => kuzzle.hotelClerk.removeRooms(request)).throw(NotFoundError);
   });
 

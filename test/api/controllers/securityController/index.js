@@ -23,11 +23,17 @@ const
 describe('/api/controllers/security', () => {
   let
     funnelController,
+    sandbox = sinon.createSandbox(),
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnelController = new FunnelController(kuzzle);
+    errorsManager.throw = sandbox.spy(errorsManager, 'throw');
+  });
+
+  afterEach(() => {
+    errorsManager.throw.restore();
   });
 
   describe('#constructor', () => {
@@ -111,16 +117,9 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
-      errorsManager.throw = sinon.spy(errorsManager, 'throw');
-      try {
+      return should(() => {
         mDelete(kuzzle, 'type', request);
-      } catch (e) {
-        should(errorsManager.throw)
-          .be.calledOnce()
-          .be.calledWith('api', 'security', 'delete_limit_reached', 1);
-        should(e).be.instanceOf(BadRequestError);
-        errorsManager.throw.restore();
-      }
+      }).throw('The number of deletes to perform exceeds the server configured value 1.');
     });
 
     it('should return the input ids if everything went fine', () => {

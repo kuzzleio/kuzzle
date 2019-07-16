@@ -300,8 +300,6 @@ describe('Test: document controller', () => {
           {_id: 'anotherDocumentId', body: {some: 'body'}}
         ]
       };
-
-      documentController.getError = sinon.stub().returns(new PartialError());
       return documentController.mCreate(request)
         .then(result => {
           should(result).match({hits: ['created'], total: 1});

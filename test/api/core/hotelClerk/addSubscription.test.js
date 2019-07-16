@@ -24,7 +24,6 @@ describe('Test: hotelClerk.addSubscription', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     hotelClerk = new HotelClerk(kuzzle);
-
     request = new Request({
       index: 'foo',
       collection: 'bar',
@@ -39,7 +38,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       }
     }, {connectionId, token: null});
   });
-
+  
   it('should initialize base structures', () => {
     should(hotelClerk.rooms).be.an.Object().and.be.empty();
     should(hotelClerk.customers).be.an.Object().and.be.empty();
@@ -176,19 +175,28 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should reject the subscription if the given state argument is incorrect', () => {
     request.input.args.state = 'foo';
 
-    return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
+    return hotelClerk.addSubscription(request)
+      .catch((e) => {
+        should(e).be.instanceOf(BadRequestError);
+      });
   });
 
   it('should reject the subscription if the given scope argument is incorrect', () => {
     request.input.args.scope = 'foo';
 
-    return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
+    return hotelClerk.addSubscription(request)
+      .catch((e) => {
+        should(e).be.instanceOf(BadRequestError);
+      });
   });
 
   it('should reject the subscription if the given users argument is incorrect', () => {
     request.input.args.users = 'foo';
 
-    return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
+    return hotelClerk.addSubscription(request)
+      .catch((e) => {
+        should(e).be.instanceOf(BadRequestError);
+      });
   });
 
   it('should reject the subscription if the number of minterms exceeds the configured limit', () => {
@@ -206,7 +214,6 @@ describe('Test: hotelClerk.addSubscription', () => {
       id: 'foobar',
     }));
     return hotelClerk.addSubscription(request)
-      .then(() => {throw new Error('should not happen');})
       .catch(error => {
         should(error)
           .be.an.instanceof(SizeLimitError);
@@ -218,7 +225,10 @@ describe('Test: hotelClerk.addSubscription', () => {
   it('should refuse a subscription if the rooms limit has been reached', () => {
     hotelClerk.roomsCount = kuzzle.config.limits.subscriptionRooms;
 
-    return should(hotelClerk.addSubscription(request)).be.rejectedWith(SizeLimitError);
+    return hotelClerk.addSubscription(request)
+      .catch((e) => {
+        should(e).be.instanceOf(SizeLimitError);
+      });
   });
 
   it('should impose no limit to the number of rooms if the limit is set to 0', () => {

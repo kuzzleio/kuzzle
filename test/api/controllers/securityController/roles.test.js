@@ -7,18 +7,14 @@ const
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  SecurityController = rewire('../../../../lib/api/controllers/securityController'),
-  errorsManager = require('../../../../lib/config/error-codes/throw');
+  { BadRequestError, SizeLimitError } = require('kuzzle-common-objects').errors,
+  SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
   let
     kuzzle,
     request,
     securityController;
-
-  before(() => {
-  });
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -158,15 +154,6 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#searchRoles', () => {
-    let errorsManagerthrow;
-
-    beforeEach(() => {
-      errorsManagerthrow = sinon.spy(errorsManager, 'throw');
-    });
-
-    afterEach(() => {
-      errorsManagerthrow.restore();
-    });
     
     it('should return response with an array of roles on searchRole call', () => {
       kuzzle.repositories.role.searchRole.resolves({
@@ -191,13 +178,8 @@ describe('Test: security controller - roles', () => {
       request = new Request({body: {policies: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
-      errorsManager.throw = sinon.spy();
 
-      return securityController.searchRoles(request).catch(() => {
-        should(errorsManager.throw)
-          .be.calledOnce()
-          .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
-      });
+      return should(() => securityController.searchRoles(request)).throw(SizeLimitError);
     });
 
     it('should reject an error in case of error', () => {

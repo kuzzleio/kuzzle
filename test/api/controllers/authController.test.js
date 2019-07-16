@@ -191,7 +191,6 @@ describe('Test the auth controller', () => {
 
     it('should emit an error if the token cannot be expired', () => {
       const error = new Error('Mocked error');
-      authController.getError = sinon.stub().returns(new KuzzleInternalError());
       kuzzle.repositories.token.expire.rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(KuzzleInternalError);

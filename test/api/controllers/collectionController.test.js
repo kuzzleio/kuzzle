@@ -114,7 +114,7 @@ describe('Test: collection controller', () => {
       kuzzle.indexCache.exists.resolves(false);
       
       return collectionController.getSpecifications(request)
-        .should.be.rejectedWith(PreconditionError);
+        .should.be.rejectedWith(PreconditionError, {message: `The index ${index} does not exist.`});
     });
 
     it('should return a dedicated error if the collection does not exist', () => {
@@ -122,7 +122,7 @@ describe('Test: collection controller', () => {
       kuzzle.indexCache.exists.onSecondCall().resolves(false);
 
       return collectionController.getSpecifications(request)
-        .should.be.rejectedWith(PreconditionError);
+        .should.be.rejectedWith(PreconditionError, {message: `The collection ${collection} does not exist.`});
     });
 
     it('should give a meaningful message if there is no specifications', () => {

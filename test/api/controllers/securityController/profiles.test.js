@@ -4,12 +4,12 @@ const
   rewire = require('rewire'),
   should = require('should'),
   sinon = require('sinon'),
-  errorsManager = require('../../../../lib/config/error-codes/throw'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
   {
     BadRequestError,
-    NotFoundError
+    NotFoundError,
+    SizeLimitError
   } = require('kuzzle-common-objects').errors,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
@@ -28,6 +28,7 @@ describe('Test: security controller - profiles', () => {
     securityController = new SecurityController(kuzzle);
   });
 
+  
   describe('#updateProfileMapping', () => {
     const foo = {foo: 'bar'};
 
@@ -266,15 +267,6 @@ describe('Test: security controller - profiles', () => {
   });
 
   describe('#searchProfiles', () => {
-    let errorsManagerthrow;
-
-    beforeEach(() => {
-      errorsManagerthrow = sinon.spy(errorsManager, 'throw');
-    });
-
-    afterEach(() => {
-      errorsManagerthrow.restore();
-    });
 
     it('should return an object containing an array of profiles on searchProfile call', () => {
       kuzzle.repositories.profile.searchProfiles.resolves({hits: [{_id: 'test'}]});
@@ -322,14 +314,8 @@ describe('Test: security controller - profiles', () => {
       request = new Request({body: {roles: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
-
-      try {
-        securityController.searchProfiles(request);
-      } catch (e) {
-        should(errorsManagerthrow)
-          .be.calledOnce()
-          .be.calledWith('api', 'security', 'search_page_size_limit_reached', 1);
-      }
+ 
+      return should(() => securityController.searchProfiles(request)).throw(SizeLimitError); 
     });
 
     it('should reject an error in case of error', () => {
@@ -526,9 +512,8 @@ describe('Test: security controller - profiles', () => {
       securityController.throw = sinon.spy();
 
       return securityController.getProfileRights(new Request({_id: 'test'}))
-        .catch (() => {
+        .catch(() => {
           should(securityController.throw)
-            .be.calledOnce()
             .be.calledWith('profile_not_found', 'test');
         });
     });
