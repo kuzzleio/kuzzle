@@ -19,7 +19,7 @@ describe('funnelController.processRequest', () => {
     funnel = new FunnelController(kuzzle);
   });
 
-  it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', done => {
+  it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', () => {
     let request = new Request({controller: 'document', index: '@test', action: 'get'});
     kuzzle.repositories.user.load.resolves({
       _id: -1,
@@ -27,17 +27,16 @@ describe('funnelController.processRequest', () => {
     });
     kuzzle.repositories.token.verifyToken.resolves({userId: -1});
 
-    funnel.checkRights(request)
+    return funnel.checkRights(request)
       .then(() => should.fail('fulfilled promise', 'rejected promise'))
       .catch(err => {
         should(err).be.instanceof(UnauthorizedError);
         should(kuzzle.pipe.calledWithMatch('request:onAuthorized', request)).be.false();
         should(kuzzle.pipe.calledWithMatch('request:onUnauthorized', request)).be.true();
-        done();
       });
   });
 
-  it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', done => {
+  it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', () => {
     let request = new Request({controller: 'document', index: '@test', action: 'get'});
     kuzzle.repositories.user.load.resolves({
       _id: 'user',
@@ -45,13 +44,12 @@ describe('funnelController.processRequest', () => {
     });
     kuzzle.repositories.token.verifyToken.resolves({user: 'user'});
 
-    funnel.checkRights(request)
+    return funnel.checkRights(request)
       .then(() => should.fail('fulfilled promise', 'rejected promise'))
       .catch(err => {
         should(err).be.instanceof(ForbiddenError);
         should(kuzzle.pipe.calledWithMatch('request:onAuthorized', request)).be.false();
         should(kuzzle.pipe.calledWithMatch('request:onUnauthorized', request)).be.true();
-        done();
       });
   });
 
