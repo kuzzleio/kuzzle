@@ -58,6 +58,11 @@
           "code": 6,
           "message": "Some document creations failed : %s.",
           "class": "PartialError"
+        },
+        "deletion_failed": {
+          "code": 6,
+          "message": "Some document deletions failed : %s.",
+          "class": "PartialError"
         }
       }
     },

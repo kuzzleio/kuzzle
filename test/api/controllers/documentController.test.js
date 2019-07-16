@@ -577,7 +577,7 @@ describe('Test: document controller', () => {
         .then(result => {
           should(documentController.getError)
             .be.calledOnce()
-            .be.calledWith('some_creation_failed', ['anotherDocumentId']);
+            .be.calledWith('deletion_failed', ['anotherDocumentId']);
           should(result).match(['documentId']);
           should(request.error).be.instanceOf(PartialError);
           should(request.status).be.eql(206);
