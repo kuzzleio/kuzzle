@@ -19,20 +19,21 @@
  * limitations under the License.
  */
 
-const { Kuzzle, WebSocket } = require('kuzzle-sdk');
+const {
+  Kuzzle,
+  Http,
+  WebSocket
+} = require('kuzzle-sdk');
 
 /**
- *  Send an action through the API
+ *  Instantiate the SDK
  *  First log the user if credentials are provided
  *  then send the action to corresponding controller
  *
  *  @param {object} options
- *  @param {string} controller
- *  @param {string} action
- *  @param {object} query
  *  @return {Promise}
  */
-function sendAction (query, options) {
+function getSdk (options = {}, protocol = 'http') {
   const config = {
     host: options.host || 'localhost',
     port: options.port || 7512
@@ -48,7 +49,14 @@ function sendAction (query, options) {
     };
   }
 
-  const kuzzle = new Kuzzle(new WebSocket(config.host, { port: config.port }));
+  let networkProtocol;
+  if (protocol === 'http') {
+    networkProtocol = new Http(config.host, { port: config.port });
+  } else {
+    networkProtocol = new WebSocket(config.host, { port: config.port });
+  }
+
+  const kuzzle = new Kuzzle(networkProtocol);
 
   return kuzzle.connect()
     .then(() => {
@@ -56,7 +64,7 @@ function sendAction (query, options) {
         return kuzzle.auth.login(config.login.strategy, config.login.credentials);
       }
     })
-    .then(() => kuzzle.query(query));
+    .then(() => kuzzle);
 }
 
-module.exports = sendAction;
+module.exports = getSdk;

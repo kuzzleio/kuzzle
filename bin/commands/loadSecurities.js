@@ -22,16 +22,23 @@
 const
   ColorOutput = require('./colorOutput'),
   loadJson = require('./loadJson'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandLoadSecurities (securitiesPath, options) {
   let
+    sdk,
     opts = options;
 
   const cout = new ColorOutput(opts);
 
-  return loadJson(securitiesPath)
-    .then(securities => sendAction({
+  return getSdk(options)
+    .then(response => {
+      sdk = response;
+
+      return null;
+    })
+    .then(() => loadJson(securitiesPath))
+    .then(securities => sdk.query({
       controller: 'admin',
       action: 'loadSecurities',
       refresh: 'wait_for',
