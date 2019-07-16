@@ -23,7 +23,7 @@ const
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 /** @type ColorOutput */
 let cout;
@@ -74,6 +74,7 @@ function confirm (username, resetRoles) {
 
 function commandCreateFirstAdmin (options) {
   let
+    sdk,
     username,
     password,
     resetRoles;
@@ -81,16 +82,18 @@ function commandCreateFirstAdmin (options) {
   cout = new ColorOutput(options);
 
   process.stdin.setEncoding('utf8');
-  const action = {
-    controller: 'server',
-    action: 'adminExists'
-  };
 
-  return sendAction(action, options)
+  return getSdk(options)
+    .then(response => {
+      sdk = response;
+
+      return null;
+    })
+    .then(() => sdk.server.adminExists())
     .then(adminExists => {
-      if (adminExists.result.exists) {
+      if (adminExists) {
         cout.error('An administrator account already exists.');
-        process.exit(0);
+        process.exit(1);
       }
 
       return getUserName();
@@ -111,26 +114,20 @@ function commandCreateFirstAdmin (options) {
     .then(response => {
       if (!response) {
         cout.error('Abort.');
-        process.exit(0);
+        process.exit(1);
       }
 
-      const query = {
-        controller: 'security',
-        action: 'createFirstAdmin',
-        _id: username,
-        reset: resetRoles,
-        body: {
-          content: { },
-          credentials: {
-            local: {
-              username,
-              password
-            }
+      const adminUser = {
+        content: { },
+        credentials: {
+          local: {
+            username,
+            password
           }
         }
       };
 
-      return sendAction(query, options);
+      return sdk.security.createFirstAdmin(username, adminUser, { reset: resetRoles });
     })
     .then(() => {
       cout.ok(`[✔] "${username}" administrator account created`);
