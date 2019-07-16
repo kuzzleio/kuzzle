@@ -20,12 +20,21 @@
  */
 
 const
+  semver = require('semver'),
   loadJson = require('./loadJson'),
   ColorOutput = require('./colorOutput');
 
 function commandStart (options = {}) {
+  let kuzzle;
+
+  if (semver.satisfies(process.version, '>= 8.0.0')) {
+    kuzzle = new (require('../../lib/api/kuzzle'))();
+  } else {
+    // node6 compatible commands are one level deeper
+    kuzzle = new (require('../../../lib/api/kuzzle'))();
+  }
+
   const
-    kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options),
     kuzzleParams = {};
 

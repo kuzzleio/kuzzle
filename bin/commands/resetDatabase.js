@@ -24,7 +24,7 @@ const
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandResetDatabase (options) {
   const cout = new ColorOutput(options);
@@ -43,12 +43,13 @@ function commandResetDatabase (options) {
 
   if (userIsSure) {
     cout.notice('[ℹ] Processing...\n');
-    const query = {
+    const request = {
       controller: 'admin',
       action: 'resetDatabase'
     };
 
-    return sendAction(query, options)
+    return getSdk(options)
+      .then(sdk => sdk.query(request))
       .then(() => {
         cout.ok('[✔] Kuzzle databases have been successfully reset');
         process.exit(0);
