@@ -26,16 +26,11 @@ describe('Test: hotelClerk.removeRooms', () => {
       }
     };
 
-
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.realtime = new Koncorde();
     context = {connectionId, token: {userId: ''}, user: {_id: ''}};
-    
-  });
-
-  afterEach(() => {
     
   });
 
@@ -47,7 +42,7 @@ describe('Test: hotelClerk.removeRooms', () => {
       collection: collection1,
       body: {}
     }, context);
-      
+
     return should(() => kuzzle.hotelClerk.removeRooms(request)).throw(NotFoundError);
   });
 

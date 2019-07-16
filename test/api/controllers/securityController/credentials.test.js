@@ -69,7 +69,7 @@ describe('Test: security controller - credentials', () => {
       kuzzle.repositories.user.load.resolves(null);
 
       return should(securityController.createCredentials(request))
-        .rejectedWith(BadRequestError);
+        .rejectedWith(BadRequestError, {message: 'Cannot create credentials: unknown kuid someUserId.'});
     });
   });
 

@@ -18,7 +18,6 @@ const
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
-
   let
     kuzzle,
     request,
@@ -84,7 +83,6 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#searchUsers', () => {
-
     it('should return a valid responseObject', () => {
       request = new Request({
         body: { query: {foo: 'bar' }},
@@ -178,7 +176,7 @@ describe('Test: security controller - users', () => {
         from: 0,
         size: 10
       });
-      
+
       return should(() => securityController.searchUsers(request)).throw(SizeLimitError);
     });
 

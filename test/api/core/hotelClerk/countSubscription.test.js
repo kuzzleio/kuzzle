@@ -7,7 +7,7 @@ const
 describe('Test: hotelClerk.countSubscription', () => {
   let
     kuzzle;
-  
+
   before(() => {
     kuzzle = new Kuzzle();
   });
@@ -17,7 +17,6 @@ describe('Test: hotelClerk.countSubscription', () => {
 
     return should(() => kuzzle.hotelClerk.countSubscription(request))
       .throw(NotFoundError, { message: 'The room Id "foobar" does not exist.' });
-  
   });
 
   it('should return the right subscriptions count when handling a correct request', () => {

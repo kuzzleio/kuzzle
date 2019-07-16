@@ -154,7 +154,6 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#searchRoles', () => {
-    
     it('should return response with an array of roles on searchRole call', () => {
       kuzzle.repositories.role.searchRole.resolves({
         hits: [{_id: 'test'}],
