@@ -99,13 +99,8 @@
           "message": "A dump is already being generated. Skipping.",
           "class": "PreconditionError"
         },
-        "dump_generation_disabled": {
-          "code": 3,
-          "message": "Dump generation is disabled.",
-          "class": "PreconditionError"
-        },
         "reading_log_directory": {
-          "code": 4,
+          "code": 3,
           "message": "Cannot read log directory '%s' : %s.",
           "class": "InternalError"
         }
