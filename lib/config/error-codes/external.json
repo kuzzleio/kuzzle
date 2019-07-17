@@ -100,6 +100,21 @@
           "class": "BadRequestError"
         }
       }
+    },
+    "internal_engine": {
+      "code": 2,
+      "errors": {
+        "lock_wait_timeout": {
+          "code": 1,
+          "message": "Internal engine bootstrap - lock wait timeout exceeded.",
+          "class": "InternalError"
+        },
+        "plugin_bootstrap_lock_wait_timeout": {
+          "code": 1,
+          "message": "Plugin %s bootstrap - lock wait timeout exceeded.",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }
