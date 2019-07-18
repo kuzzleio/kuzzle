@@ -392,7 +392,7 @@ class KuzzleMock extends Kuzzle {
         if (name === 'constructor') {
           continue;
         }
-        if (!this.hasOwnProperty(name)) {
+        if (!Object.prototype.hasOwnProperty.call(this, name)) {
           this[name] = function() {
             throw new Error(`Kuzzle original property ${name} is not mocked`);
           };
