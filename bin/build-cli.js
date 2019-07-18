@@ -1,8 +1,10 @@
+#!/bin/env node
+
 /*
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2018 Kuzzle
+ * Copyright 2015-2019 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -19,31 +21,12 @@
  * limitations under the License.
  */
 
+'use strict';
+
 const
-  ColorOutput = require('./colorOutput'),
-  getSdk = require('./getSdk');
+  semver = require('semver'),
+  { execSync } = require('child_process');
 
-function commandShutdown (options) {
-  const
-    cout = new ColorOutput(options);
-
-  cout.notice('[ℹ] Shutting down...');
-
-  const request = {
-    controller: 'admin',
-    action: 'shutdown'
-  };
-
-  return getSdk(options)
-    .then(sdk => sdk.query(request))
-    .then(() => {
-      cout.ok('[✔] Done');
-      process.exit(0);
-    })
-    .catch(err => {
-      cout.error(err);
-      process.exit(1);
-    });
+if (!semver.satisfies(process.version, '>= 8.0.0')) {
+  execSync('babel bin/commands/*.js -d bin/commands/node6');
 }
-
-module.exports = commandShutdown;

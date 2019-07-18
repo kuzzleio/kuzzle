@@ -24,7 +24,7 @@ const
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandResetKuzzleData (options) {
   const
@@ -45,12 +45,13 @@ function commandResetKuzzleData (options) {
 
   if (userIsSure) {
     cout.notice('[ℹ] Processing...\n');
-    const query = {
+    const request = {
       controller: 'admin',
       action: 'resetKuzzleData'
     };
 
-    return sendAction(query, options)
+    return getSdk(options)
+      .then(sdk => sdk.query(request))
       .then(() => {
         cout.ok('[✔] Kuzzle has been successfully reset');
         process.exit(0);

@@ -5,6 +5,7 @@ const
   } = require('cucumber'),
   { execSync } = require('child_process'),
   fs = require('fs'),
+  ndjson = require('ndjson'),
   should = require('should');
 
 When('I have a file {string} containing {string}', function (filePath, rawContent) {
@@ -26,4 +27,26 @@ Then(/A file "([\w\./-]+)" exists( and contain '(.*)')?/, function (filePath, ra
     const fileContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     should(fileContent).match(expectedContent);
   }
+});
+
+Then('a file {string} contain {int} documents', function (filePath, count) {
+  const content = [];
+
+  return new Promise(resolve => {
+    fs.createReadStream(filePath)
+      .pipe(ndjson.parse())
+      .on('data', obj => content.push(obj))
+      .on('finish', () => {
+        should(content.length).be.eql(count);
+
+        for (const document of content.slice(1)) {
+          should(document).be.type('object');
+          should(document.body).be.type('object');
+          should(document._id).be.type('string');
+          should(document.body._kuzzle_info).be.type('object');
+        }
+
+        resolve();
+      });
+  });
 });
