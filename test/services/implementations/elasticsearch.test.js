@@ -2833,7 +2833,7 @@ describe('Test: ElasticSearch service', () => {
       };
 
       should(() => elasticsearch._checkMapping(mapping))
-        .throw({ message: 'Incorrect mapping mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
+        .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
     });
 
     it('should throw when a nested property is incorrect', () => {
@@ -2851,7 +2851,7 @@ describe('Test: ElasticSearch service', () => {
       };
 
       should(() => elasticsearch._checkMapping(mapping))
-        .throw({ message: 'Incorrect mapping mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
+        .throw({ message: 'Incorrect mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
     });
 
     it('should return null if no properties are incorrect', () => {
