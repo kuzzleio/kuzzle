@@ -450,7 +450,7 @@ describe('Test: ElasticSearch service', () => {
         .catch(err => {
           try {
             should(err).be.an.instanceOf(NotFoundError);
-            should(err.message).be.exactly(`Document with id "${request.input.resource._id}" not found.`);
+            should(err.message).be.exactly(`Document with id '${request.input.resource._id}' not found.`);
             should(elasticsearch.client.index).not.be.called();
 
             done();
@@ -1324,7 +1324,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.bulk.resolves({});
 
       return should(elasticsearch.import(request))
-        .be.rejectedWith(PreconditionError, {message: 'Index "test" and/or collection "unit-tests-elasticsearch" don\'t exist'});
+        .be.rejectedWith(PreconditionError, {message: 'Index \'test\' and/or collection \'unit-tests-elasticsearch\' don\'t exist.'});
     });
   });
 
@@ -2187,7 +2187,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mcreate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mcreate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should get documents from ES only if there are IDs provided', () => {
@@ -2366,7 +2366,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should bulk import documents to be created or replaced', () => {
@@ -2497,7 +2497,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.mupdate(request)).rejectedWith(
         SizeLimitError,
-        {message: 'Number of documents exceeds the server configured value (1)'});
+        {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should bulk import documents to be updated', () => {
@@ -2642,7 +2642,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mreplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mreplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should reject documents that are not found', () => {
@@ -2777,7 +2777,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {ids: ['foo', 'bar']};
 
-      return should(elasticsearch.mdelete(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mdelete(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should correctly separate bulk successes from errors', () => {
