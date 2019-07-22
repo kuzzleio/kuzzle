@@ -15,7 +15,9 @@
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
     "lint": "eslint --max-warnings=0 ./lib ./test ./features",
-    "build-cli": "node bin/build-cli.js"
+    "doc-prepare": "cd doc && bash prepare-doc.sh",
+    "doc-dev": "npm --prefix doc/framework run dev",
+    "doc-build": "npm --prefix doc/framework run build"
   },
   "directories": {
     "lib": "lib"
