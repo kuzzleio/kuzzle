@@ -257,6 +257,20 @@ jobs:
       script:
         - MODE=production bash build-docker-images.sh
 
+# --------------------------------------
+# Documentation
+# --------------------------------------
+    - stage: Documentation
+      name: Dead link check
+      if: type = pull_request OR type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/ OR type = cron
+
+      before_script:
+        - npm run doc-prepare
+        - npm run --prefix doc/framework clone-repos
+        - gem install typhoeus
+      script:
+        - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
+
 # ---------------------------------------
 # Notifications
 # ---------------------------------------
