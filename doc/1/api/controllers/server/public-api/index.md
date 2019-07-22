@@ -1,14 +1,18 @@
 ---
 code: true
 type: page
-title: info
+title: publicApi
 ---
 
-# info
+# publicApi
 
 
+Returns available API, including Kuzzle API and plugins API.  
 
-Returns information about Kuzzle: available API (base + extended), plugins, external services (Redis, Elasticsearch, ...), servers, etc.
+::: warning
+This route is used by the HTTP protocols of the SDKs to build requests based on the controller and action names.  
+Disabling this route for the anonymous user may limit SDKs features.
+:::
 
 ---
 
@@ -17,8 +21,7 @@ Returns information about Kuzzle: available API (base + extended), plugins, exte
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512
-URL(2): http://kuzzle:7512/_serverInfo
+URL: http://kuzzle:7512/_publicApi
 Method: GET
 ```
 
@@ -27,7 +30,7 @@ Method: GET
 ```js
 {
   "controller": "server",
-  "action": "info"
+  "action": "publicApi"
 }
 ```
 
@@ -35,74 +38,43 @@ Method: GET
 
 ## Response
 
-Returns a serverInfo object with the following properties:
+Returns an object containing the definition of the available API.  
+Each key correspond to a controller.
 
-- `kuzzle`: kuzzle information about its API, active plugins, and system information
-- `services`: description and status of external services (e.g. Redis, Elasticsearch, ...)
 
 ```js
 {
   "status": 200,
   "error": null,
   "controller": "server",
-  "action": "info",
+  "action": "publicApi",
   "result": {
-    "serverInfo": {
-      "kuzzle": {
-        "api": {
-          "routes": {
-            // complete exposed API documentation
-            // example:
-            "auth": {
-              "login": {
-                "controller": "auth",
-                "action": "login",
-                "http": [
-                    {
-                        "url": "/_login/:strategy",
-                        "verb": "GET"
-                    },
-                    {
-                        "url": "/_login/:strategy",
-                        "verb": "POST"
-                    }
-                ]
-              }
-            }
-          }
-        },
-        "memoryUsed": 115036160,
-        "nodeVersion": "v8.9.0",
-        "plugins": {
-          // plugins information
-          // example:
-          "kuzzle-plugin-auth-passport-local": {
-            "manifest": {
-              "name": "kuzzle-plugin-auth-passport-local",
-              "path": "/var/app/plugins/enabled/kuzzle-plugin-auth-passport-local",
-              "kuzzleVersion": ">=1.0.0 <2.0.0"
+    "auth": {
+      "login": {
+        "controller": "auth",
+        "action": "login",
+        "http": [
+            {
+                "url": "/_login/:strategy",
+                "verb": "GET"
             },
-            "hooks": [],
-            "pipes": [],
-            "controllers": [],
-            "routes": [],
-            "strategies": [ "local" ]
+            {
+                "url": "/_login/:strategy",
+                "verb": "POST"
+            }
+        ]
+      }
+    },
+    "plugin-test/example": {
+      "liia": {
+        "controller": "plugin-test/example",
+        "action": "liia",
+        "http": [
+          {
+            "url": "_plugin/plugin-test/liia",
+            "verb": "GET"
           }
-        },
-        "system": {
-          "cpus": [
-            // list of CPUs
-          ],
-          "memory": {
-            "total": 16420540416,
-            "free": 1214001152
-          },
-        },
-        "uptime": "98436.853s",
-        "version": "<kuzzle version>"
-      },
-      "services": {
-        // external services list, description and status
+        ]
       }
     }
   }
