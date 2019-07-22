@@ -21,7 +21,7 @@
 
 const
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandShutdown (options) {
   const
@@ -29,12 +29,13 @@ function commandShutdown (options) {
 
   cout.notice('[ℹ] Shutting down...');
 
-  const query = {
+  const request = {
     controller: 'admin',
     action: 'shutdown'
   };
 
-  return sendAction(query, options)
+  return getSdk(options)
+    .then(sdk => sdk.query(request))
     .then(() => {
       cout.ok('[✔] Done');
       process.exit(0);
