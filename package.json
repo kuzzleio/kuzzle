@@ -13,7 +13,10 @@
     "functional-testing": "bash features/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features"
+    "lint": "eslint --max-warnings=0 ./lib ./bin ./test ./features",
+    "doc-prepare": "cd doc && bash prepare-doc.sh",
+    "doc-dev": "npm --prefix doc/framework run dev",
+    "doc-build": "npm --prefix doc/framework run build"
   },
   "directories": {
     "lib": "lib"
