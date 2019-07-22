@@ -103,7 +103,7 @@ curl -X PUT localhost:7512/nyc-open-data/yellow-taxi?pretty
 </details>
 
 ::: info
-It is also possible to define in advance a set of indexes and collections, then load them at the start of Kuzzle (option [--mappings](/core/1/guides/essentials/cli/#start), via the [CLI](/core/1/guides/essentials/cli/#loadmappings) or with the API method [admin:loadMappings](/core/1/api/controllers/admin/loadmappings)
+It is also possible to define in advance a set of indexes and collections, then load them at the start of Kuzzle (option [--mappings](/core/1/guides/essentials/cli/#start), via the [CLI](/core/1/guides/essentials/cli/#loadmappings) or with the API method [admin:loadMappings](/core/1/api/controllers/admin/load-mappings)
 :::
 
 ## Writing documents
