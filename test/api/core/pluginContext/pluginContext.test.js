@@ -293,10 +293,29 @@ describe('Plugin Context', () => {
       should(sdk.ms).be.an.Object();
       should(sdk.security).be.an.Object();
       should(sdk.server).be.an.Object();
+      should(sdk.realtime).be.an.Object();
+
+      sdk.realtime.query = sinon.stub().resolves({
+        result: {
+          count: 10
+        }
+      });
 
       should(() => {
         sdk.realtime.subscribe();
       }).throw(PluginImplementationError);
+
+      should(() => {
+        sdk.realtime.unsubscribe();
+      }).throw(PluginImplementationError);
+
+      should(() => {
+        sdk.realtime.join();
+      }).throw(PluginImplementationError);
+
+      should.doesNotThrow(() => {
+        sdk.realtime.count('foo');
+      });
     });
 
     describe('#accessors.sdk.as', () => {
@@ -478,9 +497,9 @@ describe('Plugin Context', () => {
       it('should reject if trying to call the realtime controller', () => {
         return should(context.accessors.execute(new Request({
           controller: 'realtime',
-          action: 'publish'
+          action: 'subscribe'
         })))
-          .be.rejectedWith(/Realtime controller is not available in plugins\. You should use plugin hooks instead/);
+          .be.rejectedWith(/realtime.subscribe method is not available in plugins\. You should use plugin hooks instead/);
       });
     });
 

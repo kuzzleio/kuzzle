@@ -144,9 +144,9 @@
           "message": "[%s] No \"name\" property provided in package.json.",
           "class": "PluginImplementationError"
         },
-        "cannot_use_realtime_controller": {
+        "cannot_use_realtime_method": {
           "code": 5,
-          "message": "Realtime controller is not available in plugins. You should use plugin hooks instead.",
+          "message": "realtime:%s method is not available in plugins. You should use plugin hooks instead.",
           "class": "PluginImplementationError"
         },
         "invalid_user_object": {
