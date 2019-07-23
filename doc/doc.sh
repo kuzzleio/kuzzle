@@ -25,7 +25,7 @@ case $1 in
 
     echo "Link local doc for dead links checking"
     rm framework/src$DOC_PATH
-    ln -s ../../../../$DOC_VERSION framework/src$DOC_PATH
+    ln -s ../../../$DOC_VERSION framework/src$DOC_PATH
 
     echo "Install dependencies"
     npm --prefix framework/ install
