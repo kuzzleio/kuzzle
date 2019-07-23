@@ -1,8 +1,8 @@
 const
+  errorsManager = require('../../lib/config/error-codes/throw'),
   stableStringify = require('json-stable-stringify'),
   {
-    Request,
-    errors
+    Request
   } = require('kuzzle-common-objects');
 
 /**
@@ -10,11 +10,11 @@ const
  * on the current process.env.NODE_ENV environment variable.
  */
 module.exports = {
-  fromMessage: (className, message) => {
+  fromMessage: (domain, subdomain, errorName, message) => {
     let expectedError = new Request(
       {},
       {
-        error: new errors[className](message)
+        error: errorsManager.getError(domain, subdomain, errorName, message)
       });
 
     expectedError = expectedError.response.toJSON().content;
