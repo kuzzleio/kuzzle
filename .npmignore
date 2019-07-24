@@ -19,3 +19,4 @@ sonar-project.properties
 *.md
 **/*.md
 test
+doc/
