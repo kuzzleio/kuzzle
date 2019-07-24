@@ -1,9 +1,7 @@
 const
   errorsManager = require('../../lib/config/error-codes/throw'),
   stableStringify = require('json-stable-stringify'),
-  {
-    Request
-  } = require('kuzzle-common-objects');
+  { Request } = require('kuzzle-common-objects');
 
 /**
  * Returns a sinon matcher tailored-made to match error API responses depending
