@@ -72,7 +72,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     };
 
     protocol = new HttpProtocol();
-    
   });
 
   afterEach(() => {
