@@ -1,6 +1,7 @@
 stages:
   - Unit Tests & Linters
   - Integration tests
+  - Documentation
   - name: Cross-platform tests
     if: type = cron
   - name: Redis tests
@@ -265,7 +266,7 @@ jobs:
         - gem install typhoeus
         - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
 
-    - stage: Deployment Doc Dev
+    - stage: Deployments
       name: Deploy next-docs.kuzzle.io
       if: branch = 1-dev
       language: node_js
@@ -300,37 +301,37 @@ jobs:
       after_deploy:
         - npm run doc-cloudfront
 
-    # - stage: Deployment Doc Prod
-    #   name: Deploy docs.kuzzle.io
-    #   if: branch = master
-    #   language: node_js
-    #   node_js: 10
-    #   env:
-    #     - NODE_ENV=production
-    #     - S3_BUCKET=docs.kuzzle.io
-    #     - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
-    #     - AWS_DEFAULT_REGION=us-west-2
+    - stage: Deployments
+      name: Deploy docs.kuzzle.io
+      if: branch = master
+      language: node_js
+      node_js: 10
+      env:
+        - NODE_ENV=production
+        - S3_BUCKET=docs.kuzzle.io
+        - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
+        - AWS_DEFAULT_REGION=us-west-2
 
-    #   addons:
-    #     apt:
-    #       packages:
-    #         - python
-    #         - python-pip
+      addons:
+        apt:
+          packages:
+            - python
+            - python-pip
 
-    #   install:
-    #     - pip install awscli --upgrade --user
+      install:
+        - pip install awscli --upgrade --user
 
-    #   script:
-    #     - npm run doc-prepare
-    #     - npm run doc-build
+      script:
+        - npm run doc-prepare
+        - npm run doc-build
 
-    #   deploy:
-    #     provider: script
-    #     script:
-    #       - npm run doc-upload
-    #     skip_cleanup: true
-    #     on:
-    #       branch: master
+      deploy:
+        provider: script
+        script:
+          - npm run doc-upload
+        skip_cleanup: true
+        on:
+          branch: master
 
 
 
