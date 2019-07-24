@@ -17,7 +17,7 @@ const
   sinon = require('sinon'),
   { Writable } = require('stream'),
   errorMatcher = require(`${root}/test/util/errorMatcher`),
-  errorsManager = require('../../../../../../lib/config/error-codes/throw');
+  errorsManager = require(`${root}/lib/config/error-codes/throw`);
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   const
