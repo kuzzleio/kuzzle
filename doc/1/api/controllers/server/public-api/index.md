@@ -7,7 +7,7 @@ title: publicApi
 # publicApi
 
 
-Returns available API, including Kuzzle API and plugins API.  
+Returns available API routes, including both Kuzzle's and plugins'.  
 
 ::: warning
 This route is used by the HTTP protocols of the SDKs to build requests based on the controller and action names.  
@@ -39,7 +39,7 @@ Method: GET
 ## Response
 
 Returns an object containing the definition of the available API.  
-Each key correspond to a controller.
+Each key matches an API controller.
 
 
 ```js
