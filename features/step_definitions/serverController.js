@@ -68,7 +68,7 @@ When(/^I get server configuration$/, function (callback) {
     .catch(error => callback(error));
 });
 
-When('I get public API', function () {
+When('I get the public API', function () {
   return this.api.serverPublicApi()
     .then(({ result }) => {
       this.apiResult = result;
