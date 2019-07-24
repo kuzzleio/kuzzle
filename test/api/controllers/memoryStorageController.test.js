@@ -827,14 +827,14 @@ describe('Test: memoryStorage controller', () => {
       return msController.mget(req)
         .then(response => {
           should(response.name).be.exactly('mget');
-          should(response.args).be.eql(['foo', 'bar', 'baz']);
+          should(response.args).be.eql([['foo', 'bar', 'baz']]);
 
           req.input.args.keys = 'foo,bar,baz';
           return msController.mget(req);
         })
         .then(response => {
           should(response.name).be.exactly('mget');
-          should(response.args).be.eql(['foo', 'bar', 'baz']);
+          should(response.args).be.eql([['foo', 'bar', 'baz']]);
         });
     });
 
@@ -866,7 +866,7 @@ describe('Test: memoryStorage controller', () => {
       return msController.mset(req)
         .then(response => {
           should(response.name).be.exactly('mset');
-          should(response.args).be.eql(['key1', 'value1', 'key2', 'value2', 'key3', 'value3']);
+          should(response.args).be.eql([['key1', 'value1', 'key2', 'value2', 'key3', 'value3']]);
         });
     });
 
