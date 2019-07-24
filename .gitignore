@@ -61,5 +61,5 @@ index-dump/*
 #Node.js 6 compat
 bin/commands/node6/*
 
-# Documentation framework
+# Doc framework
 doc/framework
