@@ -296,40 +296,40 @@ jobs:
       after_deploy:
         - npm run doc-cloudfront
 
-    - stage: Deployment Doc Prod
-      name: Deploy docs.kuzzle.io
-      if: branch = master
-      language: node_js
-      node_js: 10
-      env:
-        - NODE_ENV=production
-        - S3_BUCKET=docs.kuzzle.io
-        - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
-        - AWS_DEFAULT_REGION=us-west-2
-        - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
-        # AWS_SECRET_ACCESS_KEY
-        - secure: "KByLf3nz9/GGV5obJjP3taLZUez31su5HVm4fQLee2UFgJwpG6GJRb7VTPYchwTLlNVWIwq0SFAucGvDApgwyrLOKDIkr0il4je9g4jFa/PgcYOp3fKBluPLfSZTzUBiHeCE2YK/dHEHdLt3yzTHgWxxjy5/CxmsT4iIO22OzOkmqE0ejo35ImHJ7DoZHA7ta2LGwvPCpMZ9n1+96Zu9ON2rMb4f5tVEkaAUp1/cyuK84U6v7JbvftOel/PEdqys25IYQegNupG4WEUySrv7LKXJrlq7wh6Ez1S042tAI6JRyipAcO6dzmTq9ujsP3ahqmsCxdZ5C25I05G+wWshcRuAs5uF5RWtfvDdpZv7i1fmE9W1XgsfR/iPmBFJsZ6wv/EF61sWCwDat0UKpRGuCpAvvKOUBi7LFt2YwUkZKTwhhZUvRAmWO3rqeDzxRjxgO3tG+xp1jxWyOcLfl4TGXC5pWAyH0j++jHiZgVjB3wR73V1tPjbpBsqRMuWgRFdjatju+j4BU2b9326lH10fP48SXmYwQwazq4ivDtbX6FQ6khMlwCsb/YF5AOPNvZMTBxEh2GjNDhVzWCGdXPXxJJogLHEQ3apAK6yuh2V+Ztji2KZp447/z56vhRYAm6njxfY7wnvXe9YmlJP8jyR87P9e2KJtPYCS8IBD84ZCHhg="
+    # - stage: Deployment Doc Prod
+    #   name: Deploy docs.kuzzle.io
+    #   if: branch = master
+    #   language: node_js
+    #   node_js: 10
+    #   env:
+    #     - NODE_ENV=production
+    #     - S3_BUCKET=docs.kuzzle.io
+    #     - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
+    #     - AWS_DEFAULT_REGION=us-west-2
+    #     - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
+    #     # AWS_SECRET_ACCESS_KEY
+        # - secure: "Hg5X8SsJTG0r/ge4IM7eDG6Q6t1S/aG8aO0mOwEabdBRNgbJJgT9mSv2Ukdxuse0kUl/OyA7/51pOf4tYHgRlupGzaJU9SzDTMjapYLvg1a8EhE0Fs68zOs1EGPRktnLHHKot5hnwIB1i4PKKYlooF3n4+kTX9Rj1F4KAjoroRB5kx0HOqGDJbUkifyqjrI8e0j8sNeHtrcf2PaYgylTgx8iQEsaAr5v/ba/k9Z8E5rikDqXtroHvPNCSqblJvzDLOuX4NyHqfT38sc/mBNSREImffjN8nPkMYXo0nYrKXEiXbeCeGCqFqEM+Psgjk1BcUREpfAOKBxQYTrnpz6Ga+/D+KVzGo/FPF/QyapgAokGdj9rUAuytsoPabz7tqBpNf/4ZS0SKlh9PZjgQu5CvTScDeQnavS48ChdpWnrkrmFx9DpaYp1lBFxiycUz1Z3bpLaA8odey7lBXwj2L5gpht3BpuxH2+kxb699TMiXSdYb/XOjvIWd9Ei6MkRHAmphlvEJE/sThsA9k1DdYQj05rbCQYfqEv1WutdyHc8FtQVlTivZ4dWJ/O+xuL4aOB7Lryfm2HdK9631pQVNtBbTAD3I1xwc/GzdVBLlZu8AK5vVVXie2m0bAcPuLLRarqjAaSFr3dY228OJWWSjdBgeVOQdWQ/SavPbRHU94KrdmA="
 
-      addons:
-        apt:
-          packages:
-            - python
-            - python-pip
+    #   addons:
+    #     apt:
+    #       packages:
+    #         - python
+    #         - python-pip
 
-      install:
-        - pip install awscli --upgrade --user
+    #   install:
+    #     - pip install awscli --upgrade --user
 
-      script:
-        - npm run doc-prepare
-        - npm run doc-build
+    #   script:
+    #     - npm run doc-prepare
+    #     - npm run doc-build
 
-      deploy:
-        provider: script
-        script:
-          - npm run doc-upload
-        skip_cleanup: true
-        on:
-          branch: master
+    #   deploy:
+    #     provider: script
+    #     script:
+    #       - npm run doc-upload
+    #     skip_cleanup: true
+    #     on:
+    #       branch: master
 
 
 
