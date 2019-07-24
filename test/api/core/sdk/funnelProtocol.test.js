@@ -84,7 +84,7 @@ describe('Test: sdk/funnelProtocol', () => {
         controller: 'realtime',
         action: 'subscribe'
       }))
-        .be.rejectedWith(/realtime.subscribe method is not available in plugins\. You should use plugin hooks instead/);
+        .be.rejectedWith(/realtime:subscribe method is not available in plugins\. You should use plugin hooks instead/);
     });
   });
 });
