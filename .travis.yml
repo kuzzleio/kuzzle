@@ -14,235 +14,235 @@ jobs:
 # # Unit Tests & Linters
 # # ---------------------------------------
 
-#     - stage: Unit Tests & Linters
-#       if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-#       name: Unit Tests & ESLint
-#       os: linux
-#       sudo: required
-#       language: node_js
+    - stage: Unit Tests & Linters
+      if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
+      name: Unit Tests & ESLint
+      os: linux
+      sudo: required
+      language: node_js
 
-#       cache: npm
+      cache: npm
 
-#       node_js:
-#         - "8"
+      node_js:
+        - "8"
 
-#       install:
-#         - npm install --silent
-#         - npm install --silent --only=dev
+      install:
+        - npm install --silent
+        - npm install --silent --only=dev
 
-#       script:
-#         - npm run --silent lint
-#         - npm run unit-testing
+      script:
+        - npm run --silent lint
+        - npm run unit-testing
 
-#       after_script:
-#         - npm run codecov
+      after_script:
+        - npm run codecov
 
-#     - stage: Unit Tests & Linters
-#       if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-#       name: SonarQube
-#       os: linux
-#       dist: trusty
-#       sudo: required
-#       language: java
+    - stage: Unit Tests & Linters
+      if: (type = pull_request AND fork != true) OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
+      name: SonarQube
+      os: linux
+      dist: trusty
+      sudo: required
+      language: java
 
-#       addons:
-#         sonarqube: true
+      addons:
+        sonarqube: true
 
-#       env:
-#         # SonarQube Token
-#         secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
+      env:
+        # SonarQube Token
+        secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
 
-#       script:
-#         - bash .ci/sonar.sh
+      script:
+        - bash .ci/sonar.sh
 
-# # ---------------------------------------
-# # Integration tests
-# # ---------------------------------------
+# ---------------------------------------
+# Integration tests
+# ---------------------------------------
 
-#     - stage: Integration tests
-#       if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-#       name: Node.js 6
+    - stage: Integration tests
+      if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
+      name: Node.js 6
 
-#       os: linux
-#       sudo: required
-#       language: minimal
-#       services: docker
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
 
-#       env:
-#         - NODE_LTS=6
-#         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+      env:
+        - NODE_LTS=6
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
-#       before_install:
-#         - sudo sysctl -w vm.max_map_count=262144
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
 
-#       script:
-#         - docker-compose -f .ci/test.yml run kuzzle
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
 
-#     - stage: Integration tests
-#       if: type = cron OR type = push AND branch =~ ^master|.*-dev|.*-stable
-#       name: Node.js 8
+    - stage: Integration tests
+      if: type = cron OR type = push AND branch =~ ^master|.*-dev|.*-stable
+      name: Node.js 8
 
-#       os: linux
-#       sudo: required
-#       language: minimal
-#       services: docker
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
 
-#       env:
-#         - NODE_LTS=8
-#         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+      env:
+        - NODE_LTS=8
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
-#       before_install:
-#         - sudo sysctl -w vm.max_map_count=262144
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
 
-#       script:
-#         - docker-compose -f .ci/test.yml run kuzzle
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
 
-#     - stage: Integration tests
-#       if: type = cron OR type = push AND branch =~ ^master|.*-stable$
-#       name: Node.js 10
+    - stage: Integration tests
+      if: type = cron OR type = push AND branch =~ ^master|.*-stable$
+      name: Node.js 10
 
-#       sudo: required
-#       language: minimal
-#       services: docker
+      sudo: required
+      language: minimal
+      services: docker
 
-#       env:
-#         - NODE_LTS=10
-#         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH" != "master" ]; then echo ":develop"; fi)
+      env:
+        - NODE_LTS=10
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH" != "master" ]; then echo ":develop"; fi)
 
-#       before_install:
-#         - sudo sysctl -w vm.max_map_count=262144
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
 
-#       script:
-#         - docker-compose -f .ci/test.yml run kuzzle
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
 
 
-# # ---------------------------------------
-# # Cross-platform tests
-# # ---------------------------------------
+# ---------------------------------------
+# Cross-platform tests
+# ---------------------------------------
 
-#     - stage: Cross-platform tests
-#       name: Linux ARMHF
-#       if: type = cron
+    - stage: Cross-platform tests
+      name: Linux ARMHF
+      if: type = cron
 
-#       os: linux
-#       sudo: required
-#       language: minimal
-#       services: docker
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
 
-#       env:
-#         - NODE_LTS=8
-#         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+      env:
+        - NODE_LTS=8
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
-#       before_install:
-#         - sudo sysctl -w vm.max_map_count=262144
-#         - docker run --rm --privileged multiarch/qemu-user-static:register
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+        - docker run --rm --privileged multiarch/qemu-user-static:register
 
-#       script:
-#         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-armhf ./.ci/scripts/install-armhf-deps.sh
-#         - docker-compose -f .ci/test-armhf.yml run kuzzle
+      script:
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-armhf ./.ci/scripts/install-armhf-deps.sh
+        - docker-compose -f .ci/test-armhf.yml run kuzzle
 
-#     - stage: Cross-platform tests
-#       if: type = cron
-#       name: Linux ARM64
+    - stage: Cross-platform tests
+      if: type = cron
+      name: Linux ARM64
 
-#       os: linux
-#       sudo: required
-#       language: minimal
-#       services: docker
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
 
-#       env:
-#         - NODE_LTS=8
-#         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+      env:
+        - NODE_LTS=8
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
-#       before_install:
-#         - sudo sysctl -w vm.max_map_count=262144
-#         - docker run --rm --privileged multiarch/qemu-user-static:register
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
+        - docker run --rm --privileged multiarch/qemu-user-static:register
 
-#       script:
-#         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-aarch64 ./.ci/scripts/install-aarch64-deps.sh
-#         - docker-compose -f .ci/test-aarch64.yml run kuzzle
+      script:
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-aarch64 ./.ci/scripts/install-aarch64-deps.sh
+        - docker-compose -f .ci/test-aarch64.yml run kuzzle
 
-# # ---------------------------------------
-# # Redis Tests
-# # ---------------------------------------
+# ---------------------------------------
+# Redis Tests
+# ---------------------------------------
 
-#     - stage: Redis tests
-#       name: Redis 3
+    - stage: Redis tests
+      name: Redis 3
 
-#       os: linux
-#       sudo: required
-#       language: minimal
-#       services: docker
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
 
-#       env:
-#         - NODE_LTS=8
-#         - REDIS_VERSION=3.2
-#         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+      env:
+        - NODE_LTS=8
+        - REDIS_VERSION=3.2
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
-#       before_install:
-#         - sudo sysctl -w vm.max_map_count=262144
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
 
-#       script:
-#         - docker-compose -f .ci/test.yml run kuzzle
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
 
-#     - stage: Redis tests
-#       name: Redis 4
+    - stage: Redis tests
+      name: Redis 4
 
-#       os: linux
-#       sudo: required
-#       language: minimal
-#       services: docker
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
 
-#       env:
-#         - NODE_LTS=8
-#         - REDIS_VERSION=4.0.14
-#         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+      env:
+        - NODE_LTS=8
+        - REDIS_VERSION=4.0.14
+        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
-#       before_install:
-#         - sudo sysctl -w vm.max_map_count=262144
+      before_install:
+        - sudo sysctl -w vm.max_map_count=262144
 
-#       script:
-#         - docker-compose -f .ci/test.yml run kuzzle
+      script:
+        - docker-compose -f .ci/test.yml run kuzzle
 
-# # ---------------------------------------
-# # Deployments
-# # ---------------------------------------
+# ---------------------------------------
+# Deployments
+# ---------------------------------------
 
-#     - stage: Deployments
-#       if: tag IS present AND type != cron
-#       name: NPM.js
+    - stage: Deployments
+      if: tag IS present AND type != cron
+      name: NPM.js
 
-#       os: linux
-#       sudo: required
-#       language: node_js
+      os: linux
+      sudo: required
+      language: node_js
 
-#       node_js:
-#         - "8"
+      node_js:
+        - "8"
 
-#       script:
-#         - echo "Deploying Kuzzle on NPM"
+      script:
+        - echo "Deploying Kuzzle on NPM"
 
-#       deploy:
-#         provider: npm
-#         email: support@kuzzle.io
-#         api_key:
-#           secure: gqLBt1Scnr8wAR0zauW3jI7M576Jr7d+d2C5gvCA+iI1Y6gBWMM04A3w1MHHcPUBNA+xbwNimyoxbrBozq7otiMEDbP5ConS+T3KRWyHYwjdSfmL5KmEoNqwjmo128qJq2uWFxEecBmBk63q9A3gbnhdw3/D+05NKL4B44PpyNDpT6fApsVyDNXQmeib6cYfjwB1rCv8Mcf2sbVE1eqcJuGTwDtxx/860405PqBSg7H8iGGJJr7cymaU8cK4RLre+u8GHRiSDoKeU1UiWIoIoLG0y8TisFllSstZu9kguA6ShPJJA28NLiNyJ7j0KxKW6muvY03AFxa4XQ0sMaxotjQxN3IRUnLdN1mnQydWqMRP2+HWK1uRXCiDoL9ZnSClS1BixSAv15tvhggqE76Rq4uGCcl7hYfagpUzQpsUIV40Wc7CHez/O4ZvvicWIOdo2jmh/6fRYWOFY2+ihzwszaZwAQT1cdTm75JMIqrATyNWEZvwvczQzC85HmJajhf1azyEY08kdIJxwmwh30AMl2Is0vlq9ujCp8XRsanbdj74CcDNf9RSgesiD83McLd/ZJZHSDIe//wNypcTcW4fQbSfGb1oDHWVLQ6L/jr+W3OJUgVBG31mMciGo2jSROOos8n4iHHqs3QbxTwh0B+t+1amvZlpelFUEoicprPCcN8=
-#         on:
-#           repo: kuzzleio/kuzzle
-#           branch: master
-#           tags: true
+      deploy:
+        provider: npm
+        email: support@kuzzle.io
+        api_key:
+          secure: gqLBt1Scnr8wAR0zauW3jI7M576Jr7d+d2C5gvCA+iI1Y6gBWMM04A3w1MHHcPUBNA+xbwNimyoxbrBozq7otiMEDbP5ConS+T3KRWyHYwjdSfmL5KmEoNqwjmo128qJq2uWFxEecBmBk63q9A3gbnhdw3/D+05NKL4B44PpyNDpT6fApsVyDNXQmeib6cYfjwB1rCv8Mcf2sbVE1eqcJuGTwDtxx/860405PqBSg7H8iGGJJr7cymaU8cK4RLre+u8GHRiSDoKeU1UiWIoIoLG0y8TisFllSstZu9kguA6ShPJJA28NLiNyJ7j0KxKW6muvY03AFxa4XQ0sMaxotjQxN3IRUnLdN1mnQydWqMRP2+HWK1uRXCiDoL9ZnSClS1BixSAv15tvhggqE76Rq4uGCcl7hYfagpUzQpsUIV40Wc7CHez/O4ZvvicWIOdo2jmh/6fRYWOFY2+ihzwszaZwAQT1cdTm75JMIqrATyNWEZvwvczQzC85HmJajhf1azyEY08kdIJxwmwh30AMl2Is0vlq9ujCp8XRsanbdj74CcDNf9RSgesiD83McLd/ZJZHSDIe//wNypcTcW4fQbSfGb1oDHWVLQ6L/jr+W3OJUgVBG31mMciGo2jSROOos8n4iHHqs3QbxTwh0B+t+1amvZlpelFUEoicprPCcN8=
+        on:
+          repo: kuzzleio/kuzzle
+          branch: master
+          tags: true
 
-#     - stage: Deployments
-#       if: type = push AND branch =~ ^master|.*-dev|.*-stable$
-#       name: Dockerhub
+    - stage: Deployments
+      if: type = push AND branch =~ ^master|.*-dev|.*-stable$
+      name: Dockerhub
 
-#       os: linux
-#       sudo: required
-#       language: minimal
-#       services: docker
+      os: linux
+      sudo: required
+      language: minimal
+      services: docker
 
-#       script:
-#         - MODE=production bash build-docker-images.sh
+      script:
+        - MODE=production bash build-docker-images.sh
 
 # --------------------------------------
 # Documentation
@@ -336,9 +336,9 @@ jobs:
 # # ---------------------------------------
 # # Notifications
 # # ---------------------------------------
-# notifications:
-#   slack:
-#     rooms:
-#     - secure: "nx2W8a0wTPUfMFfR0TQxoA+M0ExUAJxIBy1AfKRlJXHaXN3al+SjLNXDU/OdplN9doae8BhcpHJBLiCDfQFY5Wmmbuxq2wAWhrPduIMPZFttBuxkoWkAbrhzYPsk5t7vERrJbSAynNbKeVL1gj7zitStJxzJzT2Z8y//9KYwXty3hPMJei2R1GCLTIOYp0ddq1Uu02Sdhkg07IO+bCrv5q6NFOpnx27SjYEBIOX66bVnGUcUzrbFQM1WToHwFHU3ylZUbj+zJHu+njj9SNTaoR7nIl6oedHCtloagTxyqjLQ0k3E9O4D5fuVvanKDAnLXrlPHWwNoEjffUMQ/b8OtTpgjB6pTr8Xu5oMN4tb5AbofdFOYIyumhHEN7Yt9t1sI6mYMEPu8GfAUTNHS41QfJakGRjYWOMoWQD4sOwRi8VRx+wOkvGSF75wsIrRM30qOkU4cXjoe44My7OkJKycz5AlvR8Drow5d8FO7N4C8olNM4MyP1Ofs2ulXYVEXEXV9NxuRIpcejx8UUZfBNjHnLsAjgq4sWyey22vTxIlmzc1dN3AngiScNdU7u2emZVBmC9VSLN2hAduA1y7HxESpqxd7+9v8qKxeSYw2j1V1sh2nvOvKah2Y61erDWjOI/eAxQPnT/uF4yoHC3dFnW9j9tCej0vZ0PeIBCUIKb5mx8="
-#     on_success: never
-#     on_failure: always
+notifications:
+  slack:
+    rooms:
+    - secure: "nx2W8a0wTPUfMFfR0TQxoA+M0ExUAJxIBy1AfKRlJXHaXN3al+SjLNXDU/OdplN9doae8BhcpHJBLiCDfQFY5Wmmbuxq2wAWhrPduIMPZFttBuxkoWkAbrhzYPsk5t7vERrJbSAynNbKeVL1gj7zitStJxzJzT2Z8y//9KYwXty3hPMJei2R1GCLTIOYp0ddq1Uu02Sdhkg07IO+bCrv5q6NFOpnx27SjYEBIOX66bVnGUcUzrbFQM1WToHwFHU3ylZUbj+zJHu+njj9SNTaoR7nIl6oedHCtloagTxyqjLQ0k3E9O4D5fuVvanKDAnLXrlPHWwNoEjffUMQ/b8OtTpgjB6pTr8Xu5oMN4tb5AbofdFOYIyumhHEN7Yt9t1sI6mYMEPu8GfAUTNHS41QfJakGRjYWOMoWQD4sOwRi8VRx+wOkvGSF75wsIrRM30qOkU4cXjoe44My7OkJKycz5AlvR8Drow5d8FO7N4C8olNM4MyP1Ofs2ulXYVEXEXV9NxuRIpcejx8UUZfBNjHnLsAjgq4sWyey22vTxIlmzc1dN3AngiScNdU7u2emZVBmC9VSLN2hAduA1y7HxESpqxd7+9v8qKxeSYw2j1V1sh2nvOvKah2Y61erDWjOI/eAxQPnT/uF4yoHC3dFnW9j9tCej0vZ0PeIBCUIKb5mx8="
+    on_success: never
+    on_failure: always
