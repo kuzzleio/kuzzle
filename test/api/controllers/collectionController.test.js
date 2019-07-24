@@ -113,31 +113,31 @@ describe('Test: collection controller', () => {
     it('should return a dedicated error if the index does not exist', () => {
       kuzzle.indexCache.exists.resolves(false);
       
-      return collectionController.getSpecifications(request)
-        .should.be.rejectedWith(PreconditionError, {message: `The index ${index} does not exist.`});
+      return should(collectionController.getSpecifications(request))
+        .be.rejectedWith(PreconditionError, {message: `The index ${index} does not exist.`});
     });
 
     it('should return a dedicated error if the collection does not exist', () => {
       kuzzle.indexCache.exists.onFirstCall().resolves(true);
       kuzzle.indexCache.exists.onSecondCall().resolves(false);
 
-      return collectionController.getSpecifications(request)
-        .should.be.rejectedWith(PreconditionError, {message: `The collection ${collection} does not exist.`});
+      return should(collectionController.getSpecifications(request))
+        .be.rejectedWith(PreconditionError, {message: `The collection ${collection} does not exist.`});
     });
 
     it('should give a meaningful message if there is no specifications', () => {
       kuzzle.indexCache.exists.resolves(true);
       kuzzle.internalEngine.get.rejects(new NotFoundError('not found'));
 
-      return collectionController.getSpecifications(request)
-        .should.be.rejectedWith(
+      return should(collectionController.getSpecifications(request))
+        .be.rejectedWith(
           NotFoundError,
           {message: `No specifications defined for index ${index} and collection ${collection}`});
     });
   });
 
   describe('#searchSpecifications', () => {
-    it('should throw if the page size exceeds server limitations', done => {
+    it('should throw if the page size exceeds server limitations', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.from = 0;
       request.input.args.size = 20;
@@ -146,9 +146,8 @@ describe('Test: collection controller', () => {
 
       try {
         collectionController.searchSpecifications(request);
-        done(collectionController.throw('search_page_size', 1));
       } catch (e) {
-        done(e);
+        should(collectionController.throw).be.calledWith('search_page_size', 1);
       }
     });
 
@@ -587,15 +586,14 @@ describe('Test: collection controller', () => {
         });
     });
 
-    it('should reject the request if an invalid "type" argument is provided', done => {
+    it('should reject the request if an invalid "type" argument is provided', () => {
       request = new Request({index: 'index', type: 'foo'});
       collectionController.throw = sinon.spy();
 
       try {
         collectionController.list(request);
-        done(collectionController.throw('invalid_type_argument', 'foo'));
       } catch (e) {
-        done(e);
+        should(collectionController.throw).be.calledWith('invalid_type_argument', 'foo');
       }
     });
 

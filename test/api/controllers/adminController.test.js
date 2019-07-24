@@ -5,6 +5,7 @@ const
   {
     Request,
   } = require('kuzzle-common-objects'),
+  { PreconditionError } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
   BaseController = require('../../../lib/api/controllers/controller');
@@ -54,9 +55,9 @@ describe('Test: admin controller', () => {
 
       try {
         adminController.resetCache(request);
-        done(adminController.throw('database_not_found', 'city17'));
       } catch (e) {
-        done(e);
+        should(adminController.throw).be.calledWith('database_not_found', 'city17');
+        done();
       }
     });
   });
@@ -201,17 +202,13 @@ describe('Test: admin controller', () => {
       AdminController.__set__('_locks', { shutdown: null });
     });
 
-    it('should throw an error if shutdown is in progress', done => {
+    it('should throw an error if shutdown is in progress', () => {
       AdminController.__set__('_locks', { shutdown: true });
       adminController = new AdminController(kuzzle);
-      adminController.throw = sinon.spy();
-
-      try {
+      
+      return should(() => {
         adminController.shutdown(request);
-        done(adminController.throw('precondition', 'Kuzzle is already shutting down.'));
-      } catch (e) {
-        done(e);
-      }
+      }).throw(PreconditionError);
     });
 
     it('should send a SIGTERM', done => {

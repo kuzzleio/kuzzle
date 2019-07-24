@@ -284,7 +284,7 @@ describe('Test the auth controller', () => {
           {message: 'You must be authenticated to execute that action'});
     });
 
-    it('should throw if the token has already been refreshed', done => {
+    it('should throw if the token has already been refreshed', () => {
       authController.throw = sinon.spy();
 
       try {
@@ -295,9 +295,8 @@ describe('Test the auth controller', () => {
             user: { _id: 'bar' }
           }
         ));
-        done(authController.throw('invalid_token'));
       } catch (e) {
-        done(e);
+        should(authController.throw).be.calledWith('invalid_token');
       }
     });
 
