@@ -268,7 +268,7 @@ jobs:
 
     - stage: Deployments
       name: Deploy next-docs.kuzzle.io
-      if: branch = 1-dev
+      if: type = push AND branch =~ .*-dev
       language: node_js
       node_js: 10
       env:
@@ -303,7 +303,7 @@ jobs:
 
     - stage: Deployments
       name: Deploy docs.kuzzle.io
-      if: branch = master
+      if: type = push AND branch =~ /^master|[0-9]+-stable$/
       language: node_js
       node_js: 10
       env:
