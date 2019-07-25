@@ -16,7 +16,7 @@ const
       PluginImplementationError
     }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/controller');
+  BaseController = require('../../../lib/api/controllers/baseController');
 
 describe('Test the auth controller', () => {
   let

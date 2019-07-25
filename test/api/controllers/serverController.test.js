@@ -6,7 +6,7 @@ const
     Request,
     errors: { ServiceUnavailableError, ExternalServiceError }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/controller'),
+  BaseController = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: server controller', () => {
@@ -142,7 +142,7 @@ describe('Test: server controller', () => {
     it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
       kuzzle.services.list.storageEngine.getInfos.resolves({status: 'red'});
       serverController.throw = sinon.stub().throws(new ExternalServiceError());
-      
+
       return serverController.healthCheck(request)
         .then(response => {
           should(serverController.throw)
@@ -202,34 +202,37 @@ describe('Test: server controller', () => {
 
   describe('#info', () => {
     it('should return a properly formatted server information object', () => {
-      class Foo {
-        constructor() {
-          this.qux = 'not a function';
-          this.baz = function () {};
-        }
-        _privateMethod() {}
-        publicMethod() {}
-      }
-
-      kuzzle.funnel.controllers = {
-        foo: new Foo()
-      };
-
-      kuzzle.funnel.pluginsControllers = {
-        foobar: {
-          _privateMethod: function () {},
-          publicMethod: function () {},
-          anotherMethod: function () {},
-          notAnAction: 3.14
-        }
-      };
-
-      kuzzle.config.http.routes.push({verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l'});
-      kuzzle.config.http.routes.push({verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l/:foobar'});
-      kuzzle.pluginsManager.routes = [{verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'}];
+      serverController._buildApiDefinition = sinon.stub()
+        .onCall(0).returns({
+          foo: {
+            publicMethod: {
+              controller: 'foo',
+              action: 'publicMethod',
+              http: [
+                { url: '/u/r/l', verb: 'FOO' },
+                { url: '/u/:foobar', verb: 'FOO' }
+              ]
+            }
+          }
+        })
+        .onCall(1).returns({
+          foobar: {
+            publicMethod: {
+              action: 'publicMethod',
+              controller: 'foobar',
+              http: [{ url: '_plugin/foobar', verb: 'BAR' }]
+            },
+            anotherMethod: {
+              action: 'anotherMethod',
+              controller: 'foobar'
+            }
+          }
+        });
 
       return serverController.info()
         .then(response => {
+          should(serverController._buildApiDefinition).be.calledTwice();
+
           should(response).be.instanceof(Object);
           should(response).not.be.null();
           should(response.serverInfo).be.an.Object();
@@ -239,26 +242,19 @@ describe('Test: server controller', () => {
           should(response.serverInfo.kuzzle.api.routes).match({
             foo: {
               publicMethod: {
-                action: 'publicMethod',
                 controller: 'foo',
+                action: 'publicMethod',
                 http: [
-                  {url: '/u/r/l', verb: 'FOO'},
-                  {url: '/u/r/l/:foobar', verb: 'FOO'}
+                  { url: '/u/r/l', verb: 'FOO' },
+                  { url: '/u/:foobar', verb: 'FOO' }
                 ]
-              },
-              baz: {
-                action: 'baz',
-                controller: 'foo'
               }
             },
             foobar: {
               publicMethod: {
                 action: 'publicMethod',
                 controller: 'foobar',
-                http: [{
-                  url: '_plugin/foobar',
-                  verb: 'BAR'
-                }]
+                http: [{ url: '_plugin/foobar', verb: 'BAR' }]
               },
               anotherMethod: {
                 action: 'anotherMethod',
@@ -275,6 +271,127 @@ describe('Test: server controller', () => {
     it('should reject an error in case of error', () => {
       kuzzle.services.list.broker.getInfos.rejects(new Error('foobar'));
       return should(serverController.info()).be.rejected();
+    });
+  });
+
+  describe('#publicApi', () => {
+    it('should build the api definition', () => {
+      class Foo {
+        constructor() {
+          this.actions = new Set();
+          this.actions.add('publicMethod', 'baz');
+        }
+        publicMethod() {}
+        baz() {}
+      }
+
+      kuzzle.funnel.controllers = {
+        foo: new Foo()
+      };
+
+      kuzzle.config.http.routes = [
+        { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l' },
+        { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/:foobar' }
+      ];
+
+      kuzzle.funnel.pluginsControllers = {
+        foobar: {
+          publicMethod: function () {},
+          anotherMethod: function () {},
+        }
+      };
+
+      kuzzle.pluginsManager.routes = [{
+        verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
+      }];
+
+      serverController._buildApiDefinition = sinon.stub().returns({});
+
+      return serverController.publicApi()
+        .then(() => {
+          should(serverController._buildApiDefinition).be.calledTwice();
+          should(serverController._buildApiDefinition.getCall(0).args).be.eql([
+            kuzzle.funnel.controllers,
+            kuzzle.config.http.routes
+          ]);
+          should(serverController._buildApiDefinition.getCall(1).args).be.eql([
+            kuzzle.funnel.pluginsControllers,
+            kuzzle.pluginsManager.routes,
+            '_plugin/'
+          ]);
+        });
+    });
+  });
+
+  describe('#_buildApiDefinition', () => {
+    it('should return api definition for the provided controllers', () => {
+      class Foo {
+        constructor() {
+          this.actions = new Set();
+          this.actions.add('publicMethod', 'baz');
+        }
+        publicMethod() {}
+        baz() {}
+      }
+
+      const controllers = {
+        foo: new Foo()
+      };
+
+      const routes = [
+        { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l' },
+        { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/:foobar' }
+      ];
+
+      const pluginsControllers = {
+        foobar: {
+          publicMethod: function () {},
+          anotherMethod: function () {},
+        }
+      };
+
+      const pluginsRoutes = [{
+        verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
+      }];
+
+
+      const apiDefinition = serverController._buildApiDefinition(
+        controllers,
+        routes
+      );
+
+      const pluginApiDefinition = serverController._buildApiDefinition(
+        pluginsControllers,
+        pluginsRoutes,
+        '_plugin/'
+      );
+
+      should(apiDefinition).match({
+        foo: {
+          publicMethod: {
+            controller: 'foo',
+            action: 'publicMethod',
+            http: [
+              { url: '/u/r/l', verb: 'FOO' },
+              { url: '/u/:foobar', verb: 'FOO' }
+            ]
+          }
+        }
+      });
+
+      should(pluginApiDefinition).match({
+        foobar: {
+          publicMethod: {
+            action: 'publicMethod',
+            controller: 'foobar',
+            http: [{ url: '_plugin/foobar', verb: 'BAR' }]
+          },
+          anotherMethod: {
+            action: 'anotherMethod',
+            controller: 'foobar'
+          }
+        }
+      });
     });
   });
 });
