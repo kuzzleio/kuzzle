@@ -1,18 +1,26 @@
 stages:
   - Unit Tests & Linters
   - Integration tests
+  - Documentation
   - name: Cross-platform tests
     if: type = cron
   - name: Redis tests
     if: type = cron
   - Deployments
 
+env:
+  global:
+    - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
+    # AWS_SECRET_ACCESS_KEY
+    - secure: "Hg5X8SsJTG0r/ge4IM7eDG6Q6t1S/aG8aO0mOwEabdBRNgbJJgT9mSv2Ukdxuse0kUl/OyA7/51pOf4tYHgRlupGzaJU9SzDTMjapYLvg1a8EhE0Fs68zOs1EGPRktnLHHKot5hnwIB1i4PKKYlooF3n4+kTX9Rj1F4KAjoroRB5kx0HOqGDJbUkifyqjrI8e0j8sNeHtrcf2PaYgylTgx8iQEsaAr5v/ba/k9Z8E5rikDqXtroHvPNCSqblJvzDLOuX4NyHqfT38sc/mBNSREImffjN8nPkMYXo0nYrKXEiXbeCeGCqFqEM+Psgjk1BcUREpfAOKBxQYTrnpz6Ga+/D+KVzGo/FPF/QyapgAokGdj9rUAuytsoPabz7tqBpNf/4ZS0SKlh9PZjgQu5CvTScDeQnavS48ChdpWnrkrmFx9DpaYp1lBFxiycUz1Z3bpLaA8odey7lBXwj2L5gpht3BpuxH2+kxb699TMiXSdYb/XOjvIWd9Ei6MkRHAmphlvEJE/sThsA9k1DdYQj05rbCQYfqEv1WutdyHc8FtQVlTivZ4dWJ/O+xuL4aOB7Lryfm2HdK9631pQVNtBbTAD3I1xwc/GzdVBLlZu8AK5vVVXie2m0bAcPuLLRarqjAaSFr3dY228OJWWSjdBgeVOQdWQ/SavPbRHU94KrdmA="
+
+
 jobs:
   include:
 
-# ---------------------------------------
-# Unit Tests & Linters
-# ---------------------------------------
+# # ---------------------------------------
+# # Unit Tests & Linters
+# # ---------------------------------------
 
     - stage: Unit Tests & Linters
       if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
@@ -233,7 +241,7 @@ jobs:
           tags: true
 
     - stage: Deployments
-      if: type = push AND branch =~ ^master|.*-dev|.*-stable$ 
+      if: type = push AND branch =~ ^master|.*-dev|.*-stable$
       name: Dockerhub
 
       os: linux
@@ -244,9 +252,92 @@ jobs:
       script:
         - MODE=production bash build-docker-images.sh
 
-# ---------------------------------------
-# Notifications
-# ---------------------------------------
+# --------------------------------------
+# Documentation
+# --------------------------------------
+    - stage: Documentation
+      name: Dead link check
+      if: type = pull_request OR type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/ OR type = cron
+
+      before_script:
+        - npm run doc-prepare
+        - npm run --prefix doc/framework clone-repos
+      script:
+        - gem install typhoeus
+        - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
+
+    - stage: Deployments
+      name: Deploy next-docs.kuzzle.io
+      if: branch = 1-dev
+      language: node_js
+      node_js: 10
+      env:
+        - NODE_ENV=production
+        - S3_BUCKET=docs-next.kuzzle.io
+        - CLOUDFRONT_DISTRIBUTION_ID=E2ZCCEK9GRB49U
+        - AWS_DEFAULT_REGION=us-west-2
+
+      addons:
+        apt:
+          packages:
+            - python
+            - python-pip
+
+      install:
+        - pip install awscli --upgrade --user
+
+      script:
+        - npm run doc-prepare
+        - npm run doc-build
+
+      deploy:
+        provider: script
+        script:
+          - npm run doc-upload
+        skip_cleanup: true
+        on:
+          branch: 1-dev
+
+      after_deploy:
+        - npm run doc-cloudfront
+
+    - stage: Deployments
+      name: Deploy docs.kuzzle.io
+      if: branch = master
+      language: node_js
+      node_js: 10
+      env:
+        - NODE_ENV=production
+        - S3_BUCKET=docs.kuzzle.io
+        - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
+        - AWS_DEFAULT_REGION=us-west-2
+
+      addons:
+        apt:
+          packages:
+            - python
+            - python-pip
+
+      install:
+        - pip install awscli --upgrade --user
+
+      script:
+        - npm run doc-prepare
+        - npm run doc-build
+
+      deploy:
+        provider: script
+        script:
+          - npm run doc-upload
+        skip_cleanup: true
+        on:
+          branch: master
+
+
+
+# # ---------------------------------------
+# # Notifications
+# # ---------------------------------------
 notifications:
   slack:
     rooms:
