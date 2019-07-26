@@ -403,7 +403,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       return bootstrap._waitTillUnlocked()
         .then(() => { throw new Error('should not happen'); })
         .catch(error => {
-          should(error.message).match('Internal engine bootstrap - lock wait timeout exceeded');
+          should(error.message).match('Internal engine bootstrap - lock wait timeout exceeded.');
         })
         .finally(() => {
           mockrequire.stop('bluebird');
