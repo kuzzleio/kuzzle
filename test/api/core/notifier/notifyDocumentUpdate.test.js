@@ -65,7 +65,8 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           {
             _id,
             _meta: {canIhas: 'cheezburgers?'},
-            _source: {foo: 'bar'}
+            _source: {foo: 'bar'},
+            _updatedField: '_kuzzle_info'
           });
 
         should(notifier.notifyDocument.getCall(1)).calledWith(
