@@ -48,8 +48,8 @@ The following controllers are available in the embedded SDK:
 
 The following controllers are partially available in the embedded SDK:
   - [realtime](/sdk/js/6/controllers/realtime)
-    - [count](/sdk/js/6/controllers/security/count)
-    - [publish](/sdk/js/6/controllers/security/count)
+    - [count](/sdk/js/6/controllers/realtime/count)
+    - [publish](/sdk/js/6/controllers/realtime/count)
 
 ### Example
 
