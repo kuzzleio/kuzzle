@@ -69,7 +69,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
       return bootstrap.all()
         .then(() => { throw new Error('should not happen'); })
         .catch(error => {
-          should(error.message).match(/^Plugin pluginName bootstrap - lock wait timeout exceeded/);
+          should(error.message).match(/^Plugin pluginName bootstrap - lock wait timeout exceeded./);
         })
         .finally(() => {
           mockrequire.stop('bluebird');

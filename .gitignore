@@ -55,6 +55,8 @@ config/secrets.json
 config/testsecrets.json
 config/testsecrets.enc.json
 
+config/kuzzlerc
+
 #tests files
 index-dump/*
 
