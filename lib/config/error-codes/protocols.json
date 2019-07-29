@@ -53,13 +53,7 @@
     },
     "socketio": {
       "code": 4,
-      "errors": {
-        "socketio_request_error": {
-          "code": 1,
-          "message": "%s.",
-          "class": "BadRequestError"
-        }
-      }
+      "errors": {}
     }
   }
 }
