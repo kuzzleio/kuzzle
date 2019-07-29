@@ -726,5 +726,4 @@ describe('Test: collection controller', () => {
         });
     });
   });
-
 });

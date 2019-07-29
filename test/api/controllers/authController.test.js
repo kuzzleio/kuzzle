@@ -788,4 +788,5 @@ describe('Test the auth controller', () => {
       });
     });
   });
+
 });
