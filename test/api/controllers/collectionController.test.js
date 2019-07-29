@@ -12,7 +12,7 @@ const
     }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  BaseController = require('../../../lib/api/controllers/controller');
+  BaseController = require('../../../lib/api/controllers/baseController');
 
 describe('Test: collection controller', () => {
   let

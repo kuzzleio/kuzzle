@@ -8,7 +8,7 @@ const
   { PreconditionError } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
-  BaseController = require('../../../lib/api/controllers/controller');
+  BaseController = require('../../../lib/api/controllers/baseController');
 
 describe('Test: admin controller', () => {
   let
@@ -49,7 +49,7 @@ describe('Test: admin controller', () => {
         .catch(error => done(error));
     });
 
-    it('should raise an error if database does not exist', done => {
+    it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
       adminController.throw = sinon.spy();
 
@@ -57,7 +57,6 @@ describe('Test: admin controller', () => {
         adminController.resetCache(request);
       } catch (e) {
         should(adminController.throw).be.calledWith('database_not_found', 'city17');
-        done();
       }
     });
   });

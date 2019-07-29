@@ -7,7 +7,7 @@ const
     errors: { PartialError }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  BaseController = require('../../../lib/api/controllers/controller');
+  BaseController = require('../../../lib/api/controllers/baseController');
 
 describe('Test the bulk controller', () => {
   let

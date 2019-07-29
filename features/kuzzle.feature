@@ -1,5 +1,9 @@
 Feature: Kuzzle functional tests
 
+  Scenario: API method server:publicApi
+    When I get the public API
+    Then I have the definition of kuzzle and plugins controllers
+
   Scenario: CLI: dump and restore index
     And I create an index named "tolkien"
     When I create a collection "tolkien":"noldor" with "5" documents
