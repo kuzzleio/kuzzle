@@ -50,33 +50,31 @@ describe('Test: document controller', () => {
         });
     });
 
-    it('should throw an error if index contains a comma', done => {
+    it('should throw an error if index contains a comma', () => {
       request.input.resource.index = '%test,anotherIndex';
       request.input.action = 'search';
       documentController.throw = sinon.spy();
 
       try {
         documentController.search(request);
-        done(documentController.throw('search_on_multiple_indexes'));
       } catch (e) {
-        done(e);
+        should(documentController.throw).be.calledWith('search_on_multiple_indexes');
       }
     });
 
-    it('should throw an error if collection contains a comma', done => {
+    it('should throw an error if collection contains a comma', () => {
       request.input.resource.collection = 'unit-test-documentController,anotherCollection';
       request.input.action = 'search';
       documentController.throw = sinon.spy();
 
       try {
         documentController.search(request);
-        done(documentController.throw('search_on_multiple_collections'));
       } catch (e) {
-        done(e);
+        should(documentController.throw).be.calledWith('search_on_multiple_collections');
       }
     });
 
-    it('should throw an error if the size argument exceeds server configuration', done => {
+    it('should throw an error if the size argument exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.size = 10;
       request.input.action = 'search';
@@ -84,9 +82,8 @@ describe('Test: document controller', () => {
 
       try {
         documentController.search(request);
-        done(documentController.throw('get_limit_reached', 1));
       } catch (e) {
-        done(e);
+        should(documentController.throw).be.calledWith('get_limit_reached', 1);
       }
     });
 
@@ -195,7 +192,7 @@ describe('Test: document controller', () => {
       }).throw('The request must specify the body attribute "ids" of type "array".');
     });
 
-    it('should throw an error if the number of documents to get exceeds server configuration', done => {
+    it('should throw an error if the number of documents to get exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.body = {ids: ['anId', 'anotherId']};
       kuzzle.services.list.storageEngine.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
@@ -204,9 +201,9 @@ describe('Test: document controller', () => {
 
       try {
         documentController.mGet(request);
-        done(documentController.throw('get_limit_reached', 1));
+        
       } catch (e) {
-        done(e);
+        should(documentController.throw).be.calledWith('get_limit_reached', 1);
       }
     });
   });
