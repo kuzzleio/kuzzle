@@ -146,7 +146,7 @@
         },
         "cannot_use_realtime_method": {
           "code": 5,
-          "message": "realtime:%s method is not available in plugins. You should use plugin hooks instead.",
+          "message": "\"realtime:%s\" method is not available in plugins. You should use plugin hooks instead.",
           "class": "PluginImplementationError"
         },
         "invalid_user_object": {
@@ -363,6 +363,11 @@
           "code": 47,
           "message": "A plugin named %s already exists",
           "class": "PluginImplementationError"
+        },
+        "invalid_user_object_provided": {
+          "code": 48,
+          "message": "FunnelProtocol.constructor: Invalid User object \"%s\"",
+          "class": "InternalError"
         }
       }
     }

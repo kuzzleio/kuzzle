@@ -490,12 +490,22 @@ describe('Plugin Context', () => {
 
       });
 
-      it('should reject if trying to call the realtime controller', () => {
-        return should(context.accessors.execute(new Request({
-          controller: 'realtime',
-          action: 'subscribe'
-        })))
-          .be.rejectedWith(/realtime:subscribe method is not available in plugins\. You should use plugin hooks instead/);
+      it('should reject if trying to call forbidden methods from realtime controller', () => {
+        return Promise.resolve()
+          .then(() => {
+            return should(context.accessors.execute(new Request({
+              controller: 'realtime',
+              action: 'subscribe'
+            })))
+              .be.rejectedWith(/"realtime:subscribe" method is not available in plugins\. You should use plugin hooks instead/);
+          })
+          .then(() => {
+            return should(context.accessors.execute(new Request({
+              controller: 'realtime',
+              action: 'unsubscribe'
+            })))
+              .be.rejectedWith(/"realtime:unsubscribe" method is not available in plugins\. You should use plugin hooks instead/);
+          });
       });
     });
 
