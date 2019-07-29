@@ -437,7 +437,7 @@ describe('InternalEngine', () => {
 
       kuzzle.services.list.internalCache.exists.returns(Bluebird.resolve(0));
 
-      return should(kuzzle.internalEngine.scroll(collection, 'foobar')).be.rejectedWith(NotFoundError, {message: 'Non-existing or expired scroll identifier'});
+      return should(kuzzle.internalEngine.scroll(collection, 'foobar')).be.rejectedWith(NotFoundError, {message: 'Non-existing or expired scroll identifier.'});
     });
   });
 

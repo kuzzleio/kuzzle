@@ -1,5 +1,5 @@
 const
-  BaseController = require('../../lib/api/controllers/controller'),
+  BaseController = require('../../lib/api/controllers/baseController'),
   {
     errors: {
       InternalError: KuzzleInternalError

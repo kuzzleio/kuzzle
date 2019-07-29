@@ -14,7 +14,7 @@ const
       PartialError
     }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/controller');
+  BaseController = require('../../../lib/api/controllers/baseController');
 
 describe('Test: document controller', () => {
   const foo = {foo: 'bar'};
