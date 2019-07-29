@@ -28,6 +28,15 @@ class ApiBase {
     throw new Error('not implemented');
   }
 
+  serverPublicApi () {
+    const msg = {
+      controller: 'server',
+      action: 'publicApi'
+    };
+
+    return this.send(msg);
+  }
+
   bulkImport (bulk, index, collection) {
     const
       msg = {

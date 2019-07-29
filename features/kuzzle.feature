@@ -1,5 +1,9 @@
 Feature: Kuzzle functional tests
 
+  Scenario: API method server:publicApi
+    When I get the public API
+    Then I have the definition of kuzzle and plugins controllers
+
   Scenario: CLI: dump and restore index
     And I create an index named "tolkien"
     When I create a collection "tolkien":"noldor" with "5" documents
@@ -409,11 +413,11 @@ Feature: Kuzzle functional tests
 
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
-    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
     When I write the document "documentGrace"
     When I check if index "kuzzle-test-index" exists
     Then The result should match the json true
