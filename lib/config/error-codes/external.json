@@ -98,6 +98,7 @@
           "code": 19,
           "message": "Refresh parameter only supports the value 'wait_for' or false.",
           "class": "BadRequestError"
+<<<<<<< HEAD
         },
         "incorrect_mapping_property": {
           "code": 20,
@@ -105,6 +106,9 @@
           "class": "BadRequestError"
         }
 
+=======
+        }
+>>>>>>> 1-dev
       }
     },
     "internal_engine": {
