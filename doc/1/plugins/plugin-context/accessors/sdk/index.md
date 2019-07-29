@@ -41,13 +41,15 @@ The following controllers are available in the embedded SDK:
 - [document](/sdk/js/6/controllers/document)
 - [index](/sdk/js/6/controllers/index)
 - [memoryStorage (ms)](/sdk/js/6/ms)
-- [security](/core/1/api/controllers/security)
+- [security](/sdk/js/6/controllers/security)
 - [server](/sdk/js/6/controllers/server)
 
 <SinceBadge version="1.9.0" />
 
 The following controllers are partially available in the embedded SDK:
- - [realtime](/core/1/api/controllers/realtime) without `subscribe` and `unsubscribe`
+  - [realtime](/sdk/js/6/controllers/realtime)
+    - [count](/sdk/js/6/controllers/security/count)
+    - [publish](/sdk/js/6/controllers/security/count)
 
 ### Example
 
