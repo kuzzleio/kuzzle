@@ -44,6 +44,11 @@ The following controllers are available in the embedded SDK:
 - [security](/core/1/api/controllers/security)
 - [server](/sdk/js/6/controllers/server)
 
+<SinceBadge version="1.9.0" />
+
+The following controllers are partially available in the embedded SDK:
+ - [realtime](/core/1/api/controllers/realtime) without `subscribe` and `unsubscribe`
+
 ### Example
 
 ```js
