@@ -285,19 +285,17 @@ describe('Test the auth controller', () => {
     });
 
     it('should throw if the token has already been refreshed', () => {
-      authController.throw = sinon.spy();
 
-      try {
-        authController.refreshToken(new Request(
-          {},
-          {
-            token: { userId: 'foo', _id: 'bar', refreshed: true },
-            user: { _id: 'bar' }
-          }
-        ));
-      } catch (e) {
-        should(authController.throw).be.calledWith('invalid_token');
-      }
+      return should(() => authController.refreshToken(new Request(
+        {},
+        {
+          token: { userId: 'foo', _id: 'bar', refreshed: true },
+          user: { _id: 'bar' }
+        }
+      )))
+        .throw(
+          UnauthorizedError,
+          { message: 'Invalid token.' });
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {

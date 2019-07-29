@@ -8,7 +8,8 @@ const
     errors: {
       BadRequestError,
       PreconditionError,
-      NotFoundError
+      NotFoundError,
+      SizeLimitError
     }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
@@ -142,13 +143,10 @@ describe('Test: collection controller', () => {
       request.input.args.from = 0;
       request.input.args.size = 20;
       request.input.action = 'searchSpecifications';
-      collectionController.throw = sinon.spy();
-
-      try {
-        collectionController.searchSpecifications(request);
-      } catch (e) {
-        should(collectionController.throw).be.calledWith('search_page_size', 1);
-      }
+      
+      should(() => collectionController.searchSpecifications(request)).throw(
+        SizeLimitError,
+        { message: 'Search page size exceeds server configured documents limit ( 1 ).' });
     });
 
     it('should call internalEngine with the right data', () => {
@@ -588,13 +586,10 @@ describe('Test: collection controller', () => {
 
     it('should reject the request if an invalid "type" argument is provided', () => {
       request = new Request({index: 'index', type: 'foo'});
-      collectionController.throw = sinon.spy();
 
-      try {
-        collectionController.list(request);
-      } catch (e) {
-        should(collectionController.throw).be.calledWith('invalid_type_argument', 'foo');
-      }
+      should(() => collectionController.list(request)).throw(
+        BadRequestError,
+        { message: 'Must specify a valid type argument; Expected: \'all\', \'stored\' or \'realtime\'; Received: foo.'});
     });
 
     it('should only return stored collections with type = stored', () => {
