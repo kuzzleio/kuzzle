@@ -280,7 +280,7 @@ describe('Plugin Context', () => {
       should(strategies.remove).be.a.Function();
     });
 
-    it('should expose an SDK client accessor', () => {
+    it('should expose a SDK client accessor', () => {
       const sdk = context.accessors.sdk;
 
       should(sdk.as).be.a.Function();
@@ -307,10 +307,6 @@ describe('Plugin Context', () => {
 
       should(() => {
         sdk.realtime.unsubscribe();
-      }).throw(PluginImplementationError);
-
-      should(() => {
-        sdk.realtime.join();
       }).throw(PluginImplementationError);
 
       should.doesNotThrow(() => {
