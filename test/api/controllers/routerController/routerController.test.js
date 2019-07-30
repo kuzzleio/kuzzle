@@ -32,7 +32,7 @@ describe('Test: routerController', () => {
     it('should have registered the connection', () => {
       routerController.newConnection(requestContext);
 
-      const context = routerController.connections[connectionId];
+      const context = routerController.connections.get(connectionId);
       should(context).be.instanceOf(RequestContext);
       should(context.connectionId).be.eql(connectionId);
       should(context.protocol).be.eql(protocol);
@@ -63,14 +63,16 @@ describe('Test: routerController', () => {
 
   describe('#removeConnection', () => {
     it('should remove the context from the context pool', () => {
-      routerController.connections[connectionId] = requestContext;
+      routerController.connections.set(connectionId, requestContext);
       routerController.removeConnection(requestContext);
 
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledWith(requestContext);
-      should(kuzzle.statistics.dropConnection).be.calledOnce();
-      should(kuzzle.statistics.dropConnection).be.calledWith(requestContext);
-      should(routerController.connections[connectionId]).be.undefined();
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
+        .calledOnce()
+        .calledWith(requestContext);
+      should(kuzzle.statistics.dropConnection)
+        .calledOnce()
+        .calledWith(requestContext);
+      should(routerController.connections.has(connectionId)).be.false();
     });
 
     it('should remove the context from the context pool', () => {
@@ -85,7 +87,7 @@ describe('Test: routerController', () => {
 
     it('should return an error if no connectionId is provided', () => {
       const context = new RequestContext({connection: {protocol}});
-      routerController.connections[connectionId] = context;
+      routerController.connections.set(connectionId, context);
       routerController.removeConnection(context);
 
       should(kuzzle.log.error)
@@ -95,7 +97,7 @@ describe('Test: routerController', () => {
 
     it('should return an error if no protocol is provided', () => {
       const context = new RequestContext({connection: {id: connectionId}});
-      routerController.connections[connectionId] = context;
+      routerController.connections.set(connectionId, context);
       routerController.removeConnection(context);
 
       should(kuzzle.log.error)
@@ -121,6 +123,17 @@ describe('Test: routerController', () => {
         connection: {
           id: null,
           protocol: 'foobar'
+        }
+      });
+      should(routerController.isConnectionAlive(context)).be.true();
+    });
+
+    it('should always return true for request coming from the proxy', () => {
+      const context = new RequestContext({
+        connection: {
+          id: 'foobar',
+          protocol: 'foobar',
+          proxy: true
         }
       });
       should(routerController.isConnectionAlive(context)).be.true();
