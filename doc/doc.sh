@@ -39,6 +39,11 @@ case $1 in
     ./framework/node_modules/.bin/vuepress build $DOC_VERSION/ $ARGS
   ;;
 
+  build-netlify)
+    export SITE_BASE="/"
+    ./framework/node_modules/.bin/vuepress build $DOC_VERSION/ $ARGS
+  ;;
+
   upload)
     aws s3 sync $DOC_VERSION/.vuepress/dist s3://$S3_BUCKET$SITE_BASE --delete
   ;;
