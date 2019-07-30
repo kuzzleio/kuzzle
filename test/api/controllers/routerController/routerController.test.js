@@ -116,11 +116,11 @@ describe('Test: routerController', () => {
       should(routerController.isConnectionAlive(requestContext)).be.false();
     });
 
-    it('should always return true on HTTP connections', () => {
+    it('should always return true for connections without an id', () => {
       const context = new RequestContext({
         connection: {
-          id: connectionId,
-          protocol: 'http'
+          id: null,
+          protocol: 'foobar'
         }
       });
       should(routerController.isConnectionAlive(context)).be.true();
