@@ -1341,6 +1341,12 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
+      request.input.body = {
+        properties: {
+          name: { type: 'keyword' }
+        }
+      };
+
       elasticsearch.esWrapper.getMapping = sinon.stub().resolves(getMappingReturn);
     });
 
@@ -1361,6 +1367,19 @@ describe('Test: ElasticSearch service', () => {
           should(arg.body.properties.city)
             .be.exactly(request.input.body.properties.city);
         });
+    });
+
+    it('should reject with BadRequestError on wrong mapping', () => {
+      const collectionMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return should(elasticsearch.updateMapping(request))
+        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
     });
 
     it('should reject and handle error for bad mapping input', done => {
@@ -1650,6 +1669,12 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       request.input.resource.collection = '%foobar';
 
+      request.input.body = {
+        properties: {
+          name: { type: 'keyword' }
+        }
+      };
+
       elasticsearch.client.indices.putMapping.resolves({});
       elasticsearch.kuzzle.indexCache.exists
         .onCall(0).resolves(true)
@@ -1712,6 +1737,19 @@ describe('Test: ElasticSearch service', () => {
           });
           should(esRequest.body.dynamic).be.eql('strict');
         });
+    });
+
+    it('should reject with BadRequestError on wrong mapping', () => {
+      const collectionMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return should(elasticsearch.createCollection(request))
+        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
     });
 
     it('should create collection with mapping if supplied in the body', () => {
@@ -2784,6 +2822,54 @@ describe('Test: ElasticSearch service', () => {
           ]);
           should(result.result).be.an.Array().and.be.empty();
         });
+    });
+  });
+
+  describe('#_checkMapping', () => {
+    it('should throw when a property is incorrect', () => {
+      const mapping = {
+        properties: {},
+        dinamic: 'false'
+      };
+
+      should(() => elasticsearch._checkMapping(mapping))
+        .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
+    });
+
+    it('should throw when a nested property is incorrect', () => {
+      const mapping = {
+        dynamic: 'false',
+        properties: {
+          name: { type: 'keyword' },
+          car: {
+            dinamic: 'false',
+            properties: {
+              brand: { type: 'keyword' }
+            }
+          }
+        }
+      };
+
+      should(() => elasticsearch._checkMapping(mapping))
+        .throw({ message: 'Incorrect mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
+    });
+
+    it('should return null if no properties are incorrect', () => {
+      const mapping = {
+        dynamic: 'false',
+        properties: {
+          name: { type: 'keyword' },
+          car: {
+            dynamic: 'false',
+            properties: {
+              brand: { type: 'keyword' }
+            }
+          }
+        }
+      };
+
+      should(() => elasticsearch._checkMapping(mapping))
+        .not.throw();
     });
   });
 });
