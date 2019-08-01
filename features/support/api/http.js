@@ -988,6 +988,13 @@ class HttpApi {
     });
   }
 
+  revokeTokens(id) {
+    return this.callApi({
+      url: this.apiPath(`_revokeTokens/${id}`),
+      method: 'DELETE'
+    });
+  }
+
   scroll (scrollId, scroll) {
     const options = {
       url: this.apiPath(`_scroll/${scrollId}`),

@@ -767,4 +767,16 @@ describe('Test: security controller - users', () => {
       });
     });
   });
+
+  describe('#revokeTokens', () => {
+    it('should revoke all tokens related to a given user', () => {
+      
+      return should(securityController.revokeTokens((new Request({ _id: 'test', })))).be.resolved();
+    });
+
+    it('should reject an error if the user doesn\'t exists.', () => {
+      kuzzle.repositories.user.load.resolves(null);
+      return should(securityController.revokeTokens(new Request({ _id: 'test' }))).be.rejectedWith(NotFoundError);
+    });
+  });
 });

@@ -157,6 +157,15 @@ Then(/^I replace the user "(.*?)" with data {(.*?)}$/, function (id, data) {
     });
 });
 
+Then(/^I revoke all tokens of the user "(.*?)"$/, function (id) {
+  return this.api.revokeTokens(this.idPrefix + id)
+    .then(body => {
+      if (body.error) {
+        throw new Error(body.error.message);
+      }
+    });
+});
+
 Then(/^I delete the user "(.*?)"$/, function (id) {
   return this.api.deleteUser(this.idPrefix + id, true)
     .then(body => {
@@ -240,4 +249,3 @@ Then(/^I am able to perform a scrollUsers request$/, function () {
       }
     });
 });
-

@@ -1,0 +1,56 @@
+---
+code: true
+type: page
+title: revokeTokens
+---
+
+# revokeTokens
+
+
+
+Revokes every token of a given user.
+
+---
+
+## Query Syntax
+
+### HTTP
+
+```http
+URL: http://kuzzle:7512/_revokeTokens_/<_id>
+Method: DELETE
+Body:
+```
+
+### Other protocols
+
+```js
+{
+  "controller": "security",
+  "action": "revokeTokens",
+  "_id": "<kuid>"
+}
+```
+
+---
+
+## Arguments
+
+- `_id`: user [kuid](/core/1/guides/kuzzle-depth/authentication/#the-kuzzle-user-identifier)
+
+---
+
+## Response
+
+```js
+{
+  "status": 200,
+  "error": null,
+  "result": {
+    "_id": "<kuid>"
+    }
+  "action": "revokeTokens",
+  "controller": "security",
+  "requestId": "<unique request identifier>"
+}
+```

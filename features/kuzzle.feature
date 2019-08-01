@@ -604,6 +604,7 @@ Feature: Kuzzle functional tests
     Then I am able to perform a scrollUsers request
     Then I delete the user "user2-id"
     Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    Then I revoke all tokens of the user "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]},"strategies":["local"]}
     Then I log out
