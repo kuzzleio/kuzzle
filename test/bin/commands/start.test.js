@@ -1,25 +1,28 @@
 const
   mockRequire = require('mock-require'),
-  rewire = require('rewire'),
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('bin/commands/start.js', () => {
   let
-    start;
+    start,
+    ColorOutputMock;
 
   beforeEach(() => {
+    ColorOutputMock = function () {
+      return {
+        ok: sinon.stub(),
+        warn: sinon.stub(),
+        notice: sinon.stub(),
+        error: sinon.stub()
+      };
+    };
+
     mockRequire('../../../bin/commands/loadJson', sinon.stub().resolves({}));
     mockRequire('../../../lib/api/kuzzle', KuzzleMock);
-    start = rewire('../../../bin/commands/start');
-
-    start.__set__({
-      console: {
-        log: sinon.stub(),
-        error: sinon.stub()
-      }
-    });
+    mockRequire('../../../bin/commands/colorOutput', ColorOutputMock);
+    start = mockRequire.reRequire('../../../bin/commands/start');
   });
 
   afterEach(() => {
@@ -42,5 +45,4 @@ describe('bin/commands/start.js', () => {
           });
       });
   });
-
 });

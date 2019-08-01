@@ -1,9 +1,12 @@
 const
   should = require('should'),
+  sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   RouterController = require('../../../../lib/api/controllers/routerController'),
-  PluginImplementationError = require('kuzzle-common-objects').errors.PluginImplementationError,
-  RequestContext = require('kuzzle-common-objects').models.RequestContext;
+  {
+    models: { RequestContext },
+    errors: { PluginImplementationError }
+  } = require('kuzzle-common-objects');
 
 describe('Test: routerController', () => {
   const
@@ -29,7 +32,7 @@ describe('Test: routerController', () => {
     it('should have registered the connection', () => {
       routerController.newConnection(requestContext);
 
-      const context = routerController.connections[connectionId];
+      const context = routerController.connections.get(connectionId);
       should(context).be.instanceOf(RequestContext);
       should(context.connectionId).be.eql(connectionId);
       should(context.protocol).be.eql(protocol);
@@ -43,31 +46,33 @@ describe('Test: routerController', () => {
       const context = new RequestContext({connection: {protocol}});
       routerController.newConnection(context);
 
-      should(kuzzle.emit).be.calledOnce();
-      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.log.error)
+        .calledOnce()
+        .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
 
     it('should return an error if no protocol is provided', () => {
       const context = new RequestContext({connection: {id: connectionId}});
       routerController.newConnection(context);
 
-      should(kuzzle.emit).be.calledOnce();
-      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.log.error)
+        .calledOnce()
+        .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
   });
 
   describe('#removeConnection', () => {
     it('should remove the context from the context pool', () => {
-      routerController.connections[connectionId] = requestContext;
+      routerController.connections.set(connectionId, requestContext);
       routerController.removeConnection(requestContext);
 
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledWith(requestContext);
-      should(kuzzle.statistics.dropConnection).be.calledOnce();
-      should(kuzzle.statistics.dropConnection).be.calledWith(requestContext);
-      should(routerController.connections[connectionId]).be.undefined();
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
+        .calledOnce()
+        .calledWith(requestContext);
+      should(kuzzle.statistics.dropConnection)
+        .calledOnce()
+        .calledWith(requestContext);
+      should(routerController.connections.has(connectionId)).be.false();
     });
 
     it('should remove the context from the context pool', () => {
@@ -75,29 +80,29 @@ describe('Test: routerController', () => {
 
       should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
       should(kuzzle.statistics.dropConnection).not.be.called();
-      should(kuzzle.emit).be.calledOnce();
-      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.log.error)
+        .calledOnce()
+        .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
 
     it('should return an error if no connectionId is provided', () => {
       const context = new RequestContext({connection: {protocol}});
-      routerController.connections[connectionId] = context;
+      routerController.connections.set(connectionId, context);
       routerController.removeConnection(context);
 
-      should(kuzzle.emit).be.calledOnce();
-      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.log.error)
+        .calledOnce()
+        .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
 
     it('should return an error if no protocol is provided', () => {
       const context = new RequestContext({connection: {id: connectionId}});
-      routerController.connections[connectionId] = context;
+      routerController.connections.set(connectionId, context);
       routerController.removeConnection(context);
 
-      should(kuzzle.emit).be.calledOnce();
-      should(kuzzle.emit.firstCall.args[0]).be.eql('log:error');
-      should(kuzzle.emit.firstCall.args[1]).be.instanceOf(PluginImplementationError);
+      should(kuzzle.log.error)
+        .calledOnce()
+        .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
   });
 
@@ -113,11 +118,22 @@ describe('Test: routerController', () => {
       should(routerController.isConnectionAlive(requestContext)).be.false();
     });
 
-    it('should always return true on HTTP connections', () => {
+    it('should always return true for connections without an id', () => {
       const context = new RequestContext({
         connection: {
-          id: connectionId,
-          protocol: 'http'
+          id: null,
+          protocol: 'foobar'
+        }
+      });
+      should(routerController.isConnectionAlive(context)).be.true();
+    });
+
+    it('should always return true for request coming from the proxy', () => {
+      const context = new RequestContext({
+        connection: {
+          id: 'foobar',
+          protocol: 'foobar',
+          proxy: true
         }
       });
       should(routerController.isConnectionAlive(context)).be.true();

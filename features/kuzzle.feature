@@ -1,4 +1,29 @@
 Feature: Kuzzle functional tests
+
+  Scenario: API method server:publicApi
+    When I get the public API
+    Then I have the definition of kuzzle and plugins controllers
+
+  Scenario: CLI: dump and restore index
+    And I create an index named "tolkien"
+    When I create a collection "tolkien":"noldor" with "5" documents
+    And I create a collection "tolkien":"angband" with "3" documents
+    And I refresh the index "tolkien"
+    And I use the CLI command 'indexDump tolkien ./index-dump'
+    Then A file "index-dump/tolkien--noldor--data.jsonl" exists
+    And A file "index-dump/tolkien--angband--data.jsonl" exists
+    And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
+    And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
+    When I'm able to delete the index named "tolkien"
+    And I create an index named "tolkien"
+    When I create a collection "tolkien":"noldor"
+    And I create a collection "tolkien":"angband"
+    And I use the CLI command 'indexRestore ./index-dump'
+    And I refresh the index "tolkien"
+    Then I count 5 documents in index "tolkien":"noldor"
+    Then I count 3 documents in index "tolkien":"angband"
+    Then I'm able to delete the index named "tolkien"
+
   Scenario: CLI: encrypt and decrypt secrets
     When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
     And I use the CLI command 'encryptSecrets config/testsecrets.json --noint --vault-key azerty --outputFile config/testsecrets.enc.json'
@@ -388,11 +413,11 @@ Feature: Kuzzle functional tests
 
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
-    Then The result should raise an error with message "Indexes starting with a "%" are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
     When I write the document "documentGrace"
     When I check if index "kuzzle-test-index" exists
     Then The result should match the json true

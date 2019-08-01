@@ -19,21 +19,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandResetDatabase (options) {
   const cout = new ColorOutput(options);
   let userIsSure = false;
 
-  console.log(cout.warn('[ℹ] You are about to clear all data stored on Kuzzle.'));
-  console.log(cout.warn('[ℹ] This operation cannot be undone.\n'));
+  cout.warn('[ℹ] You are about to clear all data stored on Kuzzle.');
+  cout.warn('[ℹ] This operation cannot be undone.\n');
 
   if (!params.noint) {
     userIsSure = readlineSync.question('[❓] Are you sure? If so, please type "I am sure": ') === 'I am sure';
@@ -44,24 +42,25 @@ function commandResetDatabase (options) {
   }
 
   if (userIsSure) {
-    console.log(cout.notice('[ℹ] Processing...\n'));
-    const query = {
+    cout.notice('[ℹ] Processing...\n');
+    const request = {
       controller: 'admin',
       action: 'resetDatabase'
     };
 
-    return sendAction(query, options)
+    return getSdk(options)
+      .then(sdk => sdk.query(request))
       .then(() => {
-        console.log(cout.ok('[✔] Kuzzle databases have been successfully reset'));
+        cout.ok('[✔] Kuzzle databases have been successfully reset');
         process.exit(0);
       })
       .catch(err => {
-        console.error(err);
+        cout.error(err);
         process.exit(1);
       });
   }
 
-  console.log(cout.notice('[ℹ] Aborted'));
+  cout.notice('[ℹ] Aborted');
 }
 
 module.exports = commandResetDatabase;

@@ -600,6 +600,22 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           .be.calledWithExactly(Buffer.from('content'));
       });
 
+      it('should send a 0-length-content response if marked as raw and content is null', () => {
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          result = new Request({});
+
+        result.setResult(null, {
+          raw : true
+        });
+
+        cb(result);
+
+        should(response.end).be.calledWith(Buffer.from(''));
+        should(result.response.headers['Content-Length']).be.eql('0');
+      });
+
       it('should compress the outgoing message with deflate if asked to', () => {
         payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, deflate, baz'};
         protocol._sendRequest({id: 'connectionId'}, response, payload);

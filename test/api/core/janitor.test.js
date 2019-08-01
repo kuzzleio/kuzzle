@@ -12,16 +12,6 @@ const
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-function rewireJanitor() {
-  const Janitor = rewire('../../../lib/api/core/janitor');
-  Janitor.__set__('console', {
-    log: sinon.stub(),
-    error: sinon.stub()
-  });
-
-  return Janitor;
-}
-
 /*
  /!\ In these tests, the promise returned by shutdown
  do not mark the function as "finished".
@@ -37,7 +27,7 @@ describe('Test: core/janitor', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    Janitor = rewireJanitor();
+    Janitor = rewire('../../../lib/api/core/janitor');
     janitor = new Janitor(kuzzle);
   });
 
@@ -269,7 +259,7 @@ describe('Test: core/janitor', () => {
       mockrequire('glob', globStub);
 
       mockrequire.reRequire('../../../lib/api/core/janitor');
-      Janitor = rewireJanitor();
+      Janitor = rewire('../../../lib/api/core/janitor');
       janitor = new Janitor(kuzzle);
 
       kuzzle.config.dump.enabled = true;
@@ -281,18 +271,7 @@ describe('Test: core/janitor', () => {
       janitor._dump = true;
 
       janitor.dump(suffix)
-        .then(() => done(new Error('Should rejects with error')))
-        .catch(error => {
-          should(error).be.instanceOf(PreconditionError);
-          done();
-        });
-    });
-
-    it('should reject with an error if dump is disabled by configuration', done => {
-      kuzzle.config.dump.enabled = false;
-
-      janitor.dump(suffix)
-        .then(() => done(new Error('Should rejects with error')))
+        .then(() => done(new Error('Should reject with error')))
         .catch(error => {
           should(error).be.instanceOf(PreconditionError);
           done();
@@ -489,7 +468,7 @@ describe('Test: core/janitor', () => {
 
       mockrequire('pm2', pm2Mock);
       mockrequire.reRequire('../../../lib/api/core/janitor');
-      Janitor = rewireJanitor();
+      Janitor = rewire('../../../lib/api/core/janitor');
 
       Janitor.__set__({
         process: processMock,

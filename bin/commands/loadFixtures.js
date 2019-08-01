@@ -19,32 +19,37 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   ColorOutput = require('./colorOutput'),
   loadJson = require('./loadJson'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandLoadFixtures (fixturesPath, options) {
   let
+    sdk,
     opts = options;
 
   const cout = new ColorOutput(opts);
 
-  return loadJson(fixturesPath)
-    .then(fixtures => sendAction({
+  return getSdk(options)
+    .then(response => {
+      sdk = response;
+
+      return null;
+    })
+    .then(() => loadJson(fixturesPath))
+    .then(fixtures => sdk.query({
       controller: 'admin',
       action: 'loadFixtures',
       refresh: 'wait_for',
       body: fixtures
     }, opts))
     .then(() => {
-      console.log(cout.ok('[✔] Fixtures have been successfully loaded'));
+      cout.ok('[✔] Fixtures have been successfully loaded');
       process.exit(0);
     })
     .catch(err => {
-      console.error(err);
+      cout.error(err);
       process.exit(1);
     });
 }

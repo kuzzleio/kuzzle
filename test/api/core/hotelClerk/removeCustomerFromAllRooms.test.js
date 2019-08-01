@@ -118,7 +118,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
     return hotelClerk.removeCustomerFromAllRooms(context)
       .then(() => {
-        should(kuzzle.emit).be.calledWith('log:error', error);
+        should(kuzzle.log.error).be.calledWith(error);
 
         // the room should be removed from the hotel clerk even if
         // Koncorde fails

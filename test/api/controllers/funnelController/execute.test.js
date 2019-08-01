@@ -4,8 +4,13 @@ const
   should = require('should'),
   sinon = require('sinon'),
   Bluebird = require('bluebird'),
-  Request = require('kuzzle-common-objects').Request,
-  ServiceUnavailableError = require('kuzzle-common-objects').errors.ServiceUnavailableError,
+  {
+    Request,
+    errors: {
+      BadRequestError,
+      ServiceUnavailableError
+    }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   rewire = require('rewire'),
   FunnelController = rewire('../../../../lib/api/controllers/funnelController');
@@ -52,7 +57,8 @@ describe('funnelController.execute', () => {
       funnel.execute(request, (err, res) => {
         try {
           should(err).be.null();
-          // 102 is the default status of a request, it should be 200 when coming out from the execute
+          // 102 is the default status of a request, it should be 200 when
+          // coming out from the execute
           should(res.status).be.exactly(102);
           should(res).be.instanceOf(Request);
           should(funnel.processRequest).be.calledOnce();
@@ -80,14 +86,14 @@ describe('funnelController.execute', () => {
   });
 
   describe('#core:overload hook', () => {
-    it('should fire the hook the first time Kuzzle is in overloaded state', /** @this {Mocha} */ () => {
+    it('should fire the hook the first time Kuzzle is in overloaded state', () => {
       funnel.overloaded = true;
       funnel.requestsCacheQueue = Array(kuzzle.config.limits.requestsBufferWarningThreshold + 1);
 
       funnel.execute(request, () => {});
 
       should(kuzzle.emit)
-        .be.calledTwice()
+        .be.calledOnce()
         .be.calledWith('core:overload');
     });
 
@@ -97,7 +103,7 @@ describe('funnelController.execute', () => {
       funnel.execute(request, () => {});
 
       should(kuzzle.emit)
-        .be.calledTwice()
+        .be.calledOnce()
         .be.calledWith('core:overload');
     });
 
@@ -201,7 +207,10 @@ describe('funnelController.execute', () => {
 
       should(funnel.execute(request, cb)).be.eql(0);
       should(funnel.checkRights).not.be.called();
-      should(cb).not.be.called();
+      should(cb)
+        .calledOnce()
+        .calledWith(sinon.match.instanceOf(BadRequestError));
+      should(cb.firstCall.args[0].message).eql('Client connection dropped');
     });
   });
 
