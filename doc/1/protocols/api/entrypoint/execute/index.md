@@ -38,7 +38,7 @@ This resulting object contains the following properties:
 * `raw` (boolean, default `false`): if `false`, the response content is a JSON object following the [Kuzzle standard response format](core/1/api/essentials/kuzzle-response/). Otherwise, the content can be anything, depending on the executed API action.
 * `status` (integer, default `200`): request status, following the standard [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
 * `requestId` (string, nullable): request identifier set by clients, and used to link asynchronous responses to emitted requests.
-* `content`: the response itself, this is the payload that should be sent to the requesting client following the implemented protocol format. This property type partlydepends the value of the `raw` flag (if `false`, then the content is always a JSON object).
+* `content`: the response itself, this is the payload that should be sent to the requesting client following the implemented protocol format. This property type partly depends on the value of the `raw` flag (if `false`, then the content is always a JSON object).
 * `headers` (JSON object, default `{}`): custom headers/optional response properties that can be added by the executed API action. Whether the protocol interprets and uses them depends on its nature and implementation.
 
 ---
