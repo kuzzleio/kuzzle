@@ -54,14 +54,14 @@ describe('Test: validation/types/integer', () => {
       const errorMessages = [];
 
       should(integerType.validate(rangeTypeOptions, 40, errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The value is lesser than the minimum.']);
+      should(errorMessages).be.deepEqual(['Value 40 is lesser than the allowed minimum (41)']);
     });
 
     it('should return false if fieldValue is above max', () => {
       const errorMessages = [];
 
       should(integerType.validate(rangeTypeOptions, 43, errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The value is greater than the maximum.']);
+      should(errorMessages).be.deepEqual(['Value 43 is greater than the allowed maximum (42)']);
     });
   });
 });
