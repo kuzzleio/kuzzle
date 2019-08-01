@@ -33,19 +33,21 @@ To get a list of commands and options run the CLI:
 #
 #   Commands:
 #
-#     createFirstAdmin           create the first administrator user
-#     clearCache                 clear internal caches in Redis
-#     reset                      reset all users, profiles, roles and documents validation specifications
-#     resetSecurity              reset all users, profiles and roles
-#     resetDatabase              remove all data stored on Kuzzle
-#     shutdown                   gracefully exits after processing remaining requests
-#     start [options]            start a Kuzzle instance
-#     dump                       create a dump of current state of kuzzle
-#     loadMappings <file>        load database mappings into Kuzzle
-#     loadFixtures <file>        load database fixtures into Kuzzle
-#     loadSecurities <file>      load roles, profiles and users into Kuzzle
-#     encryptSecrets [file] [options]  encrypt a secrets file with the provided key
-#     decryptSecrets [file] [options]  decrypt a secrets file with the provided key
+#   createFirstAdmin [options]          create the first administrator user
+#   clearCache [options]                clear internal caches in Redis
+#   reset [options]                     reset all users, profiles, roles and documents validation specifications
+#   resetSecurity [options]             reset all users, profiles and roles
+#   resetDatabase [options]             remove all data stored on Kuzzle
+#   shutdown [options]                  gracefully exits after processing remaining requests
+#   start [options]                     start a Kuzzle instance
+#   dump [options]                      create a dump of current state of kuzzle
+#   loadMappings [options] <file>       load database mappings into Kuzzle
+#   loadFixtures [options] <file>       load database fixtures into Kuzzle
+#   loadSecurities [options] <file>     load roles, profiles and users into Kuzzle
+#   encryptSecrets [options] [file]     encrypt a secrets file with the provided key
+#   decryptSecrets [options] [file]     decrypt a secrets file with the provided key
+#   indexDump [options] <index> <path>  dump an entire index in the specified directory
+#   indexRestore [options] <path>       restore the content of a previously dumped index
 #
 #   Options:
 #
@@ -589,3 +591,41 @@ The `file` can be provided in the command line, through the `KUZZLE_SECRETS_FILE
 ::: info
 See also [Secrets Vault](/core/1/guides/essentials/secrets-vault)
 :::
+
+## indexDump
+
+<SinceBadge version="1.9.0" />
+
+```bash
+./bin/kuzzle indexDump <index> <path> [options]
+
+Options:
+      --batch-size <batchSize>  Maximum batch size (see limits.documentsFetchCount config)
+```
+
+Dump the index `<index>` in the directory `<path>`.  
+Each collection is dumped in a separate file in [JSON lines](http://jsonlines.org/) format.  
+
+The dump directory have the following structure:
+
+```bash
+<path>
+├── <index>--<collection>--data.jsonl
+└── <index>--<collection>--data.jsonl
+```
+
+This dump is intended to be loaded with the `indexRestore` command.
+
+## indexRestore
+
+<SinceBadge version="1.9.0" />
+
+```bash
+./bin/kuzzle indexRestore <path> [options]
+
+Options:
+      --batch-size <batchSize>  Maximum batch size (see limits.documentsWriteCount config)
+```
+
+Restore a previously dumped index from directory `<path>` into Kuzzle.  
+The index and destination collections must exist.  
