@@ -260,7 +260,7 @@ class KuzzleMock extends Kuzzle {
     this.rootPath = '/kuzzle';
 
     this.router = {
-      connections: {},
+      connections: new Map(),
       execute: this.sandbox.stub().resolves(foo),
       isConnectionAlive: this.sandbox.stub().returns(true),
       init: this.sandbox.spy(),
@@ -390,7 +390,7 @@ class KuzzleMock extends Kuzzle {
         if (name === 'constructor') {
           continue;
         }
-        if (!this.hasOwnProperty(name)) {
+        if (!Object.prototype.hasOwnProperty.call(this, name)) {
           this[name] = function() {
             throw new Error(`Kuzzle original property ${name} is not mocked`);
           };

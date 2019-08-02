@@ -206,6 +206,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       id: 'foobar',
     }));
     return hotelClerk.addSubscription(request)
+      .then(() => {throw new Error('should not happen');})
       .catch(error => {
         should(error)
           .be.an.instanceof(SizeLimitError);
