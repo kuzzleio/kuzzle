@@ -136,7 +136,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
           should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
           should(protocol.decoders.identity).be.a.Function();
-
           should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
           should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
           should(protocol.decoders.identity('foobar')).eql(null);
