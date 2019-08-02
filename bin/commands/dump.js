@@ -19,33 +19,33 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
-function commandDump (options) {
+async function commandDump (options) {
   const
     cout = new ColorOutput(options);
 
-  console.log(cout.notice('[ℹ] Creating dump file...'));
+  cout.notice('[ℹ] Creating dump file...');
 
-  const query = {
-    controller: 'admin',
-    action: 'dump',
-    suffix: 'cli'
+  const
+    sdk = await getSdk(options, 'http'),
+    request = {
+      controller: 'admin',
+      action: 'dump',
+      suffix: 'cli'
   };
 
-  return sendAction(query, options)
-    .then(request => {
-      console.log(cout.ok('[✔] Done!'));
-      console.log('\n' + cout.warn(`[ℹ] Dump has been successfully generated in "${request.result}" folder`));
-      console.log(cout.warn('[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io'));
+  return sdk.query(request)
+    .then(response => {
+      cout.ok('[✔] Done!');
+      cout.notice(`[ℹ] A dump report has been successfully generated in the "${response.result}" folder`);
+      cout.notice('[ℹ] You can send the folder to the kuzzle core team at support@kuzzle.io');
       process.exit(0);
     })
     .catch(err => {
-      console.log(cout.error(`[✖] ${err}`));
+      cout.error(`[✖] ${err}`);
       process.exit(1);
     });
 }

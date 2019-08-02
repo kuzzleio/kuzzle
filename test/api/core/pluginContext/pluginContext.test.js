@@ -1,13 +1,19 @@
 'use strict';
 
+const root = '../../../..';
+
 const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  User = require('../../../../lib/api/core/models/security/user'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  User = require(`${root}/lib/api/core/models/security/user`),
+  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
     Request,
+    models: {
+      RequestContext,
+      RequestInput
+    },
     errors: {
       PluginImplementationError
     }
@@ -23,7 +29,7 @@ describe('Plugin Context', () => {
     deprecateStub;
 
   beforeEach(() => {
-    mockrequire('../../../../lib/services/internalEngine', function () {
+    mockrequire(`${root}/lib/services/internalEngine`, function () {
       this.init = sinon.spy();
       this.bootstrap = {
         all: sinon.spy(),
@@ -31,13 +37,13 @@ describe('Plugin Context', () => {
       };
     });
 
-    deprecateStub = sinon.stub().returnsArg(0);
-    mockrequire('../../../../lib/util/deprecate', {
+    deprecateStub = sinon.stub().returnsArg(1);
+    mockrequire(`${root}/lib/util/deprecate`, {
       deprecateProperties: deprecateStub
     });
 
     PluginContext = mockrequire.reRequire(
-      '../../../../lib/api/core/plugins/pluginContext');
+      `${root}/lib/api/core/plugins/pluginContext`);
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
@@ -54,7 +60,9 @@ describe('Plugin Context', () => {
 
     it('should expose the right constructors', () => {
       let repository;
-      const Koncorde = require('koncorde');
+      const
+        Koncorde = require('koncorde'),
+        BaseValidationType = require(`${root}/lib/api/core/validation/baseType`);
 
       should(context.constructors).be.an.Object().and.not.be.empty();
       should(context.constructors.Dsl).be.a.Function();
@@ -65,8 +73,19 @@ describe('Plugin Context', () => {
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
 
-      should(deprecateStub).calledOnce();
-      should(deprecateStub.firstCall.args[1]).match({Dsl: 'Koncorde'});
+      should(deprecateStub)
+        .calledOnce()
+        .calledWithMatch(
+          kuzzle.log,
+          {
+            RequestContext,
+            RequestInput,
+            Koncorde,
+            BaseValidationType,
+            Dsl: Koncorde,
+            Request: sinon.match.func
+          },
+          { Dsl: 'Koncorde' });
 
       should(new context.constructors.Dsl).be.instanceOf(Koncorde);
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
@@ -204,8 +223,6 @@ describe('Plugin Context', () => {
     });
 
     it('should expose the right accessors', () => {
-      let triggerCalled = 0;
-
       [
         'silly',
         'verbose',
@@ -218,20 +235,23 @@ describe('Plugin Context', () => {
 
         context.log[level]('test');
 
-        should(kuzzle.emit).have.callCount(++triggerCalled);
-        should(kuzzle.emit.getCall(triggerCalled -1))
-          .be.calledWithExactly('log:' + level, 'test');
+        should(kuzzle.log[level])
+          .calledOnce()
+          .calledWithExactly('test');
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
-      should(context.accessors).have.properties(['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
+      should(context.accessors).have.properties(
+        ['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
     });
 
     it('should expose a data validation accessor', () => {
       const validation = context.accessors.validation;
 
-      should(validation.addType).be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
-      should(validation.validate).be.eql(kuzzle.validation.validate.bind(kuzzle.validation));
+      should(validation.addType)
+        .be.eql(kuzzle.validation.addType.bind(kuzzle.validation));
+      should(validation.validate)
+        .be.eql(kuzzle.validation.validate.bind(kuzzle.validation));
     });
 
     it('should expose an API execution accessor', () => {
@@ -320,9 +340,9 @@ describe('Plugin Context', () => {
     });
 
     describe('#trigger', () => {
-      it('should trigger a log:error if eventName contains a colon', () => {
+      it('should log an error if the event name contains a colon', () => {
         context.accessors.trigger('event:with:colons');
-        should(kuzzle.emit).be.calledWith('log:error');
+        should(kuzzle.log.error).be.calledOnce();
       });
 
       it('should call trigger with the given event name and payload', () => {

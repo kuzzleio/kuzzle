@@ -334,9 +334,9 @@ describe('Test: Internal broker', () => {
 
         WSBrokerClientRewire.__get__('emit')(client);
 
-        should(kuzzle.emit)
+        should(kuzzle.log.error)
           .be.calledOnce()
-          .be.calledWith('log:error', 'No socket for broker test');
+          .be.calledWith('No socket for broker test');
       });
 
       it('`send` should send properly envelopped data', () => {
@@ -410,9 +410,8 @@ describe('Test: Internal broker', () => {
 
         socket.emit('open', 1);
 
-        should(client.kuzzle.emit).be.calledWith(
-          'log:warn',
-          '[internalBroker] A node opened an already open connection');
+        should(client.kuzzle.log.warn)
+          .be.calledWith('[internalBroker] A node opened an already open connection');
       });
 
       it('on close event should try to reconnect', () => {
@@ -795,8 +794,8 @@ describe('Test: Internal broker', () => {
 
         return server.init()
           .then(() => {
-            should(server.kuzzle.emit).be.calledWith(
-              'log:warn', 'Internal broker disabled by configuration');
+            should(server.kuzzle.log.warn)
+              .be.calledWith('Internal broker disabled by configuration');
           });
       });
 
@@ -845,7 +844,7 @@ describe('Test: Internal broker', () => {
         const response = server.broadcast('test', {foo: 'bar'}, client2.client.socket);
 
         should(response).be.exactly(0);
-        should(kuzzle.emit.lastCall).be.calledWith('log:error', error);
+        should(kuzzle.log.error).be.calledWith(error);
       });
 
     });
@@ -1115,8 +1114,7 @@ describe('Test: Internal broker', () => {
           should(removeClientSpy).be.calledOnce();
           should(removeClientSpy).be.calledWith(server, clientSocket);
 
-          should(kuzzle.emit.lastCall).be.calledWith(
-            'log:info', 'client disconnected [1] test');
+          should(kuzzle.log.info).be.calledWith('client disconnected [1] test');
         });
       });
 
@@ -1129,8 +1127,8 @@ describe('Test: Internal broker', () => {
 
         serverSocket.emit('error', error);
 
-        should(server.kuzzle.emit).have.callCount(4);
-        should(server.kuzzle.emit.lastCall).be.calledWith('log:error');
+        should(server.kuzzle.emit).have.callCount(3);
+        should(server.kuzzle.log.error).calledOnce();
         should(server.onErrorHandlers[0]).be.calledOnce();
       });
     });

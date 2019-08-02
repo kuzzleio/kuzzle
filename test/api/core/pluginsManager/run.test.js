@@ -154,11 +154,12 @@ describe('PluginsManager.run', () => {
 
     it('should throw if a hook target is not a function and not a method name', () => {
       plugin.object.hooks = {
-        'foo:bar': 'foo'
+        'foo:bar': 'fou'
       };
 
-      return should(pluginsManager.run())
-        .be.rejectedWith(PluginImplementationError);
+      plugin.object.foo = () => {};
+
+      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
     });
   });
 
@@ -261,11 +262,12 @@ describe('PluginsManager.run', () => {
 
     it('should throw if a pipe target is not a function and not a method name', () => {
       plugin.object.pipes = {
-        'foo:bar': 'foo'
+        'foo:bar': 'fou'
       };
 
-      return should(pluginsManager.run())
-        .be.rejectedWith(PluginImplementationError);
+      plugin.object.foo = () => {};
+
+      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
     });
 
     it('should attach pipes event and reject if an attached function return an error', () => {
@@ -315,12 +317,9 @@ describe('PluginsManager.run', () => {
       return pluginsManager.run()
         .then(() => kuzzle.pipe('foo:bar'))
         .then(() => {
-          should(fooStub)
-            .be.calledOnce();
-          should(kuzzle.emit)
-            .be.calledWithMatch(
-              'log:warn',
-              /Plugin pipe .*? exceeded [0-9]*ms to execute\./);
+          should(fooStub).be.calledOnce();
+          should(kuzzle.log.warn)
+            .calledWithMatch(/Plugin pipe .*? exceeded [0-9]*ms to execute\./);
 
           kuzzle.config.plugins.common.pipeWarnTime = warnTime;
         });
@@ -491,13 +490,14 @@ describe('PluginsManager.run', () => {
       plugin.object.controllers = {
         'foo': {
           'actionName': 'functionName',
-          'anotherActionName': 'does not exist'
+          'anotherActionName': 'fou'
         }
       };
 
       plugin.object.functionName = () => {};
+      plugin.object.foo = () => {};
 
-      should(pluginsManager.run()).be.rejected();
+      should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
     });
 
     it('should not add an invalid route to the API', () => {
@@ -510,30 +510,44 @@ describe('PluginsManager.run', () => {
       plugin.object.functionName = () => {};
 
       plugin.object.routes = [
-        {invalid: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'}
+        {vert: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'}
       ];
-      should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "verb"/ })
+        .then(() => {
+          plugin.object.routes = [
+            {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'}
+          ];
 
-      plugin.object.routes = [
-        {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'}
-      ];
-      should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+          return should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+        })
+        .then(() => {
+          plugin.object.routes = [
+            {verb: 'posk', url: '/bar', controller: 'foo', action: 'bar'}
+          ];
 
-      plugin.object.routes = [
-        {verb: 'invalid', url: '/bar', controller: 'foo', action: 'bar'}
-      ];
-      should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+          return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "post"/ });
+        })
+        .then(() => {
+          plugin.object.routes = [
+            {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'baz'}
+          ];
 
-      plugin.object.routes = [
-        {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'invalid'}
-      ];
-      should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+          return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "bar"/ });
+        })
+        .then(() => {
+          plugin.object.routes = [
+            {verb: 'get', url: '/bar/:name', controller: 'fou', action: 'bar'}
+          ];
 
-      plugin.object.routes = [
-        {verb: 'get', url: '/bar/:name', controller: 'invalid', action: 'bar'}
-      ];
-      should(pluginsManager.run()).be.rejectedWith(PluginImplementationError);
+          return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
+        })
+        .then(() => {
+          plugin.object.routes = [
+            { verb: 'get', url: '/bar/:name', controler: 'foo', action: 'bar' }
+          ];
 
+          return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "controller"/ });
+        });
     });
   });
 });

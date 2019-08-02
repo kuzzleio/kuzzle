@@ -112,11 +112,7 @@ describe('Test: validation initialization', () => {
         .then(() => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual(configurationMock);
-          should(kuzzle.emit.callCount).be.eql(4);
-          should(kuzzle.emit.args[0][0]).be.eql('log:info');
-          should(kuzzle.emit.args[1][0]).be.eql('log:info');
-          should(kuzzle.emit.args[2][0]).be.eql('log:info');
-          should(kuzzle.emit.args[3][0]).be.eql('log:info');
+          should(kuzzle.log.info.callCount).be.eql(4);
         });
     });
 
@@ -129,14 +125,8 @@ describe('Test: validation initialization', () => {
         .then(() => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual({});
-          should(kuzzle.emit.callCount).be.eql(7);
-          should(kuzzle.emit.args[0][0]).be.eql('log:error');
-          should(kuzzle.emit.args[1][0]).be.eql('log:error');
-          should(kuzzle.emit.args[2][0]).be.eql('log:error');
-          should(kuzzle.emit.args[3][0]).be.eql('log:error');
-          should(kuzzle.emit.args[4][0]).be.eql('log:error');
-          should(kuzzle.emit.args[5][0]).be.eql('log:error');
-          should(kuzzle.emit.args[6][0]).be.eql('log:info');
+          should(kuzzle.log.error.callCount).be.eql(6);
+          should(kuzzle.log.info.callCount).be.eql(1);
         });
     });
   });
@@ -580,8 +570,7 @@ describe('Test: validation initialization', () => {
       }).throw('Specification for the field undefined.undefined.aField triggered an error');
 
       should(curateFieldSpecificationStub.callCount).be.eql(1);
-      should(kuzzle.emit.callCount).be.eql(1);
-      should(kuzzle.emit.args[0][0]).be.eql('log:error');
+      should(kuzzle.log.error).calledOnce();
     });
 
     it('should return an error array if one of the field curation returns an error in verbose mode', () => {
@@ -612,8 +601,7 @@ describe('Test: validation initialization', () => {
       should(response.errors[1]).be.eql('error two');
       should(response.errors[2]).be.eql('error three');
       should(curateFieldSpecificationStub.callCount).be.eql(3);
-      should(kuzzle.emit.callCount).be.eql(3);
-      should(kuzzle.emit.args[0][0]).be.eql('log:error');
+      should(kuzzle.log.error.callCount).be.eql(3);
     });
   });
 
@@ -812,7 +800,12 @@ describe('Test: validation initialization', () => {
         fieldName = 'aField',
         verboseErrors = true;
 
-      const response = validation.curateFieldSpecificationFormat(fieldSpec, indexName, collectionName, fieldName, verboseErrors);
+      const response = validation.curateFieldSpecificationFormat(
+        fieldSpec,
+        indexName,
+        collectionName,
+        fieldName,
+        verboseErrors);
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(2);
       should(response.errors).be.eql([
@@ -829,7 +822,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, type is a mandatory field specification property.');
+      }).throw('In undefined.undefined.undefined, \'type\' is a mandatory field specification property.');
     });
 
     it('should throw an error if the field specification contains a not recognized type', () => {
@@ -934,6 +927,24 @@ describe('Test: validation initialization', () => {
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
       }).throw('In undefined.undefined.undefined, "minCount" can not be greater than "maxCount".');
+    });
+
+    it('should throw if the multivalued value field is not a boolean', () => {
+      const
+        fieldSpec = {
+          type: 'string',
+          multivalued: {
+            value: null,
+            maxCount: 42
+          }
+        };
+
+      validation.types = {
+        string: 'aType'
+      };
+
+      should(() => validation.curateFieldSpecificationFormat(fieldSpec))
+        .throw('In undefined.undefined.undefined, "multivalued.value" must be a boolean');
     });
 
     it('should return true if specification is well formed', () => {

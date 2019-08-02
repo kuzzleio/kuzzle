@@ -28,6 +28,15 @@ class KuzzleMock extends Kuzzle {
 
     this.sandbox.spy(this, 'emit');
 
+    this.log = {
+      error: this.sandbox.stub(),
+      warn: this.sandbox.stub(),
+      info: this.sandbox.stub(),
+      silly: this.sandbox.stub(),
+      debug: this.sandbox.stub(),
+      verbose: this.sandbox.stub()
+    };
+
     this.realtime = {
       test: this.sandbox.stub().returns([]),
       register: this.sandbox.stub().resolves(),
@@ -251,7 +260,7 @@ class KuzzleMock extends Kuzzle {
     this.rootPath = '/kuzzle';
 
     this.router = {
-      connections: {},
+      connections: new Map(),
       execute: this.sandbox.stub().resolves(foo),
       isConnectionAlive: this.sandbox.stub().returns(true),
       init: this.sandbox.spy(),
@@ -334,6 +343,8 @@ class KuzzleMock extends Kuzzle {
 
     this.start = sinon.stub().resolves();
 
+    this.getError = sinon.stub().returns({});
+
     this.statistics = {
       completedRequest: this.sandbox.spy(),
       newConnection: this.sandbox.stub(),
@@ -381,7 +392,7 @@ class KuzzleMock extends Kuzzle {
         if (name === 'constructor') {
           continue;
         }
-        if (!this.hasOwnProperty(name)) {
+        if (!Object.prototype.hasOwnProperty.call(this, name)) {
           this[name] = function() {
             throw new Error(`Kuzzle original property ${name} is not mocked`);
           };

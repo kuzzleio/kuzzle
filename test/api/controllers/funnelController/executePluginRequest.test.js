@@ -52,7 +52,7 @@ describe('funnelController.executePluginRequest', () => {
 
   it('should dump on errors in whitelist', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
-    kuzzle.adminController.dump = sinon.stub();
+    kuzzle.janitor.dump = sinon.stub();
     kuzzle.config.dump.enabled = true;
 
     const rq = new Request({controller: 'testme', action: 'fail'});
@@ -60,8 +60,8 @@ describe('funnelController.executePluginRequest', () => {
     const callback = () => {
       setTimeout(() => {
         try {
-          should(kuzzle.emit).be.called();
-          should(kuzzle.adminController.dump).be.called();
+          should(kuzzle.log.error).be.calledOnce();
+          should(kuzzle.janitor.dump).be.called();
           done();
         } catch (e) {
           done(e);
@@ -81,7 +81,7 @@ describe('funnelController.executePluginRequest', () => {
 
   it('should not dump on errors if dump is disabled', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
-    kuzzle.adminController.dump = sinon.stub();
+    kuzzle.janitor.dump = sinon.stub();
     kuzzle.config.dump.enabled = false;
 
     const rq = new Request({controller: 'testme', action: 'fail'});
@@ -89,7 +89,7 @@ describe('funnelController.executePluginRequest', () => {
     const callback = () => {
       setTimeout(() => {
         try {
-          should(kuzzle.adminController.dump).not.be.called();
+          should(kuzzle.janitor.dump).not.be.called();
           done();
         } catch(e) {
           done(e);

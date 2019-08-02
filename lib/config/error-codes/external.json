@@ -1,0 +1,126 @@
+{
+  "code": 2,
+  "subdomains": {
+    "elasticsearch": {
+      "code": 1,
+      "errors": {
+        "wrong_elasticsearch_version": {
+          "code": 1,
+          "message": "Your elasticsearch version is %s; Only elasticsearch version 5 is currently supported.",
+          "class": "InternalError"
+        },
+        "unknown_scroll_identifier": {
+          "code": 2,
+          "message": "Non-existing or expired scroll identifier.",
+          "class": "NotFoundError"
+        },
+        "wrong_get_action": {
+          "code": 3,
+          "message": "The action _search can't be done with a GET.",
+          "class": "BadRequestError"
+        },
+        "document_not_found": {
+          "code": 4,
+          "message": "Document not found.",
+          "class": "NotFoundError"
+        },
+        "index_or_collection_does_not_exist": {
+          "code": 5,
+          "message": "Index '%s' and/or collection '%s' don't exist.",
+          "class": "PreconditionError"
+        },
+        "document_already_exists": {
+          "code": 6,
+          "message": "Document already exists.",
+          "class": "BadRequestError"
+        },
+        "document_id_not_found": {
+          "code": 7,
+          "message": "Document with id '%s' not found.",
+          "class": "NotFoundError"
+        },
+        "empty_query": {
+          "code": 8,
+          "message": "Query cannot be empty.",
+          "class": "BadRequestError"
+        },
+        "document_id_cannot_be_null": {
+          "code": 9,
+          "message": "null is not a valid document ID.",
+          "class": "BadRequestError"
+        },
+        "index_does_not_exist": {
+          "code": 10,
+          "message": "Index '%s' does not exist.",
+          "class": "PreconditionError"
+        },
+        "missing_or_invalid_import_attribute": {
+          "code": 11,
+          "message": "import must specify a body attribute 'bulkData' of type Object.",
+          "class": "BadRequestError"
+        },
+        "missing_data_collection_argument": {
+          "code": 12,
+          "message": "Missing data collection argument.",
+          "class": "BadRequestError"
+        },
+        "missing_data_index_argument": {
+          "code": 13,
+          "message": "Missing data index argument.",
+          "class": "BadRequestError"
+        },
+        "index_protected": {
+          "code": 14,
+          "message": "Index '%s' is protected, please use appropriated routes instead.",
+          "class": "BadRequestError"
+        },
+        "error_on_index_refresh": {
+          "code": 15,
+          "message": "Error refreshing index %s:\n%s.",
+          "class": "InternalError"
+        },
+        "limit_documents_reached": {
+          "code": 16,
+          "message": "Number of documents exceeds the server configured value (%s).",
+          "class": "SizeLimitError"
+        },
+        "index_reserved": {
+          "code": 17,
+          "message": "Indexes starting with a '%' are reserved for internal use. Cannot process index %s.",
+          "class": "BadRequestError"
+        },
+        "create_action_does_not_support_routing": {
+          "code": 18,
+          "message": "Kuzzle does not support '_routing' in create action.",
+          "class": "BadRequestError"
+        },
+        "wrong_refresh_parameter": {
+          "code": 19,
+          "message": "Refresh parameter only supports the value 'wait_for' or false.",
+          "class": "BadRequestError"
+        },
+        "incorrect_mapping_property": {
+          "code": 20,
+          "message": "Incorrect mapping property \"mapping.%s\".%s",
+          "class": "BadRequestError"
+        }
+
+      }
+    },
+    "internal_engine": {
+      "code": 2,
+      "errors": {
+        "lock_wait_timeout": {
+          "code": 1,
+          "message": "Internal engine bootstrap - lock wait timeout exceeded.",
+          "class": "InternalError"
+        },
+        "plugin_bootstrap_lock_wait_timeout": {
+          "code": 1,
+          "message": "Plugin %s bootstrap - lock wait timeout exceeded.",
+          "class": "InternalError"
+        }
+      }
+    }
+  }
+}

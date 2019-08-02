@@ -450,7 +450,7 @@ describe('Test: ElasticSearch service', () => {
         .catch(err => {
           try {
             should(err).be.an.instanceOf(NotFoundError);
-            should(err.message).be.exactly(`Document with id "${request.input.resource._id}" not found.`);
+            should(err.message).be.exactly(`Document with id '${request.input.resource._id}' not found.`);
             should(elasticsearch.client.index).not.be.called();
 
             done();
@@ -748,12 +748,12 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.update.rejects(esError);
 
       elasticsearch.update(request)
-        .catch((error) => {
+        .catch(error => {
           try{
             should(error).be.instanceOf(NotFoundError);
             should(error.message).be.equal('Index "banana" does not exist, please create it first');
-            should(error.internalError).eql(esError);
-            should(error.service).be.equal('elasticsearch');
+            should(error.stack.replace(/^.*?\n/, ''))
+              .eql(esError.stack.replace(/^.*?\n/, ''));
             should(elasticsearch.client.update.firstCall.args[0].id).be.null();
             done();
           }
@@ -1324,7 +1324,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.bulk.resolves({});
 
       return should(elasticsearch.import(request))
-        .be.rejectedWith(PreconditionError, {message: 'Index "test" and/or collection "unit-tests-elasticsearch" don\'t exist'});
+        .be.rejectedWith(PreconditionError, {message: 'Index \'test\' and/or collection \'unit-tests-elasticsearch\' don\'t exist.'});
     });
   });
 
@@ -1338,6 +1338,12 @@ describe('Test: ElasticSearch service', () => {
           mappings: {
             [collection]: {}
           }
+        }
+      };
+
+      request.input.body = {
+        properties: {
+          name: { type: 'keyword' }
         }
       };
 
@@ -1361,6 +1367,19 @@ describe('Test: ElasticSearch service', () => {
           should(arg.body.properties.city)
             .be.exactly(request.input.body.properties.city);
         });
+    });
+
+    it('should reject with BadRequestError on wrong mapping', () => {
+      const collectionMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return should(elasticsearch.updateMapping(request))
+        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
     });
 
     it('should reject and handle error for bad mapping input', done => {
@@ -1650,6 +1669,12 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       request.input.resource.collection = '%foobar';
 
+      request.input.body = {
+        properties: {
+          name: { type: 'keyword' }
+        }
+      };
+
       elasticsearch.client.indices.putMapping.resolves({});
       elasticsearch.kuzzle.indexCache.exists
         .onCall(0).resolves(true)
@@ -1712,6 +1737,19 @@ describe('Test: ElasticSearch service', () => {
           });
           should(esRequest.body.dynamic).be.eql('strict');
         });
+    });
+
+    it('should reject with BadRequestError on wrong mapping', () => {
+      const collectionMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return should(elasticsearch.createCollection(request))
+        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
     });
 
     it('should create collection with mapping if supplied in the body', () => {
@@ -2050,7 +2088,7 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
         .then(response => {
-          should(kuzzle.emit).calledWith('log:error');
+          should(kuzzle.log.error).calledOnce();
           should(elasticsearch.client.indices.refresh).be.called();
           should(response).be.eql({ foo: 'bar' });
           return null;
@@ -2149,7 +2187,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mcreate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mcreate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should get documents from ES only if there are IDs provided', () => {
@@ -2328,7 +2366,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should bulk import documents to be created or replaced', () => {
@@ -2459,7 +2497,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.mupdate(request)).rejectedWith(
         SizeLimitError,
-        {message: 'Number of documents exceeds the server configured value (1)'});
+        {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should bulk import documents to be updated', () => {
@@ -2604,7 +2642,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mreplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mreplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should reject documents that are not found', () => {
@@ -2739,7 +2777,7 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {ids: ['foo', 'bar']};
 
-      return should(elasticsearch.mdelete(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1)'});
+      return should(elasticsearch.mdelete(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
     });
 
     it('should correctly separate bulk successes from errors', () => {
@@ -2784,6 +2822,54 @@ describe('Test: ElasticSearch service', () => {
           ]);
           should(result.result).be.an.Array().and.be.empty();
         });
+    });
+  });
+
+  describe('#_checkMapping', () => {
+    it('should throw when a property is incorrect', () => {
+      const mapping = {
+        properties: {},
+        dinamic: 'false'
+      };
+
+      should(() => elasticsearch._checkMapping(mapping))
+        .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
+    });
+
+    it('should throw when a nested property is incorrect', () => {
+      const mapping = {
+        dynamic: 'false',
+        properties: {
+          name: { type: 'keyword' },
+          car: {
+            dinamic: 'false',
+            properties: {
+              brand: { type: 'keyword' }
+            }
+          }
+        }
+      };
+
+      should(() => elasticsearch._checkMapping(mapping))
+        .throw({ message: 'Incorrect mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
+    });
+
+    it('should return null if no properties are incorrect', () => {
+      const mapping = {
+        dynamic: 'false',
+        properties: {
+          name: { type: 'keyword' },
+          car: {
+            dynamic: 'false',
+            properties: {
+              brand: { type: 'keyword' }
+            }
+          }
+        }
+      };
+
+      should(() => elasticsearch._checkMapping(mapping))
+        .not.throw();
     });
   });
 });

@@ -19,29 +19,29 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
 const
   ColorOutput = require('./colorOutput'),
-  sendAction = require('./sendAction');
+  getSdk = require('./getSdk');
 
 function commandShutdown (options) {
   const
     cout = new ColorOutput(options);
 
-  console.log(cout.notice('[ℹ] Shutting down...'));
+  cout.notice('[ℹ] Shutting down...');
 
-  const query = {
+  const request = {
     controller: 'admin',
     action: 'shutdown'
   };
 
-  return sendAction(query, options)
+  return getSdk(options)
+    .then(sdk => sdk.query(request))
     .then(() => {
-      console.log(cout.ok('[✔] Done'));
+      cout.ok('[✔] Done');
       process.exit(0);
     })
     .catch(err => {
-      console.error(err);
+      cout.error(err);
       process.exit(1);
     });
 }

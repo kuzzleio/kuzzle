@@ -19,19 +19,26 @@
  * limitations under the License.
  */
 
-/* eslint-disable no-console */
-
 const
+  semver = require('semver'),
   loadJson = require('./loadJson'),
   ColorOutput = require('./colorOutput');
 
 function commandStart (options = {}) {
+  let kuzzle;
+
+  if (semver.satisfies(process.version, '>= 8.0.0')) {
+    kuzzle = new (require('../../lib/api/kuzzle'))();
+  } else {
+    // node6 compatible commands are one level deeper
+    kuzzle = new (require('../../../lib/api/kuzzle'))();
+  }
+
   const
-    kuzzle = new (require('../../lib/api/kuzzle'))(),
     cout = new ColorOutput(options),
     kuzzleParams = {};
 
-  console.log(cout.kuz('[ℹ] Starting Kuzzle server'));
+  cout.notice('[ℹ] Starting Kuzzle server');
 
   const promises = [];
 
@@ -59,18 +66,18 @@ function commandStart (options = {}) {
   return Promise.all(promises)
     .then(() => kuzzle.start(kuzzleParams))
     .then(() => {
-      console.log(cout.kuz('[✔] Kuzzle server ready'));
+      cout.ok('[✔] Kuzzle server ready');
       return kuzzle.internalEngine.bootstrap.adminExists()
         .then(res => {
           if (!res) {
-            console.log(cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.'));
-            console.log(cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.'));
-            console.log(cout.notice('    For more information: https://docs.kuzzle.io/guide/1/essentials/security/'));
+            cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');
+            cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.');
+            cout.notice('    For more information: https://docs.kuzzle.io/guide/1/essentials/security/');
           }
         });
     })
     .catch(err => {
-      console.error(cout.error(`[x] [ERROR] ${err.stack}`));
+      cout.error(`[x] [ERROR] ${err.stack}`);
       process.exit(1);
     });
 }
