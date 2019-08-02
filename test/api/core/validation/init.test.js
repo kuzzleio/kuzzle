@@ -800,7 +800,12 @@ describe('Test: validation initialization', () => {
         fieldName = 'aField',
         verboseErrors = true;
 
-      const response = validation.curateFieldSpecificationFormat(fieldSpec, indexName, collectionName, fieldName, verboseErrors);
+      const response = validation.curateFieldSpecificationFormat(
+        fieldSpec,
+        indexName,
+        collectionName,
+        fieldName,
+        verboseErrors);
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(2);
       should(response.errors).be.eql([
@@ -817,7 +822,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, type is a mandatory field specification property.');
+      }).throw('In undefined.undefined.undefined, \'type\' is a mandatory field specification property.');
     });
 
     it('should throw an error if the field specification contains a not recognized type', () => {
@@ -922,6 +927,24 @@ describe('Test: validation initialization', () => {
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
       }).throw('In undefined.undefined.undefined, "minCount" can not be greater than "maxCount".');
+    });
+
+    it('should throw if the multivalued value field is not a boolean', () => {
+      const
+        fieldSpec = {
+          type: 'string',
+          multivalued: {
+            value: null,
+            maxCount: 42
+          }
+        };
+
+      validation.types = {
+        string: 'aType'
+      };
+
+      should(() => validation.curateFieldSpecificationFormat(fieldSpec))
+        .throw('In undefined.undefined.undefined, "multivalued.value" must be a boolean');
     });
 
     it('should return true if specification is well formed', () => {
