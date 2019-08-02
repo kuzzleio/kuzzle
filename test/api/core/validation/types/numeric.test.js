@@ -47,15 +47,15 @@ describe('Test: validation/types/numeric', () => {
     it('should return false if fieldValue is below min', () => {
       const errorMessages = [];
 
-      should(numericType.validate(rangeTypeOptions, 40.1, errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The value is lesser than the minimum.']);
+      should(numericType.validate(rangeTypeOptions, 40.99, errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['Value 40.99 is lesser than the allowed minimum (41)']);
     });
 
     it('should return false if fieldValue is above max', () => {
       const errorMessages = [];
 
-      should(numericType.validate(rangeTypeOptions, 43.1, errorMessages)).be.false();
-      should(errorMessages).be.deepEqual(['The value is greater than the maximum.']);
+      should(numericType.validate(rangeTypeOptions, 42.1, errorMessages)).be.false();
+      should(errorMessages).be.deepEqual(['Value 42.1 is greater than the allowed maximum (42)']);
     });
   });
 
