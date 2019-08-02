@@ -121,6 +121,16 @@
           "class": "InternalError"
         }
       }
+    },
+    "redis": {
+      "code": 3,
+      "errors": {
+        "redis_service_not_connected": {
+          "code": 1,
+          "message": "Redis service is not connected.",
+          "class": "ServiceUnavailableError"
+        }
+      }
     }
   }
 }
