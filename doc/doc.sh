@@ -20,6 +20,8 @@ fi
 
 case $1 in
   prepare)
+    rm -rf framework
+
     echo "Clone documentation framework"
     rm -rf framework/
     git clone --depth 10 --single-branch --branch master https://github.com/kuzzleio/documentation.git framework/
