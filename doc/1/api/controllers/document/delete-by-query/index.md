@@ -63,7 +63,7 @@ Body:
 
 ## Response
 
-Returns a `hits` array containing the list of deleted document identifiers.
+Returns a `ids` array containing the list of deleted document identifiers.
 
 ```js
 {
@@ -75,7 +75,7 @@ Returns a `hits` array containing the list of deleted document identifiers.
   "action": "deleteByQuery",
   "requestId": "<unique request identifier>",
   "result": {
-    "hits": [
+    "ids": [
       "id 1",
       "id 2",
       "id ...",
