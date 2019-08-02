@@ -25,13 +25,12 @@ describe('Test: hotelClerk.removeRooms', () => {
         name: 'foo'
       }
     };
-
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
     kuzzle.realtime = new Koncorde();
     context = {connectionId, token: {userId: ''}, user: {_id: ''}};
-    
+
   });
 
   it('should reject an error if there is no subscription on this index', () => {

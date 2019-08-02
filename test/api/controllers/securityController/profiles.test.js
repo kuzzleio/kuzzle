@@ -27,7 +27,6 @@ describe('Test: security controller - profiles', () => {
     kuzzle.repositories.profile.getProfileFromRequest.resolves();
     securityController = new SecurityController(kuzzle);
   });
-
   
   describe('#updateProfileMapping', () => {
     const foo = {foo: 'bar'};
@@ -267,7 +266,6 @@ describe('Test: security controller - profiles', () => {
   });
 
   describe('#searchProfiles', () => {
-
     it('should return an object containing an array of profiles on searchProfile call', () => {
       kuzzle.repositories.profile.searchProfiles.resolves({hits: [{_id: 'test'}]});
 
@@ -314,8 +312,8 @@ describe('Test: security controller - profiles', () => {
       request = new Request({body: {roles: ['role1']}});
       request.input.args.from = 0;
       request.input.args.size = 10;
- 
-      return should(() => securityController.searchProfiles(request)).throw(SizeLimitError); 
+
+      return should(() => securityController.searchProfiles(request)).throw(SizeLimitError);
     });
 
     it('should reject an error in case of error', () => {

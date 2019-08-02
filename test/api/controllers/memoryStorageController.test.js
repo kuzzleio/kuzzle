@@ -471,7 +471,6 @@ describe('Test: memoryStorage controller', () => {
             ]
           }
         });
-
       
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(BadRequestError);
     });
@@ -677,6 +676,7 @@ describe('Test: memoryStorage controller', () => {
 
       req.input.body.points = [{name: 'foo', lon: '13.361389', lat: 'bar'}];
       should(() => msController.geoadd(req)).throw(BadRequestError);
+
       req.input.body.points = [
         {name: 'palermo', lon: '13.361389', lat: '38.115556'},
         {name: 'catania', lon: '15.087269', lat: '37.502669'}

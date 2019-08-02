@@ -24,6 +24,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     hotelClerk = new HotelClerk(kuzzle);
+
     request = new Request({
       index: 'foo',
       collection: 'bar',
@@ -38,7 +39,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       }
     }, {connectionId, token: null});
   });
-  
+
   it('should initialize base structures', () => {
     should(hotelClerk.rooms).be.an.Object().and.be.empty();
     should(hotelClerk.customers).be.an.Object().and.be.empty();

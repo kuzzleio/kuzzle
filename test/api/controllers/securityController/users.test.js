@@ -337,7 +337,7 @@ describe('Test: security controller - users', () => {
       return should(securityController.createUser(new Request({
         _id: 'test',
         body: {
-          content: { name: 'John Doe', profileIds: ['anonymous'] }
+          content: {name: 'John Doe', profileIds: ['anonymous']}
         }
       }))).be.rejectedWith(PreconditionError);
     });
@@ -391,6 +391,7 @@ describe('Test: security controller - users', () => {
     it('should reject an error if a strategy is unknown', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+      
       request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
 
       return should(securityController.createUser(request)).be.rejectedWith(BadRequestError);
@@ -414,6 +415,7 @@ describe('Test: security controller - users', () => {
     it('should reject if credentials already exist on the provided user id', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+
       kuzzle.pluginsManager.getStrategyMethod
         .withArgs('someStrategy', 'exists')
         .returns(sinon.stub().resolves(true));

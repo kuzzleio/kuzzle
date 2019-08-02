@@ -201,7 +201,7 @@ describe('Test: admin controller', () => {
     it('should throw an error if shutdown is in progress', () => {
       AdminController.__set__('_locks', { shutdown: true });
       adminController = new AdminController(kuzzle);
-      
+
       return should(() => {
         adminController.shutdown(request);
       }).throw(PreconditionError);
