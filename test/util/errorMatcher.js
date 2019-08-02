@@ -58,7 +58,7 @@ module.exports = {
         comparedStr = stableStringify(compared),
         res = comparedStr === expectedStr;
 
-      // makes debugging easier, since sinon do not have the expectedError
+      // makes debugging easier, since sinon does not have the expectedError
       // object
       if (!res) {
         // eslint-disable-next-line no-console
