@@ -37,6 +37,17 @@ Then(/^I should receive a ?(.*?) notification with field ?(.*?) equal to "([^"]*
   });
 });
 
+
+Then(/^The notification should have "([^"]*)" array with ([\d]*) element/, function (member, n_elements, callback) {
+  if (this.api.responses.result[member].length == n_elements) {
+    callback();
+  } else {
+    console.log('Wrong notification received: ');
+    console.dir(this.api.responses, { colors: true, depth: null });
+    callback('The document was supposed to contain the member "' + member + '" with ' + n_elements + ' elements : Has '+ this.api.responses.result[member].length +'.');
+  }
+});
+
 Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, member, callback) {
   if ((this.api.responses.result[member] || not) && !(this.api.responses.result[member] && not)) {
     callback();
