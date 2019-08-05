@@ -557,13 +557,9 @@ describe('Test: document controller', () => {
       });
 
       request.input.body = {ids: ['documentId', 'anotherDocumentId']};
-      documentController.getError = sinon.stub().returns(new PartialError);
-
+   
       return documentController.mDelete(request)
         .then(result => {
-          should(documentController.getError)
-            .be.calledOnce()
-            .be.calledWith('deletion_failed', ['anotherDocumentId']);
           should(result).match(['documentId']);
           should(request.error).be.instanceOf(PartialError);
           should(request.status).be.eql(206);

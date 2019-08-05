@@ -214,7 +214,6 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
       kuzzle.repositories.profile.load.resolves(null);
-      sinon.spy(securityController, 'getError');
 
       return should(securityController.getProfile(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
     });
@@ -507,12 +506,10 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject NotFoundError on a getProfileRights call with a bad id', () => {
       kuzzle.repositories.profile.load.resolves(null);
-      securityController.throw = sinon.spy();
 
       return securityController.getProfileRights(new Request({_id: 'test'}))
-        .catch(() => {
-          should(securityController.throw)
-            .be.calledWith('profile_not_found', 'test');
+        .catch((e) => {
+          should(e).be.instanceOf(NotFoundError);
         });
     });
   });

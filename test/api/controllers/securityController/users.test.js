@@ -75,7 +75,6 @@ describe('Test: security controller - users', () => {
 
     it('should reject with NotFoundError when the user is not found', () => {
       kuzzle.repositories.user.load.resolves(null);
-      sinon.spy(securityController, 'getError');
 
       return should(securityController.getUser(new Request({_id: 'i.dont.exist'})))
         .be.rejectedWith(NotFoundError);
@@ -669,7 +668,6 @@ describe('Test: security controller - users', () => {
 
     it('should return an error if the user is not found', () => {
       kuzzle.repositories.user.load.resolves(null);
-      sinon.spy(securityController, 'getError');
 
       return should(securityController.replaceUser(new Request({_id: 'i.dont.exist', body: {profileIds: ['anonymous']}}))).be.rejectedWith(NotFoundError);
     });
@@ -750,13 +748,10 @@ describe('Test: security controller - users', () => {
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
       kuzzle.repositories.user.load.resolves(null);
-      securityController.throw = sinon.spy();
 
       return securityController.getUserRights(new Request({ _id: 'i.dont.exist' }))
-        .catch(() => {
-          should(securityController.throw)
-            .be.calledOnce()
-            .be.calledWith('user_not_found', 'i.dont.exist');
+        .catch((e) => {
+          should(e).be.instanceOf(NotFoundError);
         });
     });
   });
