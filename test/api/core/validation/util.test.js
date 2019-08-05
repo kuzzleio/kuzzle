@@ -190,7 +190,7 @@ describe('Test: validation utilities', () => {
 
       should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).throw('Document: a message');
+      }).throw('Document: a message.');
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
