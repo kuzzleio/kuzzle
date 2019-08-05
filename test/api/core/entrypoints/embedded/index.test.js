@@ -136,6 +136,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     for (const Class of [HttpMock, WebSocketMock, SocketIOMock, MqttMock]) {
       Class.prototype.init = sinon.stub().resolves(true);
     }
+
   });
 
   afterEach(() => {
