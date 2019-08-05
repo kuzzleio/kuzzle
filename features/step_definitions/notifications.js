@@ -39,7 +39,7 @@ Then(/^I should receive a ?(.*?) notification with field ?(.*?) equal to "([^"]*
 
 
 Then(/^The notification should have "([^"]*)" array with ([\d]*) element/, function (member, n_elements, callback) {
-  if (this.api.responses.result[member].length == n_elements) {
+  if (this.api.responses.result[member].length === parseInt(n_elements)) {
     callback();
   } else {
     console.log('Wrong notification received: ');
