@@ -136,6 +136,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     for (const Class of [HttpMock, WebSocketMock, SocketIOMock, MqttMock]) {
       Class.prototype.init = sinon.stub().resolves(true);
     }
+
   });
 
   afterEach(() => {
@@ -268,7 +269,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     it('should throw if the provided port is not an integer', () => {
       kuzzle.config.server.port = 'foobar';
       should(() => entrypoint.init())
-        .throw(KuzzleInternalError, {message: 'Invalid network port number: foobar'});
+        .throw(KuzzleInternalError, {message: 'Invalid network port number: foobar.'});
     });
 
     it('should log and reject if an error occured', () => {
