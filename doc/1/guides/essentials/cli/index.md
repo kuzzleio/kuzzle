@@ -603,10 +603,10 @@ Options:
       --batch-size <batchSize>  Maximum batch size (see limits.documentsFetchCount config)
 ```
 
-Dump the index `<index>` in the directory `<path>`.  
+Dumps the index `<index>` in the directory `<path>`.  
 Each collection is dumped in a separate file in [JSON lines](http://jsonlines.org/) format.  
 
-The dump directory have the following structure:
+The dump directory has the following structure:
 
 ```bash
 <path>
@@ -627,5 +627,5 @@ Options:
       --batch-size <batchSize>  Maximum batch size (see limits.documentsWriteCount config)
 ```
 
-Restore a previously dumped index from directory `<path>` into Kuzzle.  
+Restores a previously dumped index from directory `<path>` into Kuzzle.  
 The index and destination collections must exist.  
