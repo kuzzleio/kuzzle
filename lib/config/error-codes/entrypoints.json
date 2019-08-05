@@ -20,6 +20,56 @@
           "class": "PluginImplementationError"
         }
       }
+    },
+    "http_router": {
+      "code": 2,
+      "errors": {
+        "unrecognized_http_method": {
+          "code" : 1,
+          "message": "Unrecognized HTTP method %s.",
+          "class": "BadRequestError"
+        },
+        "api_url_not_found": {
+          "code": 2,
+          "message": "API URL not found: %s.",
+          "class": "NotFoundError"
+        },
+        "invalid_request_content_type": {
+          "code": 3,
+          "message": "Invalid request content-type. Expected \"application/json\", got: \"%s\".",
+          "class": "BadRequestError"
+        },
+        "invalid_request_charset": {
+          "code": 4,
+          "message": "Invalid request charset. Expected \"utf-8\", got: \"%s\".",
+          "class": "BadRequestError"
+        },
+        "unable_to_attach_url": {
+          "code": 5,
+          "message": "Unable to attach URL %s: URL path already exists.",
+          "class": "InternalError"
+        },
+        "part_already_exists": {
+          "code": 6,
+          "message": "part already exists.",
+          "class": "InternalError"
+        },
+        "unable_to_convert_http_header_to_json": {
+          "code": 7,
+          "message": "Unable to convert HTTP x-kuzzle-volatile header to JSON.",
+          "class": "BadRequestError"
+        },
+        "unable_to_convert_http_body_to_json": {
+          "code": 8,
+          "message": "Unable to convert HTTP body to JSON.",
+          "class": "BadRequestError"
+        },
+        "request_error": {
+          "code": 9,
+          "message": "%s.",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }
