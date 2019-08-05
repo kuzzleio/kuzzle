@@ -37,7 +37,7 @@ Body:
   "controller": "document",
   "action": "mDelete",
   "body": {
-    "hits": ["<documentId>", "<anotherDocumentId>"]
+    "ids": ["<documentId>", "<anotherDocumentId>"]
   }
 }
 ```
