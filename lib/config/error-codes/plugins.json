@@ -153,6 +153,31 @@
           "code": 31,
           "message": "%s Only following http verbs are allowed: \"%s\". %s",
           "class": "PluginImplementationError"
+        },
+        "invalid_name_property": {
+          "code": 32,
+          "message": "[%s/manifest.json] Invalid \"name\" property: expected a non-empty string.",
+          "class": "PluginImplementationError"
+        },
+        "missing_name_property": {
+          "code": 33,
+          "message": "[%s/manifest.json] A \"name\" property is required.",
+          "class": "PluginImplementationError"
+        },
+        "function_validate_not_implemented": {
+          "code": 34,
+          "message": "The type %s must implement the function 'validate'.",
+          "class": "PluginImplementationError"
+        },
+        "function_validateFieldSpecification_not_implemented": {
+          "code": 35,
+          "message": "The type %s must implement the function 'validateFieldSpecification'.",
+          "class": "PluginImplementationError"
+        },
+        "function_getStrictness_not_implemented": {
+          "code": 36,
+          "message": "The allowing children type %s must implement the function 'getStrictness'.",
+          "class": "PluginImplementationError"
         }
       }
     },
@@ -247,6 +272,21 @@
         "plugin_is_not_a_constructor": {
           "code": 18,
           "message": "Plugin %s is not a constructor.",
+          "class": "PluginImplementationError"
+        },
+        "unable_to_load_manifest": {
+          "code": 19,
+          "message": "[%s] Unable to load the file 'manifest.json'.",
+          "class": "PluginImplementationError"
+        },
+        "version_mismatch": {
+          "code": 20,
+          "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
+          "class": "PluginImplementationError"
+        },
+        "plugin_error": {
+          "code": 21,
+          "message": "%s.",
           "class": "PluginImplementationError"
         }
       }
