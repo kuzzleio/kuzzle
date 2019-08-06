@@ -2861,6 +2861,7 @@ describe('Test: ElasticSearch service', () => {
           name: { type: 'keyword' },
           car: {
             dynamic: 'false',
+            type: 'nested',
             properties: {
               brand: { type: 'keyword' }
             }
