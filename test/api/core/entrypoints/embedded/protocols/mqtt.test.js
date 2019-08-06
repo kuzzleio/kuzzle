@@ -416,9 +416,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
           payload: Buffer.from('invalid')
         }, client);
 
-
         const matcher = errorMatcher.fromMessage(
-          'BadRequestError',
+          'protocols',
+          'mqtt',
+          'mqtt_request_error',
           'Unexpected token i in JSON at position 0');
 
         should(protocol._respond)
