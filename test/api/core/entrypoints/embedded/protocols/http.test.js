@@ -500,7 +500,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             cb = kuzzle.router.http.route.firstCall.args[1],
             result = new Request({});
 
-          result.setError(errorsManager.getError('protocols', 'http', 'http_request_error', 'foobar'));
+          result.setError(errorsManager.getError('network', 'http', 'http_request_error', 'foobar'));
 
           cb(result);
 
@@ -509,7 +509,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             .be.calledWithMatch(400, result.response.headers);
 
           const matcher = errorMatcher.fromMessage(
-            'protocols',
+            'network',
             'http',
             'http_request_error',
             'foobar');
@@ -740,9 +740,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         process.env.NODE_ENV = env;
 
         const
-          kerr = errorsManager.getError('protocols', 'http', 'http_request_error', 'test'),
+          kerr = errorsManager.getError('network', 'http', 'http_request_error', 'test'),
           matcher = errorMatcher.fromMessage(
-            'protocols',
+            'network',
             'http',
             'http_request_error',
             'test'),
