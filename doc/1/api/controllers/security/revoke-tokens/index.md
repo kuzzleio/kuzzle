@@ -46,9 +46,7 @@ Body:
 {
   "status": 200,
   "error": null,
-  "result": {
-    "_id": "<kuid>"
-    }
+  "result": null,
   "action": "revokeTokens",
   "controller": "security",
   "requestId": "<unique request identifier>"

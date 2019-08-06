@@ -207,6 +207,20 @@ Then(/^I'm ?(not)* able to find rights for user "([^"]*)"$/, function (not, id, 
     .catch(error => callback(not ? null : error));
 });
 
+Then(/^I'm ?(not)* able to check the token for current user/, function (not, callback) {
+
+  this.api.checkToken(this.currentUser.token)
+    .then(body => {
+      if (!body.result.valid) {
+        if (not) {
+          return callback();
+        }
+        return callback(new Error(body.result.state));
+      }
+      callback();
+    });
+});
+
 Then(/^I'm able to find my rights$/, function () {
   return this.api.getMyRights()
     .then(body => {
