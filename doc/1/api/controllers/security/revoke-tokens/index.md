@@ -17,9 +17,8 @@ Revokes every token of a given user.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_revokeTokens_/<_id>
+URL: http://kuzzle:7512/users/:_id/tokens
 Method: DELETE
-Body:
 ```
 
 ### Other protocols
