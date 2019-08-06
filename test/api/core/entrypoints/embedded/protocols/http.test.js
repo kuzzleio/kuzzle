@@ -504,9 +504,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
           cb(result);
 
-          should(result.response.headers).have.value(
-            'Content-Length',
-            String(response.end.firstCall.args[0].length));
+          should(result.response.getHeader('Content-Length'))
+            .eql(String(response.end.firstCall.args[0].length));
 
           should(response.writeHead)
             .be.calledOnce()
@@ -547,9 +546,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(content.toString()).eql(sent.toString());
 
-        should(result.response.headers).have.value(
-          'Content-Length',
-          String(sent.length));
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(sent.length));
       });
 
       it('should output a stringified buffer as a raw buffer result', () => {
@@ -572,9 +570,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(sent).be.an.instanceof(Buffer);
         should(sent.toString()).eql('test');
 
-        should(result.response.headers).have.value(
-          'Content-Length',
-          String(sent.length));
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(sent.length));
       });
 
       it('should output serialized JS objects marked as raw', () => {
@@ -593,9 +590,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         const expected = Buffer.from(JSON.stringify([{foo: 'bar'}]));
 
         should(response.end).be.calledWith(expected);
-        should(result.response.headers).have.value(
-          'Content-Length',
-          String(expected.length));
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(expected.length));
       });
 
       it('should output scalar content as-is if marked as raw', () => {
@@ -617,9 +613,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           .be.calledOnce()
           .be.calledWithExactly(expected);
 
-        should(result.response.headers).have.value(
-          'Content-Length',
-          String(expected.length));
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(expected.length));
       });
 
       it('should send a 0-length-content response if marked as raw and content is null', () => {
@@ -635,9 +630,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         cb(result);
 
         should(response.end).be.calledWith(Buffer.from(''));
-        should(result.response.headers).have.value(
-          'Content-Length',
-          String('0'));
+        should(result.response.getHeader('Content-Length'))
+          .eql(String('0'));
       });
 
       it('should compress the outgoing message with deflate if asked to', () => {
@@ -761,9 +755,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         cb(request);
 
         should(response.end).be.calledWith(Buffer.from(result));
-        should(request.response.headers).have.value(
-          'Content-Length',
-          String(result.length));
+        should(request.response.getHeader('Content-Length'))
+          .eql(String(result.length));
       });
     });
   });
