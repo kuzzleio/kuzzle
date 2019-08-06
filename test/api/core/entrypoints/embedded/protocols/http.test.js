@@ -632,8 +632,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         cb(result);
 
         should(response.end).be.calledWith(Buffer.from(''));
-        should(result.response.getHeader('Content-Length'))
-          .eql(String('0'));
+        should(result.response.getHeader('Content-Length')).eql('0');
       });
 
       it('should compress the outgoing message with deflate if asked to', () => {
