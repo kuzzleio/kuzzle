@@ -1,20 +1,18 @@
 const
+  errorsManager = require('../../lib/config/error-codes/throw'),
   stableStringify = require('json-stable-stringify'),
-  {
-    Request,
-    errors
-  } = require('kuzzle-common-objects');
+  { Request } = require('kuzzle-common-objects');
 
 /**
  * Returns a sinon matcher tailored-made to match error API responses depending
  * on the current process.env.NODE_ENV environment variable.
  */
 module.exports = {
-  fromMessage: (className, message) => {
+  fromMessage: (domain, subdomain, errorName, message) => {
     let expectedError = new Request(
       {},
       {
-        error: new errors[className](message)
+        error: errorsManager.getError(domain, subdomain, errorName, message)
       });
 
     expectedError = expectedError.response.toJSON().content;
@@ -58,7 +56,7 @@ module.exports = {
         comparedStr = stableStringify(compared),
         res = comparedStr === expectedStr;
 
-      // makes debugging easier, since sinon do not have the expectedError
+      // makes debugging easier, since sinon does not have the expectedError
       // object
       if (!res) {
         // eslint-disable-next-line no-console

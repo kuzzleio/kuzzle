@@ -280,7 +280,7 @@ describe('Plugin Context', () => {
       should(strategies.remove).be.a.Function();
     });
 
-    it('should expose an SDK client accessor', () => {
+    it('should expose a SDK client accessor', () => {
       const sdk = context.accessors.sdk;
 
       should(sdk.as).be.a.Function();
@@ -293,10 +293,25 @@ describe('Plugin Context', () => {
       should(sdk.ms).be.an.Object();
       should(sdk.security).be.an.Object();
       should(sdk.server).be.an.Object();
+      should(sdk.realtime).be.an.Object();
+
+      sdk.realtime.query = sinon.stub().resolves({
+        result: {
+          count: 10
+        }
+      });
 
       should(() => {
         sdk.realtime.subscribe();
       }).throw(PluginImplementationError);
+
+      should(() => {
+        sdk.realtime.unsubscribe();
+      }).throw(PluginImplementationError);
+
+      should.doesNotThrow(() => {
+        sdk.realtime.count('foo');
+      });
     });
 
     describe('#accessors.sdk.as', () => {
@@ -475,12 +490,22 @@ describe('Plugin Context', () => {
 
       });
 
-      it('should reject if trying to call the realtime controller', () => {
-        return should(context.accessors.execute(new Request({
-          controller: 'realtime',
-          action: 'publish'
-        })))
-          .be.rejectedWith(/Realtime controller is not available in plugins\. You should use plugin hooks instead/);
+      it('should reject if trying to call forbidden methods from realtime controller', () => {
+        return Promise.resolve()
+          .then(() => {
+            return should(context.accessors.execute(new Request({
+              controller: 'realtime',
+              action: 'subscribe'
+            })))
+              .be.rejectedWith(/"realtime:subscribe" method is not available in plugins\. You should use plugin hooks instead/);
+          })
+          .then(() => {
+            return should(context.accessors.execute(new Request({
+              controller: 'realtime',
+              action: 'unsubscribe'
+            })))
+              .be.rejectedWith(/"realtime:unsubscribe" method is not available in plugins\. You should use plugin hooks instead/);
+          });
       });
     });
 
