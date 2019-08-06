@@ -750,7 +750,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           raw : true
         });
 
-        request.response.setHeader('content-length', 'one does not simply set a content length');
+        request.response.setHeader(
+          'Content-Length',
+          'one does not simply set a content length');
 
         cb(request);
 
