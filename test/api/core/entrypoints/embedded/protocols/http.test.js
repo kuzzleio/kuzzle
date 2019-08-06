@@ -16,7 +16,8 @@ const
   should = require('should'),
   sinon = require('sinon'),
   { Writable } = require('stream'),
-  errorMatcher = require(`${root}/test/util/errorMatcher`);
+  errorMatcher = require(`${root}/test/util/errorMatcher`),
+  errorsManager = require(`${root}/lib/config/error-codes/throw`);
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   const
@@ -126,7 +127,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     });
 
     it('should set decoders with throwables if compression is disabled', () => {
-      const message = 'Compression support is disabled';
+      const message = 'Compression support is disabled.';
       entrypoint.config.protocols.http.allowCompression = false;
 
       return protocol.init(entrypoint)
@@ -135,7 +136,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
           should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
           should(protocol.decoders.identity).be.a.Function();
-
           should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
           should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
           should(protocol.decoders.identity('foobar')).eql(null);
@@ -203,7 +203,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            {message: 'Maximum HTTP request size exceeded'});
+            {message: 'Maximum HTTP request size exceeded.'});
       });
 
       it('should handle json content', done => {
@@ -257,7 +257,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            {message: 'Too many encodings'});
+            {message: 'Too many encodings.'});
       });
 
       it('should reject if an unknown compression algorithm is provided', () => {
@@ -271,7 +271,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            {message: 'Unsupported compression algorithm "foobar"'});
+            {message: 'Unsupported compression algorithm "foobar".'});
       });
 
       it('should handle chain pipes properly to match multi-layered compression', () => {
@@ -357,7 +357,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           try {
             should(error)
               .instanceOf(SizeLimitError)
-              .match({message: 'Maximum HTTP request size exceeded'});
+              .match({message: 'Maximum HTTP request size exceeded.'});
 
             // called automatically when a pipe rejects a callback, but not
             // by our mock obviously
@@ -384,7 +384,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
                 sinon.match.instanceOf(ClientConnection),
                 { url: request.url, method: request.method },
                 response,
-                { message: 'Maximum HTTP request size exceeded' });
+                { message: 'Maximum HTTP request size exceeded.' });
             done();
           } catch (e) {
             done(e);
@@ -406,7 +406,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            { message: 'Unsupported content type: foo/bar' });
+            { message: 'Unsupported content type: foo/bar.' });
       });
 
       it('should reply with error if the binary file size sent exceeds the maxFormFileSize', () => {
@@ -500,7 +500,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             cb = kuzzle.router.http.route.firstCall.args[1],
             result = new Request({});
 
-          result.setError(new BadRequestError('foobar'));
+          result.setError(errorsManager.getError('protocols', 'http', 'http_request_error', 'foobar'));
 
           cb(result);
 
@@ -512,7 +512,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             .be.calledWithMatch(400, result.response.headers);
 
           const matcher = errorMatcher.fromMessage(
-            'BadRequestError',
+            'protocols',
+            'http',
+            'http_request_error',
             'foobar');
 
           should(response.end)
@@ -730,7 +732,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             {id: 'connectionId'},
             payload,
             response,
-            {message: 'foobar'});
+            {message: 'foobar.'});
 
         should(protocol._replyWithError.firstCall.args[3])
           .be.instanceOf(BadRequestError);
@@ -779,8 +781,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         process.env.NODE_ENV = env;
 
         const
-          kerr = new BadRequestError('test'),
-          matcher = errorMatcher.fromMessage('BadRequestError', 'test'),
+          kerr = errorsManager.getError('protocols', 'http', 'http_request_error', 'test'),
+          matcher = errorMatcher.fromMessage(
+            'protocols',
+            'http',
+            'http_request_error',
+            'test'),
           expected = (new Request(payload, {connectionId, kerr})).serialize();
 
         // likely to be different, and we do not care about it
@@ -839,7 +845,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         protocol._createWritableStream(request, {});
       } catch (e) {
         should(e).be.instanceOf(BadRequestError);
-        should(e.message).be.equals('Unsupported content type: application/toto');
+        should(e.message).be.equals('Unsupported content type: application/toto.');
       }
     });
   });

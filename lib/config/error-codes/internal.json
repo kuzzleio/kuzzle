@@ -120,6 +120,141 @@
           "class": "NotFoundError"
         }
       }
+    },
+    "validation": {
+      "code": 5,
+      "errors": {
+        "missing_typename_property": {
+          "code": 1,
+          "message": "The typeName property must be defined in the validation type object.",
+          "class": "PluginImplementationError"
+        },
+        "missing_function_validate": {
+          "code": 2,
+          "message": "The type %s must implement the function 'validate'.",
+          "class": "PluginImplementationError"
+        },
+        "missing_function_validatefieldspecification": {
+          "code": 3,
+          "message": "The type %s must implement the function 'validateFieldSpecification'.",
+          "class": "PluginImplementationError"
+        },
+        "missing_function_getstrictness": {
+          "code": 4,
+          "message": "The allowing children type %s must implement the function 'getStrictness'.",
+          "class": "PluginImplementationError"
+        },
+        "type_already_defined": {
+          "code": 5,
+          "message": "The type %s is already defined.",
+          "class": "PluginImplementationError"
+        },
+        "object_format_error": {
+          "code": 6,
+          "message": "All levels of an object have to be defined in the specification.",
+          "class": "PreconditionError"
+        },
+        "type_not_allowed": {
+          "code": 7,
+          "message": "The field type %s is not allowed to have children fields.",
+          "class": "PreconditionError"
+        },
+        "parent_field_not_defined": {
+          "code": 8,
+          "message": "The parent field of the field \"%s\" is not defined.",
+          "class": "PreconditionError"
+        },
+        "errorcontext_document": {
+          "code": 9,
+          "message": "Document: %s.",
+          "class": "BadRequestError"
+        },
+        "invalid_formats_option": {
+          "code": 10,
+          "message": "Invalid \"formats\" option: must be a non-empty array.",
+          "class": "PreconditionError"
+        },
+        "unrecognized_format_name": {
+          "code": 11,
+          "message": "Unrecognized format name%s: %s.",
+          "class": "PreconditionError"
+        },
+        "invalid_range_option": {
+          "code": 12,
+          "message": "Invalid \"range\" option definition.",
+          "class": "PreconditionError"
+        },
+        "invalid_range": {
+          "code": 13,
+          "message": "Invalid range: min > max.",
+          "class": "PreconditionError"
+        },
+        "invalid_range_type": {
+          "code": 14,
+          "message": "Invalid \"range.%s\" option: must be of type \"number\".",
+          "class": "PreconditionError"
+        },
+        "invalid_range_format": {
+          "code": 15,
+          "message": "Option \"%s\": invalid format.",
+          "class": "PreconditionError"
+        },
+        "unable_to_parse_range_value": {
+          "code": 16,
+          "message": "Unable to parse the range value \"%s\".",
+          "class": "PreconditionError"
+        },
+        "notempty_option_type": {
+          "code": 17,
+          "message": "Option \"notEmpty\" must be of type \"boolean\".",
+          "class": "PreconditionError"
+        },
+        "missing_values_option": {
+          "code": 18,
+          "message": "Option \"values\" is required.",
+          "class": "PreconditionError"
+        },
+        "values_option_cannot_be_empty": {
+          "code": 19,
+          "message": "Option \"values\" must be a non-empty array.",
+          "class": "PreconditionError"
+        },
+        "invalid_values_format": {
+          "code": 20,
+          "message": "Values must be of type \"string\". Invalid value%s: %s.",
+          "class": "PreconditionError"
+        },
+        "shapetypes_option_cannot_be_empty": {
+          "code": 21,
+          "message": "Option \"shapeTypes\" must be a non-empty array.",
+          "class": "PreconditionError"
+        },
+        "invalid_shape": {
+          "code": 22,
+          "message": "Invalid shape%s: %s.",
+          "class": "PreconditionError"
+        },
+        "strict_option_type": {
+          "code": 23,
+          "message": "Option \"strict\" must be of type \"boolean\".",
+          "class": "PreconditionError"
+        },
+        "invalid_length_option": {
+          "code": 24,
+          "message": "Invalid \"length\" option definition.",
+          "class": "PreconditionError"
+        },
+        "invalid_length_type": {
+          "code": 25,
+          "message": "Invalid \"length.%s\" option: must be of type \"number\".",
+          "class": "PreconditionError"
+        },
+        "invalid_length_range": {
+          "code": 26,
+          "message": "Invalid length range: min > max.",
+          "class": "PreconditionError"
+        }
+      }
     }
   }
 }

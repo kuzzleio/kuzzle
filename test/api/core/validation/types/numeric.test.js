@@ -74,22 +74,22 @@ describe('Test: validation/types/numeric', () => {
     it('should throw if "range" is not an object', () => {
       [[], undefined, null, 'foobar', 123].forEach(range => {
         should(() => numericType.validateFieldSpecification({range}))
-          .throw(PreconditionError, {message: 'Invalid "range" option definition'});
+          .throw(PreconditionError, {message: 'Invalid "range" option definition.'});
       });
     });
 
     it('should throw if an unrecognized property is passed to the range options', () => {
       should(() => numericType.validateFieldSpecification({range: {foo: 123}}))
-        .throw(PreconditionError, {message: 'Invalid "range" option definition'});
+        .throw(PreconditionError, {message: 'Invalid "range" option definition.'});
     });
 
     it('should throw if a non-numeric value is passed to the min or max properties', () => {
       [[], {}, undefined, null, 'foo'].forEach(v => {
         should(() => numericType.validateFieldSpecification({range: {min: v}}))
-          .throw(PreconditionError, {message: 'Invalid "range.min" option: must be of type "number"'});
+          .throw(PreconditionError, {message: 'Invalid "range.min" option: must be of type "number".'});
 
         should(() => numericType.validateFieldSpecification({range: {max: v}}))
-          .throw(PreconditionError, {message: 'Invalid "range.max" option: must be of type "number"'});
+          .throw(PreconditionError, {message: 'Invalid "range.max" option: must be of type "number".'});
       });
     });
 
@@ -99,7 +99,7 @@ describe('Test: validation/types/numeric', () => {
           min: 42,
           max: 41
         }
-      })).throw(PreconditionError, {message: 'Invalid range: min > max'});
+      })).throw(PreconditionError, {message: 'Invalid range: min > max.'});
     });
   });
 });
