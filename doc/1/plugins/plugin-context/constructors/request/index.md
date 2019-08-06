@@ -180,7 +180,7 @@ async sendPdf (request) {
       'Content-Disposition': `attachment; filename="file.pdf"`,
       'Cache-Control': 'no-cache'
     }
-  );
+  });
 
   return file;
 }
