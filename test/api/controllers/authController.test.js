@@ -189,6 +189,14 @@ describe('Test the auth controller', () => {
         });
     });
 
+    it('should expire every tokens at once', () => {
+      request.input.args.global = true;
+      return authController.logout(request)
+        .then(() => {
+          should(kuzzle.repositories.token.deleteByUserId).calledWith('foo');
+        });
+    });
+
     it('should emit an error if the token cannot be expired', () => {
       const error = new Error('Mocked error');
 
