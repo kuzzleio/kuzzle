@@ -990,7 +990,7 @@ class HttpApi {
 
   revokeTokens(id) {
     return this.callApi({
-      url: this.apiPath(`_revokeTokens/${id}`),
+      url: this.apiPath(`users/${id}/tokens`),
       method: 'DELETE'
     });
   }

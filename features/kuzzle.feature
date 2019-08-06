@@ -590,6 +590,16 @@ Feature: Kuzzle functional tests
     And The mapping should contain "bar" field of type "keyword"
 
   @security
+  Scenario: revoke user's tokens
+    When I create a new role "role1" with id "role1"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a user "user1" with id "user1-id"
+    Then I log in as user1:testpwd1 expiring in 1h
+    Then I'm able to find rights for user "user1-id"
+    Then I revoke all tokens of the user "user1-id"
+    Then I'm not able to find rights for user "user1-id"
+
+  @security
   Scenario: user crudl
     When I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -604,7 +614,6 @@ Feature: Kuzzle functional tests
     Then I am able to perform a scrollUsers request
     Then I delete the user "user2-id"
     Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
-    Then I revoke all tokens of the user "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]},"strategies":["local"]}
     Then I log out
