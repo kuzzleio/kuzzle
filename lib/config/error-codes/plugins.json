@@ -2,7 +2,7 @@
   "code": 3,
   "subdomains": {
     "validation": {
-      "code": 1, 
+      "code": 1,
       "errors" : {
         "invalid_plugin_name": {
           "code": 1,
@@ -184,9 +184,9 @@
     "runtime": {
       "code": 2,
       "errors": {
-        "cannot_use_realtime_controller": {
+        "cannot_use_realtime_method": {
           "code": 1,
-          "message": "Realtime controller is not available in plugins. You should use plugin hooks instead.",
+          "message": "\"realtime:%s\" method is not available in plugins. You should use plugin hooks instead.",
           "class": "PluginImplementationError"
         },
         "plugin_initialization_failed": {
