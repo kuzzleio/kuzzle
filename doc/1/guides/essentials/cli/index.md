@@ -557,10 +557,10 @@ The roles, profiles and users definition follow the same structure as in the bod
 ```bash
 ./bin/kuzzle encryptSecrets [file] [options]
 
-Options:
-      --vault-key <vaultKey>     Vault key used to encrypt secrets
-      --outputFile <outputFile>  Output file to write encrypted secrets
-      --noint                    non interactive mode
+# Options:
+#       --vault-key <vaultKey>     Vault key used to encrypt secrets
+#       --outputFile <outputFile>  Output file to write encrypted secrets
+#       --noint                    non interactive mode
 ```
 
 Encrypts the provided `file` with the provided `vaultKey`.  
@@ -578,10 +578,10 @@ See also [Secrets Vault](/core/1/guides/essentials/secrets-vault)
 ```bash
 ./bin/kuzzle decryptSecrets [file] [options]
 
-Options:
-      --vault-key <vaultKey>     Vault key used to encrypt secrets
-      --outputFile <outputFile>  Output file to write encrypted secrets
-      --noint                    non interactive mode
+# Options:
+#       --vault-key <vaultKey>     Vault key used to encrypt secrets
+#       --outputFile <outputFile>  Output file to write encrypted secrets
+#       --noint                    non interactive mode
 ```
 
 Decrypts the provided `file` with the provided `vaultKey`.  
@@ -599,8 +599,8 @@ See also [Secrets Vault](/core/1/guides/essentials/secrets-vault)
 ```bash
 ./bin/kuzzle indexDump <index> <path> [options]
 
-Options:
-      --batch-size <batchSize>  Maximum batch size (see limits.documentsFetchCount config)
+# Options:
+#       --batch-size <batchSize>  Maximum batch size (see limits.documentsFetchCount config)
 ```
 
 Dumps the index `<index>` in the directory `<path>`.  
@@ -623,8 +623,8 @@ This dump is intended to be loaded with the `indexRestore` command.
 ```bash
 ./bin/kuzzle indexRestore <path> [options]
 
-Options:
-      --batch-size <batchSize>  Maximum batch size (see limits.documentsWriteCount config)
+# Options:
+#       --batch-size <batchSize>  Maximum batch size (see limits.documentsWriteCount config)
 ```
 
 Restores a previously dumped index from directory `<path>` into Kuzzle.  
