@@ -73,16 +73,6 @@
           "code": 2,
           "message": "Invalid token",
           "class": "UnauthorizedError"
-        },
-        "token_expired": {
-          "code": 3,
-          "message": "Token Expired",
-          "class": "UnauthorizedError"
-        },
-        "jwt_error": {
-          "code": 4,
-          "message": "Json Web Token Error",
-          "class": "UnauthorizedError"
         }
       }
     },
