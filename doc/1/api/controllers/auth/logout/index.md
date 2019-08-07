@@ -31,7 +31,7 @@ Headers: Authorization: "Bearer <authentication token>"
   "controller": "auth",
   "action": "logout",
   "jwt": "<authentication token>",
-  "global": "<global>"
+  "global": "<true|false>"
 }
 ```
 
@@ -43,7 +43,7 @@ Headers: Authorization: "Bearer <authentication token>"
 
 ### Optional:
 
-* `global`: Boolean that enable or disable a global disconnection by revoking every sessions at once. (default: false)
+* `global`: Boolean that enable or disable a global disconnection by revoking every sessions at once. (default: `false`)
 
 
 ---
