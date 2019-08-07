@@ -504,6 +504,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
           cb(result);
 
+          should(result.response.getHeader('Content-Length'))
+            .eql(String(response.end.firstCall.args[0].length));
+
           should(response.writeHead)
             .be.calledOnce()
             .be.calledWithMatch(400, result.response.headers);
@@ -544,6 +547,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         const sent = response.end.firstCall.args[0];
 
         should(content.toString()).eql(sent.toString());
+
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(sent.length));
       });
 
       it('should output a stringified buffer as a raw buffer result', () => {
@@ -565,6 +571,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(sent).be.an.instanceof(Buffer);
         should(sent.toString()).eql('test');
+
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(sent.length));
       });
 
       it('should output serialized JS objects marked as raw', () => {
@@ -580,8 +589,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         cb(result);
 
-        should(response.end)
-          .be.calledWith(Buffer.from(JSON.stringify([{foo: 'bar'}])));
+        const expected = Buffer.from(JSON.stringify([{foo: 'bar'}]));
+
+        should(response.end).be.calledWith(expected);
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(expected.length));
       });
 
       it('should output scalar content as-is if marked as raw', () => {
@@ -597,9 +609,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         cb(result);
 
+        const expected = Buffer.from('content');
+
         should(response.end)
           .be.calledOnce()
-          .be.calledWithExactly(Buffer.from('content'));
+          .be.calledWithExactly(expected);
+
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(expected.length));
       });
 
       it('should send a 0-length-content response if marked as raw and content is null', () => {
@@ -615,7 +632,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         cb(result);
 
         should(response.end).be.calledWith(Buffer.from(''));
-        should(result.response.headers['Content-Length']).be.eql('0');
+        should(result.response.getHeader('Content-Length')).eql('0');
       });
 
       it('should compress the outgoing message with deflate if asked to', () => {
@@ -668,7 +685,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         cb(result);
 
-        should(response.setHeader).not.calledWith('Content-Encoding', sinon.match.string);
+        should(response.setHeader).not.calledWith(
+          'Content-Encoding',
+          sinon.match.string);
         should(zlibstub.deflate).not.called();
         should(zlibstub.gzip).not.called();
       });
@@ -720,8 +739,29 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(zlibstub.deflate).not.called();
         should(zlibstub.gzip).calledOnce();
       });
-    });
 
+      it('should overwrite the content-length even if one was set', () => {
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          request = new Request({}),
+          result = 'foobar';
+
+        request.setResult(result, {
+          raw : true
+        });
+
+        request.response.setHeader(
+          'Content-Length',
+          'one does not simply set a content length');
+
+        cb(request);
+
+        should(response.end).be.calledWith(Buffer.from(result));
+        should(request.response.getHeader('Content-Length'))
+          .eql(String(result.length));
+      });
+    });
   });
 
   describe('#_replyWithError', () => {
@@ -757,6 +797,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(entrypoint.logAccess.firstCall.args[0].serialize())
           .match(expected);
 
+        should(response.end)
+          .calledOnce()
+          .calledWith(sinon.match(matcher));
+
         should(response.writeHead)
           .be.calledOnce()
           .be.calledWith(
@@ -765,12 +809,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
               'Content-Type': 'application/json',
               'Access-Control-Allow-Origin': '*',
               'Access-Control-Allow-Methods' : 'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile'
+              'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile',
+              'Content-Length': String(response.end.firstCall.args[0].length)
             });
-
-        should(response.end)
-          .calledOnce()
-          .calledWith(sinon.match(matcher));
 
         entrypoint.logAccess.resetHistory();
         response.writeHead.resetHistory();

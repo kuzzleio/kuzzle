@@ -329,6 +329,8 @@ jobs:
           - npm run doc-upload
         skip_cleanup: true
 
+      after_deploy:
+        - npm run doc-cloudfront
 
 # # ---------------------------------------
 # # Notifications

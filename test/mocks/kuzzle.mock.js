@@ -343,8 +343,6 @@ class KuzzleMock extends Kuzzle {
 
     this.start = sinon.stub().resolves();
 
-    this.getError = sinon.stub().returns({});
-
     this.statistics = {
       completedRequest: this.sandbox.spy(),
       newConnection: this.sandbox.stub(),

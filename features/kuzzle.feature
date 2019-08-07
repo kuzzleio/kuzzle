@@ -326,6 +326,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentAda"
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a document notification with field action equal to "update"
+    And The notification should have "_updatedFields" array with 1 element
     And The notification should have a "_source" member
     And The notification should have volatile
 
