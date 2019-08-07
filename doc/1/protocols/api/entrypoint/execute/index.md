@@ -10,7 +10,7 @@ title: execute
 
 Executes a Kuzzle's [API action](/core/1/api/).
 
-The `execute` function main usage is to forward users API requests to Kuzzle.
+The `execute` function main usage is to forward users API requests to Kuzzle. 
 
 ---
 
@@ -24,19 +24,22 @@ execute(request, [callback]);
 
 | Arguments  | Type                                                             | Description                                                                                              |
 | ---------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `request`  | [`Request`](/core/1/protocols/api/context/request) | The API query to execute                                                                                 |
-| `callback` | <pre>function</pre>                                              | Callback to call with the API execution result.<br/>If not provided, `execute` returns a promise instead |
+| `request`  | <pre>[Request](/core/1/protocols/api/context/request)</pre> | Standardized API request |
+| `callback(result)` | <pre>function</pre> | Callback receiving the response |
 
 ---
 
 ## Return
 
-The `execute` function resolves to an updated Request object, with its [response part](/core/1/protocols/api/context/request) set.
+The `execute` function resolves to a serialized Kuzzle response JSON object.
 
-How the response is returned depends whether a callback argument is provided:
+This resulting object contains the following properties:
 
-- if it is: the `execute` function returns nothing, and the callback is called once the API call is finished, with the following arguments: `callback(error, request)`
-- otherwise: the `execute` function returns a promise, resolving to the updated request, or rejected with a KuzzleError object
+* `raw` (boolean, default `false`): if `false`, the response content is a JSON object following the [Kuzzle standard response format](core/1/api/essentials/kuzzle-response/). Otherwise, the content can be anything, depending on the executed API action.
+* `status` (integer, default `200`): request status, following the standard [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
+* `requestId` (string, nullable): request identifier set by clients, and used to link asynchronous responses to emitted requests.
+* `content`: the response itself, this is the payload that should be sent to the requesting client following the implemented protocol format. This property type partly depends on the value of the `raw` flag (if `false`, then the content is always a JSON object).
+* `headers` (JSON object, default `{}`): custom headers/optional response properties that can be added by the executed API action. Whether the protocol interprets and uses them depends on its nature and implementation.
 
 ---
 
@@ -44,18 +47,34 @@ How the response is returned depends whether a callback argument is provided:
 
 ```js
 const request = new context.Request({
-  index: 'index',
-  collection: 'collection',
-  controller: 'document',
-  action: 'get',
-  _id: 'documentID'
+  controller: 'server',
+  action: 'now'
 });
 
-try {
-  // "request" is the updated Request object
-  // The API response is accessed through "request.response"
-  request = await context.accessors.execute(request);
-} catch (error) {
-  // "error" is a KuzzleError object
-}
+context.accessors.execute(request, result => {
+  // Content example for the result object:
+  // 
+  // { 
+  //   "raw": false,
+  //   "status": 200,
+  //   "requestId": "b0eec0b9-f458-4ec8-8aee-b86d7a922290",
+  //   "content": { 
+  //     "requestId": "b0eec0b9-f458-4ec8-8aee-b86d7a922290",
+  //     "status": 200,
+  //     "error": null,
+  //     "controller": "server",
+  //     "action": "now",
+  //     "collection": null,
+  //     "index": null,
+  //     "volatile": null,
+  //     "result": { "now": 1564644834036 } 
+  //   },
+  //   "headers": { 
+  //     "content-type": "application/json",
+  //     "Accept-Encoding": "gzip,deflate,identity",
+  //     "Access-Control-Allow-Origin": "*",
+  //     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS,HEAD"
+  //   } 
+  // }
+});
 ```
