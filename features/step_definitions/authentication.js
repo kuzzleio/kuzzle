@@ -28,6 +28,7 @@ When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin
 
       this.currentToken = {jwt: body.result.jwt};
       this.currentUser.token = body.result.jwt;
+      
 
       if (cantLogin) {
         callback('Should not be able to login');
@@ -53,6 +54,26 @@ Then(/^I log ?out$/, function (callback) {
   }
 
   this.api.logout(this.currentUser.token)
+    .then(body => {
+      delete this.currentUser;
+      if (body.error) {
+        return callback(new Error(body.error.message));
+      }
+      callback();
+    })
+    .catch(error => {
+      delete this.currentUser;
+      callback(error);
+    });
+});
+
+Then(/^I logout all sessions at once/, function (callback) {
+  if (!this.currentUser || !this.currentUser.token) {
+    callback(new Error('Cannot retrieve jwt token'));
+    return false;
+  }
+
+  this.api.logout(this.currentUser.token, true)
     .then(body => {
       delete this.currentUser;
       if (body.error) {

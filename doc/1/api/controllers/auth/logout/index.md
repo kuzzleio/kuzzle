@@ -19,7 +19,7 @@ If there were any, real-time subscriptions are cancelled.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_logout[?global=<global>]
+URL: http://kuzzle:7512/_logout[?global]
 Method: POST
 Headers: Authorization: "Bearer <authentication token>"
 ```

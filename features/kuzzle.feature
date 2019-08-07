@@ -467,6 +467,17 @@ Feature: Kuzzle functional tests
     And The token is invalid
 
   @security
+  Scenario: logout every sessions at once
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I check the JWT Token
+    And The token is valid
+    Then I logout all sessions at once
+    Then I can't write the document
+    Then I check the JWT Token
+    And The token is invalid
+
+  @security
   Scenario: refresh token
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
