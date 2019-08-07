@@ -160,9 +160,14 @@
           "class": "UnauthorizedError"
         },
         "forbidden_action": {
-          "code": 6,
+          "code": 7,
           "message": "Forbidden action %s for user %s.",
           "class": "ForbiddenError"
+        },
+        "client_connection_dropped": {
+          "code": 8,
+          "message": "Client connection dropped",
+          "class": "BadRequestError"
         }
       }
     },
@@ -248,6 +253,11 @@
           "code": 13,
           "message": "Internal database inconsistency detected: existing credentials found on non-existing user %s.",
           "class": "InternalError"
+        },
+        "validate_method": {
+          "code": 14,
+          "message": "%s.",
+          "class": "BadRequestError"
         }
       }
     },
