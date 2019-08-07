@@ -233,7 +233,6 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForSet(req)).throw(BadRequestError);
-
       req.input.body.value = { foo: 'bar' };
       should(() => extractArgumentsFromRequestForSet(req)).throw(BadRequestError);
     });
@@ -472,7 +471,7 @@ describe('Test: memoryStorage controller', () => {
             ]
           }
         });
-
+      
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(BadRequestError);
     });
   });

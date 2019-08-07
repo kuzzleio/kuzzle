@@ -5,7 +5,14 @@ const
   errorsManager = require('../../lib/config/error-codes/throw'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
   {
-    errors: { InternalError, ExternalServiceError }
+    errors: { 
+      InternalError,
+      ExternalServiceError,
+      NotFoundError,
+      PreconditionError,
+      PartialError,
+      UnauthorizedError
+    }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
@@ -54,7 +61,7 @@ describe('/lib/api/kuzzle.js', () => {
           {
             errorName: 'api-server-elasticsearch_down',
             code: 1,
-            message: 'ElasticSearch is down: {"status":"red"}'
+            message: 'ElasticSearch is down: {"status":"red"}.'
           }
         );
     });
@@ -68,6 +75,55 @@ describe('/lib/api/kuzzle.js', () => {
             errorName: 'internal-unexpected-unknown_error',
             code: 1,
             message: 'Unknown error: {"status":"error"}.'
+          }
+        );
+    });
+
+    it('should throw an NotFoundError with default name, msg and code', () => {
+      should(() => errorsManager.throw('api', 'admin', 'database_not_found', 'fake_database'))
+        .throw(
+          NotFoundError,
+          {
+            errorName: 'api-admin-database_not_found',
+            code: 1,
+            message: 'Database fake_database not found.'
+          }
+        );
+    });
+
+    it('should throw a PreconditionError with default name, msg and code', () => {
+      should(() => errorsManager.throw('api', 'admin', 'action_locked', 'Kuzzle is already shutting down'))
+        .throw(
+          PreconditionError,
+          {
+            errorName: 'api-admin-action_locked',
+            code: 2,
+            message: 'Lock action error: Kuzzle is already shutting down.'
+          }
+        );
+    });
+
+    it('should throw an UnauthorizedError with default name, msg and code', () => {
+      should(() => errorsManager.throw('api', 'auth', 'invalid_token'))
+        .throw(
+          UnauthorizedError,
+          {
+            errorName: 'api-auth-invalid_token',
+            code: 2,
+            message: 'Invalid token.'
+          }
+        );
+    });
+
+    it('should throw a PartialError with default name, msg and code', () => {
+      should(() => errorsManager.throw('api', 'bulk', 'document_creations_failed', ['foo', 'bar']))
+        .throw(
+          PartialError,
+          {
+            errorName: 'api-bulk-document_creations_failed',
+            errors: ['foo', 'bar'],
+            code: 1,
+            message: 'Some document creations failed: foo,bar.'
           }
         );
     });
