@@ -17,7 +17,7 @@
         "service_unavailable": {
           "code": 1,
           "message": "Service unavailable: %s.",
-          "class": "ExternalServiceError"
+          "class": "ServiceUnavailableError"
         }
       }
     },

@@ -7,8 +7,7 @@ const
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  SizeLimitError = require('kuzzle-common-objects').errors.SizeLimitError,
+  { BadRequestError, SizeLimitError } = require('kuzzle-common-objects').errors,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
@@ -16,9 +15,6 @@ describe('Test: security controller - roles', () => {
     kuzzle,
     request,
     securityController;
-
-  before(() => {
-  });
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();

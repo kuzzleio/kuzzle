@@ -27,7 +27,7 @@ describe('Test: security controller - profiles', () => {
     kuzzle.repositories.profile.getProfileFromRequest.resolves();
     securityController = new SecurityController(kuzzle);
   });
-
+  
   describe('#updateProfileMapping', () => {
     const foo = {foo: 'bar'};
 
@@ -214,6 +214,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
       kuzzle.repositories.profile.load.resolves(null);
+
       return should(securityController.getProfile(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
     });
   });
@@ -506,7 +507,10 @@ describe('Test: security controller - profiles', () => {
     it('should reject NotFoundError on a getProfileRights call with a bad id', () => {
       kuzzle.repositories.profile.load.resolves(null);
 
-      return should(securityController.getProfileRights(new Request({_id: 'test'}))).be.rejectedWith(NotFoundError);
+      return securityController.getProfileRights(new Request({_id: 'test'}))
+        .catch((e) => {
+          should(e).be.instanceOf(NotFoundError);
+        });
     });
   });
 

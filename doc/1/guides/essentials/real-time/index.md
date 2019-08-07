@@ -12,8 +12,8 @@ Kuzzle includes his own real-time engine for sending notifications to clients co
 Real-time capabilities requires the use of a persistent communication protocol such as WebSocket or MQTT.
 
 Kuzzle offers 2 different ways of doing real-time:
- - volatile Pub/Sub system
- - real-time database notifications
+ - volatile Pub/Sub system (see on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-real-time-applications))
+ - real-time database notifications (see on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-real-time-engine))
 
  ::: info
 You can bypass notifications from being triggered by using actions from the [bulk controller](/core/1/api/controllers/bulk).

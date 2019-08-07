@@ -52,7 +52,7 @@ describe('funnelController.processRequest', () => {
     const request = new Request({action: 'create'});
 
     should(() => funnel.processRequest(request))
-      .throw(BadRequestError, {message: 'Unknown controller null'});
+      .throw(BadRequestError, {message: 'Unknown controller null.'});
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -65,7 +65,7 @@ describe('funnelController.processRequest', () => {
 
     should(() => funnel.processRequest(request))
       .throw(BadRequestError, {
-        message: 'No corresponding action null in controller fakeController'
+        message: 'No corresponding action null in controller fakeController.'
       });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
@@ -82,7 +82,7 @@ describe('funnelController.processRequest', () => {
 
     should(() => funnel.processRequest(request))
       .throw(BadRequestError, {
-        message: 'No corresponding action create in controller fakeController'
+        message: 'No corresponding action create in controller fakeController.'
       });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
@@ -100,7 +100,7 @@ describe('funnelController.processRequest', () => {
 
     should(() => funnel.processRequest(request))
       .throw(BadRequestError, {
-        message: `No corresponding action create in controller ${controller}`
+        message: `No corresponding action create in controller ${controller}.`
       });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);

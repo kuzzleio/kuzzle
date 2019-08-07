@@ -199,7 +199,6 @@ describe('Test the auth controller', () => {
 
     it('should emit an error if the token cannot be expired', () => {
       const error = new Error('Mocked error');
-
       kuzzle.repositories.token.expire.rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(KuzzleInternalError);
@@ -301,7 +300,7 @@ describe('Test the auth controller', () => {
           user: {_id: 'bar'}
         }
       )))
-        .throw(UnauthorizedError, {message: 'Invalid token'});
+        .throw(UnauthorizedError, {message: 'Invalid token.'});
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {
