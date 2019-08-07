@@ -43,7 +43,7 @@ Headers: Authorization: "Bearer <authentication token>"
 
 ### Optional:
 
-* `global`: Boolean that enable or disable a global disconnection by revoking every sessions at once. (default: false)
+* `global`: Boolean that enable or disable a global disconnection by revoking every sessions at once. (default: `false`)
 
 
 ---
