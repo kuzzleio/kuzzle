@@ -28,7 +28,6 @@ When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin
 
       this.currentToken = {jwt: body.result.jwt};
       this.currentUser.token = body.result.jwt;
-      
 
       if (cantLogin) {
         callback('Should not be able to login');
