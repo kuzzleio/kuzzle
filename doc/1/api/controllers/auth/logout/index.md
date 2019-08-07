@@ -31,7 +31,7 @@ Headers: Authorization: "Bearer <authentication token>"
   "controller": "auth",
   "action": "logout",
   "jwt": "<authentication token>",
-  "global": "<global>"
+  "global": "<true|false>"
 }
 ```
 
