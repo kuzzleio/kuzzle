@@ -38,8 +38,8 @@ The `before` event name is built using the following template:
 
 | API action                                                                                   | After event name                 |
 | -------------------------------------------------------------------------------------------- | -------------------------------- |
-| [auth:login](/core/1/api/controllers/auth/login/)                               | `auth:beforeLogin`               |
-| [document:createOrReplace](/core/1/api/controllers/document/create-or-replace/) | `document:beforeCreateOrReplace` |
+| [auth:login](/core/1/api/controllers/auth/login)                               | `auth:beforeLogin`               |
+| [document:createOrReplace](/core/1/api/controllers/document/create-or-replace) | `document:beforeCreateOrReplace` |
 
 ---
 
@@ -64,8 +64,8 @@ The `after` event name is built using the following template:
 
 | API action                                                                                   | After event name                |
 | -------------------------------------------------------------------------------------------- | ------------------------------- |
-| [auth:login](/core/1/api/controllers/auth/login/)                               | `auth:afterLogin`               |
-| [document:createOrReplace](/core/1/api/controllers/document/create-or-replace/) | `document:afterCreateOrReplace` |
+| [auth:login](/core/1/api/controllers/auth/login)                               | `auth:afterLogin`               |
+| [document:createOrReplace](/core/1/api/controllers/document/create-or-replace) | `document:afterCreateOrReplace` |
 
 ---
 
@@ -90,5 +90,5 @@ The `error` event name is built using the following template:
 
 | API action                                                                                   | After event name                |
 | -------------------------------------------------------------------------------------------- | ------------------------------- |
-| [auth:login](/core/1/api/controllers/auth/login/)                               | `auth:errorLogin`               |
-| [document:createOrReplace](/core/1/api/controllers/document/create-or-replace/) | `document:errorCreateOrReplace` |
+| [auth:login](/core/1/api/controllers/auth/login)                               | `auth:errorLogin`               |
+| [document:createOrReplace](/core/1/api/controllers/document/create-or-replace) | `document:errorCreateOrReplace` |
