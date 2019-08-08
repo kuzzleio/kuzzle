@@ -266,7 +266,7 @@
         },
         "unexpected_return_value": {
           "code": 24,
-          "message": "Unexpected return value from action %s/%s: expected a Promise",
+          "message": "Unexpected return value from action \"%s:%s\": expected a Promise",
           "class": "PluginImplementationError"
         },
         "rejected_new_connection_invalid_args": {
