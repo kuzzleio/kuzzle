@@ -11,7 +11,7 @@ services:
       - ./nginx:/etc/nginx/conf.d
 
   kuzzle:
-    image: kuzzleio/core-dev
+    image: kuzzleio/core-dev:2.x
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
