@@ -44,7 +44,7 @@ Method: GET
 
 ### Optional:
 
-- `includeTrash`: if true, documents in the [trashcan](/core/1/guides/essentials/document-metadata/) can be returned
+- `includeTrash`: if true, documents in the [trashcan](/core/1/guides/essentials/document-metadata) can be returned
 
 ---
 
