@@ -84,7 +84,7 @@ describe('Test: repositories/tokenRepository', () => {
       const token = jwt.sign({_id: -99999}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
 
       return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
-        message: 'Invalid token'
+        message: 'Invalid token.'
       });
     });
 
@@ -197,7 +197,7 @@ describe('Test: repositories/tokenRepository', () => {
       kuzzle.services.list.internalCache.setex.rejects(new Error('error'));
 
       return should(tokenRepository.generateToken(user, request))
-        .be.rejectedWith(KuzzleInternalError, {message: 'Unable to generate token for unknown user'});
+        .be.rejectedWith(KuzzleInternalError, { message: 'Unknown User : cannot generate token'});
     });
 
     it('should allow a big ttl if no maxTTL is set', () => {
