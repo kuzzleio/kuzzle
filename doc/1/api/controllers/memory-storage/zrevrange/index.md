@@ -8,7 +8,7 @@ title: zrevrange
 
 
 
-Identical to [zrange](/core/1/api/controllers/memory-storage/zrange/), except that the sorted set is traversed in descending order.
+Identical to [zrange](/core/1/api/controllers/memory-storage/zrange), except that the sorted set is traversed in descending order.
 
 [[_Redis documentation_]](https://redis.io/commands/zrevrange)
 

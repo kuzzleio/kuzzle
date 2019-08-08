@@ -346,7 +346,7 @@ search(query, [options]);
 
 | Arguments | Type              | Description                                                                                            |
 | --------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
-| `query`   | <pre>object</pre> | Search query, using Elasticsearch [query format](/core/1/guides/cookbooks/elasticsearch/basic-queries/) |
+| `query`   | <pre>object</pre> | Search query, using Elasticsearch [query format](/core/1/guides/cookbooks/elasticsearch/basic-queries) |
 | `options` | <pre>object</pre> | Optional arguments                                                                                     |
 
 #### options

@@ -12,7 +12,7 @@ title: core:auth:strategyRemoved
 | ---------- | ----------------- | ----------------------------------- |
 | `strategy` | <pre>object</pre> | Authentication strategy information |
 
-Triggered whenever a plugin [dynamically removes](/core/1/plugins/plugin-context/accessors/strategies/) an authentication strategy.
+Triggered whenever a plugin [dynamically removes](/core/1/plugins/plugin-context/accessors/strategies) an authentication strategy.
 
 :::info
 Pipes cannot listen to that event, only hooks can.
