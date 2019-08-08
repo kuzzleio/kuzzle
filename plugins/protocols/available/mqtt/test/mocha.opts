@@ -1,0 +1,5 @@
+-b
+-r should-sinon
+--reporter spec
+--recursive
+

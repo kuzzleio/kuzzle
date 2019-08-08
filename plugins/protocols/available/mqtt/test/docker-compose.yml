@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  kuzzle:
+    image: kuzzleio/kuzzle:develop
+    ports:
+      - 7512:7512
+      - 1883:1883
+    volumes:
+      - ..:/var/app/protocols/enabled/mqtt
+    environment:
+      - kuzzle_services__db__client__host=http://elasticsearch:9200
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_server__protocols__mqtt__developmentMode=true
+      - NODE_ENV=${NODE_ENV:-development}
+      - DEBUG=${DEBUG:-kuzzle:entry-point:protocols}
+
+  redis:
+    image: redis:3.2
+
+  elasticsearch:
+    image: kuzzleio/elasticsearch:5.4.1
+    environment:
+      - cluster.name=kuzzle
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+

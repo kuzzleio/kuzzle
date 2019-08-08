@@ -1,11 +1,6 @@
 version: '3'
 
 services:
-  proxy:
-    image: kuzzleio/proxy
-    ports:
-      - "7513:7512"
-
   nginx:
     image: nginx:1.15-alpine
     depends_on:
@@ -40,8 +35,6 @@ services:
       - kuzzle_services__db__client__host=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
-      - kuzzle_server__entryPoints__proxy=true
-      - kuzzle_server__proxy__host=proxy
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=${NODE_ENV:-development}
@@ -53,6 +46,7 @@ services:
       - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
       - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
+      - NODE_10_VERSION=10.16.0
 
   redis:
     image: redis:${REDIS_VERSION:-5}

@@ -1,0 +1,22 @@
+language: node_js
+node_js:
+- '6'
+before_install: npm i -g npm@6
+script:
+- npm install --unsafe-perm && npm test && npm run codecov
+env:
+- CXX=g++-4.8
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+notifications:
+  webhooks:
+    urls:
+    - https://webhooks.gitter.im/e/8e145155fbaaf37cffea
+    on_success: change
+    on_failure: always
+    on_start: never
+  email: false

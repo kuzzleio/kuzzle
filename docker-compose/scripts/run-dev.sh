@@ -4,6 +4,8 @@ set -e
 
 elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
 
+n $NODE_10_VERSION
+
 npm install --unsafe-perm
 npm rebuild all --unsafe-perm
 chmod -R 777 node_modules/

@@ -1,0 +1,18 @@
+# Node
+node_modules
+npm-debug.log*
+.node_history
+
+# coverage
+/coverage
+/.nyc_output
+
+# ide
+.idea
+
+# Other
+.DS_STORE
+*#
+*~
+.*.swp
+.tags
