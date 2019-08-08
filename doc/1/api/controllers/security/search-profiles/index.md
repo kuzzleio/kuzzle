@@ -57,7 +57,7 @@ Body:
 ### Optional:
 
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
-- `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollProfiles](/core/1/api/controllers/security/scroll-profiles/) API action
+- `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollProfiles](/core/1/api/controllers/security/scroll-profiles) API action
 - `size`: the maximum number of profiles returned in one response page
 
 ---
