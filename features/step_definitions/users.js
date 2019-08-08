@@ -157,6 +157,15 @@ Then(/^I replace the user "(.*?)" with data {(.*?)}$/, function (id, data) {
     });
 });
 
+Then(/^I revoke all tokens of the user "(.*?)"$/, function (id) {
+  return this.api.revokeTokens(this.idPrefix + id)
+    .then(body => {
+      if (body.error) {
+        throw new Error(body.error.message);
+      }
+    });
+});
+
 Then(/^I delete the user "(.*?)"$/, function (id) {
   return this.api.deleteUser(this.idPrefix + id, true)
     .then(body => {
@@ -196,6 +205,20 @@ Then(/^I'm ?(not)* able to find rights for user "([^"]*)"$/, function (not, id, 
       callback();
     })
     .catch(error => callback(not ? null : error));
+});
+
+Then(/^I'm ?(not)* able to check the token for current user/, function (not, callback) {
+
+  this.api.checkToken(this.currentUser.token)
+    .then(body => {
+      if (!body.result.valid) {
+        if (not) {
+          return callback();
+        }
+        return callback(new Error(body.result.state));
+      }
+      callback();
+    });
 });
 
 Then(/^I'm able to find my rights$/, function () {
@@ -240,4 +263,3 @@ Then(/^I am able to perform a scrollUsers request$/, function () {
       }
     });
 });
-
