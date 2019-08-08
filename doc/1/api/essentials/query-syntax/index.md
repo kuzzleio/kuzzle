@@ -23,7 +23,7 @@ Every API route documentation has a dedicated HTTP section, explaining how to us
 The following list of HTTP headers can be added to any and all HTTP requests:
 
 - `Accept-Encoding`: compression algorithm(s) usable by Kuzzle to encode the query response. Accepted encodings, in order of preference: `gzip`, `deflate`, `identity`.
-- `Authorization` (expected value: `Bearer <token>`): user's authentification token, obtained through the [login](/core/1/api/controllers/auth/login/) method
+- `Authorization` (expected value: `Bearer <token>`): user's authentification token, obtained through the [login](/core/1/api/controllers/auth/login) method
 - `Content-Encoding`: compression algorithm(s) used to encode the body sent to Kuzzle. Accepted encodings: `deflate`, `gzip`, `identity`
 
 ### Body encoding
@@ -84,9 +84,9 @@ Depending on the API route executed, other parameters may be required. Those are
 
 There are 3 parameters that can be provided to all queries, independently to the API route executed:
 
-- `jwt`: user's authentification token, obtained through the [login](/core/1/api/controllers/auth/login/) method
+- `jwt`: user's authentification token, obtained through the [login](/core/1/api/controllers/auth/login) method
 - `requestId`: user-defined request identifier. Kuzzle does not guarantee that responses are sent back in the same order than queries are made; use that field to link responses to their query of origin
-- `volatile`: user-defined data, without any impact to the query. Use that object to pass information about the query itself to real-time subscribers. Read more [here](/core/1/api/essentials/volatile-data/)
+- `volatile`: user-defined data, without any impact to the query. Use that object to pass information about the query itself to real-time subscribers. Read more [here](/core/1/api/essentials/volatile-data)
 
 Additionally, a few other parameters are very commonly found in API queries:
 

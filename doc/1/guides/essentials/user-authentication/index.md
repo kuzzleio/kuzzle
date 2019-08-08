@@ -9,15 +9,15 @@ order: 750
 
 ## Creating Users
 
-Once we have created security [roles and profiles](/core/1/guides/essentials/security/), we can go on to create the users that will access the Kuzzle.
+Once we have created security [roles and profiles](/core/1/guides/essentials/security), we can go on to create the users that will access the Kuzzle.
 
-Users can be created by either using the [Kuzzle Admin Console](/core/1/guides/essentials/admin-console/) or the [API](/core/1/api/controllers/security/create-user/).
+Users can be created by either using the [Kuzzle Admin Console](/core/1/guides/essentials/admin-console/) or the [API](/core/1/api/controllers/security/create-user).
 
 When creating a user, you will need to assign them one or more [profiles](/core/1/guides/essentials/security/#defining-profiles).
 
 Additionally, you can set:
 
-- [User credentials](/core/1/guides/essentials/user-authentication/#user-credentials): If no credentials are provided, then the user cannot [login](/core/1/api/controllers/auth/login/)
+- [User credentials](/core/1/guides/essentials/user-authentication/#user-credentials): If no credentials are provided, then the user cannot [login](/core/1/api/controllers/auth/login)
 - Any number of properties that you want to store in your user object, such as a lastname or a list of hobbies. These properties are stored at the user level and are not linked to any particular authentication strategy.
 
 Let's create a user with username `johndoe` and password `letmein` using the HTTP API:
@@ -73,7 +73,7 @@ Once a user has been created, they can access resources in Kuzzle as permitted b
 
 To request access to Kuzzle, a user must first send an [authentication request](/core/1/api/controllers/auth/login/). Kuzzle will validate the credentials it receives in the request using the predefined authentication strategy and return a [JSON Web Token](https://tools.ietf.org/html/rfc7519) if the user credentials are valid.
 
-The JSON Web Token must then be [appended to all subsequent requests](/core/1/api/essentials/query-syntax/) to access Kuzzle resources.
+The JSON Web Token must then be [appended to all subsequent requests](/core/1/api/essentials/query-syntax) to access Kuzzle resources.
 
 ## Local Strategy
 
