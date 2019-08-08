@@ -15,8 +15,8 @@ There are 3 root fields for mapping configuration:
  - [_meta](/core/1/guides/essentials/database-mappings/#collection-metadata): collection metadata
 
 The following API methods can be used to modify these mappings:
- - [collection:create](/core/1/api/controllers/collection/create/)
- - [collection:updateMapping](/core/1/api/controllers/collection/update-mapping/)
+ - [collection:create](/core/1/api/controllers/collection/create)
+ - [collection:updateMapping](/core/1/api/controllers/collection/update-mapping)
 
 ---
 
@@ -65,7 +65,7 @@ The following mapping must first be defined:
 }
 ```
 
-This mapping is then passed in the body to the methods [collection:create](/core/1/api/controllers/collection/create/) or [collection:updateMapping](/core/1/api/controllers/collection/update-mapping/).
+This mapping is then passed in the body to the methods [collection:create](/core/1/api/controllers/collection/create/) or [collection:updateMapping](/core/1/api/controllers/collection/update-mapping).
 
 ```bash
 # First create a collection yellow-taxi in the nyc-open-index
@@ -94,7 +94,7 @@ The value of this configuration will change the way Elasticsearch manages the cr
 
 Refer to Elasticsearch documentation for more informations: [Elasticsearch dynamic mapping](https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html)
 
-The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/1/guides/essentials/configuration/) file under the key `services.db.dynamic`.
+The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/1/guides/essentials/configuration) file under the key `services.db.dynamic`.
 
 ::: warning
 We advise not to let Elasticsearch dynamically infer the type of new fields in production.
@@ -146,7 +146,7 @@ If you set the ```_meta``` field in your request, the old value will be overwrit
 
 Refer to Elasticsearch documentation for more informations: [Elasticsearch mapping meta field](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/mapping-meta-field.html)
 
-These metadata can be retrieved with the [collection:getMapping](/core/1/api/controllers/collection/get-mapping/) API method.
+These metadata can be retrieved with the [collection:getMapping](/core/1/api/controllers/collection/get-mapping) API method.
 
 ### Example
 

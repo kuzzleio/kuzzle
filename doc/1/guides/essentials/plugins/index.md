@@ -14,7 +14,7 @@ For example, imagine you are developing a mobile application that accesses a **t
 Kuzzle's **[Plugin Engine](/core/1/plugins)** is a powerful feature that ensures that Kuzzle meets any project requirement:
 
 - select from a set of prebuilt plugins (such as the [OAuth2 Authentication Plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-oauth) or the [Cluster Plugin](https://github.com/kuzzleio/kuzzle-plugin-cluster)).
-- [create your own plugin](/core/1/guides/essentials/introduction/) to meet your specific requirements.
+- [create your own plugin](/core/1/guides/essentials/introduction) to meet your specific requirements.
 
 ---
 
@@ -22,7 +22,7 @@ Kuzzle's **[Plugin Engine](/core/1/plugins)** is a powerful feature that ensures
 
 Plugins are used to extend Kuzzle's functionalities. They are loaded into Kuzzle during startup and share its execution thread. A plugin can implement one or multiple of the following interfaces:
 
-[Hooks](/core/1/plugins/guides/hooks/): adds asynchronous listeners that perform operations triggered by data events. When a listened event occurs, the data is sent to the listeners and Kuzzle continues its process without waiting for the listener to complete.
+[Hooks](/core/1/plugins/guides/hooks): adds asynchronous listeners that perform operations triggered by data events. When a listened event occurs, the data is sent to the listeners and Kuzzle continues its process without waiting for the listener to complete.
 
 _Example - "Write a log to a third-party logging service every time a document is deleted"_. The [Logger Plugin](https://github.com/kuzzleio/kuzzle-plugin-logger) (shipped with Kuzzle) uses this feature to log all the data-related events.
 

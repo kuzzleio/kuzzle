@@ -11,7 +11,7 @@ order: 200
 
 Plugins can [add new controllers](/core/1/plugins/guides/controllers) to the Kuzzle API.
 
-These new controllers and actions behave exactly like [native API actions](/core/1/plugins/guides/events/api-events/).
+These new controllers and actions behave exactly like [native API actions](/core/1/plugins/guides/events/api-events).
 All calls to plugins API actions trigger two of these three events:
 
 - before the action starts
