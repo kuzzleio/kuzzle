@@ -124,7 +124,7 @@ describe('funnelController.processRequest', () => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
           should(e.message).startWith(
-            `Unexpected return value from action \"${controller}:succeed\": expected a Promise`);
+            `Unexpected return value from action "${controller}:succeed": expected a Promise`);
           should(kuzzle.pipe)
             .not.calledWith('request:onSuccess', request);
           should(kuzzle.pipe)
