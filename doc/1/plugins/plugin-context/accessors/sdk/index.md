@@ -13,7 +13,7 @@ Accessor to the embedded SDK.
 The embedded SDK is a custom version of our [Javascript SDK](/sdk/js/6) that uses a custom protocol plugged directly into Kuzzle core.
 
 All the documented controllers can be used, except the `realtime` one.
-Also, the low-level [query](/sdk/js/6/core-classes/kuzzle/query/) method is available for use.
+Also, the low-level [query](/sdk/js/6/core-classes/kuzzle/query) method is available for use.
 
 ::: info
 The embedded SDK methods do not trigger [API events](/core/1/plugins/guides/events/api-events) or [request:on* events](/core/1/plugins/guides/events/request-on-authorized).
@@ -23,7 +23,7 @@ The embedded SDK methods do not trigger [API events](/core/1/plugins/guides/even
 
 By default, when using the embedded SDK, requests made to Kuzzle API don't have the same context as the original request received by the plugin.
 
-Typically, the `request.context.user` property is not set and thus [Kuzzle metadata](/core/1/guides/essentials/document-metadata/) will not be set when creating or updating documents.
+Typically, the `request.context.user` property is not set and thus [Kuzzle metadata](/core/1/guides/essentials/document-metadata) will not be set when creating or updating documents.
 
 It is possible to use the same user context as the original request with the embedded SDK, for this purpose it is necessary to use the [as()](/core/1/plugins/plugin-context/accessors/sdk/#as) impersonation method.
 
@@ -75,7 +75,7 @@ async myAwesomePipe (request) {
 
 <SinceBadge version="1.6.0" />
 
-Accessor to the [query method](/sdk/js/6/core-classes/kuzzle/query/).
+Accessor to the [query method](/sdk/js/6/core-classes/kuzzle/query).
 This can be useful to call plugins custom controller action.
 
 ### Example

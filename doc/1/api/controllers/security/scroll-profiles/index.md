@@ -8,7 +8,7 @@ title: scrollProfiles
 
 
 
-Moves a result set cursor forward, created by a [searchProfiles](/core/1/api/controllers/security/search-profiles/) query with the `scroll` argument provided.
+Moves a result set cursor forward, created by a [searchProfiles](/core/1/api/controllers/security/search-profiles) query with the `scroll` argument provided.
 
 Results returned by a `scrollProfiles` request reflect the state of the index at the time of the initial search request, like a fixed snapshot. Subsequent changes to documents do not affect the scroll results.
 

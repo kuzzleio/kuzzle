@@ -79,8 +79,8 @@ Body:
 ### Optional:
 
 - `from`: paginates search results by defining the offset from the first result you want to fetch. Usually used with the `size` argument
-- `includeTrash`: if true, include documents in the [trashcan](/core/1/guides/essentials/document-metadata/)
-- `scroll`: creates a forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` is returned in the results. This cursor can then be moved forward using the [scroll](/core/1/api/controllers/document/scroll/) API action
+- `includeTrash`: if true, include documents in the [trashcan](/core/1/guides/essentials/document-metadata)
+- `scroll`: creates a forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` is returned in the results. This cursor can then be moved forward using the [scroll](/core/1/api/controllers/document/scroll) API action
 - `size`: set the maximum number of documents returned per result page
 
 ---
