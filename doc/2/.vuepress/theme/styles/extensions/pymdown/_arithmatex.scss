@@ -1,0 +1,28 @@
+// ----------------------------------------------------------------------------
+// Rules
+// ----------------------------------------------------------------------------
+
+// Scoped in typesetted content to match specificity of regular content
+.md-typeset {
+  // MathJax integration - add padding to omit vertical scrollbar
+  .MJXc-display {
+    margin: 0.75em 0;
+    padding: 0.75em 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // Stretch top-level containers
+  > p > .MJXc-display {
+    // [mobile -]: Stretch to whole width
+    @include break-to-device(mobile) {
+      margin: 0.75em -1.6rem;
+      padding: 0.25em 1.6rem;
+    }
+  }
+
+  // Remove outline on tab index
+  .MathJax_CHTML {
+    outline: 0;
+  }
+}

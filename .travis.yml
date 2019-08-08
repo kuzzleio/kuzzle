@@ -32,7 +32,7 @@ jobs:
       cache: npm
 
       node_js:
-        - "8"
+        - "10"
 
       install:
         - npm install --silent
@@ -66,47 +66,8 @@ jobs:
 # ---------------------------------------
 # Integration tests
 # ---------------------------------------
-
     - stage: Integration tests
       if: type = pull_request OR (type = push AND branch =~ ^master|.*-dev|.*-stable$) OR type = cron
-      name: Node.js 6
-
-      os: linux
-      sudo: required
-      language: minimal
-      services: docker
-
-      env:
-        - NODE_LTS=6
-        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
-
-      before_install:
-        - sudo sysctl -w vm.max_map_count=262144
-
-      script:
-        - docker-compose -f .ci/test.yml run kuzzle
-
-    - stage: Integration tests
-      if: type = cron OR type = push AND branch =~ ^master|.*-dev|.*-stable
-      name: Node.js 8
-
-      os: linux
-      sudo: required
-      language: minimal
-      services: docker
-
-      env:
-        - NODE_LTS=8
-        - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
-
-      before_install:
-        - sudo sysctl -w vm.max_map_count=262144
-
-      script:
-        - docker-compose -f .ci/test.yml run kuzzle
-
-    - stage: Integration tests
-      if: type = cron OR type = push AND branch =~ ^master|.*-stable$
       name: Node.js 10
 
       sudo: required
@@ -124,6 +85,7 @@ jobs:
         - docker-compose -f .ci/test.yml run kuzzle
 
 
+
 # ---------------------------------------
 # Cross-platform tests
 # ---------------------------------------
@@ -138,7 +100,7 @@ jobs:
       services: docker
 
       env:
-        - NODE_LTS=8
+        - NODE_LTS=10
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
       before_install:
@@ -159,7 +121,7 @@ jobs:
       services: docker
 
       env:
-        - NODE_LTS=8
+        - NODE_LTS=10
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
       before_install:
@@ -183,7 +145,7 @@ jobs:
       services: docker
 
       env:
-        - NODE_LTS=8
+        - NODE_LTS=10
         - REDIS_VERSION=3.2
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
@@ -202,7 +164,7 @@ jobs:
       services: docker
 
       env:
-        - NODE_LTS=8
+        - NODE_LTS=10
         - REDIS_VERSION=4.0.14
         - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
 
@@ -223,9 +185,7 @@ jobs:
       os: linux
       sudo: required
       language: node_js
-
-      node_js:
-        - "8"
+      node_js: 10
 
       script:
         - echo "Deploying Kuzzle on NPM"

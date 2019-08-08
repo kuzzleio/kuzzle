@@ -1,0 +1,82 @@
+.api {
+  padding: 6px !important;
+  margin: 20px;
+  border-radius: 4px;
+  border: 2px solid $clr-indigo;
+  background-color: $clr-indigo;
+  color: white;
+  text-align: center;
+  transition: background-color 0.1s linear;
+}
+.api:hover {
+  opacity: 0.8;
+}
+.disabled {
+  pointer-events: none;
+  opacity: 0.3;
+}
+.selector {
+  width: 80%;
+  height: 40px;
+  font-size: 15px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  &-selectedItem {
+    border-bottom: 1px solid rgba(233,78,119,0.3);
+    padding: 10px 10px 5px;
+    &-icon {
+      position: relative;
+      top: 4px;
+      width: 22px;
+      height: 22px;
+      margin-right: 8px;
+    }
+    i {
+      float: right;
+      top: 10px;
+      position: relative;
+      color: #55595c;
+    }
+  }
+}
+.selector-list {
+  @include break-to-device (tablet) {
+    height: 200px;
+    overflow-y: scroll; 
+  }
+  position: absolute;
+  width: 80%;
+  background-color: white;
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.12);
+  padding: 0;
+  margin-top: 4px;
+  transform-origin: 50% 0;
+  transition: transform 0.1s linear, opacity 0.1s linear;
+  &-opened {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  &-closed {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  &-item {
+    width: 100%;
+    list-style-type: none;
+    &-link {
+      display: block;
+      height: 100%;
+      padding: 12px;
+    }
+    &-icon {
+      position: relative;
+      top: 4px;
+      width: 22px;
+      height: 22px;
+      margin-right: 8px;
+    }
+    &:hover {
+      background-color: #ddd;
+    }
+  }
+}

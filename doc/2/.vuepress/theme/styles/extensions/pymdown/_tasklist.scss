@@ -1,0 +1,59 @@
+// ----------------------------------------------------------------------------
+// Rules
+// ----------------------------------------------------------------------------
+
+// Scoped in typesetted content to match specificity of regular content
+.md-typeset {
+  // Remove list icon on task items
+  .task-list-item {
+    position: relative;
+    list-style-type: none;
+
+    // Make checkbox items align with normal list items, but position
+    // everything in ems for correct layout at smaller font sizes
+    [type='checkbox'] {
+      position: absolute;
+      top: 0.45em;
+      left: -2em;
+
+      // Adjust for RTL languages
+      [dir='rtl'] & {
+        right: -2em;
+        left: initial;
+      }
+    }
+  }
+
+  // Wrapper for list controls, in case custom checkboxes are enabled
+  .task-list-control {
+    // Checkbox icon in unchecked state
+    .task-list-indicator::before {
+      @extend %md-icon;
+
+      position: absolute;
+      top: 0.15em;
+      left: -1.25em;
+      color: $md-color-black--lighter;
+      font-size: 1.25em;
+      content: '\E835'; // check_box_outline_blank
+      vertical-align: -0.25em;
+
+      // Adjust for RTL languages
+      [dir='rtl'] & {
+        right: -1.25em;
+        left: initial;
+      }
+    }
+
+    // Checkbox icon in checked state
+    [type='checkbox']:checked + .task-list-indicator::before {
+      content: '\E834'; // check_box
+    }
+
+    // Hide original checkbox behind icon
+    [type='checkbox'] {
+      opacity: 0;
+      z-index: -1;
+    }
+  }
+}

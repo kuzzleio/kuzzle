@@ -1,0 +1,61 @@
+.Tiles {
+  &-item {
+    width: 21%;
+    height: 21%;
+    display: inline-block;
+    margin: 0 3% 3% 0;
+    padding: 15px 5px 5px 5px;
+    border-radius: 0.2rem;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12),
+      0 3px 1px -2px rgba(0, 0, 0, 0.2);
+    background-image: linear-gradient(to top, #f5f5fa, #fff);
+    text-align: center;
+    position: relative;
+
+    &.min {
+      width: 11%;
+      height: 11%;
+    }
+  }
+
+  &-item:last-of-type {
+    margin-right: 0;
+  }
+
+  &-item-logo {
+    width: 70%;
+    height: 70%;
+    position: relative;
+    margin: 0;
+  }
+
+  &-item-name {
+    color: $md-color-blue;
+  }
+
+  @include break-to-device(mobile) {
+    &-item {
+      width: 35%;
+      height: 35%;
+      margin: 0 16px 25px 0;
+      &.min {
+        width: 20%;
+        height: 20%;
+      }
+    }
+  }
+
+  &-item:hover {
+    top: -2px;
+    left: -1px;
+
+    &.min {
+      top: 0px;
+      left: 0px;
+    }
+
+    .Languages-item-name {
+      color: $md-color-pink;
+    }
+  }
+}

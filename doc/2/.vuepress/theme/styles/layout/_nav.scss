@@ -1,0 +1,604 @@
+// ----------------------------------------------------------------------------
+// Rules
+// ----------------------------------------------------------------------------
+
+// Navigation container
+.md-nav {
+  font-size: 1.4rem;
+  line-height: 1.3;
+
+  &--primary {
+    .md-nav-title {
+      position: sticky;
+      background-color: white;
+      top: 0px;
+      z-index: 10;
+    }
+
+    .md-nav__item {
+      padding-left: 0;
+      i {
+        float: left;
+        margin-top: 4px;
+        font-size: 10px;
+
+        &.fa-caret-down {
+          margin-right: -2px;
+        }
+      }
+
+      span {
+        margin-left: 6px;
+
+        &.no_arrow {
+          margin-left: 9px;
+        }
+      }
+    }
+  }
+
+  &--secondary {
+    label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    a {
+      font-size: 11px;
+      font-weight: 400;
+    }
+  }
+
+  // List title
+  &__title {
+    display: block;
+    padding: 0.5rem 1.2rem 0;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+
+    // Icon, hidden by default
+    &::before {
+      @extend %md-icon, %md-icon__button;
+
+      display: none;
+      content: '\E5C4'; // arrow_back
+
+      // Adjust for RTL languages
+      [dir='rtl'] & {
+        content: '\E5C8'; // arrow_forward
+      }
+    }
+
+    // Hide button by default
+    .md-nav__button {
+      display: none;
+    }
+  }
+
+  // List of items
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    .sub-menu:not(.no-parent) {
+      padding-left: 16px;
+      transform: scaleY(0);
+      transform-origin: 50% 0;
+      transition: transform 0.2s linear, height 0.2s linear, opacity 0.2s linear;
+      opacity: 0;
+      height: 0px;
+    }
+
+    .displaySubmenu {
+      opacity: 1 !important;
+      transform: scaleY(1) !important;
+    }
+
+    & > .md-nav__item-container {
+      margin-bottom: 24px;
+
+      @include break-to-device(tablet) {
+        margin-bottom: 0px;
+      }
+    }
+  }
+
+  &__separator {
+    margin-top: 22px;
+    margin-bottom: 12px;
+    padding-bottom: 4px;
+    width: 90%;
+    border-bottom: 1px solid rgba(233, 78, 119, 0.3);
+    text-transform: uppercase;
+
+    &:first-child {
+      margin-top: 8px;
+    }
+
+    @include break-to-device(tablet) {
+      display: none;
+    }
+  }
+
+  // List item
+  &__item {
+    padding: 5px 1.2rem;
+    height: 30px;
+
+    // Add bottom spacing to last item
+    &:last-child {
+      padding-bottom: 1.2rem;
+    }
+
+    // 2nd+ level items
+    & & {
+      padding-right: 0;
+
+      // Adjust for RTL languages
+      [dir='rtl'] & {
+        padding-right: 1.2rem;
+        padding-left: 0;
+      }
+
+      // Remove bottom spacing for nested items
+      &:last-child {
+        padding-bottom: 0;
+      }
+    }
+    &--code {
+      font-family: 'Roboto Mono', 'Courier New', monospace, sans-serif;
+    }
+  }
+
+  // Button with logo
+  &__button {
+    @extend %md-icon, %md-icon__button;
+
+    // Stretch image
+    img {
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  // Link inside item
+  &__link {
+    display: inline;
+    // margin-top: 0.625em;
+    transition: color 0.125s;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    overflow: hidden;
+
+    code {
+      background-color: $md-code-background-inline;
+      padding: 2px;
+    }
+
+    // Icon
+    &::after {
+      @extend %md-icon;
+
+      // Item contains a nested list
+      .md-nav__item--nested > & {
+        content: '\E313'; // keyboard_arrow_down
+      }
+    }
+
+    // Hide link to table of contents by default - this will only match the
+    // table of contents inside the drawer below and including tablet portrait
+    html &[for='toc'] {
+      display: none;
+
+      // Hide table of contents by default
+      & ~ .md-nav {
+        display: none;
+      }
+
+      // Hide icon for current item
+      + .md-nav__link::after {
+        display: none;
+      }
+    }
+
+    // Active link
+    &:active,
+    &--active {
+      color: $md-color-pink;
+    }
+
+    // Reset active color for nested list titles
+    .md-nav__item--nested > & {
+      color: inherit;
+    }
+
+    // Focused or hovered link
+    &:focus,
+    &:hover {
+      color: $md-color-pink;
+    }
+  }
+
+  &__mobile-color {
+    background-color: #002835;
+  }
+
+  &__mobile-group-name {
+    font-weight: 700;
+    font-size: 1.3rem;
+    opacity: 0.5;
+    padding: 0 0 0 10px;
+    margin-bottom: -5px;
+    color: white;
+    text-transform: capitalize;
+  }
+
+  // Repository containing source
+  // &__source {
+  //   display: none;
+  // }
+
+  // [tablet -]: Layered navigation
+  @include break-to-device(tablet) {
+    background-color: $md-color-white;
+
+    // Stretch primary navigation to drawer
+    &--primary,
+    &--primary .md-nav {
+      display: flex;
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      flex-direction: column;
+      height: 100%;
+      z-index: 1;
+    }
+
+    // Adjust styles for primary navigation
+    &--primary {
+      // List title and item
+      .md-nav__title,
+      .md-nav__item {
+        font-size: 1.6rem;
+        line-height: 1.5;
+      }
+
+      // List title - higher specificity is necessary to ensure that the title
+      // inside the drawer is always styled accordingly
+      html & .md-nav__title {
+        position: relative;
+        height: 6rem;
+        padding: 0.8rem 4.6rem 0.4rem;
+        padding-right: 0;
+        background-color: $md-color-black--lightest;
+        color: $md-color-black--light;
+        font-weight: 400;
+        line-height: 4.8rem;
+        white-space: nowrap;
+        cursor: pointer;
+
+        // Icon
+        &::before {
+          display: block;
+          position: absolute;
+          top: 0.4rem;
+          left: 0.4rem;
+          width: 4rem;
+          height: 4rem;
+          color: $md-color-black--light;
+        }
+
+        // Main lists
+        ~ .md-nav__list {
+          background-color: $md-color-white;
+          box-shadow: 0 0.1rem 0 $md-color-black--lightest inset;
+          z-index: -2;
+          // Remove border for first list item
+          & > .md-nav__item:first-child {
+            border-top: 0;
+          }
+
+          .sub-menu {
+            .md-nav__item {
+              border-top: 0;
+
+              // .md-nav__link--active {
+              //   padding-left: 14px;
+              // }
+            }
+          }
+        }
+
+        // Site title in main navigation
+        &--site {
+          position: relative;
+          background-color: $md-color-primary;
+          color: $md-color-white;
+
+          // Site logo
+          .md-nav__button {
+            display: block;
+            position: absolute;
+            top: 0.4rem;
+            left: 0.4rem;
+            width: 6.4rem;
+            height: 6.4rem;
+            font-size: 4.8rem;
+
+            @include break-to-device(tablet) {
+              width: 4rem;
+              height: 4rem;
+              top: -1.6rem;
+            }
+          }
+
+          // Hide back arrow icon
+          &::before {
+            display: none;
+          }
+        }
+      }
+
+      // Adjust for RTL languages
+      html [dir='rtl'] & .md-nav__title {
+        // Icon
+        &::before {
+          right: 0.4rem;
+          left: initial;
+        }
+
+        // Site title in main navigation
+        &--site .md-nav__button {
+          right: 0.4rem;
+          left: initial;
+        }
+      }
+
+      // List of items
+      .md-nav__list {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      // List item
+      .md-nav__item {
+        padding: 12px;
+        border-top: 0.1rem solid $md-color-black--lightest;
+
+        // Adjust for RTL languages
+        [dir='rtl'] & {
+          padding: 0;
+        }
+
+        // Increase spacing to account for icon
+        &--nested > .md-nav__link {
+          padding-right: 4.8rem;
+
+          // Adjust for RTL languages
+          [dir='rtl'] & {
+            padding-right: 1.6rem;
+            padding-left: 4.8rem;
+          }
+
+          // Replace icon with right arrow
+          &::after {
+            content: '\E315'; // keyboard_arrow_right
+
+            // Adjust for RTL languages
+            [dir='rtl'] & {
+              content: '\E314'; // keyboard_arrow_left
+            }
+          }
+        }
+      }
+
+      // Link inside item
+      .md-nav__link {
+        position: relative;
+        margin-top: 0;
+        // padding: 0.1rem 1.6rem;
+
+        // Rotate icon
+        &::after {
+          position: absolute;
+          top: 50%;
+          right: 1.2rem;
+          margin-top: -1.2rem;
+          color: inherit;
+          font-size: 2.4rem;
+
+          // Adjust for RTL languages
+          [dir='rtl'] & {
+            right: initial;
+            left: 1.2rem;
+          }
+        }
+      }
+
+      // Table of contents inside navigation
+      .md-nav--secondary {
+        // Set links to static to avoid unnecessary layering
+        .md-nav__link {
+          position: static;
+        }
+
+        // Set nested navigation for table of contents to static
+        .md-nav {
+          position: static;
+          background-color: transparent;
+
+          // 3rd level link
+          .md-nav__link {
+            padding-left: 2.8rem;
+
+            // Adjust for RTL languages
+            [dir='rtl'] & {
+              padding-right: 2.8rem;
+              padding-left: initial;
+            }
+          }
+
+          // 4th level link
+          .md-nav .md-nav__link {
+            padding-left: 4rem;
+
+            // Adjust for RTL languages
+            [dir='rtl'] & {
+              padding-right: 4rem;
+              padding-left: initial;
+            }
+          }
+
+          // 5th level link
+          .md-nav .md-nav .md-nav__link {
+            padding-left: 5.2rem;
+
+            // Adjust for RTL languages
+            [dir='rtl'] & {
+              padding-right: 5.2rem;
+              padding-left: initial;
+            }
+          }
+
+          // 6th level link
+          .md-nav .md-nav .md-nav .md-nav__link {
+            padding-left: 6.4rem;
+
+            // Adjust for RTL languages
+            [dir='rtl'] & {
+              padding-right: 6.4rem;
+              padding-left: initial;
+            }
+          }
+        }
+      }
+    }
+
+    // Hide nested navigation by default
+    .md-nav__toggle ~ & {
+      display: flex;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.8, 0, 0.6, 1),
+        opacity 0.125s 0.05s;
+      opacity: 0;
+
+      // Adjust for RTL languages
+      [dir='rtl'] & {
+        transform: translateX(-100%);
+      }
+
+      // Just hide navigation, if browser doesn't supports 3D transforms
+      .no-csstransforms3d & {
+        display: none;
+      }
+    }
+
+    // Expand nested navigation, if toggle is checked
+    .md-nav__toggle:checked ~ & {
+      transform: translateX(0);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.125s 0.125s;
+      opacity: 1;
+
+      // Just show navigation, if browser doesn't supports 3D transforms
+      .no-csstransforms3d & {
+        display: flex;
+      }
+    }
+  }
+
+  // [tablet portrait -]: Show table of contents in drawer
+  @include break-to-device(tablet portrait) {
+    // Show link to table of contents - higher specificity is necessary to
+    // display the table of contents inside the drawer
+    html &__link[for='toc'] {
+      display: block;
+      padding-right: 4.8rem;
+
+      // Unrotate icon for table of contents
+      &::after {
+        color: inherit;
+        content: '\E8DE'; // toc
+      }
+
+      // Hide link to current item
+      + .md-nav__link {
+        display: none;
+      }
+
+      // Show table of contents
+      & ~ .md-nav {
+        display: flex;
+      }
+    }
+
+    // Adjust for RTL languages
+    html [dir='rtl'] &__link {
+      padding-right: 1.6rem;
+      padding-left: 4.8rem;
+    }
+  }
+
+  // [screen +]: Tree-like navigation
+  @include break-from-device(screen) {
+    // Animation is only possible if JavaScript is available, as the max-height
+    // property must be calculated before transitioning
+    &[data-md-state='animate'] {
+      transition: max-height 0.25s cubic-bezier(0.86, 0, 0.07, 1);
+    }
+
+    // Hide nested navigation by default
+    .md-nav__toggle ~ & {
+      max-height: 0;
+      overflow: hidden;
+
+      // Just hide links for accessibility if JavaScript is not available
+      .no-js & {
+        display: none;
+      }
+    }
+
+    // Expand nested navigation, if toggle is checked
+    .md-nav__toggle:checked ~ &,
+    &[data-md-state='expand'] {
+      max-height: 100%;
+
+      // Just show for accessibility links if JavaScript is not available
+      .no-js & {
+        display: block;
+      }
+    }
+
+    // Hide titles for nested navigation
+    &__item--nested > .md-nav > &__title {
+      display: none;
+    }
+
+    // Link inside item - ideally the link display method would be set to
+    // inline on screen, but this doesn't work with text ellipsis
+    &__link {
+      // Item contains a nested list
+      .md-nav__item--nested > &::after {
+        display: inline-block;
+        transform-origin: 0.45em 0.45em;
+        transform-style: preserve-3d;
+        vertical-align: -0.125em;
+
+        // Only animate icon when JavaScript is available, as the height can
+        // not be animated anyway, and better no fun than half the fun
+        .js & {
+          transition: transform 0.4s;
+        }
+      }
+
+      // Rotate icon for expanded lists
+      .md-nav__item--nested .md-nav__toggle:checked ~ &::after {
+        transform: rotateX(180deg);
+      }
+    }
+  }
+}

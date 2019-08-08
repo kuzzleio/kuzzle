@@ -1,0 +1,72 @@
+// ----------------------------------------------------------------------------
+// Rules
+// ----------------------------------------------------------------------------
+
+// Content container
+.md-content {
+  // [tablet landscape +]: Add space for table of contents
+  @include break-from-device(tablet landscape) {
+    margin-right: 24.2rem;
+
+    // Adjust for RTL languages
+    [dir='rtl'] & {
+      margin-right: initial;
+      margin-left: 24.2rem;
+    }
+  }
+
+  // [screen +]: Add space for table of contents
+  @include break-from-device(screen) {
+    margin-left: 24.2rem;
+
+    // Adjust for RTL languages
+    [dir='rtl'] & {
+      margin-right: 24.2rem;
+    }
+  }
+
+  // Define spacing
+  &__inner {
+    margin: 0 1.6rem 2.4rem;
+    padding-top: 1.2rem;
+
+    // [screen +]: Increase horizontal spacing
+    @include break-from-device(screen) {
+      margin-right: 0;
+      margin-left: 0;
+    }
+
+    // Hack: add pseudo element for spacing, as the overflow of the content
+    // container may not be hidden due to an imminent offset error on targets
+    &::before {
+      display: block;
+      height: 0.8rem;
+      content: '';
+    }
+
+    // Hack: remove bottom spacing of last element, due to margin collapse
+    > :last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Icons
+  &__icon {
+    @extend %md-icon__button;
+
+    position: relative;
+    margin: 0.8rem 0;
+    padding: 0;
+    float: right;
+
+    // Override default link color for icons
+    .md-typeset & {
+      color: $md-color-black--lighter;
+    }
+
+    // Hide for print
+    @media print {
+      display: none;
+    }
+  }
+}

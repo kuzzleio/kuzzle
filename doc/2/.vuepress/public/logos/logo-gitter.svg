@@ -1,0 +1,16 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="402" width="582" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <g id="comp_x5F_145-gitter">
+   <g id="svg_1">
+    <path stroke="#002835" id="svg_2" fill="none" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="m142.385763,313.746l-45.28,0l0,-285.746l45.28,0l0,285.746zm90.293,-221.375l-45.28,0l0,391.629l45.28,0l0,-391.629zm90.384,0l-45.282,0l0,391.629l45.282,0l0,-391.629zm90.293,-0.089l-45.282,0l0,221.913l45.282,0l0,-221.913z"/>
+   </g>
+  </g>
+  <g id="Layer_1"/>
+ </g>
+</svg>

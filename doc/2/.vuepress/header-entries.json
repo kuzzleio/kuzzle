@@ -1,0 +1,36 @@
+{
+    "Use": [
+        {
+            "path": "/core/1/guides/",
+            "generateLink": true,
+            "label": "Guides"
+        },
+        {
+            "path": "/core/1/api/",
+            "generateLink": true,
+            "label": "API"
+        },
+        {
+            "path": "/sdk/",
+            "generateLink": false,
+            "label": "SDK"
+        },
+        {
+            "path": "/official-plugins/",
+            "generateLink": false,
+            "label": "Plugins"
+        }
+    ],
+    "Extend": [
+        {
+            "path": "/core/1/plugins/",
+            "generateLink": true,
+            "label": "Write Plugins"
+        },
+        {
+            "path": "/core/1/protocols/",
+            "generateLink": true,
+            "label": "Write Protocols"
+        }
+    ]
+}
