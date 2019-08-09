@@ -71,11 +71,11 @@ If one or multiple of these functions are missing, Kuzzle fails to load the prot
 
 `channel` is a recurrent concept in the protocol interface, one that must be implemented by the protocol itself.
 
-Simply put: it is the same `channel` identifier returned to a user after a [real-time subscription](/core/1/api/controllers/realtime/subscribe/). Many users can share the same channel, as it is calculated from the provided subscription filters, after they are normalized (i.e. equivalent yet differently written filters still share the same identifier).
+Simply put: it is the same `channel` identifier returned to a user after a [real-time subscription](/core/1/api/controllers/realtime/subscribe). Many users can share the same channel, as it is calculated from the provided subscription filters, after they are normalized (i.e. equivalent yet differently written filters still share the same identifier).
 
-Kuzzle notifies protocols when one of their managed connection [joins](/core/1/protocols/api/methods/joinchannel/) or [leaves](/core/1/protocols/api/methods/leavechannel) a channel.
+Kuzzle notifies protocols when one of their managed connection [joins](/core/1/protocols/api/methods/joinchannel) or [leaves](/core/1/protocols/api/methods/leavechannel) a channel.
 
-Kuzzle has no opinion on how a protocol handles channels and their associated users. It simply asks protocols to [broadcast](/core/1/protocols/api/methods/broadcast/), or to [notify](/core/1/protocols/api/methods/notify) messages to listening users.
+Kuzzle has no opinion on how a protocol handles channels and their associated users. It simply asks protocols to [broadcast](/core/1/protocols/api/methods/broadcast), or to [notify](/core/1/protocols/api/methods/notify) messages to listening users.
 
 ---
 

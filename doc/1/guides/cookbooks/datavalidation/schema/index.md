@@ -61,4 +61,4 @@ const specification = {
 };
 ```
 
-Learn how to [create simple field validators](/core/1/guides/cookbooks/datavalidation/fields/) and [complex validators](/core/1/guides/cookbooks/datavalidation/validators).
+Learn how to [create simple field validators](/core/1/guides/cookbooks/datavalidation/fields) and [complex validators](/core/1/guides/cookbooks/datavalidation/validators).

@@ -32,7 +32,7 @@ bootstrap(collections);
 
 | Arguments     | Type              | Description                                                                                                                        |
 | ------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `collections` | <pre>object</pre> | List of collection to create, with their corresponding [data mapping](/core/1/guides/essentials/store-access-data/#document-mapping) |
+| `collections` | <pre>object</pre> | List of collection to create, with their corresponding [data mapping](/core/1/guides/essentials/store-access-data#document-mapping) |
 
 ### Return
 
@@ -84,7 +84,7 @@ createCollection(collection, mapping);
 | Arguments    | Type              | Description                                                                       |
 | ------------ | ----------------- | --------------------------------------------------------------------------------- |
 | `collection` | <pre>string</pre> | Collection name                                                                   |
-| `mapping`    | <pre>object</pre> | Collection [mapping](/core/1/guides/essentials/store-access-data/#document-mapping) |
+| `mapping`    | <pre>object</pre> | Collection [mapping](/core/1/guides/essentials/store-access-data#document-mapping) |
 
 ### Return
 

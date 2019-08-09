@@ -16,9 +16,9 @@ This method will only update the mapping when the collection already exists.
 
 <SinceBadge version="1.7.1" />
 
-You can define the collection [dynamic mapping policy](/core/1/guides/essentials/database-mappings/#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
+You can define the collection [dynamic mapping policy](/core/1/guides/essentials/database-mappings#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
 
-You can define [collection additional metadata](/core/1/guides/essentials/database-mappings/#collection-metadata) within the `_meta` root field.
+You can define [collection additional metadata](/core/1/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
 
 ---
 
@@ -95,9 +95,9 @@ Body:
 
 ### Optional:
 
-* `dynamic`: [dynamic mapping policy](/core/1/guides/essentials/database-mappings/#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
-* `_meta`: [collection additional metadata](/core/1/guides/essentials/database-mappings/#collection-metadata) stored next to the collection
-* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/1/guides/essentials/database-mappings/#properties-types-definition)
+* `dynamic`: [dynamic mapping policy](/core/1/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
+* `_meta`: [collection additional metadata](/core/1/guides/essentials/database-mappings#collection-metadata) stored next to the collection
+* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/1/guides/essentials/database-mappings#properties-types-definition)
 
 ---
 
@@ -124,5 +124,5 @@ Returns a confirmation that the collection is being created:
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors/#common-errors)
-- [PreconditionError](/core/1/api/essentials/errors/#preconditionerror)
+- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [PreconditionError](/core/1/api/essentials/errors#preconditionerror)

@@ -39,7 +39,7 @@ Alternative 2:
 
 ## Geodistances
 
-Distances used in geofencing filters such as [geoDistance](/core/1/guides/cookbooks/realtime-api/terms/#geodistance/) or [geoDistanceRange](/core/1/guides/cookbooks/realtime-api/terms/#geodistance-range) can be expressed in various ways.
+Distances used in geofencing filters such as [geoDistance](/core/1/guides/cookbooks/realtime-api/terms#geodistance) or [geoDistanceRange](/core/1/guides/cookbooks/realtime-api/terms#geodistance-range) can be expressed in various ways.
 
 Accepted units:
 

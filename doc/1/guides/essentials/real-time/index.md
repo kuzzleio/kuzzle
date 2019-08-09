@@ -132,7 +132,7 @@ Customers subscribing to this channel will receive the following notification:
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/1/api/essentials/notifications/#documents-changes-messages)
+More information about the [Document Notification format](/core/1/api/essentials/notifications#documents-changes-messages)
 
 ::: warning
 Messages published with the [realtime:publish](/core/1/api/controllers/realtime/publish) method are not persisted in the database.
@@ -230,7 +230,7 @@ Customers subscribing to the changes in this collection will receive the followi
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/1/api/essentials/notifications/#documents-changes-messages)
+More information about the [Document Notification format](/core/1/api/essentials/notifications#documents-changes-messages)
 
 ## Subscription filters
 
@@ -323,7 +323,7 @@ In addition to filters, it is possible to specify options to the [realtime:subsc
 
 ### scope
 
-The [scope](/core/1/api/controllers/realtime/subscribe/#arguments) option allows you to specify whether you want to receive notifications regarding documents entering or leaving the scope only.
+The [scope](/core/1/api/controllers/realtime/subscribe#arguments) option allows you to specify whether you want to receive notifications regarding documents entering or leaving the scope only.
 
 This parameter can take 3 values:
  - `in`: receive only notifications about documents entering the scope
@@ -351,7 +351,7 @@ For example, to be informed of taxis arriving at central park:
 
 ### users
 
-The [users](/core/1/api/controllers/realtime/subscribe/#arguments) option allows you to receive additional notifications when another client joins or leaves the same room.
+The [users](/core/1/api/controllers/realtime/subscribe#arguments) option allows you to receive additional notifications when another client joins or leaves the same room.
 
 This parameter can take 4 values:
  - `in`: only receive notifications when a customer joins the room
@@ -399,7 +399,7 @@ If a second customer subscribes to the same notifications, then the customer wil
 </pre>
 </details>
 
-More information about the [User Notification format](/core/1/api/essentials/notifications/#user-notification)
+More information about the [User Notification format](/core/1/api/essentials/notifications#user-notification)
 
 ### volatile data
 

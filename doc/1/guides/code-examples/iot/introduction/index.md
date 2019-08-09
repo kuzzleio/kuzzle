@@ -15,7 +15,7 @@ In this code example we will show you how to connect to Kuzzle using MQTT, a wid
 ## Install Kuzzle and enable the MQTT protocol
 
 First, you need to download Kuzzle.
-To do that you can follow these [instructions](/core/1/guides/getting-started//#running-kuzzle).
+To do that you can follow these [instructions](/core/1/guides/getting-started#running-kuzzle).
 
 In order to enable the MQTT protocol in Kuzzle, we just need to add 3 lines in the docker-compose file. Specifically, we need to open the port `1883`, which is the default for MQTT, and we need to set 2 environment variables.
 

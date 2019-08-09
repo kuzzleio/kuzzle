@@ -6,7 +6,7 @@ title: Dynamic Roles Definitions
 
 # Dynamic Roles Definitions
 
-In the [Getting Started Guide](/core/1/guides/essentials/security/#user-permissions), we discussed how to assign basic permissions to users through roles and profiles. We are now going to look at more complex and dynamic permissions.
+In the [Getting Started Guide](/core/1/guides/essentials/security#user-permissions), we discussed how to assign basic permissions to users through roles and profiles. We are now going to look at more complex and dynamic permissions.
 
 By definition, permissions only control to what API actions users can access depending on their profiles, without conditions.
 
@@ -51,8 +51,8 @@ For example, here is a role definition that limits access to documents such that
 
 In the definition above:
 
-- `test` is the body of [the permission function](/core/1/guides/kuzzle-depth/roles-definitions/#the-permission-function)
-- `args` is the parameter given to [the fetch definition function](/core/1/guides/kuzzle-depth/roles-definitions/#the-fetch-definition)
+- `test` is the body of [the permission function](/core/1/guides/kuzzle-depth/roles-definitions#the-permission-function)
+- `args` is the parameter given to [the fetch definition function](/core/1/guides/kuzzle-depth/roles-definitions#the-fetch-definition)
 
 ---
 
@@ -82,13 +82,13 @@ function ($request, $currentUserId, args) {
 There are a set of predefined variables which are automatically accessible in a Permission Function, these are:
 
 - `$request`: The complete [request](https://github.com/kuzzleio/kuzzle-common-objects#request) object being evaluated.
-- `$currentUserId`: The current user [`<kuid>`](/core/1/guides/essentials/user-authentication/#kuzzle-user-identifier-kuid) (equivalent to `request.context.token.userId`).
+- `$currentUserId`: The current user [`<kuid>`](/core/1/guides/essentials/user-authentication#kuzzle-user-identifier-kuid) (equivalent to `request.context.token.userId`).
 
 #### Permission Function Args
 
 The main purpose of the "closure" behavior is to grant permissions based on the current state of the storage layer. This means that, in order to determine if an action can be granted, we will first need to fetch documents used in the permission function from the storage layer.
 
-Documents fetched from the storage layer are stored in the `args` object as defined by the [fetch definition](/core/1/guides/kuzzle-depth/roles-definitions/#the-fetch-definition).
+Documents fetched from the storage layer are stored in the `args` object as defined by the [fetch definition](/core/1/guides/kuzzle-depth/roles-definitions#the-fetch-definition).
 
 Each `args` object will look like:
 
@@ -138,7 +138,7 @@ We define the Fetch Definition in a `args` object with the following structure:
 }
 ```
 
-You can define one or more variables inside the `args` object and, for each variable, define the action used to populate it. Each of these variables will then be available in the [permission function](/core/1/guides/kuzzle-depth/roles-definitions/#the-permission-function), accessible in the `args` object as follows: `args.<variable>`.
+You can define one or more variables inside the `args` object and, for each variable, define the action used to populate it. Each of these variables will then be available in the [permission function](/core/1/guides/kuzzle-depth/roles-definitions#the-permission-function), accessible in the `args` object as follows: `args.<variable>`.
 
 #### Fetch Definition Actions
 
@@ -215,7 +215,7 @@ args.myDocuments = [
 
 ##### SEARCH
 
-The `search` action type performs a search on the persistence layer and returns the resulting documents. It is a typical [document search](/core/1/guides/essentials/store-access-data/#document-search). For example:
+The `search` action type performs a search on the persistence layer and returns the resulting documents. It is a typical [document search](/core/1/guides/essentials/store-access-data#document-search). For example:
 
 ```js
 {

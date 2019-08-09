@@ -40,7 +40,7 @@ If you're more familiar with the way relational databases store data, here is ho
 Comparing document-oriented storages with relational databases would require a more thorough analysis, but for the purposes of this guide, we shall reduce the list of differences to the following 3 items:
   - Documents are identified with a unique identifier, which is stored separately from the content of documents (compared to primary/foreign keys, stored alongside the data they identify),
   - no advanced join system,
-  - a [typed mapping system](/core/1/guides/essentials/database-mappings/#properties-types-definition) to define how Elasticsearch should index the fields.
+  - a [typed mapping system](/core/1/guides/essentials/database-mappings#properties-types-definition) to define how Elasticsearch should index the fields.
 
 All these differences should be taken into account when modeling your [data model](/core/1/guides/essentials/database-mappings) and your application.  
 
@@ -103,7 +103,7 @@ curl -X PUT localhost:7512/nyc-open-data/yellow-taxi?pretty
 </details>
 
 ::: info
-It is also possible to define in advance a set of indexes and collections, then load them at the start of Kuzzle (option [--mappings](/core/1/guides/essentials/cli/#start), via the [CLI](/core/1/guides/essentials/cli/#loadmappings) or with the API method [admin:loadMappings](/core/1/api/controllers/admin/load-mappings)
+It is also possible to define in advance a set of indexes and collections, then load them at the start of Kuzzle (option [--mappings](/core/1/guides/essentials/cli#start), via the [CLI](/core/1/guides/essentials/cli#loadmappings) or with the API method [admin:loadMappings](/core/1/api/controllers/admin/load-mappings)
 :::
 
 ## Writing documents

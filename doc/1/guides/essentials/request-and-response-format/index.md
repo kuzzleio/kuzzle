@@ -7,7 +7,7 @@ order: 800
 
 # Request and Response Format
 
-Any access to a Kuzzle resource must be made through a [request](https://github.com/kuzzleio/kuzzle-common-objects#request). The `Request` object is [sealed](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/seal), which means you cannot add or delete fields once the object is initialized. The `Request` state evolves along with the [lifecycle of the transaction](/core/1/guides/essentials/request-and-response-format/#request-life-cycle).
+Any access to a Kuzzle resource must be made through a [request](https://github.com/kuzzleio/kuzzle-common-objects#request). The `Request` object is [sealed](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/seal), which means you cannot add or delete fields once the object is initialized. The `Request` state evolves along with the [lifecycle of the transaction](/core/1/guides/essentials/request-and-response-format#request-life-cycle).
 
 Let's take a look at the structure of the `Request` object.
 

@@ -78,7 +78,7 @@ Here is a filter, testing for equality on the field `last` in the `name` object:
 
 ## Matching array values
 
-A few keywords, like [exists](/core/1/guides/cookbooks/realtime-api/terms/#exists) or [missing](/core/1/guides/cookbooks/realtime-api/terms/#missing), allow searching for array values.
+A few keywords, like [exists](/core/1/guides/cookbooks/realtime-api/terms#exists) or [missing](/core/1/guides/cookbooks/realtime-api/terms#missing), allow searching for array values.
 
 These values can be accessed with the following syntax: `<array path>[<value>]`  
 Only one array value per `exists`/`missing` keyword can be searched in this manner.
@@ -90,7 +90,7 @@ The array value must be provided using the JSON format:
 - Strings: the value must be enclosed in double quotes. Example: `foo["string value"]`
 - Numbers, booleans and `null` must be used as is. Examples: `foo[3.14]`, `foo[false]`, `foo[null]`
 
-Array values can be combined with [nested properties](/core/1/guides/cookbooks/realtime-api/advanced/#testing-nested-fields): `nested.array["value"]`
+Array values can be combined with [nested properties](/core/1/guides/cookbooks/realtime-api/advanced#testing-nested-fields): `nested.array["value"]`
 
 ### Example
 
