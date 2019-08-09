@@ -249,7 +249,7 @@ The following diagram shows how a client can subscribe to a channel.
 
 #### Publishing to a Channel Directly
 
-The following diagram shows how the Kuzzle server triggers a response as a result of a publish request made using the [Real-time/Publish](/core/1/api/controllers/realtime/publish/) action.
+The following diagram shows how the Kuzzle server triggers a response as a result of a publish request made using the [Real-time/Publish](/core/1/api/controllers/realtime/publish) action.
 
 ![pubsub_scenario_details2](./Asynchronous_Communication_Publishing_Directly.png)
 

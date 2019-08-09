@@ -210,9 +210,9 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistanceRange` filter contains the following properties:
 
-- a [geopoint](/core/1/guides/cookbooks/realtime-api/geofencing/#geopoints/) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
-- a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](/core/1/guides/cookbooks/realtime-api/geofencing/#geodistances/)
-- a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](/core/1/guides/cookbooks/realtime-api/geofencing/#geodistances/)
+- a [geopoint](/core/1/guides/cookbooks/realtime-api/geofencing/#geopoints) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
+- a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](/core/1/guides/cookbooks/realtime-api/geofencing/#geodistances)
+- a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](/core/1/guides/cookbooks/realtime-api/geofencing/#geodistances)
 
 ### Syntax
 
@@ -269,8 +269,8 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistance` filter contains the following properties:
 
-- a [geopoint](/core/1/guides/cookbooks/realtime-api/geofencing/#geopoints/) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
-- a `distance` parameter in [geodistance format](/core/1/guides/cookbooks/realtime-api/geofencing/#geodistances/)
+- a [geopoint](/core/1/guides/cookbooks/realtime-api/geofencing/#geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
+- a `distance` parameter in [geodistance format](/core/1/guides/cookbooks/realtime-api/geofencing/#geodistances)
 
 ### Syntax
 

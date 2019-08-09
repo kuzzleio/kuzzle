@@ -8,7 +8,7 @@ title: zrevrangebylex
 
 
 
-Identical to [zrangebylex](/core/1/api/controllers/memory-storage/zrangebylex/) except that the sorted set is traversed in descending order.
+Identical to [zrangebylex](/core/1/api/controllers/memory-storage/zrangebylex) except that the sorted set is traversed in descending order.
 
 [[_Redis documentation_]](https://redis.io/commands/zrevrangebylex)
 

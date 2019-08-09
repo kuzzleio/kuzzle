@@ -381,5 +381,5 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 - Exploit the full capabilites of Elasticsearch with [Data Mappings](/core/1/guides/essentials/database-mappings)
 - Read our [Elasticsearch Cookbook](/core/1/guides/cookbooks/elasticsearch) to learn more about how querying works in Kuzzle
-- Use [document metadata](/core/1/guides/essentials/document-metadata/) to find or recover documents
-- Keep track of data changes using [Real-time Notifications](/core/1/guides/essentials/real-time/)
+- Use [document metadata](/core/1/guides/essentials/document-metadata) to find or recover documents
+- Keep track of data changes using [Real-time Notifications](/core/1/guides/essentials/real-time)

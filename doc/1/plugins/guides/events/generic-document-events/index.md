@@ -61,12 +61,12 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:create](/core/1/api/controllers/document/create/)
-- [document:createOrReplace](/core/1/api/controllers/document/create-or-replace/)
-- [document:mCreate](/core/1/api/controllers/document/m-create/)
-- [document:mCreateOrReplace](/core/1/api/controllers/document/m-create-or-replace/)
-- [document:mReplace](/core/1/api/controllers/document/m-replace/)
-- [document:replace](/core/1/api/controllers/document/replace/)
+- [document:create](/core/1/api/controllers/document/create)
+- [document:createOrReplace](/core/1/api/controllers/document/create-or-replace)
+- [document:mCreate](/core/1/api/controllers/document/m-create)
+- [document:mCreateOrReplace](/core/1/api/controllers/document/m-create-or-replace)
+- [document:mReplace](/core/1/api/controllers/document/m-replace)
+- [document:replace](/core/1/api/controllers/document/replace)
 
 ## generic:document:afterWrite
 
@@ -97,12 +97,12 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:create](/core/1/api/controllers/document/create/)
-- [document:createOrReplace](/core/1/api/controllers/document/create-or-replace/)
-- [document:mCreate](/core/1/api/controllers/document/m-create/)
-- [document:mCreateOrReplace](/core/1/api/controllers/document/m-create-or-replace/)
-- [document:mReplace](/core/1/api/controllers/document/m-replace/)
-- [document:replace](/core/1/api/controllers/document/replace/)
+- [document:create](/core/1/api/controllers/document/create)
+- [document:createOrReplace](/core/1/api/controllers/document/create-or-replace)
+- [document:mCreate](/core/1/api/controllers/document/m-create)
+- [document:mCreateOrReplace](/core/1/api/controllers/document/m-create-or-replace)
+- [document:mReplace](/core/1/api/controllers/document/m-replace)
+- [document:replace](/core/1/api/controllers/document/replace)
 
 
 ## generic:document:beforeUpdate
@@ -134,8 +134,8 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:update](/core/1/api/controllers/document/update/)
-- [document:mUpdate](/core/1/api/controllers/document/m-update/)
+- [document:update](/core/1/api/controllers/document/update)
+- [document:mUpdate](/core/1/api/controllers/document/m-update)
 
 
 ## generic:document:afterUpdate
@@ -167,8 +167,8 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:update](/core/1/api/controllers/document/update/)
-- [document:mUpdate](/core/1/api/controllers/document/m-update/)
+- [document:update](/core/1/api/controllers/document/update)
+- [document:mUpdate](/core/1/api/controllers/document/m-update)
 
 
 ## generic:document:beforeDelete
@@ -200,8 +200,8 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:delete](/core/1/api/controllers/document/delete/)
-- [document:mDelete](/core/1/api/controllers/document/m-delete/)
+- [document:delete](/core/1/api/controllers/document/delete)
+- [document:mDelete](/core/1/api/controllers/document/m-delete)
 
 
 ## generic:document:afterDelete
@@ -233,9 +233,9 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:delete](/core/1/api/controllers/document/delete/)
-- [document:mDelete](/core/1/api/controllers/document/m-delete/)
-- [document:deleteByQuery](/core/1/api/controllers/document/delete-by-query/)
+- [document:delete](/core/1/api/controllers/document/delete)
+- [document:mDelete](/core/1/api/controllers/document/m-delete)
+- [document:deleteByQuery](/core/1/api/controllers/document/delete-by-query)
 
 
 ## generic:document:beforeGet
@@ -267,8 +267,8 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:get](/core/1/api/controllers/document/get/)
-- [document:mGet](/core/1/api/controllers/document/m-get/)
+- [document:get](/core/1/api/controllers/document/get)
+- [document:mGet](/core/1/api/controllers/document/m-get)
 
 
 ## generic:document:afterGet
@@ -300,6 +300,6 @@ class PipePlugin {
 ```
 
 ### Associated controller actions:
-- [document:get](/core/1/api/controllers/document/get/)
-- [document:mGet](/core/1/api/controllers/document/m-get/)
-- [document:search](/core/1/api/controllers/document/search/)
+- [document:get](/core/1/api/controllers/document/get)
+- [document:mGet](/core/1/api/controllers/document/m-get)
+- [document:search](/core/1/api/controllers/document/search)

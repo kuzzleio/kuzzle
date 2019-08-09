@@ -2827,13 +2827,22 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#_checkMapping', () => {
     it('should throw when a property is incorrect', () => {
-      const mapping = {
-        properties: {},
-        dinamic: 'false'
-      };
+      const
+        mapping2 = {
+          type: 'nested',
+          properties: {}
+        },
+        mapping = {
+          properties: {},
+          dinamic: 'false'
+        };
+
 
       should(() => elasticsearch._checkMapping(mapping))
         .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
+
+      should(() => elasticsearch._checkMapping(mapping2))
+        .throw({ message: 'Incorrect mapping property "mapping.type".' });
     });
 
     it('should throw when a nested property is incorrect', () => {
@@ -2861,6 +2870,7 @@ describe('Test: ElasticSearch service', () => {
           name: { type: 'keyword' },
           car: {
             dynamic: 'false',
+            type: 'nested',
             properties: {
               brand: { type: 'keyword' }
             }

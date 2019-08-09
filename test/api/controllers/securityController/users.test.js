@@ -10,10 +10,10 @@ const
   {
     BadRequestError,
     NotFoundError,
-    InternalError: KuzzleInternalError,
     PluginImplementationError,
     SizeLimitError,
     PreconditionError,
+    InternalError: KuzzleInternalError
   } = require('kuzzle-common-objects').errors,
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
@@ -390,7 +390,7 @@ describe('Test: security controller - users', () => {
     it('should reject an error if a strategy is unknown', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
+      
       request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
 
       return should(securityController.createUser(request)).be.rejectedWith(BadRequestError);
@@ -748,7 +748,11 @@ describe('Test: security controller - users', () => {
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
       kuzzle.repositories.user.load.resolves(null);
-      return should(securityController.getUserRights(new Request({_id: 'i.dont.exist'}))).be.rejectedWith(NotFoundError);
+
+      return securityController.getUserRights(new Request({ _id: 'i.dont.exist' }))
+        .catch((e) => {
+          should(e).be.instanceOf(NotFoundError);
+        });
     });
   });
 
@@ -765,6 +769,21 @@ describe('Test: security controller - users', () => {
           .be.calledOnce()
           .be.calledWith(kuzzle, 'user', request);
       });
+    });
+  });
+
+  describe('#revokeTokens', () => {
+    it('should revoke all tokens related to a given user', () => {
+
+      return securityController.revokeTokens((new Request({ _id: 'test', })))
+        .then(() => {
+          should(kuzzle.repositories.token.deleteByUserId).be.calledOnce().be.calledWith('test');
+        });
+    });
+
+    it('should reject an error if the user doesn\'t exists.', () => {
+      kuzzle.repositories.user.load.resolves(null);
+      return should(securityController.revokeTokens(new Request({ _id: 'test' }))).be.rejectedWith(NotFoundError);
     });
   });
 });
