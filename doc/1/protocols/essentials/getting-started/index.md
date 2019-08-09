@@ -17,7 +17,7 @@ Protocols can even decide to propose a dedicated message format and/or query syn
 Protocols are provided with objects to interact with Kuzzle:
 
 - [EntryPoint](/core/1/protocols/api/entrypoint): base communication layer (declare user connections, forward API requests, ...)
-- [context](/core/1/protocols/api/context/): utilities and object constructors not directly related to network communications
+- [context](/core/1/protocols/api/context): utilities and object constructors not directly related to network communications
 
 ---
 
@@ -56,12 +56,12 @@ The following properties can be defined in this `manifest.json` file:
 
 To add new network capabilities, a protocol must implement a set of functions, to be called by Kuzzle:
 
-- [broadcast](/core/1/protocols/api/methods/broadcast/)
-- [disconnect](/core/1/protocols/api/methods/disconnect/)
-- [init](/core/1/protocols/api/methods/init/)
-- [joinChannel](/core/1/protocols/api/methods/joinchannel/)
-- [leaveChannel](/core/1/protocols/api/methods/leavechannel/)
-- [notify](/core/1/protocols/api/methods/notify/)
+- [broadcast](/core/1/protocols/api/methods/broadcast)
+- [disconnect](/core/1/protocols/api/methods/disconnect)
+- [init](/core/1/protocols/api/methods/init)
+- [joinChannel](/core/1/protocols/api/methods/joinchannel)
+- [leaveChannel](/core/1/protocols/api/methods/leavechannel)
+- [notify](/core/1/protocols/api/methods/notify)
 
 If one or multiple of these functions are missing, Kuzzle fails to load the protocol, and refuses to start.
 
@@ -73,15 +73,15 @@ If one or multiple of these functions are missing, Kuzzle fails to load the prot
 
 Simply put: it is the same `channel` identifier returned to a user after a [real-time subscription](/core/1/api/controllers/realtime/subscribe/). Many users can share the same channel, as it is calculated from the provided subscription filters, after they are normalized (i.e. equivalent yet differently written filters still share the same identifier).
 
-Kuzzle notifies protocols when one of their managed connection [joins](/core/1/protocols/api/methods/joinchannel/) or [leaves](/core/1/protocols/api/methods/leavechannel/) a channel.
+Kuzzle notifies protocols when one of their managed connection [joins](/core/1/protocols/api/methods/joinchannel/) or [leaves](/core/1/protocols/api/methods/leavechannel) a channel.
 
-Kuzzle has no opinion on how a protocol handles channels and their associated users. It simply asks protocols to [broadcast](/core/1/protocols/api/methods/broadcast/), or to [notify](/core/1/protocols/api/methods/notify/) messages to listening users.
+Kuzzle has no opinion on how a protocol handles channels and their associated users. It simply asks protocols to [broadcast](/core/1/protocols/api/methods/broadcast/), or to [notify](/core/1/protocols/api/methods/notify) messages to listening users.
 
 ---
 
 ## Configuration
 
-Protocols can be configured in the Kuzzle [configuration](/core/1/guides/essentials/configuration/) file, under the `server/protocols/<protocol name>` section.
+Protocols can be configured in the Kuzzle [configuration](/core/1/guides/essentials/configuration) file, under the `server/protocols/<protocol name>` section.
 
 ### Example
 

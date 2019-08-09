@@ -326,6 +326,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentAda"
     Then I update the document with value "Hopper" in field "lastName"
     Then I should receive a document notification with field action equal to "update"
+    And The notification should have "_updatedFields" array with 1 element
     And The notification should have a "_source" member
     And The notification should have volatile
 
@@ -599,6 +600,16 @@ Feature: Kuzzle functional tests
     Then I get the user mapping
     Then The mapping should contain "foo" field of type "text"
     And The mapping should contain "bar" field of type "keyword"
+
+  @security
+  Scenario: revoke user's tokens
+    When I create a new role "role1" with id "role1"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a user "user1" with id "user1-id"
+    Then I log in as user1:testpwd1 expiring in 1h
+    Then I'm able to check the token for current user
+    Then I revoke all tokens of the user "user1-id"
+    Then I'm not able to check the token for current user
 
   @security
   Scenario: user crudl

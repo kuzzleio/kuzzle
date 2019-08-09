@@ -12,7 +12,7 @@ title: room:new
 | --------- | ----------------- | ----------------------- |
 | `room`    | <pre>object</pre> | Joined room information |
 
-Triggered whenever a new [subscription](/core/1/api/controllers/realtime/subscribe/) is created.
+Triggered whenever a new [subscription](/core/1/api/controllers/realtime/subscribe) is created.
 
 :::info
 Pipes cannot listen to that event, only hooks can.
