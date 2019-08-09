@@ -55,7 +55,7 @@
       "code": 4,
       "errors": {}
     },
-    "embedded_entrypoint": {
+    "entrypoint": {
       "code": 5,
       "errors": {
         "unknown_event_received": {
