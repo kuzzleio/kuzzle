@@ -246,6 +246,27 @@ describe('Test: repositories/tokenRepository', () => {
       return should(tokenRepository.generateToken(user, request, {expiresIn: '1m'}))
         .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
     });
+
+    it('should refresh the token if needed', () => {
+      const oldToken = {};
+      kuzzle.tokenManager.getConnectedUserToken.returns(oldToken);
+
+      const user = new User();
+      user._id = 'id';
+
+      const request = new Request({}, {
+        user,
+        connectionId: 'connectionId'
+      });
+
+      return tokenRepository.generateToken(user, request)
+        .then(token => {
+          should(kuzzle.tokenManager.refresh)
+            .be.calledOnce()
+            .be.calledWith(oldToken, token);
+        });
+
+    });
   });
 
   describe('#serializeToCache', () => {
