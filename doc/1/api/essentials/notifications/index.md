@@ -90,7 +90,7 @@ User notifications are triggered by the following events:
 - A user subscribes to the same room
 - A user leaves that room
 
-These notifications are sent only if the `users` argument is set to any other value than the default `none` one (see [subscription request](/core/1/api/controllers/realtime/subscribe/)).
+These notifications are sent only if the `users` argument is set to any other value than the default `none` one (see [subscription request](/core/1/api/controllers/realtime/subscribe)).
 
 ### Format
 

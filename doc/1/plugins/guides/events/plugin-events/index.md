@@ -34,7 +34,7 @@ The `before` event name is built using the following template:
 
 `<plugin name>/<controller>:before<Action>`
 
-- `plugin name`: the plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started/#prerequisites)
+- `plugin name`: the plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started#prerequisites)
 - `controller`: API controller name
 - `Action`: controller action, camel cased
 
@@ -60,7 +60,7 @@ The `after` event name is built using the following template:
 
 `<plugin name>/<controller>:after<Action>`
 
-- `plugin name`: the plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started/#prerequisites)
+- `plugin name`: the plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started#prerequisites)
 - `controller`: API controller name
 - `Action`: controller action, camel cased
 
@@ -86,7 +86,7 @@ The `error` event name is built using the following template:
 
 `<plugin name>/<controller>:error<Action>`
 
-- `plugin name`: the plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started/#prerequisites)
+- `plugin name`: the plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started#prerequisites)
 - `controller`: API controller name
 - `Action`: controller action, camel cased
 

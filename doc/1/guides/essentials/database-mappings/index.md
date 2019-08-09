@@ -10,9 +10,9 @@ order: 400
 With Elasticsearch, it is possible to define mappings for collections. These mappings allow you to configure the way Elasticsearch will handle these collections.
 
 There are 3 root fields for mapping configuration:
- - [properties](/core/1/guides/essentials/database-mappings/#properties-types-definition): collection types definition
- - [dynamic](/core/1/guides/essentials/database-mappings/#dynamic-mapping-policy): dynamic mapping policy against new fields
- - [_meta](/core/1/guides/essentials/database-mappings/#collection-metadata): collection metadata
+ - [properties](/core/1/guides/essentials/database-mappings#properties-types-definition): collection types definition
+ - [dynamic](/core/1/guides/essentials/database-mappings#dynamic-mapping-policy): dynamic mapping policy against new fields
+ - [_meta](/core/1/guides/essentials/database-mappings#collection-metadata): collection metadata
 
 The following API methods can be used to modify these mappings:
  - [collection:create](/core/1/api/controllers/collection/create)
@@ -65,7 +65,7 @@ The following mapping must first be defined:
 }
 ```
 
-This mapping is then passed in the body to the methods [collection:create](/core/1/api/controllers/collection/create/) or [collection:updateMapping](/core/1/api/controllers/collection/update-mapping).
+This mapping is then passed in the body to the methods [collection:create](/core/1/api/controllers/collection/create) or [collection:updateMapping](/core/1/api/controllers/collection/update-mapping).
 
 ```bash
 # First create a collection yellow-taxi in the nyc-open-index

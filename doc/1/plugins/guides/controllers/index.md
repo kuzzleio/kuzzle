@@ -11,7 +11,7 @@ Kuzzle's API is divided into controllers, each exposing executable actions (see 
 
 Plugins can extend Kuzzle's API by adding new controllers to it.
 
-[Security access](/core/1/guides/essentials/security/) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
+[Security access](/core/1/guides/essentials/security) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
 
 ---
 
@@ -247,7 +247,7 @@ module.exports = class ControllerPlugin {
    */
   otherActionFunction(request) {
     // do action
-    return Promise.resolve(/* result content */);
+    return Promise.resolve(/* result content *);
   }
 };
 ```

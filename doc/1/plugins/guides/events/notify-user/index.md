@@ -14,4 +14,4 @@ title: notify:user
 
 Triggered whenever a real-time user notification is about to be sent.
 
-A [pipe](/core/1/plugins/guides/pipes/) can block some (or all) notifications by rejecting the provided promise.
+A [pipe](/core/1/plugins/guides/pipes) can block some (or all) notifications by rejecting the provided promise.
