@@ -93,6 +93,11 @@
           "code": 2,
           "message": "Invalid token.",
           "class": "UnauthorizedError"
+        },
+        "unknown_authentication_strategy": {
+          "code": 2,
+          "message": "Unknown authentication strategy \"%s\"",
+          "class": "BadRequestError"
         }
       }
     },

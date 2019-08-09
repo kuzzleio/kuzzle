@@ -178,6 +178,16 @@
           "code": 36,
           "message": "The allowing children type %s must implement the function 'getStrictness'.",
           "class": "PluginImplementationError"
+        },
+        "unable_to_load_manifest": {
+          "code": 37,
+          "message": "[%s] Unable to load the file 'manifest.json'.",
+          "class": "PluginImplementationError"
+        },
+        "version_mismatch": {
+          "code": 38,
+          "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
+          "class": "PluginImplementationError"
         }
       }
     },
@@ -274,20 +284,20 @@
           "message": "Plugin %s is not a constructor.",
           "class": "PluginImplementationError"
         },
-        "unable_to_load_manifest": {
-          "code": 19,
-          "message": "[%s] Unable to load the file 'manifest.json'.",
-          "class": "PluginImplementationError"
-        },
-        "version_mismatch": {
-          "code": 20,
-          "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
-          "class": "PluginImplementationError"
-        },
         "plugin_error": {
-          "code": 21,
+          "code": 19,
           "message": "%s.",
           "class": "PluginImplementationError"
+        },
+        "missing_user_for_authentication": {
+          "code": 20,
+          "message": "%s",
+          "class": "UnauthorizedError"
+        },
+        "register_pipe_timeout": {
+          "code": 21,
+          "message": "%s",
+          "class": "GatewayTimeoutError"
         }
       }
     }
