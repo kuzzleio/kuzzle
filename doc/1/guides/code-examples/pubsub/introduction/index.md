@@ -14,7 +14,7 @@ In this code example we will show you how pub/sub works with Kuzzle.
 
 ## Configure Kuzzle
 
-First let's make sure Kuzzle is running and create the index and collection we will use to store documents. Follow these [instructions](/core/1/guides/getting-started//#running-kuzzle).
+First let's make sure Kuzzle is running and create the index and collection we will use to store documents. Follow these [instructions](/core/1/guides/getting-started#running-kuzzle).
 
 ## Create Your App
 

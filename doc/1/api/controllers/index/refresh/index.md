@@ -70,5 +70,5 @@ Returns an object detailing the status of the forced refresh.
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors/#common-errors)
-- [NotFoundError](/core/1/api/essentials/errors/#notfounderror)
+- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [NotFoundError](/core/1/api/essentials/errors#notfounderror)
