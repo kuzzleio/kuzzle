@@ -62,4 +62,4 @@ Returns a confirmation that the index is being created:
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors/#common-errors)
+- [Common errors](/core/1/api/essentials/errors#common-errors)

@@ -11,8 +11,8 @@ description: Introduction to Koncorde
 [Koncorde](https://www.npmjs.com/package/koncorde) is a data percolation engine
 and is part of Kuzzle's real-time engine. It is used to:
 
-- trigger notifications on [real-time subscriptions](/core/1/guides/essentials/real-time/)
-- [perform data validation](/core/1/guides/essentials/data-validation/)
+- trigger notifications on [real-time subscriptions](/core/1/guides/essentials/real-time)
+- [perform data validation](/core/1/guides/essentials/data-validation)
 
 Koncorde exposes a [DSL](https://wikipedia.org/en/Domain-specific_language) that enables you to define filters you can apply to any
 stream of data and be notified whenever the content of the stream matches the filter.
@@ -21,7 +21,7 @@ This paradigm is called "percolation" and is the foundation of Kuzzle's real-tim
 In other words, a percolation engine is the inverse of a search engine, where
 data is indexed and filters are used to retrieve data that matches them.
 
-**This is different from document search [read more about how to search persistent data](/core/1/guides/essentials/store-access-data/#document-search).**
+**This is different from document search [read more about how to search persistent data](/core/1/guides/essentials/store-access-data#document-search).**
 
 A data percolation engine has the following properties:
 
@@ -37,7 +37,7 @@ data**, for example, by defining a bounding polgon and checking whether the poin
 contained in your data are contained or not in it.
 
 If you are looking for information about how to setup a live data subscription
-in Kuzzle, please refer to [the specific docs in the Essentials section](/core/1/guides/essentials/real-time/).
+in Kuzzle, please refer to [the specific docs in the Essentials section](/core/1/guides/essentials/real-time).
 
 ## Quick start
 

@@ -399,7 +399,7 @@ describe('Test: repositories/profileRepository', () => {
           done(new Error('The promise is not rejected'));
         })
         .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError).and.match({message: 'Missing profile id'});
+          should(e).be.an.instanceOf(BadRequestError).and.match({message: 'Missing profileId'});
           should(kuzzle.emit).not.be.called();
           done();
         })

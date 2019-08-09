@@ -73,7 +73,7 @@ Here we assume you have installed Kuzzle on your localhost, if this is not the c
 
 ## Subscribe to Documents with Specific Criteria
 
-We will perform a subscription request that tells Kuzzle that the App wants to be notified anytime a document is created that contains the _message_ field. We define this subscription filter as follows, for more information about filters click [here](/core/1/guides/cookbooks/realtime-api/):
+We will perform a subscription request that tells Kuzzle that the App wants to be notified anytime a document is created that contains the _message_ field. We define this subscription filter as follows, for more information about filters click [here](/core/1/guides/cookbooks/realtime-api):
 
 In the Subscribe function add:
 

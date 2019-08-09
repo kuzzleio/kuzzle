@@ -27,8 +27,8 @@ Before launching Kuzzle using Docker containers, ensure that your system meets t
 
 - **64-bit environment**
 - **At least 1.4GB of memory**
-- **Docker v1.10+**, see [instructions here](https://docs.docker.com/engine/installation/)
-- **Docker Compose v1.8+**, see [instructions here](https://docs.docker.com/compose/install/)
+- **Docker v1.10+**, see [instructions here](https://docs.docker.com/engine/installation)
+- **Docker Compose v1.8+**, see [instructions here](https://docs.docker.com/compose/install)
 
 ::: info
 Before starting the docker stack, you need to increase the maximum amount of virtual memory in order to run Elasticsearch, which is part of our stack (see why [here](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/_maximum_map_count_check.html)):
@@ -132,10 +132,10 @@ Associated password is your unique instance ID. You can get it from the EC2 AWS 
 In this section we will perform a manual installation of Kuzzle on a Linux distribution. We choose Linux because all Kuzzle components work natively on it.
 
 ::: info
-By default, Kuzzle expects all the components to be running on localhost but you can [change](/core/1/guides/essentials/configuration/)'ll be able to select which [Kuzzle](/core/1/guides/essentials/admin-console/#connect-to-kuzzle) installation that you want to manage. this behavior.
+By default, Kuzzle expects all the components to be running on localhost but you can [change](/core/1/guides/essentials/configuration)'ll be able to select which [Kuzzle](/core/1/guides/essentials/admin-console#connect-to-kuzzle) installation that you want to manage. this behavior.
 :::
 
-We will run Kuzzle using [pm2](http://pm2.keymetrics.io/), a process management tool used to monitor Node.js applications.
+We will run Kuzzle using [pm2](http://pm2.keymetrics.io), a process management tool used to monitor Node.js applications.
 
 ### Supported operating systems
 
@@ -147,11 +147,11 @@ The following operating systems are actively supported (64-bit versions only):
 ### Prerequisites
 
 - [Elasticsearch](https://www.elastic.co/products/elasticsearch) version 5.x
-- [Redis](http://redis.io/) version 3.x or higher
-- [Node.js](https://nodejs.org/en/download/package-manager/) version 6.x or higher
-- [NPM](https://www.npmjs.com/) version 3 or higher
-- [Python](https://www.python.org/) version 2.7 preferred
-- [GDB](https://www.gnu.org/software/gdb/) version 7.7 or higher
+- [Redis](http://redis.io) version 3.x or higher
+- [Node.js](https://nodejs.org/en/download/package-manager) version 6.x or higher
+- [NPM](https://www.npmjs.com) version 3 or higher
+- [Python](https://www.python.org) version 2.7 preferred
+- [GDB](https://www.gnu.org/software/gdb) version 7.7 or higher
 - a C++11 compatible compiler
 - it's strongly advised that the system value for the maximum number of opened files (`ulimit -n` on most Unix systems) is set to a high value (i.e. 65535 is a good min. value)
 
@@ -206,7 +206,7 @@ done
 
 Kuzzle uses Elasticsearch and Redis as a persistent and key-value store, respectively. If you are running these components on the same machine as your Kuzzle installation then no additional configuration is needed. If; however, you are running them on another host, you will need to create or update the `.kuzzlerc` file in your installation folder.
 
-Please refer to the [configuration section](/core/1/guides/essentials/configuration/) for more details.
+Please refer to the [configuration section](/core/1/guides/essentials/configuration) for more details.
 
 ### Setup PM2
 
@@ -216,7 +216,7 @@ Now that you have installed Kuzzle and loaded its plugins, lets install pm2. Run
 sudo npm install -g pm2
 ```
 
-Now create a [pm2 configuration file](http://pm2.keymetrics.io/docs/usage/application-declaration/#process-file) that sets the application and environment details. We will create the `KUZZLE_BACKEND_INSTALL_DIR` environment variable to store the location of our Kuzzle installation:
+Now create a [pm2 configuration file](http://pm2.keymetrics.io/docs/usage/application-declaration#process-file) that sets the application and environment details. We will create the `KUZZLE_BACKEND_INSTALL_DIR` environment variable to store the location of our Kuzzle installation:
 
 ```bash
 export KUZZLE_BACKEND_INSTALL_DIR="~/kuzzle/kuzzle"
@@ -282,7 +282,7 @@ pm2 "<start|stop|restart>" kuzzlebackend
 ```
 
 ::: success
-Now that Kuzzle is up and running you can [install](/core/1/guides/essentials/admin-console/) the <strong>Kuzzle Admin Console</strong>.
+Now that Kuzzle is up and running you can [install](/core/1/guides/essentials/admin-console) the <strong>Kuzzle Admin Console</strong>.
 :::
 
 ### Troubleshooting
@@ -333,7 +333,7 @@ Elasticsearch WARNING: 2018-01-12T13:36:34Z
   No living connections
 ```
 
-If you see the following message and your Elasticsearch installation uses a security layer, configure the Elasticsearch client options in the `.kuzzlerc` file. For more information click [here](/core/1/guides/essentials/configuration/).
+If you see the following message and your Elasticsearch installation uses a security layer, configure the Elasticsearch client options in the `.kuzzlerc` file. For more information click [here](/core/1/guides/essentials/configuration).
 
 ```
 [ℹ] Starting Kuzzle server
@@ -387,5 +387,5 @@ Once your Kuzzle instance is up and running, dive even deeper to learn how to le
 
 - take a look at the [SDK Reference](/sdk)
 - learn how to use [Koncorde](/core/1/guides/cookbooks/realtime-api) to create incredibly fine-grained and blazing-fast subscriptions
-- follow our guide to learn how to [implement basic authentication](/core/1/guides/essentials/user-authentication/#local-strategy).
-- follow our guide to learn how to [implement manage users and setup fine-grained access control](/core/1/guides/essentials/security/).
+- follow our guide to learn how to [implement basic authentication](/core/1/guides/essentials/user-authentication#local-strategy).
+- follow our guide to learn how to [implement manage users and setup fine-grained access control](/core/1/guides/essentials/security).

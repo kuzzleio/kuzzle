@@ -7,7 +7,7 @@ order: 300
 
 # Pipes
 
-Pipes are functions plugged to [events](/core/1/plugins/guides/events/), called synchronously by Kuzzle, and receiving information regarding that event.
+Pipes are functions plugged to [events](/core/1/plugins/guides/events), called synchronously by Kuzzle, and receiving information regarding that event.
 
 Pipes can:
 
@@ -15,14 +15,14 @@ Pipes can:
 - Change the received information. Kuzzle will use the updated information upon resuming the task
 
 :::warning
-If a pipe takes too long to respond, Kuzzle will eventually abort the entire task with a [GatewayTimeout](/core/1/plugins/plugin-context/errors/gatewaytimeouterror) error. The timeout value can be changed in the [configuration files](/core/1/guides/essentials/configuration/).
+If a pipe takes too long to respond, Kuzzle will eventually abort the entire task with a [GatewayTimeout](/core/1/plugins/plugin-context/errors/gatewaytimeouterror) error. The timeout value can be changed in the [configuration files](/core/1/guides/essentials/configuration).
 :::
 
 ---
 
 ## Usage
 
-Plugins can register pipes by exposing a `pipes` object: keys are listened [events](/core/1/plugins/guides/events/), and values are either a function to execute whenever that event is triggered, or an array of functions.
+Plugins can register pipes by exposing a `pipes` object: keys are listened [events](/core/1/plugins/guides/events), and values are either a function to execute whenever that event is triggered, or an array of functions.
 
 ```js
 this.pipes = {
@@ -36,10 +36,10 @@ If multiple pipes are plugged to the same event (either from the same plugin or 
 Pipes must notify Kuzzle about their completion by one of these two means:
 
 - by calling the `callback(error, request)` function received as their last argument (leave the `error` null if the pipe executed successfully)
-- by returning a promise, resolved (or rejected) with a valid [Request](/core/1/guides/essentials/request-and-response-format/) upon the completion of the pipe
+- by returning a promise, resolved (or rejected) with a valid [Request](/core/1/guides/essentials/request-and-response-format) upon the completion of the pipe
 
 :::warning
-You must either call the callback with a valid [Request](/core/1/guides/essentials/request-and-response-format/) or return a promise resolving to one.
+You must either call the callback with a valid [Request](/core/1/guides/essentials/request-and-response-format) or return a promise resolving to one.
 :::
 
 If a pipe throws an error, it is advised to throw one of the available [KuzzleError](/core/1/plugins/plugin-context/errors/kuzzleerror) object. Otherwise, Kuzzle will reject the task with a `PluginImplementationError` error.

@@ -11,7 +11,7 @@ Kuzzle's API is divided into controllers, each exposing executable actions (see 
 
 Plugins can extend Kuzzle's API by adding new controllers to it.
 
-[Security access](/core/1/guides/essentials/security/) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
+[Security access](/core/1/guides/essentials/security) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
 
 ---
 
@@ -50,7 +50,7 @@ In order to create a new controller, the plugin must expose the following proper
 
 ## Return a response
 
-By default, Kuzzle wraps a controller action's result in a [Kuzzle Response](/core/1/api/essentials/kuzzle-response/) object.  
+By default, Kuzzle wraps a controller action's result in a [Kuzzle Response](/core/1/api/essentials/kuzzle-response) object.  
 
 Consider the following action:
 ```js
@@ -134,7 +134,7 @@ Quick summary of how queries are normalized:
 
 Kuzzle triggers events on all controller routes, including those added by plugins.
 
-Read more about these automatic controller events [here](/core/1/plugins/guides/events/).
+Read more about these automatic controller events [here](/core/1/plugins/guides/events).
 
 ---
 
@@ -247,7 +247,7 @@ module.exports = class ControllerPlugin {
    */
   otherActionFunction(request) {
     // do action
-    return Promise.resolve(/* result content */);
+    return Promise.resolve(/* result content *);
   }
 };
 ```

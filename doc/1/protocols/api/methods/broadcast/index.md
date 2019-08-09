@@ -6,7 +6,7 @@ title: broadcast
 
 # broadcast
 
-Asks the protocol to emit a payload to [channels](/core/1/protocols/essentials/getting-started/#channels).
+Asks the protocol to emit a payload to [channels](/core/1/protocols/essentials/getting-started#channels).
 
 ---
 

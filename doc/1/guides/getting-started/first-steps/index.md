@@ -12,7 +12,7 @@ It's time to play with the [Kuzzle JS SDK](/sdk). In this section, we will learn
 
 Before proceeding, please make sure your system has these programs installed:
 
-- **Node.js** version 6 or higher ([download page](https://nodejs.org/en/download/))
+- **Node.js** version 6 or higher ([download page](https://nodejs.org/en/download))
 - Kuzzle
 
 :::info
@@ -96,7 +96,7 @@ document created
 ```
 
 :::success
-You have now successfully stored your first document into Kuzzle. Check the [Admin Console Guide](/core/1/guides/essentials/admin-console/) to see how to browse your collection and confirm that your document was saved.
+You have now successfully stored your first document into Kuzzle. Check the [Admin Console Guide](/core/1/guides/essentials/admin-console) to see how to browse your collection and confirm that your document was saved.
 :::
 
 _You can find more resources about Kuzzle SDK in the [SDK Reference](/sdk)._
@@ -115,7 +115,7 @@ Run your file in Node.js
 node create.js
 ```
 
-This creates a new document in Kuzzle, triggering a [notification](/core/1/guides/essentials/real-time/):
+This creates a new document in Kuzzle, triggering a [notification](/core/1/guides/essentials/real-time):
 
 ```bash
 subscribe ok
@@ -133,5 +133,5 @@ Now that you're more familiar with Kuzzle, dive even deeper to learn how to leve
 
 - take a look at the [/sdk](SDK Reference)
 - learn how to use [/core/1/guides/cookbooks/realtime-api](Koncorde) to create incredibly fine-grained and blazing-fast subscriptions
-- follow our guide to learn how to implement [/core/1/guides/essentials/user-authentication/#local-strategy](basic authentication)
+- follow our guide to learn how to implement [/core/1/guides/essentials/user-authentication#local-strategy](basic authentication)
 - follow our guide to learn how to implement [/core/1/guides/essentials/security/](manage users and setup fine-grained access control)

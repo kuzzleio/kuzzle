@@ -93,6 +93,46 @@
           "code": 2,
           "message": "Invalid token.",
           "class": "UnauthorizedError"
+        },
+        "unknown_authentication_strategy": {
+          "code": 3,
+          "message": "Unknown authentication strategy \"%s\"",
+          "class": "BadRequestError"
+        },
+        "cannot_generate_token_with_unknown_user": {
+          "code": 4,
+          "message": "Unknown User : cannot generate token",
+          "class": "InternalError"
+        },
+        "cannot_generate_token_with_unknown_context": {
+          "code": 5,
+          "message": "Unknown context : cannot generate token",
+          "class": "InternalError"
+        },
+        "expiresIn_limit_reached": {
+          "code": 6,
+          "message": "expiresIn value exceeds maximum allowed value",
+          "class": "BadRequestError"
+        },
+        "generate_token_error": {
+          "code": 7,
+          "message": "Error while generating token",
+          "class": "InternalError"
+        },
+        "token_expired": {
+          "code": 8,
+          "message": "Token expired",
+          "class": "UnauthorizedError"
+        },
+        "json_web_token_error": {
+          "code": 9,
+          "message": "Json Web Token Error",
+          "class": "UnauthorizedError"
+        },
+        "error_verifying_token": {
+          "code": 10,
+          "message": "Error verifying token",
+          "class": "InternalError"
         }
       }
     },
@@ -160,9 +200,14 @@
           "class": "UnauthorizedError"
         },
         "forbidden_action": {
-          "code": 6,
+          "code": 7,
           "message": "Forbidden action %s for user %s.",
           "class": "ForbiddenError"
+        },
+        "client_connection_dropped": {
+          "code": 8,
+          "message": "Client connection dropped",
+          "class": "BadRequestError"
         }
       }
     },
@@ -248,6 +293,256 @@
           "code": 13,
           "message": "Internal database inconsistency detected: existing credentials found on non-existing user %s.",
           "class": "InternalError"
+        },
+        "validate_method": {
+          "code": 14,
+          "message": "%s.",
+          "class": "BadRequestError"
+        },
+        "missing_profile_id": {
+          "code": 15,
+          "message": "Missing profileId",
+          "class": "BadRequestError"
+        },
+        "missing_profile_ids": {
+          "code": 16,
+          "message": "Missing profileIds",
+          "class": "BadRequestError"
+        },
+        "profile_ids_must_be_array_of_string": {
+          "code": 17,
+          "message": "An array of strings must be provided as profileIds",
+          "class": "BadRequestError"
+        },
+        "expected_profile_id_to_be_a_string": {
+          "code": 18,
+          "message": "Invalid argument: Expected profile id to be a string, received \"%s\"",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_basic_profile": {
+          "code": 19,
+          "message": "%s is one of the basic profiles of Kuzzle, you cannot delete it, but you can edit it.",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_profile_being_used": {
+          "code": 20,
+          "message": "The profile \"%s\" cannot be deleted since it is used by some users.",
+          "class": "ForbiddenError"
+        },
+        "missing_anonymous_role": {
+          "code": 21,
+          "message": "Anonymous profile must include the anonymous role",
+          "class": "BadRequestError"
+        },
+        "unable_to_hydrate_profile": {
+          "code": 22,
+          "message": "Unable to hydrate the profile %s: missing role(s) in the database",
+          "class": "NotFoundError"
+        },
+        "unable_to_find_collection_with_id": {
+          "code": 23,
+          "message": "Unable to find %s with id '%s'",
+          "class": "NotFoundError"
+        },
+        "ids_must_be_an_array": {
+          "code": 24,
+          "message": "Bad argument: %s is not an array.",
+          "class": "InternalError"
+        },
+        "load_from_cache": {
+          "code": 25,
+          "message": "%s",
+          "class": "InternalError"
+        },
+        "nothing_to_delete_in_repository": {
+          "code": 26,
+          "message": "Repository %s: nothing to delete",
+          "class": "InternalError"
+        },
+        "missing_id_in_repository": {
+          "code": 27,
+          "message": "Repository %s: missing _id",
+          "class": "InternalError"
+        },
+        "missing_role_id": {
+          "code": 28,
+          "message": "Missing role id",
+          "class": "BadRequestError"
+        },
+        "expected_role_id_to_be_a_string": {
+          "code": 29,
+          "message": "Invalid argument: Expected role id to be a string, received \"%s\"",
+          "class": "BadRequestError"
+        },
+        "cannot_remove_login_permission_from_anonymous_role": {
+          "code": 30,
+          "message": "Cannot remove login permission from anonymous role",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_basic_role": {
+          "code": 31,
+          "message": "%s is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_role_being_used": {
+          "code": 32,
+          "message": "The role \"%s\" cannot be deleted since it is used by some profile.",
+          "class": "BadRequestError"
+        },
+        "unable_remove_bad_credentials": {
+          "code": 33,
+          "message": "was not able to remove bad credentials of user '%s'",
+          "class": "PartialError"
+        },
+        "anonymous_user_not_assigned_to_anonymous_profile": {
+          "code": 34,
+          "message": "Anonymous user must be assigned the anonymous profile",
+          "class": "BadRequestError"
+        },
+        "unable_to_hydrate_user": {
+          "code": 35,
+          "message": "Unable to hydrate the user %s: missing profile(s) in the database",
+          "class": "NotFoundError"
+        },
+        "cannot_get_roles_for_uninitialized_profile": {
+          "code": 36,
+          "message": "Cannot get roles for uninitialized profile %s",
+          "class": "PreconditionError"
+        },
+        "missing_mandatory_policies_attribute": {
+          "code": 37,
+          "message": "The \"policies\" attribute is mandatory and must be an array",
+          "class": "BadRequestError"
+        },
+        "empty_policies_attribute": {
+          "code": 38,
+          "message": "The \"policies\" attribute array cannot be empty",
+          "class": "BadRequestError"
+        },
+        "missing_mandatory_roleId_attribute": {
+          "code": 39,
+          "message": "policies[%s] Missing mandatory attribute \"roleId\"",
+          "class": "BadRequestError"
+        },
+        "unexpected_attribute_in_policies": {
+          "code": 40,
+          "message": "policies[%s] Unexpected attribute \"%s\". Valid attributes are \"roleId\" and \"restrictedTo\"",
+          "class": "BadRequestError"
+        },
+        "attribute_restrictedTo_not_an_array_of_objects": {
+          "code": 41,
+          "message": "policies[%s] Expected \"restrictedTo\" to be an array of objects",
+          "class": "BadRequestError"
+        },
+        "restrictedTo_field_must_be_an_object": {
+          "code": 42,
+          "message": "policies[%s].restrictedTo[%s] should be an object",
+          "class": "BadRequestError"
+        },
+        "missing_mandatory_index_attribute_in_restrictedTo_array": {
+          "code": 43,
+          "message": "policies[%s].restrictedTo[%s] Missing mandatory attribute \"index\"",
+          "class": "BadRequestError"
+        },
+        "index_attribute_is_empty_string": {
+          "code": 44,
+          "message": "policies[%s].restrictedTo[%s] Attribute \"index\" must be a non-empty string value",
+          "class": "BadRequestError"
+        },
+        "attribute_collections_not_an_array_in_retrictedTo": {
+          "code": 45,
+          "message": "policies[%s].restrictedTo[%s] Attribute \"collections\" must be of type \"array\"",
+          "class": "BadRequestError"
+        },
+        "attribute_collections_not_contains_not_only_non_empty_strings": {
+          "code": 46,
+          "message": "policies[%s].restrictedTo[%s] Attribute \"collections\" can only contain non-empty string values",
+          "class": "BadRequestError"
+        },
+        "unexptected_attribute_in_restrictedTo_array": {
+          "code": 47,
+          "message": "policies[%s].restrictedTo[%s] Unexpected attribute \"%s\". Valid attributes are \"index\" and \"collections\"",
+          "class": "BadRequestError"
+        },
+        "cannot_get_profiles_for_uninitialized_user": {
+          "code": 48,
+          "message": "Cannot get profiles for uninitialized user %s",
+          "class": "PreconditionError"
+        },
+        "cannot_check_permissions_on_uninitialized_role": {
+          "code": 49,
+          "message": "Cannot check permissions on uninitialized role %s",
+          "class": "PreconditionError"
+        },
+        "invalid_rights_given": {
+          "code": 50,
+          "message": "Invalid rights given for role %s(%s) : %s",
+          "class": "InternalError"
+        },
+        "controllers_definition_not_an_object": {
+          "code": 51,
+          "message": "The \"controllers\" definition must be an object",
+          "class": "BadRequestError"
+        },
+        "empty_controllers_definition": {
+          "code": 52,
+          "message": "The \"controllers\" definition cannot be empty",
+          "class": "BadRequestError"
+        },
+        "controller_definition_not_an_object": {
+          "code": 53,
+          "message": "Invalid definition for [%s]: must be an object",
+          "class": "BadRequestError"
+        },
+        "empty_controller_definition": {
+          "code": 54,
+          "message": "Invalid definition for [%s]: cannot be empty",
+          "class": "BadRequestError"
+        },
+        "actions_attribute_missing_in_controller_definition": {
+          "code": 55,
+          "message": "Invalid definition for [%s]: \"actions\" attribute missing",
+          "class": "BadRequestError"
+        },
+        "actions_attribute_not_an_object_in_controller_definition": {
+          "code": 56,
+          "message": "Invalid definition for [%s]: \"actions\" attribute must be an object",
+          "class": "BadRequestError"
+        },
+        "actions_attribute_empty_in_controller_definition": {
+          "code": 57,
+          "message": "Invalid definition for [%s]: \"actions\" attribute cannot be empty",
+          "class": "BadRequestError"
+        },
+        "invalid_type_in_definition_for_controller_action": {
+          "code": 58,
+          "message": "Invalid definition for [%s, %s]: must be a boolean or an object",
+          "class": "BadRequestError"
+        },
+        "missing_test_element_for_controller_action": {
+          "code": 59,
+          "message": "Invalid definition for [%s, %s]. Permissions defined as closures must have a \"test\" element.",
+          "class": "BadRequestError"
+        },
+        "error_executing_function_for_controller_action": {
+          "code": 60,
+          "message": "Invalid definition for [%s, %s]: error executing function",
+          "class": "BadRequestError"
+        },
+        "parsing_rights_for_role": {
+          "code": 61,
+          "message": "Error parsing rights for role %s (%s) : %s",
+          "class": "BadRequestError"
+        },
+        "parsing_closure_rights_for_role": {
+          "code": 62,
+          "message": "%s",
+          "class": "BadRequestError"
+        },
+        "rights_action_closure_execution": {
+          "code": 63,
+          "message": "%s",
+          "class": "BadRequestError"
         }
       }
     },

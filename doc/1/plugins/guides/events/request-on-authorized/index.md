@@ -14,4 +14,4 @@ title: request:onAuthorized
 
 Triggered whenever a request passes authorization checks and is ready to be processed.
 
-This event occurs before [before events](/core/1/plugins/guides/events/api-events/#before).
+This event occurs before [before events](/core/1/plugins/guides/events/api-events#before).

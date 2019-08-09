@@ -15,7 +15,7 @@ By default, the MQTT protocol is disabled in the Kuzzle configuration.
 
 ## Configuration
 
-The protocol can be configured via the [kuzzlerc configuration file](/core/1/guides/essentials/configuration/), under the `server > protocols > mqtt` section.
+The protocol can be configured via the [kuzzlerc configuration file](/core/1/guides/essentials/configuration), under the `server > protocols > mqtt` section.
 
 | Option            | Type               | Description                                                                                                                                                                                                                             | Default             |
 | ----------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
@@ -47,7 +47,7 @@ example:
 
 ### Sending an API request and getting the response
 
-By default, the MQTT protocol listens to the `Kuzzle/request` MQTT topic (see [configuration](#configuration)) for requests to the [Kuzzle API](/core/1/api/essentials/connecting-to-kuzzle/).
+By default, the MQTT protocol listens to the `Kuzzle/request` MQTT topic (see [configuration](#configuration)) for requests to the [Kuzzle API](/core/1/api/essentials/connecting-to-kuzzle).
 
 It then forwards Kuzzle response to the `Kuzzle/response` MQTT topic, **and only to the client who made the initial request**.
 
@@ -88,7 +88,7 @@ client.on('message', (topic, raw) => {
 
 ### Using Kuzzle subscriptions
 
-Kuzzle allows to [subscribe](/core/1/api/controllers/realtime/subscribe/) to messages and events using advanced filters.
+Kuzzle allows to [subscribe](/core/1/api/controllers/realtime/subscribe) to messages and events using advanced filters.
 
 Each time a subscription is sent, a dedicated MQTT topic is created, named after the `channel` property issued by Kuzzle.
 
