@@ -10,9 +10,9 @@ Updates a collection mapping.
 
 <SinceBadge version="1.7.1" />
 
-You can define the collection [dynamic mapping policy](/core/1/guides/essentials/database-mappings/#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
+You can define the collection [dynamic mapping policy](/core/1/guides/essentials/database-mappings#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
 
-You can define [collection additional metadata](/core/1/guides/essentials/database-mappings/#collection-metadata) within the `_meta` root field.
+You can define [collection additional metadata](/core/1/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
 
 ---
 
@@ -87,9 +87,9 @@ Body:
 
 ## Body properties
 
-* `dynamic`: [dynamic mapping policy](/core/1/guides/essentials/database-mappings/#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
-* `_meta`: [collection additional metadata](/core/1/guides/essentials/database-mappings/#collection-metadata) stored next to the collection
-* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/1/guides/essentials/database-mappings/#properties-types-definition)
+* `dynamic`: [dynamic mapping policy](/core/1/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
+* `_meta`: [collection additional metadata](/core/1/guides/essentials/database-mappings#collection-metadata) stored next to the collection
+* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/1/guides/essentials/database-mappings#properties-types-definition)
 
 ---
 
@@ -112,5 +112,5 @@ Body:
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors/#common-errors)
-- [NotFoundError](/core/1/api/essentials/errors/#notfounderror)
+- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [NotFoundError](/core/1/api/essentials/errors#notfounderror)

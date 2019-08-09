@@ -12,7 +12,7 @@ Kuzzle uses Elasticsearch as its datastore and provides a user friendly interfac
 
 ## Configure Kuzzle
 
-First let's make sure Kuzzle is running and create the index and collection we will use to store documents. Follow these [instructions](/core/1/guides/getting-started//#running-kuzzle).
+First let's make sure Kuzzle is running and create the index and collection we will use to store documents. Follow these [instructions](/core/1/guides/getting-started#running-kuzzle).
 
 ## Create Your App
 
