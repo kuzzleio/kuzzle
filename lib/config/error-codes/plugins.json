@@ -153,6 +153,41 @@
           "code": 31,
           "message": "%s Only following http verbs are allowed: \"%s\". %s",
           "class": "PluginImplementationError"
+        },
+        "invalid_name_property": {
+          "code": 32,
+          "message": "[%s/manifest.json] Invalid \"name\" property: expected a non-empty string.",
+          "class": "PluginImplementationError"
+        },
+        "missing_name_property": {
+          "code": 33,
+          "message": "[%s/manifest.json] A \"name\" property is required.",
+          "class": "PluginImplementationError"
+        },
+        "function_validate_not_implemented": {
+          "code": 34,
+          "message": "The type %s must implement the function 'validate'.",
+          "class": "PluginImplementationError"
+        },
+        "function_validateFieldSpecification_not_implemented": {
+          "code": 35,
+          "message": "The type %s must implement the function 'validateFieldSpecification'.",
+          "class": "PluginImplementationError"
+        },
+        "function_getStrictness_not_implemented": {
+          "code": 36,
+          "message": "The allowing children type %s must implement the function 'getStrictness'.",
+          "class": "PluginImplementationError"
+        },
+        "unable_to_load_manifest": {
+          "code": 37,
+          "message": "[%s] Unable to load the file 'manifest.json'.",
+          "class": "PluginImplementationError"
+        },
+        "version_mismatch": {
+          "code": 38,
+          "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
+          "class": "PluginImplementationError"
         }
       }
     },
@@ -250,9 +285,19 @@
           "class": "PluginImplementationError"
         },
         "plugin_error": {
-          "code": 21,
+          "code": 19,
           "message": "%s.",
           "class": "PluginImplementationError"
+        },
+        "missing_user_for_authentication": {
+          "code": 20,
+          "message": "%s",
+          "class": "UnauthorizedError"
+        },
+        "register_pipe_timeout": {
+          "code": 21,
+          "message": "%s",
+          "class": "GatewayTimeoutError"
         },
         "unable_to_serialize_response": {
           "code": 22,
