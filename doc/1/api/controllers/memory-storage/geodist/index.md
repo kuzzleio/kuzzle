@@ -8,7 +8,7 @@ title: geodist
 
 
 
-Returns the distance between two geospatial members of a key (see [geoadd](/core/1/api/controllers/memory-storage/geoadd/)).
+Returns the distance between two geospatial members of a key (see [geoadd](/core/1/api/controllers/memory-storage/geoadd)).
 
 The returned distance is expressed in meters by default.
 

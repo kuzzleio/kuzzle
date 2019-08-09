@@ -119,7 +119,7 @@ setError(error);
 
 If a `KuzzleError` object is provided, the request's status attribute is set to the error one.
 
-Otherwise, the provided error is embedded into a [InternalError](/core/1/protocols/api/context/errors/#internalerror) object, and the request status is set to 500.
+Otherwise, the provided error is embedded into a [InternalError](/core/1/protocols/api/context/errors#internalerror) object, and the request status is set to 500.
 
 ---
 

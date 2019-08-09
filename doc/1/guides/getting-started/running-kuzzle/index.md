@@ -13,7 +13,7 @@ This section learns you how to quickly get Kuzzle up and running using our insta
 Open a terminal and run the following command:
 
 ```bash
-bash -c "$(curl https://get.kuzzle.io/)"
+bash -c "$(curl https://get.kuzzle.io)"
 ```
 
 This command downloads and executes the installation script. The script checks the system for a set of prerequisites and installs missing ones, such as [Docker](https://www.docker.com). When the installation is complete, it will automatically run Kuzzle.
@@ -70,4 +70,4 @@ Now that Kuzzle is up and running, you can start playing around with it:
 - install and learn a [Kuzzle SDK](/sdk) to power-up one of your projects
 - install [Kuzzle Admin Console](/core/1/guides/essentials/admin-console), a handy way to manage data and security in your Kuzzle installation
 - explore the [Kuzzle API](/core/1/api) documentation
-- install Kuzzle [without Docker](/core/1/guides/essentials/installing-kuzzle/#manual-installation)
+- install Kuzzle [without Docker](/core/1/guides/essentials/installing-kuzzle#manual-installation)

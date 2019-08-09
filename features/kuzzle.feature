@@ -664,6 +664,17 @@ Feature: Kuzzle functional tests
     Then I wait 5s
     And I should receive a TokenExpired notification with field message equal to "Authentication Token Expired"
 
+  @security @realtime
+  Scenario: token expiration & double login
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 3s
+    And A room subscription listening to the whole collection
+    Then I wait 1s
+    And I log in as useradmin:testpwd expiring in 10s
+    Then I wait 3s
+    Then I write the document "documentGrace"
+    And I should receive a document notification with field action equal to "create"
+
   @security
   Scenario: user permissions
     Given I create a new role "role1" with id "role1"
