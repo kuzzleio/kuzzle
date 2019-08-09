@@ -145,122 +145,122 @@
           "class": "PluginImplementationError"
         },
         "invalid_user_object": {
-          "code": 6,
+          "code": 5,
           "message": "You must provide a valid User object when adding context with as().",
           "class": "PluginImplementationError"
         },
         "collection_not_specified": {
-          "code": 7,
+          "code": 6,
           "message": "The collection must be specified.",
           "class": "PluginImplementationError"
         },
         "callback_argument_expected": {
-          "code": 8,
+          "code": 7,
           "message": "Invalid argument: Expected callback to be a function, received \"%s\".",
           "class": "PluginImplementationError"
         },
         "missing_request_object": {
-          "code": 9,
+          "code": 8,
           "message": "Invalid argument: a Request object must be supplied.",
           "class": "PluginImplementationError"
         },
         "invalid_custom_event_name": {
-          "code": 10,
+          "code": 9,
           "message": "Custom event invalid name (%s). Colons are not allowed in custom events.",
           "class": "PluginImplementationError"
         },
         "missing_request_data_or_object": {
-          "code": 11,
+          "code": 10,
           "message": "A Request object and/or request data must be provided.",
           "class": "PluginImplementationError"
         },
         "invalid_strategy_registration": {
-          "code": 12,
+          "code": 11,
           "message": "[%s] Strategy %s: dynamic strategy registration can only be done using an \"authenticator\" option (see https://tinyurl.com/y7boozbk).",
           "class": "PluginImplementationError"
         },
         "plugin_initialization_failed": {
-          "code": 13,
+          "code": 12,
           "message": "Something went wrong during initialization of \"%s\" plugin.",
           "class": "PluginImplementationError"
         },
         "strategy_description_type": {
-          "code": 14,
+          "code": 13,
           "message": "%s expected the strategy description to be an object, got: %s.",
           "class": "PluginImplementationError"
         },
         "methods_property_type": {
-          "code": 15,
+          "code": 14,
           "message": "%s expected a \"methods\" property of type \"object\", got: %s.",
           "class": "PluginImplementationError"
         },
         "methodname_property_type": {
-          "code": 16,
+          "code": 15,
           "message": "%s expected a \"%s\" property of type \"string\", got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_strategy_method": {
-          "code": 17,
+          "code": 16,
           "message": "%s the strategy method \"%s\" must point to an exposed function.",
           "class": "PluginImplementationError"
         },
         "invalid_property_type": {
-          "code": 18,
+          "code": 17,
           "message": "%s expected the \"%s\" property to be of type \"string\", got: %s.",
           "class": "PluginImplementationError"
         },
         "missing_config_property": {
-          "code": 19,
+          "code": 18,
           "message": "%s expected a \"config\" property of type \"object\", got: %s.",
           "class": "PluginImplementationError"
         },
         "cannot_set_ctor_and_authenticator": {
-          "code": 20,
+          "code": 19,
           "message": "%s the \"authenticator\" and \"constructor\" parameters cannot both be set.",
           "class": "PluginImplementationError"
         },
         "invalid_constructor_property_value": {
-          "code": 21,
+          "code": 20,
           "message": "%s invalid \"constructor\" property value: constructor expected.",
           "class": "PluginImplementationError"
         },
         "authenticator_property_type": {
-          "code": 22,
+          "code": 21,
           "message": "%s expected an \"authenticator\" property of type \"string\", got: %s.",
           "class": "PluginImplementationError"
         },
         "unknown_authenticator_value": {
-          "code": 23,
+          "code": 22,
           "message": "%s unknown authenticator value: %s.",
           "class": "PluginImplementationError"
         },
         "expected_object_type": {
-          "code": 24,
+          "code": 23,
           "message": "%s expected the \"%s\" property to be of type \"object\", got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_fields_property_type": {
-          "code": 25,
+          "code": 24,
           "message": "%s expected the \"fields\" property to be of type \"array\", got: %s.",
           "class": "PluginImplementationError"
         },
         "plugin_threw_non_kuzzle_error": {
-          "code": 26,
+          "code": 25,
           "message": "Plugin %s pipe for event '%s' threw a non-Kuzzle error: %s.",
           "class": "PluginImplementationError"
         },
         "verify_dont_return_promise": {
-          "code": 27,
+          "code": 26,
           "message": "%s expected the \"verify\" to return a Promise, got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_authentication_strategy_result": {
-          "code": 28,
+          "code": 27,
           "message": "%s invalid authentication strategy result.",
           "class": "PluginImplementationError"
         },
         "invalid_authentication_kuid": {
-          "code": 29,
+          "code": 28,
           "message": "%s invalid authentication kuid returned: expected a string, got a %s.",
           "class": "PluginImplementationError"
         },

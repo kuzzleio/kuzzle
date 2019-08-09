@@ -116,7 +116,7 @@
           "class": "InternalError"
         },
         "plugin_bootstrap_lock_wait_timeout": {
-          "code": 1,
+          "code": 2,
           "message": "Plugin %s bootstrap - lock wait timeout exceeded.",
           "class": "InternalError"
         }
