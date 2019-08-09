@@ -37,7 +37,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document's `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:beforeWrite` generic events allow to intercept the Request lifecycle before all the actions related to document writing.
 
@@ -73,7 +73,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:afterWrite` generic events allow to intercept the request lifecycle after all the actions related to document writing.
 
@@ -110,7 +110,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:beforeUpdate` generic events allow to intercept the Request lifecycle before all the actions related to document updating.
 
@@ -143,7 +143,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:afterUpdate` generic events allos to intercept the Request lifecycle after all the actions related to document updating.
 
@@ -176,7 +176,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:beforeDelete` generic events allow to intercept the Request lifecycle before all the actions related to document deleting.
 
@@ -209,7 +209,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:afterDelete` generic events allow to intercept the Request lifecycle after all the actions related to document deleting.
 
@@ -243,7 +243,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:beforeGet` generic events allow to intercept the Request liecycle before all the actions related to document getting.
 
@@ -276,7 +276,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request/#request) |
+| request | `Request` | [Kuzzle API Request](/core/1/plugins/plugin-context/constructors/request#request) |
 
 `generic:document:afterGet` generic events allow to intercept the Request lifecycle after all the actions related to document getting.
 

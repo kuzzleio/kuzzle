@@ -21,7 +21,7 @@ This paradigm is called "percolation" and is the foundation of Kuzzle's real-tim
 In other words, a percolation engine is the inverse of a search engine, where
 data is indexed and filters are used to retrieve data that matches them.
 
-**This is different from document search [read more about how to search persistent data](/core/1/guides/essentials/store-access-data/#document-search).**
+**This is different from document search [read more about how to search persistent data](/core/1/guides/essentials/store-access-data#document-search).**
 
 A data percolation engine has the following properties:
 

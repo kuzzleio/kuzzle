@@ -33,7 +33,7 @@ add(name, properties);
 | Arguments    | Type              | Description                                                                                                           |
 | ------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `name`       | <pre>string</pre> | Name of the new authentication strategy                                                                               |
-| `properties` | <pre>object</pre> | Strategy properties (see [managing credentials](/core/1/plugins/guides/strategies/#managing-credentials)) |
+| `properties` | <pre>object</pre> | Strategy properties (see [managing credentials](/core/1/plugins/guides/strategies#managing-credentials)) |
 
 ### Return
 

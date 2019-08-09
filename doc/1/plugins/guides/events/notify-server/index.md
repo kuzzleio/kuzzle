@@ -14,4 +14,4 @@ title: notify:server
 
 Triggered whenever a real-time server notification is about to be sent.
 
-A [pipe](/core/1/plugins/guides/pipes/) can block some (or all) notifications by rejecting the provided promise.
+A [pipe](/core/1/plugins/guides/pipes) can block some (or all) notifications by rejecting the provided promise.

@@ -8,7 +8,7 @@ title: geohash
 
 
 
-Converts a key's geopoints (see [geoadd](/core/1/api/controllers/memory-storage/geoadd/)) into [geohashes](https://en.wikipedia.org/wiki/Geohash).
+Converts a key's geopoints (see [geoadd](/core/1/api/controllers/memory-storage/geoadd)) into [geohashes](https://en.wikipedia.org/wiki/Geohash).
 
 [[_Redis documentation_]](https://redis.io/commands/geohash)
 

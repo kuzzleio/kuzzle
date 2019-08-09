@@ -140,7 +140,7 @@ const err = new context.errors.NotFoundError('error message');
 
  / <DeprecatedBadge version="1.4.1" />
 
-Parse error. Use [BadRequestError](/core/1/protocols/api/context/errors/#badrequesterror) instead.
+Parse error. Use [BadRequestError](/core/1/protocols/api/context/errors#badrequesterror) instead.
 
 ### Status Code
 
@@ -171,7 +171,7 @@ new context.error.PartialError(message, errors);
 | Arguments  | Type                                                                                       | Description                |
 | ---------- | ------------------------------------------------------------------------------------------ | -------------------------- |
 | `message`  | <pre>string</pre>                                                                          | Error message              |
-| `failures` | [`KuzzleError[]`](/core/1/protocols/api/context/errors/#kuzzleerror) | List of encountered errors |
+| `failures` | [`KuzzleError[]`](/core/1/protocols/api/context/errors#kuzzleerror) | List of encountered errors |
 
 ### Status Code
 
