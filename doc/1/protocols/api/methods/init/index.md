@@ -23,7 +23,7 @@ init(entryPoint, context);
 | Arguments    | Type                                                           | Description                                                                              |
 | ------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `entryPoint` | [`EntryPoint`](/core/1/protocols/api/entrypoint) | Provides an interface to protocol related methods                                        |
-| `context`    | [`context`](/core/1/protocols/api/context/)       | Generic interface exposing objects and methods not directly related to the network layer |
+| `context`    | [`context`](/core/1/protocols/api/context)       | Generic interface exposing objects and methods not directly related to the network layer |
 
 ---
 
@@ -31,6 +31,6 @@ init(entryPoint, context);
 
 The `init` function can optionally return a promise. If it does, Kuzzle waits for the promise to be resolved before continuing its own initialization.
 
-If a promise is returned, it must be resolved within the configured timeout (see `services.common.defaultInitTimeout` in Kuzzle's [configuration](/core/1/guides/essentials/configuration/))
+If a promise is returned, it must be resolved within the configured timeout (see `services.common.defaultInitTimeout` in Kuzzle's [configuration](/core/1/guides/essentials/configuration))
 
 If a promise is returned and rejected, or if the `init` function throws an error, Kuzzle aborts its start sequence and shuts down.

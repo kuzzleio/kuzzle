@@ -87,7 +87,7 @@ Body:
 ### Optional:
 
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
-- `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollUsers](/core/1/api/controllers/security/scroll-users/) API action
+- `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollUsers](/core/1/api/controllers/security/scroll-users) API action
 - `size`: the maximum number of users returned in one response page
 
 ---
@@ -107,7 +107,7 @@ If the body is left empty, the result will return all available users.
 Returns an object with the following properties:
 
 - `hits`: array of object. Each object describes a found user:
-  - `_id`: user [kuid](/core/1/guides/kuzzle-depth/authentication/#the-kuzzle-user-identifier)
+  - `_id`: user [kuid](/core/1/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
   - `_source`: user definition
 - `total`: total number of users found. Depending on pagination options, this can be greater than the actual number of users in a single result page
 

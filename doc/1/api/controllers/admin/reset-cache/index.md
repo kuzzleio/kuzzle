@@ -36,7 +36,7 @@ Method: POST
 
 - `database`: there are two Redis databases that you can clear
   - `internalCache` : used by Kuzzle to cache internal data, such as authentication tokens, documents followed by real-time subscriptions, active paginated search queries, API usage statistics or cluster state
-  - `memoryStorage` : memory cache managed by Kuzzle's [memoryStorage](/core/1/api/controllers/memory-storage/) API
+  - `memoryStorage` : memory cache managed by Kuzzle's [memoryStorage](/core/1/api/controllers/memory-storage) API
 
 ---
 

@@ -6,7 +6,7 @@ title: Authentication
 
 # Authentication
 
-Kuzzle uses [Passport.js](http://Passportjs.org/) to support numerous authentication strategies, including:
+Kuzzle uses [Passport.js](http://Passportjs.org) to support numerous authentication strategies, including:
 
 - OAuth2: for authentication using providers such as GitHub or Google (click [here](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-oauth) for more details).
 - SAML: for authentication using providers such as OneLogin and for supporting single sign-on.
@@ -61,7 +61,7 @@ The Local Authentication Strategy, implemented in the [Passport Local Plugin](ht
 
 - The user profile data is returned back to the _Auth Controller_.
 
-- The _Auth Controller_ calls the `generateToken()` method to get a [JWT Token](https://jwt.io/) for the user.
+- The _Auth Controller_ calls the `generateToken()` method to get a [JWT Token](https://jwt.io) for the user.
 
 - The JWT Token is then sent back to the Client Application and should be used in subsequent requests to Kuzzle's API. Below is an example response after the authentication process is complete:
 
@@ -186,7 +186,7 @@ Location: http://< kuzzle >/_login/github?code=OAUTH2_CODE
 
 - The user profile data is returned back to the _Auth Controller_.
 
-- The _Auth Controller_ calls the `generateToken()` method to get a [JWT Token](https://jwt.io/) for the user.
+- The _Auth Controller_ calls the `generateToken()` method to get a [JWT Token](https://jwt.io) for the user.
 
 - The JWT Token is then sent back to the Client Application and should be used in subsequent requests to Kuzzle's API.
 

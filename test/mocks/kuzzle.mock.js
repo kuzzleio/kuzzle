@@ -358,18 +358,19 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.tokenManager = {
-      link: this.sandbox.stub(),
-      unlink: this.sandbox.stub(),
       expire: this.sandbox.stub(),
-      refresh: this.sandbox.stub()
+      getConnectedUserToken: this.sandbox.stub(),
+      link: this.sandbox.stub(),
+      refresh: this.sandbox.stub(),
+      unlink: this.sandbox.stub()
     };
 
     this.validation = {
-      init: this.sandbox.spy(),
+      addType: this.sandbox.spy(),
       curateSpecification: this.sandbox.stub().resolves(),
+      init: this.sandbox.spy(),
       isValidSpecification: this.sandbox.stub().resolves({isValid: false}),
-      validate: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-      addType: this.sandbox.spy()
+      validate: this.sandbox.stub().callsFake((...args) => Bluebird.resolve(args[0]))
     };
 
     this.vault = {

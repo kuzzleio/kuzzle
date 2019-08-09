@@ -8,7 +8,7 @@ title: geopos
 
 
 
-Returns the position (`[longitude, latitude]`) of the provided key's members (see [geoadd](/core/1/api/controllers/memory-storage/geoadd/)).
+Returns the position (`[longitude, latitude]`) of the provided key's members (see [geoadd](/core/1/api/controllers/memory-storage/geoadd)).
 
 [[_Redis documentation_]](https://redis.io/commands/geopos)
 

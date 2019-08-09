@@ -10,7 +10,7 @@ Initializes the plugin's private data storage.
 
 Data stored in this space can only be accessed by their proprietary plugin, using the [Repository](/core/1/plugins/plugin-context/constructors/repository) constructor.
 
-The only way documents stored in this space can be accessed using Kuzzle is if the plugin voluntarily exposes that data by [adding new API routes](/core/1/plugins/guides/controllers/).
+The only way documents stored in this space can be accessed using Kuzzle is if the plugin voluntarily exposes that data by [adding new API routes](/core/1/plugins/guides/controllers).
 
 ---
 
@@ -32,7 +32,7 @@ bootstrap(collections);
 
 | Arguments     | Type              | Description                                                                                                                        |
 | ------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `collections` | <pre>object</pre> | List of collection to create, with their corresponding [data mapping](/core/1/guides/essentials/store-access-data/#document-mapping) |
+| `collections` | <pre>object</pre> | List of collection to create, with their corresponding [data mapping](/core/1/guides/essentials/store-access-data#document-mapping) |
 
 ### Return
 
@@ -84,7 +84,7 @@ createCollection(collection, mapping);
 | Arguments    | Type              | Description                                                                       |
 | ------------ | ----------------- | --------------------------------------------------------------------------------- |
 | `collection` | <pre>string</pre> | Collection name                                                                   |
-| `mapping`    | <pre>object</pre> | Collection [mapping](/core/1/guides/essentials/store-access-data/#document-mapping) |
+| `mapping`    | <pre>object</pre> | Collection [mapping](/core/1/guides/essentials/store-access-data#document-mapping) |
 
 ### Return
 

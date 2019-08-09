@@ -6,7 +6,7 @@ title: RequestInput
 
 # RequestInput
 
-Request input, normalizing a [Kuzzle API call](/core/1/api/essentials/query-syntax/#other-protocols) in JSON format.
+Request input, normalizing a [Kuzzle API call](/core/1/api/essentials/query-syntax#other-protocols) in JSON format.
 
 This is the class used to build the `input` property of any [Request](/core/1/protocols/api/context/request) object.
 
@@ -39,7 +39,7 @@ The `data` object can contain the following properties:
 | `controller` | <pre>string</pre> | Invoked API controller                                                                            |
 | `index`      | <pre>string</pre> | Index                                                                                             |
 | `jwt`        | <pre>string</pre> | Authentication token                                                                              |
-| `volatile`   | <pre>object</pre> | Request [volatile data](/core/1/api/essentials/volatile-data/)                                    |
+| `volatile`   | <pre>object</pre> | Request [volatile data](/core/1/api/essentials/volatile-data)                                    |
 | `...`        | <pre>\*</pre>     | Unrecognized properties are considered request specific, and stored in the `args` object property |
 
 ---
@@ -54,7 +54,7 @@ The `data` object can contain the following properties:
 | `controller` | <pre>string</pre> | Invoked API controller                                         |
 | `jwt`        | <pre>string</pre> | Authentication token                                           |
 | `resource`   | <pre>object</pre> | Stored resource target                                         |
-| `volatile`   | <pre>object</pre> | Request [volatile data](/core/1/api/essentials/volatile-data/) |
+| `volatile`   | <pre>object</pre> | Request [volatile data](/core/1/api/essentials/volatile-data) |
 
 ### resource
 

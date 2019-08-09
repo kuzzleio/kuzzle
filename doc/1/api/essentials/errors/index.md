@@ -154,7 +154,7 @@ For instance, this error can be generated when trying to create a document on a 
 
 **status**: 413
 
-A `SizeLimitError` error is thrown by Kuzzle if the request size exceeds the limits defined in the [configuration](/core/1/guides/essentials/configuration/).
+A `SizeLimitError` error is thrown by Kuzzle if the request size exceeds the limits defined in the [configuration](/core/1/guides/essentials/configuration).
 
 ---
 

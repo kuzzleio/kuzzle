@@ -10,7 +10,7 @@ title: scroll
 
 Moves a search cursor forward.
 
-A search cursor is created by a [search](/core/1/api/controllers/document/search/) API call, with a `scroll` value provided.
+A search cursor is created by a [search](/core/1/api/controllers/document/search) API call, with a `scroll` value provided.
 
 Results returned by a `scroll` request reflect the state of the index at the time of the initial search request, like a fixed snapshot. Subsequent changes to documents do not affect the scroll results.
 

@@ -48,11 +48,11 @@ Body:
 
 ## Arguments
 
-- `strategy`: the name of the authentication [strategy](/core/1/guides/kuzzle-depth/authentication/#authentication) used to log the user in.
+- `strategy`: the name of the authentication [strategy](/core/1/guides/kuzzle-depth/authentication#authentication) used to log the user in.
 
 ### Optional:
 
-- `expiresIn`: set the expiration duration (default: depends on [Kuzzle configuration file](/core/1/guides/essentials/configuration/))
+- `expiresIn`: set the expiration duration (default: depends on [Kuzzle configuration file](/core/1/guides/essentials/configuration))
   - if a raw number is provided (not enclosed between quotes), then the expiration delay is in milliseconds. Example: `86400000`
   - if this value is a string, then its content is parsed by the [ms](https://www.npmjs.com/package/ms) library. Examples: `"6d"`, `"10h"`
 
@@ -60,11 +60,11 @@ Body:
 
 ## Body properties
 
-Depending on the chosen authentication strategy, additional [credential arguments](/core/1/guides/kuzzle-depth/authentication/#authentication) may be required.
+Depending on the chosen authentication strategy, additional [credential arguments](/core/1/guides/kuzzle-depth/authentication#authentication) may be required.
 
 The API request example in this page provides the necessary arguments for the [`local` authentication plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local).
 
-Check the appropriate [authentication plugin](/core/1/plugins/guides/strategies/) documentation to get the list of additional arguments to provide.
+Check the appropriate [authentication plugin](/core/1/plugins/guides/strategies) documentation to get the list of additional arguments to provide.
 
 ---
 
@@ -72,8 +72,8 @@ Check the appropriate [authentication plugin](/core/1/plugins/guides/strategies/
 
 The result contains the following properties:
 
-- `_id`: user's [kuid](/core/1/guides/kuzzle-depth/authentication/#the-kuzzle-user-identifier)
-- `jwt`: encrypted JSON Web Token, that must then be sent in the [requests headers](/core/1/api/essentials/query-syntax/#http) or in the [query](/core/1/api/essentials/query-syntax/#other-protocols)
+- `_id`: user's [kuid](/core/1/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
+- `jwt`: encrypted JSON Web Token, that must then be sent in the [requests headers](/core/1/api/essentials/query-syntax#http) or in the [query](/core/1/api/essentials/query-syntax#other-protocols)
 - `expiresAt`: token expiration date, in Epoch-millis (UTC)
 - `ttl`: token time to live, in milliseconds
 

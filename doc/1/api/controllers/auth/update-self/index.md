@@ -10,7 +10,7 @@ title: updateSelf
 
 Updates the currently logged in user information.
 
-This route cannot update the list of associated security profiles. To change a user's security profiles, the route [security:updateUser](/core/1/api/controllers/security/update-user/) must be used instead.
+This route cannot update the list of associated security profiles. To change a user's security profiles, the route [security:updateUser](/core/1/api/controllers/security/update-user) must be used instead.
 
 ---
 
@@ -64,7 +64,7 @@ User properties that can be set or updated depend on the application hosted by K
 
 Returns the following properties:
 
-- `_id`: current user's [kuid](/core/1/guides/essentials/user-authentication/#kuzzle-user-identifier-kuid)
+- `_id`: current user's [kuid](/core/1/guides/essentials/user-authentication#kuzzle-user-identifier-kuid)
 - `_source`: additional (and optional) user properties
 
 ```js

@@ -14,4 +14,4 @@ title: request:onSuccess
 
 Triggered whenever a request execution succeeds.
 
-This event occurs after [after events](/core/1/plugins/guides/events/api-events/#after).
+This event occurs after [after events](/core/1/plugins/guides/events/api-events#after).

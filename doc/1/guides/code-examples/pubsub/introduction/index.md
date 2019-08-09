@@ -14,7 +14,7 @@ In this code example we will show you how pub/sub works with Kuzzle.
 
 ## Configure Kuzzle
 
-First let's make sure Kuzzle is running and create the index and collection we will use to store documents. Follow these [instructions](/core/1/guides/getting-started//#running-kuzzle).
+First let's make sure Kuzzle is running and create the index and collection we will use to store documents. Follow these [instructions](/core/1/guides/getting-started#running-kuzzle).
 
 ## Create Your App
 
@@ -29,4 +29,4 @@ Before we get started on the App, there are a few basics you need to know:
 - Firstly, a subscription is done at the collection level. This means that Kuzzle will only monitor changes to documents in the specified collection.
 
 - Secondly, unlike typical pub/sub solutions, there is no need to create a topic first. In Kuzzle, the topic is replaced by a document `filter` which is sent by the Client when it makes a subscription request. Clients can subscribe using the same document filter, effectively simulating a `topic`.
-  For more information about subscriptions click [here](/core/1/api/controllers/realtime/subscribe/)
+  For more information about subscriptions click [here](/core/1/api/controllers/realtime/subscribe)

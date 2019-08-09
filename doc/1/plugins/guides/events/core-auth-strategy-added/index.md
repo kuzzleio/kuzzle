@@ -12,7 +12,7 @@ title: core:auth:strategyAdded
 | ---------- | ----------------- | ----------------------------------- |
 | `strategy` | <pre>object</pre> | Authentication strategy information |
 
-Triggered whenever a plugin [dynamically registers](/core/1/plugins/plugin-context/accessors/strategies/) an authentication strategy.
+Triggered whenever a plugin [dynamically registers](/core/1/plugins/plugin-context/accessors/strategies) an authentication strategy.
 
 :::info
 Pipes cannot listen to that event, only hooks can.
@@ -26,6 +26,6 @@ The provided `strategy` object has the following properties:
 
 | Properties   | Type              | Description                                                                                                         |
 | ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started/#prerequisites) |
+| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started#prerequisites) |
 | `name`       | <pre>string</pre> | Authentication strategy name                                                                                        |
-| `strategy`   | <pre>object</pre> | Authentication [strategy properties](/core/1/plugins/guides/strategies/#managing-credentials)           |
+| `strategy`   | <pre>object</pre> | Authentication [strategy properties](/core/1/plugins/guides/strategies#managing-credentials)           |

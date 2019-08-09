@@ -9,7 +9,7 @@ order: 0
 
 ## Configuration
 
-The protocol can be configured via the [kuzzlerc configuration file](/core/1/guides/essentials/configuration/), under the `server > protocols > http` section.
+The protocol can be configured via the [kuzzlerc configuration file](/core/1/guides/essentials/configuration), under the `server > protocols > http` section.
 
 | Option              | Type               | Description                                                                                                                                                                                                                                                                           | Default |
 | ------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
@@ -26,7 +26,7 @@ HTTP, WebSocket and Socket.IO protocols share the same underlying server instanc
 
 By default, Kuzzle listens to the `7512` port.
 
-The port can be modified under the `server > port` section of [Kuzzle configuration](/core/1/guides/essentials/configuration/).
+The port can be modified under the `server > port` section of [Kuzzle configuration](/core/1/guides/essentials/configuration).
 
 ## Limitations
 

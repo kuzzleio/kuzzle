@@ -30,7 +30,7 @@ First of all you need to obtain an SSL certificate for a domain. There are two w
   - obtain a self-signed certificate (development only)
   - obtain a certificate issued by a certification authority
 
-To obtain a self-signed certificate, you can follow the instructions given here: [https://www.selfsignedcertificate.com/](https://www.selfsignedcertificate.com/)
+To obtain a self-signed certificate, you can follow the instructions given here: [https://www.selfsignedcertificate.com/](https://www.selfsignedcertificate.com)
 
 To obtain a certificate from a third-party authority, you can use Certbot: [https://certbot.eff.org/](https://certbot.eff.org)
 

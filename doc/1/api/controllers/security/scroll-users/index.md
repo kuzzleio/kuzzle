@@ -8,7 +8,7 @@ title: scrollUsers
 
 
 
-Moves a result set cursor forward, created by a [searchUsers](/core/1/api/controllers/security/search-users/) query with the `scroll` argument provided.
+Moves a result set cursor forward, created by a [searchUsers](/core/1/api/controllers/security/search-users) query with the `scroll` argument provided.
 
 Results returned by a `scrollUsers` request reflect the state of the index at the time of the initial search request, like a fixed snapshot. Subsequent changes to documents do not affect the scroll results.
 
@@ -51,7 +51,7 @@ Method: GET
 Returns a paginated search result set, with the following properties:
 
 - `hits`: array of found profiles. Each document has the following properties:
-  - `_id`: user [kuid](/core/1/guides/kuzzle-depth/authentication/#the-kuzzle-user-identifier)
+  - `_id`: user [kuid](/core/1/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
   - `_source`: user definition
 - `scrollId`: identifier to the next page of result. Can be different than the previous one(s)
 - `total`: total number of found users. Usually greater than the number of users in a result page

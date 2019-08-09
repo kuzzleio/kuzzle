@@ -8,7 +8,7 @@ title: scrollSpecifications
 
 
 
-Moves a result set cursor forward, created by the [`searchSpecifications` request](/core/1/api/controllers/collection/search-specifications/) when the `scroll` argument is provided.
+Moves a result set cursor forward, created by the [`searchSpecifications` request](/core/1/api/controllers/collection/search-specifications) when the `scroll` argument is provided.
 
 Results returned by a `scroll` request reflect the state of the index at the time of the initial search request, like a fixed snapshot. Subsequent changes to documents do not affect the scroll results.
 
@@ -40,7 +40,7 @@ Method: GET
 
 - `collection`: collection name
 - `index`: index name
-- `scrollId`: cursor identifier, obtained with (/core/1/api/controllers/collection/search-specifications/)
+- `scrollId`: cursor identifier, obtained with (/core/1/api/controllers/collection/search-specifications)
 
 ### Optional:
 
@@ -110,5 +110,5 @@ Example:
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors/#common-errors)
-- [NotFoundError](/core/1/api/essentials/errors/#notfounderror)
+- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [NotFoundError](/core/1/api/essentials/errors#notfounderror)
