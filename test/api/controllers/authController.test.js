@@ -189,7 +189,7 @@ describe('Test the auth controller', () => {
         });
     });
 
-    it('should expire every tokens at once', () => {
+    it('should expire all tokens at once', () => {
       request.input.args.global = true;
       return authController.logout(request)
         .then(() => {
