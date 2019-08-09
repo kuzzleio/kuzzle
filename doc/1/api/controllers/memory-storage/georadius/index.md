@@ -8,7 +8,7 @@ title: georadius
 
 
 
-Returns the members (added with [geoadd](/core/1/api/controllers/memory-storage/geoadd/)) of a given key inside the provided geospatial radius.
+Returns the members (added with [geoadd](/core/1/api/controllers/memory-storage/geoadd)) of a given key inside the provided geospatial radius.
 
 [[_Redis documentation_]](https://redis.io/commands/georadius)
 

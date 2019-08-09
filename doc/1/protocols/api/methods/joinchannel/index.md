@@ -6,7 +6,7 @@ title: joinChannel
 
 # joinChannel
 
-Informs the protocol that one of its connected users joined a [channel](/core/1/protocols/essentials/getting-started/#channels).
+Informs the protocol that one of its connected users joined a [channel](/core/1/protocols/essentials/getting-started#channels).
 
 ---
 

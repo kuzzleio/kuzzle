@@ -25,10 +25,10 @@ Metadata can be viewed in the document's `_meta` field and contains the followin
 
 Metadata can be viewed in the document's `_kuzzle_info` field and contains the following properties:
 
-- `author`: The [unique identifier](/core/1/guides/essentials/user-authentication/#kuzzle-user-identifier-kuidd) of the user who created the document.
+- `author`: The [unique identifier](/core/1/guides/essentials/user-authentication#kuzzle-user-identifier-kuidd) of the user who created the document.
 - `createdAt`: Timestamp of document creation (create or replace), in epoch-milliseconds format.
 - `updatedAt`: Timestamp of last document update in epoch-milliseconds format, or `null` if no update has been made.
-- `updater`: The [unique identifier](/core/1/guides/essentials/user-authentication/#kuzzle-user-identifier-kuid) of the user that updated the document, or `null` if the document has never been updated.
+- `updater`: The [unique identifier](/core/1/guides/essentials/user-authentication#kuzzle-user-identifier-kuid) of the user that updated the document, or `null` if the document has never been updated.
 - `active` <DeprecatedBadge version="1.2.0" />: The status of the document. `true` if the document is active and `false` if the document has been put in the trashcan.
 - `deletedAt`<DeprecatedBadge version="1.2.0" />: Timestamp of document deletion in epoch-milliseconds format, or `null` if the document has not been deleted.
 

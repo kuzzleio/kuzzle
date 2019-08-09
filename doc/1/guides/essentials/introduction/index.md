@@ -36,7 +36,7 @@ You can interact directly with Kuzzle through its API, read the [Kuzzle API refe
 
 ## Manage your data
 
-Kuzzle relies on [Elasticsearch](https://www.elastic.co/) to store, fetch and peform a variety of CRUD and fine-grained search operations on persistent data. Please refer to our [working with persistent data](/core/1/guides/essentials/store-access-data) section for more details.
+Kuzzle relies on [Elasticsearch](https://www.elastic.co) to store, fetch and peform a variety of CRUD and fine-grained search operations on persistent data. Please refer to our [working with persistent data](/core/1/guides/essentials/store-access-data) section for more details.
 
 ## Trigger real-time notifications
 

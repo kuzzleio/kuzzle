@@ -26,5 +26,5 @@ The provided `strategy` object has the following properties:
 
 | Properties   | Type              | Description                                                                                                         |
 | ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started/#prerequisites) |
+| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/1/plugins/essentials/getting-started#prerequisites) |
 | `name`       | <pre>string</pre> | Authentication strategy name                                                                                        |

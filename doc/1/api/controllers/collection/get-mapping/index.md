@@ -10,7 +10,7 @@ Returns a collection mapping.
 
 <SinceBadge version="1.7.1" />
 
-Also returns the collection [dynamic mapping policy](/core/1/guides/essentials/database-mappings/#dynamic-mapping-policy) and [collection additional metadata](/core/1/guides/essentials/database-mappings/#collection-metadata).
+Also returns the collection [dynamic mapping policy](/core/1/guides/essentials/database-mappings#dynamic-mapping-policy) and [collection additional metadata](/core/1/guides/essentials/database-mappings#collection-metadata).
 
 ---
 
@@ -101,5 +101,5 @@ Returns a mapping object with the following structure:
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors/#common-errors)
-- [NotFoundError](/core/1/api/essentials/errors/#notfounderror)
+- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [NotFoundError](/core/1/api/essentials/errors#notfounderror)
