@@ -188,6 +188,11 @@
           "code": 38,
           "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
           "class": "PluginImplementationError"
+        },
+        "missing_kuzzleVersion": {
+          "code": 39,
+          "message": "[%s/manifest.json] No \"kuzzleVersion\" property found.",
+          "class": "PluginImplementationError"
         }
       }
     },

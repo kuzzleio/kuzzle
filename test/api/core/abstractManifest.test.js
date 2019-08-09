@@ -7,8 +7,9 @@ const
 describe('AbstractManifest class', () => {
   const
     kuzzle = new KuzzleMock(),
-    pluginPath = 'foo/bar',
-    defaultKuzzleVersion = '>=1.0.0 <2.0.0';
+    defaultKuzzleVersion = '>=2.0.0 <3.0.0',
+    pluginPath = 'foo/bar';
+
   let Manifest;
 
   function mockRequireManifest(manifest) {
@@ -33,7 +34,8 @@ describe('AbstractManifest class', () => {
   });
 
   it('should throw if kuzzleVersion is not a string', () => {
-    const message = new RegExp(`\\[${pluginPath}/manifest.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the manifest requirements \\(123\\)`),
+    const
+      message = new RegExp(`\\[${pluginPath}/manifest.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the manifest requirements \\(123\\)`),
       manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion: 123 })(() => {
@@ -42,17 +44,13 @@ describe('AbstractManifest class', () => {
     });
   });
 
-  it('should complain and default the Kuzzle target version to v1 if no kuzzleVersion property is found', () => {
+  it('should throw if kuzzleVersion is not present', () => {
+    const
+      manifest = new Manifest(kuzzle, pluginPath);
+
     mockRequireManifest({ name: 'foobar' })(() => {
-      const manifest = new Manifest(kuzzle, pluginPath);
-      manifest.load();
-      should(kuzzle.log.warn)
-        .calledOnce()
-        .calledWith(`[${pluginPath}/manifest.json] No "kuzzleVersion" property found: assuming the target is Kuzzle v1`);
-      should(manifest).match({
-        name: 'foobar',
-        kuzzleVersion: defaultKuzzleVersion
-      });
+      should(() => manifest.load())
+        .throw(PluginImplementationError, { code: 39 });
     });
   });
 
@@ -73,7 +71,7 @@ describe('AbstractManifest class', () => {
       manifest = new Manifest(kuzzle, pluginPath);
 
     [123, false, ''].forEach(name => {
-      mockRequireManifest({ name })(() => {
+      mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
         should(() => manifest.load()).throw(PluginImplementationError, { message });
       });
     });
@@ -85,7 +83,7 @@ describe('AbstractManifest class', () => {
       manifest = new Manifest(kuzzle, pluginPath);
 
     [undefined, null].forEach(name => {
-      mockRequireManifest({ name })(() => {
+      mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
         should(() => manifest.load()).throw(PluginImplementationError, { message });
       });
     });
@@ -105,7 +103,7 @@ describe('AbstractManifest class', () => {
   it('should serialize only the necessary properties', () => {
     const manifest = new Manifest(kuzzle, pluginPath);
 
-    mockRequireManifest({ name: 'foobar' })(() => {
+    mockRequireManifest({ name: 'foobar', kuzzleVersion: defaultKuzzleVersion })(() => {
       manifest.load();
 
       const serialized = JSON.parse(JSON.stringify(manifest));
