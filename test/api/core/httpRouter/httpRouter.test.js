@@ -275,7 +275,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Unrecognized HTTP method FOOBAR'
+                message: 'Unrecognized HTTP method FOOBAR.'
               },
               requestId: 'requestId',
               result: null
@@ -303,7 +303,7 @@ describe('core/httpRouter', () => {
           content: {
             error: {
               status: 400,
-              message: 'Unable to convert HTTP body to JSON'
+              message: 'Unable to convert HTTP body to JSON.'
             },
             requestId: 'requestId',
             result: null
@@ -331,7 +331,7 @@ describe('core/httpRouter', () => {
           content: {
             error: {
               status: 400,
-              message: 'Unable to convert HTTP x-kuzzle-volatile header to JSON'
+              message: 'Unable to convert HTTP x-kuzzle-volatile header to JSON.'
             },
             requestId: 'requestId',
             result: null
@@ -359,7 +359,7 @@ describe('core/httpRouter', () => {
           content: {
             error: {
               status: 400,
-              message: 'Invalid request content-type. Expected "application/json", got: "application/foobar"'
+              message: 'Invalid request content-type. Expected "application/json", got: "application/foobar".'
             },
             requestId: 'requestId',
             result: null
@@ -387,7 +387,7 @@ describe('core/httpRouter', () => {
           content: {
             error: {
               status: 400,
-              message: 'Invalid request charset. Expected "utf-8", got: "iso8859-1"'
+              message: 'Invalid request charset. Expected "utf-8", got: "iso8859-1".'
             },
             requestId: 'requestId',
             result: null
@@ -415,7 +415,7 @@ describe('core/httpRouter', () => {
           content: {
             error: {
               status: 404,
-              message: 'API URL not found: /foo/bar'
+              message: 'API URL not found: /foo/bar.'
             },
             requestId: 'requestId',
             result: null
@@ -427,7 +427,7 @@ describe('core/httpRouter', () => {
 
     it('should return an error if an exception is thrown', () => {
       const routeHandlerStub = function () {
-        this.getRequest = sinon.stub().throws(new InternalError('HTTP internal exception'));
+        this.getRequest = sinon.stub().throws(new InternalError('HTTP internal exception.'));
       };
 
       mockrequire('../../../../lib/api/core/httpRouter/routeHandler', routeHandlerStub);
@@ -453,7 +453,7 @@ describe('core/httpRouter', () => {
           content: {
             error: {
               status: 500,
-              message: 'HTTP internal exception'
+              message: 'HTTP internal exception.'
             },
             requestId: 'requestId',
             result: null

@@ -244,7 +244,7 @@ describe('Test: routerController.httpRequest', () => {
         should(result.response.requestId).be.eql(httpRequest.requestId);
         should(result.response.headers['content-type']).be.eql('application/json');
         should(result.response.status).be.eql(404);
-        should(result.response.error.message).be.eql('API URL not found: /a/b/c/d');
+        should(result.response.error.message).be.eql('API URL not found: /a/b/c/d.');
         done();
       }
       catch (e) {
