@@ -13,7 +13,7 @@ Load fixtures into the storage layer.
 **Notes:**
 
 * The fixtures can contain any number of index and collection configurations.
-* Each collection contains an array of data to load, just like the [bulk:import API](/core/1/api/controllers/bulk/import/).
+* Each collection contains an array of data to load, just like the [bulk:import API](/core/1/api/controllers/bulk/import).
 * If an index or collection does not exist, the load will fail.
 * Fixtures are loaded sequentially, one index/collection pair at a time. If a failure occurs, Kuzzle immediately interrupts the sequence, without rollbacking the previously loaded fixtures.
 

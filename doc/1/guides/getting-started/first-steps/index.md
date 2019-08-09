@@ -96,7 +96,7 @@ document created
 ```
 
 :::success
-You have now successfully stored your first document into Kuzzle. Check the [Admin Console Guide](/core/1/guides/essentials/admin-console/) to see how to browse your collection and confirm that your document was saved.
+You have now successfully stored your first document into Kuzzle. Check the [Admin Console Guide](/core/1/guides/essentials/admin-console) to see how to browse your collection and confirm that your document was saved.
 :::
 
 _You can find more resources about Kuzzle SDK in the [SDK Reference](/sdk)._
@@ -115,7 +115,7 @@ Run your file in Node.js
 node create.js
 ```
 
-This creates a new document in Kuzzle, triggering a [notification](/core/1/guides/essentials/real-time/):
+This creates a new document in Kuzzle, triggering a [notification](/core/1/guides/essentials/real-time):
 
 ```bash
 subscribe ok

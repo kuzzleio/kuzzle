@@ -249,4 +249,4 @@ args.myDocuments = [
 
 The content of `action.search` is passed directly to Elasticsearch.
 
-Please refer to our [Elasticsearch Cookbook](/core/1/guides/cookbooks/elasticsearch/) for more help on how to build your search query.
+Please refer to our [Elasticsearch Cookbook](/core/1/guides/cookbooks/elasticsearch) for more help on how to build your search query.

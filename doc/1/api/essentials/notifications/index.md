@@ -7,7 +7,7 @@ order: 500
 
 # Real-time Notifications
 
-Clients can [subscribe](/core/1/api/controllers/realtime/subscribe/) to documents, messages and events, in order to receive a notification whenever a change occurs matching the subscription scope.
+Clients can [subscribe](/core/1/api/controllers/realtime/subscribe) to documents, messages and events, in order to receive a notification whenever a change occurs matching the subscription scope.
 
 ---
 
@@ -43,7 +43,7 @@ A document notification contains the following fields:
 | `state`      | string | <DeprecatedBadge version="1.5.0" /><br/>`done`: the change has been applied<br/>`pending`: the change is about to happen | `pending`, `done` |
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                                           |
 | `type`       | string | `document`: the notification type                                                                                        |
-| `volatile`   | object | Request [volatile data](/core/1/api/essentials/volatile-data/)                                                           |
+| `volatile`   | object | Request [volatile data](/core/1/api/essentials/volatile-data)                                                           |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -106,7 +106,7 @@ These notifications are sent only if the `users` argument is set to any other va
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `user`: the notification type                                                                         |
 | `user`       | string | `in`: a new user has subscribed to the same filters<br/>`out`: a user cancelled a shared subscription |
-| `volatile`   | object | Request [volatile data](/core/1/api/essentials/volatile-data/)                                        |
+| `volatile`   | object | Request [volatile data](/core/1/api/essentials/volatile-data)                                        |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -142,7 +142,7 @@ The `result` object is the notification content, and it has the following struct
 
 Server notifications are triggered by global events, and they are sent to all of a client's subscriptions at the same time.
 
-Currently, the only event generating a server notification is when an [authentication token](/core/1/guides/essentials/user-authentication/) has expired, closing the subscription.
+Currently, the only event generating a server notification is when an [authentication token](/core/1/guides/essentials/user-authentication) has expired, closing the subscription.
 
 Other events may be added in the future.
 

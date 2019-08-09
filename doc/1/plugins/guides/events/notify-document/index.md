@@ -10,7 +10,7 @@ title: notify:document
 
 | Arguments | Type                                                                      | Description                           |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/1/api/essentials/notifications/) | The normalized real-time notification |
+| `message` | [`Notification`](/core/1/api/essentials/notifications) | The normalized real-time notification |
 
 Triggered whenever a real-time document notification is about to be sent.
 

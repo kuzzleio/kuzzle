@@ -1006,6 +1006,14 @@ class ApiBase {
     });
   }
 
+  revokeTokens (id) {
+    return this.send({
+      controller: 'security',
+      action: 'revokeTokens',
+      _id: id
+    });
+  }
+
   scroll (scrollId, scroll) {
     const
       msg = {

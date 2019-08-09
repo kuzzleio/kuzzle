@@ -16,4 +16,4 @@ This section documents the `context.log` object, exposing functions used to send
 Log levels are assigned to each exposed log function, corresponding to the log priority.
 The lower the log level, the higher its priority.
 
-Levels above the threshold configued in the `logs` section of Kuzzle's [configuration file](/core/1/guides/essentials/configuration/) are ignored.
+Levels above the threshold configued in the `logs` section of Kuzzle's [configuration file](/core/1/guides/essentials/configuration) are ignored.
