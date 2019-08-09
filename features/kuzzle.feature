@@ -468,7 +468,7 @@ Feature: Kuzzle functional tests
     And The token is invalid
 
   @security
-  Scenario: logout every sessions at once
+  Scenario: logout all sessions at once
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
     Then I check the JWT Token
