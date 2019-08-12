@@ -108,7 +108,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       return should(esWrapper.getMapping(mappingRequest))
         .be.rejectedWith(
           NotFoundError,
-          {message: `No mapping found for index "${mappingRequest.index}"`})
+          {message: `No mapping found for index "${mappingRequest.index}".`})
         .then(() => {
           client.indices.getMapping.resolves({
             foo: {
@@ -120,7 +120,7 @@ describe('Test: ElasticSearch Wrapper', () => {
 
           return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(
             NotFoundError,
-            {message: `No mapping found for index "${mappingRequest.index}"`});
+            {message: `No mapping found for index "${mappingRequest.index}".`});
         });
     });
 
