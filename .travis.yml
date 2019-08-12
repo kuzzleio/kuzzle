@@ -31,8 +31,7 @@ jobs:
 
       cache: npm
 
-      node_js:
-        - "10"
+      node_js: 10
 
       install:
         - npm install --silent
