@@ -13,4 +13,4 @@ for protocol in websocket http socketio; do
 done
 
 # mqtt
-./node_modules/.bin/cucumber-js --format progress-bar --profile "mqttEmbedded" --world-parameters "{\"host\": \"${host}\"}"
+./node_modules/.bin/cucumber-js --format progress-bar --profile "mqtt" --world-parameters "{\"host\": \"${host}\"}"
