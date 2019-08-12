@@ -807,7 +807,7 @@ class ApiBase {
     return this.send(msg);
   }
 
-  logout (jwtToken) {
+  logout (jwtToken, global = false) {
     const
       msg = {
         controller: 'auth',
@@ -815,6 +815,9 @@ class ApiBase {
         jwt: jwtToken
       };
 
+    if (global) {
+      msg.global = true;
+    }
     return this.send(msg);
   }
 
