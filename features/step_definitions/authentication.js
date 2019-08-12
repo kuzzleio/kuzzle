@@ -66,6 +66,26 @@ Then(/^I log ?out$/, function (callback) {
     });
 });
 
+Then(/^I logout all sessions at once/, function (callback) {
+  if (!this.currentUser || !this.currentUser.token) {
+    callback(new Error('Cannot retrieve jwt token'));
+    return false;
+  }
+
+  this.api.logout(this.currentUser.token, true)
+    .then(body => {
+      delete this.currentUser;
+      if (body.error) {
+        return callback(new Error(body.error.message));
+      }
+      callback();
+    })
+    .catch(error => {
+      delete this.currentUser;
+      callback(error);
+    });
+});
+
 Then(/^I check the JWT Token$/, function (callback) {
   if (!this.currentToken || !this.currentToken.jwt) {
     return callback(new Error('Cannot retrieve the JWT token'));

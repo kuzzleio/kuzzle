@@ -91,7 +91,7 @@ describe('Test: collection controller', () => {
           should(truncate).be.calledWith(request);
 
           should(response).be.instanceof(Object);
-          should(response).match(foo);
+          should(response).match({ acknowledged: true });
         });
     });
   });

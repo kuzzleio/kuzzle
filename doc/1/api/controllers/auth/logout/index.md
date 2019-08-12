@@ -19,7 +19,7 @@ If there were any, real-time subscriptions are cancelled.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_logout
+URL: http://kuzzle:7512/_logout[?global]
 Method: POST
 Headers: Authorization: "Bearer <authentication token>"
 ```
@@ -30,7 +30,8 @@ Headers: Authorization: "Bearer <authentication token>"
 {
   "controller": "auth",
   "action": "logout",
-  "jwt": "<authentication token>"
+  "jwt": "<authentication token>",
+  "global": "<true|false>"
 }
 ```
 
@@ -39,6 +40,11 @@ Headers: Authorization: "Bearer <authentication token>"
 ## Arguments
 
 - `jwt`: valid authentication token (for the HTTP protocol, the token is to be passed to the `Authorization` header instead)
+
+### Optional:
+
+* `global`: if `true`, also revokes all other active sessions instead of just the current one (default: `false`)
+
 
 ---
 
