@@ -59,7 +59,9 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           ExternalServiceError,
           {
-            errorName: 'api-server-elasticsearch_down',
+            domain: 'api',
+            subdomain: 'server',
+            error: 'elasticsearch_down',
             code: 1,
             message: 'ElasticSearch is down: {"status":"red"}.'
           }
@@ -72,7 +74,9 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           InternalError,
           {
-            errorName: 'internal-unexpected-unknown_error',
+            domain: 'internal',
+            subdomain: 'unexpected',
+            error: 'unknown_error',
             code: 1,
             message: 'Unknown error: {"status":"error"}.'
           }
@@ -84,7 +88,9 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           NotFoundError,
           {
-            errorName: 'api-admin-database_not_found',
+            domain: 'api',
+            subdomain: 'admin',
+            error: 'database_not_found',
             code: 1,
             message: 'Database fake_database not found.'
           }
@@ -96,7 +102,9 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           PreconditionError,
           {
-            errorName: 'api-admin-action_locked',
+            domain: 'api',
+            subdomain: 'admin',
+            error: 'action_locked',
             code: 2,
             message: 'Lock action error: Kuzzle is already shutting down.'
           }
@@ -108,7 +116,9 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           UnauthorizedError,
           {
-            errorName: 'api-auth-invalid_token',
+            domain: 'api',
+            subdomain: 'auth',
+            error: 'invalid_token',
             code: 2,
             message: 'Invalid token.'
           }
@@ -120,7 +130,9 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           PartialError,
           {
-            errorName: 'api-bulk-document_creations_failed',
+            domain: 'api',
+            subdomain: 'bulk',
+            error: 'document_creations_failed',
             errors: ['foo', 'bar'],
             code: 1,
             message: 'Some document creations failed: foo,bar.'
