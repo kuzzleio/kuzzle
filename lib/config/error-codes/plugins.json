@@ -336,7 +336,7 @@
         },
         "errors_configuration_file": {
           "code": 28,
-          "message": "[%s] %s",
+          "message": "[%s] errors field in manifest.json badly formatted: %s",
           "class": "PluginImplementationError"
         }
       }
