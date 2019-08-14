@@ -546,6 +546,10 @@ describe('InternalEngine', () => {
         });
     });
 
+    it('should reject if a document with the specified ID already exists', () => {
+      throw new Error('Implement me');
+    })
+
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.create.rejects(error);
@@ -625,6 +629,10 @@ describe('InternalEngine', () => {
         });
     });
 
+    it('should reject if a document with the specified ID already exists', () => {
+      throw new Error('Implement me');
+    })
+
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.update.rejects(error);
@@ -703,6 +711,11 @@ describe('InternalEngine', () => {
           }
         });
     });
+
+    it('should reject if a document with the specified ID already exists', () => {
+      throw new Error('Implement me');
+    })
+
 
     it('should reject the promise if deleting the document fails', () => {
       const error = new Error('Mocked error');

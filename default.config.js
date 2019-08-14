@@ -237,18 +237,18 @@ module.exports = {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
       client: {
-        host: 'http://localhost:9200',
-        apiVersion: '5.6'
+        node: 'http://localhost:9200',
+        requestTimeout: 60000
       },
       commonMapping: {
         _kuzzle_info: {
           properties: {
-            active: {type: 'boolean'},
-            author: {type: 'keyword'},
-            createdAt: {type: 'date'},
-            updatedAt: {type: 'date'},
-            updater: {type: 'keyword'},
-            deletedAt: {type: 'date'}
+            active:     { type: 'boolean' },
+            author:     { type: 'keyword' },
+            createdAt:  { type: 'date' },
+            updatedAt:  { type: 'date' },
+            updater:    { type: 'keyword' },
+            deletedAt: { type: 'date' }
           }
         }
       },

@@ -33,6 +33,7 @@
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/runtime": "^7.5.5",
+    "@elastic/elasticsearch": "^7.3.0",
     "async": "^2.6.3",
     "bluebird": "^3.5.5",
     "bufferutil": "^4.0.1",
