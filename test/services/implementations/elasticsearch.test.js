@@ -749,9 +749,9 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.update(request)
         .catch(error => {
-          try{
+          try {
             should(error).be.instanceOf(NotFoundError);
-            should(error.message).be.equal('Index "banana" does not exist, please create it first');
+            should(error.message).be.equal('Index "banana" does not exist, please create it first.');
             should(error.stack.replace(/^.*?\n/, ''))
               .eql(esError.stack.replace(/^.*?\n/, ''));
             should(elasticsearch.client.update.firstCall.args[0].id).be.null();
