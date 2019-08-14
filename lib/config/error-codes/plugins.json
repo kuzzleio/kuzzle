@@ -328,6 +328,11 @@
           "code": 27,
           "message": "Unable to remove connection - unknown connection identifier: %s",
           "class": "PluginImplementationError"
+        },
+        "errors_configuration_file": {
+          "code": 28,
+          "message": "[%s] %s",
+          "class": "PluginImplementationError"
         }
       }
     }
