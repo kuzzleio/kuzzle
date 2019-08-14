@@ -189,9 +189,9 @@
           "message": "No mapping found for index \"%s\".",
           "class": "NotFoundError"
         },
-        "index_not_found": {
+        "index_or_collection_not_found": {
           "code": 38,
-          "message": "Index \"%s\" does not exist, please create it first.",
+          "message": "Index or collection \"%s\" does not exist, please create it first.",
           "class": "NotFoundError"
         }
       }
