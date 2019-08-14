@@ -237,8 +237,7 @@ module.exports = {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
       client: {
-        node: 'http://localhost:9200',
-        requestTimeout: 60000
+        node: 'http://localhost:9200'
       },
       commonMapping: {
         _kuzzle_info: {
@@ -248,7 +247,7 @@ module.exports = {
             createdAt:  { type: 'date' },
             updatedAt:  { type: 'date' },
             updater:    { type: 'keyword' },
-            deletedAt: { type: 'date' }
+            deletedAt:  { type: 'date' }
           }
         }
       },
