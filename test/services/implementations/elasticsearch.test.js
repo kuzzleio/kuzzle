@@ -150,7 +150,6 @@ describe('Test: ElasticSearch service', () => {
       const initESRequest = ES.__get__('initESRequest');
 
       request.input.resource.index = '%foobar';
-
       should(() => initESRequest(request)).throw(BadRequestError);
     });
   });
