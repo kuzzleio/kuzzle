@@ -72,7 +72,7 @@ Returns a serverInfo object with the following properties:
           }
         },
         "memoryUsed": 115036160,
-        "nodeVersion": "v8.9.0",
+        "nodeVersion": "v10.16.2",
         "plugins": {
           // plugins information
           // example:
@@ -80,7 +80,7 @@ Returns a serverInfo object with the following properties:
             "manifest": {
               "name": "kuzzle-plugin-auth-passport-local",
               "path": "/var/app/plugins/enabled/kuzzle-plugin-auth-passport-local",
-              "kuzzleVersion": ">=.0.0 <2.0.0"
+              "kuzzleVersion": ">=2.0.0 <3.0.0"
             },
             "hooks": [],
             "pipes": [],

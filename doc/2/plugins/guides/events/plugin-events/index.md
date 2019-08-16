@@ -24,7 +24,7 @@ All calls to plugins API actions trigger two of these three events:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
+| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
 
 A `before` event is triggered before a plugin API request starts.
 
@@ -50,7 +50,7 @@ The `before` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
+| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
 
 An `after` event is triggered after a plugin API request succeeds.
 
@@ -76,7 +76,7 @@ The `after` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
+| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
 
 An `error` event is triggered after a plugin API request fails.
 
