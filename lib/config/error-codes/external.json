@@ -203,6 +203,11 @@
           "code": 2,
           "message": "Plugin %s bootstrap - lock wait timeout exceeded.",
           "class": "InternalError"
+        },
+        "no_jwt_secret_available": {
+          "code": 3,
+          "message": "Potential race condition: no JWT secret is available in configuration or DB.",
+          "class": "InternalError"
         }
       }
     },

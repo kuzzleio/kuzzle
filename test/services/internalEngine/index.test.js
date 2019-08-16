@@ -724,54 +724,17 @@ describe('InternalEngine', () => {
     });
   });
 
-  describe('#createInternalIndex', () => {
+  describe('#createCollection', () => {
     it('should forward the request to elasticsearch', () => {
-      const
-        createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(false));
-
-      return kuzzle.internalEngine.createInternalIndex()
-        .then(() => {
-          try {
-            should(existsStub).be.calledOnce();
-            should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
-            should(createStub).be.calledOnce();
-            should(createStub).be.calledWith({index: kuzzle.internalEngine.index});
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
+      throw new Error('implement master');
     });
 
     it('should not try to create an existing index', () => {
-      const
-        createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(true));
-
-      return kuzzle.internalEngine.createInternalIndex()
-        .then(() => {
-          try {
-            should(existsStub).be.calledOnce();
-            should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
-            should(createStub).have.callCount(0);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
+      throw new Error('implement master');
     });
 
     it('should reject the promise if creating the internal index fails', () => {
-      const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(false));
-      kuzzle.internalEngine.client.indices.create.rejects(error);
-
-      return should(kuzzle.internalEngine.createInternalIndex()).be.rejectedWith(ExternalServiceError, {message: error.message});
+      throw new Error('implement master');
     });
   });
 

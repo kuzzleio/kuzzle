@@ -11,7 +11,8 @@ const
 describe('services/internalEngine/bootstrap.js', () => {
   let
     kuzzle,
-    bootstrap;
+    bootstrap,
+    jwtSecret;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -20,106 +21,101 @@ describe('services/internalEngine/bootstrap.js', () => {
 
     bootstrap = new Bootstrap(kuzzle);
     bootstrap.config = {};
+
+    jwtSecret = 'i-am-the-secret-now';
   });
 
   describe('#constructor', () => {
     it('should set the engine to kuzzle internal engine', () => {
-      should(bootstrap.db).be.exactly(kuzzle.internalEngine);
+      should(bootstrap.storage).be.exactly(kuzzle.internalEngine);
     });
   });
 
-  describe('#adminExists', () => {
-    it('should return true if an admin exists', () => {
-      bootstrap.db.search.returns(Promise.resolve({total: 1}));
-
-      return bootstrap.adminExists()
-        .then(result => {
-          try {
-            should(bootstrap.db.search)
-              .be.calledOnce()
-              .be.calledWithMatch('users', {
-                query: {
-                  terms: {
-                    profileIds: ['admin']
-                  }
-                }
-              }, {from: 0, size: 0});
-
-            should(result).be.true();
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
+  describe('#startOrWait', () => {
+    beforeEach(() => {
+      bootstrap._bootstrap = sinon.stub().resolves();
+      bootstrap._getLock = sinon.stub().resolves(true);
+      bootstrap._checkTimeout = sinon.stub().resolves();
+      bootstrap._getJWTSecret = sinon.stub().resolves(jwtSecret);
+      bootstrap.storage.exists = sinon.stub().resolves(false);
     });
 
-    it('should return false if no admin exists', () => {
-      bootstrap.db.search.returns(Promise.resolve({hits: {total: 0}}));
+    it('should play the bootstrap sequence if it\'s the first node to start', async () => {
+      await bootstrap.startOrWait();
 
-      return bootstrap.adminExists()
-        .then(result => {
-          try {
-            should(result).be.false();
+      should(bootstrap._bootstrap).be.calledOnce();
+      should(kuzzle.config.security.jwt.secret).be.eql('i-am-the-secret-now');
+    });
 
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
+    it('should reject if bootstrap on this node takes too long', async () => {
+      bootstrap._bootstrap = () => new Promise(() => {});
+      bootstrap._checkTimeout = () => {
+        return new Promise((_, reject) => setTimeout(
+          () => reject(new Error('timeout')), 50));
+      };
+
+      const promise = bootstrap.startOrWait()
+
+      should(promise).be.rejected();
+      should(kuzzle.config.security.jwt.secret).be.null();
+    });
+
+    it('should wait for bootstrap to be finish if it\' currently playing on another node', async () => {
+      bootstrap._getLock.resolves(false);
+
+      await bootstrap.startOrWait();
+
+      should(kuzzle.config.security.jwt.secret).be.eql('i-am-the-secret-now');
+    });
+
+    it('should throw if bootstrap on another node takes too long', async () => {
+      bootstrap._getLock.resolves(false);
+      bootstrap._checkTimeout.rejects(new Error('timeout'));
+
+      const promise = bootstrap.startOrWait()
+
+      should(promise).be.rejected();
+      should(kuzzle.config.security.jwt.secret).be.null();
+    });
+
+    it('should get JWT secret and return if bootstrap is already done', async () => {
+      bootstrap.storage.exists.resolves(true);
+
+      await bootstrap.startOrWait();
+
+      should(bootstrap._getLock).not.be.called();
+      should(kuzzle.config.security.jwt.secret).be.eql('i-am-the-secret-now');
     });
 
   });
 
-  describe('#jwtSecret', () => {
-    it('should use given config if any', () => {
-      kuzzle.config.security.jwt.secret = 'mysecret';
-
-      return bootstrap.all()
-        .then(() => {
-          should(kuzzle.config.security.jwt.secret)
-            .be.eql('mysecret');
-        });
-    });
-
-    it('should take an existing seed from the db', () => {
-      kuzzle.internalEngine.create
-        .withArgs('config', 'security.jwt.secret')
-        .rejects(new Error('test'));
-      kuzzle.internalEngine.get
-        .withArgs('config', 'security.jwt.secret')
-        .resolves({
-          _source: {
-            seed: '42'
-          }
-        });
-
-      return bootstrap.all()
-        .then(() => {
-          should(kuzzle.config.security.jwt.secret)
-            .be.eql('42');
-        });
-    });
-
-    it('should autogenerate a jwt secret if none found', () => {
-      kuzzle.internalEngine.create
-        .withArgs('config', 'security.jwt.secret')
-        .returns(Bluebird.resolve());
-
-      return bootstrap.all()
-        .then(() => {
-          should(kuzzle.config.security.jwt.secret)
-            .be.a.String()
-            .and.have.length(1024);
-        });
-
-    });
+  describe('#_bootstrap', () => {
+    beforeEach(() => {
+      bootstrap._persistJWTSecret = sinon.stub().resolves();
+      bootstrap._createInternalIndex = sinon.stub().resolves();
+      bootstrap._createInitialSecurities = sinon.stub().resolves();
+      bootstrap._createInitialValidations = sinon.stub().resolves();
   });
+
+    it('should call the initialization methods and then unlock the lock', async () => {
+      await bootstrap._bootstrap();
+
+      sinon.assert.callOrder(
+        bootstrap._createInternalIndex,
+        bootstrap._createInitialSecurities,
+        bootstrap._createInitialValidations,
+        bootstrap.storage.create,
+        bootstrap._persistJWTSecret,
+        bootstrap.storage.create,
+        bootstrap._unlock
+      );
+    });
+  })
+
+
 
   describe('#_constructValidationFixtures', () => {
-    it.only('construct validation fixtures from kuzzlerc config', () => {
+    it('construct validation fixtures from kuzzlerc config', () => {
       bootstrap.config.validation = {
         nepali: {
           liia: {

@@ -66,7 +66,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
       bootstrap.lock = sinon.stub().returns(Bluebird.resolve(true));
       kuzzle.internalEngine.exists.returns(Bluebird.resolve(true));
 
-      return bootstrap.all()
+      return bootstrap.startOrWait()
         .then(() => { throw new Error('should not happen'); })
         .catch(error => {
           should(error.message).match(/^Plugin pluginName bootstrap - lock wait timeout exceeded./);
