@@ -674,6 +674,8 @@
   // Defines the specifications used to validate data.
   // Please refer to the guide for more information.
   // (https://docs.kuzzle.io/guide/1/datavalidation)
+  //
+  // /!\ No syntax check will be performed here /!\
   "validation": {
   },
 

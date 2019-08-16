@@ -36,8 +36,6 @@ describe('Test: core/indexCache', () => {
 
   describe('#init', () => {
     it('should initialize the index cache properly', () => {
-      kuzzle.internalEngine.getFieldMapping.resolves({});
-
       return indexCache.init()
         .then(() => {
           should(listAliasesStub).be.calledOnce();

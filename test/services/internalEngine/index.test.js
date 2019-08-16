@@ -920,6 +920,16 @@ describe('InternalEngine', () => {
     });
   });
 
+  describe('#adminExists', () => {
+    it('should resolve to true if an admin exists', () => {
+      throw new Error('Implement me master');
+    });
+
+    it('should resolve to false if no admin exists', () => {
+      throw new Error('Implement me master');
+    });
+  });
+
   describe('#applyDefaultMapping', () => {
     let
       getMappingResponse,

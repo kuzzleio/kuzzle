@@ -1,5 +1,6 @@
 --bail
 --require should-sinon
+--require should
 --reporter dot
 --recursive
 --slow 2000

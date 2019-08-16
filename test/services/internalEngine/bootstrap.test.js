@@ -19,288 +19,12 @@ describe('services/internalEngine/bootstrap.js', () => {
     kuzzle.indexCache.exists.resolves(false);
 
     bootstrap = new Bootstrap(kuzzle);
+    bootstrap.config = {};
   });
 
   describe('#constructor', () => {
     it('should set the engine to kuzzle internal engine', () => {
       should(bootstrap.db).be.exactly(kuzzle.internalEngine);
-    });
-  });
-
-  describe('#all', () => {
-    it('should call the proper submethods in proper order', () => {
-      sinon.stub(bootstrap, 'createCollections').returns(Promise.resolve());
-
-      return bootstrap.all()
-        .then(() => {
-
-          try {
-            should(bootstrap.db.createInternalIndex)
-              .be.calledOnce();
-
-            should(bootstrap.createCollections)
-              .be.calledOnce();
-
-            should(bootstrap.db.refresh)
-              .be.calledOnce();
-
-            should(kuzzle.indexCache.add)
-              .be.calledOnce()
-              .be.calledWithExactly(bootstrap.db.index);
-
-            sinon.assert.callOrder(
-              bootstrap.db.createInternalIndex,
-              bootstrap.createCollections,
-              bootstrap.db.refresh,
-              kuzzle.indexCache.add
-            );
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-
-    it('should respect lock', () => {
-      const lockStub = sinon.stub(bootstrap, 'lock');
-      lockStub.returns(Bluebird.resolve(false));
-      lockStub.onSecondCall().returns(Bluebird.resolve(true));
-
-      return Bluebird.all([
-        bootstrap.all(),
-        bootstrap.all()
-      ])
-        .then(() => {
-          should(kuzzle.internalEngine.createInternalIndex)
-            .be.calledOnce();
-          should(kuzzle.config.security.jwt.secret)
-            .be.String()
-            .not.be.empty();
-        });
-    });
-
-  });
-
-  describe('#createCollections', () => {
-    it('should call proper sub methods in proper order', () => {
-      [
-        'createPluginsCollection',
-        'createRolesCollection',
-        'createProfilesCollection',
-        'createUsersCollection'
-      ].forEach(m => sinon.stub(bootstrap, m).returns(Promise.resolve()));
-
-      return bootstrap.createCollections()
-        .then(() => {
-          try {
-            should(bootstrap.createPluginsCollection)
-              .be.calledOnce();
-            should(bootstrap.createRolesCollection)
-              .be.calledOnce();
-            should(bootstrap.createProfilesCollection)
-              .be.calledOnce();
-            should(bootstrap.createUsersCollection)
-              .be.calledOnce();
-
-            sinon.assert.callOrder(
-              bootstrap.createPluginsCollection,
-              bootstrap.createRolesCollection,
-              bootstrap.createProfilesCollection,
-              bootstrap.createUsersCollection
-            );
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-  });
-
-  describe('#createRolesCollection', () => {
-    it('should create mapping and add default roles', () => {
-      return bootstrap.createRolesCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .be.calledOnce()
-              .be.calledWithMatch('roles', {
-                properties: {
-                  controllers: { enabled: false }
-                }
-              });
-
-            should(bootstrap.db.createOrReplace)
-              .be.calledThrice();
-            should(bootstrap.db.createOrReplace)
-              .be.calledWithExactly('roles', 'admin', kuzzle.config.security.default.role)
-              .be.calledWithExactly('roles', 'default', kuzzle.config.security.default.role)
-              .be.calledWithExactly('roles', 'anonymous', kuzzle.config.security.default.role);
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-
-    it('should do nothing if the collection already exists', () => {
-      kuzzle.indexCache.exists.resolves(true);
-
-      return bootstrap.createRolesCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .have.callCount(0);
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-  });
-
-  describe('#createPluginsCollection', () => {
-    it('should create the mapping', () => {
-      return bootstrap.createPluginsCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .be.calledOnce()
-              .be.calledWithMatch('plugins', {
-                properties: {
-                  config: {enabled: false}
-                }
-              });
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-
-    it('should do nothing if the collection exists', () => {
-      kuzzle.indexCache.exists.resolves(true);
-
-      return bootstrap.createPluginsCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .have.callCount(0);
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-  });
-
-  describe('#createProfilesCollection', () => {
-    it('should set the mapping and inject the default profiles', () => {
-      return bootstrap.createProfilesCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .be.calledOnce()
-              .be.calledWithMatch('profiles', {
-                properties: {
-                  policies: {
-                    properties: {
-                      roleId: {
-                        type: 'keyword'
-                      }
-                    }
-                  }
-                }
-              });
-
-            should(bootstrap.db.createOrReplace)
-              .be.calledThrice()
-              .be.calledWithMatch('profiles', 'admin', {
-                policies: [{roleId: 'admin'}]
-              })
-              .be.calledWithMatch('profiles', 'default', {
-                policies: [{roleId: 'default'}]
-              })
-              .be.calledWithMatch('profiles', 'anonymous', {
-                policies: [{roleId: 'anonymous'}]
-              });
-
-            should(kuzzle.indexCache.add)
-              .be.calledOnce()
-              .be.calledWithExactly(kuzzle.internalEngine.index, 'profiles');
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-
-    it('should do nothing if the collection exists', () => {
-      kuzzle.indexCache.exists.resolves(true);
-
-      return bootstrap.createProfilesCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .have.callCount(0);
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-  });
-
-  describe('#createUsersCollection', () => {
-    it('should set the mapping', () => {
-      return bootstrap.createUsersCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .be.calledOnce()
-              .be.calledWithMatch('users', {
-                properties: {
-                  profileIds: {
-                    type: 'keyword'
-                  }
-                }
-              });
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
-    });
-
-    it('should do nothing if the collection exists', () => {
-      kuzzle.indexCache.exists.resolves(true);
-
-      return bootstrap.createUsersCollection()
-        .then(() => {
-          try {
-            should(bootstrap.db.updateMapping)
-              .have.callCount(0);
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
     });
   });
 
@@ -394,21 +118,39 @@ describe('services/internalEngine/bootstrap.js', () => {
     });
   });
 
-  describe('#_waitTillUnlocked', () => {
-    it('should throw if locked for too long', () => {
-      bootstrap.db.exists.returns(Bluebird.resolve(true));
-      mockrequire('bluebird', Object.assign(require('bluebird'), {delay: () => Bluebird.resolve()}));
-      mockrequire.reRequire('../../../lib/services/internalEngine/bootstrap');
+  describe('#_constructValidationFixtures', () => {
+    it.only('construct validation fixtures from kuzzlerc config', () => {
+      bootstrap.config.validation = {
+        nepali: {
+          liia: {
+            strict: true,
+            fields: {}
+          },
+          mehry: {
+            strict: false,
+            fields: {}
+          }
+        }
+      };
 
-      return bootstrap._waitTillUnlocked()
-        .then(() => { throw new Error('should not happen'); })
-        .catch(error => {
-          should(error.message).match('Internal engine bootstrap - lock wait timeout exceeded.');
-        })
-        .finally(() => {
-          mockrequire.stop('bluebird');
-          mockrequire.reRequire('../../../lib/services/internalEngine/bootstrap');
-        });
-    });
+      const fixtures = bootstrap._constructValidationFixtures();
+
+      should(fixtures['nepali#liia']).match({
+        index: 'nepali',
+        collection: 'liia',
+        validation: {
+          strict: true,
+          fields: {}
+        }
+      });
+      should(fixtures['nepali#mehry']).match({
+        index: 'nepali',
+        collection: 'mehry',
+        validation: {
+          strict: false,
+          fields: {}
+        }
+      });
+    })
   });
 });

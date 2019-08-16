@@ -144,7 +144,6 @@ class KuzzleMock extends Kuzzle {
       exists: this.sandbox.stub().resolves(),
       expire: this.sandbox.stub().resolves(),
       get: this.sandbox.stub().resolves(foo),
-      getFieldMapping: this.sandbox.stub().resolves(),
       getMapping: this.sandbox.stub().resolves(),
       mget: this.sandbox.stub().resolves({hits: [foo]}),
       index: 'internalIndex',
