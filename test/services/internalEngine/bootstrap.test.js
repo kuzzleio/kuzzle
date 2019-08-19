@@ -56,8 +56,10 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       const promise = bootstrap.startOrWait()
 
-      should(promise).be.rejected();
-      should(kuzzle.config.security.jwt.secret).be.null();
+      return should(promise).be.rejected()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret).be.null();
+        });
     });
 
     it('should wait for bootstrap to finish if it\' currently playing on another node', async () => {
@@ -76,9 +78,11 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       const promise = bootstrap.startOrWait()
 
-      should(promise).be.rejected();
-      should(kuzzle.config.security.jwt.secret).be.null();
-      should(bootstrap._bootstrap).not.be.called();
+      return should(promise).be.rejected()
+        .then(() => {
+          should(kuzzle.config.security.jwt.secret).be.null();
+          should(bootstrap._bootstrap).not.be.called();
+        });
     });
 
     it('should get JWT secret and return if bootstrap is already done', async () => {
@@ -194,10 +198,12 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       const promise = bootstrap._getJWTSecret();
 
-      should(promise)
-        .be.rejectedWith({
-          errorName: 'external.internal_engine.no_jwt_secret_available'});
-      should(bootstrap.engine.get).be.calledWith('config', bootstrap._JWT_SECRET_ID);
+      return should(promise).be.rejectedWith({
+          errorName: 'external.internal_engine.no_jwt_secret_available'
+      })
+        .then(() => {
+          should(bootstrap.engine.get).be.calledWith('config', bootstrap._JWT_SECRET_ID);
+        });
     });
   });
 
@@ -227,7 +233,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       const promise = bootstrap._checkTimeout(42);
 
-      should(promise).be.resolved();
+      return should(promise).be.resolved();
     });
 
     it('should reject after 10 attempts', async () => {
@@ -236,7 +242,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       const promise = bootstrap._checkTimeout();
 
-      should(promise).be.rejectedWith({
+      return should(promise).be.rejectedWith({
         errorName: 'external.internal_engine.lock_wait_timeout'});
     });
 
@@ -296,7 +302,7 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       const promise = bootstrap._getLock();
 
-      should(promise).be.rejectedWith({ errorName: 'ender.game.xenocide' });
+      return should(promise).be.rejectedWith({ errorName: 'ender.game.xenocide' });
     });
   });
 

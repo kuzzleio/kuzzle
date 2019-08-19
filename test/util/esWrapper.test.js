@@ -20,55 +20,45 @@ describe('Test: ElasticSearch Wrapper', () => {
   describe('#formatESError', () => {
     it('should convert any unknown error to a ExternalServiceError instance', () => {
       const error = new Error('test');
-
-      error.displayName = 'foobar';
+      error.meta = {
+        statusCode: 420
+      };
 
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.message).be.eql('test');
+      should(formatted.errorName).be.eql('external.elasticsearch.unexpected_error');
     });
 
-    it('should not overwrite the previous stacktrace', () => {
-      const
-        error = new Error('[illegal_argument_exception] object mapping foo can\'t be changed from nested to non-nested'),
-        stacktrace = JSON.stringify(error.stack);
-      error.displayName = 'BadRequest';
+    it('should handle version conflict errors', () => {
+      const error = new Error('[version_conflict_engine_exception] [data][AVrbg0eg90VMe4Z_dG8j]: version conflict, current version [153] is different than the one provided [152], with { index_uuid="iDrU6CfZSO6CghM1t6dl0A" & shard="2" & index="userglobaldata" }');
+      error.meta = {
+        statusCode: 409
+      };
 
       const formatted = esWrapper.formatESError(error);
 
-      should(formatted).be.instanceOf(BadRequestError);
-      should(JSON.stringify(formatted.stack)).eql(stacktrace);
+      should(formatted).be.instanceOf(ExternalServiceError);
+      should(formatted.errorName).be.eql('external.elasticsearch.unexpected_conflict_error');
     });
   });
 
-  it('should handle version conflict errors', () => {
-    const error = new Error('[version_conflict_engine_exception] [data][AVrbg0eg90VMe4Z_dG8j]: version conflict, current version [153] is different than the one provided [152], with { index_uuid="iDrU6CfZSO6CghM1t6dl0A" & shard="2" & index="userglobaldata" }');
-
-    error.displayName = 'Conflict';
-
-    const formatted = esWrapper.formatESError(error);
-
-    should(formatted).be.instanceOf(ExternalServiceError);
-    should(formatted.message).be.eql('Unable to modify document "AVrbg0eg90VMe4Z_dG8j": cluster sync failed (too many simultaneous changes applied)');
-  });
 
   describe('#getMapping', () => {
     const
       mappingRequest = {index: 'foo', type: 'bar'};
 
     it('should allow users to retrieve a mapping', () => {
-      const
-        mappings = {
-          bar: {properties: {}}
-        };
+      const mappings = {
+        bar: { properties: {} }
+      };
 
-      client.indices.getMapping.resolves({foo: {mappings}});
+      client.indices.getMapping.resolves({ body: { nepali: { mappings } } });
 
       return esWrapper.getMapping(mappingRequest)
         .then(result => {
-          should(result.foo).not.be.undefined();
-          should(result.foo.mappings).not.be.undefined();
+          should(result.nepali).not.be.undefined();
+          should(result.nepali.mappings).not.be.undefined();
         });
     });
 
@@ -87,7 +77,7 @@ describe('Test: ElasticSearch Wrapper', () => {
           }
         };
 
-      client.indices.getMapping.resolves({foo: {mappings}});
+      client.indices.getMapping.resolves({ body: { foo: { mappings } } });
 
       return esWrapper.getMapping(mappingRequest)
         .then(result => {
@@ -96,12 +86,14 @@ describe('Test: ElasticSearch Wrapper', () => {
         });
     });
 
-    it('should return a rejected promise if there is no mapping found', () => {
+    it('should return a rejected promise if there is no mapping found', async () => {
       client.indices.getMapping.resolves({
-        foobar: {
-          mappings: {qux: {
-            properties: {foo: 'bar'}
-          }}
+        body: {
+          foobar: {
+            mappings: {qux: {
+              properties: {foo: 'bar'}
+            }}
+          }
         }
       });
 
@@ -111,10 +103,12 @@ describe('Test: ElasticSearch Wrapper', () => {
           {message: `No mapping found for index "${mappingRequest.index}".`})
         .then(() => {
           client.indices.getMapping.resolves({
-            foo: {
-              mappings: {foobar: {
-                properties: {foo: 'bar'}
-              }}
+            body: {
+              foo: {
+                mappings: {foobar: {
+                  properties: {foo: 'bar'}
+                }}
+              }
             }
           });
 
@@ -126,9 +120,14 @@ describe('Test: ElasticSearch Wrapper', () => {
 
     it('should reject the getMapping promise if elasticsearch throws an error', () => {
       const error = new Error('Mocked error');
+      error.meta = {
+        statusCode: 420
+      };
       client.indices.getMapping.rejects(error);
 
-      return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(ExternalServiceError, {message: error.message});
+      return should(esWrapper.getMapping(mappingRequest))
+        .be.rejectedWith(ExternalServiceError, {
+          errorName: 'external.elasticsearch.unexpected_error' });
     });
 
     it('should include attribute `_kuzzle_info` when includeKuzzleMeta is true', () => {
@@ -140,7 +139,7 @@ describe('Test: ElasticSearch Wrapper', () => {
           }}
         };
 
-      client.indices.getMapping.resolves({ foo: { mappings }});
+      client.indices.getMapping.resolves({ body: { foo: { mappings } } });
 
       return esWrapper.getMapping(mappingRequest, true)
         .then(result => {
@@ -162,9 +161,11 @@ describe('Test: ElasticSearch Wrapper', () => {
       };
 
       client.indices.getMapping.resolves({
-        foo: { mappings },
-        bar: { mappings },
-        baz: { mappings }
+        body: {
+          foo: { mappings },
+          bar: { mappings },
+          baz: { mappings }
+        }
       });
 
       return esWrapper.getMapping({index: 'alias', type: 'bar'}, true)
@@ -194,9 +195,11 @@ describe('Test: ElasticSearch Wrapper', () => {
       };
 
       client.indices.getMapping.resolves({
-        foo: { mappings },
-        bar: { mappings },
-        baz: { mappings }
+        body: {
+          foo: { mappings },
+          bar: { mappings },
+          baz: { mappings }
+        }
       });
 
       return esWrapper.getMapping({index: 'alias', type: 'bar'}, true)
@@ -213,8 +216,10 @@ describe('Test: ElasticSearch Wrapper', () => {
 
     it('should skip empty indexes without mappings', () => {
       client.indices.getMapping.resolves({
-        foo: {},
-        qux: { mappings: { bar: { properties: {} } } }
+        body: {
+          foo: {},
+          qux: { mappings: { bar: { properties: {} } } }
+        }
       });
 
       return esWrapper.getMapping({index: 'alias', type: 'bar'}, true)
