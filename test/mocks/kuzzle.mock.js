@@ -125,17 +125,9 @@ class KuzzleMock extends Kuzzle {
 
     this.internalEngine = {
       bootstrap: {
-        adminExists: this.sandbox.stub().resolves(true),
-        all: this.sandbox.stub().resolves(),
-        createCollections: this.sandbox.stub().resolves(),
-        createRolesCollection: this.sandbox.stub().resolves(),
-        createDefaultRoles: this.sandbox.stub().resolves(),
-        createProfilesCollection: this.sandbox.stub().resolves(),
-        createDefaultProfiles: this.sandbox.stub().resolves(),
-        createUsersCollection: this.sandbox.stub().resolves(),
-        createPluginsCollection: this.sandbox.stub().resolves(),
-        delete: this.sandbox.stub().resolves()
+        startOrWait: this.sandbox.stub().resolves()
       },
+      adminExists: this.sandbox.stub().resolves(true),
       create: this.sandbox.stub().resolves(),
       createInternalIndex: this.sandbox.stub().resolves(),
       createOrReplace: this.sandbox.stub().resolves(),
@@ -158,7 +150,8 @@ class KuzzleMock extends Kuzzle {
       search: this.sandbox.stub().resolves(),
       update: this.sandbox.stub().resolves(),
       updateMapping: this.sandbox.stub().resolves(foo),
-      applyDefaultMapping: this.sandbox.stub().resolves()
+      applyDefaultMapping: this.sandbox.stub().resolves(),
+      createCollection: this.sandbox.stub().resolves()
     };
 
     this.once = this.sandbox.stub();
