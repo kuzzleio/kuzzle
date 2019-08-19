@@ -1,12 +1,14 @@
 'use strict';
 
-const {
-  getESIndex,
-  extractIndex,
-  extractCollection,
-  extractIndexes,
-  extractCollections
-} = require('../../lib/util/esEmulator');
+const
+  should = require('should'),
+  {
+    getESIndex,
+    extractIndex,
+    extractCollection,
+    extractIndexes,
+    extractCollections
+  } = require('../../lib/util/esEmulator');
 
 describe('Elasticsearch collection emulator utils', () => {
 
@@ -23,15 +25,15 @@ describe('Elasticsearch collection emulator utils', () => {
 
   describe('#extractIndex', () => {
     it('extract the index name from esIndex name', () => {
-      should(extractIndex('#nepali/liia')).be.eql('nepali')
-      should(extractIndex('%nepali/mehry')).be.eql('nepali')
+      should(extractIndex('#nepali/liia')).be.eql('nepali');
+      should(extractIndex('%nepali/mehry')).be.eql('nepali');
     });
   });
 
   describe('#extractCollection', () => {
     it('extract the collection names from esIndex name', () => {
-      should(extractCollection('#nepali/liia')).be.eql('liia')
-      should(extractCollection('%nepali/mehry')).be.eql('mehry')
+      should(extractCollection('#nepali/liia')).be.eql('liia');
+      should(extractCollection('%nepali/mehry')).be.eql('mehry');
     });
   });
 

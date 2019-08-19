@@ -54,7 +54,7 @@ describe('services/internalEngine/bootstrap.js', () => {
           () => reject(new Error('timeout')), 50));
       };
 
-      const promise = bootstrap.startOrWait()
+      const promise = bootstrap.startOrWait();
 
       return should(promise).be.rejected()
         .then(() => {
@@ -76,7 +76,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       bootstrap._getLock.resolves(false);
       bootstrap._checkTimeout.rejects(new Error('timeout'));
 
-      const promise = bootstrap.startOrWait()
+      const promise = bootstrap.startOrWait();
 
       return should(promise).be.rejected()
         .then(() => {
@@ -104,7 +104,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       bootstrap._createInitialSecurities = sinon.stub().resolves();
       bootstrap._createInitialValidations = sinon.stub().resolves();
       bootstrap._unlock = sinon.stub().resolves();
-   });
+    });
 
     it('should call the initialization methods and then unlock the lock', async () => {
       await bootstrap._bootstrap();
@@ -126,8 +126,8 @@ describe('services/internalEngine/bootstrap.js', () => {
 
       should(bootstrap.engine.createCollection.callCount).be.eql(6);
       should(bootstrap.engine.createCollection.getCall(0).args[0]).be.eql('users');
-      should(bootstrap.engine.createCollection.getCall(5).args).be.eql(
-        ['config',
+      should(bootstrap.engine.createCollection.getCall(5).args).be.eql([
+        'config',
         { dynamic: false, properties: {} }]);
     });
   });
@@ -199,7 +199,7 @@ describe('services/internalEngine/bootstrap.js', () => {
       const promise = bootstrap._getJWTSecret();
 
       return should(promise).be.rejectedWith({
-          errorName: 'external.internal_engine.no_jwt_secret_available'
+        errorName: 'external.internal_engine.no_jwt_secret_available'
       })
         .then(() => {
           should(bootstrap.engine.get).be.calledWith('config', bootstrap._JWT_SECRET_ID);

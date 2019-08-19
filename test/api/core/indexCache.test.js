@@ -9,27 +9,15 @@ describe('Test: core/indexCache', () => {
     listAliasesStub,
     listIndexesStub,
     listCollectionsStub,
-    getMappingStub,
     indexCache,
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    const internalMapping = {
-      foo: {
-        mappings: {
-          bar: 'first',
-          baz: 'second',
-          qux: 'third'
-        }
-      }
-    };
-
     listAliasesStub = kuzzle.internalEngine.listAliases.resolves({alias: 'foo', alias2: 'foo'});
     listIndexesStub = kuzzle.internalEngine.listIndexes.resolves(['foo']);
     listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
-    getMappingStub = kuzzle.internalEngine.getMapping.resolves(internalMapping);
     indexCache = new IndexCache(kuzzle);
     kuzzle.internalEngine.applyDefaultMapping.resolves(indexCache.commonMapping);
   });

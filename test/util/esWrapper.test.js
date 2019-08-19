@@ -5,7 +5,6 @@ const
   {
     errors: {
       ExternalServiceError,
-      BadRequestError,
       NotFoundError
     }
   } = require('kuzzle-common-objects'),
