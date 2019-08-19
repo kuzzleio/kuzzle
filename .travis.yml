@@ -95,6 +95,9 @@ jobs:
 
     - stage: Unit Tests & Linters
       name: Dead link check
+      cache:
+        directories:
+          - $HOME/.gem/specs
       before_script:
         - npm run doc-prepare
         - npm run --prefix doc/framework clone-repos
