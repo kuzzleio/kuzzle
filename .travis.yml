@@ -37,6 +37,7 @@ _doc-deploy: &doc-deploy
     npm: true
     directories:
       - $HOME/.cache/pip
+      - doc/framework/node_modules
   addons:
     apt:
       packages:
@@ -71,7 +72,7 @@ jobs:
       node_js: 8
       cache: npm
       install:
-        - npm install --silent
+        - npm ci --silent
       script:
         - npm run --silent lint
         - npm run unit-testing
@@ -98,6 +99,7 @@ jobs:
       cache:
         directories:
           - $HOME/.gem/specs
+          - doc/framework/node_modules
       before_script:
         - npm run doc-prepare
         - npm run --prefix doc/framework clone-repos
