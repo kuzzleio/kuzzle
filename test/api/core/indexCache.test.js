@@ -60,17 +60,6 @@ describe('Test: core/indexCache', () => {
     });
   });
 
-  describe('#initInternal', () => {
-    it('should initialize the internal index cache properly', () => {
-      return indexCache.initInternal(kuzzle.internalEngine)
-        .then(() => {
-          should(getMappingStub.calledOnce).be.true();
-          should(indexCache.indexes).be.an.Object().and.have.keys('foo');
-          should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
-        });
-    });
-  });
-
   describe('#add', () => {
     it('should add a single index to the index cache', () => {
       indexCache.add('foobar');

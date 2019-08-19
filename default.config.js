@@ -94,16 +94,52 @@ module.exports = {
         }
       }
     },
+    initial: {
+      roles: {
+        admin: {
+          controllers: {
+            '*': {
+              actions: '*'
+            }
+          }
+        },
+        default: {
+          controllers: {
+            '*': {
+              actions: '*'
+            }
+          }
+        },
+        anonymous: {
+          controllers: {
+            '*': {
+              actions: '*'
+            }
+          }
+        }
+      },
+      profiles: {
+        admin: {
+          policies: [ { roleId: 'admin' } ]
+        },
+        default: {
+          policies: [ { roleId: 'default' } ]
+        },
+        anonymous: {
+          policies: [ { roleId: 'anonymous' } ]
+        }
+      }
+    },
     standard: {
       profiles: {
         admin: {
-          policies: [ {roleId: 'admin'} ]
+          policies: [ { roleId: 'admin'} ]
         },
         default: {
-          policies: [ {roleId: 'default'} ]
+          policies: [ { roleId: 'default'} ]
         },
         anonymous: {
-          policies: [ {roleId: 'anonymous'} ]
+          policies: [ { roleId: 'anonymous'} ]
         }
       },
       roles: {
@@ -251,10 +287,50 @@ module.exports = {
           }
         }
       },
+      internalIndex: 'kuzzle',
+      internalMappings: {
+        users: {
+          properties: {
+            profileIds: { type: 'keyword' }
+          }
+        },
+        profiles: {
+          properties: {
+            policies: {
+              properties:  {
+                roleId: { type: 'keyword' }
+              }
+            }
+          }
+        },
+        roles: {
+          dynamic: 'false',
+          properties: {}
+        },
+        plugins: {
+          dynamic: 'false',
+          properties: {}
+        },
+        validations: {
+          properties: {
+            index: { type: 'keyword' },
+            collection: { type: 'keyword' },
+            validations: {
+              dynamic: 'false',
+              properties: {}
+            }
+          }
+        },
+        config: {
+          dynamic: 'false',
+          properties: {}
+        }
+      },
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       },
+      // TODO put dynamic inside commonMapping
       dynamic: 'true'
     },
     garbageCollector: {

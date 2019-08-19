@@ -186,8 +186,13 @@
         },
         "index_or_collection_not_found": {
           "code": 38,
-          "message": "Index or collection \"%s\" does not exist, please create it first.",
+          "message": "%s index \"%s\" or collection \"%s\" does not exist, please create it first.",
           "class": "NotFoundError"
+        },
+        "cannot_parse_mapping": {
+          "code": 39,
+          "message": "Cannot parse mapping property \"%s\": %s",
+          "class": "BadRequestError"
         }
       }
     },
@@ -218,6 +223,16 @@
           "code": 1,
           "message": "Redis service is not connected.",
           "class": "ServiceUnavailableError"
+        }
+      }
+    },
+    "common": {
+      "code": 4,
+      "errors": {
+        "service_initialization_timeout": {
+          "code": 1,
+          "message": "[FATAL] Service \"%s[%s]\" failed to init within %s ms.",
+          "class": "InternalError"
         }
       }
     }
