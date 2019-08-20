@@ -523,8 +523,8 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         statSync: sinon.stub().returns({isDirectory: () => true})
       });
 
-      mockrequire(path.join(protocolDirectory, 'one/manifest.json'), {name: 'foo'});
-      mockrequire(path.join(protocolDirectory, 'two/manifest.json'), {name: 'bar'});
+      mockrequire(path.join(protocolDirectory, 'one/manifest.json'), { name: 'foo', kuzzleVersion: '>=2.0.0 <3.0.0' });
+      mockrequire(path.join(protocolDirectory, 'two/manifest.json'), { name: 'bar', kuzzleVersion: '>=2.0.0 <3.0.0' });
       mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
       const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
 
@@ -599,7 +599,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         statSync: sinon.stub().returns({isDirectory: () => true})
       });
 
-      mockrequire(path.join(protocolDirectory, 'protocol/manifest.json'), {name: 'foo'});
+      mockrequire(path.join(protocolDirectory, 'protocol/manifest.json'), { name: 'foo', kuzzleVersion: '>=2.0.0 <3.0.0' });
       mockrequire.reRequire('../../../../../lib/api/core/entrypoints/embedded');
       const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
 
