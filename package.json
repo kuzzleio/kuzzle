@@ -46,7 +46,6 @@
     "didyoumean": "^1.2.1",
     "dumpme": "^1.0.2",
     "easy-circular-list": "^1.0.13",
-    "elasticsearch": "^16.3.0",
     "eventemitter3": "^4.0.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.4",
