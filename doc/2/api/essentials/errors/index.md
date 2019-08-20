@@ -2,7 +2,7 @@
 code: false
 type: page
 title: Error Handling
-description: Understanding the Kuzzle error handling mechanisms
+description: Understanding the Kuzzle error handling mechanisms.
 order: 500
 ---
 
@@ -12,15 +12,15 @@ All errors received by Kuzzle clients are `KuzzleError` error objects.
 
 A `KuzzleError` object has the following properties:
 
-| property  | type    | description                                            |
+| Property  | Type    | Description                                            |
 | --------- | ------- | ------------------------------------------------------ |
 | `status`  | integer | HTTP status code                                       |
 | `message` | text    | Short description of the error                         |
 | `stack`   | text    | (Available in development mode only) Error stack trace |
 | `errorName`  | <pre>string</pre>  | Error full name, precising domain, subdomain and the name of the error |
-| `domain`  | <pre>string</pre>  | Error domain |
-| `subdomain`  | <pre>string</pre>  | Error subdomain |
-| `error`  | <pre>string</pre>  | Error defined name |
+| `domain`  | <pre>string</pre>  | Error domain (eg. `api`)|
+| `subdomain`  | <pre>string</pre>  | Error subdomain giving you more precision about the context (eg. `admin`)|
+| `error`  | <pre>string</pre>  | Error defined name (eg. `database_not_found`)|
 | `code`  | <pre>integer</pre>  | Error code |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
