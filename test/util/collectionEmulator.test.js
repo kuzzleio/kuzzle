@@ -8,7 +8,7 @@ const
     extractCollection,
     extractIndexes,
     extractCollections
-  } = require('../../lib/util/esEmulator');
+  } = require('../../lib/util/collectionEmulator');
 
 describe('Elasticsearch collection emulator utils', () => {
 
