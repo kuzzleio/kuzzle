@@ -39,8 +39,9 @@ To get the built error: `context.errorsManager.getError(errorName, placeholders)
 
 # Example
 
-If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a BadRequestError with as message `Some error occured: Something get wrong` and the following properties :
+If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a BadRequestError with the following properties :
 
+- message : `Some error occured: Something get wrong`
 - errorName : `plugins.kuzzle-plugin-xxx.some_error`
 - domain : `plugins`
 - subdomain : `kuzzle-plugin-xxx`
