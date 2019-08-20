@@ -1,13 +1,8 @@
 version: '3'
 
 services:
-  proxy:
-    image: kuzzleio/proxy${DOCKER_PROXY_TAG}
-    environment:
-      - proxy_port=7513
-
   kuzzle:
-    image: kuzzleio/core-dev-aarch64
+    image: kuzzleio/core-dev-aarch64:2.x
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
@@ -16,22 +11,18 @@ services:
     cap_add:
       - SYS_PTRACE
     depends_on:
-      - proxy
       - redis
       - elasticsearch
     environment:
       - kuzzle_services__db__client__host=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
-      - kuzzle_server__entryPoints__proxy=true
-      - kuzzle_server__proxy__host=proxy
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=production
       - DEBUG=
       - CUCUMBER_EMBEDDED_HOST=localhost
-      - CUCUMBER_PROXY_HOST=proxy
-      - NODE_LTS=${NODE_LTS:-8}
+      - NODE_LTS=${NODE_LTS:-10}
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT
