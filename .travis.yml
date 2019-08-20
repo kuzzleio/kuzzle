@@ -70,10 +70,6 @@ jobs:
       sudo: required
       language: node_js
       node_js: 10
-      cache:
-        npm: true
-        directories:
-          - node_modules
       install:
         - npm ci --silent
       script:

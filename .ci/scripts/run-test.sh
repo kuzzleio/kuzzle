@@ -18,10 +18,6 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
-if [ -n "$CI" ]; then
-	rm -rf node_modules
-fi
-
 npm install --silent --unsafe-perm
 npm install --silent --unsafe-perm --only=dev
 find -L node_modules/.bin -type f -exec chmod 776 {} \;
