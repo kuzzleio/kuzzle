@@ -215,9 +215,9 @@ Here is the actual domains list:
   
 
 You can find them [here](https://github.com/kuzzleio/kuzzle/tree/master/lib/config/error-codes) and see their full definitions.
-Each domain, subdomain and errors has an unique code, Kuzzle prevents duplicates for each level.
+Each domain, subdomain and error has an unique code, Kuzzle prevents duplicates for each level.
 
-# Example.
+# Example
 
 Every errors concerning the api are defined in a `api.json`. Here how it goes :
 
@@ -319,7 +319,8 @@ Doing that, you will throw PreconditionError with the message `"Database foobar 
 ## Errors Manager inside Plugins
 
 When creating your own Kuzzle plugin, you can use the errors manager.
-In order to define your customs errors, you have to write it inside the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json) in a `errors` field.
+
+In order to define your customs errors, you have to write them inside the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json) in a `errors` field.
 
 Your manifest will be something like :
 ```
@@ -343,9 +344,10 @@ Your manifest will be something like :
 ```
 Here, Kuzzle will automatically assign the `domain` and `subdomain`.
 They will be respectively `plugins` and the name of the plugin `kuzzle-plugin-xxx`.
-In consequence, when using it inside your plugin, you don't have to precise `domain` and `subdomain`.
+In consequences, when using it inside your plugin, you don't have to precise `domain` and `subdomain`.
 
- You can access the `errorsManager` when creating your own Kuzzle plugins.
- Functions you need are exposed in the [PluginContext](https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
- One to throw : `context.errorsManager.throw(errorName, placeholders);`.
- Another that returns the built error: `context.errorsManager.getError(errorName, placeholders);`
+ It is exposed as `errorsManager` in the [PluginContext].
+ (https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
+ To access its function, you would write:
+ To throw : `context.errorsManager.throw(errorName, placeholders);`.
+ To get the built error: `context.errorsManager.getError(errorName, placeholders);`
