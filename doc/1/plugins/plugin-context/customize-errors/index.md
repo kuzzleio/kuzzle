@@ -10,7 +10,7 @@ When creating your own Kuzzle plugin, you can use the `errorsManager` to have cu
 
 In order to define it, you have to write them inside the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json) in a `errors` field.
 
-Your manifest will be something like :
+Your manifest would be something like :
 ```
 {
     "name": "kuzzle-plugin-xxx",
@@ -31,15 +31,14 @@ Your manifest will be something like :
 }
 ```
 
-It is exposed as `errorsManager` in the [PluginContext].
-(https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
-To access its function, you would write:
-To throw : `context.errorsManager.throw(error, placeholders);`.
-To get the built error: `context.errorsManager.getError(error, placeholders);`
+It is exposed as `errorsManager` in the [PluginContext](https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
+The `errorsManager` provides two functions:
+- To throw : `context.errorsManager.throw(error, placeholders);`.
+- To get the built error: `context.errorsManager.getError(error, placeholders);`
 
 # Example
 
-If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a BadRequestError with the following properties :
+If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/) with the following properties :
 
 - message : `Some error occured: Something get wrong`
 - errorName : `plugins.kuzzle-plugin-xxx.some_error`
