@@ -17,6 +17,11 @@ A `KuzzleError` object has the following properties:
 | `status`  | integer | HTTP status code                                       |
 | `message` | text    | Short description of the error                         |
 | `stack`   | text    | (Available in development mode only) Error stack trace |
+| `errorName`  | <pre>string</pre>  | Error full name, precising domain, subdomain and the name of the error |
+| `domain`  | <pre>string</pre>  | Error domain |
+| `subdomain`  | <pre>string</pre>  | Error subdomain |
+| `error`  | <pre>string</pre>  | Error defined name |
+| `code`  | <pre>integer</pre>  | Error code |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
 
@@ -169,185 +174,17 @@ An `UnauthorizedError` error is thrown by Kuzzle when an authentication attempt 
 
 ## Errors Manager  
 
+Kuzzle gives you precision about thrown errors by sending you a full error name composed with:
 
+- The `domain` of the error (eg. `api`)
 
-Kuzzle provides a way to customize errors codes by dividing them in 3 distinct properties :
+- The `subdomain`, which brings more precision about the context (eg. `admin`)
 
-  
+- and the proper `error` name (eg. `database_not_found`)
 
-- The `domain` of the error
-
-- The `subdomain`, which brings more precision about the context
-
-- and the proper `error` name
-
-  
-
-Each `domain` is defined in a json file loaded by Kuzzle at start.
-
-In it are defined their `subdomains` and `errors` with their message to send and the proper [KuzzleError](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/).
-
-It is working with two embedded functions that take the same arguments :
-- `throw`
-- `getError` (do not throw: returns the build error)
-
-Arguments:
-
-- `domain`
-- `subdomain`
-- `error`
-- `placeholders`
-- `body` (only if you expect a [PartialError](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/partialerror/))
-
-Here is the actual domains list:
-  
-
--  `internal`
-
--  `external`
-
--  `api`
-
--  `plugins`
-
--  `network`
-
-  
-
-You can find them [here](https://github.com/kuzzleio/kuzzle/tree/master/lib/config/error-codes) and see their full definitions.
+You can find actuals domain [here](https://github.com/kuzzleio/kuzzle/tree/master/lib/config/error-codes) and see their full definitions.
 Each domain, subdomain and error has an unique code, Kuzzle prevents duplicates for each level.
 
 # Example
 
-Every errors concerning the api are defined in a `api.json`. Here how it goes :
-
-```
-{
-  "code": 2,
-  "subdomains": {
-    "base": {
-      "code": 1,
-      "errors": {
-        "invalid_value_type": {
-          "code": 1,
-          "message": "Invalid '%s' value (%s).",
-          "class": "BadRequestError"
-        }
-      }
-    },
-    "server": {
-      "code": 2,
-      "errors": {
-        "elasticsearch_down": {
-          "code": 1,
-          "message": "ElasticSearch is down: %s.",
-          "class": "ExternalServiceError"
-        },
-        "service_unavailable": {
-          "code": 2,
-          "message": "Error : %s.",
-          "class": "ServiceUnavailableError"
-        }
-      }
-    },
-    "document": {
-      "code": 3,
-      "errors": {
-        "not_found": {
-          "code": 1,
-          "message": "The document does not exist: %s.",
-          "class": "NotFoundError"
-        },
-        "search_on_multiple_indexes": {
-          "code": 2,
-          "message": "Search on multiple indexes is not available.",
-          "class": "BadRequestError"
-        },
-        "search_on_multiple_collections": {
-          "code": 3,
-          "message": "Search on multiple collections is not available.",
-          "class": "BadRequestError"
-        },
-        "missing_scroll_id": {
-          "code": 4,
-          "message": "Missing 'scrollId' argument.",
-          "class": "BadRequestError"
-        },
-        "get_limit_reached": {
-          "code": 5,
-          "message": "Number of gets to perform exceeds the server configured value ( %s ).",
-          "class": "SizeLimitError"
-        },
-        "creation_failed": {
-          "code": 6,
-          "message": "Some document creations failed : %s.",
-          "class": "PartialError"
-        },
-        "deletion_failed": {
-          "code": 7,
-          "message": "Some document deletions failed : %s.",
-          "class": "PartialError"
-        }
-      }
-    },
-    "admin": {
-      "code": 4,
-      "errors": {
-        "database_not_found": {
-          "code": 1,
-          "message": "Database %s not found.",
-          "class": "NotFoundError"
-        },
-        "action_locked": {
-          "code": 2,
-          "message": "Lock action error: %s.",
-          "class": "PreconditionError"
-        }
-      }
-    },
-```
-  
-
-Let's say you want to throw an error that occured in the `admin` controller from the `api` because your query tells you that the database `foobar` you want to work with doesn't exist.
-
-If you use Kuzzle errors manager to throw this error, you would give it as arguments: `'api', 'admin', 'database_not_found', 'foobar'`.
-
-Doing that, you will throw PreconditionError with the message `"Database foobar not found."` (as you can see in the file), and object's properties `domain`  `subdomain` and `error` settled.
-
-  
-
-## Errors Manager inside Plugins
-
-When creating your own Kuzzle plugin, you can use the errors manager.
-
-In order to define your customs errors, you have to write them inside the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json) in a `errors` field.
-
-Your manifest will be something like :
-```
-{
-    "name": "kuzzle-plugin-xxx",
-    "kuzzleVersion": ">=1.0.0 <2.0.0",
-    "privileged": false,
-    "errors": {
-        "some_error": {
-            "code": 1,
-            "message": "Some error occurred %s",
-            "class": "BadRequestError"
-	},
-        "some_other_error": {
-            "code": 2,
-            "message": "Some other error occurred %s",
-            "class": "ForbiddenError"
-	}
-    }
-}
-```
-Here, Kuzzle will automatically assign the `domain` and `subdomain`.
-They will be respectively `plugins` and the name of the plugin `kuzzle-plugin-xxx`.
-In consequences, when using it inside your plugin, you don't have to precise `domain` and `subdomain`.
-
- It is exposed as `errorsManager` in the [PluginContext].
- (https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
- To access its function, you would write:
- To throw : `context.errorsManager.throw(errorName, placeholders);`.
- To get the built error: `context.errorsManager.getError(errorName, placeholders);`
+When you receive an error that occured in the `admin` controller from the `api` because the database you want to work with doesn't exist, Kuzzle will throw a PreconditionError with properties `domain`, `subdomain` and `error` settled as `api`, `admin` and `database_not_found`.
