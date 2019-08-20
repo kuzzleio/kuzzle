@@ -170,21 +170,3 @@ A `SizeLimitError` error is thrown by Kuzzle if the request size exceeds the lim
 **status**: 401
 
 An `UnauthorizedError` error is thrown by Kuzzle when an authentication attempt failed, or if a requested resource needs an authentication to be accessed.
-
-
-## Errors Manager  
-
-Kuzzle gives you precision about thrown errors by sending you a full error name composed with:
-
-- The `domain` of the error (eg. `api`)
-
-- The `subdomain`, which brings more precision about the context (eg. `admin`)
-
-- and the proper `error` name (eg. `database_not_found`)
-
-You can find actuals domain [here](https://github.com/kuzzleio/kuzzle/tree/master/lib/config/error-codes) and see their full definitions.
-Each domain, subdomain and error has an unique code, Kuzzle prevents duplicates for each level.
-
-# Example
-
-When you receive an error that occured in the `admin` controller from the `api` because the database you want to work with doesn't exist, Kuzzle will throw a PreconditionError with properties `domain`, `subdomain` and `error` settled as `api`, `admin` and `database_not_found`.
