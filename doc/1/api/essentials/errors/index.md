@@ -2,7 +2,7 @@
 code: false
 type: page
 title: Error Handling
-description: Understanding the Kuzzle error handling mechanisms.
+description: Understanding the Kuzzle error handling mechanisms
 order: 500
 ---
 
@@ -24,6 +24,8 @@ A `KuzzleError` object has the following properties:
 | `code`  | <pre>integer</pre>  | Error code |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
+
+YOu can see full definitions of Kuzzle errors [here](https://github.com/kuzzleio/kuzzle/tree/master/lib/config/error-codes)
 
 ---
 
