@@ -627,25 +627,31 @@
         "roles": {
           "properties": {
             "controllers": {
-              "enabled": false
+              "dynamic": "false,
+              "properties": {}
             }
           }
         },
         "plugins": {
           "properties": {
-            "enabled": false
+            "dynamic": "false,
+            "properties": {}
           }
         },
         "validations": {
           "properties": {
             "index": { "type": "keyword" },
             "collection": { "type": "keyword" },
-            "validations": { "enabled": false }
+            "validations": {
+              "dynamic": "false,
+              "properties": {}
+            }
           }
         },
         "config": {
           "properties": {
-            "enabled": false
+            "dynamic": "false,
+            "properties": {}
           }
         }
       },

@@ -4,7 +4,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  BaseBootstrap = require('../../../lib/services/bootstrap/baseBootstrap'),
+  SafeBootstrap = require('../../../lib/services/bootstrap/safeBootstrap'),
   Bootstrap = require('../../../lib/services/bootstrap/internalBootstrap');
 
 describe('InternalBootstrap', () => {
@@ -26,15 +26,15 @@ describe('InternalBootstrap', () => {
 
   describe('#startOrWait', () => {
     beforeEach(() => {
-      BaseBootstrap.prototype.startOrWait = sinon.stub().resolves();
-      internalBootstrap._createInternalIndex = sinon.stub().resolves();
+      SafeBootstrap.prototype.startOrWait = sinon.stub().resolves();
+      internalBootstrap.createInternalIndex = sinon.stub().resolves();
       internalBootstrap._getJWTSecret = sinon.stub().resolves(jwtSecret);
     });
 
     it('should create internal index and set JWT secret', async () => {
       await internalBootstrap.startOrWait();
 
-      should(internalBootstrap._createInternalIndex).be.calledOnce();
+      should(internalBootstrap.createInternalIndex).be.calledOnce();
       should(kuzzle.config.security.jwt.secret).be.eql('i-am-the-secret-now');
     });
   });
@@ -42,25 +42,25 @@ describe('InternalBootstrap', () => {
   describe('#_bootstrapSequence', () => {
     beforeEach(() => {
       internalBootstrap._persistJWTSecret = sinon.stub().resolves();
-      internalBootstrap._createInitialSecurities = sinon.stub().resolves();
-      internalBootstrap._createInitialValidations = sinon.stub().resolves();
+      internalBootstrap.createInitialSecurities = sinon.stub().resolves();
+      internalBootstrap.createInitialValidations = sinon.stub().resolves();
     });
 
     it('should call the initialization methods', async () => {
       await internalBootstrap._bootstrapSequence();
 
       sinon.assert.callOrder(
-        internalBootstrap._createInitialSecurities,
-        internalBootstrap._createInitialValidations,
+        internalBootstrap.createInitialSecurities,
+        internalBootstrap.createInitialValidations,
         internalBootstrap._persistJWTSecret,
         internalBootstrap.engine.create
       );
     });
   });
 
-  describe('#_createInternalIndex', () => {
+  describe('#createInternalIndex', () => {
     it('should create internal collections', async () => {
-      await internalBootstrap._createInternalIndex();
+      await internalBootstrap.createInternalIndex();
 
       should(internalBootstrap.engine.createCollection.callCount).be.eql(6);
       should(internalBootstrap.engine.createCollection.getCall(0).args[0]).be.eql('users');
@@ -70,9 +70,9 @@ describe('InternalBootstrap', () => {
     });
   });
 
-  describe('#_createInitialSecurities', () => {
+  describe('#createInitialSecurities', () => {
     it('should create initial roles and profiles', async () => {
-      await internalBootstrap._createInitialSecurities();
+      await internalBootstrap.createInitialSecurities();
 
       should(internalBootstrap.engine.createOrReplace.callCount).be.eql(6);
       should(internalBootstrap.engine.createOrReplace.getCall(0).args[0]).be.eql('roles');
@@ -80,7 +80,7 @@ describe('InternalBootstrap', () => {
     });
   });
 
-  describe('#_createInitialValidations', () => {
+  describe('#createInitialValidations', () => {
     it('should create initial validations from kuzzlerc', async () => {
       kuzzle.config.validation = {
         nepali: {
@@ -97,7 +97,7 @@ describe('InternalBootstrap', () => {
         }
       };
 
-      await internalBootstrap._createInitialValidations();
+      await internalBootstrap.createInitialValidations();
 
       should(internalBootstrap.engine.createOrReplace.callCount).be.eql(2);
       should(internalBootstrap.engine.createOrReplace.getCall(0).args).be.eql([

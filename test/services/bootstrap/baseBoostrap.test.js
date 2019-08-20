@@ -4,9 +4,9 @@ const
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Bootstrap = require('../../../lib/services/bootstrap/baseBootstrap');
+  Bootstrap = require('../../../lib/services/bootstrap/safeBootstrap');
 
-describe('BaseBootstrap', () => {
+describe('SafeBootstrap', () => {
   let
     kuzzle,
     bootstrap;
