@@ -171,7 +171,7 @@ An `UnauthorizedError` error is thrown by Kuzzle when an authentication attempt 
 
 
 
-Kuzzle provide a way to customize errors codes by dividing them in 3 distinct properties :
+Kuzzle provides a way to customize errors codes by dividing them in 3 distinct properties :
 
   
 
@@ -179,7 +179,7 @@ Kuzzle provide a way to customize errors codes by dividing them in 3 distinct pr
 
 - The `subdomain`, which brings more precision about the context
 
-- and the proper `error`
+- and the proper `error` name
 
   
 
@@ -187,10 +187,19 @@ Each `domain` is defined in a json file loaded by Kuzzle at start.
 
 In it are defined their `subdomains` and `errors` with their message to send and the proper [KuzzleError](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/).
 
-  
+It is working with two embedded functions that take the same arguments :
+- `throw`
+- `getError` (do not throw: returns the build error)
+
+Arguments:
+
+- `domain`
+- `subdomain`
+- `error`
+- `placeholders`
+- `body` (only if you expect a [PartialError](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/partialerror/))
 
 Here is the actual domains list:
-
   
 
 -  `internal`
@@ -208,7 +217,7 @@ Here is the actual domains list:
 You can find them [here](https://github.com/kuzzleio/kuzzle/tree/master/lib/config/error-codes) and see their full definitions.
 Each domain, subdomain and errors has an unique code, Kuzzle prevents duplicates for each level.
 
-Let's have an example.
+# Example.
 
 Every errors concerning the api are defined in a `api.json`. Here how it goes :
 
@@ -299,11 +308,11 @@ Every errors concerning the api are defined in a `api.json`. Here how it goes :
 ```
   
 
-Let's say you want to throw an error which has `api` as domain, `admin` as subdomain and an error called `database_not_found`.
+Let's say you want to throw an error that occured in the `admin` controller from the `api` because your query tells you that the database `foobar` you want to work with doesn't exist.
 
-If you use the `errorsManager` to throw this error, you could write: `errorsManager.throw('api', 'admin', 'database_not_found', 'foobar')`.
+If you use Kuzzle errors manager to throw this error, you would give it as arguments: `'api', 'admin', 'database_not_found', 'foobar'`.
 
-Doing that, you will throw a KuzzleError of type PreconditionError with the message `"Database foobar not found."`, and object's properties `domain`  `subdomain` and `error` settled.
+Doing that, you will throw PreconditionError with the message `"Database foobar not found."` (as you can see in the file), and object's properties `domain`  `subdomain` and `error` settled.
 
   
 
@@ -311,6 +320,7 @@ Doing that, you will throw a KuzzleError of type PreconditionError with the mess
 
 When creating your own Kuzzle plugin, you can use the errors manager.
 In order to define your customs errors, you have to write it inside the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json) in a `errors` field.
+
 Your manifest will be something like :
 ```
 {
@@ -331,11 +341,11 @@ Your manifest will be something like :
     }
 }
 ```
-Here, Kuzzle will automatically assign the domain and subdomain.
+Here, Kuzzle will automatically assign the `domain` and `subdomain`.
 They will be respectively `plugins` and the name of the plugin `kuzzle-plugin-xxx`.
+In consequence, when using it inside your plugin, you don't have to precise `domain` and `subdomain`.
 
-
- You can access the errorsManager when creating your own plugins Kuzzle.
+ You can access the `errorsManager` when creating your own Kuzzle plugins.
  Functions you need are exposed in the [PluginContext](https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
- If you want to throw your customs errors, you could write `context.errorsManager.throw(errorName, placeholders);`.
- The function that build the error class without throwing is accessible by doing `context.errorsManager.getError(errorName, placeholders);`
+ One to throw : `context.errorsManager.throw(errorName, placeholders);`.
+ Another that returns the built error: `context.errorsManager.getError(errorName, placeholders);`
