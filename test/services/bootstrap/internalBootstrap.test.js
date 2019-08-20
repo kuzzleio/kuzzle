@@ -24,21 +24,6 @@ describe('InternalBootstrap', () => {
     jwtSecret = 'i-am-the-secret-now';
   });
 
-  describe('#startOrWait', () => {
-    beforeEach(() => {
-      SafeBootstrap.prototype.startOrWait = sinon.stub().resolves();
-      internalBootstrap.createInternalIndex = sinon.stub().resolves();
-      internalBootstrap._getJWTSecret = sinon.stub().resolves(jwtSecret);
-    });
-
-    it('should create internal index and set JWT secret', async () => {
-      await internalBootstrap.startOrWait();
-
-      should(internalBootstrap.createInternalIndex).be.calledOnce();
-      should(kuzzle.config.security.jwt.secret).be.eql('i-am-the-secret-now');
-    });
-  });
-
   describe('#_bootstrapSequence', () => {
     beforeEach(() => {
       internalBootstrap._persistJWTSecret = sinon.stub().resolves();
@@ -164,84 +149,4 @@ describe('InternalBootstrap', () => {
       should(internalBootstrap.engine.create).be.called();
     });
   });
-
-  describe('#_checkTimeout', () => {
-    it('should resolve if there is no active lock', () => {
-      internalBootstrap.engine.exists.resolves(false);
-
-      const promise = internalBootstrap._checkTimeout(42);
-
-      return should(promise).be.resolved();
-    });
-
-    it('should reject after 10 attempts', async () => {
-      internalBootstrap.engine.exists.resolves(true);
-      internalBootstrap.attemptDelay = 2;
-
-      const promise = internalBootstrap._checkTimeout();
-
-      return should(promise).be.rejectedWith({
-        errorName: 'external.internal_engine.lock_wait_timeout'});
-    });
-
-    it('should make recurse call and resolve when the lock is not active', async () => {
-      internalBootstrap.attemptDelay = 2;
-      internalBootstrap.engine.exists
-        .onCall(0).resolves(true)
-        .onCall(1).resolves(true)
-        .onCall(2).resolves(false);
-
-      await internalBootstrap._checkTimeout();
-
-      should(internalBootstrap.engine.exists.callCount).be.eql(3);
-    });
-  });
-
-  describe('#_unlock', () => {
-    it('should delete the lock', async () => {
-      await internalBootstrap._unlock();
-
-      should(internalBootstrap.engine.delete).be.calledWith('config', internalBootstrap._LOCK_ID);
-    });
-  });
-
-  describe('#_getLock', () => {
-    it('should not acquire lock and return false if the lock already exists', async () => {
-      internalBootstrap.engine.get.resolves({ _source: { timestamp: Date.now() - 42 } });
-
-      const acquired = await internalBootstrap._getLock();
-
-      should(acquired).be.false();
-      should(internalBootstrap.engine.create).not.be.called();
-      should(internalBootstrap.engine.createOrReplace).not.be.called();
-    });
-
-    it('should acquire the lock and return true if the lock does not exists', async () => {
-      internalBootstrap.engine.get.rejects({
-        errorName: 'external.elasticsearch.document_not_found' });
-
-      const acquired = await internalBootstrap._getLock();
-
-      should(acquired).be.true();
-      should(internalBootstrap.engine.create).be.called();
-    });
-
-    it('should acquire lock and return true if an old lock is present', async () => {
-      internalBootstrap.engine.get.resolves({ _source: { timestamp: 42 } });
-
-      const acquired = await internalBootstrap._getLock();
-
-      should(acquired).be.true();
-      should(internalBootstrap.engine.createOrReplace).be.called();
-    });
-
-    it('should reject if the engine.get call is rejected with an unknown error', async () => {
-      internalBootstrap.engine.get.rejects({ errorName: 'ender.game.xenocide' });
-
-      const promise = internalBootstrap._getLock();
-
-      return should(promise).be.rejectedWith({ errorName: 'ender.game.xenocide' });
-    });
-  });
-
 });

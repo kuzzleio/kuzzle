@@ -36,7 +36,6 @@ describe('PluginBoostrap', () => {
 
       sinon.assert.callOrder(
         pluginBootstrap._createCollections,
-        pluginBootstrap.engine.refresh,
         kuzzle.indexCache.add
       );
 
