@@ -4,7 +4,7 @@ type: page
 title: customize errors
 ---
 
-## Customize errors
+# Customize errors
 
 When creating your own Kuzzle plugin, you can use the `errorsManager` to have customizable errors.
 
@@ -36,7 +36,7 @@ The `errorsManager` provides two functions:
 - To throw : `context.errorsManager.throw(error, placeholders);`.
 - To get the built error: `context.errorsManager.getError(error, placeholders);`
 
-# Example
+## Example
 
 If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/) with the following properties :
 
