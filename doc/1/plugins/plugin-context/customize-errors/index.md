@@ -1,12 +1,12 @@
 ---
 code: true
 type: page
-title: errors manager
+title: customize errors
 ---
 
-## Errors Manager
+## Customize errors
 
-When creating your own Kuzzle plugin, you can use the errors manager to have customizable errors.
+When creating your own Kuzzle plugin, you can use the `errorsManager` to have customizable errors.
 
 In order to define it, you have to write them inside the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json) in a `errors` field.
 
@@ -34,8 +34,8 @@ Your manifest will be something like :
 It is exposed as `errorsManager` in the [PluginContext].
 (https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
 To access its function, you would write:
-To throw : `context.errorsManager.throw(errorName, placeholders);`.
-To get the built error: `context.errorsManager.getError(errorName, placeholders);`
+To throw : `context.errorsManager.throw(error, placeholders);`.
+To get the built error: `context.errorsManager.getError(error, placeholders);`
 
 # Example
 
