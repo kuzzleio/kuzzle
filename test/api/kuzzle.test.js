@@ -5,7 +5,7 @@ const
   errorsManager = require('../../lib/config/error-codes/throw'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
   {
-    errors: { 
+    errors: {
       InternalError,
       ExternalServiceError,
       NotFoundError,
@@ -54,12 +54,11 @@ describe('/lib/api/kuzzle.js', () => {
 
   describe('#throw', () => {
     it('should throw an ExternalServiceError with right name, msg and code', () => {
-
       should(() => errorsManager.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
         .throw(
           ExternalServiceError,
           {
-            errorName: 'api-server-elasticsearch_down',
+            errorName: 'api.server.elasticsearch_down',
             code: 1,
             message: 'ElasticSearch is down: {"status":"red"}.'
           }
@@ -67,12 +66,11 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should throw an InternalError with default name, msg and code', () => {
-
       should(() => errorsManager.throw('api', 'server', 'fake_error', '{"status":"error"}'))
         .throw(
           InternalError,
           {
-            errorName: 'internal-unexpected-unknown_error',
+            errorName: 'internal.unexpected.unknown_error',
             code: 1,
             message: 'Unknown error: {"status":"error"}.'
           }
@@ -84,7 +82,7 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           NotFoundError,
           {
-            errorName: 'api-admin-database_not_found',
+            errorName: 'api.admin.database_not_found',
             code: 1,
             message: 'Database fake_database not found.'
           }
@@ -96,7 +94,7 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           PreconditionError,
           {
-            errorName: 'api-admin-action_locked',
+            errorName: 'api.admin.action_locked',
             code: 2,
             message: 'Lock action error: Kuzzle is already shutting down.'
           }
@@ -108,7 +106,7 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           UnauthorizedError,
           {
-            errorName: 'api-auth-invalid_token',
+            errorName: 'api.auth.invalid_token',
             code: 2,
             message: 'Invalid token.'
           }
@@ -120,7 +118,7 @@ describe('/lib/api/kuzzle.js', () => {
         .throw(
           PartialError,
           {
-            errorName: 'api-bulk-document_creations_failed',
+            errorName: 'api.bulk.document_creations_failed',
             errors: ['foo', 'bar'],
             code: 1,
             message: 'Some document creations failed: foo,bar.'
