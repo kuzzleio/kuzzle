@@ -21,9 +21,7 @@ fi
 
 case $1 in
   prepare)
-    if [ ! "$NETLIFY" -eq 0 ]; then
-      rm -rf framework
-    fi
+		rm -rf framework
 
     echo "Clone documentation framework"
     git clone --depth 10 --single-branch --branch master https://github.com/kuzzleio/documentation.git framework/

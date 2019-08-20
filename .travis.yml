@@ -98,7 +98,6 @@ jobs:
       cache:
         directories:
           - $HOME/.gem/specs
-          - doc/framework/node_modules
       before_script:
         - npm run doc-prepare
         - npm run --prefix doc/framework clone-repos
