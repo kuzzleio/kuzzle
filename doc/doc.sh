@@ -4,6 +4,7 @@ set -eu
 
 DOC_VERSION=1
 DOC_PATH=/core/1
+NETLIFY=${REVIEW_ID:-0}
 
 # Used by vuepress
 export DOC_DIR=$DOC_VERSION
@@ -20,10 +21,9 @@ fi
 
 case $1 in
   prepare)
-    rm -rf framework
+		rm -rf framework
 
     echo "Clone documentation framework"
-    rm -rf framework/
     git clone --depth 10 --single-branch --branch master https://github.com/kuzzleio/documentation.git framework/
 
     echo "Link local doc for dead links checking"
