@@ -19,7 +19,7 @@ The provided `diff` object has the following properties:
 
 | Properties     | Type                 | Description                                                                                                       |
 | -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `roomId`       | <pre>integer</pre>   | The new room unique identifier                                                                                    |
+| `roomId`       | <pre>integer</pre>   | New room unique identifier                                                                                    |
 | `connectionId` | <pre>integer</pre>   | The [ClientConnection](/core/1/protocols/api/context/clientconnection) unique identifier                          |
 | `index`        | <pre>string</pre>    | Index                                                                                                             |
 | `collection`   | <pre>string</pre>    | Collection                                                                                                        |
