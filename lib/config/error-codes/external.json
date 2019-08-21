@@ -54,14 +54,14 @@
           "message": "import must specify a body attribute 'bulkData' of type Object.",
           "class": "BadRequestError"
         },
-        "missing_data_collection_argument": {
+        "missing_collection_argument": {
           "code": 12,
-          "message": "Missing data collection argument.",
+          "message": "Missing collection argument at body[%s].",
           "class": "BadRequestError"
         },
-        "missing_data_index_argument": {
+        "missing_index_argument": {
           "code": 13,
-          "message": "Missing data index argument.",
+          "message": "Missing index argument at body[%s].",
           "class": "BadRequestError"
         },
         "index_protected": {

@@ -276,14 +276,17 @@ module.exports = {
         node: 'http://localhost:9200'
       },
       commonMapping: {
-        _kuzzle_info: {
-          properties: {
-            active:     { type: 'boolean' },
-            author:     { type: 'keyword' },
-            createdAt:  { type: 'date' },
-            updatedAt:  { type: 'date' },
-            updater:    { type: 'keyword' },
-            deletedAt:  { type: 'date' }
+        dynamic: 'true',
+        properties: {
+          _kuzzle_info: {
+            properties: {
+              active:     { type: 'boolean' },
+              author:     { type: 'keyword' },
+              createdAt:  { type: 'date' },
+              updatedAt:  { type: 'date' },
+              updater:    { type: 'keyword' },
+              deletedAt:  { type: 'date' }
+            }
           }
         }
       },
@@ -329,9 +332,7 @@ module.exports = {
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
-      },
-      // TODO put dynamic inside commonMapping
-      dynamic: 'true'
+      }
     },
     garbageCollector: {
       cleanInterval: 86400000,
