@@ -19,7 +19,7 @@ The provided `subscription` object has the following properties:
 
 | Properties     | Type                 | Description                                                                                                       |
 | -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `roomId`       | <pre>integer</pre>   | New room unique identifier                                                                                    |
+| `roomId`       | <pre>string</pre>   | Room unique identifier                                                                                    |
 | `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/1/protocols/api/context/clientconnection) unique identifier                          |
 | `index`        | <pre>string</pre>    | Index                                                                                                             |
 | `collection`   | <pre>string</pre>    | Collection                                                                                                        |
