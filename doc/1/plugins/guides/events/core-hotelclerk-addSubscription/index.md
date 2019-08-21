@@ -9,7 +9,7 @@ title: core:hotelClerk:addSubscription
 
 | Arguments  | Type              | Description                           |
 | ---------- | ----------------- | ------------------------------------- |
-| `diff`     | <pre>object</pre> | Contains information about subscription |
+| `subscription`     | <pre>object</pre> | Contains information about the added subscription |
 
 Triggered whenever a [subscription](/core/1/api/controllers/realtime/subscribe) is added.
 
