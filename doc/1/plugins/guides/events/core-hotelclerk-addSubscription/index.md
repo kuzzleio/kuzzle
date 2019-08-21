@@ -13,7 +13,7 @@ title: core:hotelClerk:addSubscription
 
 Triggered whenever a [subscription](/core/1/api/controllers/realtime/subscribe) is added.
 
-## diff
+## subscription
 
 The provided `diff` object has the following properties:
 
