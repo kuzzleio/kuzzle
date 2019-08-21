@@ -23,7 +23,7 @@ The provided `subscription` object has the following properties:
 | `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/1/protocols/api/context/clientconnection) unique identifier                          |
 | `index`        | <pre>string</pre>    | Index                                                                                                             |
 | `collection`   | <pre>string</pre>    | Collection                                                                                                        |
-| `filters`      | <pre>object</pre>    | [Filters](https://docs.kuzzle.io/core/1/guides/cookbooks/realtime-api/terms/) to match with                       |
+| `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier)  |
 | `changed`      | <pre>boolean</pre>   | Indicates if a channel was associated to the current `roomId` or if the room was associated to the `connectionId` |
 
 ---
