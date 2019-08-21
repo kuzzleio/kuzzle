@@ -1,6 +1,6 @@
 const
   should = require('should'),
-  ClientConnection = require('../../../../../lib/api/core/entrypoints/embedded/clientConnection');
+  ClientConnection = require('../../../../lib/api/core/entrypoints/clientConnection');
 
 describe('core/clientConnection', () => {
   describe('#constructor', () => {
@@ -14,8 +14,7 @@ describe('core/clientConnection', () => {
         headers = {foo: 'bar'},
         connection = new ClientConnection('protocol', ['ip1', 'ip2'], headers);
 
-      should(connection.headers)
-        .be.exactly(headers);
+      should(connection.headers).be.exactly(headers);
     });
   });
 });

@@ -55,22 +55,16 @@ describe('Test: lib/services/', () => {
     it('should register the services', () => {
       return services.init()
         .then(() => {
+          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
 
-          try {
-            should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
-
-            Object.keys(kuzzle.config.services)
-              .filter(key => key !== 'common')
-              .forEach(service => {
-                should(kuzzle.internalEngine.get).be.calledWith('services', service);
-                should(registerService).be.calledWith(service);
-              });
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          Object.keys(kuzzle.config.services)
+            .filter(key => key !== 'common')
+            .forEach(service => {
+              should(kuzzle.internalEngine.get).be.calledWith(
+                'services',
+                service);
+              should(registerService).be.calledWith(service);
+            });
         });
     });
 
@@ -79,25 +73,20 @@ describe('Test: lib/services/', () => {
       error.status = 404;
 
       kuzzle.internalEngine.get.onCall(0).rejects(error);
-      kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {foo: 'bar'}}));
+      kuzzle.internalEngine.get.resolves({_source: {foo: 'bar'}});
 
       return services.init()
         .then(() => {
-          try {
-            should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
+          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
 
-            Object.keys(kuzzle.config.services)
-              .filter(key => key !== 'common')
-              .forEach(service => {
-                should(kuzzle.internalEngine.get).be.calledWith('services', service);
-                should(registerService).be.calledWith(service);
-              });
-
-            return Bluebird.resolve();
-          }
-          catch(err) {
-            return Bluebird.reject(err);
-          }
+          Object.keys(kuzzle.config.services)
+            .filter(key => key !== 'common')
+            .forEach(service => {
+              should(kuzzle.internalEngine.get).be.calledWith(
+                'services',
+                service);
+              should(registerService).be.calledWith(service);
+            });
         });
     });
 
@@ -107,51 +96,6 @@ describe('Test: lib/services/', () => {
 
       return should(services.init()).be.rejectedWith(error);
     });
-
-    it('whitelist', () => {
-      kuzzle.config.services = {
-        ok: true,
-        alsoOk: true,
-        notOk: true
-      };
-
-      return services.init({whitelist: ['ok', 'alsoOk']})
-        .then(() => {
-          try {
-            should(registerService).be.calledWith('ok', {service: 'ok'}, true);
-            should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
-            should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
-    });
-
-    it('blacklist', () => {
-      kuzzle.config.services = {
-        ok: true,
-        alsoOk: true,
-        notOk: true
-      };
-
-      return services.init({blacklist: ['notOk']})
-        .then(() => {
-          try {
-            should(registerService).be.calledWith('ok', {service: 'ok'}, true);
-            should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
-            should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
-    });
-
   });
 
   describe('#registerService', () => {
@@ -172,15 +116,8 @@ describe('Test: lib/services/', () => {
 
       return registerService.call(context, 'serviceName', options, false)
         .then(() => {
-          try {
-            should(Services.__get__('require')).be.calledOnce();
-            should(Services.__get__('require')).be.calledWith('./serviceName');
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(Services.__get__('require')).be.calledOnce();
+          should(Services.__get__('require')).be.calledWith('./serviceName');
         });
     });
 
@@ -191,15 +128,8 @@ describe('Test: lib/services/', () => {
 
       return registerService.call(context, 'serviceName', options, false)
         .then(() => {
-          try {
-            should(Services.__get__('require')).be.calledOnce();
-            should(Services.__get__('require')).be.calledWith('./backend');
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(Services.__get__('require')).be.calledOnce();
+          should(Services.__get__('require')).be.calledWith('./backend');
         });
     });
 
@@ -216,21 +146,14 @@ describe('Test: lib/services/', () => {
         .then(() => {
           const req = Services.__get__('require');
 
-          try {
-            should(req).be.calledThrice();
-            should(req).be.calledWith('./serviceName');
+          should(req).be.calledThrice();
+          should(req).be.calledWith('./serviceName');
 
-            should(context.list).have.properties([
-              'someAlias',
-              'someOtherAlias',
-              'andYetAnotherOne'
-            ]);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(context.list).have.properties([
+            'someAlias',
+            'someOtherAlias',
+            'andYetAnotherOne'
+          ]);
         });
     });
 
@@ -241,7 +164,11 @@ describe('Test: lib/services/', () => {
         }
       })(() => {
         kuzzle.config.services.serviceName = {};
-        const r = registerService.call(context, 'serviceName', {timeout: 1000}, true);
+        const r = registerService.call(
+          context,
+          'serviceName',
+          { timeout: 1000 },
+          true);
 
         clock.tick(1000);
 
@@ -259,8 +186,13 @@ describe('Test: lib/services/', () => {
       })(() => {
         kuzzle.config.services.serviceName = {};
 
-        return should(registerService.call(context, 'serviceName', options, true))
-          .be.rejectedWith(error);
+        const promise = registerService.call(
+          context,
+          'serviceName',
+          options,
+          true);
+
+        return should(promise).be.rejectedWith(error);
       });
     });
 

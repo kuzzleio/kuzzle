@@ -28,6 +28,11 @@
           "code": 5,
           "message": "Compression support is disabled.",
           "class": "BadRequestError"
+        },
+        "unable_to_convert_http_body_to_json": {
+          "code": 6,
+          "message": "Unable to convert HTTP body to JSON.",
+          "class": "BadRequestError"
         }
       }
     },
@@ -116,7 +121,8 @@
         "unable_to_convert_http_body_to_json": {
           "code": 8,
           "message": "Unable to convert HTTP body to JSON.",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "request_error": {
           "code": 9,

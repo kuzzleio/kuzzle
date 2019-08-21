@@ -1,10 +1,10 @@
-const root = '../../../../../..';
+const root = '../../../../..';
 
 const
   mockrequire = require('mock-require'),
-  HttpFormDataStream = require(`${root}/lib/api/core/entrypoints/embedded/service/httpFormDataStream`),
-  EntryPoint = require(`${root}/lib/api/core/entrypoints/embedded`),
-  ClientConnection = require(`${root}/lib/api/core/entrypoints/embedded/clientConnection`),
+  HttpFormDataStream = require(`${root}/lib/api/core/entrypoints/service/httpFormDataStream`),
+  EntryPoint = require(`${root}/lib/api/core/entrypoints`),
+  ClientConnection = require(`${root}/lib/api/core/entrypoints/clientConnection`),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
     Request,
@@ -19,7 +19,7 @@ const
   errorMatcher = require(`${root}/test/util/errorMatcher`),
   errorsManager = require(`${root}/lib/config/error-codes/throw`);
 
-describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
+describe('/lib/api/core/entrypoints/protocols/http', () => {
   const
     gunzipMock = sinon.stub(),
     inflateMock = sinon.stub(),
@@ -44,7 +44,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       m.close = sinon.stub();
     });
     mockrequire('zlib', zlibstub);
-    HttpProtocol = mockrequire.reRequire('../../../../../../lib/api/core/entrypoints/embedded/protocols/http');
+    HttpProtocol = mockrequire
+      .reRequire(`${root}/lib/api/core/entrypoints/protocols/http`)
+      .HttpProtocol;
   });
 
   after(() => {
@@ -200,7 +202,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
             {message: 'Maximum HTTP request size exceeded.'});
@@ -212,7 +213,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         protocol._sendRequest = (connection, resp, payload) => {
           try {
             should(connection).be.instanceOf(ClientConnection);
-            should(payload.content).eql('chunk1chunk2chunk3');
+            should(payload.raw).eql('{"chunk":"chunk"}');
+            should(payload.content).eql({chunk: 'chunk'});
             done();
           }
           catch(e) {
@@ -222,12 +224,15 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         onRequest(request, response);
 
-        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
+        should(request.pipe)
+          .calledOnce()
+          .calledWith(sinon.match.instanceOf(Writable));
+
         const writable = request.pipe.firstCall.args[0];
 
-        writable.write('chunk1');
-        writable.write('chunk2');
-        writable.write('chunk3');
+        writable.write('{"chunk":');
+        writable.write('"chun');
+        writable.write('k"}');
         writable.emit('finish');
       });
 
@@ -254,7 +259,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
             {message: 'Too many encodings.'});
@@ -268,7 +272,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
             {message: 'Unsupported compression algorithm "foobar".'});
@@ -296,18 +299,24 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       it('should handle valid x-www-form-urlencoded request', done => {
         protocol._sendRequest = (connection, resp, payload) => {
-          should(connection).instanceOf(ClientConnection);
-          should(payload.content).be.empty('');
-          should(payload.json.foo).be.exactly('bar');
-          should(payload.json.baz).be.exactly('1234');
-          done();
+          try {
+            should(connection).instanceOf(ClientConnection);
+            should(payload.content).be.eql({foo: 'bar', baz: '1234'});
+            done();
+          }
+          catch (e) {
+            done(e);
+          }
         };
 
         request.headers['content-type'] = 'application/x-www-form-urlencoded';
 
         onRequest(request, response);
 
-        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(HttpFormDataStream));
+        should(request.pipe)
+          .calledOnce()
+          .calledWith(sinon.match.instanceOf(HttpFormDataStream));
+
         const writable = request.pipe.firstCall.args[0];
 
         writable.write('foo=bar&baz=1234');
@@ -317,11 +326,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
       it('should handle valid multipart/form-data request', done => {
         protocol._sendRequest = (connection, resp, payload) => {
           should(connection).instanceOf(ClientConnection);
-          should(payload.content).be.empty('');
-          should(payload.json.foo).be.exactly('bar');
-          should(payload.json.baz.filename).be.exactly('test-multipart.txt');
-          should(payload.json.baz.mimetype).be.exactly('text/plain');
-          should(payload.json.baz.file).be.exactly('WU9MTwoKCg==');
+          should(payload.content).match({
+            foo: 'bar',
+            baz: {
+              filename: 'test-multipart.txt',
+              mimetype: 'text/plain',
+              file: 'WU9MTwoKCg=='
+            }
+          });
           done();
         };
 
@@ -381,7 +393,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
             should(protocol._replyWithError)
               .be.calledWithMatch(
-                sinon.match.instanceOf(ClientConnection),
                 { url: request.url, method: request.method },
                 response,
                 { message: 'Maximum HTTP request size exceeded.' });
@@ -403,7 +414,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
             { message: 'Unsupported content type: foo/bar.' });
