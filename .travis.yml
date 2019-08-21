@@ -180,6 +180,7 @@ jobs:
     # ---------------------------------------
     - stage: Deployments
       name: NPM.js
+      if: branch = master
       os: linux
       sudo: required
       language: node_js
