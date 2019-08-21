@@ -15,7 +15,7 @@ Triggered whenever a [subscription](/core/1/api/controllers/realtime/subscribe) 
 
 ## subscription
 
-The provided `diff` object has the following properties:
+The provided `subscription` object has the following properties:
 
 | Properties     | Type                 | Description                                                                                                       |
 | -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
