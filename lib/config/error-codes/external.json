@@ -79,11 +79,6 @@
           "message": "Number of documents exceeds the server configured value (%s).",
           "class": "SizeLimitError"
         },
-        "index_reserved": {
-          "code": 17,
-          "message": "Indexes starting with a '%' are reserved for internal use. Cannot process index %s.",
-          "class": "BadRequestError"
-        },
         "create_action_does_not_support_routing": {
           "code": 18,
           "message": "Kuzzle does not support '_routing' in create action.",
