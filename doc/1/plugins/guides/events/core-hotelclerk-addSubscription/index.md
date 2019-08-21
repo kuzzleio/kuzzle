@@ -24,6 +24,5 @@ The provided `subscription` object has the following properties:
 | `index`        | <pre>string</pre>    | Index                                                                                                             |
 | `collection`   | <pre>string</pre>    | Collection                                                                                                        |
 | `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier)  |
-| `changed`      | <pre>boolean</pre>   | Indicates if a channel was associated to the current `roomId` or if the room was associated to the `connectionId` |
 
 ---
