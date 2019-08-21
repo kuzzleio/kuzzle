@@ -184,6 +184,7 @@ jobs:
       sudo: required
       language: node_js
       node_js: 10
+      script: echo "Deploying Kuzzle to NPM.js"
       deploy:
         provider: npm
         email: support@kuzzle.io
