@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-find -type d -name node_modules -print -exec rm -rf '{}' \; || true
 # WARNING: This script needs to be run in sdk-cross:node8-armhf image
 # Install Kuzzle deps using cross build toolchain
 npm install --target_arch=arm64  --target_platform=linux --silent --unsafe-perm \
