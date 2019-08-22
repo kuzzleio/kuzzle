@@ -53,7 +53,10 @@ function buildSubcodesDoc(errorCodesFiles) {
     }
     doc += '\n---\n';
   }
-  fs.writeFile('./1/api/essentials/errors/subcodes/index.md', doc, (err => {
+  const output = process.argv[2] === '-o' || process.argv[2] === '--output'
+    ? process.argv[3]
+    : './1/api/essentials/errors/subcodes/index.md';
+  fs.writeFile(output, doc, (err => {
     if (err) {
       throw new Error(err);
     }

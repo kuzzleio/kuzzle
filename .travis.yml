@@ -105,6 +105,12 @@ jobs:
         - gem install typhoeus
         - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
 
+    - stage: Unit Tests & Linters
+      name: Subcodes doc check
+      script:
+        - npm run doc-generate-subcodes -- -output $TRAVIS_BUILD_DIR/subcodes-doc-test.md
+        - diff  $TRAVIS_BUILD_DIR/subcodes-doc-test.md  $TRAVIS_BUILD_DIR/doc/1/api/essentials/errors/subcodes/index.md
+
     # ---------------------------------------
     # Integration tests
     # ---------------------------------------
