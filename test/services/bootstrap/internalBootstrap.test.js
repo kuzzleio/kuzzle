@@ -10,8 +10,7 @@ const
 describe('InternalBootstrap', () => {
   let
     internalBootstrap,
-    kuzzle,
-    jwtSecret;
+    kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -20,8 +19,31 @@ describe('InternalBootstrap', () => {
     kuzzle.config.services.internalEngine.bootstrapLockTimeout = 42000;
 
     internalBootstrap = new Bootstrap(kuzzle);
+  });
 
-    jwtSecret = 'i-am-the-secret-now';
+  describe('#startOrWait', () => {
+    let jwtSecret;
+
+    beforeEach(() => {
+      jwtSecret = 'i-am-the-secret-now';
+
+      internalBootstrap.createInternalIndex = sinon.stub().resolves();
+      internalBootstrap._getJWTSecret = sinon.stub().resolves(jwtSecret);
+      SafeBootstrap.prototype.startOrWait = sinon.stub().resolves();
+    });
+
+    it('create internal index, call parent method and set JWT secret', async () => {
+      await internalBootstrap.startOrWait();
+
+      sinon.assert.callOrder(
+        internalBootstrap.createInternalIndex,
+        SafeBootstrap.prototype.startOrWait,
+        internalBootstrap._getJWTSecret
+      );
+
+      should(internalBootstrap.kuzzle.config.security.jwt.secret)
+        .be.eql('i-am-the-secret-now');
+    });
   });
 
   describe('#_bootstrapSequence', () => {

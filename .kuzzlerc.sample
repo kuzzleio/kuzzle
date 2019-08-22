@@ -180,46 +180,6 @@
         }
       }
     },
-    // [initial]
-    // Permissions used when Kuzzle is started for the first time
-    //
-    // By default, the admin, default and anonymous users have all permissions
-    "initial": {
-      "roles": {
-        "admin": {
-          "controllers": {
-            "*": {
-              "actions": "*"
-            }
-          }
-        },
-        "default": {
-          "controllers": {
-            "*": {
-              "actions": "*"
-            }
-          }
-        },
-        "anonymous": {
-          "controllers": {
-            "*": {
-              "actions": "*"
-            }
-          }
-        }
-      },
-      "profiles": {
-        "admin": {
-          "policies": [ {"roleId": "admin"} ]
-        },
-        "default": {
-          "policies": [ {"roleId": "default"} ]
-        },
-        "anonymous": {
-          "policies": [ {"roleId": "anonymous"} ]
-        }
-      }
-    },
     // [standard]
     // Permissions used when creating an administrator user, either using the
     // CLI or the Back Office.

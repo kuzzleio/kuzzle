@@ -18,29 +18,29 @@ describe('Elasticsearch collection emulator utils', () => {
         userESIndex = getESIndex('nepali', 'liia'),
         internalESIndex = getESIndex('nepali', 'mehry', { internal: true });
 
-      should(userESIndex).be.eql('#nepali/liia');
-      should(internalESIndex).be.eql('%nepali/mehry');
+      should(userESIndex).be.eql('&nepali.liia');
+      should(internalESIndex).be.eql('%nepali.mehry');
     });
   });
 
   describe('#extractIndex', () => {
     it('extract the index name from esIndex name', () => {
-      should(extractIndex('#nepali/liia')).be.eql('nepali');
-      should(extractIndex('%nepali/mehry')).be.eql('nepali');
+      should(extractIndex('&nepali.liia')).be.eql('nepali');
+      should(extractIndex('%nepali.mehry')).be.eql('nepali');
     });
   });
 
   describe('#extractCollection', () => {
     it('extract the collection names from esIndex name', () => {
-      should(extractCollection('#nepali/liia')).be.eql('liia');
-      should(extractCollection('%nepali/mehry')).be.eql('mehry');
+      should(extractCollection('&nepali.liia')).be.eql('liia');
+      should(extractCollection('%nepali.mehry')).be.eql('mehry');
     });
   });
 
   describe('#extractIndexes', () => {
     it('extract the index names from a list of esIndex name', () => {
       const esIndexes = [
-        '%nepali/liia', '%nepali/mehry', '#india/darjeeling', '#vietnam/lfiduras'];
+        '%nepali.liia', '%nepali.mehry', '&india.darjeeling', '&vietnam.lfiduras'];
 
       should(extractIndexes(esIndexes)).be.eql(['india', 'vietnam']);
 
@@ -51,7 +51,7 @@ describe('Elasticsearch collection emulator utils', () => {
   describe('#extractCollections', () => {
     it('extract the collection names for an index from a list of esIndex name', () => {
       const esIndexes = [
-        '%nepali/liia', '%nepali/mehry', '#nepali/panipokari', '#vietnam/lfiduras'];
+        '%nepali.liia', '%nepali.mehry', '&nepali.panipokari', '&vietnam.lfiduras'];
 
       should(extractCollections(esIndexes, 'nepali')).be.eql(['panipokari']);
 
