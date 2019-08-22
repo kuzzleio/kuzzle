@@ -112,7 +112,6 @@ jobs:
     # ---------------------------------------
     # Integration tests
     # ---------------------------------------
-
     - <<: *integration-tests
       stage: Integration tests
       if: type = cron
