@@ -290,47 +290,47 @@
           "class": "PluginImplementationError"
         },
         "derived_plugin_error": {
-          "code": 199,
+          "code": 20,
           "message": "%s.",
           "class": "PluginImplementationError"
         },
         "missing_user_for_authentication": {
-          "code": 20,
+          "code": 21,
           "message": "%s",
           "class": "UnauthorizedError"
         },
         "register_pipe_timeout": {
-          "code": 21,
+          "code": 22,
           "message": "%s",
           "class": "GatewayTimeoutError"
         },
         "unable_to_serialize_response": {
-          "code": 22,
+          "code": 23,
           "message": "Unable to serialize response. Are you trying to return the request?",
           "class": "PluginImplementationError"
         },
         "user_creation": {
-          "code": 23,
+          "code": 24,
           "message": "An error occurred during the creation of user \"%s\":\n%s",
           "class": "PluginImplementationError"
         },
         "unexpected_return_value": {
-          "code": 24,
+          "code": 25,
           "message": "Unexpected return value from action \"%s:%s\": expected a Promise",
           "class": "PluginImplementationError"
         },
         "rejected_new_connection_invalid_args": {
-          "code": 25,
+          "code": 26,
           "message": "Rejected new connection - invalid arguments: %s",
           "class": "PluginImplementationError"
         },
         "unable_to_remove_connection_invalid_args": {
-          "code": 26,
+          "code": 27,
           "message": "Unable to remove connection - invalid arguments: %s",
           "class": "PluginImplementationError"
         },
         "unable_to_remove_connection_unknown_connection_identifier": {
-          "code": 27,
+          "code": 28,
           "message": "Unable to remove connection - unknown connection identifier: %s",
           "class": "PluginImplementationError"
         }
