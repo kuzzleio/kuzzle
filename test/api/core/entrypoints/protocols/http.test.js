@@ -740,15 +740,11 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
 
         should(protocol._replyWithError)
           .be.calledOnce()
-<<<<<<< HEAD:test/api/core/entrypoints/protocols/http.test.js
-          .be.calledWithMatch(payload, response, error);
-=======
           .be.calledWithMatch(
             {id: 'connectionId'},
             payload,
             response,
             {message: 'foobar'});
->>>>>>> d176eaa9... errorsManager properly sets non KuzzleError:test/api/core/entrypoints/embedded/protocols/http.test.js
 
         should(response.setHeader).calledWith('Content-Encoding', 'gzip');
         should(zlibstub.deflate).not.called();
