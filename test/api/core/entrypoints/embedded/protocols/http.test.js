@@ -731,7 +731,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             {id: 'connectionId'},
             payload,
             response,
-            {message: 'foobar'});
+            {message: 'foobar.'});
 
         should(protocol._replyWithError.firstCall.args[3])
           .be.instanceOf(BadRequestError);
