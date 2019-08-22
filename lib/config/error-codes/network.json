@@ -122,11 +122,6 @@
           "code": 9,
           "message": "%s.",
           "class": "InternalError"
-        },
-        "derived_request_error": {
-          "code": 10,
-          "message": "%s.",
-          "class": "InternalError"
         }
       }
     }
