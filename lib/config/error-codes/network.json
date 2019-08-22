@@ -9,28 +9,23 @@
           "message": "%s.",
           "class": "BadRequestError"
         },
-        "derived_http_request_error": {
-          "code": 2,
-          "message": "%s.",
-          "class": "BadRequestError"
-        },
         "http_request_size_exceeded": {
-          "code": 3,
+          "code": 2,
           "message": "Maximum HTTP request size exceeded.",
           "class": "SizeLimitError"
         },
         "too_many_encodings": {
-          "code": 4,
+          "code": 3,
           "message": "Too many encodings.",
           "class": "BadRequestError"
         },
         "unsupported_compression_algorithm": {
-          "code": 5,
+          "code": 4,
           "message": "Unsupported compression algorithm \"%s\".",
           "class": "BadRequestError"
         },
         "compression_support_disabled": {
-          "code": 6,
+          "code": 5,
           "message": "Compression support is disabled.",
           "class": "BadRequestError"
         }
