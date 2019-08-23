@@ -9,6 +9,6 @@ order: 100
 
 ## Breaking changes
 
-  - End of Node.js 6 support
+  - End of Node.js 6 and 8 support
   - End of Redis 3 and 4 support
   - End of Elasticsearch 5 support
