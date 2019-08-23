@@ -723,8 +723,10 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
       });
 
       it('should reply with an error if compressing fails', () => {
+        const error = new Error('foobar');
+
         payload.headers = {'accept-encoding': 'gzip'};
-        zlibstub.gzip.yields(new Error('foobar'));
+        zlibstub.gzip.yields(error);
         sinon.stub(protocol, '_replyWithError');
         protocol._sendRequest({id: 'connectionId'}, response, payload);
 
@@ -738,13 +740,8 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
 
         should(protocol._replyWithError)
           .be.calledOnce()
-          .be.calledWithMatch(
-            payload,
-            response,
-            {message: 'foobar.'});
+          .be.calledWithMatch(payload, response, error);
 
-        should(protocol._replyWithError.firstCall.args[2])
-          .be.instanceOf(BadRequestError);
         should(response.setHeader).calledWith('Content-Encoding', 'gzip');
         should(zlibstub.deflate).not.called();
         should(zlibstub.gzip).calledOnce();
