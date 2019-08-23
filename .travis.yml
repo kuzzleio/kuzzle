@@ -14,8 +14,7 @@ _integration-tests: &integration-tests
       - plugins/available/kuzzle-plugin-auth-passport-local/node_modules
       - plugins/available/kuzzle-plugin-logger/node_modules
   env: &integration-tests-env
-    - NODE_LTS=8
-    - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
+    - NODE_LTS=10
     - DOCKER_COMPOSE_TEST=test
   install:
     - sudo sysctl -w vm.max_map_count=262144
