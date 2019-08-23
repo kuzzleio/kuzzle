@@ -12,7 +12,7 @@ describe('Test: lib/services/', () => {
     kuzzle,
     reset,
     services,
-    requireSpy;
+    requiredModuleStub;
 
   before(() => {
     clock = sinon.useFakeTimers(Date.now());
@@ -23,10 +23,10 @@ describe('Test: lib/services/', () => {
   });
 
   beforeEach(() => {
-    requireSpy = sinon.spy();
+    requiredModuleStub = sinon.stub();
 
     reset = Services.__set__({
-      require: sinon.stub().returns(requireSpy)
+      require: sinon.stub().returns(requiredModuleStub)
     });
     kuzzle = new KuzzleMock();
     services = new Services(kuzzle);
@@ -102,9 +102,16 @@ describe('Test: lib/services/', () => {
     let
       context,
       options = {},
+      fakeService,
       registerService = Services.__get__('registerService');
 
     beforeEach(() => {
+      fakeService = {
+        init: sinon.stub().usingPromise(Bluebird).resolves()
+      };
+
+      requiredModuleStub.returns(fakeService);
+
       context = {
         list: {},
         kuzzle
@@ -112,21 +119,21 @@ describe('Test: lib/services/', () => {
     });
 
     it('should require the service', () => {
-      kuzzle.config.services.serviceName = {};
+      kuzzle.config.services.fakeService = {};
 
-      return registerService.call(context, 'serviceName', options, false)
+      return registerService.call(context, 'fakeService', options)
         .then(() => {
           should(Services.__get__('require')).be.calledOnce();
-          should(Services.__get__('require')).be.calledWith('./serviceName');
+          should(Services.__get__('require')).be.calledWith('./fakeService');
         });
     });
 
     it('should require the backend if defined', () => {
-      kuzzle.config.services.serviceName = {
+      kuzzle.config.services.fakeService = {
         backend: 'backend'
       };
 
-      return registerService.call(context, 'serviceName', options, false)
+      return registerService.call(context, 'fakeService', options, false)
         .then(() => {
           should(Services.__get__('require')).be.calledOnce();
           should(Services.__get__('require')).be.calledWith('./backend');
@@ -134,7 +141,7 @@ describe('Test: lib/services/', () => {
     });
 
     it('should define as many aliases as defined', () => {
-      kuzzle.config.services.serviceName = {
+      kuzzle.config.services.fakeService = {
         aliases: [
           'someAlias',
           'someOtherAlias',
@@ -142,12 +149,12 @@ describe('Test: lib/services/', () => {
         ]
       };
 
-      return registerService.call(context, 'serviceName', options, false)
+      return registerService.call(context, 'fakeService', options, false)
         .then(() => {
           const req = Services.__get__('require');
 
           should(req).be.calledThrice();
-          should(req).be.calledWith('./serviceName');
+          should(req).be.calledWith('./fakeService');
 
           should(context.list).have.properties([
             'someAlias',
@@ -163,16 +170,16 @@ describe('Test: lib/services/', () => {
           this.init = () => Bluebird.resolve(() => {});
         }
       })(() => {
-        kuzzle.config.services.serviceName = {};
+        kuzzle.config.services.fakeService = {};
         const r = registerService.call(
           context,
-          'serviceName',
+          'fakeService',
           { timeout: 1000 },
           true);
 
         clock.tick(1000);
 
-        return should(r).be.rejectedWith('[FATAL] Service "serviceName[serviceName]" failed to init within 1000ms');
+        return should(r).be.rejectedWith('[FATAL] Service "fakeService[fakeService]" failed to init within 1000ms');
       });
     });
 
@@ -184,11 +191,11 @@ describe('Test: lib/services/', () => {
           this.init = () => Bluebird.reject(error);
         }
       })(() => {
-        kuzzle.config.services.serviceName = {};
+        kuzzle.config.services.fakeService = {};
 
         const promise = registerService.call(
           context,
-          'serviceName',
+          'fakeService',
           options,
           true);
 

@@ -5,6 +5,7 @@ const
   HttpFormDataStream = require(`${root}/lib/api/core/entrypoints/service/httpFormDataStream`),
   EntryPoint = require(`${root}/lib/api/core/entrypoints`),
   ClientConnection = require(`${root}/lib/api/core/entrypoints/clientConnection`),
+  { HttpMessage } = require(`${root}/lib/api/core/entrypoints/protocols/http`),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
     Request,
@@ -738,12 +739,11 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            {id: 'connectionId'},
             payload,
             response,
             {message: 'foobar.'});
 
-        should(protocol._replyWithError.firstCall.args[3])
+        should(protocol._replyWithError.firstCall.args[2])
           .be.instanceOf(BadRequestError);
         should(response.setHeader).calledWith('Content-Encoding', 'gzip');
         should(zlibstub.deflate).not.called();
@@ -783,25 +783,25 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
     it('should log the access and reply with error', () => {
       const
         connectionId = 'connectionId',
-        payload = {requestId: 'foobar'},
+        payload = new HttpMessage({id: 'connectionId'}, {}),
         nodeEnv = process.env.NODE_ENV;
 
       for (const env of ['production', '', 'development']) {
         process.env.NODE_ENV = env;
 
         const
-          kerr = errorsManager.getError('network', 'http', 'http_request_error', 'test'),
-          matcher = errorMatcher.fromMessage(
+          kerr = errorsManager.getError(
             'network',
             'http',
             'http_request_error',
-            'test'),
-          expected = (new Request(payload, {connectionId, kerr})).serialize();
+            'Error: foobar'),
+          matcher = errorMatcher.fromError(kerr),
+          expected = (new Request(payload, {connectionId, error: kerr})).serialize();
 
         // likely to be different, and we do not care about it
         delete expected.data.timestamp;
 
-        protocol._replyWithError({id: connectionId}, payload, response, kerr);
+        protocol._replyWithError(payload, response, new Error('foobar'));
 
         should(entrypoint.logAccess).be.calledOnce();
         should(entrypoint.logAccess.firstCall.args[0].serialize())
@@ -837,7 +837,10 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
 
       entrypoint.clients.connectionId = {};
 
-      protocol._replyWithError({id: 'connectionId'}, {}, response, error);
+      protocol._replyWithError(
+        new HttpMessage({id: 'connectionId'}, {}),
+        response,
+        error);
 
       should(entrypoint.clients).be.empty();
     });
