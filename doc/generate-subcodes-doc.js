@@ -47,7 +47,13 @@ function buildSubcodesDoc(errorCodesFiles) {
       for (const errorName of Object.keys(subdomain.errors)) {
         const error = subdomain.errors[errorName];
         
-        doc += `${domain.code}${subdomain.code}${error.code}  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
+        const codebuf = Buffer.allocUnsafe(4);
+        codebuf.writeUInt8(domain.code, 0);
+        codebuf.writeUInt8(subdomain.code, 1);
+        codebuf.writeUInt16BE(error.code, 2);
+
+        const code = codebuf.toString('hex');
+        doc += `${code}  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
       }
       doc += '\n---\n';
     }
