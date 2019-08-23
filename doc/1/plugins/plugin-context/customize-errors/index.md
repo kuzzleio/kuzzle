@@ -36,13 +36,26 @@ The `errorsManager` provides two functions:
 - To throw : `context.errorsManager.throw(error, placeholders);`.
 - To get the built error: `context.errorsManager.getError(error, placeholders);`
 
+Also, you can give more precision by giving a [`subdomain`](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/) to your plugin in you [kuzzlerc file](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/config/). It would be like :
+
+```
+{
+  "plugins": {
+    "foobar-plugin": {
+      "option_1": "option_value",
+      "option_2": "option_value",
+      "codes": {
+          "foobar-plugin" : 42
+      }
+    }
+  }
+}
+```
+
 ## Example
 
-If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/) with the following properties :
+If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) with the following properties :
 
 - message : `Some error occured: Something get wrong`
-- errorName : `plugins.kuzzle-plugin-xxx.some_error`
-- domain : `plugins`
-- subdomain : `kuzzle-plugin-xxx`
-- error : `some_error`
-- code : 1
+- errorName : `plugins.foobar-plugin.some_error`
+- code : 0442123

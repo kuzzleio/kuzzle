@@ -12,20 +12,24 @@ All errors received by Kuzzle clients are `KuzzleError` error objects.
 
 A `KuzzleError` object has the following properties:
 
-| Property  | Type    | Description                                            |
-| --------- | ------- | ------------------------------------------------------ |
-| `status`  | integer | HTTP status code                                       |
-| `message` | text    | Short description of the error                         |
-| `stack`   | text    | (Available in development mode only) Error stack trace |
+| Property     | Type               | Description                                            |
+| ------------ | ------------------ | ------------------------------------------------------ |
+| `status`     | integer            | HTTP status code                                       |
+| `message`    | text               | Short description of the error                         |
+| `stack`      | text               | (Available in development mode only) Error stack trace |
 | `errorName`  | <pre>string</pre>  | Error full name, precising domain, subdomain and the name of the error |
-| `domain`  | <pre>string</pre>  | Error domain (eg. `api`)|
-| `subdomain`  | <pre>string</pre>  | Error subdomain giving you more precision about the context (eg. `admin`)|
-| `error`  | <pre>string</pre>  | Error defined name (eg. `database_not_found`)|
-| `code`  | <pre>integer</pre>  | Error code |
+| `code`       | <pre>integer</pre> | Error unique code |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
 
-YOu can see full definitions of Kuzzle errors [here](https://github.com/kuzzleio/kuzzle/tree/master/lib/config/error-codes)
+
+### errorName
+
+The `errorName` property is a concatenation of 3 levels of precision from where your error come from.
+For an `errorName` `api.auth.database_not_found`, you have `api` as domain, `auth` as subdomain and `database_not_found` as error.
+
+You can see full definition about Kuzzle errors [here](https://docs.kuzzle.io/core/1/api/essentials/errors/subcodes/)
+
 
 ---
 
