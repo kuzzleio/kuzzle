@@ -33,7 +33,8 @@ describe('bin/commands/start.js', () => {
     return start({
       mappings: 'mappings.json',
       fixtures: 'fixtures.json',
-      securities: 'securities.json'
+      securities: 'securities.json',
+      enablePlugins: 'kuzzle-plugin-fake,kuzzle-plugin-fake2'
     })
       .then(() => {
         should(KuzzleMock.instance().start)
@@ -41,7 +42,8 @@ describe('bin/commands/start.js', () => {
           .be.calledWith({
             mappings: {},
             fixtures: {},
-            securities: {}
+            securities: {},
+            additionalPlugins: ['kuzzle-plugin-fake','kuzzle-plugin-fake2']
           });
       });
   });
