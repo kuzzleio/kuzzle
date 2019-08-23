@@ -19,7 +19,7 @@ describe('#throw', () => {
         ExternalServiceError,
         {
           errorName: 'api.server.elasticsearch_down',
-          code: 33685505,
+          code: parseInt('02020001', 16),
           message: 'ElasticSearch is down: {"status":"red"}.'
         }
       );
@@ -31,7 +31,7 @@ describe('#throw', () => {
         InternalError,
         {
           errorName: 'internal.unexpected.unknown_error',
-          code: 1,
+          code: parseInt('00000001', 16),
           message: 'Unknown error: {"status":"error"}.'
         }
       );
@@ -43,7 +43,7 @@ describe('#throw', () => {
         NotFoundError,
         {
           errorName: 'api.admin.database_not_found',
-          code: 33816577,
+          code: parseInt('02040001', 16),
           message: 'Database fake_database not found.'
         }
       );
@@ -55,7 +55,7 @@ describe('#throw', () => {
         PreconditionError,
         {
           errorName: 'api.admin.action_locked',
-          code: 33816578,
+          code: parseInt('02040002', 16),
           message: 'Lock action error: Kuzzle is already shutting down.'
         }
       );
@@ -67,7 +67,7 @@ describe('#throw', () => {
         UnauthorizedError,
         {
           errorName: 'api.auth.invalid_token',
-          code: 33882114,
+          code: parseInt('02050002', 16),
           message: 'Invalid token.'
         }
       );
@@ -80,7 +80,7 @@ describe('#throw', () => {
         {
           errorName: 'api.bulk.document_creations_failed',
           errors: ['foo', 'bar'],
-          code: 34078721,
+          code: parseInt('02080001', 16),
           message: 'Some document creations failed: foo,bar.'
         }
       );
