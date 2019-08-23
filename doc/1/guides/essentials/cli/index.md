@@ -225,6 +225,7 @@ This call the action [admin#shutdown](/core/1/api/controllers/admin/shutdown)
 #          --securities <file>           import roles, profiles and users from file
 #          --vault-key <vaultKey>        Vault key used to decrypt secrets
 #          --secrets-file <secretsFile>  Output file to write decrypted secrets
+#          --enable-plugins <plugins>    Enable given plugins (separated with comma)
 
 ```
 
@@ -430,6 +431,16 @@ The roles, profiles and users definition follow the same structure as in the bod
   }
 }
 ```
+
+#### `--enable--plugins`
+<SinceBadge version="1.10.0" />
+
+```bash
+./bin/kuzzle start --enable-plugins kuzzle-custom-plugin-one,kuzzle-custom-plugin-two
+```
+Enable given plugins. If several names are given, they need to be separated with comma.
+Provided plugins need to be located in `plugins/available` directory.
+
 
 ---
 
