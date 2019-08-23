@@ -12,3 +12,6 @@ order: 100
   - End of Node.js 6 and 8 support
   - End of Redis 3 and 4 support
   - End of Elasticsearch 5 support
+  - End of Kuzzle Proxy support
+
+- The error `03060008 network.http_router.unable_to_convert_http_body_to_json` is now deprecated
