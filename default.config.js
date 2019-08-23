@@ -61,6 +61,18 @@ module.exports = {
       pipeWarnTime: 500,
       pipeTimeout: 5000,
       initTimeout: 10000,
+    },
+    codes: {
+      'kuzzle-plugin-logger': 20,
+      'kuzzle-plugin-auth-passport-local': 21,
+      'kuzzle-plugin-auth': 22,
+      'kuzzle-plugin-s3': 23,
+      'kuzzle-plugin-cloudinary': 24,
+      'kuzzle-plugin-prometheus': 25,
+      'kuzzle-plugin-authpassport-oauth': 26,
+      'computed-fields-plugin': 27,
+      'kuzzle-plugin-probe-listener': 28,
+      'kuzzle-plugin-multi-tenancy': 29
     }
   },
 
