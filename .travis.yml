@@ -68,7 +68,11 @@ jobs:
       os: linux
       sudo: required
       language: node_js
+
+      cache: npm
+
       node_js: 10
+
       install:
         - npm ci --silent
       script:
@@ -109,11 +113,9 @@ jobs:
     # ---------------------------------------
     - <<: *integration-tests
       stage: Integration tests
-      if: type = cron
       name: Node.js 10
       env:
         - *integration-tests-env
-        - NODE_LTS=10
 
     # ---------------------------------------
     # Cross-platform tests
@@ -141,31 +143,16 @@ jobs:
         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
 
     # ---------------------------------------
-    # Redis Tests
-    # ---------------------------------------
-    - <<: *integration-tests
-      name: Redis 3
-      stage: Redis tests
-      env:
-        - *integration-tests-env
-        - REDIS_VERSION=3.2
-
-    - <<: *integration-tests
-      name: Redis 4
-      stage: Redis tests
-      env:
-        - *integration-tests-env
-        - REDIS_VERSION=4.0.14
-
-    # ---------------------------------------
     # Deployments
     # ---------------------------------------
     - stage: Deployments
       name: NPM.js
+      if: branch = master
       os: linux
       sudo: required
       language: node_js
       node_js: 10
+      script: echo "Deploying Kuzzle to NPM.js"
       deploy:
         provider: npm
         email: support@kuzzle.io
@@ -187,7 +174,7 @@ jobs:
 
     - <<: *doc-deploy
       name: Documentation to next-docs.kuzzle.io
-      if: branch =~ /^[0-9]+-dev$/
+      if: branch = 1-dev
       env:
         - *doc-deploy-env
         - S3_BUCKET=docs-next.kuzzle.io
@@ -214,7 +201,7 @@ stages:
   - name: Redis tests
     if: type = cron
   - name: Deployments
-    if: type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/
+    if: type = push AND branch =~ /^master|[0-9]+-stable|1-dev$/
 
 # ---------------------------------------
 # Notifications
