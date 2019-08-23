@@ -228,7 +228,7 @@ stages:
   - name: Unit Tests & Linters
     if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
   - name: Integration tests
-    if: type =~ /(cron|push|pull_request)/
+    if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
   - name: Cross-platform tests
     if: type = cron
   - name: Redis tests
