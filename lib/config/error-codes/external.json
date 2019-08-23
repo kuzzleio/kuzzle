@@ -188,6 +188,11 @@
           "code": 39,
           "message": "Cannot parse mapping property \"%s\": %s",
           "class": "BadRequestError"
+        },
+        "index_already_exists": {
+          "code": 40,
+          "message": "Index %s already exists.%s",
+          "class": "BadRequestError"
         }
       }
     },
