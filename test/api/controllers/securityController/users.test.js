@@ -6,15 +6,17 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   {
-    BadRequestError,
-    NotFoundError,
-    PluginImplementationError,
-    SizeLimitError,
-    PreconditionError,
-    InternalError: KuzzleInternalError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      BadRequestError,
+      NotFoundError,
+      PluginImplementationError,
+      SizeLimitError,
+      PreconditionError,
+      InternalError: KuzzleInternalError
+    }
+  } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
@@ -44,8 +46,9 @@ describe('Test: security controller - users', () => {
       request.input.body = foo;
       return securityController.updateUserMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', request.input.body);
+          should(kuzzle.internalEngine.updateMapping)
+            .be.calledOnce()
+            .be.calledWith('users', request.input.body);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -57,8 +60,9 @@ describe('Test: security controller - users', () => {
     it('should fulfill with a response object', () => {
       return securityController.getUserMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'users'});
+          should(kuzzle.internalEngine.getMapping)
+            .be.calledOnce()
+            .be.calledWith(kuzzle.internalEngine.index, 'users');
 
           should(response).be.instanceof(Object);
           should(response).match({mapping: {}});
@@ -390,7 +394,7 @@ describe('Test: security controller - users', () => {
     it('should reject an error if a strategy is unknown', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-      
+
       request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
 
       return should(securityController.createUser(request)).be.rejectedWith(BadRequestError);
