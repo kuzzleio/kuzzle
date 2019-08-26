@@ -113,7 +113,7 @@ Filter documents containing a geographical point confined within a bounding box:
 
 A bounding box is a 2D box that can be defined using either of the following formats:
 
-- 2 [geopoints](/core/2/guides/cookbooks/realtime-api//geofencing#geopoints), defining the top left (`topLeft` or `top_left`) and bottom right (`bottomRight` or `bottom_right`) corners of the box
+- 2 [geopoints](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints), defining the top left (`topLeft` or `top_left`) and bottom right (`bottomRight` or `bottom_right`) corners of the box
 - 4 distinct values defining the 4 box corners: `top` and `bottom` are latitudes, `left` and `right` are longitudes
 
 The bounding box description must be stored in an attribute, named after the geographical point to be tested in future documents.

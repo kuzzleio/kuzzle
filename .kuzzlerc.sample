@@ -180,50 +180,7 @@
         }
       }
     },
-    // [initial]
-    // Permissions used when Kuzzle is started for the first time
-    //
-    // By default, the admin, default and anonymous users have all permissions
-    "initial": {
-      "roles": {
-        "admin": {
-          "controllers": {
-            "*": {
-              "actions": "*"
-            }
-          }
-        },
-        "default": {
-          "controllers": {
-            "*": {
-              "actions": "*"
-            }
-          }
-        },
-        "anonymous": {
-          "controllers": {
-            "*": {
-              "actions": "*"
-            }
-          }
-        }
-      },
-      "profiles": {
-        "admin": {
-          "policies": [ {"roleId": "admin"} ]
-        },
-        "default": {
-          "policies": [ {"roleId": "default"} ]
-        },
-        "anonymous": {
-          "policies": [ {"roleId": "anonymous"} ]
-        }
-      }
-    },
     // [standard]
-    // Permissions used when creating an administrator user, either using the
-    // CLI or the Back Office.
-    //
     // By default, the admin user is granted all permissions.
     // Anonymous and non-administrator users have their rights restricted
     "standard": {
@@ -289,46 +246,6 @@
 
   // Kuzzle server is the entry point for incoming requests
   "server": {
-    // [entryPoints]
-    // list of available entry points for Kuzzle.
-    // Posible values:
-    //  - embedded: Kuzzle can run on its own and does not require any
-    //    external component to process requests
-    //  - proxy: Kuzzle will connect to a Kuzzle proxy and process requests
-    //    coming from it
-    // Entry points can be combined.
-    "entryPoints": {
-      "embedded": true,
-      "proxy": false
-    },
-
-    // [proxy]
-    // A Kuzzle proxy can be used to forward requests to Kuzzle.
-    //   * host:
-    //       Host name/address of a Kuzzle proxy server.
-    //       Can be a hostname, an IP address or an URI.
-    //   * pingInterval:
-    //       Time (in milliseconds) between ping requests
-    //   * pingTimeout:
-    //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
-    //       marks its connection to the distant host as lost.
-    //   * port:
-    //       Network port opened by the Kuzzle proxy server
-    //   * retryClientListDelay
-    //       Time after which (in milliseconds) Kuzzle should ask the proxy to
-    //       send the list of clients back after a disconnection (default 1s).
-    //   * retryInterval:
-    //       Time interval (in milliseconds) between reconnection retries
-    //       when the connection to the broker server has been lost
-    "proxy": {
-      "host": "localhost",
-      "port": 7331,
-      "pingInterval": 60000,
-      "pingTimeout": 500,
-      "resendClientListDelay": 1000,
-      "retryInterval": 1000
-    },
-
     // [logs] (embedded only)
     // Configuration section for Kuzzle access logs
     //   * transports:
@@ -606,6 +523,43 @@
               "updater":    { "type": "keyword" },
               "deletedAt":  { "type": "date" }
             }
+          }
+        }
+      },
+      // Internal index name
+      "internalIndex": "kuzzle",
+      // Internal index default collections and mappings
+      "internalMappings": {
+        "users": {
+          "properties": {
+            "profileIds": { "type": "keyword" }
+          }
+        },
+        "profiles": {
+          "properties": {
+            "policies": {
+              "properties":  {
+                "roleId": { "type": "keyword" }
+              }
+            }
+          }
+        },
+        "roles": {
+          "properties": {
+            "controllers": {
+              "dynamic": "false,
+              "properties": {}
+            }
+          }
+        },
+        "plugins": {
+          "properties": {
+            "active":     { "type": "boolean" },
+            "author":     { "type": "keyword" },
+            "createdAt":  { "type": "date" },
+            "updatedAt":  { "type": "date" },
+            "updater":    { "type": "keyword" },
+            "deletedAt":  { "type": "date" }
           }
         }
       },

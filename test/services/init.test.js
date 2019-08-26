@@ -12,7 +12,7 @@ describe('Test: lib/services/', () => {
     kuzzle,
     reset,
     services,
-    requireSpy;
+    requiredModuleStub;
 
   before(() => {
     clock = sinon.useFakeTimers(Date.now());
@@ -23,10 +23,10 @@ describe('Test: lib/services/', () => {
   });
 
   beforeEach(() => {
-    requireSpy = sinon.spy();
+    requiredModuleStub = sinon.stub();
 
     reset = Services.__set__({
-      require: sinon.stub().returns(requireSpy)
+      require: sinon.stub().returns(requiredModuleStub)
     });
     kuzzle = new KuzzleMock();
     services = new Services(kuzzle);
@@ -55,22 +55,16 @@ describe('Test: lib/services/', () => {
     it('should register the services', () => {
       return services.init()
         .then(() => {
+          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
 
-          try {
-            should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
-
-            Object.keys(kuzzle.config.services)
-              .filter(key => key !== 'common')
-              .forEach(service => {
-                should(kuzzle.internalEngine.get).be.calledWith('services', service);
-                should(registerService).be.calledWith(service);
-              });
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          Object.keys(kuzzle.config.services)
+            .filter(key => key !== 'common')
+            .forEach(service => {
+              should(kuzzle.internalEngine.get).be.calledWith(
+                'services',
+                service);
+              should(registerService).be.calledWith(service);
+            });
         });
     });
 
@@ -79,25 +73,20 @@ describe('Test: lib/services/', () => {
       error.status = 404;
 
       kuzzle.internalEngine.get.onCall(0).rejects(error);
-      kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {foo: 'bar'}}));
+      kuzzle.internalEngine.get.resolves({_source: {foo: 'bar'}});
 
       return services.init()
         .then(() => {
-          try {
-            should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
+          should(Object.keys(kuzzle.config.services).length).be.greaterThan(2);
 
-            Object.keys(kuzzle.config.services)
-              .filter(key => key !== 'common')
-              .forEach(service => {
-                should(kuzzle.internalEngine.get).be.calledWith('services', service);
-                should(registerService).be.calledWith(service);
-              });
-
-            return Bluebird.resolve();
-          }
-          catch(err) {
-            return Bluebird.reject(err);
-          }
+          Object.keys(kuzzle.config.services)
+            .filter(key => key !== 'common')
+            .forEach(service => {
+              should(kuzzle.internalEngine.get).be.calledWith(
+                'services',
+                service);
+              should(registerService).be.calledWith(service);
+            });
         });
     });
 
@@ -107,60 +96,22 @@ describe('Test: lib/services/', () => {
 
       return should(services.init()).be.rejectedWith(error);
     });
-
-    it('whitelist', () => {
-      kuzzle.config.services = {
-        ok: true,
-        alsoOk: true,
-        notOk: true
-      };
-
-      return services.init({whitelist: ['ok', 'alsoOk']})
-        .then(() => {
-          try {
-            should(registerService).be.calledWith('ok', {service: 'ok'}, true);
-            should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
-            should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
-    });
-
-    it('blacklist', () => {
-      kuzzle.config.services = {
-        ok: true,
-        alsoOk: true,
-        notOk: true
-      };
-
-      return services.init({blacklist: ['notOk']})
-        .then(() => {
-          try {
-            should(registerService).be.calledWith('ok', {service: 'ok'}, true);
-            should(registerService).be.calledWith('alsoOk', {service: 'alsoOk'}, true);
-            should(registerService).be.calledWith('notOk', {service: 'notOk'}, false);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
-    });
-
   });
 
   describe('#registerService', () => {
     let
       context,
       options = {},
+      fakeService,
       registerService = Services.__get__('registerService');
 
     beforeEach(() => {
+      fakeService = {
+        init: sinon.stub().usingPromise(Bluebird).resolves()
+      };
+
+      requiredModuleStub.returns(fakeService);
+
       context = {
         list: {},
         kuzzle
@@ -168,43 +119,29 @@ describe('Test: lib/services/', () => {
     });
 
     it('should require the service', () => {
-      kuzzle.config.services.serviceName = {};
+      kuzzle.config.services.fakeService = {};
 
-      return registerService.call(context, 'serviceName', options, false)
+      return registerService.call(context, 'fakeService', options)
         .then(() => {
-          try {
-            should(Services.__get__('require')).be.calledOnce();
-            should(Services.__get__('require')).be.calledWith('./serviceName');
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(Services.__get__('require')).be.calledOnce();
+          should(Services.__get__('require')).be.calledWith('./fakeService');
         });
     });
 
     it('should require the backend if defined', () => {
-      kuzzle.config.services.serviceName = {
+      kuzzle.config.services.fakeService = {
         backend: 'backend'
       };
 
-      return registerService.call(context, 'serviceName', options, false)
+      return registerService.call(context, 'fakeService', options, false)
         .then(() => {
-          try {
-            should(Services.__get__('require')).be.calledOnce();
-            should(Services.__get__('require')).be.calledWith('./backend');
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(Services.__get__('require')).be.calledOnce();
+          should(Services.__get__('require')).be.calledWith('./backend');
         });
     });
 
     it('should define as many aliases as defined', () => {
-      kuzzle.config.services.serviceName = {
+      kuzzle.config.services.fakeService = {
         aliases: [
           'someAlias',
           'someOtherAlias',
@@ -212,25 +149,18 @@ describe('Test: lib/services/', () => {
         ]
       };
 
-      return registerService.call(context, 'serviceName', options, false)
+      return registerService.call(context, 'fakeService', options, false)
         .then(() => {
           const req = Services.__get__('require');
 
-          try {
-            should(req).be.calledThrice();
-            should(req).be.calledWith('./serviceName');
+          should(req).be.calledThrice();
+          should(req).be.calledWith('./fakeService');
 
-            should(context.list).have.properties([
-              'someAlias',
-              'someOtherAlias',
-              'andYetAnotherOne'
-            ]);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(context.list).have.properties([
+            'someAlias',
+            'someOtherAlias',
+            'andYetAnotherOne'
+          ]);
         });
     });
 
@@ -240,12 +170,16 @@ describe('Test: lib/services/', () => {
           this.init = () => Bluebird.resolve(() => {});
         }
       })(() => {
-        kuzzle.config.services.serviceName = {};
-        const r = registerService.call(context, 'serviceName', {timeout: 1000}, true);
+        kuzzle.config.services.fakeService = {};
+        const r = registerService.call(
+          context,
+          'fakeService',
+          { timeout: 1000 },
+          true);
 
         clock.tick(1000);
 
-        return should(r).be.rejectedWith('[FATAL] Service "serviceName[serviceName]" failed to init within 1000ms');
+        return should(r).be.rejectedWith('[FATAL] Service "fakeService[fakeService]" failed to init within 1000ms');
       });
     });
 
@@ -257,10 +191,15 @@ describe('Test: lib/services/', () => {
           this.init = () => Bluebird.reject(error);
         }
       })(() => {
-        kuzzle.config.services.serviceName = {};
+        kuzzle.config.services.fakeService = {};
 
-        return should(registerService.call(context, 'serviceName', options, true))
-          .be.rejectedWith(error);
+        const promise = registerService.call(
+          context,
+          'fakeService',
+          options,
+          true);
+
+        return should(promise).be.rejectedWith(error);
       });
     });
 

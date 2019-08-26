@@ -45,7 +45,7 @@ The `options` object can contain the following properties:
 | -------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `connection`   | `object`                                                              | <SinceBadge version="1.4.1" /> Connection information (see the <a href=https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestcontextconnection-object-format>connection</a> object documentation) |
 | `connectionId` | `string`                                                              | <DeprecatedBadge version="1.4.1" /> Connection unique identifier                                                                                                                                                           |
-| `error`        | [`KuzzleError`](/core/2/protocols/api/context/errors),<br/>Error | Sets the request response with the provided error                                                                                                                                                                          |
+| `error`        | `KuzzleError`,<br/>Error | Sets the request response with the provided [error](/core/2/protocols/api/context/errors)                                                                                                                                                                          |
 | `requestId`    | `string`                                                              | User-defined request identifier                                                                                                                                                                                            |
 | `result`       | `*`                                                                  | Sets the request response with the provided result, and the request status is set to `200`                                                                                                                                 |
 | `status`       | `integer`                                                             | Request status, following the [HTTP error code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) standard                                                                                                          |
@@ -59,7 +59,7 @@ Read-only:
 | Properties  | Type                                                                                                                      | Description                                                           |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | `context`   | `<a href=https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestcontext>RequestContext</a>` | General request information (logged user, network information, ...)   |
-| `error`     | `[`KuzzleError`](/core/2/protocols/api/context/errors) | Request error                                                 |
+| `error`     | `KuzzleError` | Request [error](/core/2/protocols/api/context/errors)                                                 |
 | `input`     | `<a href=https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput>RequestInput</a>`     | Input request representation                                          |
 | `response`  | `<a href=https://github.com/kuzzleio/kuzzle-common-objects#requestresponse>RequestResponse</a>`                           | Serialized [request response](/core/2/api/essentials/kuzzle-response) |
 | `result`    | `*`                                                                                                                      | Request result                                                        |
@@ -115,7 +115,7 @@ setError(error);
 
 | Arguments | Type                                                              | Description   |
 | --------- | ----------------------------------------------------------------- | ------------- |
-| `error`   | `[`KuzzleError`](/core/2/protocols/api/context/errors), Error` | Request error |
+| `error`   | `KuzzleError`, Error | Request [error](/core/2/protocols/api/context/errors) |
 
 If a `KuzzleError` object is provided, the request's status attribute is set to the error one.
 

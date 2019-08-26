@@ -46,7 +46,7 @@ validate(request, [verbose]);
 
 | Arguments | Type                                                           | Description                                                                                         |
 | --------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `request` | [`Request`](/core/2/plugins/constructors/request) | Request object with a non-empty body content                                                        |
+| `request` | [`Request`](/core/2/plugins/plugin-context/constructors/request) | Request object with a non-empty body content                                                        |
 | `verbose` | <pre>boolean</pre>                                             | If true, returns an exhaustive validation report, instead of failing at the first error encountered |
 
 ### Return
