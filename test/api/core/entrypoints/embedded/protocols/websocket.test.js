@@ -653,7 +653,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(activeConnection.socket.ping).not.be.called();
     });
 
-    it('should mark a socket as dead if an exception is triggered on PING', () => {
+    it('should mark a socket as dead if not available for PING', () => {
       const
         Connection = function (alive, lastActivity) {
           return {
