@@ -122,7 +122,7 @@
       }
     },
     "plugins": {
-      "code": 6,
+      "code": 5,
       "errors": {
         "invalid_plugin_name": {
           "code": 1,
@@ -367,7 +367,7 @@
       }
     },
     "validation": {
-      "code": 5,
+      "code": 6,
       "errors": {
         "missing_typename_property": {
           "code": 1,
@@ -498,6 +498,71 @@
           "code": 26,
           "message": "Invalid length range: min > max.",
           "class": "PreconditionError"
+        },
+        "invalid_properties_for_collection_specification": {
+          "code": 27,
+          "message": "%s",
+          "class": "PreconditionError"
+        },
+        "structure_collection_validation": {
+          "code": 28,
+          "message": "%s",
+          "class": "BadRequestError"
+        },
+        "validator_specification_of_collection_error": {
+          "code": 29,
+          "message": "Validator specification of the collection %s.%s triggered an error",
+          "class": "PreconditionError"
+        },
+        "object_level_undefined_in_specification": {
+          "code": 30,
+          "message": "All levels of an object have to be defined in the specification.",
+          "class": "PreconditionError"
+        },
+        "throw_error": {
+          "code": 31,
+          "message": "%s",
+          "class": "PreconditionError"
+        },
+        "manage_error_message": {
+          "code": 32,
+          "message": "Field %s: %s",
+          "class": "BadRequestError"
+        },
+        "strictness": {
+          "code": 33,
+          "message": "strictness",
+          "class": "BadRequestError"
+        },
+        "errorcontext": {
+          "code": 34,
+          "message": "Field %s: %s",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "statistics": {
+      "code": 7,
+      "errors": {
+        "invalid_time_value": {
+          "code": 1,
+          "message": "Invalid time value",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "sandbox": {
+      "code": 8,
+      "errors": {
+        "process_already_running": {
+          "code": 1,
+          "message": "A process is already running for this sandbox",
+          "class": "InternalError"
+        },
+        "timeout": {
+          "code": 2,
+          "message": "Timeout. The sandbox did not respond within %sms.",
+          "class": "GatewayTimeoutError"
         }
       }
     }

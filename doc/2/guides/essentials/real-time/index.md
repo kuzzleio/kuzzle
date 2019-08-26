@@ -488,5 +488,5 @@ Each customer who subscribes to the room will receive the following notification
 Now that you're more familiar with Kuzzle, dive even deeper to learn how to leverage its full capabilities:
 
 - take a look at the available [SDKs](/sdk)
-- learn how to use [Koncorde](/core/2/guides/cookbooks/realtime-api//introduction) to create fine-grained subscription filters
+- learn how to use [Koncorde](/core/2/guides/cookbooks/realtime-api/introduction) to create fine-grained subscription filters
 - follow our guide to learn how to [manage users and setup fine-grained access control](/core/2/guides/essentials/security)

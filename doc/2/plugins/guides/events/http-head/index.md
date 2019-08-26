@@ -10,6 +10,6 @@ title: http:head
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
+| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
 
 Triggered whenever a request has been submitted through HTTP HEAD methods.
