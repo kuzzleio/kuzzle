@@ -18,7 +18,7 @@ A `KuzzleError` object has the following properties:
 | `message`    | <pre>string</pre>               | Short description of the error                         |
 | `stack`      | <pre>string</pre>               | (Available in development mode only) Error stack trace |
 | `errorName`  | <pre>string</pre>  | Error full name, precising domain, subdomain and the name of the error |
-| `code`       | <pre>integer</pre> | Error unique code |
+| `code`       | <pre>number</pre> | Error unique code |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
 
