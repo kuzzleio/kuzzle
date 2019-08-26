@@ -339,6 +339,11 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: true}}});
       request.input.resource._id = '42';
 
+      try {
+        elasticsearch.create(request)
+      } catch (e) {
+        console.log(e)
+      }
       return should(elasticsearch.create(request)).be.rejectedWith(BadRequestError);
     });
 
