@@ -5,9 +5,12 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
+  {
+    Request,
+    errors: { InternalError }
+  } = require('kuzzle-common-objects'),
   Router = require('../../../../lib/api/core/httpRouter'),
-  Request = require('kuzzle-common-objects').Request;
+  { HttpMessage } = require('../../../../lib/api/core/entrypoints/protocols/http');
 
 describe('core/httpRouter', () => {
   let
@@ -20,13 +23,9 @@ describe('core/httpRouter', () => {
     kuzzleMock = new KuzzleMock();
     router = new Router(kuzzleMock);
     handler = sinon.stub().yields();
-    rq = {
-      requestId: 'requestId',
-      url: '',
-      method: '',
-      headers: {},
-      content: ''
-    };
+    rq = new HttpMessage(
+      { id: 'requestId' },
+      { url: '', method: '', headers: {} });
   });
 
   afterEach(() => {
@@ -142,15 +141,22 @@ describe('core/httpRouter', () => {
       router.route(rq, () => {
         try {
           should(handler).be.calledOnce();
-          should(handler.firstCall.args[0]).be.instanceOf(Request);
-          should(handler.firstCall.args[0].context.protocol).be.exactly('http');
-          should(handler.firstCall.args[0].context.connectionId).be.exactly('requestId');
-          should(handler.firstCall.args[0].input.headers).be.eql({
+
+          const apiRequest = handler.firstCall.args[0];
+
+          should(apiRequest).be.instanceOf(Request);
+          should(apiRequest.context.protocol).be.exactly('http');
+          should(apiRequest.context.connectionId).be.exactly('requestId');
+          should(apiRequest.input.headers).be.eql({
             foo: 'bar',
             Authorization: 'Bearer jwtFoobar',
             'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'});
-          should(handler.firstCall.args[0].input.jwt).be.exactly('jwtFoobar');
-          should(handler.firstCall.args[0].input.volatile).be.eql({modifiedBy: 'John Doe', reason: 'foobar'});
+          should(apiRequest.input.jwt).be.exactly('jwtFoobar');
+          should(apiRequest.input.volatile).be.eql({
+            modifiedBy: 'John Doe',
+            reason: 'foobar'
+          });
+
           done();
         }
         catch (e) {
@@ -165,14 +171,17 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, () => {
         try {
           should(handler).be.calledOnce();
-          should(handler.firstCall.args[0].id).match(rq.requestId);
-          should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-          should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
+
+          const apiRequest = handler.firstCall.args[0];
+
+          should(apiRequest.id).match(rq.requestId);
+          should(apiRequest.input.body).match({foo: 'bar'});
+          should(apiRequest.input.headers['content-type']).eql('application/json');
           done();
         }
         catch (e) {
@@ -187,16 +196,19 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/hello/world';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, () => {
         try {
           should(handler).be.calledOnce();
-          should(handler.firstCall.args[0].id).match(rq.requestId);
-          should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-          should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json');
-          should(handler.firstCall.args[0].input.args.bar).eql('hello');
-          should(handler.firstCall.args[0].input.args.baz).eql('world');
+
+          const apiRequest = handler.firstCall.args[0];
+
+          should(apiRequest.id).match(rq.requestId);
+          should(apiRequest.input.body).match({foo: 'bar'});
+          should(apiRequest.input.headers['content-type']).eql('application/json');
+          should(apiRequest.input.args.bar).eql('hello');
+          should(apiRequest.input.args.baz).eql('world');
           done();
         }
         catch (e) {
@@ -211,16 +223,19 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/hello/%25world';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/json; charset=utf-8';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, () => {
         try {
           should(handler).be.calledOnce();
-          should(handler.firstCall.args[0].id).match(rq.requestId);
-          should(handler.firstCall.args[0].input.body).match({foo: 'bar'});
-          should(handler.firstCall.args[0].input.headers['content-type']).eql('application/json; charset=utf-8');
-          should(handler.firstCall.args[0].input.args.bar).eql('hello');
-          should(handler.firstCall.args[0].input.args.baz).eql('%world');
+
+          const apiRequest = handler.firstCall.args[0];
+
+          should(apiRequest.id).match(rq.requestId);
+          should(apiRequest.input.body).match({foo: 'bar'});
+          should(apiRequest.input.headers['content-type']).eql('application/json; charset=utf-8');
+          should(apiRequest.input.args.bar).eql('hello');
+          should(apiRequest.input.args.baz).eql('%world');
           done();
         }
         catch (e) {
@@ -254,9 +269,11 @@ describe('core/httpRouter', () => {
           });
 
           should(result.input.headers).match(rq.headers);
-          should(kuzzleMock.pipe).be.calledOnce();
-          should(kuzzleMock.pipe).be.calledWith('http:options', sinon.match.instanceOf(Request));
+          should(kuzzleMock.pipe)
+            .be.calledOnce()
+            .be.calledWith('http:options', sinon.match.instanceOf(Request));
           should(kuzzleMock.pipe.firstCall.args[1].input.headers.foo).eql('bar');
+
           done();
         }
         catch (e) {
@@ -304,7 +321,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'FOOBAR';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, result => {
         try {
@@ -325,7 +342,6 @@ describe('core/httpRouter', () => {
               },
               headers: router.defaultHeaders
             });
-
           done();
         }
         catch (e) {
@@ -340,7 +356,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '{bad JSON syntax}';
+      rq.addChunk('{bad JSON syntax}');
 
       router.route(rq, result => {
         try {
@@ -410,7 +426,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/foobar';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, result => {
         try {
@@ -445,7 +461,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'POST';
       rq.headers['content-type'] = 'application/json; charset=iso8859-1';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, result => {
         try {
@@ -480,7 +496,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'PUT';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, result => {
         try {
@@ -510,12 +526,18 @@ describe('core/httpRouter', () => {
     });
 
     it('should return an error if an exception is thrown', done => {
-      const routeHandlerStub = function () {
-        this.getRequest = sinon.stub().throws(new InternalError('HTTP internal exception.'));
+      const routeHandlerStub = class {
+        get request () {
+          throw new InternalError('HTTP internal exception.');
+        }
       };
 
-      mockrequire('../../../../lib/api/core/httpRouter/routeHandler', routeHandlerStub);
+      mockrequire(
+        '../../../../lib/api/core/httpRouter/routeHandler',
+        routeHandlerStub);
+
       mockrequire.reRequire('../../../../lib/api/core/httpRouter/routePart');
+
       const MockRouter = mockrequire.reRequire('../../../../lib/api/core/httpRouter');
 
       router = new MockRouter(kuzzleMock);
@@ -525,7 +547,7 @@ describe('core/httpRouter', () => {
       rq.url = '/foo/bar';
       rq.method = 'PUT';
       rq.headers['content-type'] = 'application/json';
-      rq.content = '{"foo": "bar"}';
+      rq.addChunk('{"foo": "bar"}');
 
       router.route(rq, result => {
         try {

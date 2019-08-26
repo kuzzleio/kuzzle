@@ -3,13 +3,11 @@ const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  KuzzleMock = require('../../../../../mocks/kuzzle.mock'),
-  {
-    BadRequestError
-  } = require('kuzzle-common-objects').errors,
-  errorMatcher = require('../../../../../util/errorMatcher');
+  KuzzleMock = require('../../../../mocks/kuzzle.mock'),
+  { errors: { BadRequestError } } = require('kuzzle-common-objects'),
+  errorMatcher = require('../../../../util/errorMatcher');
 
-describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
+describe('/lib/api/core/entrypoints/protocols/mqtt', () => {
   const moscaOnMock = sinon.stub();
   const moscaMock = function (config) {
     this.config = config;
@@ -32,7 +30,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/mqtt', () => {
       Server: moscaMock
     });
 
-    MqttProtocol = mockrequire.reRequire('../../../../../../lib/api/core/entrypoints/embedded/protocols/mqtt');
+    MqttProtocol = mockrequire.reRequire('../../../../../lib/api/core/entrypoints/protocols/mqtt');
   });
 
   after(() => {

@@ -1,15 +1,15 @@
-const root = '../../../../../..';
+const root = '../../../../..';
 
 const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
   { IncomingMessage } = require('http'),
-  EntryPoint = require(`${root}/lib/api/core/entrypoints/embedded`),
+  EntryPoint = require(`${root}/lib/api/core/entrypoints`),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   errorMatcher = require(`${root}/test/util/errorMatcher`);
 
-describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
+describe('/lib/api/core/entrypoints/protocols/websocket', () => {
   let
     kuzzle,
     entrypoint,
@@ -35,8 +35,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       Sender: WebSocketSender
     });
 
-    WebSocketProtocol = mockrequire.reRequire(
-      `${root}/lib/api/core/entrypoints/embedded/protocols/websocket`);
+    WebSocketProtocol = mockrequire.reRequire(`${root}/lib/api/core/entrypoints/protocols/websocket`);
 
     protocol = new WebSocketProtocol();
   });
