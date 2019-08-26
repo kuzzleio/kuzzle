@@ -94,16 +94,21 @@ jobs:
         - bash .ci/sonar.sh
 
     - stage: Unit Tests & Linters
-      name: Dead link check
+      name: Documentation dead links & subcodes check
       cache:
         directories:
           - $HOME/.gem/specs
+      install:
+        - gem install typhoeus
       before_script:
         - npm run doc-prepare
         - npm run --prefix doc/framework clone-repos
       script:
-        - gem install typhoeus
+        - echo "Checking dead links..."
         - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
+        - echo "Checking subcodes..."
+        - npm run doc-generate-subcodes -- --output $TRAVIS_BUILD_DIR/subcodes-doc-test.md
+        - diff $TRAVIS_BUILD_DIR/subcodes-doc-test.md $TRAVIS_BUILD_DIR/doc/1/api/essentials/errors/subcodes/index.md
 
     # ---------------------------------------
     # Integration tests
@@ -228,7 +233,7 @@ stages:
   - name: Unit Tests & Linters
     if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
   - name: Integration tests
-    if: type =~ /(cron|push|pull_request)/
+    if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
   - name: Cross-platform tests
     if: type = cron
   - name: Redis tests
