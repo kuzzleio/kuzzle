@@ -546,6 +546,10 @@ describe('InternalEngine', () => {
         });
     });
 
+    it('should reject if a document with the specified ID already exists', () => {
+      throw new Error('Implement me');
+    });
+
     it('should reject the promise if creating the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.create.rejects(error);
@@ -623,6 +627,10 @@ describe('InternalEngine', () => {
             return Bluebird.reject(error);
           }
         });
+    });
+
+    it('should reject if a document with the specified ID already exists', () => {
+      throw new Error('Implement me');
     });
 
     it('should reject the promise if creating the document fails', () => {
@@ -704,6 +712,11 @@ describe('InternalEngine', () => {
         });
     });
 
+    it('should reject if a document with the specified ID already exists', () => {
+      throw new Error('Implement me');
+    });
+
+
     it('should reject the promise if deleting the document fails', () => {
       const error = new Error('Mocked error');
       kuzzle.internalEngine.client.delete.rejects(error);
@@ -711,54 +724,17 @@ describe('InternalEngine', () => {
     });
   });
 
-  describe('#createInternalIndex', () => {
+  describe('#createCollection', () => {
     it('should forward the request to elasticsearch', () => {
-      const
-        createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(false));
-
-      return kuzzle.internalEngine.createInternalIndex()
-        .then(() => {
-          try {
-            should(existsStub).be.calledOnce();
-            should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
-            should(createStub).be.calledOnce();
-            should(createStub).be.calledWith({index: kuzzle.internalEngine.index});
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
+      throw new Error('implement master');
     });
 
     it('should not try to create an existing index', () => {
-      const
-        createStub = kuzzle.internalEngine.client.indices.create,
-        existsStub = kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(true));
-
-      return kuzzle.internalEngine.createInternalIndex()
-        .then(() => {
-          try {
-            should(existsStub).be.calledOnce();
-            should(existsStub).be.calledWith({index: kuzzle.internalEngine.index});
-            should(createStub).have.callCount(0);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
+      throw new Error('implement master');
     });
 
     it('should reject the promise if creating the internal index fails', () => {
-      const error = new Error('Mocked error');
-      kuzzle.internalEngine.client.indices.exists.returns(Bluebird.resolve(false));
-      kuzzle.internalEngine.client.indices.create.rejects(error);
-
-      return should(kuzzle.internalEngine.createInternalIndex()).be.rejectedWith(ExternalServiceError, {message: error.message});
+      throw new Error('implement master');
     });
   });
 
@@ -904,6 +880,16 @@ describe('InternalEngine', () => {
             return Bluebird.reject(error);
           }
         });
+    });
+  });
+
+  describe('#adminExists', () => {
+    it('should resolve to true if an admin exists', () => {
+      throw new Error('Implement me master');
+    });
+
+    it('should resolve to false if no admin exists', () => {
+      throw new Error('Implement me master');
     });
   });
 

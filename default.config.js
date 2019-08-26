@@ -97,13 +97,13 @@ module.exports = {
     standard: {
       profiles: {
         admin: {
-          policies: [ {roleId: 'admin'} ]
+          policies: [ { roleId: 'admin'} ]
         },
         default: {
-          policies: [ {roleId: 'default'} ]
+          policies: [ { roleId: 'default'} ]
         },
         anonymous: {
-          policies: [ {roleId: 'anonymous'} ]
+          policies: [ { roleId: 'anonymous'} ]
         }
       },
       roles: {
@@ -227,25 +227,64 @@ module.exports = {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
       client: {
-        host: 'http://localhost:9200',
-        apiVersion: '5.6'
+        node: 'http://localhost:9200'
       },
       commonMapping: {
         _kuzzle_info: {
           properties: {
-            active: {type: 'boolean'},
-            author: {type: 'keyword'},
-            createdAt: {type: 'date'},
-            updatedAt: {type: 'date'},
-            updater: {type: 'keyword'},
-            deletedAt: {type: 'date'}
+            active:     { type: 'boolean' },
+            author:     { type: 'keyword' },
+            createdAt:  { type: 'date' },
+            updatedAt:  { type: 'date' },
+            updater:    { type: 'keyword' },
+            deletedAt:  { type: 'date' }
           }
+        }
+      },
+      internalIndex: 'kuzzle',
+      internalMappings: {
+        users: {
+          properties: {
+            profileIds: { type: 'keyword' }
+          }
+        },
+        profiles: {
+          properties: {
+            policies: {
+              properties:  {
+                roleId: { type: 'keyword' }
+              }
+            }
+          }
+        },
+        roles: {
+          dynamic: 'false',
+          properties: {}
+        },
+        plugins: {
+          dynamic: 'false',
+          properties: {}
+        },
+        validations: {
+          properties: {
+            index: { type: 'keyword' },
+            collection: { type: 'keyword' },
+            validations: {
+              dynamic: 'false',
+              properties: {}
+            }
+          }
+        },
+        config: {
+          dynamic: 'false',
+          properties: {}
         }
       },
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       },
+      // TODO put dynamic inside commonMapping
       dynamic: 'true'
     },
     garbageCollector: {
