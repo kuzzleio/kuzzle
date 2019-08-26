@@ -74,7 +74,7 @@ function commandStart (options = {}) {
     .then(() => kuzzle.start(kuzzleParams))
     .then(() => {
       cout.ok('[✔] Kuzzle server ready');
-      return kuzzle.internalEngine.bootstrap.adminExists()
+      return kuzzle.internalEngine.adminExists()
         .then(res => {
           if (!res) {
             cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');

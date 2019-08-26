@@ -6,7 +6,7 @@
       "errors": {
         "wrong_elasticsearch_version": {
           "code": 1,
-          "message": "Your elasticsearch version is %s; Only elasticsearch version 5 is currently supported.",
+          "message": "Your elasticsearch version is %s; Only elasticsearch version 7 is currently supported.",
           "class": "InternalError"
         },
         "unknown_scroll_identifier": {
@@ -19,11 +19,6 @@
           "message": "The action _search can't be done with a GET.",
           "class": "BadRequestError"
         },
-        "document_not_found": {
-          "code": 4,
-          "message": "Document not found.",
-          "class": "NotFoundError"
-        },
         "index_or_collection_does_not_exist": {
           "code": 5,
           "message": "Index '%s' and/or collection '%s' don't exist.",
@@ -31,12 +26,12 @@
         },
         "document_already_exists": {
           "code": 6,
-          "message": "Document already exists.",
+          "message": "Document with id \"%s\" already exists.",
           "class": "BadRequestError"
         },
-        "document_id_not_found": {
+        "document_not_found": {
           "code": 7,
-          "message": "Document with id '%s' not found.",
+          "message": "Document with id \"%s\" not found.",
           "class": "NotFoundError"
         },
         "empty_query": {
@@ -191,8 +186,13 @@
         },
         "index_or_collection_not_found": {
           "code": 38,
-          "message": "Index or collection \"%s\" does not exist, please create it first.",
+          "message": "%s index \"%s\" or collection \"%s\" does not exist, please create it first.",
           "class": "NotFoundError"
+        },
+        "cannot_parse_mapping": {
+          "code": 39,
+          "message": "Cannot parse mapping property \"%s\": %s",
+          "class": "BadRequestError"
         }
       }
     },
@@ -208,6 +208,11 @@
           "code": 2,
           "message": "Plugin %s bootstrap - lock wait timeout exceeded.",
           "class": "InternalError"
+        },
+        "no_jwt_secret_available": {
+          "code": 3,
+          "message": "Potential race condition: no JWT secret is available in configuration or DB.",
+          "class": "InternalError"
         }
       }
     },
@@ -218,6 +223,16 @@
           "code": 1,
           "message": "Redis service is not connected.",
           "class": "ServiceUnavailableError"
+        }
+      }
+    },
+    "common": {
+      "code": 4,
+      "errors": {
+        "service_initialization_timeout": {
+          "code": 1,
+          "message": "[FATAL] Service \"%s[%s]\" failed to init within %s ms.",
+          "class": "InternalError"
         }
       }
     }
