@@ -40,7 +40,7 @@ The following controllers are available in the embedded SDK:
 - [collection](/sdk/js/6/controllers/collection)
 - [document](/sdk/js/6/controllers/document)
 - [index](/sdk/js/6/controllers/index)
-- [memoryStorage (ms)](/sdk/js/6/ms)
+- [memoryStorage (ms)](/sdk/js/6/controllers/ms)
 - [security](/core/1/api/controllers/security)
 - [server](/sdk/js/6/controllers/server)
 
