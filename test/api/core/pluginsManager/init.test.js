@@ -341,7 +341,7 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/available/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/available/kuzzle-plugin-test/manifest.json', {
         name: 'kuzzle-plugin-test',
-        kuzzleVersion: '^1.x'
+        kuzzleVersion: '^2.x'
       });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -355,7 +355,7 @@ describe('PluginsManager', () => {
         .match({
           name: instanceName,
           privileged: false,
-          kuzzleVersion: '^1.x',
+          kuzzleVersion: '^2.x',
           path: '/kuzzle/plugins/available/kuzzle-plugin-test'
         });
       should(pluginsManager.plugins[instanceName].object).be.ok();
