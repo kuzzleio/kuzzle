@@ -50,7 +50,7 @@ describe('AbstractManifest class', () => {
 
     mockRequireManifest({ name: 'foobar' })(() => {
       should(() => manifest.load())
-        .throw(PluginImplementationError, { code: 39 });
+        .throw(PluginImplementationError, { code: parseInt('04010027', 16) });
     });
   });
 
