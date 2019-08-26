@@ -139,7 +139,7 @@ describe('/lib/api/kuzzle.js', () => {
         .then(() => {
           sinon.assert.callOrder(
             kuzzle.internalEngine.init,
-            kuzzle.internalEngine.bootstrap.all,
+            kuzzle.internalEngine.bootstrap.startOrWait,
             kuzzle.vault.prepareCrypto,
             kuzzle.vault.init,
             kuzzle.services.init,
@@ -234,7 +234,7 @@ describe('/lib/api/kuzzle.js', () => {
 
       return should(kuzzle.start()).be.rejectedWith(error)
         .then(() => {
-          should(kuzzle.internalEngine.bootstrap.all).not.be.called();
+          should(kuzzle.internalEngine.bootstrap.startOrWait).not.be.called();
           should(kuzzle.validation.init).not.be.called();
           should(kuzzle.pluginsManager.init).not.be.called();
           should(kuzzle.pluginsManager.run).not.be.called();
