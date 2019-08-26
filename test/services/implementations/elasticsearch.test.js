@@ -6,6 +6,7 @@ const
   sinon = require('sinon'),
   rewire = require('rewire'),
   ms = require('ms'),
+  _ = require('lodash'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   {
     Request,
@@ -180,7 +181,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.search.resolves({
         body: {
           total: 1,
-          hits: [ { _id: 'liia', _source: { city: 'Katmandu' } } ],
+          hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
           body: filter,
           aggregations: { some: 'aggregs' },
           scrollId: 'i-am-scroll-id'
@@ -204,7 +205,7 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match({
             scrollId: 'i-am-scroll-id',
-            hits: [ { _id: 'liia', _source: { city: 'Katmandu' } } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
             total: 1,
             aggregations: { some: 'aggregs' }
           });
@@ -274,7 +275,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.get.resolves({
         body: {
           _id: 'liia',
-          _source: { city: 'Katmandu' },
+          _source: { city: 'Kathmandu' },
           _version: 1
         }
       });
@@ -291,7 +292,7 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             _id: 'liia',
             _version: 1,
-            _source: { city: 'Katmandu' }
+            _source: { city: 'Kathmandu' }
           });
         });
     });
@@ -321,7 +322,7 @@ describe('Test: ElasticSearch service', () => {
     it('should allow getting multiples documents', () => {
       elasticsearch.client.mget.resolves({
         body: {
-          docs: [ { _id: 'liia', _source: { city: 'Katmandu' } } ],
+          docs: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
           total: 1
         }
       });
@@ -336,7 +337,7 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).match({
-            hits: [ { _id: 'liia', _source: { city: 'Katmandu' } } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
             total: 1
           });
         });
@@ -397,14 +398,14 @@ describe('Test: ElasticSearch service', () => {
         body: {
           _id: 'liia',
           _version: 1,
-          _source: { city: 'Katmandu' }
+          _source: { city: 'Kathmandu' }
         }
       });
 
       const promise = elasticsearch.create(
         index,
         collection,
-        { city: 'Katmandu' },
+        { city: 'Kathmandu' },
         { id: 'liia', refresh: 'wait_for', userId: 'aschen' });
 
       return promise
@@ -412,7 +413,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
-              city: 'Katmandu',
+              city: 'Kathmandu',
               _kuzzle_info: {
                 author: 'aschen',
                 createdAt: timestamp
@@ -426,7 +427,7 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             _id: 'liia',
             _version: 1,
-            _source: { city: 'Katmandu' }
+            _source: { city: 'Kathmandu' }
           });
         });
     });
@@ -473,7 +474,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch.create(
           index,
           collection,
-          { city: 'Katmandu' },
+          { city: 'Kathmandu' },
           { id: 'liia' });
 
       return should(promise).be.rejectedWith({
@@ -488,7 +489,7 @@ describe('Test: ElasticSearch service', () => {
         body: {
           _id: 'liia',
           _version: 1,
-          _source: { city: 'Katmandu' },
+          _source: { city: 'Kathmandu' },
           created: true
         }
       });
@@ -499,7 +500,7 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { city: 'Katmandu' },
+        { city: 'Kathmandu' },
         { refresh: 'wait_for', userId: 'aschen' });
 
       return promise
@@ -507,7 +508,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
-              city: 'Katmandu',
+              city: 'Kathmandu',
               _kuzzle_info: {
                 author: 'aschen',
                 createdAt: timestamp,
@@ -522,7 +523,7 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             _id: 'liia',
             _version: 1,
-            _source: { city: 'Katmandu' },
+            _source: { city: 'Kathmandu' },
             created: true
           });
         });
@@ -533,7 +534,7 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { city: 'Katmandu' },
+        { city: 'Kathmandu' },
         { injectKuzzleMeta: false });
 
       return promise
@@ -541,7 +542,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
-              city: 'Katmandu',
+              city: 'Kathmandu',
               _kuzzle_info: undefined
             },
             id: 'liia'
@@ -550,7 +551,7 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             _id: 'liia',
             _version: 1,
-            _source: { city: 'Katmandu' },
+            _source: { city: 'Kathmandu' },
             created: true
           });
         });
@@ -565,7 +566,7 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { city: 'Katmandu' });
+        { city: 'Kathmandu' });
 
       return should(promise).be.rejectedWith({
         errorName: 'external.elasticsearch.unexpected_error'
@@ -681,7 +682,7 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { city: 'Katmandu' });
+        { city: 'Kathmandu' });
 
       return should(promise).be.rejectedWith({
         errorName: 'external.elasticsearch.unexpected_error'
@@ -695,7 +696,7 @@ describe('Test: ElasticSearch service', () => {
         body: {
           _id: 'liia',
           _version: 1,
-          _source: { city: 'Katmandu' }
+          _source: { city: 'Kathmandu' }
         }
       });
       elasticsearch.client.exists.resolves({ body: true });
@@ -706,7 +707,7 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { city: 'Katmandu' });
+        { city: 'Kathmandu' });
 
       return promise
         .then(result => {
@@ -714,7 +715,7 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName,
             id: 'liia',
             body: {
-              city: 'Katmandu',
+              city: 'Kathmandu',
               _kuzzle_info: {
                 author: 'null',
                 createdAt: timestamp,
@@ -728,7 +729,7 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             _id: 'liia',
             _version: 1,
-            _source: { city: 'Katmandu' }
+            _source: { city: 'Kathmandu' }
           });
         });
     });
@@ -738,7 +739,7 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { city: 'Katmandu' },
+        { city: 'Kathmandu' },
         { refresh: 'wait_for', userId: 'aschen' });
 
       return promise
@@ -747,7 +748,7 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName,
             id: 'liia',
             body: {
-              city: 'Katmandu',
+              city: 'Kathmandu',
               _kuzzle_info: {
                 author: 'aschen',
                 createdAt: timestamp,
@@ -761,19 +762,19 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             _id: 'liia',
             _version: 1,
-            _source: { city: 'Katmandu' }
+            _source: { city: 'Kathmandu' }
           });
         });
     });
 
     it('should throw a NotFoundError Exception if document already exists', () => {
-      elasticsearch.client.exists.resolves({ body: false});
+      elasticsearch.client.exists.resolves({ body: false });
 
       const promise = elasticsearch.replace(
         index,
         collection,
         'liia',
-        { city: 'Katmandu' });
+        { city: 'Kathmandu' });
 
       return should(promise).be.rejectedWith({
         errorName: 'external.elasticsearch.document_not_found'
@@ -792,7 +793,7 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { city: 'Katmandu' });
+        { city: 'Kathmandu' });
 
       return should(promise).be.rejectedWith({
         errorName: 'external.elasticsearch.unexpected_error'
@@ -961,11 +962,11 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#createIndex', () => {
+  describe('#createIndex', () => {
     beforeEach(() => {
       elasticsearch.client.cat.indices.resolves({
         body: [
-          { index: esIndex }, { index: '%nepali.liia' }
+          { index: esIndexName }, { index: '%nepali.liia' }
         ]
       });
     })
@@ -996,6 +997,451 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejectedWith({
         errorName: 'external.elasticsearch.unexpected_error'
       });
+    });
+  });
+
+  describe('#createCollection', () => {
+    let _checkMappings;
+
+    beforeEach(() => {
+      _checkMappings = elasticsearch._checkMappings;
+
+      elasticsearch.collectionExists = sinon.stub().resolves(false);
+      elasticsearch.client.indices.create.resolves({});
+      elasticsearch._checkMappings = sinon.stub().resolves();
+    });
+
+    it('should allow creating a new collection and inject commonMappings', () => {
+      const
+        mappings = { properties: { city: { type: 'keyword' } } },
+        mergedMappings = _.merge(mappings, elasticsearch.config.commonMapping),
+        promise = elasticsearch.createCollection(
+          index,
+          collection,
+          mappings
+        );
+
+      return promise
+        .then(result => {
+          should(elasticsearch.collectionExists).be.calledWith(index, collection);
+          should(elasticsearch._checkMappings).be.calledWithMatch(
+            mergedMappings
+          );
+          should(elasticsearch.client.indices.create).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              mappings: mergedMappings
+            }
+          });
+
+          should(result).match({});
+        });
+    });
+
+    it('should return a rejected promise if client.indices.create fails', () => {
+      elasticsearch.client.indices.create.rejects({
+        meta: { statusCode: 42 }
+      });
+
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        { properties: { city: { type: 'keyword' } } });
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.unexpected_error'
+      });
+    });
+
+    it('should reject with BadRequestError on wrong mapping', () => {
+      elasticsearch._checkMappings = _checkMappings;
+      const collectionMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
+        }
+      };
+
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        collectionMapping);
+
+      return should(promise).be.rejectedWith({
+        message: /Did you mean "dynamic"/,
+        errorName: 'external.elasticsearch.incorrect_mapping_property'
+      });
+    });
+
+    it('should call updateMapping if the collection already exists', () => {
+      elasticsearch.collectionExists = sinon.stub().resolves(true);
+      elasticsearch.updateMapping = sinon.stub().resolves({});
+
+      const promise = elasticsearch.createCollection(index, collection);
+
+      return promise
+        .then(() => {
+          should(elasticsearch.collectionExists).be.calledWith(index, collection);
+          should(elasticsearch.updateMapping).be.calledOnce();
+        });
+    });
+
+    it('should not overwrite kuzzle commonMapping', () => {
+      elasticsearch.config.commonMapping = {
+        properties: {
+          gordon: { type: 'text' },
+          _kuzzle_info: {
+            properties: {
+              author:     { type: 'text' },
+              createdAt:  { type: 'date' },
+              updatedAt:  { type: 'date' },
+              updater:    { type: 'keyword' },
+            }
+          }
+        }
+      };
+      const collectionMapping = {
+        properties: {
+          gordon:   { type: 'keyword' },
+          freeman:  { type: 'keyword' },
+          _kuzzle_info: {
+            properties: {
+              author: { type: 'keyword' }
+            }
+          }
+        }
+      };
+
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        collectionMapping);
+
+      return promise
+        .then(() => {
+          const
+            esReq = elasticsearch.client.indices.create.firstCall.args[0],
+            expectedMapping = {
+              properties: {
+                gordon:   { type: 'text' },
+                freeman:  { type: 'keyword' },
+                _kuzzle_info: {
+                  properties: {
+                    author:     { type: 'text' },
+                    createdAt:  { type: 'date' },
+                    updatedAt:  { type: 'date' },
+                    updater:    { type: 'keyword' },
+                  }
+                }
+              }
+            };
+
+          should(esReq.body.mappings).eql(expectedMapping);
+        });
+    });
+
+  });
+
+  describe('#getMapping', () => {
+    beforeEach(() => {
+      elasticsearch.client.indices.getMapping.resolves({
+        body: {
+          [esIndexName]: {
+            mappings: {
+              dynamic: true,
+              _meta: { lang: 'npl' },
+              properties: {
+                city: { type: 'keyword' },
+                _kuzzle_info: { properties: { author: { type: 'keyword' } } }
+              }
+            }
+          }
+        }
+      });
+
+      elasticsearch.esWrapper.getMapping = sinon.stub().resolves({foo: 'bar'});
+    });
+
+    it('should have getMapping capabilities', () => {
+      const promise = elasticsearch.getMapping(index, collection);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.getMapping).be.calledWithMatch({
+            index: esIndexName
+          });
+
+          should(result).match({
+            dynamic: true,
+            _meta: { lang: 'npl' },
+            properties: {
+              city: { type: 'keyword' }
+            }
+          });
+        });
+    });
+
+    it('should include kuzzleMeta if specified', () => {
+      const promise = elasticsearch.getMapping(
+          index,
+          collection,
+          { includeKuzzleMeta: true });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.getMapping).be.calledWithMatch({
+            index: esIndexName
+          });
+
+          should(result).match({
+            dynamic: true,
+            _meta: { lang: 'npl' },
+            properties: {
+              city: { type: 'keyword' },
+              _kuzzle_info: { properties: { author: { type: 'keyword' } } }
+            }
+          });
+        });
+    });
+  });
+
+  describe.only('#updateMapping', () => {
+    let
+      getMappingReturn;
+
+    beforeEach(() => {
+      getMappingReturn = {
+        [index]: {
+          mappings: {
+            [collection]: {}
+          }
+        }
+      };
+
+      request.input.body = {
+        properties: {
+          name: { type: 'keyword' }
+        }
+      };
+
+      elasticsearch.esWrapper.getMapping = sinon.stub().resolves(getMappingReturn);
+    });
+
+    it('should have mapping capabilities', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+
+      request.input.body = {
+        dynamic: 'true',
+        properties: {
+          city: {type: 'string'}
+        }
+      };
+
+      return elasticsearch.updateMapping(request)
+        .then(() => {
+          const arg = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(arg.body.properties.city)
+            .be.exactly(request.input.body.properties.city);
+        });
+    });
+
+    it('should reject with BadRequestError on wrong mapping', () => {
+      const collectionMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
+        }
+      };
+      request.input.body = collectionMapping;
+
+      return should(elasticsearch.updateMapping(request))
+        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
+    });
+
+    it('should reject and handle error for bad mapping input', done => {
+      const
+        error = new Error('test');
+
+      error.displayName = 'BadRequest';
+      error.body = {
+        error: {
+          reason: 'foo'
+        }
+      };
+
+      elasticsearch.client.indices.putMapping.rejects(error);
+
+      elasticsearch.updateMapping(request)
+        .catch((err) => {
+          try {
+            should(err).be.instanceOf(BadRequestError);
+            should(err.message).be.equal('foo');
+            should(elasticsearch.client.indices.putMapping.firstCall.args[0]).not.have.key('properties');
+            done();
+          }
+          catch(e) { done(e); }
+        });
+    });
+
+    it('should get existing _meta and dynamic policy for the collection', () => {
+      getMappingReturn[index].mappings[collection] = {
+        dynamic: 'strict',
+        _meta: { gordon: 'freeman' }
+      };
+
+      return elasticsearch.updateMapping(request)
+        .then(() => {
+          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
+
+          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
+          should(esRequest.body.dynamic).be.eql('strict');
+          should(esRequest.body._meta).match({ gordon: 'freeman' });
+        });
+    });
+
+    it('should inject default mapping for the index', () => {
+      const expectedKuzzleMeta = {
+        properties: {
+          active: { type: 'boolean' },
+          author: { type: 'text' }, // This one differ from commonMapping
+          createdAt: { type: 'date' },
+          updatedAt: { type: 'date' },
+          updater: { type: 'keyword' },
+          deletedAt: { type: 'date' }
+        }
+      };
+      getMappingReturn[index].mappings[collection] = {
+        properties: {
+          _kuzzle_info: {
+            properties: {
+              author: { type: 'text' }
+            }
+          }
+        }
+      };
+
+      return elasticsearch.updateMapping(request)
+        .then(() => {
+          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
+
+          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
+          should(esRequest.body.properties._kuzzle_info).match(expectedKuzzleMeta);
+        });
+    });
+
+    it('should inject the default mapping', () => {
+      elasticsearch.client.indices.putMapping.resolves({});
+
+      elasticsearch.config.commonMapping = {
+        foo: {type: 'boolean'},
+        _kuzzle_info: {
+          properties: {
+            active: {type: 'boolean'},
+            author: {type: 'text'},
+            createdAt: {type: 'date'},
+            updatedAt: {type: 'date'},
+            updater: {type: 'keyword'},
+            deletedAt: {type: 'date'}
+          }
+        }
+      };
+
+      request.input.body = {
+        properties: {
+          city: {type: 'string'}
+        }
+      };
+
+      return elasticsearch.updateMapping(request)
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq.body).eql({
+            dynamic: true,
+            _meta: {},
+            properties: {
+              city: {type: 'string'},
+              foo: {type: 'boolean'},
+              _kuzzle_info: {
+                properties: {
+                  active: {type: 'boolean'},
+                  author: {type: 'text'},
+                  createdAt: {type: 'date'},
+                  updatedAt: {type: 'date'},
+                  updater: {type: 'keyword'},
+                  deletedAt: {type: 'date'}
+                }
+              }
+            }
+          });
+        });
+    });
+
+    it('should create a fresh mapping for each collection', () => {
+      const mapping = Object.assign({}, elasticsearch.config.commonMapping);
+
+      return elasticsearch.updateMapping(new Request({
+        index,
+        collection,
+        controller: 'collection',
+        action: 'updateMapping',
+        body: {
+          properties: {
+            foo: {
+              type: 'text'
+            }
+          }
+        }
+      }))
+        .then(() => elasticsearch.updateMapping(new Request({
+          index,
+          collection,
+          controller: 'collection',
+          action: 'updateMapping',
+          body: {
+            properties: {
+              bar: {
+                type: 'integer'
+              }
+            }
+          }
+        })))
+        .then(() => {
+          should(elasticsearch.config.commonMapping).eql(mapping);
+        });
+    });
+
+    it('should reuse a previously defined common mapping', () => {
+      kuzzle.indexCache.defaultMappings[index] = {
+        gordon: { type: 'text' }
+      };
+
+      return elasticsearch.updateMapping(new Request({
+        index,
+        collection,
+        body: {
+          properties: {
+            freeman: { type: 'boolean' }
+          }
+        }
+      }))
+        .then(() => {
+          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+
+          should(esReq).eql({
+            index,
+            type: collection,
+            body: {
+              dynamic: true,
+              _meta: {},
+              properties: {
+                gordon: { type: 'text' },
+                freeman: { type: 'boolean' }
+              }
+            }
+          });
+        });
     });
   });
 
@@ -1348,264 +1794,6 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#updateMapping', () => {
-    let
-      getMappingReturn;
-
-    beforeEach(() => {
-      getMappingReturn = {
-        [index]: {
-          mappings: {
-            [collection]: {}
-          }
-        }
-      };
-
-      request.input.body = {
-        properties: {
-          name: { type: 'keyword' }
-        }
-      };
-
-      elasticsearch.esWrapper.getMapping = sinon.stub().resolves(getMappingReturn);
-    });
-
-    it('should have mapping capabilities', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-
-      request.input.body = {
-        dynamic: 'true',
-        properties: {
-          city: {type: 'string'}
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          const arg = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(arg.body.properties.city)
-            .be.exactly(request.input.body.properties.city);
-        });
-    });
-
-    it('should reject with BadRequestError on wrong mapping', () => {
-      const collectionMapping = {
-        dinamic: 'false',
-        properties: {
-          freeman:  { type: 'keyword' }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return should(elasticsearch.updateMapping(request))
-        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
-    });
-
-    it('should reject and handle error for bad mapping input', done => {
-      const
-        error = new Error('test');
-
-      error.displayName = 'BadRequest';
-      error.body = {
-        error: {
-          reason: 'foo'
-        }
-      };
-
-      elasticsearch.client.indices.putMapping.rejects(error);
-
-      elasticsearch.updateMapping(request)
-        .catch((err) => {
-          try {
-            should(err).be.instanceOf(BadRequestError);
-            should(err.message).be.equal('foo');
-            should(elasticsearch.client.indices.putMapping.firstCall.args[0]).not.have.key('properties');
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
-    it('should get existing _meta and dynamic policy for the collection', () => {
-      getMappingReturn[index].mappings[collection] = {
-        dynamic: 'strict',
-        _meta: { gordon: 'freeman' }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
-
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esRequest.body.dynamic).be.eql('strict');
-          should(esRequest.body._meta).match({ gordon: 'freeman' });
-        });
-    });
-
-    it('should inject default mapping for the index', () => {
-      const expectedKuzzleMeta = {
-        properties: {
-          active: { type: 'boolean' },
-          author: { type: 'text' }, // This one differ from commonMapping
-          createdAt: { type: 'date' },
-          updatedAt: { type: 'date' },
-          updater: { type: 'keyword' },
-          deletedAt: { type: 'date' }
-        }
-      };
-      getMappingReturn[index].mappings[collection] = {
-        properties: {
-          _kuzzle_info: {
-            properties: {
-              author: { type: 'text' }
-            }
-          }
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
-
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esRequest.body.properties._kuzzle_info).match(expectedKuzzleMeta);
-        });
-    });
-
-    it('should inject the default mapping', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-
-      elasticsearch.config.commonMapping = {
-        foo: {type: 'boolean'},
-        _kuzzle_info: {
-          properties: {
-            active: {type: 'boolean'},
-            author: {type: 'text'},
-            createdAt: {type: 'date'},
-            updatedAt: {type: 'date'},
-            updater: {type: 'keyword'},
-            deletedAt: {type: 'date'}
-          }
-        }
-      };
-
-      request.input.body = {
-        properties: {
-          city: {type: 'string'}
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq.body).eql({
-            dynamic: true,
-            _meta: {},
-            properties: {
-              city: {type: 'string'},
-              foo: {type: 'boolean'},
-              _kuzzle_info: {
-                properties: {
-                  active: {type: 'boolean'},
-                  author: {type: 'text'},
-                  createdAt: {type: 'date'},
-                  updatedAt: {type: 'date'},
-                  updater: {type: 'keyword'},
-                  deletedAt: {type: 'date'}
-                }
-              }
-            }
-          });
-        });
-    });
-
-    it('should create a fresh mapping for each collection', () => {
-      const mapping = Object.assign({}, elasticsearch.config.commonMapping);
-
-      return elasticsearch.updateMapping(new Request({
-        index,
-        collection,
-        controller: 'collection',
-        action: 'updateMapping',
-        body: {
-          properties: {
-            foo: {
-              type: 'text'
-            }
-          }
-        }
-      }))
-        .then(() => elasticsearch.updateMapping(new Request({
-          index,
-          collection,
-          controller: 'collection',
-          action: 'updateMapping',
-          body: {
-            properties: {
-              bar: {
-                type: 'integer'
-              }
-            }
-          }
-        })))
-        .then(() => {
-          should(elasticsearch.config.commonMapping).eql(mapping);
-        });
-    });
-
-    it('should reuse a previously defined common mapping', () => {
-      kuzzle.indexCache.defaultMappings[index] = {
-        gordon: { type: 'text' }
-      };
-
-      return elasticsearch.updateMapping(new Request({
-        index,
-        collection,
-        body: {
-          properties: {
-            freeman: { type: 'boolean' }
-          }
-        }
-      }))
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq).eql({
-            index,
-            type: collection,
-            body: {
-              dynamic: true,
-              _meta: {},
-              properties: {
-                gordon: { type: 'text' },
-                freeman: { type: 'boolean' }
-              }
-            }
-          });
-        });
-    });
-  });
-
-  describe('#getMapping', () => {
-    beforeEach(() => {
-      elasticsearch.esWrapper.getMapping = sinon.stub().resolves({foo: 'bar'});
-    });
-
-    it('should forward the request to elasticseach wrapper', () => {
-      request.input.args.includeKuzzleMeta = false;
-
-      return elasticsearch.getMapping(request)
-        .then(res => {
-          should(elasticsearch.esWrapper.getMapping)
-            .be.calledOnce()
-            .be.calledWithExactly({ index: 'test', type: 'unit-tests-elasticsearch'}, false);
-          should(res).match({foo: 'bar'});
-        });
-    });
-  });
-
   describe('#getAllIdsFromQuery', () => {
     it('should be able to get every ids matching a query', () => {
       const
@@ -1682,212 +1870,6 @@ describe('Test: ElasticSearch service', () => {
       request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
       request.input.body = null;
       return should(elasticsearch.listCollections(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
-  });
-
-  describe('#createCollection', () => {
-    beforeEach(() => {
-      request.input.resource.collection = '%foobar';
-
-      request.input.body = {
-        properties: {
-          name: { type: 'keyword' }
-        }
-      };
-
-      elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists
-        .onCall(0).resolves(true)
-        .onCall(1).resolves(false);
-    });
-
-    it('should allow creating a new collection', () => {
-      return elasticsearch.createCollection(request);
-    });
-
-    it('should reject the createCollection promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.indices.putMapping.rejects(error);
-
-      return should(
-        elasticsearch.createCollection(request)
-      ).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
-
-    it('should reject if index doesn\'t exist', () => {
-      elasticsearch.kuzzle.indexCache.exists.onCall(0).resolves(false);
-
-      return should(
-        elasticsearch.createCollection(request)
-      ).be.rejectedWith(PreconditionError);
-    });
-
-    it('should inject default mapping for index', () => {
-      elasticsearch.config.dynamic = 'strict';
-      elasticsearch.kuzzle.indexCache.defaultMappings[index] = {
-        foo: { type: 'boolean' },
-        _kuzzle_info: {
-          properties: {
-            active: { type: 'boolean' },
-            author: { type: 'text' },
-            createdAt: { type: 'date' },
-            updatedAt: { type: 'date' },
-            updater: { type: 'keyword' },
-            deletedAt: { type: 'date' }
-          }
-        }
-      };
-
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esRequest.body.properties).match({
-            foo: { type: 'boolean' },
-            _kuzzle_info: {
-              properties: {
-                active: { type: 'boolean' },
-                author: { type: 'text' },
-                createdAt: { type: 'date' },
-                updatedAt: { type: 'date' },
-                updater: { type: 'keyword' },
-                deletedAt: { type: 'date' }
-              }
-            }
-          });
-          should(esRequest.body.dynamic).be.eql('strict');
-        });
-    });
-
-    it('should reject with BadRequestError on wrong mapping', () => {
-      const collectionMapping = {
-        dinamic: 'false',
-        properties: {
-          freeman:  { type: 'keyword' }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return should(elasticsearch.createCollection(request))
-        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
-    });
-
-    it('should create collection with mapping if supplied in the body', () => {
-      elasticsearch.config.commonMapping = {};
-
-      const collectionMapping = {
-        dynamic: 'false',
-        _meta: { alyx: 'vance' },
-        properties: {
-          gordon:   { type: 'text' },
-          freeman:  { type: 'keyword' }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq.body.dynamic).eql(collectionMapping.dynamic);
-          should(esReq.body._meta).eql(collectionMapping._meta);
-          should(esReq.body.properties).eql(collectionMapping.properties);
-        });
-    });
-
-    it('should call updateMapping if the collection already exists', () => {
-      elasticsearch.kuzzle.indexCache.exists.onCall(1).resolves(true);
-      elasticsearch.updateMapping = sinon.stub().resolves({});
-
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          should(elasticsearch.updateMapping).be.calledOnce();
-          should(elasticsearch.kuzzle.indexCache.exists).be.calledTwice();
-          should(elasticsearch.kuzzle.indexCache.exists.getCall(0).args).be.eql([index]);
-          should(elasticsearch.kuzzle.indexCache.exists.getCall(1).args).be.eql([index, '%foobar']);
-        });
-    });
-
-    it('should not overwrite kuzzle commonMapping', () => {
-      elasticsearch.config.commonMapping = {
-        gordon: { type: 'text' },
-        _kuzzle_info: {
-          properties: {
-            active:     { type: 'boolean' },
-            author:     { type: 'text' },
-            createdAt:  { type: 'date' },
-            updatedAt:  { type: 'date' },
-            updater:    { type: 'keyword' },
-            deletedAt:  { type: 'date' }
-          }
-        }
-      };
-
-      const collectionMapping = {
-        properties: {
-          gordon:   { type: 'keyword' },
-          freeman:  { type: 'keyword' },
-          _kuzzle_info: {
-            properties: {
-              author: { type: 'keyword' }
-            }
-          }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esReq.body.properties).eql({
-            gordon:   { type: 'text' },
-            freeman:  { type: 'keyword' },
-            _kuzzle_info: {
-              properties: {
-                active:     { type: 'boolean' },
-                author:     { type: 'text' },
-                createdAt:  { type: 'date' },
-                updatedAt:  { type: 'date' },
-                updater:    { type: 'keyword' },
-                deletedAt:  { type: 'date' }
-              }
-            }
-          });
-        });
-    });
-
-    it('should reuse a previously created common mapping', () => {
-      kuzzle.indexCache.defaultMappings[index] = {
-        gordon: { type: 'text' }
-      };
-
-      const collectionMapping = {
-        properties: {
-          freeman:  { type: 'keyword' },
-          _kuzzle_info: {
-            properties: {
-              author: { type: 'keyword' }
-            }
-          }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq.body.properties).eql({
-            gordon:   { type: 'text' },
-            freeman:  { type: 'keyword' },
-            _kuzzle_info: {
-              properties: {
-                author: { type: 'keyword' }
-              }
-            }
-          });
-        });
-
     });
   });
 

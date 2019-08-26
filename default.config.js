@@ -270,12 +270,10 @@ module.exports = {
         properties: {
           _kuzzle_info: {
             properties: {
-              active:     { type: 'boolean' },
               author:     { type: 'keyword' },
               createdAt:  { type: 'date' },
-              updatedAt:  { type: 'date' },
               updater:    { type: 'keyword' },
-              deletedAt:  { type: 'date' }
+              updatedAt:  { type: 'date' }
             }
           }
         }
