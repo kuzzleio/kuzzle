@@ -330,6 +330,37 @@ describe('PluginsManager', () => {
         .throw(PluginImplementationError, {message: /Plugin kuzzle-plugin-test is not a constructor/});
       should(pluginsManager.plugins).be.empty();
     });
+
+    it('should return a well-formed plugin instance if a valid requirable plugin is enabled using CLI', () => {
+      const instanceName = 'kuzzle-plugin-test';
+
+      pluginsManager = new PluginsManager(kuzzle);
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({ isDirectory: () => true });
+
+      mockrequire('/kuzzle/plugins/available/kuzzle-plugin-test', pluginStub);
+      mockrequire('/kuzzle/plugins/available/kuzzle-plugin-test/manifest.json', {
+        name: 'kuzzle-plugin-test',
+        kuzzleVersion: '^1.x'
+      });
+      PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
+
+      should(() => pluginsManager.init(['kuzzle-plugin-test'])).not.throw();
+      should(pluginsManager.plugins[instanceName])
+        .be.an.Object()
+        .and.have.keys('object', 'config', 'manifest');
+      should(pluginsManager.plugins[instanceName].config).be.eql({});
+      should(pluginsManager.plugins[instanceName].manifest)
+        .instanceOf(Manifest)
+        .match({
+          name: instanceName,
+          privileged: false,
+          kuzzleVersion: '^1.x',
+          path: '/kuzzle/plugins/available/kuzzle-plugin-test'
+        });
+      should(pluginsManager.plugins[instanceName].object).be.ok();
+    });
+
   });
 
   describe('Test plugins manager listStrategies', () => {
