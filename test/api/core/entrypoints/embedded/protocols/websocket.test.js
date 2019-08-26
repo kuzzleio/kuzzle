@@ -660,6 +660,8 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
             alive,
             lastActivity,
             socket: {
+              OPEN: 'OPEN',
+              readyState: 'OPEN',
               terminate: sinon.stub(),
               ping: sinon.stub()
             }
@@ -673,7 +675,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       ]);
 
       const deadConnection = protocol.connectionPool.get('I just met you, and this is cr...gargl');
-      deadConnection.socket.ping.throws(new Error('dead socket is dead :-('));
+      deadConnection.socket.readyState = 'CLOSED';
 
       protocol.config.heartbeat = 1000;
       protocol._doHeartbeat();
@@ -691,8 +693,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       }
 
       // dead sockets are terminated
-      should(deadConnection.socket.ping).be.called();
-      should(deadConnection.alive).be.false();
+      should(deadConnection.socket.ping).not.be.called();
       should(deadConnection.socket.terminate).be.calledOnce();
     });
   });
