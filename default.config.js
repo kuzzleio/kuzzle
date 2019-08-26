@@ -156,16 +156,6 @@ module.exports = {
   },
 
   server: {
-    entryPoints: {
-      embedded: true,
-      proxy: false
-    },
-    proxy: {
-      host: 'localhost',
-      port: 7331,
-      retryInterval: 1000,
-      resendClientListDelay: 1000
-    },
     logs: {
       transports: [
         {

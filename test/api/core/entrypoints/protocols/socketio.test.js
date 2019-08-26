@@ -2,10 +2,10 @@ const
   mockrequire = require('mock-require'),
   should = require('should'),
   sinon = require('sinon'),
-  EntryPoint = require('../../../../../../lib/api/core/entrypoints/embedded'),
-  KuzzleMock = require('../../../../../mocks/kuzzle.mock');
+  EntryPoint = require('../../../../../lib/api/core/entrypoints'),
+  KuzzleMock = require('../../../../mocks/kuzzle.mock');
 
-describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
+describe('/lib/api/core/entrypoints/protocols/socketio', () => {
   let
     kuzzle,
     entrypoint,
@@ -26,7 +26,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
     });
 
     mockrequire('socket.io', SockerIoMock);
-    SocketIoProtocol = mockrequire.reRequire('../../../../../../lib/api/core/entrypoints/embedded/protocols/socketio');
+    SocketIoProtocol = mockrequire.reRequire('../../../../../lib/api/core/entrypoints/protocols/socketio');
 
     protocol = new SocketIoProtocol();
   });

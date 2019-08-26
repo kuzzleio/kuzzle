@@ -4,7 +4,8 @@ const
   should = require('should'),
   sinon = require('sinon'),
   Request = require('kuzzle-common-objects').Request,
-  RouterController = require('../../../../lib/api/controllers/routerController');
+  RouterController = require('../../../../lib/api/controllers/routerController'),
+  { HttpMessage } = require('../../../../lib/api/core/entrypoints/protocols/http');
 
 describe('Test: routerController.httpRequest', () => {
   let
@@ -56,13 +57,9 @@ describe('Test: routerController.httpRequest', () => {
   });
 
   beforeEach(() => {
-    httpRequest = {
-      requestId: 'requestId',
-      url: '',
-      method: '',
-      headers: {},
-      content: ''
-    };
+    httpRequest = new HttpMessage(
+      {id: 'requestId'},
+      {url: '', method: '', headers: {}});
     triggerSpy = sinon.stub();
   });
 
@@ -93,7 +90,7 @@ describe('Test: routerController.httpRequest', () => {
   it('should register POST routes from the config/httpRoutes file', (done) => {
     httpRequest.url = '/my-index/my-collection/_count';
     httpRequest.method = 'POST';
-    httpRequest.content = '{"filter": "foobar"}';
+    httpRequest.addChunk('{"filter": "foobar"}');
 
     routeController.http.route(httpRequest, result => {
       try {
@@ -117,7 +114,7 @@ describe('Test: routerController.httpRequest', () => {
   it('should register PUT routes from the config/httpRoutes file', (done) => {
     httpRequest.url = '/_updateSelf';
     httpRequest.method = 'PUT';
-    httpRequest.content = '{"foo": "bar"}';
+    httpRequest.addChunk('{"foo": "bar"}');
 
     routeController.http.route(httpRequest, result => {
       try {

@@ -5,7 +5,7 @@ const
 
 module.exports = rc('kuzzle', {
   scheme: 'http',
-  host: kuzzleConfig.server.proxy.host || kuzzleConfig.services.proxyBroker.host || 'localhost',
+  host: 'localhost',
   port: 7512,
   services: {
     db: {

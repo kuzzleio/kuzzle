@@ -249,46 +249,6 @@
 
   // Kuzzle server is the entry point for incoming requests
   "server": {
-    // [entryPoints]
-    // list of available entry points for Kuzzle.
-    // Posible values:
-    //  - embedded: Kuzzle can run on its own and does not require any
-    //    external component to process requests
-    //  - proxy: Kuzzle will connect to a Kuzzle proxy and process requests
-    //    coming from it
-    // Entry points can be combined.
-    "entryPoints": {
-      "embedded": true,
-      "proxy": false
-    },
-
-    // [proxy]
-    // A Kuzzle proxy can be used to forward requests to Kuzzle.
-    //   * host:
-    //       Host name/address of a Kuzzle proxy server.
-    //       Can be a hostname, an IP address or an URI.
-    //   * pingInterval:
-    //       Time (in milliseconds) between ping requests
-    //   * pingTimeout:
-    //       Timeout (in milliseconds) of a ping request. If reached, Kuzzle
-    //       marks its connection to the distant host as lost.
-    //   * port:
-    //       Network port opened by the Kuzzle proxy server
-    //   * retryClientListDelay
-    //       Time after which (in milliseconds) Kuzzle should ask the proxy to
-    //       send the list of clients back after a disconnection (default 1s).
-    //   * retryInterval:
-    //       Time interval (in milliseconds) between reconnection retries
-    //       when the connection to the broker server has been lost
-    "proxy": {
-      "host": "localhost",
-      "port": 7331,
-      "pingInterval": 60000,
-      "pingTimeout": 500,
-      "resendClientListDelay": 1000,
-      "retryInterval": 1000
-    },
-
     // [logs] (embedded only)
     // Configuration section for Kuzzle access logs
     //   * transports:
