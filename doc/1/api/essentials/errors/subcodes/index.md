@@ -620,6 +620,7 @@ order: 500
 `67239961`  | `Rejected new connection - invalid arguments: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | rejected_new_connection_invalid_args | plugins.runtime.rejected_new_connection_invalid_args
 `67239962`  | `Unable to remove connection - invalid arguments: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_remove_connection_invalid_args | plugins.runtime.unable_to_remove_connection_invalid_args
 `67239963`  | `Unable to remove connection - unknown connection identifier: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_remove_connection_unknown_connection_identifier | plugins.runtime.unable_to_remove_connection_unknown_connection_identifier
+`67239964`  | `[<placeholder>] errors field in manifest.json badly formatted: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | errors_configuration_file | plugins.runtime.errors_configuration_file
 
 ---
 
