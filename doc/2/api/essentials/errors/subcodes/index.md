@@ -202,13 +202,12 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`16842753`  | `Your elasticsearch version is <placeholder>; Only elasticsearch version 5 is currently supported.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | wrong_elasticsearch_version | external.elasticsearch.wrong_elasticsearch_version
+`16842753`  | `Your elasticsearch version is <placeholder>; Only elasticsearch version 7 is currently supported.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | wrong_elasticsearch_version | external.elasticsearch.wrong_elasticsearch_version
 `16842754`  | `Non-existing or expired scroll identifier.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | unknown_scroll_identifier | external.elasticsearch.unknown_scroll_identifier
 `16842755`  | `The action _search can't be done with a GET.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_get_action | external.elasticsearch.wrong_get_action
-`16842756`  | `Document not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | document_not_found | external.elasticsearch.document_not_found
 `16842757`  | `Index '<placeholder>' and/or collection '<placeholder>' don't exist.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | index_or_collection_does_not_exist | external.elasticsearch.index_or_collection_does_not_exist
-`16842758`  | `Document already exists.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | document_already_exists | external.elasticsearch.document_already_exists
-`16842759`  | `Document with id '<placeholder>' not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | document_id_not_found | external.elasticsearch.document_id_not_found
+`16842758`  | `Document with id "<placeholder>" already exists.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | document_already_exists | external.elasticsearch.document_already_exists
+`16842759`  | `Document with id "<placeholder>" not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | document_not_found | external.elasticsearch.document_not_found
 `16842760`  | `Query cannot be empty.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | empty_query | external.elasticsearch.empty_query
 `16842761`  | `null is not a valid document ID.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | document_id_cannot_be_null | external.elasticsearch.document_id_cannot_be_null
 `16842762`  | `Index '<placeholder>' does not exist.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | index_does_not_exist | external.elasticsearch.index_does_not_exist
@@ -240,7 +239,8 @@ order: 500
 `16842787`  | `<placeholder>` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | unexpected_conflict_error | external.elasticsearch.unexpected_conflict_error
 `16842788`  | `<placeholder>` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | unexpected_error | external.elasticsearch.unexpected_error
 `16842789`  | `No mapping found for index "<placeholder>".` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | no_mapping_found | external.elasticsearch.no_mapping_found
-`16842790`  | `Index or collection "<placeholder>" does not exist, please create it first.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | index_or_collection_not_found | external.elasticsearch.index_or_collection_not_found
+`16842790`  | `<placeholder> index "<placeholder>" or collection "<placeholder>" does not exist, please create it first.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | index_or_collection_not_found | external.elasticsearch.index_or_collection_not_found
+`16842791`  | `Cannot parse mapping property "<placeholder>": <placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cannot_parse_mapping | external.elasticsearch.cannot_parse_mapping
 
 ---
 
@@ -251,6 +251,7 @@ order: 500
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `16908289`  | `Internal engine bootstrap - lock wait timeout exceeded.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | lock_wait_timeout | external.internal_engine.lock_wait_timeout
 `16908290`  | `Plugin <placeholder> bootstrap - lock wait timeout exceeded.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | plugin_bootstrap_lock_wait_timeout | external.internal_engine.plugin_bootstrap_lock_wait_timeout
+`16908291`  | `Potential race condition: no JWT secret is available in configuration or DB.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | no_jwt_secret_available | external.internal_engine.no_jwt_secret_available
 
 ---
 
@@ -260,6 +261,15 @@ order: 500
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `16973825`  | `Redis service is not connected.` | [ServiceUnavailableError](https://docs.kuzzle.io/core/1/api/essentials/errors/#serviceunavailableerror) | redis_service_not_connected | external.redis.redis_service_not_connected
+
+---
+
+
+### Subdomain: common, code: 4
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`17039361`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to init within <placeholder> ms.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
 
 ---
 
@@ -480,6 +490,7 @@ order: 500
 `50397187`  | `Too many encodings.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | too_many_encodings | network.http.too_many_encodings
 `50397188`  | `Unsupported compression algorithm "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unsupported_compression_algorithm | network.http.unsupported_compression_algorithm
 `50397189`  | `Compression support is disabled.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | compression_support_disabled | network.http.compression_support_disabled
+`50397190`  | `Unable to convert HTTP body to JSON.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unable_to_convert_http_body_to_json | network.http.unable_to_convert_http_body_to_json
 
 ---
 
@@ -517,6 +528,7 @@ order: 500
 `50659329`  | `Unknown event received: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unknown_event_received | network.entrypoint.unknown_event_received
 `50659330`  | `Invalid network port number: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | invalid_network_port_number | network.entrypoint.invalid_network_port_number
 `50659331`  | `Conflicting protocol name "<placeholder>".` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | conflicting_protocol_name | network.entrypoint.conflicting_protocol_name
+`50659332`  | `Kuzzle is shutting down` | [ServiceUnavailableError](https://docs.kuzzle.io/core/1/api/essentials/errors/#serviceunavailableerror) | shutting_down | network.entrypoint.shutting_down
 
 ---
 
