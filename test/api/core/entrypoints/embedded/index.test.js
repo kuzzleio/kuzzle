@@ -618,12 +618,17 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
   });
 
   describe('#newConnection', () => {
-    it('should add the connection to the store and call kuzzle router', () => {
-      const connection = {
+    let connection;
+
+    beforeEach(() => {
+      connection = {
         id: 'connectionId',
         protocol: 'protocol',
         headers: 'headers'
       };
+    });
+
+    it('should add the connection to the store and call kuzzle router', () => {
       entrypoint.newConnection(connection);
 
       should(entrypoint.clients.connectionId)
@@ -632,6 +637,49 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       should(kuzzle.router.newConnection)
         .be.calledOnce()
         .be.calledWithMatch(new RequestContext({connection}));
+    });
+
+    it('should dispatch connection:new event', () => {
+      entrypoint.newConnection(connection);
+
+      should(kuzzle.emit).be.calledWithMatch('connection:new', {
+        id: 'connectionId',
+        protocol: 'protocol',
+        headers: 'headers'
+      });
+    });
+  });
+
+  describe('#removeConnection', () => {
+    let connection;
+
+    beforeEach(() => {
+      connection = {
+        id: 'connectionId',
+        protocol: 'protocol',
+        headers: 'headers'
+      };
+
+      entrypoint.clients[connection.id] = connection;
+    });
+
+    it('should remove the connection from the store and call kuzzle router', () => {
+      entrypoint.removeConnection(connection.id);
+
+      should(kuzzle.router.removeConnection)
+        .be.calledOnce()
+        .be.calledWithMatch(new RequestContext({ connection }));
+      should(entrypoint.clients[connection.id]).be.undefined();
+    });
+
+    it('should dispatch connection:remove event', () => {
+      entrypoint.removeConnection(connection.id);
+
+      should(kuzzle.emit).be.calledWithMatch('connection:remove', {
+        id: 'connectionId',
+        protocol: 'protocol',
+        headers: 'headers'
+      });
     });
   });
 
