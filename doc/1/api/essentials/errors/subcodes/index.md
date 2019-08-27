@@ -465,6 +465,31 @@ order: 500
 
 ---
 
+
+### Subdomain: request_assertions, code: 11
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`34275329`  | `The request must specify a body.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_specify_body | api.request_assertions.must_specify_body
+`34275330`  | `The request must specify a body attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_body_attribute | api.request_assertions.missing_body_attribute
+`34275331`  | `The request must specify an attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_attribute | api.request_assertions.missing_attribute
+`34275332`  | `The request must not specify the body attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_not_specify_body_attribute | api.request_assertions.must_not_specify_body_attribute
+`34275333`  | `An unexepected type assertion "<placeholder>" has been invoked on attribute "<placeholder>".` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unexpected_type_assertion_on_attribute | api.request_assertions.unexpected_type_assertion_on_attribute
+`34275334`  | `The request must specify the body attribute "<placeholder>" of type "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_body_attribute_type | api.request_assertions.wrong_body_attribute_type
+`34275335`  | `The request must specify an _id.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_id | api.request_assertions.missing_id
+`34275336`  | `The request must not specify an _id that starts with an underscore (_).` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_id_format | api.request_assertions.wrong_id_format
+`34275337`  | `The request must specify an index.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_index | api.request_assertions.missing_index
+`34275338`  | `The request must specify a collection.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_collection | api.request_assertions.missing_collection
+`34275339`  | `The request must specify a strategy.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_strategy | api.request_assertions.missing_strategy
+`34275340`  | `The request argument's strategy must be a string.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_strategy_type | api.request_assertions.wrong_strategy_type
+`34275341`  | `The request must specify a scrollId.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_scrollId | api.request_assertions.missing_scrollId
+`34275342`  | `The request argument's scrollId must be a string.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_scrollId_type | api.request_assertions.wrong_scrollId_type
+`34275343`  | `You must be authenticated to execute that action` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | must_be_authenticated_to_execute_action | api.request_assertions.must_be_authenticated_to_execute_action
+`34275344`  | `The strategy "<placeholder>" is not a known strategy.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unknown_strategy | api.request_assertions.unknown_strategy
+`34275345`  | `Expected '<placeholder>' to be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_be_an_object | api.request_assertions.must_be_an_object
+
+---
+
 ---
 
 ## network, code: 3
