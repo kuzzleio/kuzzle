@@ -47,7 +47,7 @@
     "quotes": [2, "single"],
     "semi": [2, "always"],
     "space-before-blocks": 2,
-    "space-in-parens": [2, "never"],
+    "space-in-parens": [0, "never"],
     "vars-on-top": 2,
     "yoda": [2, "never"]
   },
@@ -57,7 +57,8 @@
     "mocha": true
   },
   "parserOptions": {
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaVersion": 2018
   },
   "extends": "eslint:recommended"
 }

@@ -2,18 +2,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   rewire = require('rewire'),
-  errorsManager = require('../../lib/config/error-codes/throw'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
-  {
-    errors: {
-      InternalError,
-      ExternalServiceError,
-      NotFoundError,
-      PreconditionError,
-      PartialError,
-      UnauthorizedError
-    }
-  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
@@ -52,81 +41,6 @@ describe('/lib/api/kuzzle.js', () => {
     kuzzle.emit('event');
   });
 
-  describe('#throw', () => {
-    it('should throw an ExternalServiceError with right name, msg and code', () => {
-      should(() => errorsManager.throw('api', 'server', 'elasticsearch_down', '{"status":"red"}'))
-        .throw(
-          ExternalServiceError,
-          {
-            errorName: 'api.server.elasticsearch_down',
-            code: 1,
-            message: 'ElasticSearch is down: {"status":"red"}.'
-          }
-        );
-    });
-
-    it('should throw an InternalError with default name, msg and code', () => {
-      should(() => errorsManager.throw('api', 'server', 'fake_error', '{"status":"error"}'))
-        .throw(
-          InternalError,
-          {
-            errorName: 'internal.unexpected.unknown_error',
-            code: 1,
-            message: 'Unknown error: {"status":"error"}.'
-          }
-        );
-    });
-
-    it('should throw an NotFoundError with default name, msg and code', () => {
-      should(() => errorsManager.throw('api', 'admin', 'database_not_found', 'fake_database'))
-        .throw(
-          NotFoundError,
-          {
-            errorName: 'api.admin.database_not_found',
-            code: 1,
-            message: 'Database fake_database not found.'
-          }
-        );
-    });
-
-    it('should throw a PreconditionError with default name, msg and code', () => {
-      should(() => errorsManager.throw('api', 'admin', 'action_locked', 'Kuzzle is already shutting down'))
-        .throw(
-          PreconditionError,
-          {
-            errorName: 'api.admin.action_locked',
-            code: 2,
-            message: 'Lock action error: Kuzzle is already shutting down.'
-          }
-        );
-    });
-
-    it('should throw an UnauthorizedError with default name, msg and code', () => {
-      should(() => errorsManager.throw('api', 'auth', 'invalid_token'))
-        .throw(
-          UnauthorizedError,
-          {
-            errorName: 'api.auth.invalid_token',
-            code: 2,
-            message: 'Invalid token.'
-          }
-        );
-    });
-
-    it('should throw a PartialError with default name, msg and code', () => {
-      should(() => errorsManager.throw('api', 'bulk', 'document_creations_failed', ['foo', 'bar']))
-        .throw(
-          PartialError,
-          {
-            errorName: 'api.bulk.document_creations_failed',
-            errors: ['foo', 'bar'],
-            code: 1,
-            message: 'Some document creations failed: foo,bar.'
-          }
-        );
-    });
-  });
-
   describe('#start', () => {
     it('should init the components in proper order', () => {
       const params = {
@@ -139,7 +53,7 @@ describe('/lib/api/kuzzle.js', () => {
         .then(() => {
           sinon.assert.callOrder(
             kuzzle.internalEngine.init,
-            kuzzle.internalEngine.bootstrap.all,
+            kuzzle.internalEngine.bootstrap.startOrWait,
             kuzzle.vault.prepareCrypto,
             kuzzle.vault.init,
             kuzzle.services.init,
@@ -234,7 +148,7 @@ describe('/lib/api/kuzzle.js', () => {
 
       return should(kuzzle.start()).be.rejectedWith(error)
         .then(() => {
-          should(kuzzle.internalEngine.bootstrap.all).not.be.called();
+          should(kuzzle.internalEngine.bootstrap.startOrWait).not.be.called();
           should(kuzzle.validation.init).not.be.called();
           should(kuzzle.pluginsManager.init).not.be.called();
           should(kuzzle.pluginsManager.run).not.be.called();

@@ -15,7 +15,6 @@ _integration-tests: &integration-tests
       - plugins/available/kuzzle-plugin-logger/node_modules
   env: &integration-tests-env
     - NODE_LTS=10
-    - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
     - DOCKER_COMPOSE_TEST=test
   install:
     - sudo sysctl -w vm.max_map_count=262144
@@ -201,10 +200,8 @@ stages:
   - name: Unit Tests & Linters
     if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
   - name: Integration tests
-    if: type =~ /(cron|push|pull_request)/
+    if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
   - name: Cross-platform tests
-    if: type = cron
-  - name: Redis tests
     if: type = cron
   - name: Deployments
     if: type = push AND branch =~ /^master|[0-9]+-stable|1-dev$/
