@@ -95,7 +95,7 @@ describe('PluginsManager', () => {
         .calledWith('[kuzzle-plugin-test] This plugin doesn\'t have customs errors in the manifest file.');
     });
 
-    it('should properly load customs errors from manifest.json', () => {
+    it('should properly load custom errors from manifest.json', () => {
       const errors = rewire('../../../../lib/config/error-codes/index');
 
       const instanceName = 'kuzzle-plugin-test',
