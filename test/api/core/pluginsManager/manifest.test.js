@@ -13,8 +13,13 @@ class AbstractManifestStub extends AbstractManifest {
 
 describe('Plugins manifest class', () => {
   const
+    c = console,
     kuzzle = new KuzzleMock(),
-    consoleStub = { warn: sinon.stub() },
+    consoleStub = {
+      log: (...args) => c.log(...args),
+      error: (...args) => c.error(...args),
+      warn: sinon.stub()
+    },
     fsStub = {
       accessSync: sinon.stub(),
       constants: {

@@ -7,8 +7,13 @@ const
 
 describe('AbstractManifest class', () => {
   const
+    c = console,
     kuzzle = new KuzzleMock(),
-    consoleStub = { warn: sinon.stub() },
+    consoleStub = {
+      log: (...args) => c.log(...args),
+      error: (...args) => c.error(...args),
+      warn: sinon.stub()
+    },
     pluginPath = 'foo/bar',
     defaultKuzzleVersion = '>=1.0.0 <2.0.0';
   let Manifest;
