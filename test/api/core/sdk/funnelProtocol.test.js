@@ -94,7 +94,7 @@ describe('Test: sdk/funnelProtocol', () => {
       })
         .then(res => {
           should(res.result).be.exactly('sdk result');
-        })
+        });
     });
   });
 });
