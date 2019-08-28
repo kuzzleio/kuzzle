@@ -39,12 +39,12 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
     const
       stillAlive = {
         _meta: {
-          'This is a triumph': 'I\'m making a not here: HUGE SUCCESS',
+          'This was a triumph': 'I\'m making a not here: HUGE SUCCESS',
           'It\'s hard to overstate': 'my satisfaction',
           'Aperture Science': 'We do what we must, because we can',
           'For the good of all of us': 'Except the ones who are dead',
 
-          'There\'s no point crying': 'over every mistake',
+          'But there\'s no point crying': 'over every mistake',
 
           'You just keep on trying': 'till you run out of cake',
           'And the science gets done': 'and you make a neat gun',
@@ -57,7 +57,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
           'As they burned it hurt because': 'I was so happy for you',
 
           'Now these points of data': 'make a beautiful line',
-          'We\'re out of beta': 'we\'re releasing on time',
+          'And we\'re out of beta': 'we\'re releasing on time',
           'And I\'m GLaD I got burned': 'think of all the things we learned',
           'For the people who are': 'still alive'
         }
