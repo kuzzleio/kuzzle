@@ -30,6 +30,34 @@ describe('Test: admin controller', () => {
     });
   });
 
+  describe('#encryptSecrets', () => {
+    beforeEach(() => {
+      request.input.action = 'encryptSecrets';
+      request.input.body = { vaultKey: 'my42Vault42Key', secrets: {aws: 'silmaril'} };
+    });
+
+    it('should encrypt an object with vault', () => {
+      return adminController.encryptSecrets(request)
+        .then((res) => {
+          should(res.aws.length).be.eql(65);
+        });
+    });
+  });
+
+  describe('#decryptSecrets', () => {
+    beforeEach(() => {
+      request.input.action = 'decryptSecrets';
+      request.input.body = { vaultKey: 'my42Vault42Key', secrets: {aws: 'a32d94368111ca329958e921a4fe5d70.36d6b839bcfee696b76b62c4de655cd0'} };
+    });
+
+    it('should encrypt an object with vault', () => {
+      return adminController.decryptSecrets(request)
+        .then((res) => {
+          should(res.aws).be.eql('silmaril');
+        });
+    });
+  });
+
   describe('#resetCache', () => {
     let flushdbStub = sinon.stub();
 
