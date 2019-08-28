@@ -79,22 +79,6 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins).be.empty();
     });
 
-    it('should warn if manifest.json does not define customs errors', () => {
-      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
-      fsStub.statSync.returns({
-        isDirectory: () => true
-      });
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
-      mockrequire(
-        '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
-        { name: 'kuzzle-plugin-test', kuzzleVersion: '^1.x' });
-      
-      pluginsManager.init();
-      should(kuzzle.log.warn)
-        .calledOnce()
-        .calledWith('[kuzzle-plugin-test] This plugin doesn\'t have custom errors in the manifest file.');
-    });
-
     it('should properly load custom errors from manifest.json', () => {
       const errors = rewire('../../../../lib/config/error-codes/index');
 
