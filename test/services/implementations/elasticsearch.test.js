@@ -969,7 +969,8 @@ describe('Test: ElasticSearch service', () => {
           { index: esIndexName }, { index: '%nepali.liia' }
         ]
       });
-    })
+    });
+
     it('should resolves if index does not exists', () => {
       const promise = elasticsearch.createIndex('lfiduras');
 
@@ -1205,172 +1206,64 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#updateMapping', () => {
+  describe('#updateMapping', () => {
     let
-      getMappingReturn;
+      newMapping,
+      existingMapping,
+      _checkMappings;
 
     beforeEach(() => {
-      getMappingReturn = {
-        [index]: {
-          mappings: {
-            [collection]: {}
-          }
-        }
-      };
+      _checkMappings = elasticsearch._checkMappings;
 
-      request.input.body = {
+      newMapping = {
         properties: {
           name: { type: 'keyword' }
         }
       };
 
-      elasticsearch.esWrapper.getMapping = sinon.stub().resolves(getMappingReturn);
-    });
-
-    it('should have mapping capabilities', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-
-      request.input.body = {
-        dynamic: 'true',
-        properties: {
-          city: {type: 'string'}
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          const arg = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(arg.body.properties.city)
-            .be.exactly(request.input.body.properties.city);
-        });
-    });
-
-    it('should reject with BadRequestError on wrong mapping', () => {
-      const collectionMapping = {
-        dinamic: 'false',
-        properties: {
-          freeman:  { type: 'keyword' }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return should(elasticsearch.updateMapping(request))
-        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
-    });
-
-    it('should reject and handle error for bad mapping input', done => {
-      const
-        error = new Error('test');
-
-      error.displayName = 'BadRequest';
-      error.body = {
-        error: {
-          reason: 'foo'
-        }
-      };
-
-      elasticsearch.client.indices.putMapping.rejects(error);
-
-      elasticsearch.updateMapping(request)
-        .catch((err) => {
-          try {
-            should(err).be.instanceOf(BadRequestError);
-            should(err.message).be.equal('foo');
-            should(elasticsearch.client.indices.putMapping.firstCall.args[0]).not.have.key('properties');
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
-    it('should get existing _meta and dynamic policy for the collection', () => {
-      getMappingReturn[index].mappings[collection] = {
+      existingMapping = {
         dynamic: 'strict',
-        _meta: { gordon: 'freeman' }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
-
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esRequest.body.dynamic).be.eql('strict');
-          should(esRequest.body._meta).match({ gordon: 'freeman' });
-        });
-    });
-
-    it('should inject default mapping for the index', () => {
-      const expectedKuzzleMeta = {
+        _meta: { meta: 'data' },
         properties: {
-          active: { type: 'boolean' },
-          author: { type: 'text' }, // This one differ from commonMapping
-          createdAt: { type: 'date' },
-          updatedAt: { type: 'date' },
-          updater: { type: 'keyword' },
-          deletedAt: { type: 'date' }
-        }
-      };
-      getMappingReturn[index].mappings[collection] = {
-        properties: {
+          city: { type: 'keyword' },
           _kuzzle_info: {
             properties: {
-              author: { type: 'text' }
+              author: { type: 'keyword' }
             }
           }
         }
       };
 
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
-
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esRequest.body.properties._kuzzle_info).match(expectedKuzzleMeta);
-        });
+      elasticsearch.getMapping = sinon.stub().resolves(existingMapping);
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch._checkMappings = sinon.stub().resolves();
     });
 
-    it('should inject the default mapping', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
+    it('should have mapping capabilities', () => {
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
 
-      elasticsearch.config.commonMapping = {
-        foo: {type: 'boolean'},
-        _kuzzle_info: {
-          properties: {
-            active: {type: 'boolean'},
-            author: {type: 'text'},
-            createdAt: {type: 'date'},
-            updatedAt: {type: 'date'},
-            updater: {type: 'keyword'},
-            deletedAt: {type: 'date'}
-          }
-        }
-      };
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.putMapping).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              dynamic: 'strict',
+              _meta: { meta: 'data' },
+              properties: {
+                name: { type: 'keyword' }
+              }
+            }
+          });
 
-      request.input.body = {
-        properties: {
-          city: {type: 'string'}
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq.body).eql({
-            dynamic: true,
-            _meta: {},
+          should(result).match({
+            dynamic: 'strict',
+            _meta: { meta: 'data' },
             properties: {
-              city: {type: 'string'},
-              foo: {type: 'boolean'},
+              city: { type: 'keyword' },
+              name: { type: 'keyword' },
               _kuzzle_info: {
                 properties: {
-                  active: {type: 'boolean'},
-                  author: {type: 'text'},
-                  createdAt: {type: 'date'},
-                  updatedAt: {type: 'date'},
-                  updater: {type: 'keyword'},
-                  deletedAt: {type: 'date'}
+                  author: { type: 'keyword' }
                 }
               }
             }
@@ -1378,421 +1271,513 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should create a fresh mapping for each collection', () => {
-      const mapping = Object.assign({}, elasticsearch.config.commonMapping);
-
-      return elasticsearch.updateMapping(new Request({
-        index,
-        collection,
-        controller: 'collection',
-        action: 'updateMapping',
-        body: {
-          properties: {
-            foo: {
-              type: 'text'
-            }
-          }
+    it('should reject with BadRequestError on wrong mapping', () => {
+      elasticsearch._checkMappings = _checkMappings;
+      newMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
         }
-      }))
-        .then(() => elasticsearch.updateMapping(new Request({
-          index,
-          collection,
-          controller: 'collection',
-          action: 'updateMapping',
-          body: {
-            properties: {
-              bar: {
-                type: 'integer'
-              }
+      };
+
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
+
+      return should(promise).be.rejectedWith({
+        message: /Did you mean "dynamic"/,
+        errorName: 'external.elasticsearch.incorrect_mapping_property'
+      });
+    });
+
+    it('should replace dynamic and _meta', () => {
+      existingMapping = {
+        dynamic: 'true',
+        _meta: { some: 'meta' }
+      };
+      newMapping = {
+        dynamic: 'false',
+        _meta: { other: 'meta' }
+      };
+
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.putMapping).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              dynamic: 'false',
+              _meta: { other: 'meta' }
             }
-          }
-        })))
-        .then(() => {
-          should(elasticsearch.config.commonMapping).eql(mapping);
+          });
+
+          should(result).match({
+            dynamic: 'false',
+            _meta: { other: 'meta' }
+          });
         });
     });
 
-    it('should reuse a previously defined common mapping', () => {
-      kuzzle.indexCache.defaultMappings[index] = {
-        gordon: { type: 'text' }
+    it('should reject and handle error for bad mapping input', () => {
+      const error = new Error('test');
+      error.meta = {
+        statusCode: 400
+      };
+      error.body = {
+        error: {
+          reason: 'foo'
+        }
+      };
+      elasticsearch.client.indices.putMapping.rejects(error);
+
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.unexpected_bad_request_error'
+      });
+    });
+  });
+
+  describe.only('#truncateCollection', () => {
+    let existingMapping;
+
+    beforeEach(() => {
+      existingMapping = {
+        dynamic: 'false',
+        properties: {
+          name: { type: 'keyword' }
+        }
       };
 
-      return elasticsearch.updateMapping(new Request({
-        index,
-        collection,
-        body: {
-          properties: {
-            freeman: { type: 'boolean' }
-          }
-        }
-      }))
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+      elasticsearch.getMapping = sinon.stub().resolves(existingMapping);
+    });
 
-          should(esReq).eql({
-            index,
-            type: collection,
-            body: {
-              dynamic: true,
-              _meta: {},
+    it('should delete and then create the collection with the same mapping', () => {
+      const promise = elasticsearch.truncateCollection(index, collection);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.getMapping).be.calledWith(index, collection);
+          should(elasticsearch.client.indices.delete).be.calledWithMatch({
+            index: esIndexName
+          });
+          should(elasticsearch.client.indices.create).be.calledWithMatch({
+            index: esIndexName,
+            mappings: {
+              dynamic: 'false',
               properties: {
-                gordon: { type: 'text' },
-                freeman: { type: 'boolean' }
+                name: { type: 'keyword' }
               }
             }
           });
-        });
+
+          should(result).be.undefined();
+        })
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.indices.delete.rejects({
+        meta: { statusCode: 42 }
+      });
+
+      const promise = elasticsearch.truncateCollection(index, collection);
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.unexpected_error'
+      });
     });
   });
 
   describe('#import', () => {
+    let
+      expectedEsRequest,
+      bulkReturnError,
+      documents,
+      bulkReturn;
+
+    beforeEach(() => {
+      expectedEsRequest = {
+        body: [
+          { index: { _id: 1, _index: esIndexName } },
+          {
+            firstName: 'foo',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+              updater: null,
+              updatedAt: null
+            }
+          },
+
+          { index: { _id: 2, _index: esIndexName } },
+          {
+            firstName: 'bar',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+              updater: null,
+              updatedAt: null
+            }
+          },
+        ],
+        refresh: false,
+        timeout: null
+      };
+
+      bulkReturn = {
+        body: {
+          items: [
+            { index: { status: 201, _id: 1, result: 'created', toto: 42 } },
+            { index: { status: 201, _id: 2, result: 'created', toto: 42 } },
+            { update: { status: 200, _id: 3, result: 'updated', toto: 42 } },
+            { delete: { status: 200, _id: 4, result: 'deleted', toto: 42 } }
+          ],
+          errors: false
+        }
+      };
+
+      bulkReturnError = {
+        body: {
+          items: [
+            { index: { status: 201, _id: 1, result: 'created', toto: 42 } },
+            { index: { status: 201, _id: 2, result: 'created', toto: 42 } },
+            { update: { status: 404, _id: 42, error: { type: 'not_found', reason: 'not found', toto: 42 } } },
+            { delete: { status: 404, _id: 21, error: { type: 'not_found', reason: 'not found', toto: 42 } } }
+          ],
+          errors: true
+        }
+      };
+
+      documents = [
+        { index: { _id: 1, _index: 'overwrite-me' } },
+        { firstName: 'foo' },
+
+        { index: { _id: 2, _type: 'delete-me' } },
+        { firstName: 'bar' },
+      ];
+
+      elasticsearch.client.bulk.resolves(bulkReturn)
+    });
+
     it('should support bulk data import', () => {
-      const
-        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
+      documents = [
+        { index: { _id: 1 } },
+        { firstName: 'foo' },
 
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
+        { index: { _id: 2 } },
+        { firstName: 'bar' },
 
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _type: collection, _index: 'alias'}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _type: collection, _index: index}}
-        ]
-      };
+        { update: { _id: 3 } },
+        { doc: { firstName: 'foobar' } },
 
-      return elasticsearch.import(request)
-        .then(() => {
-          should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
-          should(refreshIndexSpy.calledOnce).be.true();
-        });
-    });
+        { delete: { _id: 4 } }
+      ];
 
-    it('should add metadata to documents', () => {
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
+      const promise = elasticsearch.import(index, collection, documents);
 
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: 'alias'}},
-          {firstName: 'bar'},
-          {create: {_id: 3, _type: collection, _index: index}},
-          {firstName: 'gordon'},
-          {update: {_id: 1, _type: collection, _index: index}},
-          {doc: {firstName: 'foobar'}, upsert: {firstName: 'john'}},
-          {delete: {_id: 2, _type: collection, _index: index}},
-          // this update triggers a crash if the case of an update without
-          // "doc" nor "upsert" is submitted
-          {update: {_id: 42}},
-          {script: 'can I has a cheezburgscript?'}
-        ]
-      };
-
-      return elasticsearch.import(request)
-        .then(() => {
-          const body = elasticsearch.client.bulk.firstCall.args[0].body;
-
-          // Bulk action: index
-          should(body[1]._kuzzle_info).be.type('object');
-          should(body[1]._kuzzle_info.author).be.exactly('test');
-          should(body[1]._kuzzle_info.createdAt).be.belowOrEqual(Date.now());
-          should(body[1]._kuzzle_info.updatedAt).be.null();
-          should(body[1]._kuzzle_info.updater).be.null();
-          should(body[1]._kuzzle_info.active).be.ok();
-          should(body[1]._kuzzle_info.deletedAt).be.null();
-
-          // Bulk action: create
-          should(body[5]._kuzzle_info).be.type('object');
-          should(body[5]._kuzzle_info.author).be.exactly('test');
-          should(body[5]._kuzzle_info.createdAt).be.belowOrEqual(Date.now());
-          should(body[5]._kuzzle_info.updatedAt).be.null();
-          should(body[5]._kuzzle_info.updater).be.null();
-          should(body[5]._kuzzle_info.active).be.ok();
-          should(body[5]._kuzzle_info.deletedAt).be.null();
-
-          // Bulk action: update
-          should(body[7].doc._kuzzle_info).be.type('object');
-          should(body[7].doc._kuzzle_info.updater).be.exactly('test');
-          should(body[7].doc._kuzzle_info.updatedAt).not.be.null();
-          should(body[7].upsert._kuzzle_info).be.type('object');
-          should(body[7].upsert._kuzzle_info.updater).be.exactly('test');
-          should(body[7].upsert._kuzzle_info.updatedAt).not.be.null();
-
-          // Bulk action: script update
-          // (just verifying that this hasn't been filtered)
-          should(body[10].script).eql('can I has a cheezburgscript?');
-        });
-    });
-
-    it('should inject only the allowed optional parameters', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
-
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([]);
-
-      request.input.body = {
-        bulkData: []
-      };
-      request.input.args.consistency = 'foo';
-      request.input.args.refresh = 'wait_for';
-      request.input.args.routing = 'foo/bar';
-      request.input.args.timeout = 999;
-      request.input.args.fields = 'foo, bar, baz';
-
-      return elasticsearch.import(request)
-        .then(() => {
-          const arg = elasticsearch.client.bulk.firstCall.args[0];
-
-          should(arg)
-            .not.have.properties([
-              'consistency',
-              'routing',
-              'timeout',
-              'fields'
-            ]);
-          should(arg.refresh)
-            .be.exactly('wait_for');
-
-          should(refreshIndexSpy.calledOnce).be.true();
-        });
-    });
-
-    it('should raise a "Partial Error" response for bulk data import with some errors', () => {
-      elasticsearch.client.bulk.resolves({
-        errors: true,
-        items: [
-          {index: {status: 404, error: 'DocumentMissingException'}},
-          {index: {status: 404, error: 'DocumentMissingException'}}
-        ]
-      });
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 12, _type: collection, _index: 'alias'}},
-          {doc: {firstName: 'foobar'}},
-          {update: {_id: 212, _type: collection, _index: index}},
-          {doc: {firstName: 'foobar'}}
-        ]
-      };
-
-      return elasticsearch.import(request)
+      return promise
         .then(result => {
-          should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
+          expectedEsRequest = {
+            body: [
+              { index: { _id: 1, _index: esIndexName } },
+              {
+                firstName: 'foo',
+                _kuzzle_info: {
+                  author: null,
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
 
-          should(result.errors).be.true();
-          should(result.partialErrors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
+              { index: { _id: 2, _index: esIndexName } },
+              {
+                firstName: 'bar',
+                _kuzzle_info: {
+                  author: null,
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
+
+              { update: { _id: 3, _index: esIndexName } },
+              { doc: {
+                  firstName: 'foobar',
+                  _kuzzle_info: {
+                    updater: null,
+                    updatedAt: timestamp
+                  }
+                }
+              },
+
+              { delete: { _id: 4, _index: esIndexName } }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          should(elasticsearch.client.bulk).be.calledWithMatch(expectedEsRequest);
+
+          should(result).match({
+            items: [
+              { index: { status: 201, _id: 1, result: 'created' } },
+              { index: { status: 201, _id: 2, result: 'created' } },
+              { update: { status: 200, _id: 3, result: 'updated' } },
+              { delete: { status: 200, _id: 4, result: 'deleted' } },
+            ],
+            errors: []
+          });
         });
     });
 
-    it('should override the type with the collection if one has been specified in the request', () => {
-      elasticsearch.client.bulk.resolves({
-        items: [
-          {index: {_id: 1, _index: index, _type: collection}},
-          {index: {_id: 2, _index: 'indexAlt', _type: collection}},
-          {update: {_id: 1, _index: index, _type: collection}},
-          {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
-        ]
-      });
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } },
-        indexAlt: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
+    it('should inject index name', () => {
+      const promise = elasticsearch.import(index, collection, documents);
 
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _index: 'indexAlt'}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: 'alias'}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _index: 'indexAlt'}}
-        ]
-      };
-
-      return elasticsearch.import(request)
+      return promise
         .then(() => {
-          const data = elasticsearch.client.bulk.firstCall.args[0];
-
-          should(data.body).be.an.Array().and.match([
-            {index: {_id: 1, _index: index, _type: collection}},
-            {firstName: 'foo'},
-            {index: {_id: 2, _index: 'indexAlt', _type: collection}},
-            {firstName: 'bar'},
-            {update: {_id: 1, _index: 'alias', _type: collection}},
-            {doc: {firstName: 'foobar'}},
-            {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
-          ]);
-
+          should(elasticsearch.client.bulk).be.calledWithMatch(expectedEsRequest);
         });
     });
 
-    it('should reject the import promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([]);
+    it('should inject addition options to esRequest', () => {
+      const promise = elasticsearch.import(
+        index,
+        collection,
+        documents,
+        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
 
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: index}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _index: index}}
-        ]
-      };
+      return promise
+        .then(() => {
+          should(elasticsearch.client.bulk).be.calledWithMatch({
+            body: [
+              { index: { _id: 1, _index: esIndexName } },
+              {
+                firstName: 'foo',
+                _kuzzle_info: {
+                  author: 'aschen',
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
 
-      elasticsearch.client.bulk.rejects(error);
-
-      return should(elasticsearch.import(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
+              { index: { _id: 2, _index: esIndexName } },
+              {
+                firstName: 'bar',
+                _kuzzle_info: {
+                  author: 'aschen',
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
+            ],
+            refresh: 'wait_for',
+            timeout: '10m'
+          });
+        });
     });
 
-    it('should return a rejected promise if bulk data try to write into internal index', () => {
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _index: kuzzle.internalEngine.index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: index}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _index: index}}
-        ]
-      };
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } },
-        [kuzzle.internalEngine.index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([]);
+    it('should populate "errors" array for bulk data import with some errors', () => {
+      elasticsearch.client.bulk.resolves(bulkReturnError);
 
-      elasticsearch.client.bulk.resolves({});
+      const promise = elasticsearch.import(index, collection, documents);
 
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
+      return promise
+        .then(result => {
+          should(result).match({
+            items: [
+              { index: { status: 201, _id: 1, result: 'created' } },
+              { index: { status: 201, _id: 2, result: 'created' } },
+              ],
+            errors: [
+              { update: { status: 404, _id: 42, error: { type: 'not_found', reason: 'not found' } } },
+              { delete: { status: 404, _id: 21, error: { type: 'not_found', reason: 'not found' } } }
+            ]
+          });
+        });
     });
 
-    it('should return a rejected promise if body contains no bulkData parameter', () => {
-      request.input.body.bulkData = null;
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
-    });
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.bulk.rejects({
+        meta: { statusCode: 42 }
+      });
 
-    it('should return a rejected promise if no type has been provided, locally or globally', () => {
-      request.input.resource.collection = null;
+      const promise = elasticsearch.import(index, collection, documents);
 
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: 'alias'}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: index}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _type: collection, _index: index}}
-        ]
-      };
-
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
-    });
-
-    it('should return a rejected promise if no index has been provided, locally or globally', () => {
-      request.input.resource.index = null;
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _type: collection}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _type: collection, _index: index}}
-        ]
-      };
-
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
-    });
-
-    it('should rejected if index and/or collection don\'t exist', () => {
-      elasticsearch.client.indices.getMapping.resolves({});
-      elasticsearch.client.cat.aliases.resolves([]);
-      request.input.resource.index = null;
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-        ]
-      };
-
-      elasticsearch.client.bulk.resolves({});
-
-      return should(elasticsearch.import(request))
-        .be.rejectedWith(PreconditionError, {message: 'Index \'test\' and/or collection \'unit-tests-elasticsearch\' don\'t exist.'});
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.unexpected_error'
+      });
     });
   });
+
+  describe('#listCollections', () => {
+    beforeEach(() => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&nyc-open-data.taxi' }
+        ]
+      });
+    })
+
+    it('should allow listing all available collections', () => {
+      const promise = elasticsearch.listCollections('nepali');
+
+      return promise
+        .then(result => {
+          should(result).match({
+            collections: ['mehry', 'liia']
+          });
+        });
+    });
+
+    it('should not list unauthorized collections', () => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '%nepali.mehry' },
+          { index: '%nepali.liia' },
+          { index: '%nyc-open-data.taxi' }
+        ]
+      });
+
+      const promise = elasticsearch.listCollections('nepali');
+
+      return promise
+        .then(result => {
+          should(result).match({
+            collections: []
+          });
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.indices.rejects({
+        meta: { statusCode: 42 }
+      });
+
+      const promise = elasticsearch.listCollections(index);
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.unexpected_error'
+      });
+    });
+  });
+
+  describe('#listIndexes', () => {
+    beforeEach(() => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&nyc-open-data.taxi' }
+        ]
+      });
+    })
+
+    it('should allow listing all available indexes', () => {
+      const promise = elasticsearch.listIndexes();
+
+      return promise
+        .then(result => {
+          should(result).match({
+            indexes: ['nepali', 'nyc-open-data']
+          });
+        });
+    });
+
+    it('should not list unauthorized indexes', () => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '%nepali.mehry' },
+          { index: '%nepali.liia' },
+          { index: '%nyc-open-data.taxi' }
+        ]
+      });
+
+      const promise = elasticsearch.listIndexes();
+
+      return promise
+        .then(result => {
+          should(result).match({
+            indexes: []
+          });
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.indices.rejects({
+        meta: { statusCode: 42 }
+      });
+
+      const promise = elasticsearch.listIndexes();
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.unexpected_error'
+      });
+    });
+  });
+
+  describe.only('#deleteIndexes', () => {
+    beforeEach(() => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&do-not.delete' },
+          { index: '&nyc-open-data.taxi' }
+        ]
+      });
+    })
+
+    it('should allow to deletes multiple indexes', () => {
+      const promise = elasticsearch.deleteIndexes(['nepali', 'nyc-open-data']);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.delete).be.calledWithMatch({
+            index: ['&nepali.mehry', '&nepali.liia', '&nyc-open-data.taxi']
+          });
+
+          should(result).match({
+            deleted: ['nepali', 'nyc-open-data']
+          });
+        });
+    });
+
+    it('should not list unauthorized indexes', () => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&do-not.delete' },
+          { index: '%nyc-open-data.taxi' }
+        ]
+      });
+
+      const promise = elasticsearch.deleteIndexes(['nepali', 'nyc-open-data']);
+
+      return promise
+        .then(result => {
+          should(result).match({
+            indexes: []
+          });
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.indices.rejects({
+        meta: { statusCode: 42 }
+      });
+
+      const promise = elasticsearch.listIndexes();
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.unexpected_error'
+      });
+    });
+  });
+
 
   describe('#getAllIdsFromQuery', () => {
     it('should be able to get every ids matching a query', () => {
@@ -1843,46 +1828,6 @@ describe('Test: ElasticSearch service', () => {
         .then(result => {
           should(result).be.an.Array().and.match(ids);
           should(result.length).be.exactly(2);
-        });
-    });
-  });
-
-  describe('#listCollections', () => {
-    it('should allow listing all available collections', () => {
-      const
-        mappings = {
-          [index]: {
-            mappings: {
-              [collection]: {}
-            }
-          }
-        };
-
-      elasticsearch.client.indices.getMapping.resolves(mappings);
-      request.input.body = null;
-      return elasticsearch.listCollections(request);
-    });
-
-    it('should reject the listCollections promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.indices.getMapping.rejects(error);
-
-      request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
-      request.input.body = null;
-      return should(elasticsearch.listCollections(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
-  });
-
-  describe('#truncateCollection', () => {
-    it('should allow truncating an existing collection', () => {
-      const spy = sinon.stub(elasticsearch, 'deleteByQuery').resolves({});
-
-      return elasticsearch.truncateCollection(request)
-        .then(() => {
-          const req = spy.firstCall.args[0];
-
-          should(req).be.an.instanceOf(Request);
-          should(req.input.body.query).be.Object().and.match({match_all: {}});
         });
     });
   });
