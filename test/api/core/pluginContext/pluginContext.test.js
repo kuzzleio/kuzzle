@@ -32,9 +32,9 @@ describe('Plugin Context', () => {
     mockrequire(`${root}/lib/services/internalEngine`, function () {
       this.init = sinon.spy();
       this.bootstrap = {
-        all: sinon.spy(),
-        createCollection: sinon.spy()
+        startOrWait: sinon.spy()
       };
+      this.createCollection = sinon.spy();
     });
 
     deprecateStub = sinon.stub().returnsArg(1);
@@ -42,8 +42,7 @@ describe('Plugin Context', () => {
       deprecateProperties: deprecateStub
     });
 
-    PluginContext = mockrequire.reRequire(
-      `${root}/lib/api/core/plugins/pluginContext`);
+    PluginContext = mockrequire.reRequire(`${root}/lib/api/core/plugins/pluginContext`);
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');

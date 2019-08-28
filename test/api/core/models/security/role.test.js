@@ -315,7 +315,7 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.fulfilledWith(true);
+      return should(role.validateDefinition(context)).be.fulfilledWith();
     });
   });
 });

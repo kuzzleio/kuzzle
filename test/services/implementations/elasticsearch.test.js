@@ -231,7 +231,8 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.scroll(req)
         .then(result => {
-          should(elasticsearch.client.scroll.firstCall.args[0]).be.deepEqual({scrollId: 'banana42', scroll: '15s'});
+          should(elasticsearch.client.scroll.firstCall.args[0])
+            .be.deepEqual({scrollId: 'banana42', scroll: '15s'});
           should(result).be.an.Object();
           should(result.total).be.exactly(0);
           should(result.hits).be.an.Array();
@@ -242,7 +243,10 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.scroll.rejects(new Error('error'));
 
       request.input.args.scrollId = 'foobar';
-      return should(elasticsearch.scroll(request)).be.rejectedWith(Error, {message: 'error'});
+
+      return should(elasticsearch.scroll(request)).be.rejectedWith(
+        Error,
+        { message: 'error' });
     });
   });
 
@@ -446,15 +450,18 @@ describe('Test: ElasticSearch service', () => {
       request.input.resource._id = createdDocumentId;
 
       elasticsearch.replace(request)
+        .then(() => done(new Error('expected promise to be rejected')))
         .catch(err => {
           try {
             should(err).be.an.instanceOf(NotFoundError);
-            should(err.message).be.exactly(`Document with id '${request.input.resource._id}' not found.`);
+            should(err.errorName).be.exactly('external.elasticsearch.document_not_found');
             should(elasticsearch.client.index).not.be.called();
 
             done();
           }
-          catch(e) { done(e); }
+          catch(e) {
+            done(e);
+          }
         });
     });
 
@@ -709,19 +716,22 @@ describe('Test: ElasticSearch service', () => {
       const
         esError = new Error('test');
 
-      esError.displayName = 'NotFound';
-      esError.body = {
-        error: {
-          reason: 'foo'
+      esError.meta = {
+        statusCode: 404,
+        body: {
+          error: {
+            reason: 'foo' ,
+            'resource.id': 'bar'
+          }
         }
       };
 
-      esError.body.error['resource.id'] = 'bar';
       elasticsearch.client.update.rejects(esError);
       elasticsearch.kuzzle.indexCache.exists.resolves(true);
 
       elasticsearch.update(request)
-        .catch((error) => {
+        .then(() => done(new Error('expected promise to be rejected')))
+        .catch(error => {
           try{
             should(error).be.instanceOf(NotFoundError);
             should(error.message).be.equal('foo: bar');
@@ -734,12 +744,14 @@ describe('Test: ElasticSearch service', () => {
 
     it('should return a rejected promise with a customised NotFoundError when elasticsearch throws a known error', done => {
       const
-        esError = new Error('[index_not_found_exception] no such index, with { resource.type=index_or_alias resource.id=banana index=banana }');
+        esError = new Error('foo');
 
-      esError.displayName = 'NotFound';
-      esError.body = {
-        error: {
-          reason: 'foo'
+      esError.meta = {
+        statusCode: 404,
+        body: {
+          error: {
+            reason: 'no such index [&banana.boat]'
+          }
         }
       };
 
@@ -747,12 +759,11 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.update.rejects(esError);
 
       elasticsearch.update(request)
+        .then(() => done(new Error('expected promise to be rejected')))
         .catch(error => {
           try {
             should(error).be.instanceOf(NotFoundError);
-            should(error.message).be.equal('Index or collection "banana" does not exist, please create it first.');
-            should(error.stack.replace(/^.*?\n/, ''))
-              .eql(esError.stack.replace(/^.*?\n/, ''));
+            should(error.message).be.equal('User index "banana" or collection "boat" does not exist, please create it first.');
             should(elasticsearch.client.update.firstCall.args[0].id).be.null();
             done();
           }
@@ -1385,11 +1396,9 @@ describe('Test: ElasticSearch service', () => {
       const
         error = new Error('test');
 
-      error.displayName = 'BadRequest';
-      error.body = {
-        error: {
-          reason: 'foo'
-        }
+      error.meta = {
+        statusCode: 400,
+        body: { error: { reason: 'foo' } }
       };
 
       elasticsearch.client.indices.putMapping.rejects(error);
