@@ -55,6 +55,13 @@ To install a plugin, you need to make it accessible in the `plugins/enabled` fol
 
 A common practice is to first copy the plugin to a `plugins/available` folder, and then creating a symbolic link from that folder to the `plugins/enabled` folder. This way, you can easily enable and disable a plugin just by creating or deleting a symbolic link, respectively.
 
+:::info
+<SinceBadge version="1.9.3" />
+
+If you are running Kuzzle in a Docker container, you can use `$KUZZLE_PLUGINS` environment variable to enable plugins located in `plugins/available` folder.
+The variable will be used as argument for the `--enable-plugins` options from the [Kuzzle CLI start command](/core/1/guides/essentials/cli).
+:::
+
 Prior to loading the plugin into Kuzzle, you will need to load all of the plugin dependencies by running `npm install` from within the plugin folder.
 
 To demonstrate, we are going to install the [**Plugin Boilerplate**](https://github.com/kuzzleio/kuzzle-core-plugin-boilerplate), a plugin example that uses all features available to a plugin.
