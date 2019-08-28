@@ -92,7 +92,7 @@ describe('PluginsManager', () => {
       pluginsManager.init();
       should(kuzzle.log.warn)
         .calledOnce()
-        .calledWith('[kuzzle-plugin-test] This plugin doesn\'t have customs errors in the manifest file.');
+        .calledWith('[kuzzle-plugin-test] This plugin doesn\'t have custom errors in the manifest file.');
     });
 
     it('should properly load custom errors from manifest.json', () => {
