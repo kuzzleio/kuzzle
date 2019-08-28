@@ -294,7 +294,9 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller, action]: must be a boolean or an object'});
+      return should(role.validateDefinition(context)).be.rejectedWith(
+        BadRequestError,
+        { message: 'Invalid definition for [controller, action]: must be a boolean' });
     });
 
     it('should validate if only boolean rights are given', () => {
