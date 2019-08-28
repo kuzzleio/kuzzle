@@ -44,7 +44,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
           'Aperture Science': 'We do what we must, because we can',
           'For the good of all of us': 'Except the ones who are dead',
 
-          'But there\'s no sens crying': 'over every mistake',
+          'But there\'s no sense crying': 'over every mistake',
 
           'You just keep on trying': 'till you run out of cake',
           'And the science gets done': 'and you make a neat gun',
