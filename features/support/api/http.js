@@ -1290,6 +1290,32 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  decryptSecrets (vaultKey, secrets) {
+    const options = {
+      url: this.apiPath('admin/decryptSecrets'),
+      method: 'POST',
+      body: {
+        vaultKey,
+        secrets
+      }
+    };
+
+    return this.callApi(options);
+  }
+
+  encryptSecrets (vaultKey, secrets) {
+    const options = {
+      url: this.apiPath('admin/encryptSecrets'),
+      method: 'POST',
+      body: {
+        vaultKey,
+        secrets
+      }
+    };
+
+    return this.callApi(options);
+  }
+
   resetCache (database) {
     const options = {
       url: this.apiPath(`admin/_resetCache/${database}`),
