@@ -142,7 +142,7 @@ describe('PluginsManager', () => {
       should(pluginErrors[instanceName].errors).be.deepEqual(newPluginErrors);
     });
 
-    it('should throw PluginImplementationError if customs errors from manifest.json are badly formatted', () => {
+    it('should throw PluginImplementationError if custom errors from manifest.json are badly formatted', () => {
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory: () => true
