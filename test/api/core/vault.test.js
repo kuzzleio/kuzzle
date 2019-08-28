@@ -119,7 +119,8 @@ describe('Test: vault core component', () => {
     it('rejects if secrets is not an object', () => {
       should(() => {
         vault.encryptObject('not an object');
-      }).throw();    });
+      }).throw();
+    });
 
     it('reads the secret file and store decrypted secrets', () => {
       vault.prepareCrypto();
