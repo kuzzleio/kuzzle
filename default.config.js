@@ -80,7 +80,7 @@ module.exports = {
     'kuzzle-plugin-prometheus': {
       code: 25
     },
-    'kuzzle-plugin-authpassport-oauth': {
+    'kuzzle-plugin-auth-passport-oauth': {
       code: 26
     },
     'computed-fields-plugin': {
