@@ -32,6 +32,6 @@ describe('core/clientConnection', () => {
       should(connection.headers.foo).not.be.eql('not-set');
       should(connection.id).not.be.eql('not-set');
       should(connection.protocol).not.be.eql('not-set');
-    })
+    });
   });
 });
