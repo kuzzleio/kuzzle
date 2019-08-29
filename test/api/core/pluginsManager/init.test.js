@@ -26,8 +26,13 @@ describe('PluginsManager', () => {
       }
     };
     Manifest = rewire('../../../../lib/api/core/plugins/manifest');
+    const c = console;
     Manifest.__set__({
-      console: { warn: sinon.stub() },
+      console: {
+        log: (...args) => c.log(...args),
+        error: (...args) => c.error(...args),
+        warn: sinon.stub()
+      },
       fs: manifestFsStub
     });
   });

@@ -75,12 +75,25 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     mockrequire('winston-syslog', winstonTransportSyslog);
 
     // Disables unnecessary console warnings
+    const c = console;
     AbstractManifest = rewire('../../../../../lib/api/core/abstractManifest');
-    AbstractManifest.__set__({ console: { warn: sinon.stub() }});
+    AbstractManifest.__set__({
+      console: {
+        log: (...args) => c.log(...args),
+        error: (...args) => c.error(...args),
+        warn: sinon.stub()
+      }
+    });
     mockrequire('../../../../../lib/api/core/abstractManifest', AbstractManifest);
 
     Manifest = rewire('../../../../../lib/api/core/entrypoints/embedded/manifest');
-    Manifest.__set__({ console: { warn: sinon.stub() }});
+    Manifest.__set__({
+      console: {
+        log: (...args) => c.log(...args),
+        error: (...args) => c.error(...args),
+        warn: sinon.stub()
+      }
+    });
     mockrequire('../../../../../lib/api/core/entrypoints/embedded/manifest', Manifest);
 
     // Bluebird.map forces a different context, preventing rewire to mock "require"

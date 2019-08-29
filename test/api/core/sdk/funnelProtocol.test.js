@@ -79,12 +79,22 @@ describe('Test: sdk/funnelProtocol', () => {
         });
     });
 
-    it('should reject if trying to call the realtime controller', () => {
+    it('should reject if trying to call a forbidden realtime method', () => {
       return should(funnelProtocol.query({
         controller: 'realtime',
-        action: 'publish'
+        action: 'unsubscribe'
       }))
-        .be.rejectedWith(/Realtime controller is not available in plugins\. You should use plugin hooks instead/);
+        .be.rejectedWith(/realtime.unsubscribe method is not available in plugins\. You should use plugin hooks instead/);
+    });
+
+    it('should allow realtime publish call', () => {
+      return funnelProtocol.query({
+        controller: 'realtime',
+        action: 'publish'
+      })
+        .then(res => {
+          should(res.result).be.exactly('sdk result');
+        });
     });
   });
 });
