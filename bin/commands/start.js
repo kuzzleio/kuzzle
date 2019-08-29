@@ -63,6 +63,10 @@ function commandStart (options = {}) {
       }));
   }
 
+  if (options.enablePlugins) {
+    kuzzleParams.additionalPlugins = options.enablePlugins.split(',').map(x => x.trim());
+  }
+
   return Promise.all(promises)
     .then(() => kuzzle.start(kuzzleParams))
     .then(() => {

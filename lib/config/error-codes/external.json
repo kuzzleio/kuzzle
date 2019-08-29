@@ -231,7 +231,7 @@
       "errors": {
         "service_initialization_timeout": {
           "code": 1,
-          "message": "[FATAL] Service \"%s[%s]\" failed to init within %s ms.",
+          "message": "[FATAL] Service \"%s[%s]\" failed to initialize within %sms.",
           "class": "InternalError"
         }
       }
