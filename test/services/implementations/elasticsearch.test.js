@@ -59,13 +59,11 @@ describe('Test: ElasticSearch service', () => {
     it('should initialize properly', () => {
       elasticsearch = new ES(kuzzle, kuzzle.config.services.db);
       elasticsearch._buildClient = () => new ESClientMock();
-      const bootstrapMock = { index: 'kuzzle' };
 
-      const promise = elasticsearch.init(bootstrapMock);
+      const promise = elasticsearch.init();
 
       return should(promise).be.fulfilledWith(elasticsearch)
         .then(() => {
-          should(elasticsearch.bootstrap).be.eql(bootstrapMock);
           should(elasticsearch.client).not.be.null();
           should(elasticsearch.esWrapper).not.be.null();
           should(elasticsearch.esVersion).not.be.null();
