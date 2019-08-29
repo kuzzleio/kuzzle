@@ -1573,9 +1573,7 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(result).match({
-            collections: ['mehry', 'liia']
-          });
+          should(result).match(['mehry', 'liia']);
         });
     });
 
@@ -1592,9 +1590,7 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(result).match({
-            collections: []
-          });
+          should(result).match([]);
         });
     });
 
@@ -1626,9 +1622,11 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(result).match({
-            indexes: ['nepali', 'nyc-open-data']
+          should(elasticsearch.client.cat.indices).be.calledWithMatch({
+            format: 'json'
           });
+
+          should(result).match(['nepali', 'nyc-open-data']);
         });
     });
 
@@ -1646,9 +1644,7 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(result).match({
-            indexes: ['vietnam']
-          });
+          should(result).match(['vietnam']);
         });
     });
 
@@ -1656,6 +1652,66 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.cat.indices.rejects(esClientError);
 
       const promise = elasticsearch.listIndexes();
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+  });
+
+  describe('#listAliases', () => {
+    beforeEach(() => {
+      elasticsearch.client.cat.aliases.resolves({
+        body: [
+          { alias: 'alias-mehry', index: '&nepali.mehry' },
+          { alias: 'alias-liia', index: '&nepali.liia' },
+          { alias: 'alias-taxi', index: '&nyc-open-data.taxi' }
+        ]
+      });
+    });
+
+    it('should allow listing all available aliases', () => {
+      const promise = elasticsearch.listAliases();
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.cat.aliases).be.calledWithMatch({
+            format: 'json'
+          });
+
+          should(result).match([
+            { name: 'alias-mehry', index: 'nepali', collection: 'mehry' },
+            { name: 'alias-liia', index: 'nepali', collection: 'liia' },
+            { name: 'alias-taxi', index: 'nyc-open-data', collection: 'taxi' },
+          ]);
+        });
+    });
+
+    it('should not list unauthorized aliases', () => {
+      elasticsearch.client.cat.aliases.resolves({
+        body: [
+          { alias: 'alias-mehry', index: '%nepali.mehry' },
+          { alias: 'alias-liia', index: '%nepali.liia' },
+          { alias: 'alias-taxi', index: '%nyc-open-data.taxi' },
+          { alias: 'alias-lfiduras', index: '&vietnam.lfiduras' }
+        ]
+      });
+
+      const promise = elasticsearch.listAliases();
+
+      return promise
+        .then(result => {
+          should(result).match([
+            { name: 'alias-lfiduras', index: 'vietnam', collection: 'lfiduras' },
+          ]);
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.aliases.rejects(esClientError);
+
+      const promise = elasticsearch.listAliases();
 
       return should(promise).be.rejected()
         .then(() => {
@@ -2927,9 +2983,15 @@ describe('Test: ElasticSearch service', () => {
       it('extract the collection names from esIndex name', () => {
         const
           publicCollection = publicES._extractCollection('&nepali.liia'),
+          publicCollection2 = publicES._extractCollection('&vietnam.lfiduras'),
+          publicCollection3 = publicES._extractCollection('&vietnam.l'),
+          publicCollection4 = publicES._extractCollection('&vietnam.iamaverylongcollectionnamebecauseiworthit'),
           internalCollection = internalES._extractCollection('%nepali.liia');
 
         should(publicCollection).be.eql('liia');
+        should(publicCollection2).be.eql('lfiduras');
+        should(publicCollection3).be.eql('l');
+        should(publicCollection4).be.eql('iamaverylongcollectionnamebecauseiworthit');
         should(internalCollection).be.eql('liia');
       });
     });

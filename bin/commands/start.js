@@ -70,8 +70,8 @@ function commandStart (options = {}) {
   return Promise.all(promises)
     .then(() => kuzzle.start(kuzzleParams))
     .then(() => {
-      cout.ok('[✔] Kuzzle server ready');
-      return kuzzle.internalEngine.adminExists()
+      cout.ok('[✔] Kuzzle 2.x server ready');
+      return kuzzle.adminExists()
         .then(res => {
           if (!res) {
             cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');

@@ -5,7 +5,7 @@ const
   IndexCache = require('../../../lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  var
+  const
     listAliasesStub,
     listIndexesStub,
     listCollectionsStub,
@@ -20,6 +20,12 @@ describe('Test: core/indexCache', () => {
     listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
     indexCache = new IndexCache(kuzzle);
     kuzzle.internalEngine.applyDefaultMapping.resolves(indexCache.commonMapping);
+  });
+
+  describe('#init', () => {
+    it('should add internal indexes and collections to cache');
+    it('should add public indexes and collections to cache');
+    it('should handle aliases');
   });
 
   describe('#init', () => {
