@@ -6,9 +6,9 @@ title: encryptSecrets
 
 # encryptSecrets
 
-<SinceBadge version="2.0.0" />
+<SinceBadge version="1.10.0" />
 
-Encrypt an object using Vault.
+Encrypt an object using [Vault](/core/2/guides/essentials/secrets-vault/).
 
 ---
 
