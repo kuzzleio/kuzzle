@@ -529,7 +529,7 @@
           }
         }
       },
-      // Internal index name
+      // Internal index default name and collections
       "internalIndex": {
         "name": "kuzzle",
         "collections": {
