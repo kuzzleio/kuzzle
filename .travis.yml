@@ -193,7 +193,7 @@ jobs:
 # ------------------------
 stages:
   - name: Unit Tests & Linters
-    if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/
+    if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
   - name: Integration tests
     if: deactivated = false AND type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
   - name: Cross-platform tests
