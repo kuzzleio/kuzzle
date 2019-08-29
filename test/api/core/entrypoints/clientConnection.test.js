@@ -1,6 +1,6 @@
 const
   should = require('should'),
-  ClientConnection = require('../../../../../lib/api/core/entrypoints/embedded/clientConnection');
+  ClientConnection = require('../../../../lib/api/core/entrypoints/clientConnection');
 
 describe('core/clientConnection', () => {
   describe('#constructor', () => {
@@ -24,14 +24,9 @@ describe('core/clientConnection', () => {
     });
 
     it('should be frozen', () => {
-      connection.id = 'not-set';
-      connection.protocol = 'not-set';
-      connection.headers.foo = 'not-set'
-
-      should(() => connection.ips.push('not-pushed')).throw(TypeError);
-      should(connection.headers.foo).not.be.eql('not-set');
-      should(connection.id).not.be.eql('not-set');
-      should(connection.protocol).not.be.eql('not-set');
+      should(Object.isFrozen(connection)).be.true();
+      should(Object.isFrozen(connection.headers)).be.true();
+      should(Object.isFrozen(connection.ips)).be.true();
     });
   });
 });
