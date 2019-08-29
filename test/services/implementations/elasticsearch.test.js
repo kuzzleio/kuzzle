@@ -765,15 +765,14 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         'liia',
-        { refresh: 'wait_for', retryOnConflict: 42 });
+        { refresh: 'wait_for' });
 
       return promise
         .then(result => {
           should(elasticsearch.client.delete).be.calledWithMatch({
             index: esIndexName,
             id: 'liia',
-            refresh: 'wait_for',
-            retryOnConflict: 42
+            refresh: 'wait_for'
           });
 
           should(result).be.undefined();
