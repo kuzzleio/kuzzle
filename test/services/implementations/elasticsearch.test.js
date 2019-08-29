@@ -756,9 +756,7 @@ describe('Test: ElasticSearch service', () => {
             retryOnConflict: 0
           });
 
-          should(result).match({
-            _id: 'liia'
-          });
+          should(result).be.undefined();
         });
     });
 
@@ -778,9 +776,7 @@ describe('Test: ElasticSearch service', () => {
             retryOnConflict: 42
           });
 
-          should(result).match({
-            _id: 'liia'
-          });
+          should(result).be.undefined();
         });
     });
 
