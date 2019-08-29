@@ -38,8 +38,8 @@ describe('Test: admin controller', () => {
 
     it('should encrypt an object with vault', () => {
       return adminController.encryptSecrets(request)
-        .then((res) => {
-          should(res.aws.length).be.eql(65);
+        .then(() => {
+          should(kuzzle.vault.encryptObject).be.calledOnce();
         });
     });
   });
@@ -52,8 +52,8 @@ describe('Test: admin controller', () => {
 
     it('should encrypt an object with vault', () => {
       return adminController.decryptSecrets(request)
-        .then((res) => {
-          should(res.aws).be.eql('silmaril');
+        .then(() => {
+          should(kuzzle.vault.decryptObject).be.calledOnce();
         });
     });
   });
