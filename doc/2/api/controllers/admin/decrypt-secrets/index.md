@@ -6,7 +6,7 @@ title: decryptSecrets
 
 # decryptSecrets
 
-<SinceBadge version="2.0.0" />
+<SinceBadge version="1.10.0" />
 
 Encrypt an object using Vault.
 
