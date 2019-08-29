@@ -547,7 +547,7 @@
         "roles": {
           "properties": {
             "controllers": {
-              "dynamic": "false,
+              "dynamic": "false",
               "properties": {}
             }
           }

@@ -2308,7 +2308,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch.mUpdate(index, collection, documents);
 
       return promise
-        .then(result => {
+        .then(() => {
           const esRequest = {
             index: esIndexName,
             body: [

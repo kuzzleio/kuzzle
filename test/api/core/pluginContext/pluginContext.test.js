@@ -29,14 +29,6 @@ describe('Plugin Context', () => {
     deprecateStub;
 
   beforeEach(() => {
-    mockrequire(`${root}/lib/services/internalEngine`, function () {
-      this.init = sinon.spy();
-      this.bootstrap = {
-        startOrWait: sinon.spy()
-      };
-      this.createCollection = sinon.spy();
-    });
-
     deprecateStub = sinon.stub().returnsArg(1);
     mockrequire(`${root}/lib/util/deprecate`, {
       deprecateProperties: deprecateStub

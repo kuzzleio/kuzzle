@@ -15,8 +15,10 @@ class ElasticsearchClientMock {
     this.get = sinon.stub().resolves();
     this.index = sinon.stub().resolves();
     this.info = sinon.stub().resolves({
-      version: {
-        number: '7.0.0'
+      body: {
+        version: {
+          number: '7.0.0'
+        }
       }
     });
     this.mget = sinon.stub().resolves();
