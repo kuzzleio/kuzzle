@@ -112,11 +112,12 @@ bindOption(
   program
     .command('start')
     .description('start a Kuzzle instance')
-    .option('    --fixtures <file>', 'import data from file')
-    .option('    --mappings <file>', 'apply mappings from file')
-    .option('    --securities <file>', 'import roles, profiles and users from file')
+    .option('    --fixtures <file>', 'Import data from file')
+    .option('    --mappings <file>', 'Apply mappings from file')
+    .option('    --securities <file>', 'Import roles, profiles and users from file')
     .option('    --vault-key <vaultKey>', 'Vault key used to decrypt secrets')
     .option('    --secrets-file <secretsFile>', 'Output file to write decrypted secrets')
+    .option('    --enable-plugins <plugins>', 'Enable plugins from `plugins/available` directory')
     .action(requireCommand('start'))
 );
 
@@ -186,10 +187,10 @@ bindOption(
 // $ kuzzle indexRestore
 bindOption(
   program
-  .command('indexRestore <path>')
-  .option('    --batch-size <batchSize>', 'Maximum batch size (see limits.documentsWriteCount config)')
-  .description('restore the content of a previously dumped index')
-  .action(requireCommand('indexRestore'))
+    .command('indexRestore <path>')
+    .option('    --batch-size <batchSize>', 'Maximum batch size (see limits.documentsWriteCount config)')
+    .description('restore the content of a previously dumped index')
+    .action(requireCommand('indexRestore'))
 );
 
 // Run user command

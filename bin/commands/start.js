@@ -63,11 +63,15 @@ function commandStart (options = {}) {
       }));
   }
 
+  if (options.enablePlugins) {
+    kuzzleParams.additionalPlugins = options.enablePlugins.split(',').map(x => x.trim());
+  }
+
   return Promise.all(promises)
     .then(() => kuzzle.start(kuzzleParams))
     .then(() => {
       cout.ok('[✔] Kuzzle server ready');
-      return kuzzle.internalEngine.bootstrap.adminExists()
+      return kuzzle.internalEngine.adminExists()
         .then(res => {
           if (!res) {
             cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');

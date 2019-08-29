@@ -187,17 +187,6 @@
     // By default, the admin user is granted all permissions.
     // Anonymous and non-administrator users have their rights restricted
     "standard": {
-      "profiles": {
-        "admin": {
-          "policies": [ {"roleId": "admin"} ]
-        },
-        "default": {
-          "policies": [ {"roleId": "default"} ]
-        },
-        "anonymous": {
-          "policies": [ {"roleId": "anonymous"} ]
-        }
-      },
       "roles": {
         "admin": {
           "controllers": {
@@ -243,8 +232,19 @@
             }
           }
         }
+      },
+      "profiles": {
+        "admin": {
+          "policies": [ {"roleId": "admin"} ]
+        },
+        "default": {
+          "policies": [ {"roleId": "default"} ]
+        },
+        "anonymous": {
+          "policies": [ {"roleId": "anonymous"} ]
+        }
       }
-    }
+    },
   },
 
   // Kuzzle server is the entry point for incoming requests
@@ -511,19 +511,67 @@
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
       "client": {
-        "host": "http://localhost:9200",
-        "apiVersion": "5.6"
+        "node": "http://localhost:9200"
       },
       // default mapping applied to all collections
       "commonMapping": {
         "_kuzzle_info": {
           "properties": {
-            "active": {"type": "boolean"},
-            "author": {"type": "keyword"},
-            "createdAt": {"type": "date"},
-            "updatedAt": {"type": "date"},
-            "updater": {"type": "keyword"},
-            "deletedAt": {"type": "date"}
+            "active":     { "type": "boolean" },
+            "author":     { "type": "keyword" },
+            "createdAt":  { "type": "date" },
+            "updatedAt":  { "type": "date" },
+            "updater":    { "type": "keyword" },
+            "deletedAt":  { "type": "date" }
+          }
+        }
+      },
+      // Internal index name
+      "internalIndex": "kuzzle",
+      // Internal index default collections and mappings
+      "internalMappings": {
+        "users": {
+          "properties": {
+            "profileIds": { "type": "keyword" }
+          }
+        },
+        "profiles": {
+          "properties": {
+            "policies": {
+              "properties":  {
+                "roleId": { "type": "keyword" }
+              }
+            }
+          }
+        },
+        "roles": {
+          "properties": {
+            "controllers": {
+              "dynamic": "false,
+              "properties": {}
+            }
+          }
+        },
+        "plugins": {
+          "properties": {
+            "dynamic": "false,
+            "properties": {}
+          }
+        },
+        "validations": {
+          "properties": {
+            "index": { "type": "keyword" },
+            "collection": { "type": "keyword" },
+            "validations": {
+              "dynamic": "false,
+              "properties": {}
+            }
+          }
+        },
+        "config": {
+          "properties": {
+            "dynamic": "false,
+            "properties": {}
           }
         }
       },
@@ -552,6 +600,8 @@
   // Defines the specifications used to validate data.
   // Please refer to the guide for more information.
   // (https://docs.kuzzle.io/guide/1/datavalidation)
+  //
+  // /!\ No syntax check will be performed here /!\
   "validation": {
   },
 

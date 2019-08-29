@@ -9,35 +9,21 @@ describe('Test: core/indexCache', () => {
     listAliasesStub,
     listIndexesStub,
     listCollectionsStub,
-    getMappingStub,
     indexCache,
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    const internalMapping = {
-      foo: {
-        mappings: {
-          bar: 'first',
-          baz: 'second',
-          qux: 'third'
-        }
-      }
-    };
-
     listAliasesStub = kuzzle.internalEngine.listAliases.resolves({alias: 'foo', alias2: 'foo'});
     listIndexesStub = kuzzle.internalEngine.listIndexes.resolves(['foo']);
     listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
-    getMappingStub = kuzzle.internalEngine.getMapping.resolves(internalMapping);
     indexCache = new IndexCache(kuzzle);
     kuzzle.internalEngine.applyDefaultMapping.resolves(indexCache.commonMapping);
   });
 
   describe('#init', () => {
     it('should initialize the index cache properly', () => {
-      kuzzle.internalEngine.getFieldMapping.resolves({});
-
       return indexCache.init()
         .then(() => {
           should(listAliasesStub).be.calledOnce();
@@ -58,17 +44,6 @@ describe('Test: core/indexCache', () => {
 
           should(indexCache.defaultMappings.foo._kuzzle_info)
             .eql(indexCache.commonMapping._kuzzle_info);
-        });
-    });
-  });
-
-  describe('#initInternal', () => {
-    it('should initialize the internal index cache properly', () => {
-      return indexCache.initInternal(kuzzle.internalEngine)
-        .then(() => {
-          should(getMappingStub.calledOnce).be.true();
-          should(indexCache.indexes).be.an.Object().and.have.keys('foo');
-          should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
         });
     });
   });
