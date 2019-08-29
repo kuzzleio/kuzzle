@@ -61,7 +61,7 @@ You should now have a Kuzzle cluster stack running with 3 Kuzzle nodes.
 ::: info
 <SinceBadge version="1.9.3" />
 
-Kuzzle images are shipped with the cluster plugin.
+Kuzzle Docker images are shipped with the cluster plugin.
 It is disable by default, but can be enable setting up the [`$KUZZLE_PLUGINS` variable environment](/core/1/guides/essentials/plugins#installing-a-plugin).
 :::
 

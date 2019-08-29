@@ -27,7 +27,7 @@ fi
 
 log "Starting Kuzzle..."
 
-if [ -n "$KUZZLE_PLUGINS" ]; then
+if [ -n "$KUZZLE_PLUGINS" ] && [ "$1" = "start" ]; then
   enable_plugins="--enable-plugins $KUZZLE_PLUGINS"
 fi
 
