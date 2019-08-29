@@ -303,7 +303,6 @@ describe('Test: repositories/roleRepository', () => {
       should(result.controllers).match(controllers);
       should(result).not.have.property('_id');
       should(result).not.have.property('restrictedTo');
-      should(result).not.have.property('closures');
     });
   });
 
@@ -407,8 +406,7 @@ describe('Test: repositories/roleRepository', () => {
 
       return roleRepository.validateAndSaveRole(role)
         .then(response => {
-          should(response._id)
-            .be.eql('anonymous');
+          should(response._id).be.eql('anonymous');
         });
     });
 

@@ -241,7 +241,7 @@
           "policies": [ {"roleId": "anonymous"} ]
         }
       }
-    },
+    }
   },
 
   // Kuzzle server is the entry point for incoming requests
@@ -584,14 +584,14 @@
         "roles": {
           "properties": {
             "controllers": {
-              "dynamic": "false,
+              "dynamic": "false",
               "properties": {}
             }
           }
         },
         "plugins": {
           "properties": {
-            "dynamic": "false,
+            "dynamic": "false",
             "properties": {}
           }
         },
@@ -600,14 +600,14 @@
             "index": { "type": "keyword" },
             "collection": { "type": "keyword" },
             "validations": {
-              "dynamic": "false,
+              "dynamic": "false",
               "properties": {}
             }
           }
         },
         "config": {
           "properties": {
-            "dynamic": "false,
+            "dynamic": "false",
             "properties": {}
           }
         }

@@ -8,15 +8,7 @@ const
   ms = require('ms'),
   _ = require('lodash'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    Request,
-    errors: {
-      BadRequestError,
-      PreconditionError,
-      ExternalServiceError,
-      SizeLimitError
-    }
-  } = require('kuzzle-common-objects'),
+  { Request } = require('kuzzle-common-objects'),
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
   ES = rewire('../../../lib/services/elasticsearch');
 
@@ -27,56 +19,14 @@ describe('Test: ElasticSearch service', () => {
     collection = 'yellow-taxi',
     esIndexName = '&nyc-open-data.yellow-taxi',
     elasticsearch,
-    request,
-    documentAda,
-    filter,
     timestamp = Date.now(),
     dateNow = Date.now;
 
   beforeEach(() => {
-    // prevents embarking _kuzzle_info data from previous tests
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      city: 'London',
-      hobby: 'computer'
-    };
-
     kuzzle = new KuzzleMock();
+
     elasticsearch = new ES(kuzzle, kuzzle.config.services.db);
     elasticsearch._buildClient = () => new ESClientMock();
-
-    filter = {
-      query: {
-        bool: {
-          query: [
-            {
-              term: {
-                city: 'NYC'
-              }
-            },
-            {
-              term: {
-                hobby: 'computer'
-              }
-            }
-          ]
-        }
-      },
-      sort: {},
-      aggregations: {},
-      aggs: {}
-    };
-
-    request = new Request({
-      controller: 'document',
-      action: 'create',
-      requestId: 'foo',
-      collection,
-      index,
-      body: documentAda
-    }, { token: { userId: 'test' }, user: { _id: 'test' } });
-
     elasticsearch.init();
 
     Date.now = () => timestamp;
