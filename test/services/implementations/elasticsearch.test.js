@@ -34,7 +34,8 @@ describe('Test: ElasticSearch service', () => {
     elasticsearch._buildClient = () => new ESClientMock();
     elasticsearch.init();
 
-    elasticsearch.esWrapper.reject = sinon.stub().rejects(esClientError);
+
+    elasticsearch.esWrapper.reject = sinon.spy((error) => Promise.reject(error));
 
     Date.now = () => timestamp;
   });
@@ -285,31 +286,34 @@ describe('Test: ElasticSearch service', () => {
     it('should allow getting multiples documents', () => {
       elasticsearch.client.mget.resolves({
         body: {
-          docs: [ { _id: 'liia', found: true, _source: { city: 'Kathmandu' } } ],
-          total: 1
+          docs: [
+            { _id: 'liia', found: true, _source: { city: 'Kathmandu' }, _version: 1 },
+            { _id: 'mhery', found: false }
+           ]
         }
       });
 
-      const promise = elasticsearch.mGet(index, collection, ['liia']);
+      const promise = elasticsearch.mGet(index, collection, ['liia', 'mhery']);
 
       return promise
         .then(result => {
           should(elasticsearch.client.mget).be.calledWithMatch({
             body: {
               docs: [
-                { _id: 'liia', _index: esIndexName }
+                { _id: 'liia', _index: esIndexName },
+                { _id: 'mhery', _index: esIndexName },
               ]
             }
           });
 
           should(result).match({
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
-            total: 1
+            result: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1 } ],
+            errors: [ { _id: 'mhery' } ]
           });
         });
     });
 
-    it('should return a rejected promise if a search fails', () => {
+    it('should return a rejected promise if client.mget fails', () => {
       elasticsearch.client.mget.rejects(esClientError);
 
       const promise = elasticsearch.mGet(index, collection, ['liia']);
