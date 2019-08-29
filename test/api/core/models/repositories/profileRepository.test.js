@@ -410,6 +410,7 @@ describe('Test: repositories/profileRepository', () => {
 
     it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {
@@ -442,7 +443,7 @@ describe('Test: repositories/profileRepository', () => {
         {roleId: 'test'},
         {roleId: 'anonymous'}
       ];
-
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(profile);
       return profileRepository.validateAndSaveProfile(profile)
         .then(response => {
           should(response._id)
