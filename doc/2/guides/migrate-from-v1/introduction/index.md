@@ -26,3 +26,7 @@ Removed errors:
 | `0x0109003f` | `api.security.rights_action_closure_execution` |
 | `0x03060008` | `network.http_router.unable_to_convert_http_body_to_json` |
 | `0x0008...` | (the entire `sandbox` error subdomain has been removed) |
+
+Removed events:
+
+  - `security:formatUserForSerialization` (deprecated since v1.0.0)
