@@ -2,39 +2,46 @@
 
 const
   should = require('should'),
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  rewire = require('rewire'),
   ms = require('ms'),
   _ = require('lodash'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  { Request } = require('kuzzle-common-objects'),
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
-  ES = rewire('../../../lib/services/elasticsearch');
+  ES = require('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
   let
-    kuzzle = {},
-    index = 'nyc-open-data',
-    collection = 'yellow-taxi',
-    esIndexName = '&nyc-open-data.yellow-taxi',
+    kuzzle,
+    index,
+    collection,
+    esIndexName,
     elasticsearch,
-    timestamp = Date.now(),
+    timestamp,
+    esClientError,
     dateNow = Date.now;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
+    index = 'nyc-open-data';
+    collection = 'yellow-taxi';
+    esIndexName = '&nyc-open-data.yellow-taxi';
+    timestamp = Date.now();
+
+    esClientError = new Error('es client fail');
+
     elasticsearch = new ES(kuzzle, kuzzle.config.services.db);
     elasticsearch._buildClient = () => new ESClientMock();
     elasticsearch.init();
+
+    elasticsearch.esWrapper.reject = sinon.stub().rejects(esClientError);
 
     Date.now = () => timestamp;
   });
 
   afterEach(() => {
     Date.now = dateNow;
-  })
+  });
 
   describe('#constructor', () => {
     it('should initialize properties', () => {
@@ -77,10 +84,10 @@ describe('Test: ElasticSearch service', () => {
       });
 
       const promise = elasticsearch.scroll(
-          index,
-          collection,
-          'i-am-scroll-id',
-          { scroll: '10s' });
+        index,
+        collection,
+        'i-am-scroll-id',
+        { scroll: '10s' });
 
       return promise
         .then(result => {
@@ -100,15 +107,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a scroll fails', () => {
-      elasticsearch.client.scroll.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.scroll.rejects(esClientError);
 
       const promise = elasticsearch.scroll(index, collection, 'i-am-scroll-id');
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
 
     it('should rejects if the scrollId does not exists in Kuzzle cache', () => {
@@ -116,10 +122,11 @@ describe('Test: ElasticSearch service', () => {
 
       const promise = elasticsearch.scroll(index, collection, 'i-am-scroll-id');
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unknown_scroll_identifier'
-      })
+      return should(promise).be.rejected()
         .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            errorName: 'external.elasticsearch.unknown_scroll_identifier'
+          });
           should(kuzzle.services.list.internalCache.pexpire).not.be.called();
           should(elasticsearch.client.scroll).not.be.called();
         });
@@ -127,6 +134,16 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#search', () => {
+    let filter;
+
+    beforeEach(() => {
+      filter = {
+        query: {
+          match_all: {}
+        }
+      };
+    });
+
     it('should be able to search documents', () => {
       elasticsearch.client.search.resolves({
         body: {
@@ -192,15 +209,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a search fails', () => {
-      elasticsearch.client.search.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.search.rejects(esClientError);
 
       const promise = elasticsearch.search(index, collection, filter);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
 
     it('should not save the scrollId in the cache if not present in response', () => {
@@ -230,7 +246,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      const promise = elasticsearch.get(index, collection, 'liia')
+      const promise = elasticsearch.get(index, collection, 'liia');
 
       return promise
         .then(result => {
@@ -248,7 +264,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject requests when the user search for a document with id _search', () => {
-      const promise = elasticsearch.get(index, collection, '_search')
+      const promise = elasticsearch.get(index, collection, '_search');
 
       return should(promise).be.rejectedWith({
         errorName: 'external.elasticsearch.wrong_get_action'
@@ -256,15 +272,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a get fails', () => {
-      elasticsearch.client.get.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.get.rejects(esClientError);
 
       const promise = elasticsearch.get(index, collection, 'liia');
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -297,20 +312,24 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if a search fails', () => {
-      elasticsearch.client.mget.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.mget.rejects(esClientError);
 
       const promise = elasticsearch.mGet(index, collection, ['liia']);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
   describe('#count', () => {
     it('should allow counting documents using a provided filter', () => {
+      const filter = {
+        query: {
+          match_all: {}
+        }
+      };
       elasticsearch.client.count.resolves({
         body: {
           count: 42
@@ -333,15 +352,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if count fails', () => {
-      elasticsearch.client.count.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.count.rejects(esClientError);
 
       const promise = elasticsearch.count(index, collection);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -417,22 +435,6 @@ describe('Test: ElasticSearch service', () => {
             _source: { city: 'Panipokari' }
           });
         });
-    });
-
-    it('should return a rejected promise if client.index throws an error', () => {
-      elasticsearch.client.index.rejects({
-        meta: { body: { error: { reason: '[liia]: version conflict, document already exists (current version [1])' } } }
-      });
-
-      const promise = elasticsearch.create(
-          index,
-          collection,
-          { city: 'Kathmandu' },
-          { id: 'liia' });
-
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.document_already_exists'
-      });
     });
   });
 
@@ -511,9 +513,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client.index fails', () => {
-      elasticsearch.client.index.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.index.rejects(esClientError);
 
       const promise = elasticsearch.createOrReplace(
         index,
@@ -521,9 +521,10 @@ describe('Test: ElasticSearch service', () => {
         'liia',
         { city: 'Kathmandu' });
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -602,34 +603,8 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise with a NotFoundError when updating a document which does not exist', () => {
-      const esError = new Error('test');
-      esError.meta = { statusCode: 404 };
-      esError.body = {
-        found: false,
-        _id: 'mehry',
-        error: {
-          reason: 'foo',
-          'resource.id': 'bar'
-        }
-      };
-      elasticsearch.client.update.rejects(esError);
-
-      const promise = elasticsearch.update(
-        index,
-        collection,
-        'liia',
-        { city: 'Panipokari' });
-
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.document_not_found'
-      });
-    });
-
     it('should return a rejected promise if client.update fails', () => {
-      elasticsearch.client.update.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.update.rejects(esClientError);
 
       const promise = elasticsearch.update(
         index,
@@ -637,9 +612,10 @@ describe('Test: ElasticSearch service', () => {
         'liia',
         { city: 'Kathmandu' });
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -729,18 +705,17 @@ describe('Test: ElasticSearch service', () => {
         'liia',
         { city: 'Kathmandu' });
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.document_not_found'
-      })
+      return should(promise).be.rejected()
         .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            errorName: 'external.elasticsearch.document_not_found'
+          });
           should(elasticsearch.client.index).not.be.called();
         });
     });
 
     it('should return a rejected promise if client.index fails', () => {
-      elasticsearch.client.index.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.index.rejects(esClientError);
 
       const promise = elasticsearch.replace(
         index,
@@ -748,9 +723,10 @@ describe('Test: ElasticSearch service', () => {
         'liia',
         { city: 'Kathmandu' });
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -807,18 +783,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client.delete fails', () => {
-      elasticsearch.client.delete.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.delete.rejects(esClientError);
 
       const promise = elasticsearch.delete(
         index,
         collection,
         'liia');
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -889,18 +864,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client.deleteByQuery fails', () => {
-      elasticsearch.client.deleteByQuery.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.deleteByQuery.rejects(esClientError);
 
       const promise = elasticsearch.deleteByQuery(
         index,
         collection,
         { filter: 'term' });
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
 
     it('should reject if the query is empty', () => {
@@ -933,24 +907,26 @@ describe('Test: ElasticSearch service', () => {
     it('should rejects if the index already exists', () => {
       const promise = elasticsearch.createIndex('nepali');
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.index_already_exists'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            errorName: 'external.elasticsearch.index_already_exists'
+          });
+        });
     });
 
     it('should return a rejected promise if client.cat.indices fails', () => {
-      elasticsearch.client.cat.indices.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.cat.indices.rejects(esClientError);
 
       const promise = elasticsearch.createIndex(
         index,
         collection,
         { filter: 'term' });
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -993,18 +969,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client.indices.create fails', () => {
-      elasticsearch.client.indices.create.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.indices.create.rejects(esClientError);
 
       const promise = elasticsearch.createCollection(
         index,
         collection,
         { properties: { city: { type: 'keyword' } } });
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
 
     it('should reject with BadRequestError on wrong mapping', () => {
@@ -1137,9 +1112,9 @@ describe('Test: ElasticSearch service', () => {
 
     it('should include kuzzleMeta if specified', () => {
       const promise = elasticsearch.getMapping(
-          index,
-          collection,
-          { includeKuzzleMeta: true });
+        index,
+        collection,
+        { includeKuzzleMeta: true });
 
       return promise
         .then(result => {
@@ -1155,6 +1130,17 @@ describe('Test: ElasticSearch service', () => {
               _kuzzle_info: { properties: { author: { type: 'keyword' } } }
             }
           });
+        });
+    });
+
+    it('should return a rejected promise if client.cat.indices fails', () => {
+      elasticsearch.client.indices.getMapping.rejects(esClientError);
+
+      const promise = elasticsearch.getMapping(index, collection);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
   });
@@ -1235,10 +1221,13 @@ describe('Test: ElasticSearch service', () => {
 
       const promise = elasticsearch.updateMapping(index, collection, newMapping);
 
-      return should(promise).be.rejectedWith({
-        message: /Did you mean "dynamic"/,
-        errorName: 'external.elasticsearch.incorrect_mapping_property'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+            errorName: 'external.elasticsearch.incorrect_mapping_property'
+          });
+        });
     });
 
     it('should replace dynamic and _meta', () => {
@@ -1270,23 +1259,15 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should reject and handle error for bad mapping input', () => {
-      const error = new Error('test');
-      error.meta = {
-        statusCode: 400
-      };
-      error.body = {
-        error: {
-          reason: 'foo'
-        }
-      };
-      elasticsearch.client.indices.putMapping.rejects(error);
+    it('should return a rejected promise if client.cat.indices fails', () => {
+      elasticsearch.client.indices.putMapping.rejects(esClientError);
 
       const promise = elasticsearch.updateMapping(index, collection, newMapping);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_bad_request_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -1324,19 +1305,18 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).be.undefined();
-        })
+        });
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.indices.delete.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.indices.delete.rejects(esClientError);
 
       const promise = elasticsearch.truncateCollection(index, collection);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -1408,7 +1388,7 @@ describe('Test: ElasticSearch service', () => {
         { firstName: 'bar' },
       ];
 
-      elasticsearch.client.bulk.resolves(bulkReturn)
+      elasticsearch.client.bulk.resolves(bulkReturn);
     });
 
     it('should support bulk data import', () => {
@@ -1455,12 +1435,12 @@ describe('Test: ElasticSearch service', () => {
 
               { update: { _id: 3, _index: esIndexName } },
               { doc: {
-                  firstName: 'foobar',
-                  _kuzzle_info: {
-                    updater: null,
-                    updatedAt: timestamp
-                  }
+                firstName: 'foobar',
+                _kuzzle_info: {
+                  updater: null,
+                  updatedAt: timestamp
                 }
+              }
               },
 
               { delete: { _id: 4, _index: esIndexName } }
@@ -1541,7 +1521,7 @@ describe('Test: ElasticSearch service', () => {
             items: [
               { index: { status: 201, _id: 1, result: 'created' } },
               { index: { status: 201, _id: 2, result: 'created' } },
-              ],
+            ],
             errors: [
               { update: { status: 404, _id: 42, error: { type: 'not_found', reason: 'not found' } } },
               { delete: { status: 404, _id: 21, error: { type: 'not_found', reason: 'not found' } } }
@@ -1551,15 +1531,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.bulk.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.bulk.rejects(esClientError);
 
       const promise = elasticsearch.import(index, collection, documents);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
 
     it('should abort if the number of documents exceeds the configured limit', () => {
@@ -1590,7 +1569,7 @@ describe('Test: ElasticSearch service', () => {
           { index: '&nyc-open-data.taxi' }
         ]
       });
-    })
+    });
 
     it('should allow listing all available collections', () => {
       const promise = elasticsearch.listCollections('nepali');
@@ -1623,15 +1602,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.cat.indices.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.cat.indices.rejects(esClientError);
 
       const promise = elasticsearch.listCollections(index);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -1644,7 +1622,7 @@ describe('Test: ElasticSearch service', () => {
           { index: '&nyc-open-data.taxi' }
         ]
       });
-    })
+    });
 
     it('should allow listing all available indexes', () => {
       const promise = elasticsearch.listIndexes();
@@ -1678,15 +1656,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.cat.indices.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.cat.indices.rejects(esClientError);
 
       const promise = elasticsearch.listIndexes();
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -1700,7 +1677,7 @@ describe('Test: ElasticSearch service', () => {
           { index: '&nyc-open-data.taxi' }
         ]
       });
-    })
+    });
 
     it('should allow to deletes multiple indexes', () => {
       const promise = elasticsearch.deleteIndexes(['nepali', 'nyc-open-data']);
@@ -1742,15 +1719,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.cat.indices.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.cat.indices.rejects(esClientError);
 
       const promise = elasticsearch.listIndexes();
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -1790,15 +1766,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.indices.refresh.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.indices.refresh.rejects(esClientError);
 
       const promise = elasticsearch.refreshCollection(index, collection);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -1822,15 +1797,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.exists.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.exists.rejects(esClientError);
 
       const promise = elasticsearch.exists(index, collection, 'liia');
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
@@ -2783,7 +2757,7 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             result: expectedResult,
             errors: expectedErrors
-          })
+          });
         });
     });
 
@@ -2803,7 +2777,7 @@ describe('Test: ElasticSearch service', () => {
           should(result).match({
             result: [],
             errors: expectedErrors
-          })
+          });
         });
     });
 
@@ -2818,15 +2792,14 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.bulk.rejects({
-        meta: { statusCode: 42 }
-      });
+      elasticsearch.client.bulk.rejects(esClientError);
 
       const promise = elasticsearch._mExecute(esRequest, documents, partialErrors);
 
-      return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.unexpected_error'
-      });
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
 
   });
@@ -2918,6 +2891,79 @@ describe('Test: ElasticSearch service', () => {
 
       should(() => elasticsearch._checkMappings(mapping))
         .not.throw();
+    });
+  });
+
+  describe('Collection emulation utils', () => {
+    let
+      internalES,
+      publicES;
+
+    beforeEach(() => {
+      publicES = new ES(kuzzle, kuzzle.config.services.db);
+      internalES = new ES(kuzzle, kuzzle.config.services.db, 'internal');
+    });
+
+    describe('#_getESIndex', () => {
+      it('return esIndex name for a collection', () => {
+        const
+          publicESIndex = publicES._getESIndex('nepali', 'liia'),
+          internalESIndex = internalES._getESIndex('nepali', 'mehry');
+
+        should(publicESIndex).be.eql('&nepali.liia');
+        should(internalESIndex).be.eql('%nepali.mehry');
+      });
+    });
+
+    describe('#_extractIndex', () => {
+      it('extract the index name from esIndex name', () => {
+        const
+          publicIndex = publicES._extractIndex('&nepali.liia'),
+          internalIndex = internalES._extractIndex('%nepali.liia');
+
+        should(publicIndex).be.eql('nepali');
+        should(internalIndex).be.eql('nepali');
+      });
+    });
+
+    describe('#_extractCollection', () => {
+      it('extract the collection names from esIndex name', () => {
+        const
+          publicCollection = publicES._extractCollection('&nepali.liia'),
+          internalCollection = internalES._extractCollection('%nepali.liia');
+
+        should(publicCollection).be.eql('liia');
+        should(internalCollection).be.eql('liia');
+      });
+    });
+
+    describe('#_extractIndexes', () => {
+      it('extract the index names from a list of esIndex name', () => {
+        const esIndexes = [
+          '%nepali.liia', '%nepali.mehry', '&india.darjeeling', '&vietnam.lfiduras'
+        ];
+
+        const
+          publicIndexes = publicES._extractIndexes(esIndexes),
+          internalIndexes = internalES._extractIndexes(esIndexes);
+
+        should(publicIndexes).be.eql(['india', 'vietnam']);
+        should(internalIndexes).be.eql(['nepali']);
+      });
+    });
+
+    describe('#_extractCollections', () => {
+      it('extract the collection names for an index from a list of esIndex name', () => {
+        const esIndexes = [
+          '%nepali.liia', '%nepali.mehry', '&nepali.panipokari', '&vietnam.lfiduras'];
+
+        const
+          publicCollections = publicES._extractCollections(esIndexes, 'nepali'),
+          internalCollections = internalES._extractCollections(esIndexes, 'nepali');
+
+        should(publicCollections).be.eql(['panipokari']);
+        should(internalCollections).be.eql(['liia', 'mehry']);
+      });
     });
   });
 });

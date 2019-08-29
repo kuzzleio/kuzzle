@@ -38,7 +38,37 @@ describe('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.errorName).be.eql('external.elasticsearch.unexpected_conflict_error');
+      should(formatted.errorName).be.eql('external.elasticsearch.too_many_changes');
+    });
+
+    it('should handle already existing document', () => {
+      const error = new Error('');
+      error.meta = { body: { error: { reason: '[liia]: version conflict, document already exists (current version [1])' } } };
+
+      const formatted = esWrapper.formatESError(error);
+
+      should(formatted).be.match({
+        errorName: 'external.elasticsearch.document_already_exists'
+      });
+    });
+
+    it('should handle document not found', () => {
+      const error = new Error('test');
+      error.meta = { statusCode: 404 };
+      error.body = {
+        found: false,
+        _id: 'mehry',
+        error: {
+          reason: 'foo',
+          'resource.id': 'bar'
+        }
+      };
+
+      const formatted = esWrapper.formatESError(error);
+
+      should(formatted).be.match({
+        errorName: 'external.elasticsearch.document_not_found'
+      });
     });
   });
 
