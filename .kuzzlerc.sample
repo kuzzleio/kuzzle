@@ -181,6 +181,9 @@
       }
     },
     // [standard]
+    // Permissions used when creating an administrator user, either using the
+    // CLI or the Back Office.
+    //
     // By default, the admin user is granted all permissions.
     // Anonymous and non-administrator users have their rights restricted
     "standard": {
