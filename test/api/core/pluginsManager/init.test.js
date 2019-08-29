@@ -94,11 +94,10 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins).be.empty();
     });
 
-    it('should throw if a plugin with the same name already exists', () => {
-      const instanceName = 'kuzzle-plugin-test';
+    it('should throw if a plugin with the same lower-cased name already exists', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
-      fsStub.readdirSync.returns([instanceName, 'another-plugin']);
+      fsStub.readdirSync.returns(['kuzzle-plugin-test', 'another-plugin']);
       fsStub.statSync.returns({
         isDirectory: () => true
       });
@@ -106,16 +105,16 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/another-plugin', pluginStub);
       mockrequire(
         '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
-        { name: instanceName, kuzzleVersion: '^2.x'});
+        { name: 'foobar', kuzzleVersion: '^2.x'});
       mockrequire(
         '/kuzzle/plugins/enabled/another-plugin/manifest.json',
-        { name: instanceName, kuzzleVersion: '^2.x'});
+        { name: 'fooBAR', kuzzleVersion: '^2.x'});
 
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        {message: /A plugin named kuzzle-plugin-test already exists/});
+        {message: /A plugin named foobar already exists/});
     });
 
     it('should throw if a plugin does not expose a "init" method', () => {
