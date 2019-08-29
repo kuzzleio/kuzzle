@@ -26,7 +26,7 @@ describe('core/clientConnection', () => {
     it('should be frozen', () => {
       connection.id = 'not-set';
       connection.protocol = 'not-set';
-      connection.headers.foo = 'not-set'
+      connection.headers.foo = 'not-set';
 
       should(() => connection.ips.push('not-pushed')).throw(TypeError);
       should(connection.headers.foo).not.be.eql('not-set');
