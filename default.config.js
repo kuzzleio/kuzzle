@@ -242,43 +242,45 @@ module.exports = {
           }
         }
       },
-      internalIndex: 'kuzzle',
-      internalMappings: {
-        users: {
-          properties: {
-            profileIds: { type: 'keyword' }
-          }
-        },
-        profiles: {
-          properties: {
-            policies: {
-              properties:  {
-                roleId: { type: 'keyword' }
+      internalIndex: {
+        name: 'kuzzle',
+        collections: {
+          users: {
+            properties: {
+              profileIds: { type: 'keyword' }
+            }
+          },
+          profiles: {
+            properties: {
+              policies: {
+                properties:  {
+                  roleId: { type: 'keyword' }
+                }
               }
             }
-          }
-        },
-        roles: {
-          dynamic: 'false',
-          properties: {}
-        },
-        plugins: {
-          dynamic: 'false',
-          properties: {}
-        },
-        validations: {
-          properties: {
-            index: { type: 'keyword' },
-            collection: { type: 'keyword' },
-            validations: {
-              dynamic: 'false',
-              properties: {}
+          },
+          roles: {
+            dynamic: 'false',
+            properties: {}
+          },
+          plugins: {
+            dynamic: 'false',
+            properties: {}
+          },
+          validations: {
+            properties: {
+              index: { type: 'keyword' },
+              collection: { type: 'keyword' },
+              validations: {
+                dynamic: 'false',
+                properties: {}
+              }
             }
+          },
+          config: {
+            dynamic: 'false',
+            properties: {}
           }
-        },
-        config: {
-          dynamic: 'false',
-          properties: {}
         }
       },
       defaults: {
