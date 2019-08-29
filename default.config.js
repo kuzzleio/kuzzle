@@ -94,42 +94,6 @@ module.exports = {
         }
       }
     },
-    initial: {
-      roles: {
-        admin: {
-          controllers: {
-            '*': {
-              actions: '*'
-            }
-          }
-        },
-        default: {
-          controllers: {
-            '*': {
-              actions: '*'
-            }
-          }
-        },
-        anonymous: {
-          controllers: {
-            '*': {
-              actions: '*'
-            }
-          }
-        }
-      },
-      profiles: {
-        admin: {
-          policies: [ { roleId: 'admin' } ]
-        },
-        default: {
-          policies: [ { roleId: 'default' } ]
-        },
-        anonymous: {
-          policies: [ { roleId: 'anonymous' } ]
-        }
-      }
-    },
     standard: {
       profiles: {
         admin: {

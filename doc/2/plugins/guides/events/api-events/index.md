@@ -47,15 +47,7 @@ The `before` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-<<<<<<< HEAD:doc/2/plugins/guides/events/api-events/index.md
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
-=======
-<<<<<<< HEAD:doc/2/plugins/guides/events/api-events/index.md
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
-=======
 | `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
->>>>>>> ce39d8df1e38d0f502c210a554fd7562cb15d2b2:doc/2/plugins/guides/events/api-events/index.md
->>>>>>> 26aba44f363aa2ddb946c6dafc831a1a38b85735:doc/2/plugins/guides/events/api-events/index.md
 
 An `after` event is triggered after an API request succeeds.
 
@@ -81,15 +73,7 @@ The `after` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-<<<<<<< HEAD:doc/2/plugins/guides/events/api-events/index.md
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
-=======
-<<<<<<< HEAD:doc/2/plugins/guides/events/api-events/index.md
-| `request` | [`Request`](/core/2/plugins/constructors/request) | The normalized API request |
-=======
 | `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
->>>>>>> ce39d8df1e38d0f502c210a554fd7562cb15d2b2:doc/2/plugins/guides/events/api-events/index.md
->>>>>>> 26aba44f363aa2ddb946c6dafc831a1a38b85735:doc/2/plugins/guides/events/api-events/index.md
 
 An `error` event is triggered after an API request fails.
 
