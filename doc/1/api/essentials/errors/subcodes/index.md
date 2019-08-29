@@ -22,6 +22,7 @@ order: 500
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `0x1`  | `Unknown error: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unknown_error | internal.unexpected.unknown_error
+`0x2`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to init within <placeholder>ms` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | timeout | internal.unexpected.timeout
 
 ---
 
@@ -189,6 +190,18 @@ order: 500
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `0x80001`  | `A process is already running for this sandbox` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | process_already_running | internal.sandbox.process_already_running
 `0x80002`  | `Timeout. The sandbox did not respond within <placeholder>ms.` | [GatewayTimeoutError](https://docs.kuzzle.io/core/1/api/essentials/errors/#gatewaytimeouterror) | timeout | internal.sandbox.timeout
+
+---
+
+
+### Subdomain: configuration, code: 9
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`0x90001`  | `Invalid config.limits configuration format: please check your Kuzzle configuration files` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | invalid_limits_configuration_format | internal.configuration.invalid_limits_configuration_format
+`0x90002`  | `Invalid configuration: value set for "<placeholder>" limit is outside the allowed range` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | value_out_of_range | internal.configuration.value_out_of_range
+`0x90003`  | `Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | concurrentRequests_superior_to_requestsBufferSize | internal.configuration.concurrentRequests_superior_to_requestsBufferSize
+`0x90004`  | `Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | requestsBufferWarningThreshold_out_of_range | internal.configuration.requestsBufferWarningThreshold_out_of_range
 
 ---
 
@@ -462,6 +475,31 @@ order: 500
 `0x20a000f`  | `NX and XX options are mutually exclusive.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | nx_xx_exclusive_opts | api.memory_storage.nx_xx_exclusive_opts
 `0x20a0010`  | `EX and PX options are mutually exclusive.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | ex_px_exclusive_opts | api.memory_storage.ex_px_exclusive_opts
 `0x20a0011`  | `Invalid direction argument (expected: ASC or DESC).` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | direction_argument | api.memory_storage.direction_argument
+
+---
+
+
+### Subdomain: request_assertions, code: 11
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`0x20b0001`  | `The request must specify a body.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_specify_body | api.request_assertions.must_specify_body
+`0x20b0002`  | `The request must specify a body attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_body_attribute | api.request_assertions.missing_body_attribute
+`0x20b0003`  | `The request must specify an attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_attribute | api.request_assertions.missing_attribute
+`0x20b0004`  | `The request must not specify the body attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_not_specify_body_attribute | api.request_assertions.must_not_specify_body_attribute
+`0x20b0005`  | `An unexepected type assertion "<placeholder>" has been invoked on attribute "<placeholder>".` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unexpected_type_assertion_on_attribute | api.request_assertions.unexpected_type_assertion_on_attribute
+`0x20b0006`  | `The request must specify the body attribute "<placeholder>" of type "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_body_attribute_type | api.request_assertions.wrong_body_attribute_type
+`0x20b0007`  | `The request must specify an _id.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_id | api.request_assertions.missing_id
+`0x20b0008`  | `The request must not specify an _id that starts with an underscore (_).` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_id_format | api.request_assertions.wrong_id_format
+`0x20b0009`  | `The request must specify an index.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_index | api.request_assertions.missing_index
+`0x20b000a`  | `The request must specify a collection.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_collection | api.request_assertions.missing_collection
+`0x20b000b`  | `The request must specify a strategy.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_strategy | api.request_assertions.missing_strategy
+`0x20b000c`  | `The request argument's strategy must be a string.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_strategy_type | api.request_assertions.wrong_strategy_type
+`0x20b000d`  | `The request must specify a scrollId.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_scrollId | api.request_assertions.missing_scrollId
+`0x20b000e`  | `The request argument's scrollId must be a string.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_scrollId_type | api.request_assertions.wrong_scrollId_type
+`0x20b000f`  | `You must be authenticated to execute that action` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | must_be_authenticated_to_execute_action | api.request_assertions.must_be_authenticated_to_execute_action
+`0x20b0010`  | `The strategy "<placeholder>" is not a known strategy.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unknown_strategy | api.request_assertions.unknown_strategy
+`0x20b0011`  | `Expected '<placeholder>' to be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_be_an_object | api.request_assertions.must_be_an_object
 
 ---
 
