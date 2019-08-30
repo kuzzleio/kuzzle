@@ -9,9 +9,9 @@ order: 100
 
 The Kuzzle Admin Console is a web application that lets you manage Kuzzle, including **data**, **real-time notifications** and **security**.
 
-If you don't want to install Kuzzle Admin Console yourself you can use our [pubicly hosted](http://console.kuzzle.io/) Admin Console. Otherwise, grab the [source code](https://github.com/kuzzleio/kuzzle-admin-console) and install it on your  environment.
+If you don't want to install Kuzzle Admin Console yourself you can use our [pubicly hosted](http://console.kuzzle.io) Admin Console. Otherwise, grab the [source code](https://github.com/kuzzleio/kuzzle-admin-console) and install it on your  environment.
 
-In both cases the configuration is the same and you'll be able to select which [Kuzzle](/core/1/guides/essentials/admin-console/#connect-to-kuzzle) installation you want to manage.
+In both cases the configuration is the same and you'll be able to select which [Kuzzle](/core/1/guides/essentials/admin-console#connect-to-kuzzle) installation you want to manage.
 
 :::info
 Having trouble? Get in touch with us on [Gitter](https://gitter.im/kuzzleio/kuzzle)!

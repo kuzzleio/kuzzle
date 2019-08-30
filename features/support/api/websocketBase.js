@@ -66,6 +66,10 @@ class WebSocketApiBase extends ApiBase {
 
     msg.volatile = this.world.volatile;
 
+    if (this.world.currentUser && this.world.currentUser.token) {
+      msg.jwt = this.world.currentUser.token;
+    }
+
     return this._initSocket(socketName)
       .then(() => {
         const socket = this.sockets[socketName];

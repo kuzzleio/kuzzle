@@ -99,7 +99,7 @@ Each document has the following properties:
 - `_source`: document content
 - `_version`: version number of the document
 
-If one or more document cannot be replaced, the response status is set to `206`, and the `error` object contain a [partial error](/core/1/api/essentials/errors/#partialerror) error.
+If one or more document cannot be replaced, the response status is set to `206`, and the `error` object contain a [partial error](/core/1/api/essentials/errors#partialerror) error.
 
 ```js
 {

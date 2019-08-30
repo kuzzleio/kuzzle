@@ -10,7 +10,7 @@ order: 100
 
 We want you to work with Elasticsearch while you are reading this cookbook,
 to do so you will need [cURL](https://curl.haxx.se/download.html), a terminal (Linux, Mac, Cygwin...)
-and, optionally, [docker](https://docs.docker.com/install/) to speed up the installation.
+and, optionally, [docker](https://docs.docker.com/install) to speed up the installation.
 
 Alternatively you can simply trust the results we provide in the cookbook and skip the installation chapter.
 

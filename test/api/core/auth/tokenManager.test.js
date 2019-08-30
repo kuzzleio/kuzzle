@@ -123,13 +123,7 @@ describe('Test: token manager core component', () => {
 
   describe('#expire', () => {
     it('should force a token to expire when called', () => {
-      tokenManager.tokens.insert({
-        idx: `${token.expiresAt};${token._id}`,
-        connectionId: 'foo',
-        expiresAt: token.expiresAt,
-        userId: token.userId,
-        rooms: new Set(['bar'])
-      });
+      tokenManager._add(token, 'foo', ['bar']);
 
       tokenManager.expire(token);
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
@@ -337,31 +331,20 @@ describe('Test: token manager core component', () => {
     });
 
     it('should also remove the entry if the last linked room ID is removed', () => {
-      tokenManager.tokens.insert({
-        idx: `${token.expiresAt};${token._id}`,
-        connectionId: 'foo',
-        expiresAt: token.expiresAt,
-        userId: token.userId,
-        rooms: new Set(['foo', 'bar', 'baz'])
-      });
+      tokenManager._add(token, 'foo', ['bar', 'foo', 'baz']);
 
       tokenManager.unlink(token, 'bar');
       tokenManager.unlink(token, 'foo');
       tokenManager.unlink(token, 'baz');
 
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
+      should(tokenManager.tokensByConnectedUser).be.empty();
     });
   });
 
   describe('#refresh', () => {
     beforeEach(() => {
-      tokenManager.tokens.insert({
-        idx: `${token.expiresAt};${token._id}`,
-        connectionId: 'foo',
-        expiresAt: token.expiresAt,
-        userId: token.userId,
-        rooms: new Set(['bar'])
-      });
+      tokenManager._add(token, 'foo', ['bar']);
     });
 
     it('should do nothing if the provided token is not linked', () => {
@@ -381,6 +364,23 @@ describe('Test: token manager core component', () => {
       should(tokenManager.tokens.array).have.length(1);
       should(tokenManager.tokens.array[0].idx)
         .eql(`${newT.expiresAt};${newT._id}`);
+    });
+  });
+
+  describe('#getConnectedUserToken', () => {
+    it('should return a matching token', () => {
+      tokenManager._add(token, 'foo', ['bar']);
+
+      const response = tokenManager.getConnectedUserToken(token.userId, 'foo');
+      should(response).be.an.instanceOf(Token);
+      should(response).match({
+        _id: token._id,
+        expiresAt: token.expiresAt,
+        ttl: null,
+        userId: token.userId,
+        connectionId: 'foo',
+        jwt: token.jwt
+      });
     });
   });
 });

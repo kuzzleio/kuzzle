@@ -276,7 +276,7 @@ strict_year_month_day
 :::warning
 The format defined in the specification has to match the formats defined in the Elasticsearch mapping for the field.
 
-Non strict mode is slightly different from the one explained and implemented by Elasticsearch. Please refer to the [Moment.js documentation](http://momentjs.com/guides/#/parsing/strict-mode/) for further details, this is the date library we use internally.
+Non strict mode is slightly different from the one explained and implemented by Elasticsearch. Please refer to the [Moment.js documentation](http://momentjs.com/guides/#/parsing/strict-mode) for further details, this is the date library we use internally.
 
 Non strict mode has been implemented to fit Elasticsearch date formats but we recommend to use strict mode when possible.
 :::

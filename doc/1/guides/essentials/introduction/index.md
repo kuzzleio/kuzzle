@@ -36,20 +36,20 @@ You can interact directly with Kuzzle through its API, read the [Kuzzle API refe
 
 ## Manage your data
 
-Kuzzle relies on [Elasticsearch](https://www.elastic.co/) to store, fetch and peform a variety of CRUD and fine-grained search operations on persistent data. Please refer to our [working with persistent data](/core/1/guides/essentials/store-access-data/) section for more details.
+Kuzzle relies on [Elasticsearch](https://www.elastic.co) to store, fetch and peform a variety of CRUD and fine-grained search operations on persistent data. Please refer to our [working with persistent data](/core/1/guides/essentials/store-access-data) section for more details.
 
 ## Trigger real-time notifications
 
 Kuzzle lets you to setup subscriptions on specific datasets in order to trigger real-time notifications based on different data events.
 To define what events will trigger a notification we use **filters**, which describe what data to observe using a domain-specific language (DSL) that we tailored for this purpose.
 
-Please click [here](/core/1/guides/essentials/real-time/) for more details.
+Please click [here](/core/1/guides/essentials/real-time) for more details.
 
 ## Manage Authentication
 
-Kuzzle supports a variety of authentication strategies via [Passport.js](http://passportjs.org/). Local and OAuth-based authentication is natively supported, but you can also add your own custom strategy.
+Kuzzle supports a variety of authentication strategies via [Passport.js](http://passportjs.org). Local and OAuth-based authentication is natively supported, but you can also add your own custom strategy.
 
-Please click [here](/core/1/guides/essentials/security/) for more details.
+Please click [here](/core/1/guides/essentials/security) for more details.
 
 ## Customize your backend
 
@@ -61,4 +61,4 @@ Kuzzle can be tailored to your specific requirements thanks to the Plugin Engine
 - add new communication protocols
 - add new authentication strategies
 
-Please click [here](/core/1/guides/essentials/plugins/) for more details.
+Please click [here](/core/1/guides/essentials/plugins) for more details.

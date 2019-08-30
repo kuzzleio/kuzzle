@@ -38,7 +38,7 @@ Replace `kuzzle` with the IP address or with the name of the Kuzzle server.
 
 Let's use the _subscribe_ method.
 
-We will perform a subscription request that tells Kuzzle that the App wants to be notified anytime a document is created that contains the _message_ field. We define this subscription filter as follows, for more information about filters click [here](/core/1/guides/cookbooks/realtime-api/):
+We will perform a subscription request that tells Kuzzle that the App wants to be notified anytime a document is created that contains the _message_ field. We define this subscription filter as follows, for more information about filters click [here](/core/1/guides/cookbooks/realtime-api):
 
 <<< ./snippets/subscribe.js
 

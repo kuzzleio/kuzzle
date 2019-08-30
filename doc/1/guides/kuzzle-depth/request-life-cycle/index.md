@@ -12,7 +12,7 @@ Kuzzle has two main modes of communication:
 
 - **Synchronous**: Clients send requests to the Kuzzle server, which processes the data using the [Document Controller](/core/1/api/controllers/document) and then sends a response back to the client.
 
-- **Asynchronous**: Clients subscribe to the Kuzzle server via the [Real-time/Subscribe](/core/1/api/controllers/realtime/publish/) API action and receive data asynchronously as a result of a [Real-time/Publish](/core/1/api/controllers/realtime/publish/) API action or a [Document Controller](/core/1/api/controllers/document) event.
+- **Asynchronous**: Clients subscribe to the Kuzzle server via the [Real-time/Subscribe](/core/1/api/controllers/realtime/publish) API action and receive data asynchronously as a result of a [Real-time/Publish](/core/1/api/controllers/realtime/publish) API action or a [Document Controller](/core/1/api/controllers/document) event.
 
 These modes of communication are generally independant from the transport protocol. For example, a synchronous request can be made via HTTP or Websockets.
 
@@ -179,7 +179,7 @@ The following diagram shows how a client can subscribe to a channel.
 
 ![pubsub_scenario_details1](./Asynchronous_Communication_Subscription.png)
 
-- The client application opens a socket (or MQ) connection, sends a subscription request (see the [API Documentation](/core/1/api/controllers/realtime/subscribe/)), and then listens for the `< requestId >` event on the socket. The subscription request is a message that contains a filter description that defines which events should trigger a response. For instance, the following filter will trigger a response anytime content is posted to the `users` collection that contains the field `hobby` with value `computer` (see the [Koncorde Reference](/core/1/guides/cookbooks/realtime-api/) for more details):
+- The client application opens a socket (or MQ) connection, sends a subscription request (see the [API Documentation](/core/1/api/controllers/realtime/subscribe)), and then listens for the `< requestId >` event on the socket. The subscription request is a message that contains a filter description that defines which events should trigger a response. For instance, the following filter will trigger a response anytime content is posted to the `users` collection that contains the field `hobby` with value `computer` (see the [Koncorde Reference](/core/1/guides/cookbooks/realtime-api) for more details):
 
 ```js
 {
@@ -249,7 +249,7 @@ The following diagram shows how a client can subscribe to a channel.
 
 #### Publishing to a Channel Directly
 
-The following diagram shows how the Kuzzle server triggers a response as a result of a publish request made using the [Real-time/Publish](/core/1/api/controllers/realtime/publish/) action.
+The following diagram shows how the Kuzzle server triggers a response as a result of a publish request made using the [Real-time/Publish](/core/1/api/controllers/realtime/publish) action.
 
 ![pubsub_scenario_details2](./Asynchronous_Communication_Publishing_Directly.png)
 

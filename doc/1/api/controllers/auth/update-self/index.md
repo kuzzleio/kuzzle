@@ -64,7 +64,7 @@ User properties that can be set or updated depend on the application hosted by K
 
 Returns the following properties:
 
-- `_id`: current user's [kuid](/core/1/guides/essentials/user-authentication/#kuzzle-user-identifier-kuid)
+- `_id`: current user's [kuid](/core/1/guides/essentials/user-authentication#kuzzle-user-identifier-kuid)
 - `_source`: additional (and optional) user properties
 
 ```js

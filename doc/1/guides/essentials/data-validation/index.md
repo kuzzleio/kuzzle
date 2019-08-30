@@ -11,7 +11,7 @@ One common requirement when you are managing data is to perform **data validatio
 
 A common example is **email validation**. Let's say you have developed a registration page where you request a user's name and email and you want to ensure that the email they provide is valid.
 
-With Kuzzle, instead of programming the validation logic yourself, you can pick from a set of predefined [validation patterns](/core/1/guides/cookbooks/datavalidation). Validations are defined in a validation schema which determines what pattern is linked to what field, every time Kuzzle receives input data, it checks this validation schema and returns an error if a validation pattern fails. The validation schema can be configured in the `validation` field of the [configuration file](/core/1/guides/essentials/configuration/).
+With Kuzzle, instead of programming the validation logic yourself, you can pick from a set of predefined [validation patterns](/core/1/guides/cookbooks/datavalidation). Validations are defined in a validation schema which determines what pattern is linked to what field, every time Kuzzle receives input data, it checks this validation schema and returns an error if a validation pattern fails. The validation schema can be configured in the `validation` field of the [configuration file](/core/1/guides/essentials/configuration).
 
 For a detailed look at data validation, please refer to our [Data Validation Reference](/core/1/guides/cookbooks/datavalidation).
 
@@ -154,4 +154,4 @@ The idea is simple: use Koncorde to specify a filter that can be used to validat
 }
 ```
 
-In the example above, we used both the `exists` operator and the `or` operator to build our validation rule. For more information take a look at our [Koncorde Reference](/core/1/guides/cookbooks/realtime-api/terms/#exists).
+In the example above, we used both the `exists` operator and the `or` operator to build our validation rule. For more information take a look at our [Koncorde Reference](/core/1/guides/cookbooks/realtime-api/terms#exists).

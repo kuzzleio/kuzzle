@@ -15,7 +15,7 @@ Kuzzle provides a full set of functionalities to configure fine-grained permissi
 
 When Kuzzle is first installed there is no administrator account and anonymous users (i.e. unauthenticated users) have administrative privileges.
 
-To secure your Kuzzle installation you will need to create an administrator account by either using the [Kuzzle Admin Console](/core/1/guides/essentials/admin-console/#create-an-admin-account) or using the [CLI](/core/1/guides/essentials/cli/#createfirstadmin) tool.
+To secure your Kuzzle installation you will need to create an administrator account by either using the [Kuzzle Admin Console](/core/1/guides/essentials/admin-console#create-an-admin-account) or using the [CLI](/core/1/guides/essentials/cli#createfirstadmin) tool.
 
 Once the administrator account is created, you can remove anonymous access rights and properly secure your installation. You can then use the Kuzzle Admin Console or Kuzzle API to create new users and assign them permissions.
 
@@ -47,7 +47,7 @@ A `profile` is linked to a set of `roles`, and each `role` defines a set of perm
 
 ![Users, Profiles and Roles](./profiles-roles.png)
 
-All `roles` and `profiles` can be edited in the [Kuzzle Admin Console](/core/1/guides/essentials/admin-console/).
+All `roles` and `profiles` can be edited in the [Kuzzle Admin Console](/core/1/guides/essentials/admin-console).
 
 ---
 
@@ -78,7 +78,7 @@ When `controller` is declared within a Plugin, its name must be prefixed with th
 The `action permission` value can be set to either:
 
 - a boolean. If `true`, the `role` allows the given action.
-- <DeprecatedBadge version="1.4.0"/> an object describing a dynamic right definition. For more information check out the [advanced roles documentation](/core/1/guides/kuzzle-depth/roles-definitions/)).
+- <DeprecatedBadge version="1.4.0"/> an object describing a dynamic right definition. For more information check out the [advanced roles documentation](/core/1/guides/kuzzle-depth/roles-definitions)).
 
 As an example, below is the `role` definition that Kuzzle uses to request authorization from the anonymous user once the administrator account is created and anonymous access is blocked.
 
@@ -98,7 +98,7 @@ As an example, below is the `role` definition that Kuzzle uses to request author
 
 ```
 
-In the above `role` definition, anonymous users can perform the [login](/core/1/api/controllers/auth/login/), [checkToken](/core/1/api/controllers/auth/check-token/), [getCurrentUser](/core/1/api/controllers/auth/get-current-user/) and [getMyRights](/core/1/api/controllers/auth/get-my-rights/) actions of the `auth` controller.
+In the above `role` definition, anonymous users can perform the [login](/core/1/api/controllers/auth/login), [checkToken](/core/1/api/controllers/auth/check-token), [getCurrentUser](/core/1/api/controllers/auth/get-current-user) and [getMyRights](/core/1/api/controllers/auth/get-my-rights) actions of the `auth` controller.
 
 For a list of available controllers and actions from Kuzzle's API by sending a `GET` request as follows:
 
@@ -208,6 +208,6 @@ For instance, suppose you have a chat application and you want the users to only
 
 There are multiple ways of adding a business logic layer on top of the standard Kuzzle security one:
 
-* With a [Pipe Plugin](/core/1/plugins/guides/pipes), you can listen to one or multiple [API events](/core/1/plugins/guides/events/), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
-* If all you need is to make sure that submitted documents follow a strict set of formatting rules, you can add [document validators](/core/1/guides/cookbooks/datavalidation/)
+* With a [Pipe Plugin](/core/1/plugins/guides/pipes), you can listen to one or multiple [API events](/core/1/plugins/guides/events), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
+* If all you need is to make sure that submitted documents follow a strict set of formatting rules, you can add [document validators](/core/1/guides/cookbooks/datavalidation)
 * <DeprecatedBadge version="1.4.0" /> Using [Permission Closures](/core/1/guides/kuzzle-depth/roles-definitions), you can add functions directly into role definitions
