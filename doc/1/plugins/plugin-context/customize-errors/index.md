@@ -46,8 +46,7 @@ Example, for a plugin name `foobar-plugin`:
     "foobar-plugin": {
       "option_1": "option_value",
       "option_2": "option_value",
-      "_pluginCodes": {
-          "foobar-plugin" : 42
+      "_pluginCode": 42
       }
     }
   }
