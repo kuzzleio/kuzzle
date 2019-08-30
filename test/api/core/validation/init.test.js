@@ -755,7 +755,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).throw(PluginImplementationError, {message: 'foobar.\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
+      }).throw(PluginImplementationError, {message: 'foobar\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
     });
 
     it('should return an error if a field specification format is invalid in verbose mode', () => {
