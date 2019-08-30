@@ -13,7 +13,7 @@ Custom errors have to be written in the [manifest.json](https://docs.kuzzle.io/c
 Example:
 ```
 {
-    "name": "kuzzle-plugin-xxx",
+    "name": "<plugin name>",
     "kuzzleVersion": ">=1.0.0 <2.0.0",
     "privileged": false,
     "errors": {
