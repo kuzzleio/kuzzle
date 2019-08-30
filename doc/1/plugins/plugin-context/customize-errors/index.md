@@ -15,7 +15,6 @@ Example:
 {
     "name": "<plugin name>",
     "kuzzleVersion": ">=1.0.0 <2.0.0",
-    "privileged": false,
     "errors": {
         "some_error": {
             "code": 1,
