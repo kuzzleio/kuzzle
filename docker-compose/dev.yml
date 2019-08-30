@@ -50,15 +50,11 @@ services:
 
   redis:
     image: redis:${REDIS_VERSION:-5}
-    ports:
-      - 6379:6739
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7.3.0
     ulimits:
       nofile: 65536
-    ports:
-      - 9200:9200
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - node.name=alyx

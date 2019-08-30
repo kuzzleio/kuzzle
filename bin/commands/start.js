@@ -70,7 +70,7 @@ function commandStart (options = {}) {
   return Promise.all(promises)
     .then(() => kuzzle.start(kuzzleParams))
     .then(() => {
-      cout.ok('[✔] Kuzzle 2.x server ready');
+      cout.ok('[✔] Kuzzle server ready');
       return kuzzle.adminExists()
         .then(res => {
           if (!res) {
