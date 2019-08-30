@@ -408,6 +408,18 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
+    it('should throw a NotFoundError when trying to write unexisting role in profile. ', () => {
+      const invalidProfile = new Profile();
+      invalidProfile._id = 'awesomeProfile';
+      invalidProfile.policies = [{roleId: 'notSoAwesomeRole'}];
+
+      kuzzle.repositories.role.loadRoles = sinon.stub().rejects();
+      return profileRepository.validateAndSaveProfile(invalidProfile)
+        .catch(e => {
+          should(e).be.instanceOf(NotFoundError, { message: 'Unable to hydrate the profile awesomeRole: missing role(s) in the database'});
+        });
+    });
+
     it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
 
