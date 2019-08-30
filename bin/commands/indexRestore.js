@@ -122,7 +122,7 @@ async function indexRestore (dumpDirectory, options) {
     batchSize = options.batchSize || 200,
     cout = new ColorOutput(opts);
 
-  const sdk = await getSdk(options, 'websocket')
+  const sdk = await getSdk(options, 'websocket');
 
   cout.ok(`[✔] Start importing dump from ${dumpDirectory}`);
 
