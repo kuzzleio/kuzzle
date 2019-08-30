@@ -297,7 +297,7 @@ describe('PluginsManager.run', () => {
         .then(() => pluginMock.verify()))
         .be.rejectedWith(
           PluginImplementationError,
-          {message: new PluginImplementationError('foobar.').message});
+          {message: new PluginImplementationError('foobar').message});
     });
 
     it('should log a warning in case a pipe plugin exceeds the warning delay', () => {

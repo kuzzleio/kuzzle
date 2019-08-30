@@ -286,7 +286,7 @@
         },
         "plugin_error": {
           "code": 19,
-          "message": "%s.",
+          "message": "%s",
           "class": "PluginImplementationError"
         },
         "missing_user_for_authentication": {
