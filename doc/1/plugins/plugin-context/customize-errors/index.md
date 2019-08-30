@@ -35,7 +35,9 @@ The `errorsManager` provides two functions:
 - To throw : `context.errorsManager.throw(error, placeholders);`.
 - To get the built error: `context.errorsManager.get(error, placeholders);`
 
-Also, you can give more precision by giving a [`subdomain`](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/) to your plugin in you [kuzzlerc file](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/config/). It would be like :
+By default, the [subdomain](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/) code for plugins is set to `0`. A subdomain can be defined for a plugin in its configuration section in the [kuzzlerc file](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/config/). 
+
+Example, for a plugin name `foobar-plugin`:
 
 ```
 {
