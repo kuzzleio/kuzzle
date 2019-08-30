@@ -52,7 +52,7 @@ function buildSubcodesDoc(errorCodesFiles) {
           | subdomain.code << 16
           | error.code;
         buffer.writeUInt32BE(code, 0);
-        doc += `\`0x${buffer.toString('hex')}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}.\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
+        doc += `\`0x${buffer.toString('hex')}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
       }
       doc += '\n---\n';
     }
