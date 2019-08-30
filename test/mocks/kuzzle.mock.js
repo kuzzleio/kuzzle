@@ -6,7 +6,7 @@ const
   Kuzzle = require('../../lib/api/kuzzle'),
   Bluebird = require('bluebird'),
   config = require('../../lib/config'),
-  foo = {foo: 'bar'};
+  foo = { foo: 'bar' };
 
 let _instance;
 
@@ -113,44 +113,29 @@ class KuzzleMock extends Kuzzle {
 
     this.indexCache = {
       indexes: {},
-      defaultMappings: {},
       add: this.sandbox.stub(),
       exists: this.sandbox.stub(),
       init: this.sandbox.stub().resolves(),
-      initInternal: this.sandbox.stub().resolves(),
-      remove: this.sandbox.stub(),
-      reset: this.sandbox.stub()
+      remove: this.sandbox.stub()
     };
 
-    this.internalEngine = {
+    this.internalIndex = {
+      index: 'kuzzle',
       bootstrap: {
         startOrWait: this.sandbox.stub().resolves(),
         createInitialSecurities: this.sandbox.stub().resolves()
       },
-      adminExists: this.sandbox.stub().resolves(true),
-      create: this.sandbox.stub().resolves(),
-      createInternalIndex: this.sandbox.stub().resolves(),
-      createOrReplace: this.sandbox.stub().resolves(),
-      delete: this.sandbox.stub().resolves(),
-      deleteIndex: this.sandbox.stub().resolves(),
-      exists: this.sandbox.stub().resolves(),
-      expire: this.sandbox.stub().resolves(),
-      get: this.sandbox.stub().resolves(foo),
-      getMapping: this.sandbox.stub().resolves(),
-      mget: this.sandbox.stub().resolves({hits: [foo]}),
-      index: 'internalIndex',
       init: this.sandbox.stub().resolves(),
-      listCollections: this.sandbox.stub(),
-      listAliases: this.sandbox.stub().resolves([]),
-      listIndexes: this.sandbox.stub(),
-      persist: this.sandbox.stub().resolves(),
-      refresh: this.sandbox.stub().resolves(),
-      replace: this.sandbox.stub().resolves(),
-      scroll: this.sandbox.stub().resolves(),
+      get: this.sandbox.stub().resolves(),
+      mGet: this.sandbox.stub().resolves(),
       search: this.sandbox.stub().resolves(),
+      scroll: this.sandbox.stub().resolves(),
+      create: this.sandbox.stub().resolves(),
+      createOrReplace: this.sandbox.stub().resolves(),
+      replace: this.sandbox.stub().resolves(),
       update: this.sandbox.stub().resolves(),
-      updateMapping: this.sandbox.stub().resolves(foo),
-      applyDefaultMapping: this.sandbox.stub().resolves(),
+      delete: this.sandbox.stub().resolves(),
+      exists: this.sandbox.stub().resolves(),
       createCollection: this.sandbox.stub().resolves()
     };
 
@@ -265,72 +250,28 @@ class KuzzleMock extends Kuzzle {
 
     this.services = {
       init: this.sandbox.stub().resolves(),
-      list: {
-        broker: {
-          getInfos: this.sandbox.stub().resolves(),
-          listen: this.sandbox.spy(),
-          send: this.sandbox.stub().resolves()
-        },
-        gc: {
-          init: this.sandbox.spy(),
-          run: this.sandbox.stub().resolves({ids: []})
-        },
-        internalCache: {
-          get: this.sandbox.stub().resolves(null),
-          del: this.sandbox.stub().resolves(),
-          exists: this.sandbox.stub().resolves(),
-          expire: this.sandbox.stub().resolves(),
-          flushdb: this.sandbox.stub().resolves(),
-          getInfos: this.sandbox.stub().resolves(),
-          mget: this.sandbox.stub().resolves(),
-          persist: this.sandbox.stub().resolves(),
-          pexpire: this.sandbox.stub().resolves(),
-          psetex: this.sandbox.stub().resolves(),
-          searchKeys: this.sandbox.stub().resolves([]),
-          set: this.sandbox.stub().resolves(),
-          setex: this.sandbox.stub().resolves(),
-          setnx: this.sandbox.stub().resolves(),
-        },
-        memoryStorage: {
-          flushdb: this.sandbox.stub().resolves(),
-          getInfos: this.sandbox.stub().resolves()
-        },
-        storageEngine: {
-          get: this.sandbox.stub().resolves({_source: {foo}}),
-          mget: this.sandbox.stub().resolves({hits: [], total: 0}),
-          getInfos: this.sandbox.stub().resolves(),
-          getMapping: this.sandbox.stub().resolves(foo),
-          listIndexes: this.sandbox.stub().resolves({indexes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']}),
-          collectionExists: this.sandbox.stub().resolves(),
-          count: this.sandbox.stub().resolves(42),
-          create: this.sandbox.stub().resolves(foo),
-          createCollection: this.sandbox.stub().resolves(foo),
-          createIndex: this.sandbox.stub().resolves(foo),
-          createOrReplace: this.sandbox.stub().resolves(foo),
-          delete: this.sandbox.stub().resolves(foo),
-          deleteByQuery: this.sandbox.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
-          deleteByQueryFromTrash: this.sandbox.stub().resolves(Object.assign({}, foo, {ids: 'responseIds'})),
-          deleteIndex: this.sandbox.stub().resolves(foo),
-          deleteIndexes: this.sandbox.stub().resolves({deleted: ['a', 'e', 'i']}),
-          getAutoRefresh: this.sandbox.stub().resolves(false),
-          import: this.sandbox.stub().resolves(foo),
-          indexExists: this.sandbox.stub().resolves(),
-          listCollections: this.sandbox.stub().resolves(),
-          refreshIndex: this.sandbox.stub().resolves(foo),
-          replace: this.sandbox.stub().resolves(foo),
-          search: this.sandbox.stub().resolves(foo),
-          scroll: this.sandbox.stub().resolves(foo),
-          setAutoRefresh: this.sandbox.stub().resolves(true),
-          truncateCollection: this.sandbox.stub().resolves(foo),
-          update: this.sandbox.stub().resolves(foo),
-          updateMapping: this.sandbox.stub().resolves(foo),
-          mcreate: this.sandbox.stub().resolves({result: [], error: []}),
-          mupdate: this.sandbox.stub().resolves({result: [], error: []}),
-          mcreateOrReplace: this.sandbox.stub().resolves({result: [], error: []}),
-          mdelete: this.sandbox.stub().resolves({result: [], error: []}),
-          mreplace: this.sandbox.stub().resolves({result: [], error: []})
-        }
-      }
+      internalCache: {
+        get: this.sandbox.stub().resolves(),
+        del: this.sandbox.stub().resolves(),
+        exists: this.sandbox.stub().resolves(),
+        expire: this.sandbox.stub().resolves(),
+        flushdb: this.sandbox.stub().resolves(),
+        getInfos: this.sandbox.stub().resolves(),
+        mget: this.sandbox.stub().resolves(),
+        persist: this.sandbox.stub().resolves(),
+        pexpire: this.sandbox.stub().resolves(),
+        psetex: this.sandbox.stub().resolves(),
+        searchKeys: this.sandbox.stub().resolves(),
+        set: this.sandbox.stub().resolves(),
+        setex: this.sandbox.stub().resolves(),
+        setnx: this.sandbox.stub().resolves(),
+      },
+      publicCache: {
+        flushdb: this.sandbox.stub().resolves(),
+        getInfos: this.sandbox.stub().resolves()
+      },
+      internalStorage: getESMock(this, '%'),
+      publicStorage: getESMock(this, '&'),
     };
 
     this.start = sinon.stub().resolves();
@@ -402,4 +343,41 @@ class KuzzleMock extends Kuzzle {
   }
 }
 
+
+function getESMock (kuzzleMock, indexPrefix) {
+  return {
+    indexPrefix,
+    getInfos: kuzzleMock.sandbox.stub().resolves(),
+    scroll: kuzzleMock.sandbox.stub().resolves(),
+    search: kuzzleMock.sandbox.stub().resolves(),
+    get: kuzzleMock.sandbox.stub().resolves(),
+    mGet: kuzzleMock.sandbox.stub().resolves(),
+    count: kuzzleMock.sandbox.stub().resolves(),
+    create: kuzzleMock.sandbox.stub().resolves(),
+    createOrReplace: kuzzleMock.sandbox.stub().resolves(),
+    update: kuzzleMock.sandbox.stub().resolves(),
+    replace: kuzzleMock.sandbox.stub().resolves(),
+    delete: kuzzleMock.sandbox.stub().resolves(),
+    deleteByQuery: kuzzleMock.sandbox.stub().resolves(),
+    createIndex: kuzzleMock.sandbox.stub().resolves(),
+    createCollection: kuzzleMock.sandbox.stub().resolves(),
+    getMapping: kuzzleMock.sandbox.stub().resolves(),
+    truncateCollection: kuzzleMock.sandbox.stub().resolves(),
+    import: kuzzleMock.sandbox.stub().resolves(),
+    listCollections: kuzzleMock.sandbox.stub().resolves(),
+    listIndexes: kuzzleMock.sandbox.stub().resolves(),
+    listAliases: kuzzleMock.sandbox.stub().resolves(),
+    deleteIndexes: kuzzleMock.sandbox.stub().resolves(),
+    deleteIndex: kuzzleMock.sandbox.stub().resolves(),
+    refreshCollection: kuzzleMock.sandbox.stub().resolves(),
+    exists: kuzzleMock.sandbox.stub().resolves(),
+    indexExists: kuzzleMock.sandbox.stub().resolves(),
+    collectionExists: kuzzleMock.sandbox.stub().resolves(),
+    mCreate: kuzzleMock.sandbox.stub().resolves(),
+    mCreateOrReplace: kuzzleMock.sandbox.stub().resolves(),
+    mUpdate: kuzzleMock.sandbox.stub().resolves(),
+    mReplace: kuzzleMock.sandbox.stub().resolves(),
+    mDelete: kuzzleMock.sandbox.stub().resolves()
+  };
+}
 module.exports = KuzzleMock;

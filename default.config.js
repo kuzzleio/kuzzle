@@ -263,10 +263,6 @@ module.exports = {
             dynamic: 'false',
             properties: {}
           },
-          plugins: {
-            dynamic: 'false',
-            properties: {}
-          },
           validations: {
             properties: {
               index: { type: 'keyword' },

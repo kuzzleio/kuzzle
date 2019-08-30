@@ -553,12 +553,6 @@
               }
             }
           },
-          "plugins": {
-            "properties": {
-              "dynamic": "false",
-              "properties": {}
-            }
-          },
           "validations": {
             "properties": {
               "index": { "type": "keyword" },

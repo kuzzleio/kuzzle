@@ -5,78 +5,69 @@ const
   IndexCache = require('../../../lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  const
-    listAliasesStub,
-    listIndexesStub,
-    listCollectionsStub,
+  let
     indexCache,
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    listAliasesStub = kuzzle.internalEngine.listAliases.resolves({alias: 'foo', alias2: 'foo'});
-    listIndexesStub = kuzzle.internalEngine.listIndexes.resolves(['foo']);
-    listCollectionsStub = kuzzle.internalEngine.listCollections.resolves(['bar', 'baz', 'qux']);
     indexCache = new IndexCache(kuzzle);
-    kuzzle.internalEngine.applyDefaultMapping.resolves(indexCache.commonMapping);
   });
 
   describe('#init', () => {
-    it('should add internal indexes and collections to cache');
-    it('should add public indexes and collections to cache');
-    it('should handle aliases');
-  });
+    beforeEach(() => {
+      kuzzle.services.internalStorage.listIndexes.resolves(['foobar']);
+      kuzzle.services.publicStorage.listIndexes.resolves(['barfoo']);
 
-  describe('#init', () => {
-    it('should initialize the index cache properly', () => {
-      return indexCache.init()
-        .then(() => {
-          should(listAliasesStub).be.calledOnce();
-          should(listIndexesStub).be.calledOnce();
-          should(listCollectionsStub).be.calledOnce();
-          should(indexCache.indexes).be.an.Object().and.have.keys('alias', 'alias2', 'foo');
-          should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
-          should(indexCache.indexes.alias).be.exactly(indexCache.indexes.foo);
-          should(indexCache.indexes.alias2).be.exactly(indexCache.indexes.foo);
-        });
+      kuzzle.services.internalStorage.listCollections.resolves(['foolection']);
+      kuzzle.services.publicStorage.listCollections.resolves(['barlection']);
     });
 
-    it('should apply default mapping for collections', () => {
-      return indexCache.init()
-        .then(() => {
-          should(kuzzle.internalEngine.applyDefaultMapping)
-            .be.calledThrice();
+    it('should add internal and public indexes and collections to cache', async () => {
+      await indexCache.init();
 
-          should(indexCache.defaultMappings.foo._kuzzle_info)
-            .eql(indexCache.commonMapping._kuzzle_info);
-        });
+
+    });
+
+    it('should handle aliases', () => {
+
     });
   });
 
   describe('#add', () => {
     it('should add a single index to the index cache', () => {
-      indexCache.add('foobar');
+      indexCache.add({ index: 'foobar' });
+
       should(indexCache.indexes).have.keys('foobar');
-      should(indexCache.indexes.foobar).be.an.Array().and.be.empty();
+      should(indexCache.indexes.foobar.indexType).eql('public');
+      should(indexCache.indexes.foobar.collections)
+        .be.an.Array()
+        .and.be.empty();
     });
 
     it('should add a new collection to the index cache', () => {
-      indexCache.add('index', 'collection');
-      should(indexCache.indexes).have.keys('index');
-      should(indexCache.indexes.index).be.an.Array().and.match(['collection']);
+      indexCache.add({ index: 'foobar', collection: 'collection' });
+
+      should(indexCache.indexes).have.keys('foobar');
+      should(indexCache.indexes.foobar.collections)
+        .be.an.Array()
+        .and.match(['collection']);
     });
 
     it('should not add a collection if it is already in cache', () => {
-      indexCache.add('index', 'collection');
-      indexCache.add('index', 'collection');
+      indexCache.add({ index: 'foobar', collection: 'collection' });
+      indexCache.add({ index: 'foobar', collection: 'collection' });
 
-      should(indexCache.indexes).have.keys('index');
-      should(indexCache.indexes.index).be.an.Array().and.match(['collection']);
+      should(indexCache.indexes).have.keys('foobar');
+      should(indexCache.indexes.foobar.collections)
+        .be.an.Array()
+        .and.match(['collection']);
     });
 
     it('should do nothing if no index is provided', () => {
       indexCache.add();
+
       should(indexCache.indexes).be.empty();
     });
   });
@@ -106,23 +97,6 @@ describe('Test: core/indexCache', () => {
       indexCache.add('index', 'collection');
       indexCache.remove('index', 'foo');
       should(indexCache.indexes).match({index: ['collection']});
-    });
-  });
-
-  describe('#reset', () => {
-    it('should empty the index cache if invoked with no argument', () => {
-      indexCache.add('index1', 'collection');
-      indexCache.add('index2', 'collection');
-      indexCache.reset();
-      should(indexCache.indexes).be.an.Object().and.be.empty();
-    });
-
-    it('should remove all collections of an index', () => {
-      indexCache.add('index', 'collection1');
-      indexCache.add('index', 'collection2');
-      indexCache.reset('index');
-      should(indexCache.indexes).be.an.Object().and.have.keys('index');
-      should(indexCache.indexes.index).be.an.Array().and.be.empty();
     });
   });
 
