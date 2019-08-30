@@ -25,5 +25,5 @@ This class should only be used to create new Kuzzle error objects.
 
 ### errorName
 
-The `errorName` property is a concatenation of 3 levels of precision from where your error come from.
+The `errorName` property is a concatenation of 3 levels of precision; explaining where an error comes from.
 For an `errorName` `plugins.foobar-plugins.some_error`, you have `plugins` as domain, `foobar-plugins` as subdomain and `some_error` as error.
