@@ -6,7 +6,7 @@ title: customize errors
 
 # Customize errors
 
-When creating your own Kuzzle plugin, you can use the `errorsManager` to have customizable errors.
+When creating a Kuzzle plugin, custom API errors can be defined and thrown, using the `errorsManager` accessor.
 
 In order to define it, you have to write them inside the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json) in a `errors` field.
 
