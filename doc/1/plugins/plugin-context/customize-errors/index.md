@@ -56,7 +56,11 @@ Example, for a plugin name `foobar-plugin`:
 
 ## Example
 
-If you customize errors like above and you write `context.errorsManager.throw('some_error', 'Something get wrong');`, Kuzzle will throw a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) with the following properties :
+Taking the configuration example above, if an error is thrown with:
+
+`context.errorsManager.throw('some_error', 'Something get wrong');`
+
+Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) error, with the following properties:
 
 - message : `Some error occured: Something get wrong`
 - errorName : `plugins.foobar-plugin.some_error`
