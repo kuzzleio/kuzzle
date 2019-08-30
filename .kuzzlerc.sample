@@ -577,7 +577,6 @@
           }
         }
       },
-      },
       "defaults": {
         // Number of retries to attempt on an update conflict
         // before throwing an error
