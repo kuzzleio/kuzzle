@@ -33,6 +33,19 @@ You can see full definition about Kuzzle errors [here](https://docs.kuzzle.io/co
 
 ---
 
+### code
+
+The `code` property is a concatenation of 3 codes:
+- The domain code (eg. `02` for `api`).
+- The subdomain code (eg. `04` for `auth`).
+- The proper error code (eg. `0001` for `database_not_found`).
+
+So a `code` `0x02040001` has `02` as domain code on 1 byte, `04` as subdomain code on 1 byte and `0001` as error code on 2 bytes.
+
+You can see full definition about Kuzzle errors [here](https://docs.kuzzle.io/core/1/api/essentials/errors/subcodes/)
+
+
+
 ## Common errors
 
 All Kuzzle requests can return one of the following errors:

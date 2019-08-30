@@ -6,7 +6,7 @@ title: customize errors
 
 # Customize errors
 
-When creating a Kuzzle plugin, custom API errors can be defined and thrown, using the `errorsManager` accessor.
+When creating a Kuzzle plugin, custom [API errors](https://docs.kuzzle.io/core/1/api/essentials/errors/) can be defined and thrown, using the `errorsManager`.
 
 Custom errors have to be written in the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json), in an `errors` field.
 
@@ -35,6 +35,7 @@ The `errorsManager` provides two functions:
 - To throw : `context.errorsManager.throw(error, placeholders);`.
 - To get the built error: `context.errorsManager.get(error, placeholders);`
 
+Note that the `domain` is `plugins`, meaning that its code is fixed to `04` and cannot be changed.
 By default, the [subdomain](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/) code for plugins is set to `0`. A subdomain can be defined for a plugin in its configuration section in the [kuzzlerc file](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/config/). 
 
 Example, for a plugin name `foobar-plugin`:
@@ -45,7 +46,7 @@ Example, for a plugin name `foobar-plugin`:
     "foobar-plugin": {
       "option_1": "option_value",
       "option_2": "option_value",
-      "codes": {
+      "_pluginCodes": {
           "foobar-plugin" : 42
       }
     }
