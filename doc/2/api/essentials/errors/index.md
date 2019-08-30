@@ -42,7 +42,7 @@ The `code` property is a concatenation of 3 codes:
 
 So a `code` `0x02040001` has `02` as domain code on 1 byte, `04` as subdomain code on 1 byte and `0001` as error code on 2 bytes.
 
-You can see full definition about Kuzzle errors [here](https://docs.kuzzle.io/core/1/api/essentials/errors/subcodes/)
+You can see the full definition of Kuzzle API errors [here](https://docs.kuzzle.io/core/1/api/essentials/errors/subcodes/)
 
 
 
