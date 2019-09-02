@@ -1292,7 +1292,7 @@ class HttpApi {
 
   decryptSecrets (vaultKey, secrets) {
     const options = {
-      url: this.apiPath('admin/decryptSecrets'),
+      url: this.apiPath('admin/_decryptSecrets'),
       method: 'POST',
       body: {
         vaultKey,
@@ -1305,7 +1305,7 @@ class HttpApi {
 
   encryptSecrets (vaultKey, secrets) {
     const options = {
-      url: this.apiPath('admin/encryptSecrets'),
+      url: this.apiPath('admin/_encryptSecrets'),
       method: 'POST',
       body: {
         vaultKey,
