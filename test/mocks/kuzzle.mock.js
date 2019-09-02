@@ -6,6 +6,7 @@ const
   Kuzzle = require('../../lib/api/kuzzle'),
   Bluebird = require('bluebird'),
   config = require('../../lib/config'),
+  IndexEngineMock = require('./indexEngine.mock'),
   foo = { foo: 'bar' };
 
 let _instance;
@@ -119,24 +120,14 @@ class KuzzleMock extends Kuzzle {
       remove: this.sandbox.stub()
     };
 
-    this.internalIndex = {
-      index: 'kuzzle',
-      bootstrap: {
-        startOrWait: this.sandbox.stub().resolves(),
-        createInitialSecurities: this.sandbox.stub().resolves()
-      },
-      init: this.sandbox.stub().resolves(),
-      get: this.sandbox.stub().resolves(),
-      mGet: this.sandbox.stub().resolves(),
-      search: this.sandbox.stub().resolves(),
-      scroll: this.sandbox.stub().resolves(),
-      create: this.sandbox.stub().resolves(),
-      createOrReplace: this.sandbox.stub().resolves(),
-      replace: this.sandbox.stub().resolves(),
-      update: this.sandbox.stub().resolves(),
-      delete: this.sandbox.stub().resolves(),
-      exists: this.sandbox.stub().resolves(),
-      createCollection: this.sandbox.stub().resolves()
+    this.internalIndex = new IndexEngineMock(
+      this,
+      'kuzzle',
+      this.services.internalStorage);
+
+    this.internalIndex._boostrap = {
+      startOrWait: sinon.stub().resolves(),
+      createInitialSecurities: sinon.stub().resolves()
     };
 
     this.once = this.sandbox.stub();
@@ -272,21 +263,6 @@ class KuzzleMock extends Kuzzle {
       },
       internalStorage: getESMock(this, 'internal'),
       publicStorage: getESMock(this, 'public'),
-    };
-
-    this.internalIndex = {
-      init: sinon.stub().resolves(),
-      get: sinon.stub().resolves(),
-      mGet: sinon.stub().resolves(),
-      search: sinon.stub().resolves(),
-      scroll: sinon.stub().resolves(),
-      create: sinon.stub().resolves(),
-      createOrReplace: sinon.stub().resolves(),
-      replace: sinon.stub().resolves(),
-      update: sinon.stub().resolves(),
-      delete: sinon.stub().resolves(),
-      exists: sinon.stub().resolves(),
-      createCollection: sinon.stub().resolves()
     };
 
     this.start = sinon.stub().resolves();

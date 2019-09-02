@@ -4,6 +4,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
+  IndexEngineMock = require('../../../../mocks/indexEngine.mock'),
   IndexEngine = require('../../../../../lib/api/core/storage/indexEngine'),
   SafeBootstrap = require('../../../../../lib/api/core/storage/bootstrap/safeBootstrap'),
   InternalIndexBootstrap = require('../../../../../lib/api/core/storage/bootstrap/internalIndexBootstrap');
@@ -18,7 +19,7 @@ describe('InternalIndexBootstrap', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    internalIndexEngine = new IndexEngine(
+    internalIndexEngine = new IndexEngineMock(
       kuzzle,
       internalIndexName,
       kuzzle.services.internalStorage);
@@ -80,10 +81,10 @@ describe('InternalIndexBootstrap', () => {
     it('should create internal collections', async () => {
       await internalIndexBootstrap.createInternalIndex();
 
-      should(internalIndexEngine.createCollection.callCount).be.eql(6);
+      should(internalIndexEngine.createCollection.callCount).be.eql(5);
       should(internalIndexEngine.createCollection.getCall(0).args[0])
         .be.eql('users');
-      should(internalIndexEngine.createCollection.getCall(5).args).be.eql([
+      should(internalIndexEngine.createCollection.getCall(4).args).be.eql([
         'config',
         { dynamic: false, properties: {} }]);
     });
