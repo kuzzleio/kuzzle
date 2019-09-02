@@ -73,6 +73,7 @@ order: 500
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `0x00040001`  | `Cannot decrypt secrets: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | decrypt_secrets | internal.vault.decrypt_secrets
 `0x00040002`  | `Cannot find vault key. Aborting.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | vault_key_not_found | internal.vault.vault_key_not_found
+`0x00040003`  | `Secrets must be an object.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | secrets_must_be_object | internal.vault.secrets_must_be_object
 
 ---
 
