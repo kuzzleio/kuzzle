@@ -8,7 +8,7 @@ title: customize errors
 
 When creating a Kuzzle plugin, custom [API errors](https://docs.kuzzle.io/core/1/api/essentials/errors/) can be defined and thrown, using the `errorsManager`.
 
-Custom errors have to be written in the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json), in an `errors` field.
+Custom errors have to be specified in the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json), in an `errors` field.
 
 Example:
 ```
