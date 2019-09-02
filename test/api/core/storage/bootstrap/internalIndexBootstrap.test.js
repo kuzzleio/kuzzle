@@ -33,7 +33,9 @@ describe('InternalIndexBootstrap', () => {
   });
 
   describe('#startOrWait', () => {
-    let jwtSecret;
+    let
+      safeBootstrapStartOrWait,
+      jwtSecret;
 
     beforeEach(() => {
       jwtSecret = 'i-am-the-secret-now';
@@ -41,7 +43,12 @@ describe('InternalIndexBootstrap', () => {
       internalIndexBootstrap.createInternalIndex = sinon.stub().resolves();
       internalIndexBootstrap._getJWTSecret = sinon.stub().resolves(jwtSecret);
 
+      safeBootstrapStartOrWait = SafeBootstrap.prototype.startOrWait;
       SafeBootstrap.prototype.startOrWait = sinon.stub().resolves();
+    });
+
+    afterEach(() => {
+      SafeBootstrap.prototype.startOrWait = safeBootstrapStartOrWait;
     });
 
     it('create internal index, call parent method and set JWT secret', async () => {

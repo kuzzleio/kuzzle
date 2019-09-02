@@ -1863,9 +1863,8 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#indexExists', () => {
     it('should call list indexes and return true if index exists', () => {
-      elasticsearch.listIndexes = sinon.stub().resolves({
-        indexes: ['nepali', 'nyc-open-data']
-      });
+      elasticsearch.listIndexes = sinon.stub().resolves(
+        ['nepali', 'nyc-open-data']);
 
       const promise = elasticsearch.indexExists('nepali');
 
@@ -1878,9 +1877,8 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should call list indexes and return false if index does not exists', () => {
-      elasticsearch.listIndexes = sinon.stub().resolves({
-        indexes: ['nepali', 'nyc-open-data']
-      });
+      elasticsearch.listIndexes = sinon.stub().resolves(
+        ['nepali', 'nyc-open-data']);
 
       const promise = elasticsearch.indexExists('vietnam');
 
@@ -1895,9 +1893,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#collectionExists', () => {
     it('should call list collections and return true if collection exists', () => {
-      elasticsearch.listCollections = sinon.stub().resolves({
-        collections: ['liia', 'mehry']
-      });
+      elasticsearch.listCollections = sinon.stub().resolves(['liia', 'mehry']);
 
       const promise = elasticsearch.collectionExists('nepali', 'liia');
 
@@ -1910,9 +1906,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should call list collections and return false if collection does not exists', () => {
-      elasticsearch.listCollections = sinon.stub().resolves({
-        collections: ['liia', 'mehry']
-      });
+      elasticsearch.listCollections = sinon.stub().resolves(['liia', 'mehry']);
 
       const promise = elasticsearch.collectionExists('nepali', 'lfiduras');
 
