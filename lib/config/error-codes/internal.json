@@ -118,6 +118,11 @@
           "code": 2,
           "message": "Cannot find vault key. Aborting.",
           "class": "NotFoundError"
+        },
+        "secrets_must_be_object": {
+          "code": 3,
+          "message": "Secrets must be an object.",
+          "class": "PreconditionError"
         }
       }
     },
