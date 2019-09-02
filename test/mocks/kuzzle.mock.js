@@ -274,6 +274,21 @@ class KuzzleMock extends Kuzzle {
       publicStorage: getESMock(this, 'public'),
     };
 
+    this.internalIndex = {
+      init: sinon.stub().resolves(),
+      get: sinon.stub().resolves(),
+      mGet: sinon.stub().resolves(),
+      search: sinon.stub().resolves(),
+      scroll: sinon.stub().resolves(),
+      create: sinon.stub().resolves(),
+      createOrReplace: sinon.stub().resolves(),
+      replace: sinon.stub().resolves(),
+      update: sinon.stub().resolves(),
+      delete: sinon.stub().resolves(),
+      exists: sinon.stub().resolves(),
+      createCollection: sinon.stub().resolves()
+    };
+
     this.start = sinon.stub().resolves();
 
     this.statistics = {

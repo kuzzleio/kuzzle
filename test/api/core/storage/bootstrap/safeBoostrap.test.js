@@ -4,9 +4,9 @@ const
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
-  SafeBootstrap = require('../../../../../lib/services/bootstrap/safeBootstrap');
+  SafeBootstrap = require('../../../../../lib/api/core/storage/bootstrap/safeBootstrap');
 
-xdescribe('SafeBootstrap', () => {
+describe('SafeBootstrap', () => {
   let
     kuzzle,
     bootstrap;
@@ -15,9 +15,8 @@ xdescribe('SafeBootstrap', () => {
     kuzzle = new KuzzleMock();
 
     bootstrap = new SafeBootstrap(
-      'base',
       kuzzle,
-      kuzzle.internalEngine,
+      kuzzle.internalIndex,
       42);
 
     bootstrap._bootstrapSequence = sinon.stub().resolvesArg(0);
@@ -25,7 +24,7 @@ xdescribe('SafeBootstrap', () => {
 
   describe('#startOrWait', () => {
     beforeEach(() => {
-      bootstrap.storage.exists.resolves(false);
+      bootstrap.indexEngine.exists.resolves(false);
       bootstrap._isLocked = sinon.stub().resolves(false);
       bootstrap._waitTillUnlocked = sinon.stub().resolves();
       bootstrap._playBootstrap = sinon.stub().resolves();

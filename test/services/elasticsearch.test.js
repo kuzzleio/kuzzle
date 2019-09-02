@@ -5,9 +5,9 @@ const
   sinon = require('sinon'),
   ms = require('ms'),
   _ = require('lodash'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  ESClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
-  ES = require('../../../../lib/services/elasticsearch');
+  KuzzleMock = require('../mocks/kuzzle.mock'),
+  ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
+  ES = require('../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
   let
