@@ -18,19 +18,18 @@ Example:
     "errors": {
         "some_error": {
             "code": 1,
-            "message": "Some error occurred: %s",
+            "message": "An error occurred: %s",
             "class": "BadRequestError"
 	},
         "some_other_error": {
             "code": 2,
-            "message": "Some other error occurred: %s",
+            "message": "An other error occurred: %s",
             "class": "ForbiddenError"
 	}
     }
 }
 ```
 
-It is exposed as `errorsManager` in the [PluginContext](https://docs.kuzzle.io/core/1/plugins/plugin-context/accessors/intro/).
 The `errorsManager` provides two functions:
 - To throw : `context.errorsManager.throw(error, placeholders);`.
 - To get the built error: `context.errorsManager.get(error, placeholders);`
@@ -57,10 +56,10 @@ Example, for a plugin name `foobar-plugin`:
 
 Taking the configuration example above, if an error is thrown with:
 
-`context.errorsManager.throw('some_error', 'Something get wrong');`
+`context.errorsManager.throw('some_error', 'request badly formatted');`
 
 Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) error, with the following properties:
 
-- message : `Some error occured: Something get wrong`
+- message : `An error occured: request badly formatted`
 - errorName : `plugins.foobar-plugin.some_error`
-- code : 0442123
+- code : 0x04020033
