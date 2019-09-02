@@ -417,7 +417,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return should(profileRepository.validateAndSaveProfile(invalidProfile)).be.rejectedWith(
         NotFoundError, { message: 'Unable to hydrate the profile awesomeProfile: missing role(s) in the database'
-      });
+        });
 
     });
 
