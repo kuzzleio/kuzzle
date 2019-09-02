@@ -84,7 +84,7 @@ xdescribe('SafeBootstrap', () => {
 
       sinon.assert.callOrder(
         bootstrap._bootstrapSequence,
-        bootstrap.engine.create,
+        bootstrap.indexEngine.create,
         bootstrap._unlock
       );
 
@@ -94,7 +94,7 @@ xdescribe('SafeBootstrap', () => {
 
   describe('#_waitTillUnlocked', () => {
     it('should resolve if there is no active lock', () => {
-      bootstrap.engine.exists.resolves(false);
+      bootstrap.indexEngine.exists.resolves(false);
 
       const promise = bootstrap._waitTillUnlocked(42);
 
@@ -102,7 +102,7 @@ xdescribe('SafeBootstrap', () => {
     });
 
     it('should reject after 10 attempts', async () => {
-      bootstrap.engine.exists.resolves(true);
+      bootstrap.indexEngine.exists.resolves(true);
       bootstrap.attemptDelay = 2;
 
       const promise = bootstrap._waitTillUnlocked();
@@ -112,14 +112,14 @@ xdescribe('SafeBootstrap', () => {
 
     it('should make recurse call and resolve when the lock is not active', async () => {
       bootstrap.attemptDelay = 2;
-      bootstrap.engine.exists
+      bootstrap.indexEngine.exists
         .onCall(0).resolves(true)
         .onCall(1).resolves(true)
         .onCall(2).resolves(false);
 
       await bootstrap._waitTillUnlocked();
 
-      should(bootstrap.engine.exists.callCount).be.eql(3);
+      should(bootstrap.indexEngine.exists.callCount).be.eql(3);
     });
   });
 
@@ -127,41 +127,42 @@ xdescribe('SafeBootstrap', () => {
     it('should delete the lock', async () => {
       await bootstrap._unlock();
 
-      should(bootstrap.engine.delete).be.calledWith('config', bootstrap._LOCK_ID);
+      should(bootstrap.indexEngine.delete)
+        .be.calledWith('config', bootstrap._LOCK_ID);
     });
   });
 
   describe('#_isLocked', () => {
     it('should return true if the lock already exists', async () => {
-      bootstrap.engine.get.resolves({ _source: { timestamp: Date.now() - 42 } });
+      bootstrap.indexEngine.get.resolves({ _source: { timestamp: Date.now() - 42 } });
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.true();
-      should(bootstrap.engine.create).not.be.called();
-      should(bootstrap.engine.createOrReplace).not.be.called();
+      should(bootstrap.indexEngine.create).not.be.called();
+      should(bootstrap.indexEngine.createOrReplace).not.be.called();
     });
 
     it('should acquire the lock and return false if the lock does not exists', async () => {
-      bootstrap.engine.get.rejects({ status: 404 });
+      bootstrap.indexEngine.get.rejects({ status: 404 });
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.false();
-      should(bootstrap.engine.create).be.called();
+      should(bootstrap.indexEngine.create).be.called();
     });
 
     it('should acquire lock and return false if an old lock is present', async () => {
-      bootstrap.engine.get.resolves({ _source: { timestamp: 42 } });
+      bootstrap.indexEngine.get.resolves({ _source: { timestamp: 42 } });
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.false();
-      should(bootstrap.engine.createOrReplace).be.called();
+      should(bootstrap.indexEngine.createOrReplace).be.called();
     });
 
     it('should reject if the engine.get call is rejected with an unknown error', async () => {
-      bootstrap.engine.get.rejects({ errorName: 'ender.game.xenocide' });
+      bootstrap.indexEngine.get.rejects({ errorName: 'ender.game.xenocide' });
 
       const promise = bootstrap._isLocked();
 

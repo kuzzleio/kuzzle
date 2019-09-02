@@ -270,8 +270,8 @@ class KuzzleMock extends Kuzzle {
         flushdb: this.sandbox.stub().resolves(),
         getInfos: this.sandbox.stub().resolves()
       },
-      internalStorage: getESMock(this, '%'),
-      publicStorage: getESMock(this, '&'),
+      internalStorage: getESMock(this, 'internal'),
+      publicStorage: getESMock(this, 'public'),
     };
 
     this.start = sinon.stub().resolves();
@@ -344,9 +344,12 @@ class KuzzleMock extends Kuzzle {
 }
 
 
-function getESMock (kuzzleMock, indexPrefix) {
+function getESMock (kuzzleMock, indexType) {
   return {
-    indexPrefix,
+    indexType,
+    indexPrefix: indexType === 'public'
+      ? '&'
+      : '%',
     getInfos: kuzzleMock.sandbox.stub().resolves(),
     scroll: kuzzleMock.sandbox.stub().resolves(),
     search: kuzzleMock.sandbox.stub().resolves(),
