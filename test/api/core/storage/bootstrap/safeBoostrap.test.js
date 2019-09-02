@@ -3,8 +3,8 @@
 const
   sinon = require('sinon'),
   should = require('should'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Bootstrap = require('../../../lib/services/bootstrap/safeBootstrap');
+  KuzzleMock = require('../../../../mocks/kuzzle.mock'),
+  SafeBootstrap = require('../../../../../lib/services/bootstrap/safeBootstrap');
 
 xdescribe('SafeBootstrap', () => {
   let
@@ -14,7 +14,7 @@ xdescribe('SafeBootstrap', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    bootstrap = new Bootstrap(
+    bootstrap = new SafeBootstrap(
       'base',
       kuzzle,
       kuzzle.internalEngine,
