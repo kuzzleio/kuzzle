@@ -195,7 +195,7 @@ stages:
   - name: Unit Tests & Linters
     if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
   - name: Integration tests
-    if: deactivated = false AND type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
+    if: env(DEACTIVATED) = false AND type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
   - name: Cross-platform tests
     if: type = cron
   - name: Deployments
