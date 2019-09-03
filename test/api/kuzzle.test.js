@@ -43,7 +43,7 @@ describe('/lib/api/kuzzle.js', () => {
   });
 
   describe('#start', () => {
-    it('should init the components in proper order', () => {
+    xit('should init the components in proper order', () => {
       const params = {
         mappings: {},
         fixtures: {},
