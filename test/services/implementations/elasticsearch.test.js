@@ -30,9 +30,16 @@ describe('Test: ElasticSearch service', () => {
 
     esClientError = new Error('es client fail');
 
+<<<<<<< HEAD
+    should(preparedData.type).be.exactly(request.input.resource.collection);
+      should(preparedData.id).be.undefined();
+      should(preparedData._id).be.undefined();
+      should(preparedData.index).be.exactly(request.input.resource.index);
+=======
     elasticsearch = new ES(kuzzle, kuzzle.config.services.db);
     elasticsearch._buildClient = () => new ESClientMock();
     elasticsearch.init();
+>>>>>>> 2-dev
 
 
     elasticsearch.esWrapper.reject = sinon.spy((error) => Promise.reject(error));
