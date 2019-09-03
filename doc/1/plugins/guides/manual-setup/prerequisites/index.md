@@ -32,7 +32,7 @@ Kuzzle needs a few information to make your plugin work properly. These informat
 
 The following properties can be defined in this `manifest.json` file:
 
-- `name` (**required**): plugin unique identifier. Names can only contain lowercase letters, numbers, hyphens and underscores.
+- `name` (**required**): plugin unique identifier. Names can only contain letters, numbers, hyphens and underscores.
 - `kuzzleVersion`: a non-empty string describing a [semver range](https://www.npmjs.com/package/semver#ranges), limiting the range of Kuzzle versions supported by this plugin. If not set, a warning is displayed on the console, and Kuzzle assumes that the plugin is only compatible with Kuzzle v1.x
 
 <DeprecatedBadge version="1.5.0" /> Kuzzle still allows plugins to be loaded without a <code>manifest.json</code> file, for backward compatibility reasons, falling back to the <a href=https://docs.npmjs.com/files/package.json#name>package.json</a> file to retrieve the plugin's name. This will change in next major releases of Kuzzle.

@@ -6,7 +6,7 @@
       "errors" : {
         "invalid_plugin_name": {
           "code": 1,
-          "message": "[%s] Invalid plugin name. The name must be comprised only of lowercased letters, numbers, hyphens and underscores.",
+          "message": "[%s] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores.",
           "class": "PluginImplementationError"
         },
         "invalid_privileged_property": {

@@ -585,7 +585,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x04010001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of lowercased letters, numbers, hyphens and underscores.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_plugin_name | plugins.validation.invalid_plugin_name
+`0x04010001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_plugin_name | plugins.validation.invalid_plugin_name
 `0x04010002`  | `[<placeholder>] Invalid "privileged" property: expected a boolean, got a <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_privileged_property | plugins.validation.invalid_privileged_property
 `0x04010003`  | `[<placeholder>] No package.json file found.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_package_json | plugins.validation.missing_package_json
 `0x04010004`  | `You must provide a valid User object when adding context with as().` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_user_object | plugins.validation.invalid_user_object
