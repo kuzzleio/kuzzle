@@ -52,7 +52,7 @@ function buildSubcodesDoc(errorCodesFiles) {
           | subdomain.code << 16
           | error.code;
         buffer.writeUInt32BE(code, 0);
-        doc += `\`0x${buffer.toString('hex')}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](/core/1/api/essentials/errors#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
+        doc += `\`0x${buffer.toString('hex')}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
       }
       doc += '\n---\n';
     }
@@ -60,7 +60,7 @@ function buildSubcodesDoc(errorCodesFiles) {
   }
   const output = process.argv[2] === '-o' || process.argv[2] === '--output'
     ? process.argv[3]
-    : './1/api/essentials/errors/subcodes/index.md';
+    : './2/api/essentials/errors/subcodes/index.md';
   fs.writeFile(output, doc, (err => {
     if (err) {
       throw new Error(err);
