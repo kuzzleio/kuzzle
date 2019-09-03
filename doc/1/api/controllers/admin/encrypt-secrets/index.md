@@ -8,7 +8,7 @@ title: encryptSecrets
 
 <SinceBadge version="1.10.0" />
 
-Encrypts an object using [Vault](/core/2/guides/essentials/secrets-vault/).
+Encrypts an object using [Vault](/core/1/guides/essentials/secrets-vault/).
 
 ---
 
