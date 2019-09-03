@@ -75,7 +75,7 @@ jobs:
       script:
         - npm run --silent lint
         - npm run unit-testing
-      after_script:
+      after_success:
         - npm run codecov
 
     - stage: Unit Tests & Linters

@@ -286,7 +286,7 @@
         },
         "plugin_error": {
           "code": 19,
-          "message": "%s.",
+          "message": "%s",
           "class": "PluginImplementationError"
         },
         "missing_user_for_authentication": {
@@ -327,6 +327,11 @@
         "unable_to_remove_connection_unknown_connection_identifier": {
           "code": 27,
           "message": "Unable to remove connection - unknown connection identifier: %s",
+          "class": "PluginImplementationError"
+        },
+        "errors_configuration_file": {
+          "code": 28,
+          "message": "[%s] errors field in manifest.json badly formatted: %s",
           "class": "PluginImplementationError"
         }
       }

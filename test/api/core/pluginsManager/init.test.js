@@ -79,6 +79,79 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins).be.empty();
     });
 
+    it('should properly load custom errors from manifest.json', () => {
+      const errors = rewire('../../../../lib/config/error-codes/index');
+
+      const instanceName = 'kuzzle-plugin-test',
+        newPluginErrors = {
+          'some_error': {
+            'code': 1,
+            'message': 'Some error occured %s',
+            'class': 'BadRequestError'
+          },
+          'some_other_error': {
+            'code': 2,
+            'message': 'Some other error occured %s',
+            'class': 'ForbiddenError'
+          }
+        };
+
+      let pluginErrors = errors.__get__('plugins').subdomains;
+
+      should(pluginErrors).not.have.ownProperty(instanceName);
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
+      mockrequire(
+        '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
+        {
+          name: instanceName,
+          kuzzleVersion: '^1.x',
+          errors: newPluginErrors
+        });
+
+      pluginsManager.init();
+
+      should(kuzzle.log.info)
+        .calledOnce()
+        .calledWith('[kuzzle-plugin-test] Custom errors successfully loaded.');
+
+      pluginErrors = errors.__get__('plugins').subdomains;
+
+      should(pluginErrors).have.ownProperty(instanceName);
+      should(pluginErrors[instanceName]).have.ownProperty('errors');
+      should(pluginErrors[instanceName].errors).be.deepEqual(newPluginErrors);
+    });
+
+    it('should throw PluginImplementationError if custom errors from manifest.json are badly formatted', () => {
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
+      mockrequire(
+        '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
+        {
+          name: 'kuzzle-plugin-test',
+          kuzzleVersion: '^1.x',
+          errors: {
+            'some_error': {
+              'message': 'Some error occured %s',
+              'class': 'BadRequestError'
+            },
+            'some_other_error': {
+              'code': 2,
+              'message': 'Some other error occured %s',
+              'class': 'ForbiddenError'
+            }
+          }
+        });
+      should(() => pluginsManager.init()).throw(PluginImplementationError);
+    });
+
     it('should throw if a plugin does not contain a manifest.json file nor a package.json one', () => {
       pluginsManager = new PluginsManager(kuzzle);
       manifestFsStub.accessSync.throws(new Error('foobar'));
