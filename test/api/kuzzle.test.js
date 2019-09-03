@@ -3,7 +3,6 @@ const
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = rewire('../../lib/api/kuzzle'),
-  InternalIndexBootstrap = require('../../lib/api/core/storage/bootstrap/internalIndexBootstrap'),
   KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {

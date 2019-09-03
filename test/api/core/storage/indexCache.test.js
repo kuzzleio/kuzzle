@@ -90,14 +90,14 @@ describe('Test: core/indexCache', () => {
       should(indexCache.indexes.foobar.collections)
         .be.an.Array()
         .and.match(['collection']);
-      should(kuzzle.emit).be.calledOnce()
+      should(kuzzle.emit).be.calledOnce();
     });
 
     it('should do nothing if no index is provided', () => {
       indexCache.add();
 
       should(indexCache.indexes).be.empty();
-      should(kuzzle.emit).not.be.called()
+      should(kuzzle.emit).not.be.called();
     });
   });
 

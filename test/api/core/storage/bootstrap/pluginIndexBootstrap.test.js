@@ -2,7 +2,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
-  IndexEngine = require('../../../../../lib/api/core/storage/indexEngine');
+  IndexEngine = require('../../../../../lib/api/core/storage/indexEngine'),
   PluginIndexBootstrap = require('../../../../../lib/api/core/storage/bootstrap/pluginIndexBootstrap');
 
 describe('PluginBoostrap', () => {

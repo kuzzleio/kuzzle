@@ -1,5 +1,6 @@
 const
   sinon = require('sinon'),
+  should = require('should'),
   KuzzleMock = require('../mocks/kuzzle.mock'),
   Service = require('../../lib/services/service');
 
@@ -24,7 +25,7 @@ describe('Service', () => {
 
   describe('#constructor', () => {
     it('should use provided timeout or service default timeout', () => {
-      service2 = new Service(name, kuzzle, { initTimeout: 1000 });
+      const service2 = new Service(name, kuzzle, { initTimeout: 1000 });
 
       should(service.initTimeout)
         .be.eql(kuzzle.config.services.common.defaultInitTimeout);

@@ -72,7 +72,7 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#verifyToken', () => {
     beforeEach(() => {
-      tokenRepository.cacheEngine.get.resolves(null)
+      tokenRepository.cacheEngine.get.resolves(null);
     });
 
     it('should reject the promise if the jwt is invalid', () => {
@@ -314,7 +314,7 @@ describe('Test: repositories/tokenRepository', () => {
   describe('#deleteByUserId', () => {
     // @todo ask seb or benoit for these tests
     xit('should delete the tokens associated to a user identifier', () => {
-      sinon.stub(tokenReposxory, 'refreshCacheTTL');
+      sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.resolves([
         'repos/internalIndex/token/foo#foo',
         'repos/internalIndex/token/foo#bar',

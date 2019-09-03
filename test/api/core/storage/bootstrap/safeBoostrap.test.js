@@ -143,7 +143,9 @@ describe('SafeBootstrap', () => {
     });
 
     it('should acquire the lock and return false if the lock does not exists', async () => {
-      bootstrap.indexEngine.get.rejects({ status: 404 });
+      const error = new Error('not found');
+      error.status = 404;
+      bootstrap.indexEngine.get.rejects(error);
 
       const isLocked = await bootstrap._isLocked();
 
@@ -161,7 +163,9 @@ describe('SafeBootstrap', () => {
     });
 
     it('should reject if the engine.get call is rejected with an unknown error', async () => {
-      bootstrap.indexEngine.get.rejects({ errorName: 'ender.game.xenocide' });
+      const error = new Error('not found');
+      error.errorName = 'ender.game.xenocide';
+      bootstrap.indexEngine.get.rejects(error);
 
       const promise = bootstrap._isLocked();
 

@@ -5,7 +5,6 @@ const
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   IndexEngineMock = require('../../../../mocks/indexEngine.mock'),
-  IndexEngine = require('../../../../../lib/api/core/storage/indexEngine'),
   SafeBootstrap = require('../../../../../lib/api/core/storage/bootstrap/safeBootstrap'),
   InternalIndexBootstrap = require('../../../../../lib/api/core/storage/bootstrap/internalIndexBootstrap');
 
@@ -161,7 +160,9 @@ describe('InternalIndexBootstrap', () => {
     });
 
     it('should reject if the JWT does not exists', () => {
-      internalIndexEngine.get.rejects({ status: 404 });
+      const error = new Error('not found');
+      error.status = 404;
+      internalIndexEngine.get.rejects(error);
 
       const promise = internalIndexBootstrap._getJWTSecret();
 

@@ -40,7 +40,7 @@ describe('IndexEngine', () => {
         'kuzzle',
         'users',
         'user-kuid');
-    })
+    });
   });
 
   describe('#mGet', () => {

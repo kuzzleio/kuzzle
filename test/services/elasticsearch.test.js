@@ -289,7 +289,7 @@ describe('Test: ElasticSearch service', () => {
           docs: [
             { _id: 'liia', found: true, _source: { city: 'Kathmandu' }, _version: 1 },
             { _id: 'mhery', found: false }
-           ]
+          ]
         }
       });
 
