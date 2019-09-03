@@ -8,7 +8,7 @@ title: decryptSecrets
 
 <SinceBadge version="1.10.0" />
 
-Decrypts an object using [Vault](/core/2/guides/essentials/secrets-vault/).
+Decrypts an object using [Vault](/core/1/guides/essentials/secrets-vault/).
 
 ---
 
