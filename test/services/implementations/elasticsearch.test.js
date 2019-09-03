@@ -147,6 +147,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should throw if attempting to access to an internal index', () => {
+
       const initESRequest = ES.__get__('initESRequest');
 
       request.input.resource.index = '%foobar';

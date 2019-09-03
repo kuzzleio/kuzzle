@@ -12,7 +12,7 @@ module.exports = {
     let expectedError = new Request(
       {},
       {
-        error: errorsManager.getError(domain, subdomain, errorName, message)
+        error: errorsManager.get(domain, subdomain, errorName, message)
       });
 
     expectedError = expectedError.response.toJSON().content;
