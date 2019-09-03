@@ -31,12 +31,6 @@ Feature: Kuzzle functional tests
     When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
     Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
 
-  Scenario: adminController: encrypt and decrypt secrets
-    When I send request to "encrypt" the following secrets '{ "aws": { "key": "silmaril" }, "secret": "ring" }' with a vaultKey of value "my42Vault42Key"
-    Then It should be encrypted
-    When I send request to "decrypt" the following secrets '{ "aws": { "key": "a32d94368111ca329958e921a4fe5d70.36d6b839bcfee696b76b62c4de655cd0" }, "secret": "4ffdc98e54f4febaa90b9b6de93732be.bcae7ae4a036b6abbdd6fa9376b7b447" }' with a vaultKey of value "my42Vault42Key"
-    Then I should receive '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-
   Scenario: Bulk mWrite
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
     When I use bulk:mWrite action with

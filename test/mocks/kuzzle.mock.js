@@ -365,8 +365,6 @@ class KuzzleMock extends Kuzzle {
     this.vault = {
       init: this.sandbox.stub(),
       prepareCrypto: this.sandbox.stub(),
-      encryptObject: this.sandbox.stub(),
-      decryptObject: this.sandbox.stub(),
       secrets: {
         aws: {
           secretKeyId: 'the cake is a lie'
