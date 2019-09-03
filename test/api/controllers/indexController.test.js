@@ -2,10 +2,7 @@ const
   should = require('should'),
   sinon = require('sinon'),
   IndexController = require('../../../lib/api/controllers/indexController'),
-  {
-    Request,
-    errors: { BadRequestError }
-  } = require('kuzzle-common-objects'),
+  { Request } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
