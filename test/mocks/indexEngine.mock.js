@@ -13,6 +13,7 @@ class IndexEngineMock extends IndexEngine {
     this.mGet = sinon.stub().resolves();
     this.search = sinon.stub().resolves();
     this.scroll = sinon.stub().resolves();
+    this.count = sinon.stub().resolves();
     this.create = sinon.stub().resolves();
     this.createOrReplace = sinon.stub().resolves();
     this.replace = sinon.stub().resolves();

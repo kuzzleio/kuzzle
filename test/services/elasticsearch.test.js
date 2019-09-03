@@ -63,7 +63,7 @@ describe('Test: ElasticSearch service', () => {
 
       const promise = elasticsearch.init();
 
-      return should(promise).be.fulfilledWith(elasticsearch)
+      return should(promise).be.fulfilledWith()
         .then(() => {
           should(elasticsearch.client).not.be.null();
           should(elasticsearch.esWrapper).not.be.null();
@@ -161,9 +161,9 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.client.search.firstCall.args[0]).match({
             index: esIndexName,
             body: filter,
-            from: null,
-            size: null,
-            scroll: null
+            from: undefined,
+            size: undefined,
+            scroll: undefined
           });
 
           should(kuzzle.services.internalCache.psetex.firstCall.args[1])
@@ -347,9 +347,7 @@ describe('Test: ElasticSearch service', () => {
             body: filter
           });
 
-          should(result).match({
-            count: 42
-          });
+          should(result).be.eql(42);
         });
     });
 
@@ -561,7 +559,7 @@ describe('Test: ElasticSearch service', () => {
               }
             },
             id: 'liia',
-            refresh: false,
+            refresh: undefined,
             retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
           });
 
@@ -654,7 +652,7 @@ describe('Test: ElasticSearch service', () => {
                 updater: null
               }
             },
-            refresh: false
+            refresh: undefined
           });
 
           should(result).match({
@@ -752,8 +750,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.client.delete).be.calledWithMatch({
             index: esIndexName,
             id: 'liia',
-            refresh: false,
-            retryOnConflict: 0
+            refresh: undefined
           });
 
           should(result).be.undefined();
@@ -818,9 +815,10 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { filter: 'term' } },
-            from: null,
-            size: null,
-            refresh: false
+            scroll: '5m',
+            from: undefined,
+            size: undefined,
+            refresh: undefined
           });
 
           should(result).match({
@@ -1349,8 +1347,8 @@ describe('Test: ElasticSearch service', () => {
             }
           },
         ],
-        refresh: false,
-        timeout: null
+        refresh: undefined,
+        timeout: undefined
       };
 
       bulkReturn = {
@@ -1442,8 +1440,8 @@ describe('Test: ElasticSearch service', () => {
 
               { delete: { _id: 4, _index: esIndexName } }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           should(elasticsearch.client.bulk).be.calledWithMatch(expectedEsRequest);
 
@@ -1975,8 +1973,8 @@ describe('Test: ElasticSearch service', () => {
               { index: { _index: esIndexName } },
               { city: 'Ho Chi Minh City', ...kuzzleMeta }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           const toImport = [
             { _source: { city: 'Kathmandu', ...kuzzleMeta } },
@@ -2013,8 +2011,8 @@ describe('Test: ElasticSearch service', () => {
               { index: { _index: esIndexName } },
               { city: 'Kathmandu', ...kuzzleMeta }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           const toImport = [
             { _source: { city: 'Kathmandu', ...kuzzleMeta } }
@@ -2056,8 +2054,8 @@ describe('Test: ElasticSearch service', () => {
               { index: { _index: esIndexName } },
               { city: 'Ho Chi Minh City', ...kuzzleMeta }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           const toImport = [
             { _source: { city: 'Kathmandu', ...kuzzleMeta } },
@@ -2148,8 +2146,8 @@ describe('Test: ElasticSearch service', () => {
               { index: { _index: esIndexName, _id: 'liia' } },
               { city: 'Ho Chi Minh City', ...kuzzleMeta }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           const toImport = [
             { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
@@ -2216,8 +2214,8 @@ describe('Test: ElasticSearch service', () => {
               { index: { _index: esIndexName, _id: 'liia' } },
               { city: 'Ho Chi Minh City' }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           const toImport = [
             { _id: 'mehry', _source: { city: 'Kathmandu' } },
@@ -2284,8 +2282,8 @@ describe('Test: ElasticSearch service', () => {
               { update: { _index: esIndexName, _id: 'liia' } },
               { doc: { city: 'Ho Chi Minh City', ...kuzzleMeta }, _source: true }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           const toImport = [
             { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
@@ -2362,8 +2360,8 @@ describe('Test: ElasticSearch service', () => {
               { update: { _index: esIndexName, _id: 'mehry' } },
               { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true }
             ],
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           };
           const toImport = [
             { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } }
@@ -2431,8 +2429,8 @@ describe('Test: ElasticSearch service', () => {
           });
 
           const esRequest = {
-            refresh: false,
-            timeout: null,
+            refresh: undefined,
+            timeout: undefined,
             body: [
               { index: { _id: 'mehry', _index: esIndexName } },
               { city: 'Kathmandu', ...kuzzleMeta },
@@ -2475,8 +2473,8 @@ describe('Test: ElasticSearch service', () => {
           });
 
           const esRequest = {
-            refresh: false,
-            timeout: null,
+            refresh: undefined,
+            timeout: undefined,
             body: [
               { index: { _id: 'mehry', _index: esIndexName } },
               { city: 'Kathmandu', ...kuzzleMeta }
@@ -2523,8 +2521,8 @@ describe('Test: ElasticSearch service', () => {
           });
 
           const esRequest = {
-            refresh: false,
-            timeout: null,
+            refresh: undefined,
+            timeout: undefined,
             body: [
               { index: { _id: 'mehry', _index: esIndexName } },
               { city: 'Kathmandu', ...kuzzleMeta }
@@ -2611,8 +2609,8 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName,
             body: { ids: { values: ['mehry', 'liia'] } },
             scroll: '30s',
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           });
 
           should(result).match({
@@ -2640,8 +2638,8 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName,
             body: { ids: { values: ['mehry'] } },
             scroll: '30s',
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           });
 
           should(result).match({
@@ -2671,8 +2669,8 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName,
             body: { ids: { values: ['mehry'] } },
             scroll: '30s',
-            refresh: false,
-            timeout: null
+            refresh: undefined,
+            timeout: undefined
           });
 
           should(result).match({
@@ -2727,7 +2725,7 @@ describe('Test: ElasticSearch service', () => {
 
     beforeEach(() => {
       esRequest = {
-        refresh: false,
+        refresh: undefined,
         body: [
           { index: { _index: esIndexName, _id: 'liia' } },
           { city: 'Kathmandu' },

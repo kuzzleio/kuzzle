@@ -140,4 +140,17 @@ describe('/lib/api/kuzzle.js', () => {
         });
     });
   });
+
+  describe('#adminExists', () => {
+    it('should resolves to true if an admin exists', async () => {
+      kuzzle.internalIndex.count.resolves(42);
+
+      const exists = await kuzzle.adminExists();
+
+      should(exists).be.true();
+      should(kuzzle.internalIndex.count).be.calledWithMatch(
+        'users',
+        { query: { terms: { profileIds: ['admin'] } } });
+    });
+  });
 });

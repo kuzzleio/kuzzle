@@ -26,8 +26,8 @@ describe('PluginBoostrap', () => {
       kuzzle.services.internalStorage);
 
     pluginIndexBootstrap = new PluginIndexBootstrap(
-      pluginName,
       kuzzle,
+      pluginName,
       pluginIndexEngine);
 
     collections = {
