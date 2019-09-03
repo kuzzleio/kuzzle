@@ -30,3 +30,7 @@ Removed errors:
 Removed events:
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
+
+Other changes:
+
+  - Plugins manifest files are now required

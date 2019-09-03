@@ -79,7 +79,7 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins).be.empty();
     });
 
-    it('should throw if a plugin does not contain a manifest.json file nor a package.json one', () => {
+    it('should throw if a plugin does not contain a manifest.json file', () => {
       pluginsManager = new PluginsManager(kuzzle);
       manifestFsStub.accessSync.throws(new Error('foobar'));
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
@@ -90,7 +90,7 @@ describe('PluginsManager', () => {
       });
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        {message:  /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\] No package\.json file found\./});
+        {message:  /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\] Unable to load the file 'manifest.json'\./});
       should(pluginsManager.plugins).be.empty();
     });
 
