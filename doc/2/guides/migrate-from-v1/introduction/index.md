@@ -14,12 +14,13 @@ Dropped support for:
   - Redis versions 3 and 4
   - Elasticsearch v5 
   - Kuzzle Proxy 
-  - Permission Closures (deprecated since Kuzzle 1.4.0)
-  - Document trashcan (deprecated since Kuzzle 1.2.0)
 
 API Changes:
+  - Remove permission closures (deprecated since Kuzzle 1.4.0)
+  - Remove the documents trashcan (deprecated since Kuzzle 1.2.0)
   - Remove the `_meta` tag from documents and notifications (it was deprecated since Kuzzle 1.3.0)
   - Fields linked to the documents trashcan have been removed from the dDocuments and notifications metadata : `deletedAt`, `active`
+  - Remove the real-time notifications about events that were about to happen (deprecated since Kuzzle 1.5.0)
 
 Removed errors:
 
