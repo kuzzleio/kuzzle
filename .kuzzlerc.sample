@@ -244,7 +244,7 @@
           "policies": [ {"roleId": "anonymous"} ]
         }
       }
-    },
+    }
   },
 
   // Kuzzle server is the entry point for incoming requests
@@ -496,7 +496,7 @@
     //       Elasticsearch constructor and can contain all options/keys outlined
     //       here:
     //       https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-configuration.html
-    //   * dynamic:
+    //   * commonMapping.dynamic:
     //       Default policy against new fields that are not referenced in the
     //       collection mapping.
     //       The value of this configuration will change Elasticsearch behavior
@@ -515,63 +515,65 @@
       },
       // default mapping applied to all collections
       "commonMapping": {
-        "_kuzzle_info": {
-          "properties": {
-            "active":     { "type": "boolean" },
-            "author":     { "type": "keyword" },
-            "createdAt":  { "type": "date" },
-            "updatedAt":  { "type": "date" },
-            "updater":    { "type": "keyword" },
-            "deletedAt":  { "type": "date" }
+        "dynamic": "true",
+        "properties": {
+          "_kuzzle_info": {
+            "properties": {
+              "author":     { "type": "keyword" },
+              "createdAt":  { "type": "date" },
+              "updatedAt":  { "type": "date" },
+              "updater":    { "type": "keyword" }
+            }
           }
         }
       },
-      // Internal index name
-      "internalIndex": "kuzzle",
-      // Internal index default collections and mappings
-      "internalMappings": {
-        "users": {
-          "properties": {
-            "profileIds": { "type": "keyword" }
-          }
-        },
-        "profiles": {
-          "properties": {
-            "policies": {
-              "properties":  {
-                "roleId": { "type": "keyword" }
+      // Internal index default name and collections
+      "internalIndex": {
+        "name": "kuzzle",
+        "collections": {
+          "users": {
+            "properties": {
+              "profileIds": { "type": "keyword" }
+            }
+          },
+          "profiles": {
+            "properties": {
+              "policies": {
+                "properties":  {
+                  "roleId": { "type": "keyword" }
+                }
               }
             }
-          }
-        },
-        "roles": {
-          "properties": {
-            "controllers": {
-              "dynamic": "false,
+          },
+          "roles": {
+            "properties": {
+              "controllers": {
+                "dynamic": "false",
+                "properties": {}
+              }
+            }
+          },
+          "plugins": {
+            "properties": {
+              "dynamic": "false",
               "properties": {}
             }
-          }
-        },
-        "plugins": {
-          "properties": {
-            "dynamic": "false,
-            "properties": {}
-          }
-        },
-        "validations": {
-          "properties": {
-            "index": { "type": "keyword" },
-            "collection": { "type": "keyword" },
-            "validations": {
-              "dynamic": "false,
+          },
+          "validations": {
+            "properties": {
+              "index": { "type": "keyword" },
+              "collection": { "type": "keyword" },
+              "validations": {
+                "dynamic": "false",
+                "properties": {}
+              }
+            }
+          },
+          "config": {
+            "properties": {
+              "dynamic": "false",
               "properties": {}
             }
-          }
-        },
-        "config": {
-          "properties": {
-            "dynamic": "false,
-            "properties": {}
           }
         }
       },

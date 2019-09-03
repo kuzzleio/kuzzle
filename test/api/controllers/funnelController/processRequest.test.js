@@ -25,7 +25,6 @@ describe('funnelController.processRequest', () => {
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire('../../../../lib/services/internalEngine');
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
     mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
     const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
@@ -258,14 +257,14 @@ describe('funnelController.processRequest', () => {
         pipes: {
           'generic:document:beforeWrite': function hello(documents) {
             should(documents[0]._id).equal(null);
-      
+
             documents[0]._id = 'foobar';
-      
+
             return Promise.resolve(documents);
           },
           'document:beforeCreate': (request) => {
             should(request.input.resource._id).equal('foobar');
-  
+
             done();
             return Promise.resolve(request);
           },

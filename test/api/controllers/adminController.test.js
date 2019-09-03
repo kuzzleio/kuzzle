@@ -51,7 +51,7 @@ describe('Test: admin controller', () => {
 
     it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
-      
+
       should(() => adminController.resetCache(request)).throw(
         NotFoundError,
         { message: 'Database city17 not found.' });
@@ -63,8 +63,8 @@ describe('Test: admin controller', () => {
       request.input.action = 'resetKuzzleData';
     });
 
-    it('should erase the internal ES & Redis dbs', done => {
-      adminController.resetKuzzleData(request)
+    it('should erase the internal ES & Redis dbs', () => {
+      return adminController.resetKuzzleData(request)
         .then(() => {
           should(kuzzle.repositories.user.truncate).be.calledOnce();
           should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
@@ -74,7 +74,7 @@ describe('Test: admin controller', () => {
             .be.calledOnce()
             .be.calledWithExactly('internalIndex');
 
-          should(kuzzle.internalEngine.bootstrap.all).be.calledOnce();
+          should(kuzzle.internalEngine.bootstrap.startOrWait).be.calledOnce();
           should(kuzzle.validation).be.an.Object();
           should(kuzzle.start).be.a.Function();
 
@@ -82,11 +82,9 @@ describe('Test: admin controller', () => {
             kuzzle.internalEngine.deleteIndex,
             kuzzle.services.list.internalCache.flushdb,
             kuzzle.indexCache.remove,
-            kuzzle.internalEngine.bootstrap.all
+            kuzzle.internalEngine.bootstrap.startOrWait
           );
-          done();
-        })
-        .catch(error => done(error));
+        });
     });
   });
 
@@ -95,25 +93,22 @@ describe('Test: admin controller', () => {
       request.input.action = 'resetSecurity';
     });
 
-    it('should scroll and delete all registered users, profiles and roles', done => {
-      adminController.resetSecurity(request)
+    it('should scroll and delete all registered users, profiles and roles', () => {
+      return adminController.resetSecurity(request)
         .then(() => {
           should(kuzzle.repositories.user.truncate).be.calledOnce();
           should(kuzzle.repositories.profile.truncate).be.calledOnce();
           should(kuzzle.repositories.role.truncate).be.calledOnce();
-          should(kuzzle.internalEngine.bootstrap.createDefaultProfiles).be.calledOnce();
-          should(kuzzle.internalEngine.bootstrap.createDefaultRoles).be.calledOnce();
+          should(kuzzle.internalEngine.bootstrap.createInitialSecurities)
+            .be.calledOnce();
 
           sinon.assert.callOrder(
             kuzzle.repositories.user.truncate,
             kuzzle.repositories.profile.truncate,
             kuzzle.repositories.role.truncate,
-            kuzzle.internalEngine.bootstrap.createDefaultProfiles,
-            kuzzle.internalEngine.bootstrap.createDefaultRoles
+            kuzzle.internalEngine.bootstrap.createInitialSecurities
           );
-          done();
-        })
-        .catch(error => done(error));
+        });
     });
 
     it('should unlock the action even if the promise reject', done => {
