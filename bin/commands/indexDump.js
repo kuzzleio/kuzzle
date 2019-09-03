@@ -28,7 +28,7 @@ const
   ndjson = require('ndjson'),
   getSdk = require('./getSdk');
 
-//@TODO use 'recursive: true' with node.js 10
+// @todo use 'recursive: true' with node.js 10
 function mkdirp (fullPath) {
   const parts = fullPath.split(path.sep);
 
