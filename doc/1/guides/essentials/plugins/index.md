@@ -58,7 +58,7 @@ A common practice is to first copy the plugin to a `plugins/available` folder, a
 :::info
 <SinceBadge version="1.10.0" />
 
-If you are running Kuzzle in a Docker container, you can use `$KUZZLE_PLUGINS` environment variable to enable plugins located in `plugins/available` folder.
+If you are running Kuzzle in a Docker container, you can use the `$KUZZLE_PLUGINS` environment variable to enable plugins located in `plugins/available` folder.
 The variable will be used as argument for the `--enable-plugins` options from the [Kuzzle CLI start command](/core/1/guides/essentials/cli).
 :::
 
