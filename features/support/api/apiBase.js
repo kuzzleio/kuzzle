@@ -1324,28 +1324,6 @@ class ApiBase {
     });
   }
 
-  decryptSecrets (vaultKey, secrets) {
-    return this.send({
-      controller: 'admin',
-      action: 'decryptSecrets',
-      body: {
-        vaultKey,
-        secrets
-      }
-    });
-  }
-
-  encryptSecrets (vaultKey, secrets) {
-    return this.send({
-      controller: 'admin',
-      action: 'encryptSecrets',
-      body: {
-        vaultKey,
-        secrets
-      }
-    });
-  }
-
   resetCache (database) {
     return this.send({
       controller: 'admin',
