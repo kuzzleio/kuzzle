@@ -553,18 +553,8 @@
     },
     "sandbox": {
       "code": 8,
-      "errors": {
-        "process_already_running": {
-          "code": 1,
-          "message": "A process is already running for this sandbox",
-          "class": "InternalError"
-        },
-        "timeout": {
-          "code": 2,
-          "message": "Timeout. The sandbox did not respond within %sms.",
-          "class": "GatewayTimeoutError"
-        }
-      }
+      "deprecated": true,
+      "errors": {}
     }
   }
 }
