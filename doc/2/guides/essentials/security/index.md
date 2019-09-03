@@ -62,7 +62,7 @@ The `role` definition is represented as a JSON object where each key at the root
   "controllers": {
     "<controller name|*>": {
       "actions": {
-        "<action name|*>": true, // accepted values: [true|false|object]
+        "<action name|*>": true,
         "<action name|*>": false,
         // ...
       }
@@ -75,10 +75,7 @@ The `controllers` and `actions` properties can be set to a specific value or to 
 
 When `controller` is declared within a Plugin, its name must be prefixed with the name of the Plugin, like `< plugin-name/controller-name >`.
 
-The `action permission` value can be set to either:
-
-- a boolean. If `true`, the `role` allows the given action.
-- <DeprecatedBadge version="1.4.0"/> an object describing a dynamic right definition. For more information check out the [advanced roles documentation](/core/2/guides/kuzzle-depth/roles-definitions)).
+The `action permission` value is a boolean. If `true`, the `role` allows the given action.
 
 As an example, below is the `role` definition that Kuzzle uses to request authorization from the anonymous user once the administrator account is created and anonymous access is blocked.
 
@@ -198,16 +195,17 @@ Then we can declare three different profiles using this same role, each with var
   ]
 }
 ```
+
 ---
+
 ## Writing complex permission rules
 
 So far, we've seen how to set permissions to API routes, using user roles and profiles.
 
-But this is rarely enough to secure an application, as it's commonplace to reject queries or data depending of business rules.
+But this is rarely enough to secure an application, as it's commonplace to reject queries or data depending on business rules.
 For instance, suppose you have a chat application and you want the users to only be able to edit & delete their own messages: this type of rules cannot be expressed as a simple boolean.
 
 There are multiple ways of adding a business logic layer on top of the standard Kuzzle security one:
 
 * With a [Pipe Plugin](/core/2/plugins/guides/pipes), you can listen to one or multiple [API events](/core/2/plugins/guides/events), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
 * If all you need is to make sure that submitted documents follow a strict set of formatting rules, you can add [document validators](/core/2/guides/cookbooks/datavalidation)
-* <DeprecatedBadge version="1.4.0" /> Using [Permission Closures](/core/2/guides/kuzzle-depth/roles-definitions), you can add functions directly into role definitions

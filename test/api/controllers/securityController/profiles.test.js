@@ -5,12 +5,14 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   {
-    BadRequestError,
-    NotFoundError,
-    SizeLimitError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      BadRequestError,
+      NotFoundError,
+      SizeLimitError
+    }
+  } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - profiles', () => {
@@ -27,7 +29,7 @@ describe('Test: security controller - profiles', () => {
     kuzzle.repositories.profile.getProfileFromRequest.resolves();
     securityController = new SecurityController(kuzzle);
   });
-  
+
   describe('#updateProfileMapping', () => {
     const foo = {foo: 'bar'};
 
@@ -54,8 +56,9 @@ describe('Test: security controller - profiles', () => {
     it('should fulfill with a response object', () => {
       return securityController.getProfileMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'profiles'});
+          should(kuzzle.internalEngine.getMapping)
+            .be.calledOnce()
+            .be.calledWith(kuzzle.internalEngine.index, 'profiles');
 
           should(response).be.instanceof(Object);
           should(response).match({mapping: {}});

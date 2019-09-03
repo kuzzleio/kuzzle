@@ -2,1807 +2,1031 @@
 
 const
   should = require('should'),
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
-  rewire = require('rewire'),
+  ms = require('ms'),
+  _ = require('lodash'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    Request,
-    errors: {
-      BadRequestError,
-      NotFoundError,
-      KuzzleError,
-      PreconditionError,
-      ExternalServiceError,
-      SizeLimitError
-    }
-  } = require('kuzzle-common-objects'),
   ESClientMock = require('../../mocks/services/elasticsearchClient.mock'),
-  ES = rewire('../../../lib/services/elasticsearch');
+  ES = require('../../../lib/services/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
   let
-    kuzzle = {},
-    index = 'test',
-    collection = 'unit-tests-elasticsearch',
-    createdDocumentId = 'id-test',
+    kuzzle,
+    index,
+    collection,
+    esIndexName,
     elasticsearch,
-    engineType = 'storageEngine',
-    request,
-    documentAda,
-    filter,
-    filterAfterActiveAdded,
-    rawKuzzleMeta;
+    timestamp,
+    esClientError,
+    dateNow = Date.now;
 
   beforeEach(() => {
-    // prevents embarking _kuzzle_info data from previous tests
-    documentAda = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      city: 'London',
-      hobby: 'computer'
-    };
-
     kuzzle = new KuzzleMock();
-    ES.__set__('buildClient', () => new ESClientMock());
-    elasticsearch = new ES(kuzzle, {service: engineType}, kuzzle.config.services.db);
-    elasticsearch.autoRefresh = {};
 
-    filter = {
-      query: {
-        bool: {
-          query: [
-            {
-              term: {
-                city: 'NYC'
-              }
-            },
-            {
-              term: {
-                hobby: 'computer'
-              }
-            }
-          ]
-        }
-      },
-      sort: {},
-      aggregations: {},
-      aggs: {}
-    };
-    filterAfterActiveAdded = {
-      query: {
-        bool: {
-          must: filter.query,
-          filter: {
-            bool: {
-              must_not: {
-                term: {
-                  '_kuzzle_info.active': false
-                }
-              }
-            }
-          }
-        }
-      },
-      sort: {},
-      aggregations: {},
-      aggs: {}
-    };
+    index = 'nyc-open-data';
+    collection = 'yellow-taxi';
+    esIndexName = '&nyc-open-data.yellow-taxi';
+    timestamp = Date.now();
 
-    rawKuzzleMeta = {
-      query: {
-        bool: {
-          filter: {
-            bool: {
-              must_not: {
-                term: {
-                  '_kuzzle_info.active': false
-                }
-              }
-            }
-          }
-        }
-      }
-    };
+    esClientError = new Error('es client fail');
 
-    request = new Request({
-      controller: 'document',
-      action: 'create',
-      requestId: 'foo',
-      collection,
-      index,
-      body: documentAda
-    }, {token: {userId: 'test'}, user: {_id: 'test'}});
+    elasticsearch = new ES(kuzzle, kuzzle.config.services.db);
+    elasticsearch._buildClient = () => new ESClientMock();
     elasticsearch.init();
+
+
+    elasticsearch.esWrapper.reject = sinon.spy((error) => Promise.reject(error));
+
+    Date.now = () => timestamp;
+  });
+
+  afterEach(() => {
+    Date.now = dateNow;
+  });
+
+  describe('#constructor', () => {
+    it('should initialize properties', () => {
+      const esPublic = new ES(kuzzle, kuzzle.config.services.db);
+      const esInternal = new ES(kuzzle, kuzzle.config.services.db, 'internal');
+
+      should(esPublic.kuzzle).be.exactly(kuzzle);
+      should(esPublic.config).be.exactly(kuzzle.config.services.db);
+      should(esPublic.indexPrefix).be.eql('&');
+      should(esInternal.indexPrefix).be.eql('%');
+    });
   });
 
   describe('#init', () => {
     it('should initialize properly', () => {
-      return should(elasticsearch.init()).be.fulfilledWith(elasticsearch);
-    });
-  });
+      elasticsearch = new ES(kuzzle, kuzzle.config.services.db);
+      elasticsearch._buildClient = () => new ESClientMock();
 
-  describe('#initESRequest', () => {
-    it('should prepare the data for elasticsearch', () => {
-      const initESRequest = ES.__get__('initESRequest');
+      const promise = elasticsearch.init();
 
-      request.input.resource._id = 'foobar';
-      ['unrecognized', 'from', 'size', 'scroll', 'scrollId', 'refresh'].forEach(arg => {
-        request.input.args[arg] = arg;
-      });
-
-      let preparedData = initESRequest(request,
-        ['from', 'size', 'scroll', 'scrollId', 'refresh']);
-
-      should(preparedData.type).be.exactly(request.input.resource.collection);
-      should(preparedData.id).be.undefined();
-      should(preparedData._id).be.undefined();
-      should(preparedData.index).be.exactly(request.input.resource.index);
-
-      should(preparedData)
-        .not.have.property('unrecognized');
-      ['from', 'size', 'scroll', 'scrollId', 'refresh'].forEach(arg => {
-        should(preparedData[arg]).be.exactly(arg);
-      });
-    });
-
-    it('should throw if attempting to access to an internal index', () => {
-
-      const initESRequest = ES.__get__('initESRequest');
-
-      request.input.resource.index = '%foobar';
-      should(() => initESRequest(request)).throw(BadRequestError);
-    });
-  });
-
-  describe('#search', () => {
-    it('should be able to search documents', () => {
-      elasticsearch.client.search.resolves({total: 0, hits: [{_id: 'foo', _source: {foo: 'bar'}}]});
-
-      request.input.body = filter;
-      return elasticsearch.search(request)
-        .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0].body).be.deepEqual(filterAfterActiveAdded);
-          should(result).be.an.Object();
-          should(result.total).be.exactly(0);
-          should(result.hits).be.an.Array();
-        });
-    });
-
-    it('should handle search results without a _source property', () => {
-      elasticsearch.client.search.resolves({total: 0, hits: [{_id: 'foo'}]});
-
-      request.input.body = filter;
-      return elasticsearch.search(request)
-        .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0].body).be.deepEqual(filterAfterActiveAdded);
-          should(result).be.an.Object();
-          should(result.total).be.exactly(0);
-          should(result.hits).be.an.Array();
-        });
-    });
-
-    it('should be able to search with from/size and scroll arguments', () => {
-      elasticsearch.client.search.resolves({total: 0, hits: [], _scroll_id: 'banana42'});
-
-      request.input.body = filter;
-      request.input.args.from = 0;
-      request.input.args.size = 1;
-      request.input.args.scroll = '30s';
-
-      return elasticsearch.search(request)
-        .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0]).be.deepEqual({
-            from: 0,
-            size: 1,
-            scroll: '30s',
-            index: index,
-            type: collection,
-            body: filterAfterActiveAdded
-          });
-          should(result).be.an.Object();
-          should(result.total).be.exactly(0);
-          should(result.hits).be.an.Array();
-          should(result._scroll_id).be.exactly('banana42');
-          should(result.scrollId).be.exactly('banana42');
-        });
-    });
-
-    it('should return a rejected promise if a search fails', done => {
-      elasticsearch.client.search.rejects(new Error('Mocked error'));
-
-      elasticsearch.search(request)
-        .then(() => done('should have been rejected'))
-        .catch(() => {
-          try {
-            should(elasticsearch.client.search.firstCall.args[0].body).not.be.exactly(filter);
-            done();
-          }
-          catch(e) { done(e); }
+      return should(promise).be.fulfilledWith(elasticsearch)
+        .then(() => {
+          should(elasticsearch.client).not.be.null();
+          should(elasticsearch.esWrapper).not.be.null();
+          should(elasticsearch.esVersion).not.be.null();
         });
     });
   });
 
   describe('#scroll', () => {
     it('should be able to scroll an old search', () => {
-      const req = new Request({
-        scrollId: 'banana42'
+      elasticsearch.client.scroll.resolves({
+        body: {
+          total: 0,
+          hits: [],
+          scrollId: 'azerty'
+        }
       });
-      elasticsearch.client.scroll.resolves({total: 0, hits: []});
 
-      return elasticsearch.scroll(req)
+      const promise = elasticsearch.scroll(
+        index,
+        collection,
+        'i-am-scroll-id',
+        { scroll: '10s' });
+
+      return promise
         .then(result => {
-          should(elasticsearch.client.scroll.firstCall.args[0]).be.deepEqual({scrollId: 'banana42', scroll: '15s'});
-          should(result).be.an.Object();
-          should(result.total).be.exactly(0);
-          should(result.hits).be.an.Array();
+          should(kuzzle.services.list.internalCache.exists).be.called();
+          should(kuzzle.services.list.internalCache.pexpire).be.called();
+          should(elasticsearch.client.scroll.firstCall.args[0]).be.deepEqual({
+            index: esIndexName,
+            scrollId: 'i-am-scroll-id',
+            scroll: '10s'
+          });
+          should(result).be.deepEqual({
+            total: 0,
+            hits: [],
+            scrollId: 'azerty'
+          });
         });
     });
 
     it('should return a rejected promise if a scroll fails', () => {
-      elasticsearch.client.scroll.rejects(new Error('error'));
+      elasticsearch.client.scroll.rejects(esClientError);
 
-      request.input.args.scrollId = 'foobar';
-      return should(elasticsearch.scroll(request)).be.rejectedWith(Error, {message: 'error'});
+      const promise = elasticsearch.scroll(index, collection, 'i-am-scroll-id');
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+
+    it('should rejects if the scrollId does not exists in Kuzzle cache', () => {
+      kuzzle.services.list.internalCache.exists.resolves(0);
+
+      const promise = elasticsearch.scroll(index, collection, 'i-am-scroll-id');
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            errorName: 'external.elasticsearch.unknown_scroll_identifier'
+          });
+          should(kuzzle.services.list.internalCache.pexpire).not.be.called();
+          should(elasticsearch.client.scroll).not.be.called();
+        });
     });
   });
 
-  describe('#create', () => {
-    it('should allow creating documents if the document does not already exists', () => {
-      sinon.stub(elasticsearch, 'refreshIndex').resolves();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.index.resolves({});
+  describe('#search', () => {
+    let filter;
 
-      elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
+    beforeEach(() => {
+      filter = {
+        query: {
+          match_all: {}
+        }
+      };
+    });
 
-      return elasticsearch.create(request)
-        .then(() => {
-          let data = elasticsearch.client.index.firstCall.args[0];
+    it('should be able to search documents', () => {
+      elasticsearch.client.search.resolves({
+        body: {
+          total: 1,
+          hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
+          body: filter,
+          aggregations: { some: 'aggregs' },
+          scrollId: 'i-am-scroll-id'
+        }
+      });
 
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
+      const promise = elasticsearch.search(index, collection, filter);
 
-          should(elasticsearch.client.get).not.be.called();
+      return promise
+        .then(result => {
+          should(elasticsearch.client.search.firstCall.args[0]).match({
+            index: esIndexName,
+            body: filter,
+            from: null,
+            size: null,
+            scroll: null
+          });
 
-          should(elasticsearch.refreshIndex)
-            .be.calledOnce();
-          should(elasticsearch.refreshIndex.firstCall.args[0].index).be.eql(request.index);
+          should(kuzzle.services.list.internalCache.psetex.firstCall.args[1])
+            .be.eql(ms(elasticsearch.config.defaults.scrollTTL));
+
+          should(result).match({
+            scrollId: 'i-am-scroll-id',
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
+            total: 1,
+            aggregations: { some: 'aggregs' }
+          });
         });
     });
 
-    it('should replace a document because it already exists but is inactive', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
+    it('should be able to search with from/size and scroll arguments', () => {
+      elasticsearch.client.search.resolves({
+        body: {
+          total: 0,
+          hits: [],
+          scrollId: 'i-am-scroll-id'
+        }
+      });
 
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.index.resolves({});
-      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: false}}});
-      request.input.resource._id = '42';
+      const promise = elasticsearch.search(
+        index,
+        collection,
+        filter,
+        { from: 0, size: 1, scroll: '30s' });
 
-      return elasticsearch.create(request)
+      return promise
         .then(() => {
-          const data = elasticsearch.client.index.firstCall.args[0];
-
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
-
-          should(refreshIndexSpy.calledOnce).be.true();
+          should(elasticsearch.client.search.firstCall.args[0]).match({
+            index: esIndexName,
+            body: filter,
+            from: 0,
+            size: 1,
+            scroll: '30s'
+          });
+          should(kuzzle.services.list.internalCache.psetex.firstCall.args[1])
+            .be.eql(ms('30s'));
         });
     });
 
-    it('should create a document with a non existing id', () => {
-      const
-        error = new Error('Mocked error'),
-        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
+    it('should return a rejected promise if a search fails', () => {
+      elasticsearch.client.search.rejects(esClientError);
 
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.create.resolves({});
-      error.displayName = 'NotFound';
+      const promise = elasticsearch.search(index, collection, filter);
 
-      elasticsearch.client.get.rejects(error);
-      request.input.resource._id = '42';
-
-      return elasticsearch.create(request)
+      return should(promise).be.rejected()
         .then(() => {
-          const data = elasticsearch.client.create.firstCall.args[0];
-
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
-
-          should(refreshIndexSpy.calledOnce).be.true();
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
 
-    it('should reject the create promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked create error');
-      elasticsearch.client.get.rejects(new Error('Mocked create error'));
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+    it('should not save the scrollId in the cache if not present in response', () => {
+      elasticsearch.client.search.resolves({
+        body: {
+          total: 0,
+          hits: []
+        }
+      });
 
-      request.input.resource._id = 'foobar';
+      const promise = elasticsearch.search(index, collection, {});
 
-      return should(elasticsearch.create(request)).be.rejectedWith(error);
-    });
-
-    it('should reject the create promise if client.index throws an error', () => {
-      const error = new Error('Mocked index error');
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: false}}});
-      elasticsearch.client.index.rejects(error);
-      request.input.resource._id = '42';
-
-      return should(elasticsearch.create(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
-
-    it('should reject a promise if the document already exists', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: true}}});
-      request.input.resource._id = '42';
-
-      return should(elasticsearch.create(request)).be.rejectedWith(BadRequestError);
-    });
-
-    it('should reject if index or collection don\'t exist', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-      elasticsearch.client.index.resolves({});
-
-      return should(elasticsearch.create(request)).be.rejectedWith(PreconditionError);
-    });
-  });
-
-  describe('#createOrReplace', () => {
-    it('should support createOrReplace capability', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      elasticsearch.client.index.resolves({});
-      request.input.resource._id = createdDocumentId;
-
-      return elasticsearch.createOrReplace(request)
+      return promise
         .then(() => {
-          const data = elasticsearch.client.index.firstCall.args[0];
-
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
-          should(data.body._kuzzle_info).not.be.undefined();
-          should(data.id).be.exactly(createdDocumentId);
-          should(refreshIndexSpy.calledOnce).be.true();
-        });
-    });
-
-    it('should not inject meta if specified', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.index.resolves({});
-      request.input.resource._id = createdDocumentId;
-
-      return elasticsearch.createOrReplace(request, false)
-        .then(() => {
-          const data = elasticsearch.client.index.firstCall.args[0];
-          should(data.body._kuzzle_info).be.undefined();
-        });
-    });
-
-    it('should reject the createOrReplace promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.index.rejects(error);
-
-      request.input.resource._id = createdDocumentId;
-      return should(elasticsearch.createOrReplace(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
-
-    it('should reject if index or collection don\'t exist', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-
-      elasticsearch.client.index.resolves({});
-      request.input.resource._id = createdDocumentId;
-
-      return should(elasticsearch.createOrReplace(request)).be.rejectedWith(PreconditionError);
-    });
-  });
-
-  describe('#replace', () => {
-    it('should support replace capability', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
-
-      elasticsearch.client.index.resolves({});
-      elasticsearch.client.exists.resolves(true);
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      request.input.resource._id = createdDocumentId;
-
-      return elasticsearch.replace(request)
-        .then(() => {
-          const data = elasticsearch.client.index.firstCall.args[0];
-
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
-          should(data.id).be.exactly(createdDocumentId);
-
-          should(refreshIndexSpy.calledOnce).be.true();
-        });
-    });
-
-    it('should reject the replace promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-
-      elasticsearch.client.exists.resolves(true);
-      elasticsearch.client.index.rejects(error);
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      request.input.resource._id = createdDocumentId;
-
-      return should(elasticsearch.replace(request)).be.rejectedWith(error);
-    });
-
-    it('should throw a NotFoundError Exception if document already exists', done => {
-      elasticsearch.client.exists.resolves(false);
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      kuzzle.indexes = {};
-      request.input.resource._id = createdDocumentId;
-
-      elasticsearch.replace(request)
-        .catch(err => {
-          try {
-            should(err).be.an.instanceOf(NotFoundError);
-            should(err.message).be.exactly(`Document with id '${request.input.resource._id}' not found.`);
-            should(elasticsearch.client.index).not.be.called();
-
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
-    it('should reject if index or collection don\'t exist', () => {
-      elasticsearch.client.exists.resolves(false);
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-
-      request.input.resource._id = createdDocumentId;
-
-      return should(elasticsearch.replace(request)).be.rejectedWith(PreconditionError);
-    });
-
-    it('should support replace capability', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
-
-      elasticsearch.client.index.resolves({});
-      elasticsearch.client.exists.resolves(true);
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-
-      request.input.resource._id = createdDocumentId;
-
-      return elasticsearch.replace(request)
-        .then(() => {
-          const data = elasticsearch.client.index.firstCall.args[0];
-
-          should(data.index).be.exactly(index);
-          should(data.type).be.exactly(collection);
-          should(data.body).be.exactly(documentAda);
-          should(data.id).be.exactly(createdDocumentId);
-
-          should(refreshIndexSpy.calledOnce).be.true();
+          should(kuzzle.services.list.internalCache.psetex).not.be.called();
         });
     });
   });
 
   describe('#get', () => {
     it('should allow getting a single document', () => {
-      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: true}}});
+      elasticsearch.client.get.resolves({
+        body: {
+          _id: 'liia',
+          _source: { city: 'Kathmandu' },
+          _version: 1
+        }
+      });
 
-      request.input.body = null;
-      request.input.resource._id = createdDocumentId;
+      const promise = elasticsearch.get(index, collection, 'liia');
 
-      return elasticsearch.get(request)
-        .then(() => {
-          should(elasticsearch.client.get.firstCall.args[0].id).be.exactly(createdDocumentId);
+      return promise
+        .then(result => {
+          should(elasticsearch.client.get).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia'
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 1,
+            _source: { city: 'Kathmandu' }
+          });
         });
     });
 
-    it('should not throw error when "_source" is not defined', () => {
-      elasticsearch.client.get.resolves({foo: 'bar'});
-
-      request.input.body = null;
-      request.input.resource._id = createdDocumentId;
-
-      return elasticsearch.get(request);
-    });
-
-    it('should reject requests when document is on inactive stat', () => {
-      elasticsearch.client.get.resolves({_source: {_kuzzle_info: {active: false}}});
-
-      return should(elasticsearch.get(request)).be.rejectedWith(NotFoundError);
-    });
-
     it('should reject requests when the user search for a document with id _search', () => {
-      request.input.resource._id = '_search';
+      const promise = elasticsearch.get(index, collection, '_search');
 
-      return should(elasticsearch.get(request)).be.rejectedWith(BadRequestError);
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.wrong_get_action'
+      });
     });
 
-    it('should allow expose kuzzle metadata in _source._kuzzle_info and _meta properties', () => {
-      elasticsearch.client.get.returns(Bluebird.resolve({_source: {_kuzzle_info: {active: true}}}));
+    it('should return a rejected promise if a get fails', () => {
+      elasticsearch.client.get.rejects(esClientError);
 
-      request.input.body = null;
-      request.input.resource._id = createdDocumentId;
+      const promise = elasticsearch.get(index, collection, 'liia');
 
-      return elasticsearch.get(request)
-        .then(response => {
-          should(response._source._kuzzle_info).be.eql(response._meta);
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
   });
 
-  describe('#mget', () => {
-    it('should return a rejected promise if getting a single document fails', done => {
-      elasticsearch.client.mget.rejects(new Error('Mocked error'));
-
-      elasticsearch.mget(request)
-        .catch(() => {
-          try {
-            should(elasticsearch.client.mget.calledOnce).be.true();
-            should(elasticsearch.client.mget.firstCall.args[0].id).be.undefined();
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
+  describe('#mGet', () => {
     it('should allow getting multiples documents', () => {
-      elasticsearch.client.mget.resolves({});
+      elasticsearch.client.mget.resolves({
+        body: {
+          docs: [
+            { _id: 'liia', found: true, _source: { city: 'Kathmandu' }, _version: 1 },
+            { _id: 'mhery', found: false }
+          ]
+        }
+      });
 
-      request.input.body = {ids: ['1', '2', '3']};
+      const promise = elasticsearch.mGet(index, collection, ['liia', 'mhery']);
 
-      return elasticsearch.mget(request)
-        .then(() => {
-          should(elasticsearch.client.mget.firstCall.args[0].body.ids).be.an.Array();
+      return promise
+        .then(result => {
+          should(elasticsearch.client.mget).be.calledWithMatch({
+            body: {
+              docs: [
+                { _id: 'liia', _index: esIndexName },
+                { _id: 'mhery', _index: esIndexName },
+              ]
+            }
+          });
+
+          should(result).match({
+            result: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1 } ],
+            errors: [ { _id: 'mhery' } ]
+          });
         });
     });
 
-    it('should return a rejected promise if getting some multiple documents fails', done => {
-      elasticsearch.client.mget.rejects(new Error('Mocked error'));
+    it('should return a rejected promise if client.mget fails', () => {
+      elasticsearch.client.mget.rejects(esClientError);
 
-      request.input.body = {};
+      const promise = elasticsearch.mGet(index, collection, ['liia']);
 
-      elasticsearch.mget(request)
-        .catch(() => {
-          try {
-            should(elasticsearch.client.mget.firstCall.args[0].body.ids).be.undefined();
-            done();
-          }
-          catch(e) { done(e); }
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
   });
 
   describe('#count', () => {
     it('should allow counting documents using a provided filter', () => {
-      elasticsearch.client.count.resolves({});
+      const filter = {
+        query: {
+          match_all: {}
+        }
+      };
+      elasticsearch.client.count.resolves({
+        body: {
+          count: 42
+        }
+      });
 
-      request.input.body = {};
+      const promise = elasticsearch.count(index, collection, filter);
 
-      return elasticsearch.count(request)
-        .then(() => {
-          should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleMeta);
+      return promise
+        .then(result => {
+          should(elasticsearch.client.count).be.calledWithMatch({
+            index: esIndexName,
+            body: filter
+          });
+
+          should(result).match({
+            count: 42
+          });
         });
     });
 
-    it('should allow counting objects using a query', () => {
-      elasticsearch.client.count.resolves({});
+    it('should return a rejected promise if count fails', () => {
+      elasticsearch.client.count.rejects(esClientError);
 
-      request.input.body = {};
-      request.input.body = {query: {foo: 'bar'}};
-      rawKuzzleMeta.query.bool.must = request.input.body.query;
+      const promise = elasticsearch.count(index, collection);
 
-      return elasticsearch.count(request)
+      return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch.client.count)
-            .be.calledOnce();
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+  });
 
-          should(elasticsearch.client.count.firstCall.args[0].body).be.deepEqual(rawKuzzleMeta);
+  describe('#create', () => {
+    it('should allow creating document an ID is provided', () => {
+      elasticsearch.client.index.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1,
+          _source: { city: 'Kathmandu' }
+        }
+      });
+
+      const promise = elasticsearch.create(
+        index,
+        collection,
+        { city: 'Kathmandu' },
+        { id: 'liia', refresh: 'wait_for', userId: 'aschen' });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.index).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                author: 'aschen',
+                createdAt: timestamp
+              }
+            },
+            id: 'liia',
+            refresh: 'wait_for',
+            op_type: 'create'
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 1,
+            _source: { city: 'Kathmandu' }
+          });
         });
     });
 
-    it('should return a rejected promise if the count fails', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.count.rejects(error);
+    it('should create a document when no ID is provided', () => {
+      elasticsearch.client.index.resolves({
+        body: {
+          _id: 'mehry',
+          _version: 1,
+          _source: { city: 'Panipokari' }
+        }
+      });
 
-      request.input.body = {query: {foo: 'bar'}};
+      const promise = elasticsearch.create(
+        index,
+        collection,
+        { city: 'Panipokari' });
 
-      return should(elasticsearch.count(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
+      return promise
+        .then(result => {
+          should(elasticsearch.client.index).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              city: 'Panipokari',
+              _kuzzle_info: {
+                author: null
+              }
+            }
+          });
+
+          should(result).match({
+            _id: 'mehry',
+            _version: 1,
+            _source: { city: 'Panipokari' }
+          });
+        });
+    });
+  });
+
+  describe('#createOrReplace', () => {
+    beforeEach(() => {
+      elasticsearch.client.index.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1,
+          _source: { city: 'Kathmandu' },
+          created: true
+        }
+      });
+    });
+
+    it('should support createOrReplace capability', () => {
+      const promise = elasticsearch.createOrReplace(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' },
+        { refresh: 'wait_for', userId: 'aschen' });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.index).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                author: 'aschen',
+                createdAt: timestamp,
+                updatedAt: timestamp,
+                updater: 'aschen'
+              }
+            },
+            id: 'liia',
+            refresh: 'wait_for'
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 1,
+            _source: { city: 'Kathmandu' },
+            created: true
+          });
+        });
+    });
+
+    it('should not inject meta if specified', () => {
+      const promise = elasticsearch.createOrReplace(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' },
+        { injectKuzzleMeta: false });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.index).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: undefined
+            },
+            id: 'liia'
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 1,
+            _source: { city: 'Kathmandu' },
+            created: true
+          });
+        });
+    });
+
+    it('should return a rejected promise if client.index fails', () => {
+      elasticsearch.client.index.rejects(esClientError);
+
+      const promise = elasticsearch.createOrReplace(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' });
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
   describe('#update', () => {
+    beforeEach(() => {
+      elasticsearch.client.update.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1
+        }
+      });
+    });
+
     it('should allow to update a document', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
+      const promise = elasticsearch.update(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' });
 
-      elasticsearch.client.update.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+      return promise
+        .then(result => {
+          should(elasticsearch.client.update).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              doc: {
+                city: 'Panipokari',
+                _kuzzle_info: {
+                  updatedAt: timestamp,
+                  updater: null
+                }
+              }
+            },
+            id: 'liia',
+            refresh: false,
+            retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+          });
 
-      request.input.resource._id = createdDocumentId;
-
-      return elasticsearch.update(request)
-        .then(() => {
-          const data = elasticsearch.client.update.firstCall.args[0];
-
-          should(data.retryOnConflict).be.undefined();
-          should(data.body.doc).be.exactly(documentAda);
-          should(data.body.doc._kuzzle_info).be.an.Object();
-          should(data.body.doc._kuzzle_info.updatedAt).be.a.Number();
-          should(data.body.doc._kuzzle_info.updater).be.eql('test');
-          should(data.body.doc._kuzzle_info.active).be.true();
-
-          should(data.id).be.exactly(createdDocumentId);
-
-          should(refreshIndexSpy.calledOnce).be.true();
+          should(result).match({
+            _id: 'liia',
+            _version: 1
+          });
         });
     });
 
-    it('should handle the retryOnConflict optional argument', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
+    it('should handle optional configurations', () => {
+      const promise = elasticsearch.update(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        { refresh: 'wait_for', userId: 'aschen', retryOnConflict: 42 });
 
-      elasticsearch.config.defaults.onUpdateConflictRetries = 42;
-      elasticsearch.client.update.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+      return promise
+        .then(result => {
+          should(elasticsearch.client.update).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              doc: {
+                city: 'Panipokari',
+                _kuzzle_info: {
+                  updatedAt: timestamp,
+                  updater: 'aschen'
+                }
+              }
+            },
+            id: 'liia',
+            refresh: 'wait_for',
+            retryOnConflict: 42
+          });
 
-      request.input.resource._id = createdDocumentId;
-      request.input.args.retryOnConflict = 13;
-
-      return elasticsearch.update(request)
-        .then(() => {
-          const data = elasticsearch.client.update.firstCall.args[0];
-
-          should(data.retryOnConflict).be.eql(13);
-          should(data.body.doc).be.exactly(documentAda);
-          should(data.body.doc._kuzzle_info).be.an.Object();
-          should(data.body.doc._kuzzle_info.updatedAt).be.a.Number();
-          should(data.body.doc._kuzzle_info.updater).be.eql('test');
-          should(data.body.doc._kuzzle_info.active).be.true();
-
-          should(data.id).be.exactly(createdDocumentId);
-
-          should(refreshIndexSpy.calledOnce).be.true();
+          should(result).match({
+            _id: 'liia',
+            _version: 1
+          });
         });
     });
 
-    it('should handle the onUpdateConflictRetries default configuration', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
+    it('should return a rejected promise if client.update fails', () => {
+      elasticsearch.client.update.rejects(esClientError);
 
-      elasticsearch.config.defaults.onUpdateConflictRetries = 42;
-      elasticsearch.client.update.resolves({});
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+      const promise = elasticsearch.update(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' });
 
-      request.input.resource._id = createdDocumentId;
-
-      return elasticsearch.update(request)
+      return should(promise).be.rejected()
         .then(() => {
-          const data = elasticsearch.client.update.firstCall.args[0];
-
-          should(data.retryOnConflict).be.eql(42);
-          should(data.body.doc).be.exactly(documentAda);
-          should(data.body.doc._kuzzle_info).be.an.Object();
-          should(data.body.doc._kuzzle_info.updatedAt).be.a.Number();
-          should(data.body.doc._kuzzle_info.updater).be.eql('test');
-          should(data.body.doc._kuzzle_info.active).be.true();
-
-          should(data.id).be.exactly(createdDocumentId);
-
-          should(refreshIndexSpy.calledOnce).be.true();
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
+  });
 
-    it('should reject if index or collection don\'t exist', () => {
-      elasticsearch.client.exists.resolves(false);
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-
-      request.input.resource._id = createdDocumentId;
-
-      return should(elasticsearch.update(request)).be.rejectedWith(PreconditionError);
-    });
-
-    it('should return a rejected promise with a NotFoundError when updating a document which does not exist', done => {
-      const
-        esError = new Error('test');
-
-      esError.displayName = 'NotFound';
-      esError.body = {
-        error: {
-          reason: 'foo'
+  describe('#replace', () => {
+    beforeEach(() => {
+      elasticsearch.client.index.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1,
+          _source: { city: 'Kathmandu' }
         }
-      };
+      });
+      elasticsearch.client.exists.resolves({ body: true });
+    });
 
-      esError.body.error['resource.id'] = 'bar';
-      elasticsearch.client.update.rejects(esError);
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+    it('should support replace capability', () => {
+      const promise = elasticsearch.replace(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' });
 
-      elasticsearch.update(request)
-        .catch((error) => {
-          try{
-            should(error).be.instanceOf(NotFoundError);
-            should(error.message).be.equal('foo: bar');
-            should(elasticsearch.client.update.firstCall.args[0].id).be.null();
-            done();
-          }
-          catch(e) { done(e); }
+      return promise
+        .then(result => {
+          should(elasticsearch.client.index).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                author: null,
+                createdAt: timestamp,
+                updatedAt: timestamp,
+                updater: null
+              }
+            },
+            refresh: false
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 1,
+            _source: { city: 'Kathmandu' }
+          });
         });
     });
 
-    it('should return a rejected promise with a customised NotFoundError when elasticsearch throws a known error', done => {
-      const
-        esError = new Error('[index_not_found_exception] no such index, with { resource.type=index_or_alias resource.id=banana index=banana }');
+    it('should accept additional options', () => {
+      const promise = elasticsearch.replace(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' },
+        { refresh: 'wait_for', userId: 'aschen' });
 
-      esError.displayName = 'NotFound';
-      esError.body = {
-        error: {
-          reason: 'foo'
-        }
-      };
+      return promise
+        .then(result => {
+          should(elasticsearch.client.index).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                author: 'aschen',
+                createdAt: timestamp,
+                updatedAt: timestamp,
+                updater: 'aschen'
+              }
+            },
+            refresh: 'wait_for'
+          });
 
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.update.rejects(esError);
-
-      elasticsearch.update(request)
-        .catch(error => {
-          try {
-            should(error).be.instanceOf(NotFoundError);
-            should(error.message).be.equal('Index or collection "banana" does not exist, please create it first.');
-            should(error.stack.replace(/^.*?\n/, ''))
-              .eql(esError.stack.replace(/^.*?\n/, ''));
-            should(elasticsearch.client.update.firstCall.args[0].id).be.null();
-            done();
-          }
-          catch(e) { done(e); }
+          should(result).match({
+            _id: 'liia',
+            _version: 1,
+            _source: { city: 'Kathmandu' }
+          });
         });
     });
 
-    it('should return a rejected promise with an Error if an update fails for unknown reason', () => {
-      const
-        esError = new Error('banana error');
+    it('should throw a NotFoundError Exception if document already exists', () => {
+      elasticsearch.client.exists.resolves({ body: false });
 
-      elasticsearch.client.update.rejects(esError);
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
+      const promise = elasticsearch.replace(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' });
 
-      return should(elasticsearch.update(request)).be.rejected();
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            errorName: 'external.elasticsearch.document_not_found'
+          });
+          should(elasticsearch.client.index).not.be.called();
+        });
+    });
+
+    it('should return a rejected promise if client.index fails', () => {
+      elasticsearch.client.index.rejects(esClientError);
+
+      const promise = elasticsearch.replace(
+        index,
+        collection,
+        'liia',
+        { city: 'Kathmandu' });
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
   describe('#delete', () => {
-    it('should allow to delete a document', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
-
-      elasticsearch.client.update.resolves({});
-      elasticsearch.client.get.resolves({
-        _source: {
-          _kuzzle_info: {
-            active: true
-          }
+    beforeEach(() => {
+      elasticsearch.client.delete.resolves({
+        body: {
+          _id: 'liia'
         }
       });
+    });
 
-      request.input.body = null;
-      request.input.resource._id = createdDocumentId;
+    it('should allow to delete a document', () => {
+      const promise = elasticsearch.delete(
+        index,
+        collection,
+        'liia');
 
-      return elasticsearch.delete(request)
-        .then(() => {
-          should(elasticsearch.client.update.firstCall.args[0].id).be.exactly(createdDocumentId);
-          should(refreshIndexSpy.calledOnce).be.true();
+      return promise
+        .then(result => {
+          should(elasticsearch.client.delete).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            refresh: false,
+            retryOnConflict: 0
+          });
+
+          should(result).be.undefined();
         });
     });
 
-    it('should return a rejected promise if a delete fails', () => {
-      elasticsearch.client.update.rejects(new Error('Mocked error'));
+    it('should allow additional options', () => {
+      const promise = elasticsearch.delete(
+        index,
+        collection,
+        'liia',
+        { refresh: 'wait_for', retryOnConflict: 42 });
 
-      return should(elasticsearch.delete(request)).be.rejected();
+      return promise
+        .then(result => {
+          should(elasticsearch.client.delete).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            refresh: 'wait_for',
+            retryOnConflict: 42
+          });
+
+          should(result).be.undefined();
+        });
+    });
+
+    it('should return a rejected promise if client.delete fails', () => {
+      elasticsearch.client.delete.rejects(esClientError);
+
+      const promise = elasticsearch.delete(
+        index,
+        collection,
+        'liia');
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
-      request.input.body = {
-        query: {
-          term: {firstName: 'foobar'}
+      elasticsearch.client.deleteByQuery.resolves({
+        body: {
+          total: 2,
+          deleted: 1,
+          failures: [
+            { shardId: 42, reason: 'error', foo: 'bar' }
+          ]
         }
-      };
-    });
-
-    it('should return an empty result array when no document has been deactivated using a filter', () => {
-      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
-
-      return elasticsearch.deleteByQuery(request)
-        .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0]).not.be.undefined();
-
-          // Ugly line in order to spot a random bug on this unit test
-          should(result.ids).not.be.undefined().and.be.an.Array();
-          should(result.ids.length).be.exactly(0);
-        });
-    });
-
-    it('should allow to deactivate documents using a provided filter', () => {
-      const
-        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded'),
-        mockupIds = ['foo', 'bar', 'baz'],
-        getAllIdsStub = sinon.stub().resolves(mockupIds);
-
-      elasticsearch.client.bulk.resolves(mockupIds);
-
-      return ES.__with__({
-        getAllIdsFromQuery: getAllIdsStub,
-        Date: {
-          now: () => 42
-        }
-      })(() => {
-        return elasticsearch.deleteByQuery(request)
-          .then(result => {
-            const bulkData = elasticsearch.client.bulk.firstCall.args[0];
-
-            // elasticsearch.client.bullk
-            should(bulkData.body).not.be.undefined().and.be.an.Array();
-            // (mockupIds.length * 2) because there is update requests with body
-            should(bulkData.body.length).be.exactly(mockupIds.length * 2);
-
-            bulkData.body.forEach(cmd => {
-              should(cmd).be.an.Object();
-              if (cmd.update) {
-                should(cmd.update).not.be.undefined().and.be.an.Object();
-                should(mockupIds.indexOf(cmd.update._id)).not.be.eql(-1);
-                should(cmd.update._type).be.exactly(request.input.resource.collection);
-              }
-              if (cmd.doc) {
-                should(cmd.doc).not.be.undefined().and.be.an.Object();
-                should(cmd.doc).be.eql({_kuzzle_info: { active: false, deletedAt: 42, updater: 'test' }});
-              }
-            });
-
-            // elasticserach.deleteByQuery
-            should(result.ids).not.be.undefined().and.be.an.Array();
-            should(result.ids).match(mockupIds);
-
-            // refreshIndexIfNeeded
-            should(refreshIndexSpy.calledOnce).be.true();
-          });
       });
     });
 
-    it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
-      elasticsearch.client.search.yields(new Error(), {});
-
-      return should(elasticsearch.deleteByQuery(request)).be.rejected();
-    });
-
-    it('should return a rejected promise if the delete by query fails because of a bulk failure', () => {
-      const error = new KuzzleError('Mocked error');
-      elasticsearch.client.bulk.rejects(error);
-
-      request.input.body.query = {some: 'query'};
-
-      return ES.__with__({
-        getAllIdsFromQuery: () => Bluebird.resolve(['foo', 'bar'])
-      })(() => {
-        return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(error);
-      });
-    });
-
-    it('should return a rejected promise if the delete by query fails because the filter is null', () => {
-      request.input.body.query = null;
-
-      return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(BadRequestError);
-    });
-  });
-
-  describe('#deleteByQueryFromTrash', () => {
-    it('should return an empty result array when no document has been deleted using a filter', () => {
-      elasticsearch.client.search.yields(null, {hits: {hits: [], total: 0}});
-
-      delete request.input.body;
-      request.input.body.query = {term: {firstName: 'no way any document can be returned with this filter'}};
-
-      return elasticsearch.deleteByQueryFromTrash(request)
-        .then(result => {
-          should(elasticsearch.client.search.firstCall.args[0].body.query).be.exactly(request.input.body.query);
-
-          // Ugly line in order to spot a random bug on this unit test
-          should(result.ids).not.be.undefined().and.be.an.Array();
-          should(result.ids.length).be.exactly(0);
-        });
-    });
-
-    it('should allow to delete inactive documents using a provided filter from the trash', () => {
-      const
-        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded'),
-        mockupIds = ['foo', 'bar', 'baz'],
-        getAllIdsStub = sinon.stub().resolves(mockupIds);
-
-      elasticsearch.client.bulk.resolves(mockupIds);
-      elasticsearch.client.search.yields(null, {hits: {hits: [{_id: 'foo'}, {_id: 'bar'}, {_id: 'baz'}], total: mockupIds.length}});
-
-      return ES.__with__({
-        getAllIdsFromQuery: getAllIdsStub,
-        Date: {
-          now: () => 42
-        }
-      })(() => {
-        return should(elasticsearch.deleteByQueryFromTrash(request)
-          .then(result => {
-            const bulkData = elasticsearch.client.bulk.firstCall.args[0];
-
-            // elasticsearch.client.bulk
-            should(bulkData.body).not.be.undefined().and.be.an.Array();
-            should(bulkData.body.length).be.exactly(mockupIds.length);
-
-            bulkData.body.forEach(cmd => {
-              should(cmd).be.an.Object();
-              should(cmd.delete).not.be.undefined().and.be.an.Object();
-              should(mockupIds.indexOf(cmd.delete._id)).not.be.eql(-1);
-              should(cmd.delete._type).be.exactly(request.input.resource.collection);
-            });
-
-            // elasticserach.deleteByQuery
-            should(result.ids).not.be.undefined().and.be.an.Array();
-            should(result.ids).match(mockupIds);
-
-            // refreshIndexIfNeeded
-            should(refreshIndexSpy.calledOnce).be.true();
-          }));
-      });
-    });
-
-    it('should return a rejected promise if the delete by query fails because of a bad filter', () => {
-      elasticsearch.client.search.yields(new Error(), {});
-
-      return should(elasticsearch.deleteByQuery(request)).be.rejected();
-    });
-
-    it('should reject the promise if the delete by query fails because of a bulk failure', () => {
-      const error = new KuzzleError('Mocked error');
-      elasticsearch.client.bulk.rejects(error);
-
-      request.input.body.query = {some: 'query'};
-
-      return ES.__with__({
-        getAllIdsFromQuery: () => Bluebird.resolve(['foo', 'bar'])
-      })(() => {
-        return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(error);
-      });
-    });
-
-    it('should return a rejected promise if the delete by query fails because the filter is null', () => {
-      request.input.body.query = null;
-
-      return should(elasticsearch.deleteByQuery(request)).be.rejectedWith(BadRequestError);
-    });
-  });
-
-  describe('#import', () => {
-    it('should support bulk data import', () => {
-      const
-        refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
-
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _type: collection, _index: 'alias'}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _type: collection, _index: index}}
-        ]
-      };
-
-      return elasticsearch.import(request)
-        .then(() => {
-          should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
-          should(refreshIndexSpy.calledOnce).be.true();
-        });
-    });
-
-    it('should add metadata to documents', () => {
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: 'alias'}},
-          {firstName: 'bar'},
-          {create: {_id: 3, _type: collection, _index: index}},
-          {firstName: 'gordon'},
-          {update: {_id: 1, _type: collection, _index: index}},
-          {doc: {firstName: 'foobar'}, upsert: {firstName: 'john'}},
-          {delete: {_id: 2, _type: collection, _index: index}},
-          // this update triggers a crash if the case of an update without
-          // "doc" nor "upsert" is submitted
-          {update: {_id: 42}},
-          {script: 'can I has a cheezburgscript?'}
-        ]
-      };
-
-      return elasticsearch.import(request)
-        .then(() => {
-          const body = elasticsearch.client.bulk.firstCall.args[0].body;
-
-          // Bulk action: index
-          should(body[1]._kuzzle_info).be.type('object');
-          should(body[1]._kuzzle_info.author).be.exactly('test');
-          should(body[1]._kuzzle_info.createdAt).be.belowOrEqual(Date.now());
-          should(body[1]._kuzzle_info.updatedAt).be.null();
-          should(body[1]._kuzzle_info.updater).be.null();
-          should(body[1]._kuzzle_info.active).be.ok();
-          should(body[1]._kuzzle_info.deletedAt).be.null();
-
-          // Bulk action: create
-          should(body[5]._kuzzle_info).be.type('object');
-          should(body[5]._kuzzle_info.author).be.exactly('test');
-          should(body[5]._kuzzle_info.createdAt).be.belowOrEqual(Date.now());
-          should(body[5]._kuzzle_info.updatedAt).be.null();
-          should(body[5]._kuzzle_info.updater).be.null();
-          should(body[5]._kuzzle_info.active).be.ok();
-          should(body[5]._kuzzle_info.deletedAt).be.null();
-
-          // Bulk action: update
-          should(body[7].doc._kuzzle_info).be.type('object');
-          should(body[7].doc._kuzzle_info.updater).be.exactly('test');
-          should(body[7].doc._kuzzle_info.updatedAt).not.be.null();
-          should(body[7].upsert._kuzzle_info).be.type('object');
-          should(body[7].upsert._kuzzle_info.updater).be.exactly('test');
-          should(body[7].upsert._kuzzle_info.updatedAt).not.be.null();
-
-          // Bulk action: script update
-          // (just verifying that this hasn't been filtered)
-          should(body[10].script).eql('can I has a cheezburgscript?');
-        });
-    });
-
-    it('should inject only the allowed optional parameters', () => {
-      const refreshIndexSpy = sinon.spy(elasticsearch, 'refreshIndexIfNeeded');
-
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([]);
-
-      request.input.body = {
-        bulkData: []
-      };
-      request.input.args.consistency = 'foo';
-      request.input.args.refresh = 'wait_for';
-      request.input.args.routing = 'foo/bar';
-      request.input.args.timeout = 999;
-      request.input.args.fields = 'foo, bar, baz';
-
-      return elasticsearch.import(request)
-        .then(() => {
-          const arg = elasticsearch.client.bulk.firstCall.args[0];
-
-          should(arg)
-            .not.have.properties([
-              'consistency',
-              'routing',
-              'timeout',
-              'fields'
-            ]);
-          should(arg.refresh)
-            .be.exactly('wait_for');
-
-          should(refreshIndexSpy.calledOnce).be.true();
-        });
-    });
-
-    it('should raise a "Partial Error" response for bulk data import with some errors', () => {
-      elasticsearch.client.bulk.resolves({
-        errors: true,
-        items: [
-          {index: {status: 404, error: 'DocumentMissingException'}},
-          {index: {status: 404, error: 'DocumentMissingException'}}
-        ]
-      });
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 12, _type: collection, _index: 'alias'}},
-          {doc: {firstName: 'foobar'}},
-          {update: {_id: 212, _type: collection, _index: index}},
-          {doc: {firstName: 'foobar'}}
-        ]
-      };
-
-      return elasticsearch.import(request)
-        .then(result => {
-          should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
-
-          should(result.errors).be.true();
-          should(result.partialErrors).be.an.Array().and.match([{status: 404}]).and.match([{error: /^DocumentMissingException/}]);
-        });
-    });
-
-    it('should override the type with the collection if one has been specified in the request', () => {
-      elasticsearch.client.bulk.resolves({
-        items: [
-          {index: {_id: 1, _index: index, _type: collection}},
-          {index: {_id: 2, _index: 'indexAlt', _type: collection}},
-          {update: {_id: 1, _index: index, _type: collection}},
-          {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
-        ]
-      });
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } },
-        indexAlt: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _index: 'indexAlt'}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: 'alias'}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _index: 'indexAlt'}}
-        ]
-      };
-
-      return elasticsearch.import(request)
-        .then(() => {
-          const data = elasticsearch.client.bulk.firstCall.args[0];
-
-          should(data.body).be.an.Array().and.match([
-            {index: {_id: 1, _index: index, _type: collection}},
-            {firstName: 'foo'},
-            {index: {_id: 2, _index: 'indexAlt', _type: collection}},
-            {firstName: 'bar'},
-            {update: {_id: 1, _index: 'alias', _type: collection}},
-            {doc: {firstName: 'foobar'}},
-            {delete: {_id: 2, _index: 'indexAlt', _type: collection}}
-          ]);
-
-        });
-    });
-
-    it('should reject the import promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([]);
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: index}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _index: index}}
-        ]
-      };
-
-      elasticsearch.client.bulk.rejects(error);
-
-      return should(elasticsearch.import(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
-
-    it('should return a rejected promise if bulk data try to write into internal index', () => {
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _index: kuzzle.internalEngine.index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: index}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _index: index}}
-        ]
-      };
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } },
-        [kuzzle.internalEngine.index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([]);
-
-      elasticsearch.client.bulk.resolves({});
-
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
-    });
-
-    it('should return a rejected promise if body contains no bulkData parameter', () => {
-      request.input.body.bulkData = null;
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
-    });
-
-    it('should return a rejected promise if no type has been provided, locally or globally', () => {
-      request.input.resource.collection = null;
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: 'alias'}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _index: index}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _type: collection, _index: index}}
-        ]
-      };
-
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
-    });
-
-    it('should return a rejected promise if no index has been provided, locally or globally', () => {
-      request.input.resource.index = null;
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-          {update: {_id: 1, _type: collection}},
-          {doc: {firstName: 'foobar'}},
-          {delete: {_id: 2, _type: collection, _index: index}}
-        ]
-      };
-
-      elasticsearch.client.bulk.resolves({});
-      const getMappingResult = {
-        [index]: { mappings: { [collection]: {} } }
-      };
-      elasticsearch.client.indices.getMapping.resolves(getMappingResult);
-      elasticsearch.client.cat.aliases.resolves([
-        {alias: 'alias', index}
-      ]);
-
-      return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
-    });
-
-    it('should rejected if index and/or collection don\'t exist', () => {
-      elasticsearch.client.indices.getMapping.resolves({});
-      elasticsearch.client.cat.aliases.resolves([]);
-      request.input.resource.index = null;
-
-      request.input.body = {
-        bulkData: [
-          {index: {_id: 1, _type: collection, _index: index}},
-          {firstName: 'foo'},
-          {index: {_id: 2, _type: collection, _index: index}},
-          {firstName: 'bar'},
-        ]
-      };
-
-      elasticsearch.client.bulk.resolves({});
-
-      return should(elasticsearch.import(request))
-        .be.rejectedWith(PreconditionError, {message: 'Index \'test\' and/or collection \'unit-tests-elasticsearch\' don\'t exist.'});
-    });
-  });
-
-  describe('#updateMapping', () => {
-    let
-      getMappingReturn;
-
-    beforeEach(() => {
-      getMappingReturn = {
-        [index]: {
-          mappings: {
-            [collection]: {}
-          }
-        }
-      };
-
-      request.input.body = {
-        properties: {
-          name: { type: 'keyword' }
-        }
-      };
-
-      elasticsearch.esWrapper.getMapping = sinon.stub().resolves(getMappingReturn);
-    });
-
-    it('should have mapping capabilities', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-
-      request.input.body = {
-        dynamic: 'true',
-        properties: {
-          city: {type: 'string'}
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          const arg = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(arg.body.properties.city)
-            .be.exactly(request.input.body.properties.city);
-        });
-    });
-
-    it('should reject with BadRequestError on wrong mapping', () => {
-      const collectionMapping = {
-        dinamic: 'false',
-        properties: {
-          freeman:  { type: 'keyword' }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return should(elasticsearch.updateMapping(request))
-        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
-    });
-
-    it('should reject and handle error for bad mapping input', done => {
-      const
-        error = new Error('test');
-
-      error.displayName = 'BadRequest';
-      error.body = {
-        error: {
-          reason: 'foo'
-        }
-      };
-
-      elasticsearch.client.indices.putMapping.rejects(error);
-
-      elasticsearch.updateMapping(request)
-        .catch((err) => {
-          try {
-            should(err).be.instanceOf(BadRequestError);
-            should(err.message).be.equal('foo');
-            should(elasticsearch.client.indices.putMapping.firstCall.args[0]).not.have.key('properties');
-            done();
-          }
-          catch(e) { done(e); }
-        });
-    });
-
-    it('should get existing _meta and dynamic policy for the collection', () => {
-      getMappingReturn[index].mappings[collection] = {
-        dynamic: 'strict',
-        _meta: { gordon: 'freeman' }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
-
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esRequest.body.dynamic).be.eql('strict');
-          should(esRequest.body._meta).match({ gordon: 'freeman' });
-        });
-    });
-
-    it('should inject default mapping for the index', () => {
-      const expectedKuzzleMeta = {
-        properties: {
-          active: { type: 'boolean' },
-          author: { type: 'text' }, // This one differ from commonMapping
-          createdAt: { type: 'date' },
-          updatedAt: { type: 'date' },
-          updater: { type: 'keyword' },
-          deletedAt: { type: 'date' }
-        }
-      };
-      getMappingReturn[index].mappings[collection] = {
-        properties: {
-          _kuzzle_info: {
-            properties: {
-              author: { type: 'text' }
-            }
-          }
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          should(elasticsearch.esWrapper.getMapping).be.calledOnce();
-
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esRequest.body.properties._kuzzle_info).match(expectedKuzzleMeta);
-        });
-    });
-
-    it('should inject the default mapping', () => {
-      elasticsearch.client.indices.putMapping.resolves({});
-
-      elasticsearch.config.commonMapping = {
-        foo: {type: 'boolean'},
-        _kuzzle_info: {
-          properties: {
-            active: {type: 'boolean'},
-            author: {type: 'text'},
-            createdAt: {type: 'date'},
-            updatedAt: {type: 'date'},
-            updater: {type: 'keyword'},
-            deletedAt: {type: 'date'}
-          }
-        }
-      };
-
-      request.input.body = {
-        properties: {
-          city: {type: 'string'}
-        }
-      };
-
-      return elasticsearch.updateMapping(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq.body).eql({
-            dynamic: true,
-            _meta: {},
-            properties: {
-              city: {type: 'string'},
-              foo: {type: 'boolean'},
-              _kuzzle_info: {
-                properties: {
-                  active: {type: 'boolean'},
-                  author: {type: 'text'},
-                  createdAt: {type: 'date'},
-                  updatedAt: {type: 'date'},
-                  updater: {type: 'keyword'},
-                  deletedAt: {type: 'date'}
-                }
-              }
-            }
-          });
-        });
-    });
-
-    it('should create a fresh mapping for each collection', () => {
-      const mapping = Object.assign({}, elasticsearch.config.commonMapping);
-
-      return elasticsearch.updateMapping(new Request({
+    it('should have deleteByQuery capability', () => {
+      const promise = elasticsearch.deleteByQuery(
         index,
         collection,
-        controller: 'collection',
-        action: 'updateMapping',
-        body: {
-          properties: {
-            foo: {
-              type: 'text'
-            }
-          }
-        }
-      }))
-        .then(() => elasticsearch.updateMapping(new Request({
-          index,
-          collection,
-          controller: 'collection',
-          action: 'updateMapping',
-          body: {
-            properties: {
-              bar: {
-                type: 'integer'
-              }
-            }
-          }
-        })))
-        .then(() => {
-          should(elasticsearch.config.commonMapping).eql(mapping);
-        });
-    });
+        { filter: 'term' });
 
-    it('should reuse a previously defined common mapping', () => {
-      kuzzle.indexCache.defaultMappings[index] = {
-        gordon: { type: 'text' }
-      };
+      return promise
+        .then(result => {
+          should(elasticsearch.client.deleteByQuery).be.calledWithMatch({
+            index: esIndexName,
+            body: { query: { filter: 'term' } },
+            from: null,
+            size: null,
+            refresh: false
+          });
 
-      return elasticsearch.updateMapping(new Request({
-        index,
-        collection,
-        body: {
-          properties: {
-            freeman: { type: 'boolean' }
-          }
-        }
-      }))
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq).eql({
-            index,
-            type: collection,
-            body: {
-              dynamic: true,
-              _meta: {},
-              properties: {
-                gordon: { type: 'text' },
-                freeman: { type: 'boolean' }
-              }
-            }
+          should(result).match({
+            total: 2,
+            deleted: 1,
+            failures: [
+              { shardId: 42, reason: 'error' }
+            ]
           });
         });
     });
+
+    it('should allow additional options', () => {
+      const promise = elasticsearch.deleteByQuery(
+        index,
+        collection,
+        { filter: 'term' },
+        { refresh: 'wait_for', from: 1, size: 3 });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.deleteByQuery).be.calledWithMatch({
+            index: esIndexName,
+            body: { query: { filter: 'term' } },
+            from: 1,
+            size: 3,
+            refresh: 'wait_for'
+          });
+
+          should(result).match({
+            total: 2,
+            deleted: 1,
+            failures: [
+              { shardId: 42, reason: 'error' }
+            ]
+          });
+        });
+    });
+
+    it('should return a rejected promise if client.deleteByQuery fails', () => {
+      elasticsearch.client.deleteByQuery.rejects(esClientError);
+
+      const promise = elasticsearch.deleteByQuery(
+        index,
+        collection,
+        { filter: 'term' });
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+
+    it('should reject if the query is empty', () => {
+      const promise = elasticsearch.deleteByQuery(
+        index,
+        collection,
+        'not an object');
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.empty_query'
+      });
+    });
   });
 
-  describe('#getMapping', () => {
+  describe('#createIndex', () => {
     beforeEach(() => {
-      elasticsearch.esWrapper.getMapping = sinon.stub().resolves({foo: 'bar'});
-    });
-
-    it('should forward the request to elasticseach wrapper', () => {
-      request.input.args.includeKuzzleMeta = false;
-
-      return elasticsearch.getMapping(request)
-        .then(res => {
-          should(elasticsearch.esWrapper.getMapping)
-            .be.calledOnce()
-            .be.calledWithExactly({ index: 'test', type: 'unit-tests-elasticsearch'}, false);
-          should(res).match({foo: 'bar'});
-        });
-    });
-  });
-
-  describe('#getAllIdsFromQuery', () => {
-    it('should be able to get every ids matching a query', () => {
-      const
-        getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
-        ids = ['foo', 'bar'];
-
-      elasticsearch.client.search.yields(null, {
-        hits: {
-          hits: [{_id: 'foo'}, {_id: 'bar'}],
-          total: 2
-        }
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: esIndexName }, { index: '%nepali.liia' }
+        ]
       });
+    });
 
-      return getAllIdsFromQuery(elasticsearch.client, request)
-        .then(result => {
-          should(result).be.an.Array().and.match(ids);
-          should(result.length).be.exactly(2);
+    it('should resolves if index does not exists', () => {
+      const promise = elasticsearch.createIndex('lfiduras');
+
+      return should(promise).be.resolved();
+    });
+
+    it('should rejects if the index already exists', () => {
+      const promise = elasticsearch.createIndex('nepali');
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            errorName: 'external.elasticsearch.index_already_exists'
+          });
         });
     });
 
-    it('should return a rejected promise if the search fails', () => {
-      const getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery');
+    it('should return a rejected promise if client.cat.indices fails', () => {
+      elasticsearch.client.cat.indices.rejects(esClientError);
 
-      elasticsearch.client.search.yields(new Error('rejected'));
-      return should(getAllIdsFromQuery(elasticsearch.client, request)).be.rejectedWith('rejected');
-    });
+      const promise = elasticsearch.createIndex(
+        index,
+        collection,
+        { filter: 'term' });
 
-    it('should scroll through result pages until getting all ids', () => {
-      const
-        getAllIdsFromQuery = ES.__get__('getAllIdsFromQuery'),
-        ids = ['foo', 'bar'];
-
-      elasticsearch.client.search.yields(null, {
-        hits: {
-          hits: [{_id: 'foo'}],
-          total: 2
-        }
-      });
-      elasticsearch.client.scroll.yields(null, {
-        hits: {
-          hits: [ {_id: 'bar'} ],
-          total: 2
-        }
-      });
-
-      return getAllIdsFromQuery(elasticsearch.client, request)
-        .then(result => {
-          should(result).be.an.Array().and.match(ids);
-          should(result.length).be.exactly(2);
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
-    });
-  });
-
-  describe('#listCollections', () => {
-    it('should allow listing all available collections', () => {
-      const
-        mappings = {
-          [index]: {
-            mappings: {
-              [collection]: {}
-            }
-          }
-        };
-
-      elasticsearch.client.indices.getMapping.resolves(mappings);
-      request.input.body = null;
-      return elasticsearch.listCollections(request);
-    });
-
-    it('should reject the listCollections promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.indices.getMapping.rejects(error);
-
-      request.input.resource.index = 'kuzzle-unit-tests-fakeindex';
-      request.input.body = null;
-      return should(elasticsearch.listCollections(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
     });
   });
 
   describe('#createCollection', () => {
+    let _checkMappings;
+
     beforeEach(() => {
-      request.input.resource.collection = '%foobar';
+      _checkMappings = elasticsearch._checkMappings;
 
-      request.input.body = {
-        properties: {
-          name: { type: 'keyword' }
-        }
-      };
-
-      elasticsearch.client.indices.putMapping.resolves({});
-      elasticsearch.kuzzle.indexCache.exists
-        .onCall(0).resolves(true)
-        .onCall(1).resolves(false);
+      elasticsearch.collectionExists = sinon.stub().resolves(false);
+      elasticsearch.client.indices.create.resolves({});
+      elasticsearch._checkMappings = sinon.stub().resolves();
     });
 
-    it('should allow creating a new collection', () => {
-      return elasticsearch.createCollection(request);
-    });
+    it('should allow creating a new collection and inject commonMappings', () => {
+      const
+        mappings = { properties: { city: { type: 'keyword' } } },
+        mergedMappings = _.merge(mappings, elasticsearch.config.commonMapping),
+        promise = elasticsearch.createCollection(
+          index,
+          collection,
+          mappings
+        );
 
-    it('should reject the createCollection promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.indices.putMapping.rejects(error);
-
-      return should(
-        elasticsearch.createCollection(request)
-      ).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
-
-    it('should reject if index doesn\'t exist', () => {
-      elasticsearch.kuzzle.indexCache.exists.onCall(0).resolves(false);
-
-      return should(
-        elasticsearch.createCollection(request)
-      ).be.rejectedWith(PreconditionError);
-    });
-
-    it('should inject default mapping for index', () => {
-      elasticsearch.config.dynamic = 'strict';
-      elasticsearch.kuzzle.indexCache.defaultMappings[index] = {
-        foo: { type: 'boolean' },
-        _kuzzle_info: {
-          properties: {
-            active: { type: 'boolean' },
-            author: { type: 'text' },
-            createdAt: { type: 'date' },
-            updatedAt: { type: 'date' },
-            updater: { type: 'keyword' },
-            deletedAt: { type: 'date' }
-          }
-        }
-      };
-
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          const esRequest = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esRequest.body.properties).match({
-            foo: { type: 'boolean' },
-            _kuzzle_info: {
-              properties: {
-                active: { type: 'boolean' },
-                author: { type: 'text' },
-                createdAt: { type: 'date' },
-                updatedAt: { type: 'date' },
-                updater: { type: 'keyword' },
-                deletedAt: { type: 'date' }
-              }
+      return promise
+        .then(result => {
+          should(elasticsearch.collectionExists).be.calledWith(index, collection);
+          should(elasticsearch._checkMappings).be.calledWithMatch(
+            mergedMappings
+          );
+          should(elasticsearch.client.indices.create).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              mappings: mergedMappings
             }
           });
-          should(esRequest.body.dynamic).be.eql('strict');
+
+          should(result).be.undefined();
+        });
+    });
+
+    it('should return a rejected promise if client.indices.create fails', () => {
+      elasticsearch.client.indices.create.rejects(esClientError);
+
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        { properties: { city: { type: 'keyword' } } });
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
 
     it('should reject with BadRequestError on wrong mapping', () => {
+      elasticsearch._checkMappings = _checkMappings;
       const collectionMapping = {
         dinamic: 'false',
         properties: {
           freeman:  { type: 'keyword' }
         }
       };
-      request.input.body = collectionMapping;
 
-      return should(elasticsearch.createCollection(request))
-        .be.rejectedWith({ message: /Did you mean "dynamic"/ });
-    });
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        collectionMapping);
 
-    it('should create collection with mapping if supplied in the body', () => {
-      elasticsearch.config.commonMapping = {};
-
-      const collectionMapping = {
-        dynamic: 'false',
-        _meta: { alyx: 'vance' },
-        properties: {
-          gordon:   { type: 'text' },
-          freeman:  { type: 'keyword' }
-        }
-      };
-      request.input.body = collectionMapping;
-
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-
-          should(esReq.body.dynamic).eql(collectionMapping.dynamic);
-          should(esReq.body._meta).eql(collectionMapping._meta);
-          should(esReq.body.properties).eql(collectionMapping.properties);
-        });
+      return should(promise).be.rejectedWith({
+        message: /Did you mean "dynamic"/,
+        errorName: 'external.elasticsearch.incorrect_mapping_property'
+      });
     });
 
     it('should call updateMapping if the collection already exists', () => {
-      elasticsearch.kuzzle.indexCache.exists.onCall(1).resolves(true);
+      elasticsearch.collectionExists = sinon.stub().resolves(true);
       elasticsearch.updateMapping = sinon.stub().resolves({});
 
-      return elasticsearch.createCollection(request)
+      const promise = elasticsearch.createCollection(index, collection);
+
+      return promise
         .then(() => {
+          should(elasticsearch.collectionExists).be.calledWith(index, collection);
           should(elasticsearch.updateMapping).be.calledOnce();
-          should(elasticsearch.kuzzle.indexCache.exists).be.calledTwice();
-          should(elasticsearch.kuzzle.indexCache.exists.getCall(0).args).be.eql([index]);
-          should(elasticsearch.kuzzle.indexCache.exists.getCall(1).args).be.eql([index, '%foobar']);
         });
     });
 
     it('should not overwrite kuzzle commonMapping', () => {
       elasticsearch.config.commonMapping = {
-        gordon: { type: 'text' },
-        _kuzzle_info: {
-          properties: {
-            active:     { type: 'boolean' },
-            author:     { type: 'text' },
-            createdAt:  { type: 'date' },
-            updatedAt:  { type: 'date' },
-            updater:    { type: 'keyword' },
-            deletedAt:  { type: 'date' }
+        properties: {
+          gordon: { type: 'text' },
+          _kuzzle_info: {
+            properties: {
+              author:     { type: 'text' },
+              createdAt:  { type: 'date' },
+              updatedAt:  { type: 'date' },
+              updater:    { type: 'keyword' },
+            }
           }
         }
       };
-
       const collectionMapping = {
         properties: {
           gordon:   { type: 'keyword' },
@@ -1814,36 +1038,131 @@ describe('Test: ElasticSearch service', () => {
           }
         }
       };
-      request.input.body = collectionMapping;
 
-      return elasticsearch.createCollection(request)
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        collectionMapping);
+
+      return promise
         .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
-          should(esReq.body.properties).eql({
-            gordon:   { type: 'text' },
-            freeman:  { type: 'keyword' },
-            _kuzzle_info: {
+          const
+            esReq = elasticsearch.client.indices.create.firstCall.args[0],
+            expectedMapping = {
               properties: {
-                active:     { type: 'boolean' },
-                author:     { type: 'text' },
-                createdAt:  { type: 'date' },
-                updatedAt:  { type: 'date' },
-                updater:    { type: 'keyword' },
-                deletedAt:  { type: 'date' }
+                gordon:   { type: 'text' },
+                freeman:  { type: 'keyword' },
+                _kuzzle_info: {
+                  properties: {
+                    author:     { type: 'text' },
+                    createdAt:  { type: 'date' },
+                    updatedAt:  { type: 'date' },
+                    updater:    { type: 'keyword' },
+                  }
+                }
               }
+            };
+
+          should(esReq.body.mappings).eql(expectedMapping);
+        });
+    });
+
+  });
+
+  describe('#getMapping', () => {
+    beforeEach(() => {
+      elasticsearch.client.indices.getMapping.resolves({
+        body: {
+          [esIndexName]: {
+            mappings: {
+              dynamic: true,
+              _meta: { lang: 'npl' },
+              properties: {
+                city: { type: 'keyword' },
+                _kuzzle_info: { properties: { author: { type: 'keyword' } } }
+              }
+            }
+          }
+        }
+      });
+
+      elasticsearch.esWrapper.getMapping = sinon.stub().resolves({foo: 'bar'});
+    });
+
+    it('should have getMapping capabilities', () => {
+      const promise = elasticsearch.getMapping(index, collection);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.getMapping).be.calledWithMatch({
+            index: esIndexName
+          });
+
+          should(result).match({
+            dynamic: true,
+            _meta: { lang: 'npl' },
+            properties: {
+              city: { type: 'keyword' }
             }
           });
         });
     });
 
-    it('should reuse a previously created common mapping', () => {
-      kuzzle.indexCache.defaultMappings[index] = {
-        gordon: { type: 'text' }
+    it('should include kuzzleMeta if specified', () => {
+      const promise = elasticsearch.getMapping(
+        index,
+        collection,
+        { includeKuzzleMeta: true });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.getMapping).be.calledWithMatch({
+            index: esIndexName
+          });
+
+          should(result).match({
+            dynamic: true,
+            _meta: { lang: 'npl' },
+            properties: {
+              city: { type: 'keyword' },
+              _kuzzle_info: { properties: { author: { type: 'keyword' } } }
+            }
+          });
+        });
+    });
+
+    it('should return a rejected promise if client.cat.indices fails', () => {
+      elasticsearch.client.indices.getMapping.rejects(esClientError);
+
+      const promise = elasticsearch.getMapping(index, collection);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+  });
+
+  describe('#updateMapping', () => {
+    let
+      newMapping,
+      existingMapping,
+      _checkMappings;
+
+    beforeEach(() => {
+      _checkMappings = elasticsearch._checkMappings;
+
+      newMapping = {
+        properties: {
+          name: { type: 'keyword' }
+        }
       };
 
-      const collectionMapping = {
+      existingMapping = {
+        dynamic: 'strict',
+        _meta: { meta: 'data' },
         properties: {
-          freeman:  { type: 'keyword' },
+          city: { type: 'keyword' },
           _kuzzle_info: {
             properties: {
               author: { type: 'keyword' }
@@ -1851,981 +1170,1671 @@ describe('Test: ElasticSearch service', () => {
           }
         }
       };
-      request.input.body = collectionMapping;
 
-      return elasticsearch.createCollection(request)
-        .then(() => {
-          const esReq = elasticsearch.client.indices.putMapping.firstCall.args[0];
+      elasticsearch.getMapping = sinon.stub().resolves(existingMapping);
+      elasticsearch.client.indices.putMapping.resolves({});
+      elasticsearch._checkMappings = sinon.stub().resolves();
+    });
 
-          should(esReq.body.properties).eql({
-            gordon:   { type: 'text' },
-            freeman:  { type: 'keyword' },
-            _kuzzle_info: {
+    it('should have mapping capabilities', () => {
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.putMapping).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              dynamic: 'strict',
+              _meta: { meta: 'data' },
               properties: {
-                author: { type: 'keyword' }
+                name: { type: 'keyword' }
+              }
+            }
+          });
+
+          should(result).match({
+            dynamic: 'strict',
+            _meta: { meta: 'data' },
+            properties: {
+              city: { type: 'keyword' },
+              name: { type: 'keyword' },
+              _kuzzle_info: {
+                properties: {
+                  author: { type: 'keyword' }
+                }
               }
             }
           });
         });
+    });
 
+    it('should reject with BadRequestError on wrong mapping', () => {
+      elasticsearch._checkMappings = _checkMappings;
+      newMapping = {
+        dinamic: 'false',
+        properties: {
+          freeman:  { type: 'keyword' }
+        }
+      };
+
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWithMatch({
+            message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+            errorName: 'external.elasticsearch.incorrect_mapping_property'
+          });
+        });
+    });
+
+    it('should replace dynamic and _meta', () => {
+      existingMapping = {
+        dynamic: 'true',
+        _meta: { some: 'meta' }
+      };
+      newMapping = {
+        dynamic: 'false',
+        _meta: { other: 'meta' }
+      };
+
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.putMapping).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              dynamic: 'false',
+              _meta: { other: 'meta' }
+            }
+          });
+
+          should(result).match({
+            dynamic: 'false',
+            _meta: { other: 'meta' }
+          });
+        });
+    });
+
+    it('should return a rejected promise if client.cat.indices fails', () => {
+      elasticsearch.client.indices.putMapping.rejects(esClientError);
+
+      const promise = elasticsearch.updateMapping(index, collection, newMapping);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
   describe('#truncateCollection', () => {
-    it('should allow truncating an existing collection', () => {
-      const spy = sinon.stub(elasticsearch, 'deleteByQuery').resolves({});
+    let existingMapping;
 
-      return elasticsearch.truncateCollection(request)
+    beforeEach(() => {
+      existingMapping = {
+        dynamic: 'false',
+        properties: {
+          name: { type: 'keyword' }
+        }
+      };
+
+      elasticsearch.getMapping = sinon.stub().resolves(existingMapping);
+    });
+
+    it('should delete and then create the collection with the same mapping', () => {
+      const promise = elasticsearch.truncateCollection(index, collection);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.getMapping).be.calledWith(index, collection);
+          should(elasticsearch.client.indices.delete).be.calledWithMatch({
+            index: esIndexName
+          });
+          should(elasticsearch.client.indices.create).be.calledWithMatch({
+            index: esIndexName,
+            mappings: {
+              dynamic: 'false',
+              properties: {
+                name: { type: 'keyword' }
+              }
+            }
+          });
+
+          should(result).be.undefined();
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.indices.delete.rejects(esClientError);
+
+      const promise = elasticsearch.truncateCollection(index, collection);
+
+      return should(promise).be.rejected()
         .then(() => {
-          const req = spy.firstCall.args[0];
-
-          should(req).be.an.instanceOf(Request);
-          should(req.input.body.query).be.Object().and.match({match_all: {}});
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
   });
 
-  describe('#reset', () => {
-    it('should allow deleting all indexes', () => {
-      elasticsearch.client.indices.delete.resolves({});
+  describe('#import', () => {
+    let
+      expectedEsRequest,
+      bulkReturnError,
+      documents,
+      bulkReturn;
 
-      elasticsearch.client.cat.indices.resolves('      \n %kuzzle      \n ' + index + ' \n  ');
+    beforeEach(() => {
+      expectedEsRequest = {
+        body: [
+          { index: { _id: 1, _index: esIndexName } },
+          {
+            firstName: 'foo',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+              updater: null,
+              updatedAt: null
+            }
+          },
 
-      request.input.body = {indexes: [index]};
+          { index: { _id: 2, _index: esIndexName } },
+          {
+            firstName: 'bar',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+              updater: null,
+              updatedAt: null
+            }
+          },
+        ],
+        refresh: false,
+        timeout: null
+      };
 
-      return elasticsearch.deleteIndexes(request)
-        .then(() => {
-          should(elasticsearch.client.indices.delete.firstCall.args[0]).be.an.Object().and.match({index: [index]});
+      bulkReturn = {
+        body: {
+          items: [
+            { index: { status: 201, _id: 1, result: 'created', toto: 42 } },
+            { index: { status: 201, _id: 2, result: 'created', toto: 42 } },
+            { update: { status: 200, _id: 3, result: 'updated', toto: 42 } },
+            { delete: { status: 200, _id: 4, result: 'deleted', toto: 42 } }
+          ],
+          errors: false
+        }
+      };
+
+      bulkReturnError = {
+        body: {
+          items: [
+            { index: { status: 201, _id: 1, result: 'created', toto: 42 } },
+            { index: { status: 201, _id: 2, result: 'created', toto: 42 } },
+            { update: { status: 404, _id: 42, error: { type: 'not_found', reason: 'not found', toto: 42 } } },
+            { delete: { status: 404, _id: 21, error: { type: 'not_found', reason: 'not found', toto: 42 } } }
+          ],
+          errors: true
+        }
+      };
+
+      documents = [
+        { index: { _id: 1, _index: 'overwrite-me' } },
+        { firstName: 'foo' },
+
+        { index: { _id: 2, _type: 'delete-me' } },
+        { firstName: 'bar' },
+      ];
+
+      elasticsearch.client.bulk.resolves(bulkReturn);
+    });
+
+    it('should support bulk data import', () => {
+      documents = [
+        { index: { _id: 1 } },
+        { firstName: 'foo' },
+
+        { index: { _id: 2 } },
+        { firstName: 'bar' },
+
+        { update: { _id: 3 } },
+        { doc: { firstName: 'foobar' } },
+
+        { delete: { _id: 4 } }
+      ];
+
+      const promise = elasticsearch.import(index, collection, documents);
+
+      return promise
+        .then(result => {
+          expectedEsRequest = {
+            body: [
+              { index: { _id: 1, _index: esIndexName } },
+              {
+                firstName: 'foo',
+                _kuzzle_info: {
+                  author: null,
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
+
+              { index: { _id: 2, _index: esIndexName } },
+              {
+                firstName: 'bar',
+                _kuzzle_info: {
+                  author: null,
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
+
+              { update: { _id: 3, _index: esIndexName } },
+              { doc: {
+                firstName: 'foobar',
+                _kuzzle_info: {
+                  updater: null,
+                  updatedAt: timestamp
+                }
+              }
+              },
+
+              { delete: { _id: 4, _index: esIndexName } }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          should(elasticsearch.client.bulk).be.calledWithMatch(expectedEsRequest);
+
+          should(result).match({
+            items: [
+              { index: { status: 201, _id: 1, result: 'created' } },
+              { index: { status: 201, _id: 2, result: 'created' } },
+              { update: { status: 200, _id: 3, result: 'updated' } },
+              { delete: { status: 200, _id: 4, result: 'deleted' } },
+            ],
+            errors: []
+          });
         });
     });
 
-    it('should return a rejected promise if the reset fails while deleting all indexes', () => {
-      const
-        error = new Error('Mocked delete error'),
-        indexes = {index: ['some index']};
+    it('should inject index name', () => {
+      const promise = elasticsearch.import(index, collection, documents);
 
-      request.input.body = {indexes: [index]};
-      indexes[kuzzle.config.internalIndex] = [];
+      return promise
+        .then(() => {
+          should(elasticsearch.client.bulk).be.calledWithMatch(expectedEsRequest);
+        });
+    });
 
-      elasticsearch.client.indices.getMapping.resolves(indexes);
-      elasticsearch.client.indices.delete.rejects(error);
+    it('should inject addition options to esRequest', () => {
+      const promise = elasticsearch.import(
+        index,
+        collection,
+        documents,
+        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
 
-      return should(elasticsearch.deleteIndexes(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
+      return promise
+        .then(() => {
+          should(elasticsearch.client.bulk).be.calledWithMatch({
+            body: [
+              { index: { _id: 1, _index: esIndexName } },
+              {
+                firstName: 'foo',
+                _kuzzle_info: {
+                  author: 'aschen',
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
+
+              { index: { _id: 2, _index: esIndexName } },
+              {
+                firstName: 'bar',
+                _kuzzle_info: {
+                  author: 'aschen',
+                  createdAt: timestamp,
+                  updater: null,
+                  updatedAt: null
+                }
+              },
+            ],
+            refresh: 'wait_for',
+            timeout: '10m'
+          });
+        });
+    });
+
+    it('should populate "errors" array for bulk data import with some errors', () => {
+      elasticsearch.client.bulk.resolves(bulkReturnError);
+
+      const promise = elasticsearch.import(index, collection, documents);
+
+      return promise
+        .then(result => {
+          should(result).match({
+            items: [
+              { index: { status: 201, _id: 1, result: 'created' } },
+              { index: { status: 201, _id: 2, result: 'created' } },
+            ],
+            errors: [
+              { update: { status: 404, _id: 42, error: { type: 'not_found', reason: 'not found' } } },
+              { delete: { status: 404, _id: 21, error: { type: 'not_found', reason: 'not found' } } }
+            ]
+          });
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.bulk.rejects(esClientError);
+
+      const promise = elasticsearch.import(index, collection, documents);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+
+    it('should abort if the number of documents exceeds the configured limit', () => {
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      const promise = elasticsearch.import(
+        index,
+        collection,
+        [
+          { index: { _id: 1, _index: esIndexName } },
+          { body: { foo: 'bar' } },
+          { delete: { _id: 2, _index: esIndexName } }
+        ]);
+
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.limit_documents_reached'
+      });
     });
   });
 
-  describe('#createIndex', () => {
-    it('should be able to create index', () => {
-      elasticsearch.client.indices.create.resolves({});
+  describe('#listCollections', () => {
+    beforeEach(() => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&nyc-open-data.taxi' }
+        ]
+      });
+    });
 
-      return elasticsearch.createIndex(request)
-        .then(() => {
-          should(elasticsearch.client.indices.create.firstCall.args[0].index).be.exactly(request.input.resource.index);
+    it('should allow listing all available collections', () => {
+      const promise = elasticsearch.listCollections('nepali');
+
+      return promise
+        .then(result => {
+          should(result).match({
+            collections: ['mehry', 'liia']
+          });
         });
     });
 
-    it('should reject the createIndex promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.indices.create.rejects(error);
+    it('should not list unauthorized collections', () => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '%nepali.mehry' },
+          { index: '%nepali.liia' },
+          { index: '%nyc-open-data.taxi' }
+        ]
+      });
 
-      return should(elasticsearch.createIndex(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
-    });
+      const promise = elasticsearch.listCollections('nepali');
 
-    it('should throw if attempting to create an internal index', () => {
-      request.input.resource.index = '%foobar';
-
-      should(() => elasticsearch.createIndex(request)).throw(BadRequestError);
-    });
-  });
-
-  describe('#deleteIndex', () => {
-    it('should be able to delete index', () => {
-      elasticsearch.client.indices.delete.resolves({});
-
-      return elasticsearch.deleteIndex(request)
-        .then(() => {
-          should(elasticsearch.client.indices.delete.firstCall.args[0].index).be.exactly(request.input.resource.index);
+      return promise
+        .then(result => {
+          should(result).match({
+            collections: []
+          });
         });
     });
 
-    it('should reject the deleteIndex promise if elasticsearch throws an error', () => {
-      elasticsearch.client.indices.delete.rejects(new Error());
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.indices.rejects(esClientError);
 
-      return should(elasticsearch.deleteIndex(request)).be.rejected();
-    });
+      const promise = elasticsearch.listCollections(index);
 
-    it('should throw if attempting to delete an internal index', () => {
-      request.input.resource.index = '%foobar';
-
-      should(() => elasticsearch.deleteIndex(request)).throw(BadRequestError);
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
   describe('#listIndexes', () => {
-    it('should allow listing indexes', () => {
-      elasticsearch.client.indices.getMapping.resolves({indexes: []});
-
-      return elasticsearch.listIndexes(request);
+    beforeEach(() => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&nyc-open-data.taxi' }
+        ]
+      });
     });
 
-    it('should reject the listIndexes promise if elasticsearch throws an error', () => {
-      const error = new Error('Mocked error');
-      elasticsearch.client.indices.getMapping.rejects(error);
+    it('should allow listing all available indexes', () => {
+      const promise = elasticsearch.listIndexes();
 
-      return should(elasticsearch.listIndexes(request)).be.rejectedWith(ExternalServiceError, {message: error.message});
+      return promise
+        .then(result => {
+          should(result).match({
+            indexes: ['nepali', 'nyc-open-data']
+          });
+        });
+    });
+
+    it('should not list unauthorized indexes', () => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '%nepali.mehry' },
+          { index: '%nepali.liia' },
+          { index: '%nyc-open-data.taxi' },
+          { index: '&vietnam.lfiduras' }
+        ]
+      });
+
+      const promise = elasticsearch.listIndexes();
+
+      return promise
+        .then(result => {
+          should(result).match({
+            indexes: ['vietnam']
+          });
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.indices.rejects(esClientError);
+
+      const promise = elasticsearch.listIndexes();
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
-  describe('#getInfos', () => {
-    it('should allow getting elasticsearch informations', () => {
-      const
-        output = {version: {}, indices: {store: {}}};
+  describe('#deleteIndexes', () => {
+    beforeEach(() => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&do-not.delete' },
+          { index: '&nyc-open-data.taxi' }
+        ]
+      });
+    });
 
-      elasticsearch.client.cluster.stats.resolves(output);
-      elasticsearch.client.cluster.health.resolves(output);
-      elasticsearch.client.info.resolves(output);
+    it('should allow to deletes multiple indexes', () => {
+      const promise = elasticsearch.deleteIndexes(['nepali', 'nyc-open-data']);
 
-      return elasticsearch.getInfos(request);
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.delete).be.calledWithMatch({
+            index: ['&nepali.mehry', '&nepali.liia', '&nyc-open-data.taxi']
+          });
+
+          should(result).match({
+            deleted: ['nepali', 'nyc-open-data']
+          });
+        });
+    });
+
+    it('should not delete unauthorized indexes', () => {
+      elasticsearch.client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali.liia' },
+          { index: '&do-not.delete' },
+          { index: '%nyc-open-data.taxi' }
+        ]
+      });
+
+      const promise = elasticsearch.deleteIndexes(['nepali', 'nyc-open-data']);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.delete).be.calledWithMatch({
+            index: ['&nepali.mehry', '&nepali.liia']
+          });
+
+          should(result).match({
+            deleted: ['nepali']
+          });
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.indices.rejects(esClientError);
+
+      const promise = elasticsearch.listIndexes();
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
-  describe('#refreshIndex', () => {
+  describe('#deleteIndex', () => {
+    it('should call deleteIndexes', () => {
+      elasticsearch.deleteIndexes = sinon.stub().resolves();
+
+      const promise = elasticsearch.deleteIndex('nepali');
+
+      return promise
+        .then(result => {
+          should(elasticsearch.deleteIndexes).be.calledWith(['nepali']);
+
+          should(result).be.undefined();
+        });
+    });
+  });
+
+  describe('#refreshCollection', () => {
     it('should send a valid request to es client', () => {
-      elasticsearch.client.indices.refresh = sinon.spy(req => Bluebird.resolve(req));
+      elasticsearch.client.indices.refresh.resolves({
+        body: { _shards: 'shards' }
+      });
 
-      return elasticsearch.refreshIndex(request)
-        .then(data => {
-          should(data.index).be.eql(index);
+      const promise = elasticsearch.refreshCollection(index, collection);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.indices.refresh).be.calledWithMatch({
+            index: esIndexName
+          });
+
+          should(result).match({
+            _shards: 'shards'
+          });
         });
     });
 
-    it('should throw if attempting to refresh an internal index', () => {
-      request.input.resource.index = '%foobar';
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.indices.refresh.rejects(esClientError);
 
-      should(() => elasticsearch.refreshIndex(request)).throw(BadRequestError);
+      const promise = elasticsearch.refreshCollection(index, collection);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
     });
   });
 
-  describe('#getAutoRefresh', () => {
-    it('should reflect the current autoRefresh status', () => {
-      return elasticsearch.getAutoRefresh(request)
-        .then(response => {
-          should(response).be.false();
+  describe('#exists', () => {
+    it('should have document exists capability', () => {
+      elasticsearch.client.exists.resolves({
+        body: true
+      });
 
-          elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
-          return elasticsearch.getAutoRefresh(request);
-        })
-        .then(response => {
-          should(response).be.true();
-          elasticsearch.settings.autoRefresh[request.input.resource.index] = false;
+      const promise = elasticsearch.exists(index, collection, 'liia');
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.exists).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia'
+          });
+
+          should(result).be.eql(true);
         });
     });
 
-    it('should throw if attempting to get the AutoRefresh status on an internal index', () => {
-      request.input.resource.index = '%foobar';
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.exists.rejects(esClientError);
 
-      should(() => elasticsearch.getAutoRefresh(request)).throw(BadRequestError);
-    });
-  });
+      const promise = elasticsearch.exists(index, collection, 'liia');
 
-  describe('#setAutoRefresh', () => {
-    it('should toggle the autoRefresh status', () => {
-      const
-        req = new Request({
-          index: request.index,
-          body: { autoRefresh: true }
-        });
-
-      kuzzle.internalEngine.createOrReplace = sinon.stub().resolves({});
-
-      return elasticsearch.setAutoRefresh(req)
-        .then(response => {
-          should(response).be.true();
-          should(kuzzle.internalEngine.createOrReplace.calledOnce).be.true();
-
-          req.input.body.autoRefresh = false;
-          return elasticsearch.setAutoRefresh(req);
-        })
-        .then(response => {
-          should(response).be.false();
-        });
-    });
-
-    it('should throw if attempting to set the AutoRefresh option on an internal index', () => {
-      request.input.resource.index = '%foobar';
-
-      should(() => elasticsearch.setAutoRefresh(request)).throw(BadRequestError);
-    });
-  });
-
-  describe('#refreshIndexIfNeeded', () => {
-    it('should not refresh the index if autoRefresh is set to false', () => {
-      elasticsearch.client.indices.refresh.resolves({});
-
-      return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
-        .then(response => {
-          should(elasticsearch.client.indices.refresh).not.be.called();
-          should(response).be.eql({ foo: 'bar' });
-        });
-    });
-
-    it('should refresh the index if asked to', () => {
-      elasticsearch.client.indices.refresh.resolves({});
-      elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
-
-      return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
-        .then(response => {
-          should(elasticsearch.client.indices.refresh).be.called();
-          should(response).be.eql({foo: 'bar'});
-        });
-    });
-
-    it('should not block execution if the index cannot be refreshed', () => {
-      const error = new Error('Mocked error');
-
-      elasticsearch.client.indices.refresh.rejects(error);
-      elasticsearch.settings.autoRefresh[request.input.resource.index] = true;
-
-      return elasticsearch.refreshIndexIfNeeded({index: request.input.resource.index}, {foo: 'bar'})
-        .then(response => {
-          should(kuzzle.log.error).calledOnce();
-          should(elasticsearch.client.indices.refresh).be.called();
-          should(response).be.eql({ foo: 'bar' });
-          return null;
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
         });
     });
   });
 
   describe('#indexExists', () => {
-    it('should call es indices.exists method', () => {
-      elasticsearch.client.indices.exists.resolves(true);
+    it('should call list indexes and return true if index exists', () => {
+      elasticsearch.listIndexes = sinon.stub().resolves({
+        indexes: ['nepali', 'nyc-open-data']
+      });
 
-      return elasticsearch.indexExists(request)
-        .then(response => {
-          should(response).be.true();
+      const promise = elasticsearch.indexExists('nepali');
 
-          should(elasticsearch.client.indices.exists).be.calledOnce();
+      return promise
+        .then(result => {
+          should(elasticsearch.listIndexes).be.called();
 
-          should(elasticsearch.client.indices.exists.firstCall.args[0]).match({
-            index: 'test'
-          });
+          should(result).be.eql(true);
         });
     });
 
-    it('should format the error', () => {
-      const
-        error = new Error('test'),
-        spy = sinon.spy(elasticsearch.esWrapper, 'formatESError');
+    it('should call list indexes and return false if index does not exists', () => {
+      elasticsearch.listIndexes = sinon.stub().resolves({
+        indexes: ['nepali', 'nyc-open-data']
+      });
 
-      elasticsearch.client.indices.exists.rejects(error);
+      const promise = elasticsearch.indexExists('vietnam');
 
-      return elasticsearch.indexExists(request)
-        .then(() => {
-          throw new Error('this should not occur');
-        })
-        .catch(() => {
-          should(spy)
-            .be.calledOnce()
-            .be.calledWith(error);
+      return promise
+        .then(result => {
+          should(elasticsearch.listIndexes).be.called();
+
+          should(result).be.eql(false);
         });
     });
   });
 
   describe('#collectionExists', () => {
-    it('should call es indices.existType method', () => {
-      elasticsearch.client.indices.existsType.resolves(true);
+    it('should call list collections and return true if collection exists', () => {
+      elasticsearch.listCollections = sinon.stub().resolves({
+        collections: ['liia', 'mehry']
+      });
 
-      return elasticsearch.collectionExists(request)
-        .then(() => {
-          should(elasticsearch.client.indices.existsType).be.calledOnce();
+      const promise = elasticsearch.collectionExists('nepali', 'liia');
 
-          should(elasticsearch.client.indices.existsType.firstCall.args[0])
-            .match({
-              index,
-              type: collection
-            });
+      return promise
+        .then(result => {
+          should(elasticsearch.listCollections).be.called();
+
+          should(result).be.eql(true);
         });
     });
 
-    it('should format errors', () => {
-      const
-        error = new Error('test'),
-        spy = sinon.spy(elasticsearch.esWrapper, 'formatESError');
+    it('should call list collections and return false if collection does not exists', () => {
+      elasticsearch.listCollections = sinon.stub().resolves({
+        collections: ['liia', 'mehry']
+      });
 
-      elasticsearch.client.indices.existsType.rejects(error);
+      const promise = elasticsearch.collectionExists('nepali', 'lfiduras');
 
-      return elasticsearch.collectionExists(request)
-        .then(() => {
-          throw new Error('this should not happen');
-        })
-        .catch(() => {
-          should(spy)
-            .be.calledOnce()
-            .be.calledWith(error);
+      return promise
+        .then(result => {
+          should(elasticsearch.listCollections).be.called();
+
+          should(result).be.eql(false);
         });
     });
   });
 
-  describe('#mcreate', () => {
-    const metadata = {
-      active: true,
-      author: 'test',
-      updater: null,
-      updatedAt: null,
-      deletedAt: null
-    };
+  describe('#mCreate', () => {
+    let
+      kuzzleMeta,
+      mExecuteResult,
+      documentsWithIds,
+      documentsWithoutIds;
 
-    it('should prevent creating documents to a non-existing index or collection', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
-
-      return should(elasticsearch.mcreate(request)).rejectedWith(PreconditionError);
-    });
-
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      kuzzle.config.limits.documentsWriteCount = 1;
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
-
-      return should(elasticsearch.mcreate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
-    });
-
-    it('should get documents from ES only if there are IDs provided', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 201}}
-        ]
-      });
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
-
-      return elasticsearch.mcreate(request)
-        .then(result => {
-          should(elasticsearch.client.mget).not.be.called();
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
-            body: [
-              {index: {_index: index, _type: collection}},
-              {foo: 'bar', _kuzzle_info: metadata},
-              {index: {_index: index, _type: collection}},
-              {bar: 'foo', _kuzzle_info: metadata}
-            ]
-          });
-          should(result.error).be.an.Array().and.be.empty();
-          should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201},
-            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 201}
-          ]);
-
-          should(result.result[0]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[1]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
-          should(result.result[1]._source._kuzzle_info.createdAt).be.approximately(now, 100);
-        });
-    });
-
-    it('should filter existing documents depending of their "active" status', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      request.input.body = {
-        documents: [
-          {_id: 'foo1', body: {foo: 'bar1'}},
-          {body: {foo: 'bar_'}},
-          {_id: 'foo2', body: {foo: 'bar2'}},
-          {_id: 'foo3', body: {foo: 'bar3'}},
-          {_id: 'foo4', body: {foo: 'bar4'}}
-        ]
+    beforeEach(() => {
+      kuzzleMeta = {
+        _kuzzle_info: {
+          author: null,
+          createdAt: timestamp,
+          updater: null,
+          updatedAt: null
+        }
       };
+
+      documentsWithIds = [
+        { body: { city: 'Kathmandu' } },
+        { _id: 'liia', body: { city: 'Ho Chi Minh City' } }
+      ];
+
+      documentsWithoutIds = [
+        { body: { city: 'Kathmandu' } },
+        { body: { city: 'Ho Chi Minh City' } }
+      ];
+
+      mExecuteResult = { result: [], errors: [] };
+
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
+    });
+
+    it('should do a mGet request if we need to get some documents', () => {
       elasticsearch.client.mget.resolves({
-        docs: [
-          // active document => must be rejected
-          {_id: 'foo1', found: true, _source: {_kuzzle_info: {active: true}}},
-          // inactive document => can be overwritten
-          {_id: 'foo2', found: true, _source: {_kuzzle_info: {active: false}}},
-          // non-existent document => can be created
-          {_id: 'foo3', found: false},
-          // document without metadata => must be considered 'active' and be rejected
-          {_id: 'foo4', found: true, _source: {}}
-        ]
-      });
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo?', status: 201}},
-          {index: {_id: 'foo2', status: 201}},
-          {index: {_id: 'foo3', status: 201}}
-        ]
+        body: {
+          docs: []
+        }
       });
 
-      return elasticsearch.mcreate(request)
+      const promise = elasticsearch.mCreate(index, collection, documentsWithIds);
+
+      return promise
         .then(result => {
-          should(elasticsearch.client.mget).calledOnce().and.calledWithMatch({
-            index,
-            type: collection,
-            body: {
-              docs: [
-                {_id: 'foo1', _source: '_kuzzle_info.active'},
-                {_id: 'foo2', _source: '_kuzzle_info.active'},
-                {_id: 'foo3', _source: '_kuzzle_info.active'},
-                {_id: 'foo4', _source: '_kuzzle_info.active'},
-              ]
-            }
+          should(elasticsearch.client.mget).be.calledWithMatch({
+            index: esIndexName,
+            body: { docs: [ { _id: 'liia', _source: false } ] }
           });
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
-            body: [
-              {index: {_index: index, _type: collection}},
-              {foo: 'bar_', _kuzzle_info: metadata},
-              {index: {_index: index, _type: collection, _id: 'foo2'}},
-              {foo: 'bar2', _kuzzle_info: metadata},
-              {index: {_index: index, _type: collection, _id: 'foo3'}},
-              {foo: 'bar3', _kuzzle_info: metadata}
-            ]
-          });
-          should(result.error).be.an.Array().and.match([
-            {document: {_id: 'foo1', body: {foo: 'bar1'}}, reason: 'document already exists'},
-            {document: {_id: 'foo4', body: {foo: 'bar4'}}, reason: 'document already exists'}
-          ]);
-          should(result.result).match([
-            {_id: 'foo?', _source: {foo: 'bar_', _kuzzle_info: metadata}, _meta: metadata, status: 201},
-            {_id: 'foo2', _source: {foo: 'bar2', _kuzzle_info: metadata}, _meta: metadata, status: 201},
-            {_id: 'foo3', _source: {foo: 'bar3', _kuzzle_info: metadata}, _meta: metadata, status: 201}
-          ]);
 
-          for(let i = 0; i < 3; i++) {
-            should(result.result[i]._meta.createdAt).be.approximately(now, 100);
-            should(result.result[i]._source._kuzzle_info.createdAt).be.approximately(now, 100);
-          }
+          const esRequest = {
+            index: esIndexName,
+            body: [
+              { index: { _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta },
+              { index: { _index: esIndexName } },
+              { city: 'Ho Chi Minh City', ...kuzzleMeta }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          const toImport = [
+            { _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+
+          should(result).match(mExecuteResult);
         });
     });
 
-    it('should correctly separate bulk successes from errors', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 400}}
-        ]
+    it('should reject already existing documents', () => {
+      elasticsearch.client.mget.resolves({
+        body: {
+          docs: [ { _id: 'liia', found: true } ]
+        }
       });
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
 
-      return elasticsearch.mcreate(request)
+      const promise = elasticsearch.mCreate(index, collection, documentsWithIds);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.mget).be.calledWithMatch({
+            index: esIndexName,
+            body: { docs: [ { _id: 'liia', _source: false } ] }
+          });
+
+          const esRequest = {
+            index: esIndexName,
+            body: [
+              { index: { _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          const toImport = [
+            { _source: { city: 'Kathmandu', ...kuzzleMeta } }
+          ];
+          const rejected = [
+            {
+              document: {
+                _id: 'liia',
+                _source: { city: 'Ho Chi Minh City', ...kuzzleMeta }
+              },
+              reason: 'document already exists'
+            }
+          ];
+
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            rejected);
+
+          should(result).match(mExecuteResult);
+        });
+    });
+
+    it('should not do a mGet request if we didn\'t need to get some documents', () => {
+      const promise = elasticsearch.mCreate(
+        index,
+        collection,
+        documentsWithoutIds);
+
+      return promise
         .then(result => {
           should(elasticsearch.client.mget).not.be.called();
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
-            body: [
-              {index: {_index: index, _type: collection}},
-              {foo: 'bar', _kuzzle_info: metadata},
-              {index: {_index: index, _type: collection}},
-              {bar: 'foo', _kuzzle_info: metadata}
-            ]
-          });
-          should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
-          ]);
-          should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
-          ]);
 
-          should(result.result[0]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          const esRequest = {
+            index: esIndexName,
+            body: [
+              { index: { _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta },
+              { index: { _index: esIndexName } },
+              { city: 'Ho Chi Minh City', ...kuzzleMeta }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          const toImport = [
+            { _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+
+          should(result).match(mExecuteResult);
+        });
+    });
+
+    it('should allow additional options', () => {
+      kuzzleMeta._kuzzle_info.author = 'aschen';
+      const promise = elasticsearch.mCreate(
+        index,
+        collection,
+        documentsWithoutIds,
+        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.mget).not.be.called();
+
+          const esRequest = {
+            index: esIndexName,
+            body: [
+              { index: { _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta },
+              { index: { _index: esIndexName } },
+              { city: 'Ho Chi Minh City', ...kuzzleMeta }
+            ],
+            refresh: 'wait_for',
+            timeout: '10m'
+          };
+          const toImport = [
+            { _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+
+          should(result).match(mExecuteResult);
         });
     });
   });
 
-  describe('#mcreateOrReplace', () => {
-    const metadata = {
-      active: true,
-      author: 'test',
-      updater: null,
-      updatedAt: null,
-      deletedAt: null
-    };
+  describe('#mCreateOrReplace', () => {
+    let
+      kuzzleMeta,
+      mExecuteResult,
+      documents;
 
-    it('should prevent creating/replacing documents to a non-existing index or collection', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+    beforeEach(() => {
+      kuzzleMeta = {
+        _kuzzle_info: {
+          author: null,
+          createdAt: timestamp,
+          updater: null,
+          updatedAt: null
+        }
+      };
 
-      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(PreconditionError);
+      documents = [
+        { _id: 'mehry', body: { city: 'Kathmandu' } },
+        { _id: 'liia', body: { city: 'Ho Chi Minh City' } }
+      ];
+
+      mExecuteResult = { result: [], errors: [] };
+
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
     });
 
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      kuzzle.config.limits.documentsWriteCount = 1;
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+    it('should call _mExecute with formated documents', () => {
+      const promise = elasticsearch.mCreateOrReplace(index, collection, documents);
 
-      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
-    });
-
-    it('should bulk import documents to be created or replaced', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 201}}
-        ]
-      });
-      request.input.body = {documents: [{_id: 'foobar', body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
-
-      return elasticsearch.mcreateOrReplace(request)
+      return promise
         .then(result => {
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
+          const esRequest = {
+            index: esIndexName,
             body: [
-              {index: {_index: index, _type: collection, _id: 'foobar'}},
-              {foo: 'bar', _kuzzle_info: metadata},
-              {index: {_index: index, _type: collection}},
-              {bar: 'foo', _kuzzle_info: metadata}
-            ]
-          });
-          should(result.error).be.an.Array().and.be.empty();
-          should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201},
-            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 201}
-          ]);
+              { index: { _index: esIndexName, _id: 'mehry' } },
+              { city: 'Kathmandu', ...kuzzleMeta },
+              { index: { _index: esIndexName, _id: 'liia' } },
+              { city: 'Ho Chi Minh City', ...kuzzleMeta }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
 
-          should(result.result[0]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[1]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
-          should(result.result[1]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          should(result).match(mExecuteResult);
+        });
+    });
+
+    it('should allow additional options', () => {
+      kuzzleMeta._kuzzle_info.author = 'aschen';
+
+      const promise = elasticsearch.mCreateOrReplace(
+        index,
+        collection,
+        documents,
+        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
+
+      return promise
+        .then(result => {
+          const esRequest = {
+            index: esIndexName,
+            body: [
+              { index: { _index: esIndexName, _id: 'mehry' } },
+              { city: 'Kathmandu', ...kuzzleMeta },
+              { index: { _index: esIndexName, _id: 'liia' } },
+              { city: 'Ho Chi Minh City', ...kuzzleMeta }
+            ],
+            refresh: 'wait_for',
+            timeout: '10m'
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+
+          should(result).match(mExecuteResult);
         });
     });
 
     it('should not inject kuzzle meta when specified', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 201}}
-        ]
-      });
-      request.input.body = {documents: [{_id: 'foobar', body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+      const promise = elasticsearch.mCreateOrReplace(
+        index,
+        collection,
+        documents,
+        { injectKuzzleMeta: false });
 
-      return elasticsearch.mcreateOrReplace(request, false)
-        .then(() => {
-          const esRequest = elasticsearch.client.bulk.args[0][0];
-          should(esRequest.body[1]._kuzzle_info).be.undefined();
-          should(esRequest.body[3]._kuzzle_info).be.undefined();
-        });
-    });
-
-    it('should correctly separate bulk successes from errors', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 400}}
-        ]
-      });
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
-
-      return elasticsearch.mcreateOrReplace(request)
+      return promise
         .then(result => {
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
+          const esRequest = {
+            index: esIndexName,
             body: [
-              {index: {_index: index, _type: collection}},
-              {foo: 'bar', _kuzzle_info: metadata},
-              {index: {_index: index, _type: collection}},
-              {bar: 'foo', _kuzzle_info: metadata}
-            ]
-          });
-          should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
-          ]);
-          should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
-          ]);
+              { index: { _index: esIndexName, _id: 'mehry' } },
+              { city: 'Kathmandu' },
+              { index: { _index: esIndexName, _id: 'liia' } },
+              { city: 'Ho Chi Minh City' }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu' } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
 
-          should(result.result[0]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          should(result).match(mExecuteResult);
         });
     });
   });
 
-  describe('#mupdate', () => {
-    const metadata = {
-      active: true,
-      updater: 'test',
-      deletedAt: null
-    };
+  describe('#mUpdate', () => {
+    let
+      kuzzleMeta,
+      mExecuteResult,
+      documents;
 
-    it('should prevent updating documents to a non-existing index or collection', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-      request.input.body = {
-        documents: [
-          {_id: 'foo', body: {foo: 'bar'}},
-          {_id: 'bar', body: {bar: 'foo'}}
-        ]
+    beforeEach(() => {
+      kuzzleMeta = {
+        _kuzzle_info: {
+          updater: null,
+          updatedAt: timestamp
+        }
       };
 
-      return should(elasticsearch.mupdate(request))
-        .rejectedWith(PreconditionError);
-    });
+      documents = [
+        { _id: 'mehry', body: { city: 'Kathmandu' } },
+        { _id: 'liia', body: { city: 'Ho Chi Minh City' } }
+      ];
 
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      kuzzle.config.limits.documentsWriteCount = 1;
-      request.input.body = {
-        documents: [
-          {_id: 'foo', body: {foo: 'bar'}},
-          {_id: 'bar', body: {bar: 'foo'}}
-        ]
-      };
-
-      return should(elasticsearch.mupdate(request)).rejectedWith(
-        SizeLimitError,
-        {message: 'Number of documents exceeds the server configured value (1).'});
-    });
-
-    it('should bulk import documents to be updated', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
+      mExecuteResult = {
+        result: [
           {
-            index: {
-              _id: 'foo',
-              status: 201,
-              get: {
-                _source: {foo: 'bar', leftalone: true, _kuzzle_info: metadata}
-              }
-            }
+            _id: 'mehry',
+            _source: { city: 'Kathmandu' },
+            get: { _source: { age: 26, city: 'Kathmandu' } }
           },
           {
-            index: {
-              _id: 'bar',
-              status: 201,
-              get: {
-                _source: {bar: 'foo', leftalone: true, _kuzzle_info: metadata}
-              }
-            }
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City' },
+            get: { _source: { age: 29, city: 'Ho Chi Minh City' } }
           }
-        ]
-      });
-      request.input.body = {
-        documents: [
-          {_id: 'foo', body: {foo: 'bar'}},
-          {_id: 'bar', body: {bar: 'foo'}}
-        ]
+        ],
+        errors: []
       };
 
-      return elasticsearch.mupdate(request)
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
+    });
+
+    it('should call _mExecute with formated documents', () => {
+      const promise = elasticsearch.mUpdate(index, collection, documents);
+
+      return promise
         .then(result => {
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
+          const esRequest = {
+            index: esIndexName,
             body: [
-              {update: {_index: index, _type: collection, _id: 'foo'}},
-              {doc: {foo: 'bar', _kuzzle_info: metadata}, _source: true},
-              {update: {_index: index, _type: collection, _id: 'bar'}},
-              {doc: {bar: 'foo', _kuzzle_info: metadata}, _source: true}
-            ]
+              { update: { _index: esIndexName, _id: 'mehry' } },
+              { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true },
+              { update: { _index: esIndexName, _id: 'liia' } },
+              { doc: { city: 'Ho Chi Minh City', ...kuzzleMeta }, _source: true }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+
+          should(result).match({
+            result: [
+              {
+                _id: 'mehry',
+                _source: { city: 'Kathmandu', age: 26 }
+              },
+              {
+                _id: 'liia',
+                _source: { city: 'Ho Chi Minh City', age: 29 }
+              }
+            ],
+            errors: []
           });
-          should(result.error).be.an.Array().and.be.empty();
-          should(result.result).match([
+        });
+    });
+
+    it('should allow additional options', () => {
+      kuzzleMeta._kuzzle_info.updater = 'aschen';
+
+      const promise = elasticsearch.mUpdate(
+        index,
+        collection,
+        documents,
+        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
+
+      return promise
+        .then(() => {
+          const esRequest = {
+            index: esIndexName,
+            body: [
+              { update: { _index: esIndexName, _id: 'mehry' } },
+              { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true },
+              { update: { _index: esIndexName, _id: 'liia' } },
+              { doc: { city: 'Ho Chi Minh City', ...kuzzleMeta }, _source: true }
+            ],
+            refresh: 'wait_for',
+            timeout: '10m'
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+        });
+
+    });
+
+    it('should add documents without ID to rejected documents', () => {
+      documents = [
+        { _id: 'mehry', body: { city: 'Kathmandu' } },
+        { body: { city: 'Ho Chi Minh City' } }
+      ];
+
+      const promise = elasticsearch.mUpdate(index, collection, documents);
+
+      return promise
+        .then(() => {
+          const esRequest = {
+            index: esIndexName,
+            body: [
+              { update: { _index: esIndexName, _id: 'mehry' } },
+              { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true }
+            ],
+            refresh: false,
+            timeout: null
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } }
+          ];
+          const rejected = [
             {
-              _id: 'foo',
-              _source: {foo: 'bar', leftalone: true, _kuzzle_info: metadata},
-              _meta: metadata,
-              status: 201
-            },
-            {
-              _id: 'bar',
-              _source: {bar: 'foo', leftalone: true, _kuzzle_info: metadata},
-              _meta: metadata,
-              status: 201
+              document: { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
+              reason: 'document ID is required'
             }
-          ]);
-
-          should(result.result[0]._meta.updatedAt).be.approximately(now, 100);
-          should(result.result[1]._meta.updatedAt).be.approximately(now, 100);
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            rejected);
         });
     });
 
-    it('should correctly separate bulk successes from errors', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 400}}
-        ]
-      });
-      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
-
-      return elasticsearch.mupdate(request)
-        .then(result => {
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
-            body: [
-              {update: {_index: index, _type: collection, _id: 'foo'}},
-              {doc: {foo: 'bar', _kuzzle_info: metadata}, _source: true},
-              {update: {_index: index, _type: collection, _id: 'bar'}},
-              {doc: {bar: 'foo', _kuzzle_info: metadata}, _source: true}
-            ]
-          });
-          should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
-          ]);
-          should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
-          ]);
-
-          should(result.result[0]._source._kuzzle_info.updatedAt).be.approximately(now, 100);
-        });
-    });
-
-    it('should reject documents without an ID', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
-
-      return elasticsearch.mupdate(request)
-        .then(result => {
-          should(elasticsearch.client.bulk).not.be.called();
-          should(result.error).match([
-            {document: {_source: {foo: 'bar'}}, reason: 'a document ID is required'},
-            {document: {_source: {bar: 'foo'}}, reason: 'a document ID is required'}
-          ]);
-          should(result.result).be.an.Array().and.be.empty();
-        });
-    });
   });
 
-  describe('#mreplace', () => {
-    const metadata = {
-      active: true,
-      author: 'test',
-      updater: null,
-      updatedAt: null,
-      deletedAt: null
-    };
+  describe('#mReplace', () => {
+    let
+      kuzzleMeta,
+      mExecuteResult,
+      documents;
 
-    it('should prevent replacing documents to a non-existing index or collection', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-      elasticsearch.client.mget.resolves({docs: [{found: true}, {found: true}]});
-      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
-
-      return should(elasticsearch.mreplace(request)).rejectedWith(PreconditionError);
-    });
-
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.mget.resolves({docs: [{found: true}, {found: true}]});
-      kuzzle.config.limits.documentsWriteCount = 1;
-      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
-
-      return should(elasticsearch.mreplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
-    });
-
-    it('should reject documents that are not found', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      request.input.body = {
-        documents: [
-          {_id: 'foo1', body: {foo: 'bar1'}},
-          {_id: 'foo2', body: {foo: 'bar2'}},
-        ]
+    beforeEach(() => {
+      kuzzleMeta = {
+        _kuzzle_info: {
+          author: null,
+          createdAt: timestamp,
+          updater: null,
+          updatedAt: null
+        }
       };
-      elasticsearch.client.mget.resolves({
-        docs: [
-          {_id: 'foo1', found: false},
-          {_id: 'foo2', found: true, _source: {_kuzzle_info: {active: false}}}
-        ]
-      });
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo2', status: 201}}
-        ]
-      });
 
-      return elasticsearch.mreplace(request)
+      documents = [
+        { _id: 'mehry', body: { city: 'Kathmandu' } },
+        { _id: 'liia', body: { city: 'Ho Chi Minh City' } }
+      ];
+
+      mExecuteResult = { result: [], errors: [] };
+
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
+
+      elasticsearch.client.mget.resolves({
+        body: {
+          docs: [ { _id: 'mehry', found: true }, { _id: 'liia', found: true } ]
+        }
+      });
+    });
+
+    it('should get documents and then format them for _mExecute', () => {
+      const promise = elasticsearch.mReplace(index, collection, documents);
+
+      return promise
         .then(result => {
-          should(elasticsearch.client.mget).calledOnce().and.calledWithMatch({
-            index,
-            type: collection,
+          should(elasticsearch.client.mget).be.calledWithMatch({
+            index: esIndexName,
             body: {
               docs: [
-                {_id: 'foo1', _source: '_kuzzle_info.active'},
-                {_id: 'foo2', _source: '_kuzzle_info.active'}
+                { _id: 'mehry', _source: false },
+                { _id: 'liia', _source: false }
               ]
             }
           });
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
-            body: [
-              {index: {_index: index, _type: collection, _id: 'foo2'}},
-              {foo: 'bar2', _kuzzle_info: metadata}
-            ]
-          });
-          should(result.error).be.an.Array().and.match([
-            {document: {_id: 'foo1', _source: {foo: 'bar1'}}, reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'},
-          ]);
-          should(result.result).match([
-            {_id: 'foo2', _source: {foo: 'bar2', _kuzzle_info: metadata}, _meta: metadata, status: 201},
-          ]);
 
-          should(result.result[0]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          const esRequest = {
+            refresh: false,
+            timeout: null,
+            body: [
+              { index: { _id: 'mehry', _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta },
+              { index: { _id: 'liia', _index: esIndexName } },
+              { city: 'Ho Chi Minh City', ...kuzzleMeta }
+            ]
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+
+          should(result).match(mExecuteResult);
         });
     });
 
-    it('should correctly separate bulk successes from errors', () => {
-      const now = Date.now();
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 400}}
-        ]
-      });
+    it('should add not found documents to rejected', () => {
       elasticsearch.client.mget.resolves({
-        docs: [
-          {_id: 'foo', found: true, _source: {_kuzzle_info: {active: true}}},
-          {_id: 'bar', found: true, _source: {_kuzzle_info: {active: false}}}
-        ]
+        body: {
+          docs: [ { _id: 'mehry', found: true }, { _id: 'liia', found: false } ]
+        }
       });
-      request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
 
-      return elasticsearch.mreplace(request)
+      const promise = elasticsearch.mReplace(index, collection, documents);
+
+      return promise
         .then(result => {
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
-            body: [
-              {index: {_index: index, _type: collection, _id: 'foo'}},
-              {foo: 'bar', _kuzzle_info: metadata},
-              {index: {_index: index, _type: collection, _id: 'bar'}},
-              {bar: 'foo', _kuzzle_info: metadata}
-            ]
+          should(elasticsearch.client.mget).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              docs: [
+                { _id: 'mehry', _source: false },
+                { _id: 'liia', _source: false }
+              ]
+            }
           });
-          should(result.error).match([
-            {_id: 'bar', _source: {bar: 'foo', _kuzzle_info: metadata}, _meta: metadata, status: 400}
-          ]);
-          should(result.result).match([
-            {_id: 'foo', _source: {foo: 'bar', _kuzzle_info: metadata}, _meta: metadata, status: 201}
-          ]);
 
-          should(result.result[0]._meta.createdAt).be.approximately(now, 100);
-          should(result.result[0]._source._kuzzle_info.createdAt).be.approximately(now, 100);
+          const esRequest = {
+            refresh: false,
+            timeout: null,
+            body: [
+              { index: { _id: 'mehry', _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta }
+            ]
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } }
+          ];
+          const rejected = [
+            {
+              document: { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
+              reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'
+            }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            rejected);
+
+          should(result).match(mExecuteResult);
         });
     });
 
-    it('should reject documents without an ID', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
+    it('should add documents without an ID to rejected', () => {
+      documents = [
+        { _id: 'mehry', body: { city: 'Kathmandu' } },
+        { body: { city: 'Ho Chi Minh City' } }
+      ];
+      elasticsearch.client.mget.resolves({
+        body: {
+          docs: [ { _id: 'mehry', found: true } ]
+        }
+      });
 
-      return elasticsearch.mreplace(request)
+      const promise = elasticsearch.mReplace(index, collection, documents);
+
+      return promise
         .then(result => {
-          should(elasticsearch.client.bulk).not.be.called();
-          should(result.error).match([
-            {document: {_source: {foo: 'bar'}}, reason: 'a document ID is required'},
-            {document: {_source: {bar: 'foo'}}, reason: 'a document ID is required'}
-          ]);
-          should(result.result).be.an.Array().and.be.empty();
+          should(elasticsearch.client.mget).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              docs: [ { _id: 'mehry', _source: false } ]
+            }
+          });
+
+          const esRequest = {
+            refresh: false,
+            timeout: null,
+            body: [
+              { index: { _id: 'mehry', _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta }
+            ]
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } }
+          ];
+          const rejected = [
+            {
+              document: { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
+              reason: 'the document ID must be a string'
+            }
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            rejected);
+
+          should(result).match(mExecuteResult);
+        });
+    });
+
+    it('should allow additional options', () => {
+      kuzzleMeta._kuzzle_info.author = 'aschen';
+
+      const promise = elasticsearch.mReplace(
+        index,
+        collection,
+        documents,
+        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
+
+      return promise
+        .then(result => {
+          const esRequest = {
+            refresh: 'wait_for',
+            timeout: '10m',
+            body: [
+              { index: { _id: 'mehry', _index: esIndexName } },
+              { city: 'Kathmandu', ...kuzzleMeta },
+              { index: { _id: 'liia', _index: esIndexName } },
+              { city: 'Ho Chi Minh City', ...kuzzleMeta }
+            ]
+          };
+          const toImport = [
+            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
+            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
+          ];
+          should(elasticsearch._mExecute).be.calledWithMatch(
+            esRequest,
+            toImport,
+            []);
+
+          should(result).match(mExecuteResult);
         });
     });
   });
 
-  describe('#mdelete', () => {
-    const metadata = {
-      active: false,
-      updater: 'test'
-    };
+  describe('#mDelete', () => {
+    let documentIds;
 
-    it('should prevent deleting documents in a non-existing index or collection', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(false);
-      request.input.body = {ids: ['foo', 'bar']};
+    beforeEach(() => {
+      documentIds = ['mehry', 'liia'];
 
-      return should(elasticsearch.mdelete(request)).rejectedWith(PreconditionError);
+      elasticsearch.mGet = sinon.stub().resolves({
+        hits: [
+          { _id: 'mehry', _source: { city: 'Kathmandu' } },
+          { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
+        ]
+      });
+    });
+
+    it('should allow to delete multiple documents with deleteByQuery', () => {
+      const promise = elasticsearch.mDelete(index, collection, documentIds);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.mGet).be.calledWithMatch(
+            index,
+            collection,
+            ['mehry', 'liia']);
+
+          should(elasticsearch.client.deleteByQuery).be.calledWithMatch({
+            index: esIndexName,
+            body: { ids: { values: ['mehry', 'liia'] } },
+            scroll: '30s',
+            refresh: false,
+            timeout: null
+          });
+
+          should(result).match({
+            result: ['mehry', 'liia'],
+            errors: []
+          });
+        });
+    });
+
+    it('should add non existing documents to rejected', () => {
+      elasticsearch.mGet = sinon.stub().resolves({
+        hits: [ { _id: 'mehry', _source: { city: 'Kathmandu' } } ]
+      });
+
+      const promise = elasticsearch.mDelete(index, collection, documentIds);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.mGet).be.calledWithMatch(
+            index,
+            collection,
+            ['mehry']);
+
+          should(elasticsearch.client.deleteByQuery).be.calledWithMatch({
+            index: esIndexName,
+            body: { ids: { values: ['mehry'] } },
+            scroll: '30s',
+            refresh: false,
+            timeout: null
+          });
+
+          should(result).match({
+            result: ['mehry'],
+            errors: [
+              { id: 'liia', reason: 'cannot find document' }
+            ]
+          });
+        });
+    });
+
+    it('should add document with ID non string to rejected', () => {
+      elasticsearch.mGet = sinon.stub().resolves({
+        hits: [ { _id: 'mehry', _source: { city: 'Kathmandu' } } ]
+      });
+
+      const promise = elasticsearch.mDelete(index, collection, ['mehry', 42]);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.mGet).be.calledWithMatch(
+            index,
+            collection,
+            ['mehry']);
+
+          should(elasticsearch.client.deleteByQuery).be.calledWithMatch({
+            index: esIndexName,
+            body: { ids: { values: ['mehry'] } },
+            scroll: '30s',
+            refresh: false,
+            timeout: null
+          });
+
+          should(result).match({
+            result: ['mehry'],
+            errors: [
+              { id: 42, reason: 'the document ID must be a string' }
+            ]
+          });
+        });
+    });
+
+    it('should allow additional options', () => {
+      const promise = elasticsearch.mDelete(
+        index,
+        collection,
+        documentIds,
+        { refresh: 'wait_for', timeout: '10m' });
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.deleteByQuery).be.calledWithMatch({
+            index: esIndexName,
+            body: { ids: { values: ['mehry', 'liia'] } },
+            scroll: '30s',
+            refresh: 'wait_for',
+            timeout: '10m'
+          });
+
+          should(result).match({
+            result: ['mehry', 'liia'],
+            errors: []
+          });
+        });
     });
 
     it('should abort if the number of documents exceeds the configured limit', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
       kuzzle.config.limits.documentsWriteCount = 1;
-      request.input.body = {ids: ['foo', 'bar']};
 
-      return should(elasticsearch.mdelete(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
-    });
+      const promise = elasticsearch.mDelete(index, collection, documentIds);
 
-    it('should correctly separate bulk successes from errors', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      elasticsearch.client.bulk.resolves({
-        took: 30,
-        errors: false,
-        items: [
-          {index: {_id: 'foo', status: 201}},
-          {index: {_id: 'bar', status: 400}}
-        ]
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.limit_documents_reached'
       });
-      request.input.body = {ids: ['foo', 'bar']};
-
-      return elasticsearch.mdelete(request)
-        .then(result => {
-          should(elasticsearch.client.bulk.args[0][0]).match({
-            index,
-            type: collection,
-            body: [
-              {update: {_index: index, _type: collection, _id: 'foo'}},
-              {doc: {_kuzzle_info: metadata}},
-              {update: {_index: index, _type: collection, _id: 'bar'}},
-              {doc: {_kuzzle_info: metadata}}
-            ]
-          });
-          should(result.error).match([{_id: 'bar', status: 400}]);
-          should(result.result).match(['foo']);
-        });
-    });
-
-    it('should reject non-string IDs', () => {
-      elasticsearch.kuzzle.indexCache.exists.resolves(true);
-      request.input.body = {ids: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
-
-      return elasticsearch.mdelete(request)
-        .then(result => {
-          should(elasticsearch.client.bulk).not.be.called();
-          should(result.error).match([
-            {id: {body: {foo: 'bar'}}, reason: 'the document ID must be a string'},
-            {id: {body: {bar: 'foo'}}, reason: 'the document ID must be a string'}
-          ]);
-          should(result.result).be.an.Array().and.be.empty();
-        });
     });
   });
 
-  describe('#_checkMapping', () => {
+  describe('_mExecute', () => {
+    let
+      esRequest,
+      documents,
+      partialErrors;
+
+    beforeEach(() => {
+      esRequest = {
+        refresh: false,
+        body: [
+          { index: { _index: esIndexName, _id: 'liia' } },
+          { city: 'Kathmandu' },
+          { update: { _index: esIndexName, _id: 'mehry' } },
+          { doc: { city: 'Kathmandu' } }
+        ]
+      };
+
+      documents = [
+        { _id: 'liia', _source: { city: 'Kathmandu' } },
+        { _id: 'mehry', _source: { city: 'Ho Chi Minh City' } }
+      ];
+
+      partialErrors = [
+        {
+          document: { body: { some: 'document' } },
+          status: 400,
+          reason: 'some reason'
+        }
+      ];
+
+      elasticsearch.client.bulk.resolves({
+        body: {
+          items: [
+            {
+              index: {
+                _id: 'liia',
+                status: 201,
+                _version: 1,
+                result: 'created',
+                foo: 'bar'
+              }
+            },
+            {
+              index: {
+                _id: 'mehry',
+                status: 400,
+                error: { reason: 'bad request' },
+                bar: 'foo'
+              }
+            }
+          ]
+        }
+      });
+    });
+
+    it('should call client.bulk and separate success from errors', () => {
+      const promise = elasticsearch._mExecute(esRequest, documents, partialErrors);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.bulk).be.calledWithMatch(esRequest);
+
+          const expectedResult = [
+            {
+              _id: 'liia',
+              _source: { city: 'Kathmandu' },
+              _status: 201,
+              _version: 1,
+              result: 'created'
+            }
+          ];
+          const expectedErrors = [
+            {
+              document: { body: { some: 'document' } },
+              reason: 'some reason'
+            },
+            {
+              document: { _id: 'mehry', _source: { city: 'Ho Chi Minh City' } },
+              status: 400,
+              reason: 'bad request'
+            }
+          ];
+          should(result).match({
+            result: expectedResult,
+            errors: expectedErrors
+          });
+        });
+    });
+
+    it('should not call bulk if there is no documents', () => {
+      const promise = elasticsearch._mExecute(esRequest, [], partialErrors);
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.bulk).not.be.called();
+
+          const expectedErrors = [
+            {
+              document: { body: { some: 'document' } },
+              reason: 'some reason'
+            }
+          ];
+          should(result).match({
+            result: [],
+            errors: expectedErrors
+          });
+        });
+    });
+
+    it('should reject if limit document reached', () => {
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      const promise = elasticsearch._mExecute(esRequest, documents, partialErrors);
+
+      return should(promise).be.rejectedWith({
+        errorName: 'external.elasticsearch.limit_documents_reached'
+      });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.bulk.rejects(esClientError);
+
+      const promise = elasticsearch._mExecute(esRequest, documents, partialErrors);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+
+  });
+
+  describe('#_extractMDocuments', () => {
+    it('should add documents without body in rejected array', () => {
+      const documents = [
+        { _id: 'liia', body: { city: 'Kathmandu' } },
+        { _id: 'no-body' }
+      ];
+      const kuzzleMeta = {
+        _kuzzle_info: {
+          author: null,
+          createdAt: timestamp,
+          updater: null,
+          updatedAt: null
+        }
+      };
+
+      const {
+        rejected,
+        extractedDocuments
+      } = elasticsearch._extractMDocuments(documents, kuzzleMeta);
+
+      should(rejected).match([{
+        document: { _id: 'no-body' },
+        reason: 'document body is not an object'
+      }]);
+
+      should(extractedDocuments).match([{
+        _id: 'liia',
+        _source: { city: 'Kathmandu' }
+      }]);
+    });
+  });
+
+  describe('#_checkMappings', () => {
     it('should throw when a property is incorrect', () => {
       const
         mapping2 = {
@@ -2838,10 +2847,10 @@ describe('Test: ElasticSearch service', () => {
         };
 
 
-      should(() => elasticsearch._checkMapping(mapping))
+      should(() => elasticsearch._checkMappings(mapping))
         .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
 
-      should(() => elasticsearch._checkMapping(mapping2))
+      should(() => elasticsearch._checkMappings(mapping2))
         .throw({ message: 'Incorrect mapping property "mapping.type".' });
     });
 
@@ -2859,7 +2868,7 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      should(() => elasticsearch._checkMapping(mapping))
+      should(() => elasticsearch._checkMappings(mapping))
         .throw({ message: 'Incorrect mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
     });
 
@@ -2878,8 +2887,81 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      should(() => elasticsearch._checkMapping(mapping))
+      should(() => elasticsearch._checkMappings(mapping))
         .not.throw();
+    });
+  });
+
+  describe('Collection emulation utils', () => {
+    let
+      internalES,
+      publicES;
+
+    beforeEach(() => {
+      publicES = new ES(kuzzle, kuzzle.config.services.db);
+      internalES = new ES(kuzzle, kuzzle.config.services.db, 'internal');
+    });
+
+    describe('#_getESIndex', () => {
+      it('return esIndex name for a collection', () => {
+        const
+          publicESIndex = publicES._getESIndex('nepali', 'liia'),
+          internalESIndex = internalES._getESIndex('nepali', 'mehry');
+
+        should(publicESIndex).be.eql('&nepali.liia');
+        should(internalESIndex).be.eql('%nepali.mehry');
+      });
+    });
+
+    describe('#_extractIndex', () => {
+      it('extract the index name from esIndex name', () => {
+        const
+          publicIndex = publicES._extractIndex('&nepali.liia'),
+          internalIndex = internalES._extractIndex('%nepali.liia');
+
+        should(publicIndex).be.eql('nepali');
+        should(internalIndex).be.eql('nepali');
+      });
+    });
+
+    describe('#_extractCollection', () => {
+      it('extract the collection names from esIndex name', () => {
+        const
+          publicCollection = publicES._extractCollection('&nepali.liia'),
+          internalCollection = internalES._extractCollection('%nepali.liia');
+
+        should(publicCollection).be.eql('liia');
+        should(internalCollection).be.eql('liia');
+      });
+    });
+
+    describe('#_extractIndexes', () => {
+      it('extract the index names from a list of esIndex name', () => {
+        const esIndexes = [
+          '%nepali.liia', '%nepali.mehry', '&india.darjeeling', '&vietnam.lfiduras'
+        ];
+
+        const
+          publicIndexes = publicES._extractIndexes(esIndexes),
+          internalIndexes = internalES._extractIndexes(esIndexes);
+
+        should(publicIndexes).be.eql(['india', 'vietnam']);
+        should(internalIndexes).be.eql(['nepali']);
+      });
+    });
+
+    describe('#_extractCollections', () => {
+      it('extract the collection names for an index from a list of esIndex name', () => {
+        const esIndexes = [
+          '%nepali.liia', '%nepali.mehry', '&nepali.panipokari', '&vietnam.lfiduras'];
+
+        const
+          publicCollections = publicES._extractCollections(esIndexes, 'nepali'),
+          internalCollections = internalES._extractCollections(esIndexes, 'nepali');
+
+        should(publicCollections).be.eql(['panipokari']);
+        should(internalCollections).be.eql(['liia', 'mehry']);
+      });
     });
   });
 });

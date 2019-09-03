@@ -50,7 +50,7 @@ Each right is an object with the following properties:
 - `action`: controller's action
 - `index`: authorized or denied index
 - `collection`: authorized or denied collection
-- `value`: one of the following value: `denied`, `allowed`, or `conditional`
+- `value`: one of the following value: `denied`, `allowed`
 
 ```js
 {
