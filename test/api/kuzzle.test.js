@@ -7,6 +7,7 @@ const
 
 describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
+
   const mockedProperties = [
     'entryPoints',
     'funnel',

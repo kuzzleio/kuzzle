@@ -312,9 +312,10 @@ class KuzzleMock extends Kuzzle {
         kuzzleProto = Object.getPrototypeOf(mockProto);
 
       for (let name of Object.getOwnPropertyNames(kuzzleProto)) {
-        if (name === 'constructor') {
+        if (['constructor', 'adminExists'].includes(name)) {
           continue;
         }
+
         if (!Object.prototype.hasOwnProperty.call(this, name)) {
           this[name] = function() {
             throw new Error(`Kuzzle original property ${name} is not mocked`);
@@ -322,7 +323,6 @@ class KuzzleMock extends Kuzzle {
         }
       }
     }
-
   }
 
   static hash (input) {
