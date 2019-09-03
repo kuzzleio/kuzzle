@@ -541,14 +541,6 @@ class ApiBase {
     });
   }
 
-  getAutoRefresh (index) {
-    return this.send({
-      index: index,
-      controller: 'index',
-      action: 'getAutoRefresh'
-    });
-  }
-
   getCredentials (strategy, userId) {
     return this.send({
       controller: 'security',
@@ -960,21 +952,6 @@ class ApiBase {
     return this.send(msg);
   }
 
-  refreshIndex (index) {
-    return this.send({
-      index: index,
-      controller: 'index',
-      action: 'refresh'
-    });
-  }
-
-  refreshInternalIndex () {
-    return this.send({
-      controller: 'index',
-      action: 'refreshInternal'
-    });
-  }
-
   refreshToken () {
     return this.send({
       controller: 'auth',
@@ -1130,17 +1107,6 @@ class ApiBase {
     }
 
     return this.send(msg);
-  }
-
-  setAutoRefresh (index, autoRefresh) {
-    return this.send({
-      index: index,
-      controller: 'index',
-      action: 'setAutoRefresh',
-      body: {
-        autoRefresh: autoRefresh
-      }
-    });
   }
 
   subscribe (filters, client, authentified = false) {

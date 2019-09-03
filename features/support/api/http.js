@@ -594,10 +594,6 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  getAutoRefresh (index) {
-    return this.callApi(this._getRequest(index, null, 'index', 'getAutoRefresh'));
-  }
-
   getCredentials (strategy, userId) {
     const options = {
       url : this.apiPath('credentials/' + strategy + '/' + userId),
@@ -947,20 +943,6 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  refreshIndex (index) {
-    return this.callApi({
-      url: this.apiPath(index + '/_refresh'),
-      method: 'POST'
-    });
-  }
-
-  refreshInternalIndex () {
-    return this.callApi({
-      url: this.apiPath('_refreshInternal'),
-      method: 'POST'
-    });
-  }
-
   refreshToken () {
     return this.callApi({
       url: this.apiPath('_refreshToken'),
@@ -1143,10 +1125,6 @@ class HttpApi {
     }
 
     return this.callApi(options);
-  }
-
-  setAutoRefresh (index, autoRefresh) {
-    return this.callApi(this._getRequest(index, null, 'index', 'setAutoRefresh', {body: {autoRefresh}}));
   }
 
   truncateCollection (index, collection) {

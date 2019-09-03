@@ -30,3 +30,10 @@ Removed errors:
 Removed events:
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
+
+Removed API methods:
+
+  - `index:refresh`: you should use the new `collection:refresh` method instead
+  - `index:getAutoRefresh`
+  - `index:setAutoRefresh`
+  - `index:refreshInternal`
