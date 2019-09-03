@@ -81,6 +81,17 @@ describe('IndexEngine', () => {
     });
   });
 
+  describe('#count', () => {
+    it('should call storageEngine.count with the good arguments', async () => {
+      await indexEngine.count('users', { query: { match_all: {} } });
+
+      should(indexEngine.storageEngine.count).be.calledWith(
+        'kuzzle',
+        'users',
+        { query: { match_all: {} } });
+    });
+  });
+
   describe('#create', () => {
     it('should call storageEngine.create with the good arguments', async () => {
       await indexEngine.create(

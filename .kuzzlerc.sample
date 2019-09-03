@@ -391,6 +391,15 @@
       "retryInterval": 1000
     },
 
+    // [internalIndex]
+    // The database engine used for Kuzzle internal index
+    //   * bootstrapLockTimeout:
+    //       Maximum amount of time (in milliseconds)
+    //       to wait for a concurrent database bootstrap
+    "internalIndex": {
+      "bootstrapLockTimeout": 5000
+    },
+
     // [internalCache]
     // The cache service relies on Redis sample settings for Redis service
     // (see also https://github.com/luin/ioredis)
@@ -410,14 +419,6 @@
         "host": "localhost",
         "port": 6379
       }
-    },
-    // [internalIndex]
-    // The database engine used for Kuzzle internal index
-    //   * bootstrapLockTimeout:
-    //       Maximum amount of time (in milliseconds)
-    //       to wait for a concurrent database bootstrap
-    "internalIndex": {
-      "bootstrapLockTimeout": 5000
     },
     // 2. using a master/slaves Redis instance with Redis sentinels
     //    (cf. http://redis.io/topics/sentinel):
