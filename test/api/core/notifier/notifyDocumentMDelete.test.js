@@ -38,18 +38,6 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
   it('should notify when a document has been deleted', () => {
     const
       stillAlive = {
-        _meta: {
-          'This is a triumph': 'I\'m making a not here: HUGE SUCCESS',
-          'It\'s hard to overstate': 'my satisfaction',
-          'Aperture Science': 'We do what we must, because we can',
-          'For the good of all of us': 'Except the ones who are dead',
-
-          'There\'s no point crying': 'over every mistake',
-
-          'You just keep on trying': 'till you run out of cake',
-          'And the science gets done': 'and you make a neat gun',
-          'For the people who are': 'still alive'
-        },
         _source: {
           'I\'m not even angry': 'I\'m being so sincere right now',
           'Even though you broke my heart': 'and killed me',
@@ -66,7 +54,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
     kuzzle.realtime.test.returns(['foo', 'bar']);
     kuzzle.services.publicStorage.mGet.resolves({
       hits: [
-        {_id: 'foobar', _source: stillAlive._source, _meta: stillAlive._meta}
+        { _id: 'foobar', _source: stillAlive._source }
       ],
       total: 1
     });
@@ -76,7 +64,6 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
         should(notifier.notifyDocument)
           .calledOnce()
           .calledWith(['foo', 'bar'], request, 'out', 'done', 'delete', {
-            _meta: stillAlive._meta,
             _id: 'foobar'
           });
       });

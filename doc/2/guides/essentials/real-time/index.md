@@ -216,9 +216,7 @@ Customers subscribing to the changes in this collection will receive the followi
         "author": "-1",
         "createdAt": 1558781280058,
         "updatedAt": null,
-        "updater": null,
-        "active": true,
-        "deletedAt": null
+        "updater": null
       }
     },
     "_id": "AWrumr8-njeq4FJZaOmC"
@@ -304,9 +302,7 @@ This information is contained in the `scope` field of the notifications:
         "author": "-1",
         "createdAt": 1558781280058,
         "updatedAt": null,
-        "updater": null,
-        "active": true,
-        "deletedAt": null
+        "updater": null
       }
     },
     "_id": "AWrumr8-njeq4FJZaOmC"

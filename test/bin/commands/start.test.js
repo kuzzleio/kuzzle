@@ -4,7 +4,7 @@ const
   should = require('should'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-describe('bin/commands/start.js', () => {
+describe.skip('bin/commands/start.js', () => {
   let
     start,
     ColorOutputMock;
