@@ -9,7 +9,8 @@ const
     Request,
     errors: { InternalError }
   } = require('kuzzle-common-objects'),
-  Router = require('../../../../lib/api/core/httpRouter');
+  Router = require('../../../../lib/api/core/httpRouter'),
+  { HttpMessage } = require('../../../../lib/api/core/entrypoints/protocols/http');
 
 describe('core/httpRouter', () => {
   let
