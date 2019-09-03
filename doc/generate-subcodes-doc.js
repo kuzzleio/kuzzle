@@ -60,11 +60,7 @@ function buildSubcodesDoc(errorCodesFiles) {
   const output = process.argv[2] === '-o' || process.argv[2] === '--output'
     ? process.argv[3]
     : `./${kuzzleVersion}/api/essentials/errors/subcodes/index.md`;
-  fs.writeFileSync(output, doc, (err => {
-    if (err) {
-      throw new Error(err);
-    }
-  }));
+  fs.writeFileSync(output, doc);
 }
 
 buildSubcodesDoc({ internal, external, api, network, plugins });
