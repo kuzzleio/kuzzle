@@ -150,12 +150,13 @@ describe('IndexEngine', () => {
 
   describe('#delete', () => {
     it('should call storageEngine.delete with the good arguments', async () => {
-      await indexEngine.delete('users', 'user-kuid');
+      await indexEngine.delete('users', 'user-kuid', { refresh: 'wait_for' });
 
       should(indexEngine.storageEngine.delete).be.calledWith(
         'kuzzle',
         'users',
-        'user-kuid');
+        'user-kuid',
+        { refresh: 'wait_for' });
     });
   });
 
@@ -188,7 +189,7 @@ describe('IndexEngine', () => {
       should(kuzzle.indexCache.add).be.calledWithMatch({
         index: 'kuzzle',
         collection: 'admins',
-        indexType: indexEngine.storageEngine.indexType
+        scope: indexEngine.storageEngine.scope
       });
     });
   });

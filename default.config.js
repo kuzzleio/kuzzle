@@ -220,7 +220,7 @@ module.exports = {
         port: 6379
       }
     },
-    internalEngine: {
+    internalIndex: {
       bootstrapLockTimeout: 5000
     },
     db: {

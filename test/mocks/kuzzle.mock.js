@@ -335,10 +335,10 @@ class KuzzleMock extends Kuzzle {
 }
 
 
-function getESMock (kuzzleMock, indexType) {
+function getESMock (kuzzleMock, scope) {
   return {
-    indexType,
-    indexPrefix: indexType === 'public'
+    scope,
+    indexPrefix: scope === 'public'
       ? '&'
       : '%',
     getInfos: kuzzleMock.sandbox.stub().resolves(),

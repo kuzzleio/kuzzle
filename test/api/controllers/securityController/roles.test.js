@@ -15,7 +15,7 @@ const
   } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
-describe('Test: security controller - roles', () => {
+xdescribe('Test: security controller - roles', () => {
   let
     kuzzle,
     request,
@@ -26,8 +26,8 @@ describe('Test: security controller - roles', () => {
     securityController = new SecurityController(kuzzle);
 
     request = new Request({controller: 'security'});
-    kuzzle.internalEngine.get.resolves({});
-    kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {roles: {properties: {}}}}});
+    kuzzle.internalIndex.get.resolves({});
+    kuzzle.internalIndex.getMapping.resolves({internalIndex: {mappings: {roles: {properties: {}}}}});
   });
 
   describe('#updateRoleMapping', () => {
@@ -43,8 +43,8 @@ describe('Test: security controller - roles', () => {
       request.input.body = foo;
       return securityController.updateRoleMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('roles', request.input.body);
+          should(kuzzle.internalIndex.updateMapping).be.calledOnce();
+          should(kuzzle.internalIndex.updateMapping).be.calledWith('roles', request.input.body);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -57,9 +57,9 @@ describe('Test: security controller - roles', () => {
     it('should fulfill with a response object', () => {
       return securityController.getRoleMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.getMapping)
+          should(kuzzle.internalIndex.getMapping)
             .be.calledOnce()
-            .be.calledWith(kuzzle.internalEngine.index, 'roles');
+            .be.calledWith(kuzzle.internalIndex.index, 'roles');
 
           should(response).be.instanceof(Object);
           should(response).match({mapping: {}});

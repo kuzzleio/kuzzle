@@ -7,7 +7,6 @@ const
   should = require('should'),
   sinon = require('sinon'),
   User = require(`${root}/lib/api/core/models/security/user`),
-  IndexEngineMock = require(`${root}/test/mocks/indexEngine.mock`),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
     Request,
@@ -27,7 +26,6 @@ describe('Plugin Context', () => {
     kuzzle,
     context,
     PluginContext,
-    indexEngineConstructorSpy,
     deprecateStub;
 
   beforeEach(() => {
@@ -35,10 +33,6 @@ describe('Plugin Context', () => {
     mockrequire(`${root}/lib/util/deprecate`, {
       deprecateProperties: deprecateStub
     });
-
-    indexEngineConstructorSpy = sinon.spy((...args) => new IndexEngineMock(...args));
-
-    mockrequire(`../storage/indexEngine`, indexEngineConstructorSpy);
 
     PluginContext = mockrequire.reRequire(`${root}/lib/api/core/plugins/pluginContext`);
 

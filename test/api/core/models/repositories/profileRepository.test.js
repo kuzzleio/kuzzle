@@ -22,6 +22,7 @@ describe('Test: repositories/profileRepository', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
     profileRepository = new ProfileRepository(kuzzle);
 
     testProfile = new Profile();
@@ -31,7 +32,7 @@ describe('Test: repositories/profileRepository', () => {
       {roleId: 'test2'}
     ];
 
-    return profileRepository.init();
+    return profileRepository.init({ indexEngine: kuzzle.internalIndex });
   });
 
   describe('#load', () => {
@@ -61,7 +62,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should reject if the profile does not exist', () => {
-      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
+      profileRepository.indexEngine.get.rejects(new NotFoundError('Not found'));
 
       return should(profileRepository.load('idontexist'))
         .rejectedWith(NotFoundError, {message: 'Unable to find profiles with id \'idontexist\''});

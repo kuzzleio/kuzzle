@@ -25,7 +25,7 @@ describe('InternalIndexBootstrap', () => {
       kuzzle.services.internalStorage);
 
     kuzzle.indexCache.exists.resolves(false);
-    kuzzle.config.services.internalEngine.bootstrapLockTimeout = 42000;
+    kuzzle.config.services.internalIndex.bootstrapLockTimeout = 42000;
 
     internalIndexBootstrap = new InternalIndexBootstrap(
       kuzzle,

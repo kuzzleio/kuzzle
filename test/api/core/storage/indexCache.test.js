@@ -29,12 +29,12 @@ describe('Test: core/indexCache', () => {
       await indexCache.init();
 
       should(indexCache.indexes.foobar).match({
-        indexType: 'internal',
+        scope: 'internal',
         collections: ['foolection']
       });
 
       should(indexCache.indexes.barfoo).match({
-        indexType: 'public',
+        scope: 'public',
         collections: ['barlection']
       });
     });
@@ -57,14 +57,14 @@ describe('Test: core/indexCache', () => {
       indexCache.add({ index: 'foobar' });
 
       should(indexCache.indexes).have.keys('foobar');
-      should(indexCache.indexes.foobar.indexType).eql('public');
+      should(indexCache.indexes.foobar.scope).eql('public');
       should(indexCache.indexes.foobar.collections)
         .be.an.Array()
         .and.be.empty();
       should(kuzzle.emit).be.calledWithMatch(
         'core:indexCache:add',
         {
-          index: 'foobar', indexType: 'public'
+          index: 'foobar', scope: 'public'
         });
     });
 
@@ -78,7 +78,7 @@ describe('Test: core/indexCache', () => {
       should(kuzzle.emit).be.calledWithMatch(
         'core:indexCache:add',
         {
-          index: 'foobar', collection: 'collection', indexType: 'public'
+          index: 'foobar', collection: 'collection', scope: 'public'
         });
     });
 
@@ -113,7 +113,7 @@ describe('Test: core/indexCache', () => {
       should(kuzzle.emit).be.calledWithMatch(
         'core:indexCache:remove',
         {
-          index: 'foobar', indexType: 'public'
+          index: 'foobar', scope: 'public'
         });
     });
 
@@ -123,13 +123,13 @@ describe('Test: core/indexCache', () => {
       indexCache.remove({ index: 'foobar', collection: 'foolection' });
 
       should(indexCache.indexes.foobar).match({
-        indexType: 'public',
+        scope: 'public',
         collections: ['foolection2']
       });
       should(kuzzle.emit).be.calledWithMatch(
         'core:indexCache:remove',
         {
-          index: 'foobar', collection: 'foolection', indexType: 'public'
+          index: 'foobar', collection: 'foolection', scope: 'public'
         });
     });
 
@@ -138,7 +138,7 @@ describe('Test: core/indexCache', () => {
 
       should(indexCache.indexes).match({
         foobar: {
-          indexType: 'public',
+          scope: 'public',
           collections: ['foolection']
         }
       });
@@ -150,7 +150,7 @@ describe('Test: core/indexCache', () => {
 
       should(indexCache.indexes).match({
         foobar: {
-          indexType: 'public',
+          scope: 'public',
           collections: ['foolection']
         }
       });
@@ -188,7 +188,7 @@ describe('Test: core/indexCache', () => {
     });
 
     it('should return false if the index is not the same type', () => {
-      indexCache.add({ index: 'kuzzle', collection: 'users', indexType: 'internal' });
+      indexCache.add({ index: 'kuzzle', collection: 'users', scope: 'internal' });
 
       const indexExists = indexCache.exists({ index: 'kuzzle' });
       const collectionExists = indexCache.exists({

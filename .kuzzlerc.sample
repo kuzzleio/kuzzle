@@ -411,12 +411,12 @@
         "port": 6379
       }
     },
-    // [internalEngine]
-    // The database layer used internally by Kuzzle
+    // [internalIndex]
+    // The database engine used for Kuzzle internal index
     //   * bootstrapLockTimeout:
     //       Maximum amount of time (in milliseconds)
     //       to wait for a concurrent database bootstrap
-    "internalEngine": {
+    "internalIndex": {
       "bootstrapLockTimeout": 5000
     },
     // 2. using a master/slaves Redis instance with Redis sentinels
