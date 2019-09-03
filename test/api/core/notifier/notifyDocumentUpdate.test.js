@@ -58,7 +58,6 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           ['foo'],
           request,
           'in',
-          'done',
           'update',
           {
             _id,
@@ -67,7 +66,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           });
 
         should(notifier.notifyDocument.getCall(1)).calledWith(
-          ['bar'], request, 'out', 'done', 'update', { _id });
+          ['bar'], request, 'out', 'update', { _id });
 
         should(kuzzle.services.internalCache.get)
           .calledOnce()

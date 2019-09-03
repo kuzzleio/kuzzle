@@ -26,6 +26,7 @@ Removed errors:
 
 | Code | Unique name |
 |------|-------------|
+| `0x00020004` | `internal.hotelclerk.incorrect_state_value` |
 | `0x01090032` | `api.security.invalid_rights_given` |
 | `0x0109003b` | `api.security.missing_test_element_for_controller_action` |
 | `0x0109003e` | `api.security.parsing_closure_rights_for_role` |

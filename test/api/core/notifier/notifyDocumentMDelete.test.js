@@ -63,14 +63,14 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
       .then(() => {
         should(notifier.notifyDocument)
           .calledOnce()
-          .calledWith(['foo', 'bar'], request, 'out', 'done', 'delete', {
+          .calledWith(['foo', 'bar'], request, 'out', 'delete', {
             _id: 'foobar'
           });
       });
   });
 
   it('should notify for each document when multiple document have been deleted', () => {
-    var ids = ['foo', 'bar'];
+    const ids = ['foo', 'bar'];
 
     kuzzle.services.publicStorage.mGet.resolves({
       hits: [
@@ -83,8 +83,8 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
     return notifier.notifyDocumentMDelete(request, ids)
       .then(() => {
         should(notifier.notifyDocument.callCount).be.eql(2);
-        should(notifier.notifyDocument.getCall(0).args[5]._id).be.eql('foo');
-        should(notifier.notifyDocument.getCall(1).args[5]._id).be.eql('bar');
+        should(notifier.notifyDocument.getCall(0).args[4]._id).be.eql('foo');
+        should(notifier.notifyDocument.getCall(1).args[4]._id).be.eql('bar');
       });
   });
 });
