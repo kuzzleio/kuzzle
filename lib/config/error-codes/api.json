@@ -8,6 +8,16 @@
           "code": 1,
           "message": "Invalid '%s' value (%s).",
           "class": "BadRequestError"
+        },
+        "missing_param": {
+          "code": 2,
+          "message": "Missing param \"%s\"",
+          "class": "BadRequestError"
+        },
+        "invalid_param": {
+          "code": 3,
+          "message": "Invalid %s param \"%s\": \"%s\".",
+          "class": "BadRequestError"
         }
       }
     },

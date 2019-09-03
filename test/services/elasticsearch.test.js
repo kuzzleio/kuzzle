@@ -1739,9 +1739,7 @@ describe('Test: ElasticSearch service', () => {
             index: ['&nepali.mehry', '&nepali.liia', '&nyc-open-data.taxi']
           });
 
-          should(result).match({
-            deleted: ['nepali', 'nyc-open-data']
-          });
+          should(result).match(['nepali', 'nyc-open-data']);
         });
     });
 
@@ -1763,9 +1761,7 @@ describe('Test: ElasticSearch service', () => {
             index: ['&nepali.mehry', '&nepali.liia']
           });
 
-          should(result).match({
-            deleted: ['nepali']
-          });
+          should(result).match(['nepali']);
         });
     });
 
