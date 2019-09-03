@@ -47,10 +47,12 @@ function buildSubcodesDoc(errorCodesFiles) {
       for (const errorName of Object.keys(subdomain.errors)) {
         const error = subdomain.errors[errorName];
 
+        const buffer = Buffer.allocUnsafe(4);
         const code = domain.code << 24
           | subdomain.code << 16
           | error.code;
-        doc += `\`0x${code.toString(16)}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
+        buffer.writeUInt32BE(code, 0);
+        doc += `\`0x${buffer.toString('hex')}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
       }
       doc += '\n---\n';
     }
