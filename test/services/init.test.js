@@ -133,7 +133,7 @@ describe('Test: lib/services/', () => {
         backend: 'backend'
       };
 
-      return registerService.call(context, 'fakeService', options, false)
+      return registerService.call(context, 'fakeService', options)
         .then(() => {
           should(Services.__get__('require')).be.calledOnce();
           should(Services.__get__('require')).be.calledWith('./backend');
@@ -149,7 +149,7 @@ describe('Test: lib/services/', () => {
         ]
       };
 
-      return registerService.call(context, 'fakeService', options, false)
+      return registerService.call(context, 'fakeService', options)
         .then(() => {
           const req = Services.__get__('require');
 
@@ -167,19 +167,18 @@ describe('Test: lib/services/', () => {
     it('should return a rejected promise if the service did not init in time', () => {
       return Services.__with__({
         require: () => function () {
-          this.init = () => Bluebird.resolve(() => {});
+          this.init = () => new Promise(() => {});
         }
       })(() => {
         kuzzle.config.services.fakeService = {};
         const r = registerService.call(
           context,
           'fakeService',
-          { timeout: 1000 },
-          true);
+          { timeout: 1000 });
 
         clock.tick(1000);
 
-        return should(r).be.rejectedWith('[FATAL] Service "fakeService[fakeService]" failed to init within 1000ms');
+        return should(r).be.rejectedWith('[FATAL] Service "fakeService[fakeService]" failed to initialize within 1000ms.');
       });
     });
 
@@ -196,8 +195,7 @@ describe('Test: lib/services/', () => {
         const promise = registerService.call(
           context,
           'fakeService',
-          options,
-          true);
+          options);
 
         return should(promise).be.rejectedWith(error);
       });

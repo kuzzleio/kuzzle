@@ -6,8 +6,13 @@ const
   Bluebird = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
-  { BadRequestError, SizeLimitError } = require('kuzzle-common-objects').errors,
+  {
+    Request,
+    errors: {
+      BadRequestError,
+      SizeLimitError
+    }
+  } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
@@ -52,8 +57,9 @@ describe('Test: security controller - roles', () => {
     it('should fulfill with a response object', () => {
       return securityController.getRoleMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'roles'});
+          should(kuzzle.internalEngine.getMapping)
+            .be.calledOnce()
+            .be.calledWith(kuzzle.internalEngine.index, 'roles');
 
           should(response).be.instanceof(Object);
           should(response).match({mapping: {}});
