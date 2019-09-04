@@ -12,15 +12,39 @@ All errors received by Kuzzle clients are `KuzzleError` error objects.
 
 A `KuzzleError` object has the following properties:
 
-| property  | type    | description                                            |
-| --------- | ------- | ------------------------------------------------------ |
-| `status`  | integer | HTTP status code                                       |
-| `message` | text    | Short description of the error                         |
-| `stack`   | text    | (Available in development mode only) Error stack trace |
+| Property     | Type               | Description                                            |
+| ------------ | ------------------ | ------------------------------------------------------ |
+| `status`     | <pre>number</pre>            | HTTP status code                                       |
+| `message`    | <pre>string</pre>               | Short description of the error                         |
+| `stack`      | <pre>string</pre>               | (Available in development mode only) Error stack trace |
+| `errorName`  | <pre>string</pre>  | Error full name, precising domain, subdomain and the name of the error |
+| `code`       | <pre>number</pre> | Error unique code |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
 
+
+### errorName
+
+The `errorName` property is a concatenation of 3 levels of precision from where your error come from.
+For an `errorName` `api.auth.database_not_found`, you have `api` as domain, `auth` as subdomain and `database_not_found` as error.
+
+You can see the full definition about Kuzzle errors [here](https://docs.kuzzle.io/core/1/api/essentials/errors/subcodes/)
+
+
 ---
+
+### code
+
+The `code` property is a concatenation of 3 codes:
+- The domain code (eg. `02` for `api`).
+- The subdomain code (eg. `04` for `auth`).
+- The proper error code (eg. `0001` for `database_not_found`).
+
+So a `code` `0x02040001` has `02` as domain code on 1 byte, `04` as subdomain code on 1 byte and `0001` as error code on 2 bytes.
+
+You can see the full definition of Kuzzle API errors [here](https://docs.kuzzle.io/core/1/api/essentials/errors/subcodes/)
+
+
 
 ## Common errors
 
