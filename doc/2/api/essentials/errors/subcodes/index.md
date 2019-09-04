@@ -187,8 +187,6 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00080001`  | `A process is already running for this sandbox` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | process_already_running | internal.sandbox.process_already_running
-`0x00080002`  | `Timeout. The sandbox did not respond within <placeholder>ms.` | [GatewayTimeoutError](https://docs.kuzzle.io/core/1/api/essentials/errors/#gatewaytimeouterror) | timeout | internal.sandbox.timeout
 
 ---
 
@@ -212,8 +210,8 @@ order: 500
 `0x01010009`  | `null is not a valid document ID.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | document_id_cannot_be_null | external.elasticsearch.document_id_cannot_be_null
 `0x0101000a`  | `Index '<placeholder>' does not exist.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | index_does_not_exist | external.elasticsearch.index_does_not_exist
 `0x0101000b`  | `import must specify a body attribute 'bulkData' of type Object.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_or_invalid_import_attribute | external.elasticsearch.missing_or_invalid_import_attribute
-`0x0101000c`  | `Missing data collection argument.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_data_collection_argument | external.elasticsearch.missing_data_collection_argument
-`0x0101000d`  | `Missing data index argument.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_data_index_argument | external.elasticsearch.missing_data_index_argument
+`0x0101000c`  | `Missing collection argument at body[<placeholder>].` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_collection_argument | external.elasticsearch.missing_collection_argument
+`0x0101000d`  | `Missing index argument at body[<placeholder>].` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_index_argument | external.elasticsearch.missing_index_argument
 `0x0101000e`  | `Index '<placeholder>' is protected, please use appropriated routes instead.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | index_protected | external.elasticsearch.index_protected
 `0x0101000f`  | `Error refreshing index <placeholder>:
 <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | error_on_index_refresh | external.elasticsearch.error_on_index_refresh
@@ -241,6 +239,7 @@ order: 500
 `0x01010025`  | `No mapping found for index "<placeholder>".` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | no_mapping_found | external.elasticsearch.no_mapping_found
 `0x01010026`  | `<placeholder> index "<placeholder>" or collection "<placeholder>" does not exist, please create it first.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | index_or_collection_not_found | external.elasticsearch.index_or_collection_not_found
 `0x01010027`  | `Cannot parse mapping property "<placeholder>": <placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cannot_parse_mapping | external.elasticsearch.cannot_parse_mapping
+`0x01010028`  | `Index <placeholder> already exists.<placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | index_already_exists | external.elasticsearch.index_already_exists
 
 ---
 
@@ -269,7 +268,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x01040001`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to init within <placeholder> ms.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
+`0x01040001`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
 
 ---
 
@@ -441,7 +440,7 @@ order: 500
 `0x02090037`  | `Invalid definition for [<placeholder>]: "actions" attribute missing` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | actions_attribute_missing_in_controller_definition | api.security.actions_attribute_missing_in_controller_definition
 `0x02090038`  | `Invalid definition for [<placeholder>]: "actions" attribute must be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | actions_attribute_not_an_object_in_controller_definition | api.security.actions_attribute_not_an_object_in_controller_definition
 `0x02090039`  | `Invalid definition for [<placeholder>]: "actions" attribute cannot be empty` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | actions_attribute_empty_in_controller_definition | api.security.actions_attribute_empty_in_controller_definition
-`0x0209003a`  | `Invalid definition for [<placeholder>, <placeholder>]: must be a boolean or an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_type_in_definition_for_controller_action | api.security.invalid_type_in_definition_for_controller_action
+`0x0209003a`  | `Invalid definition for [<placeholder>, <placeholder>]: must be a boolean` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_type_in_definition_for_controller_action | api.security.invalid_type_in_definition_for_controller_action
 `0x0209003b`  | `Invalid definition for [<placeholder>, <placeholder>]. Permissions defined as closures must have a "test" element.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_test_element_for_controller_action | api.security.missing_test_element_for_controller_action
 `0x0209003c`  | `Invalid definition for [<placeholder>, <placeholder>]: error executing function` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | error_executing_function_for_controller_action | api.security.error_executing_function_for_controller_action
 `0x0209003d`  | `Error parsing rights for role <placeholder> (<placeholder>) : <placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | parsing_rights_for_role | api.security.parsing_rights_for_role
@@ -559,7 +558,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x04010001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of lowercased letters, numbers, hyphens and underscores.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_plugin_name | plugins.validation.invalid_plugin_name
+`0x04010001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_plugin_name | plugins.validation.invalid_plugin_name
 `0x04010002`  | `[<placeholder>] Invalid "privileged" property: expected a boolean, got a <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_privileged_property | plugins.validation.invalid_privileged_property
 `0x04010003`  | `[<placeholder>] No package.json file found.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_package_json | plugins.validation.missing_package_json
 `0x04010004`  | `You must provide a valid User object when adding context with as().` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_user_object | plugins.validation.invalid_user_object
