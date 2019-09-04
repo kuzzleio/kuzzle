@@ -477,7 +477,8 @@
         "invalid_rights_given": {
           "code": 50,
           "message": "Invalid rights given for role %s(%s) : %s",
-          "class": "InternalError"
+          "class": "InternalError",
+          "deprecated": true
         },
         "controllers_definition_not_an_object": {
           "code": 51,
@@ -516,13 +517,14 @@
         },
         "invalid_type_in_definition_for_controller_action": {
           "code": 58,
-          "message": "Invalid definition for [%s, %s]: must be a boolean or an object",
+          "message": "Invalid definition for [%s, %s]: must be a boolean",
           "class": "BadRequestError"
         },
         "missing_test_element_for_controller_action": {
           "code": 59,
           "message": "Invalid definition for [%s, %s]. Permissions defined as closures must have a \"test\" element.",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "error_executing_function_for_controller_action": {
           "code": 60,
@@ -537,12 +539,14 @@
         "parsing_closure_rights_for_role": {
           "code": 62,
           "message": "%s",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "rights_action_closure_execution": {
           "code": 63,
           "message": "%s",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         }
       }
     },

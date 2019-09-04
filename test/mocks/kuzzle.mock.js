@@ -124,7 +124,8 @@ class KuzzleMock extends Kuzzle {
 
     this.internalEngine = {
       bootstrap: {
-        startOrWait: this.sandbox.stub().resolves()
+        startOrWait: this.sandbox.stub().resolves(),
+        createInitialSecurities: this.sandbox.stub().resolves()
       },
       adminExists: this.sandbox.stub().resolves(true),
       create: this.sandbox.stub().resolves(),

@@ -1,7 +1,7 @@
 const
   Bluebird = require('bluebird'),
   should = require('should'),
-  sinon = require('sinon'),
+  sinon = require('sinon').createSandbox(),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   Repository = require('../../../../../lib/api/core/models/repositories/repository'),
   User = require('../../../../../lib/api/core/models/security/user'),

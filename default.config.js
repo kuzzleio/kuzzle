@@ -230,62 +230,63 @@ module.exports = {
         node: 'http://localhost:9200'
       },
       commonMapping: {
-        _kuzzle_info: {
-          properties: {
-            active:     { type: 'boolean' },
-            author:     { type: 'keyword' },
-            createdAt:  { type: 'date' },
-            updatedAt:  { type: 'date' },
-            updater:    { type: 'keyword' },
-            deletedAt:  { type: 'date' }
+        dynamic: 'true',
+        properties: {
+          _kuzzle_info: {
+            properties: {
+              author:     { type: 'keyword' },
+              createdAt:  { type: 'date' },
+              updater:    { type: 'keyword' },
+              updatedAt:  { type: 'date' }
+            }
           }
         }
       },
-      internalIndex: 'kuzzle',
-      internalMappings: {
-        users: {
-          properties: {
-            profileIds: { type: 'keyword' }
-          }
-        },
-        profiles: {
-          properties: {
-            policies: {
-              properties:  {
-                roleId: { type: 'keyword' }
+      internalIndex: {
+        name: 'kuzzle',
+        collections: {
+          users: {
+            properties: {
+              profileIds: { type: 'keyword' }
+            }
+          },
+          profiles: {
+            properties: {
+              policies: {
+                properties:  {
+                  roleId: { type: 'keyword' }
+                }
               }
             }
-          }
-        },
-        roles: {
-          dynamic: 'false',
-          properties: {}
-        },
-        plugins: {
-          dynamic: 'false',
-          properties: {}
-        },
-        validations: {
-          properties: {
-            index: { type: 'keyword' },
-            collection: { type: 'keyword' },
-            validations: {
-              dynamic: 'false',
-              properties: {}
+          },
+          roles: {
+            dynamic: 'false',
+            properties: {}
+          },
+          plugins: {
+            dynamic: 'false',
+            properties: {}
+          },
+          validations: {
+            properties: {
+              index: { type: 'keyword' },
+              collection: { type: 'keyword' },
+              validations: {
+                dynamic: 'false',
+                properties: {}
+              }
             }
+          },
+          config: {
+            dynamic: 'false',
+            properties: {}
           }
-        },
-        config: {
-          dynamic: 'false',
-          properties: {}
         }
       },
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
-      },
-      // TODO put dynamic inside commonMapping
-      dynamic: 'true'
+      }
     },
     garbageCollector: {
       cleanInterval: 86400000,
