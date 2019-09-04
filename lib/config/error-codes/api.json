@@ -649,6 +649,96 @@
           "class": "BadRequestError"
         }
       }
+    },
+    "request_assertions": {
+      "code": 11,
+      "errors": {
+        "must_specify_body": {
+          "code": 1,
+          "message": "The request must specify a body.",
+          "class": "BadRequestError"
+        },
+        "missing_body_attribute": {
+          "code": 2,
+          "message": "The request must specify a body attribute \"%s\".",
+          "class": "BadRequestError"
+        },
+        "missing_attribute": {
+          "code": 3,
+          "message": "The request must specify an attribute \"%s\".",
+          "class": "BadRequestError"
+        },
+        "must_not_specify_body_attribute": {
+          "code": 4,
+          "message": "The request must not specify the body attribute \"%s\".",
+          "class": "BadRequestError"
+        },
+        "unexpected_type_assertion_on_attribute": {
+          "code": 5,
+          "message": "An unexepected type assertion \"%s\" has been invoked on attribute \"%s\".",
+          "class": "InternalError"
+        },
+        "wrong_body_attribute_type": {
+          "code": 6,
+          "message": "The request must specify the body attribute \"%s\" of type \"%s\".",
+          "class": "BadRequestError"
+        },
+        "missing_id": {
+          "code": 7,
+          "message": "The request must specify an _id.",
+          "class": "BadRequestError"
+        },
+        "wrong_id_format": {
+          "code": 8,
+          "message": "The request must not specify an _id that starts with an underscore (_).",
+          "class": "BadRequestError"
+        },
+        "missing_index": {
+          "code": 9,
+          "message": "The request must specify an index.",
+          "class": "BadRequestError"
+        },
+        "missing_collection": {
+          "code": 10,
+          "message": "The request must specify a collection.",
+          "class": "BadRequestError"
+        },
+        "missing_strategy": {
+          "code": 11,
+          "message": "The request must specify a strategy.",
+          "class": "BadRequestError"
+        },
+        "wrong_strategy_type": {
+          "code": 12,
+          "message": "The request argument's strategy must be a string.",
+          "class": "BadRequestError"
+        },
+        "missing_scrollId": {
+          "code": 13,
+          "message": "The request must specify a scrollId.",
+          "class": "BadRequestError"
+        },
+        "wrong_scrollId_type": {
+          "code": 14,
+          "message": "The request argument's scrollId must be a string.",
+          "class": "BadRequestError"
+        },
+        "must_be_authenticated_to_execute_action": {
+          "code": 15,
+          "message": "You must be authenticated to execute that action",
+          "class": "UnauthorizedError"
+        },
+        "unknown_strategy": {
+          "code": 16,
+          "message": "The strategy \"%s\" is not a known strategy.",
+          "class": "BadRequestError"
+        },
+        "must_be_an_object": {
+          "code": 17,
+          "message": "Expected '%s' to be an object",
+          "class": "BadRequestError"
+        }
+      }
     }
   }
 }

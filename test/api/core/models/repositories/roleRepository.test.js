@@ -403,7 +403,7 @@ describe('Test: repositories/roleRepository', () => {
 
       role._id = 'anonymous';
       role.controllers = rights;
-
+      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
       return roleRepository.validateAndSaveRole(role)
         .then(response => {
           should(response._id).be.eql('anonymous');

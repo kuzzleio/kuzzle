@@ -20,6 +20,7 @@
  */
 
 const path = '../lib/config/error-codes/';
+const kuzzleVersion = 2;
 const internal = require(`${path}internal`);
 const external = require(`${path}external`);
 const api = require(`${path}/api`);
@@ -47,12 +48,10 @@ function buildSubcodesDoc(errorCodesFiles) {
       for (const errorName of Object.keys(subdomain.errors)) {
         const error = subdomain.errors[errorName];
 
-        const buffer = Buffer.allocUnsafe(4);
         const code = domain.code << 24
           | subdomain.code << 16
           | error.code;
-        buffer.writeUInt32BE(code, 0);
-        doc += `\`0x${buffer.toString('hex')}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/1/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
+        doc += `\`${code}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/${kuzzleVersion}/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
       }
       doc += '\n---\n';
     }
@@ -60,12 +59,8 @@ function buildSubcodesDoc(errorCodesFiles) {
   }
   const output = process.argv[2] === '-o' || process.argv[2] === '--output'
     ? process.argv[3]
-    : './2/api/essentials/errors/subcodes/index.md';
-  fs.writeFile(output, doc, (err => {
-    if (err) {
-      throw new Error(err);
-    }
-  }));
+    : `./${kuzzleVersion}/api/essentials/errors/subcodes/index.md`;
+  fs.writeFileSync(output, doc);
 }
 
 buildSubcodesDoc({ internal, external, api, network, plugins });
