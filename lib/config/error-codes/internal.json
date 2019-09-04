@@ -558,43 +558,8 @@
     },
     "sandbox": {
       "code": 8,
-      "errors": {
-        "process_already_running": {
-          "code": 1,
-          "message": "A process is already running for this sandbox",
-          "class": "InternalError"
-        },
-        "timeout": {
-          "code": 2,
-          "message": "Timeout. The sandbox did not respond within %sms.",
-          "class": "GatewayTimeoutError"
-        }
-      }
-    },
-    "configuration": {
-      "code": 9,
-      "errors": {
-        "invalid_limits_configuration_format": {
-          "code": 1,
-          "message": "Invalid config.limits configuration format: please check your Kuzzle configuration files",
-          "class": "InternalError"
-        },
-        "value_out_of_range": {
-          "code": 2,
-          "message": "Invalid configuration: value set for \"%s\" limit is outside the allowed range",
-          "class": "InternalError"
-        },
-        "concurrentRequests_superior_to_requestsBufferSize": {
-          "code": 3,
-          "message": "Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize",
-          "class": "InternalError"
-        },
-        "requestsBufferWarningThreshold_out_of_range": {
-          "code": 4,
-          "message": "Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize",
-          "class": "InternalError"
-        }
-      }
+      "deprecated": true,
+      "errors": {}
     }
   }
 }
