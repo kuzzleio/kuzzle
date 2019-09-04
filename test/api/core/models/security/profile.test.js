@@ -6,8 +6,10 @@ const
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   Role = require('../../../../../lib/api/core/models/security/role'),
-  Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError;
+  {
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects');
 
 const
   _kuzzle = Symbol.for('_kuzzle');
@@ -15,12 +17,14 @@ const
 describe('Test: security/profileTest', () => {
   const
     context = {connectionId: null, userId: null},
-    request = new Request({
-      index: 'index',
-      collection: 'collection',
-      controller: 'controller',
-      action: 'action'
-    }, context);
+    request = new Request(
+      {
+        index: 'index',
+        collection: 'collection',
+        controller: 'controller',
+        action: 'action'
+      },
+      context);
   let
     kuzzle;
 
@@ -42,12 +46,12 @@ describe('Test: security/profileTest', () => {
     const
       profile = new Profile(),
       roles = {
-        disallowAllRole: new Role(),
-        allowActionRole: new Role()
+        denyRole: new Role(),
+        allowRole: new Role()
       };
 
-    roles.disallowAllRole._id = 'disallowAllRole';
-    roles.disallowAllRole.controllers = {
+    roles.denyRole._id = 'denyRole';
+    roles.denyRole.controllers = {
       '*': {
         actions: {
           '*': false
@@ -55,8 +59,8 @@ describe('Test: security/profileTest', () => {
       }
     };
 
-    roles.allowActionRole._id = 'allowActionRole';
-    roles.allowActionRole.controllers = {
+    roles.allowRole._id = 'allowRole';
+    roles.allowRole.controllers = {
       controller: {
         actions: {
           action: true
@@ -67,7 +71,7 @@ describe('Test: security/profileTest', () => {
       roles[roleId][_kuzzle] = kuzzle;
     }
 
-    profile.policies = [{roleId: 'disallowAllRole'}];
+    profile.policies = [{roleId: 'denyRole' }];
 
     kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
 
@@ -76,18 +80,18 @@ describe('Test: security/profileTest', () => {
       .then(isAllowed => {
         should(isAllowed).be.false();
 
-        profile.policies.push({roleId: 'allowActionRole'});
+        profile.policies.push({roleId: 'allowRole' });
         return profile.isActionAllowed(request);
       })
       .then(isAllowed => {
         should(isAllowed).be.true();
 
         profile.policies = [
-          {roleId: 'disallowAllRole'},
+          {roleId: 'denyRole' },
           {
-            roleId: 'allowActionRole',
+            roleId: 'allowRole',
             restrictedTo: [
-              {index: 'index1'},
+              {index: 'index1' },
               {index: 'index2', collections: ['collection1']},
               {index: 'index3', collections: ['collection1', 'collection2']}
             ]
@@ -99,7 +103,7 @@ describe('Test: security/profileTest', () => {
       .then(isAllowed => should(isAllowed).be.false());
   });
 
-  it('should retrieve the good rights list', () => {
+  it('should retrieve the correct rights list', () => {
     const
       profile = new Profile(),
       role1 = new Role(),
@@ -113,39 +117,44 @@ describe('Test: security/profileTest', () => {
 
     role1._id = 'role1';
     role1.controllers = {
-      read: {
+      document: {
         actions: { '*': true }
       }
     };
 
-    profile.policies.push({roleId: role1._id, restrictedTo: [{ index: 'index1', collections: ['collection1', 'collection2'] }]});
+    profile.policies.push({
+      roleId: role1._id,
+      restrictedTo: [
+        { index: 'index1', collections: ['collection1', 'collection2'] }
+      ]
+    });
 
     role2._id = 'role2';
     role2.controllers = {
-      write: {
-        actions: { publish: true, create: true, update: true }
+      document: {
+        actions: { delete: true, create: true, update: true }
       }
     };
 
-    profile.policies.push({roleId: role2._id, restrictedTo: [{index: 'index2'}]});
+    profile.policies.push({
+      roleId: role2._id,
+      restrictedTo: [{index: 'index2' }]
+    });
 
     role3._id = 'role3';
     role3.controllers = {
-      read: {
-        actions: { get: true, count: true, search: true }
-      },
-      write: {
-        actions: { update: {test: 'return true;'}, create: true, delete: {test: 'return true;'} }
+      document: {
+        actions: { get: true, count: true, search: true, create: true }
       }
     };
 
     for (const roleId of Object.keys(roles)) {
       roles[roleId][_kuzzle] = kuzzle;
     }
+
     profile.constructor._hash = kuzzle.constructor.hash;
 
     profile.policies.push({roleId: role3._id});
-
 
     kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
 
@@ -158,53 +167,40 @@ describe('Test: security/profileTest', () => {
         rights = Object.keys(rights).reduce((array, item) => array.concat(rights[item]), []);
         should(rights).be.an.Array();
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'read' &&
-                  item.action === 'get';
-        });
+        filteredItem = rights.filter(
+          item => item.controller === 'document' && item.action === 'get');
+
         should(filteredItem).length(1);
         should(filteredItem[0].index).be.equal('*');
         should(filteredItem[0].collection).be.equal('*');
         should(filteredItem[0].value).be.equal('allowed');
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'read' &&
-                  item.action === '*';
-        });
+        filteredItem = rights.filter(
+          item => item.controller === 'document' && item.action === '*');
+
         should(filteredItem).length(2);
         should(filteredItem.every(item => item.index === 'index1')).be.equal(true);
         should(filteredItem.some(item => item.collection === 'collection1')).be.equal(true);
         should(filteredItem.some(item => item.collection === 'collection2')).be.equal(true);
         should(filteredItem.every(item => item.value === 'allowed')).be.equal(true);
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'write' && item.action === 'publish';
-        });
+        filteredItem = rights.filter(
+          item => item.controller === 'document' && item.action === 'delete');
+
         should(filteredItem).length(1);
         should(filteredItem[0].index).be.equal('index2');
         should(filteredItem[0].collection).be.equal('*');
         should(filteredItem[0].value).be.equal('allowed');
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'write' && item.action === 'update';
-        });
-        should(filteredItem.every(item => {
-          return (item.index === '*' && item.collection === '*' && item.value === 'conditional') ||
-            (item.index === 'index2' && item.collection === '*' && item.value === 'allowed');
-        })).be.equal(true);
+        filteredItem = rights.filter(
+          item => item.controller === 'document' && item.action === 'update');
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'write' && item.action === 'delete';
-        });
-        should(filteredItem).length(1);
-        should(filteredItem[0].index).be.equal('*');
-        should(filteredItem[0].collection).be.equal('*');
-        should(filteredItem[0].value).be.equal('conditional');
-
-        filteredItem = rights.filter(item => {
-          return item.controller === 'read' && item.action === 'listIndexes';
-        });
-        should(filteredItem).length(0);
+        should(
+          filteredItem
+            .every(item => item.index === 'index2'
+              && item.collection === '*'
+              && item.value === 'allowed'))
+          .be.equal(true);
       });
   });
 
@@ -214,16 +210,18 @@ describe('Test: security/profileTest', () => {
       profile.policies = null;
       profile._id = 'test';
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'The "policies" attribute is mandatory and must be an array'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.missing_mandatory_policies_attribute' });
     });
 
     it('should reject if an empty policies array is provided', () => {
       const profile = new Profile();
       profile._id = 'test';
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'The "policies" attribute array cannot be empty'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.empty_policies_attribute' });
     });
 
     it('should reject if no roleId is given', () => {
@@ -231,58 +229,49 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{}];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0] Missing mandatory attribute "roleId"'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.missing_mandatory_roleId_attribute' });
     });
 
     it('should reject if an invalid attribute is given', () => {
       const profile = new Profile();
       profile._id = 'test';
-      profile.policies = [{
-        roleId: 'admin',
-        foo: 'bar'
-      }];
+      profile.policies = [{ roleId: 'admin', foo: 'bar' }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0] Unexpected attribute "foo". Valid attributes are "roleId" and "restrictedTo"'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.unexpected_attribute_in_policies' });
     });
 
     it('should reject if restrictedTo is not an array', () => {
       const profile = new Profile();
       profile._id = 'test';
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: 'bar'
-      }];
+      profile.policies = [{ roleId: 'admin', restrictedTo: 'bar' }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0] Expected "restrictedTo" to be an array of objects'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.attribute_restrictedTo_not_an_array_of_objects' });
     });
 
     it('should reject if restrictedTo contains a non-object value', () => {
       const profile = new Profile();
       profile._id = 'test';
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: [null]
-      }];
+      profile.policies = [{ roleId: 'admin', restrictedTo: [null] }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] should be an object'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.restrictedTo_field_must_be_an_object' });
     });
 
     it('should reject if restrictedTo does not contain an index', () => {
       const profile = new Profile();
       profile._id = 'test';
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: [{
-          foo: 'bar'
-        }]
-      }];
+      profile.policies = [{ roleId: 'admin', restrictedTo: [{ foo: 'bar' }] }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Missing mandatory attribute "index"'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.missing_mandatory_index_attribute_in_restrictedTo_array' });
     });
 
     it('should reject if restrictedTo is given an invalid attribute', () => {
@@ -290,14 +279,12 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{
-          index: 'index',
-          foo: 'bar'
-        }]
+        restrictedTo: [{ index: 'index', foo: 'bar' }]
       }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collections"'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.unexptected_attribute_in_restrictedTo_array' });
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -305,14 +292,12 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{
-          index: 'index',
-          collections: 'bar'
-        }]
+        restrictedTo: [{ index: 'index', collections: 'bar' }]
       }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" must be of type "array"'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.attribute_collections_not_an_array_in_retrictedTo' });
     });
 
     it('should reject if restrictedTo.collections is not an array of strings', () => {
@@ -320,14 +305,12 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{
-          index: 'index',
-          collections: ['bar', 123]
-        }]
+        restrictedTo: [{ index: 'index', collections: ['bar', 123] }]
       }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" can only contain non-empty string values'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.attribute_collections_not_contains_not_only_non_empty_strings' });
     });
 
     it('should reject if restrictedTo.collections contains an empty string', () => {
@@ -335,14 +318,12 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{
-          index: 'index',
-          collections: ['bar', '']
-        }]
+        restrictedTo: [{ index: 'index', collections: ['bar', ''] }]
       }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" can only contain non-empty string values'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.attribute_collections_not_contains_not_only_non_empty_strings' });
     });
 
     it('should reject if restrictedTo.index is not a string', () => {
@@ -350,14 +331,12 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{
-          index: false,
-          collections: ['bar', 'baz']
-        }]
+        restrictedTo: [{ index: false, collections: ['bar', 'baz'] }]
       }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "index" must be a non-empty string value'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.index_attribute_is_empty_string' });
     });
 
     it('should reject if restrictedTo.index is an empty string', () => {
@@ -365,14 +344,12 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{
-          index: '',
-          collections: ['bar', 'baz']
-        }]
+        restrictedTo: [{ index: '', collections: ['bar', 'baz'] }]
       }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "index" must be a non-empty string value'});
+      return should(profile.validateDefinition()).be.rejectedWith(
+        BadRequestError,
+        { errorName: 'api.security.index_attribute_is_empty_string' });
     });
   });
 });
