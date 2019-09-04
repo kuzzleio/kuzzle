@@ -33,7 +33,12 @@ Removed events:
 
 Removed API methods:
 
+**Index Controller**
+
   - `index:refresh`: you should use the new `collection:refresh` method instead
   - `index:getAutoRefresh`
   - `index:setAutoRefresh`
   - `index:refreshInternal`
+
+**Admin Controller**
+  - `admin:resetKuzzleData`: this route can lead to inconsistency with the auth system in a cluster environment
