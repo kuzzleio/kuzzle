@@ -28,7 +28,7 @@ describe('Plugins manifest class', () => {
     kuzzle = new KuzzleMock();
     mockrequire('../../../../lib/api/core/abstractManifest', AbstractManifestStub);
     mockrequire.reRequire('../../../../lib/api/core/abstractManifest');
-    Manifest = rewire('../../../../lib/api/core/plugins/manifest');
+    Manifest = rewire('../../../../lib/api/core/plugins/pluginManifest');
     Manifest.__set__({ fs: fsStub });
   });
 

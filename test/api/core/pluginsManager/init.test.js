@@ -25,7 +25,7 @@ describe('PluginsManager', () => {
         R_OK: true
       }
     };
-    Manifest = rewire('../../../../lib/api/core/plugins/manifest');
+    Manifest = rewire('../../../../lib/api/core/plugins/pluginManifest');
     Manifest.__set__({
       fs: manifestFsStub
     });
@@ -47,7 +47,7 @@ describe('PluginsManager', () => {
     manifestFsStub.accessSync.returns();
 
     mockrequire('fs', fsStub);
-    mockrequire('../../../../lib/api/core/plugins/manifest', Manifest);
+    mockrequire('../../../../lib/api/core/plugins/pluginManifest', Manifest);
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
