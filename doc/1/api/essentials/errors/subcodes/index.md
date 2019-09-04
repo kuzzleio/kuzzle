@@ -22,7 +22,6 @@ order: 500
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `1`  | `Unknown error: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unknown_error | internal.unexpected.unknown_error
-`2`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to init within <placeholder>ms` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | timeout | internal.unexpected.timeout
 
 ---
 
@@ -190,18 +189,6 @@ order: 500
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `524289`  | `A process is already running for this sandbox` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | process_already_running | internal.sandbox.process_already_running
 `524290`  | `Timeout. The sandbox did not respond within <placeholder>ms.` | [GatewayTimeoutError](https://docs.kuzzle.io/core/1/api/essentials/errors/#gatewaytimeouterror) | timeout | internal.sandbox.timeout
-
----
-
-
-### Subdomain: configuration, code: 9
-
-| Code | Message          | Class              | Error              | FullName           |
------- | -----------------| ------------------ | ------------------ | ------------------ |
-`589825`  | `Invalid config.limits configuration format: please check your Kuzzle configuration files` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | invalid_limits_configuration_format | internal.configuration.invalid_limits_configuration_format
-`589826`  | `Invalid configuration: value set for "<placeholder>" limit is outside the allowed range` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | value_out_of_range | internal.configuration.value_out_of_range
-`589827`  | `Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | concurrentRequests_superior_to_requestsBufferSize | internal.configuration.concurrentRequests_superior_to_requestsBufferSize
-`589828`  | `Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | requestsBufferWarningThreshold_out_of_range | internal.configuration.requestsBufferWarningThreshold_out_of_range
 
 ---
 
@@ -648,7 +635,7 @@ order: 500
 `67239952`  | `The plugin "<placeholder>" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | privileged_mode_not_setted | plugins.runtime.privileged_mode_not_setted
 `67239953`  | `A plugin named <placeholder> already exists` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_name_already_exists | plugins.runtime.plugin_name_already_exists
 `67239954`  | `Plugin <placeholder> is not a constructor.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_is_not_a_constructor | plugins.runtime.plugin_is_not_a_constructor
-`67239955`  | `<placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_error | plugins.runtime.plugin_error
+`67239955`  | `<placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_error | plugins.runtime.plugin_error
 `67239956`  | `<placeholder>` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | missing_user_for_authentication | plugins.runtime.missing_user_for_authentication
 `67239957`  | `<placeholder>` | [GatewayTimeoutError](https://docs.kuzzle.io/core/1/api/essentials/errors/#gatewaytimeouterror) | register_pipe_timeout | plugins.runtime.register_pipe_timeout
 `67239958`  | `Unable to serialize response. Are you trying to return the request?` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_serialize_response | plugins.runtime.unable_to_serialize_response
