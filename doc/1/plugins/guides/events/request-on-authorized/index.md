@@ -10,7 +10,7 @@ title: request:onAuthorized
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | [`Request`](/core/1/plugins/plugin-context/constructors/request/) | The normalized API request |
+| `request` | [`Request`](/core/1/plugins/plugin-context/constructors/request) | The normalized API request |
 
 Triggered whenever a request passes authorization checks and is ready to be processed.
 
