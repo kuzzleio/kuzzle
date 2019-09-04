@@ -59,7 +59,7 @@ Body:
 
 ### Optional:
 
-- `documentId`: set the document unique ID to the provided value, instead of auto-generating a random ID
+- `_id`: set the document unique ID to the provided value, instead of auto-generating a random ID
 - `notify`: if set to true, Kuzzle will trigger realtime notifications
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created document is indexed
 
@@ -77,8 +77,7 @@ Returns an object with the following properties:
 
 - `_id`: created document unique identifier
 - `_source`: document content
-- `_version`: version of the created document (should be `1`)
-- `created`: a boolean telling if a new document has been created
+- `_version`: version of the created document
 
 ```js
 {
@@ -92,9 +91,8 @@ Returns an object with the following properties:
   "result": {
     "_id": "<documentId>",
     "_version": 1,
-    "created": true,
     "_source": {
-      // ...
+      // document content
     },
   }
 }

@@ -41,7 +41,14 @@ Removed API methods:
   - `index:refreshInternal`
 
 **Admin Controller**
+
   - `admin:resetKuzzleData`: this route can lead to inconsistency with the auth system in a cluster environment
+
+Modified API Methods:
+
+**Bulk Controller**
+
+  - `bulk:import`: it's no longer allowed to specify different index and collection in bulk data array
 
 Removed CLI actions:
 
