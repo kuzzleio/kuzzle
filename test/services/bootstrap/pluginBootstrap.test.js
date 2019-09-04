@@ -4,7 +4,7 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Bootstrap = require('../../../lib/services/bootstrap/pluginBootstrap');
 
-describe('PluginBoostrap', () => {
+xdescribe('PluginBoostrap', () => {
   let
     kuzzle,
     pluginBootstrap,

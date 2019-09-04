@@ -18,7 +18,6 @@ describe('pluginsManager.pipe', () => {
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire('../../../../lib/services/internalEngine');
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
     mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
     const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');

@@ -1,10 +1,13 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Kuzzle = require('../../../../../lib/api/kuzzle'),
+  Bluebird = require('bluebird'),
+  Kuzzle = require('../../../../mocks/kuzzle.mock'),
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   User = require('../../../../../lib/api/core/models/security/user'),
-  Request = require('kuzzle-common-objects').Request;
+  { Request,
+    errors: { PreconditionError }
+  } = require('kuzzle-common-objects');
 
 const
   _kuzzle = Symbol.for('_kuzzle');
@@ -15,6 +18,10 @@ describe('Test: security/userTest', () => {
     profile,
     profile2,
     user;
+
+  before(() => {
+    sinon.usingPromise(Bluebird);
+  });
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
@@ -28,6 +35,7 @@ describe('Test: security/userTest', () => {
     profile2.isActionAllowed = sinon.stub().resolves(false);
 
     user = new User();
+    user[_kuzzle] = kuzzle;
     user.profileIds = ['profile', 'profile2'];
 
     kuzzle.repositories = {
@@ -39,24 +47,36 @@ describe('Test: security/userTest', () => {
   });
 
   it('should retrieve the good rights list', () => {
-    var
+    const
       profileRights = {
         rights1: {
-          controller: 'read', action: 'get', index: 'foo', collection: 'bar',
+          controller: 'document',
+          action: 'get',
+          index: 'foo',
+          collection: 'bar',
           value: 'allowed'
         },
-        rights2: {
-          controller: 'write', action: 'delete', index: '*', collection: '*',
-          value: 'conditional'
+        rights4: {
+          controller: 'document',
+          action: 'delete',
+          index: 'foo',
+          collection: 'bar',
+          value: 'denied'
         }
       },
       profileRights2 = {
         rights1: {
-          controller: 'read', action: 'get', index: 'foo', collection: 'bar',
-          value: 'conditional'
+          controller: 'document',
+          action: 'get',
+          index: 'foo',
+          collection: 'bar',
+          value: 'denied'
         },
         rights3: {
-          controller: 'write', action: 'create', index: 'foo', collection: 'bar',
+          controller: 'document',
+          action: 'create',
+          index: 'foo',
+          collection: 'bar',
           value: 'allowed'
         }
       };
@@ -67,50 +87,39 @@ describe('Test: security/userTest', () => {
 
     return user.getRights(kuzzle)
       .then(rights => {
-        var filteredItem;
+        let filteredItem;
 
         should(rights).be.an.Object();
         rights = Object.keys(rights).reduce((array, item) => array.concat(rights[item]), []);
         should(rights).be.an.Array();
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'read' &&
-                  item.action === 'get';
-        });
+        filteredItem = rights.filter(
+          item => item.controller === 'document' && item.action === 'get');
+
         should(filteredItem).length(1);
         should(filteredItem[0].index).be.equal('foo');
         should(filteredItem[0].collection).be.equal('bar');
         should(filteredItem[0].value).be.equal('allowed');
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'write' &&
-                  item.action === 'delete';
-        });
-        should(filteredItem).length(1);
-        should(filteredItem[0].index).be.equal('*');
-        should(filteredItem[0].collection).be.equal('*');
-        should(filteredItem[0].value).be.equal('conditional');
+        filteredItem = rights.filter(
+          item => item.controller === 'document' && item.action === 'delete');
 
-        filteredItem = rights.filter(item => {
-          return item.controller === 'write' &&
-                  item.action === 'create';
-        });
+        should(filteredItem).length(1);
+        should(filteredItem[0].index).be.equal('foo');
+        should(filteredItem[0].collection).be.equal('bar');
+        should(filteredItem[0].value).be.equal('denied');
+
+        filteredItem = rights.filter(
+          item => item.controller === 'document' && item.action === 'create');
+
         should(filteredItem).length(1);
         should(filteredItem[0].index).be.equal('foo');
         should(filteredItem[0].collection).be.equal('bar');
         should(filteredItem[0].value).be.equal('allowed');
-
-        filteredItem = rights.filter(item => {
-          return item.controller === 'read' && item.action === 'listIndexes';
-        });
-        should(filteredItem).length(0);
-
       });
   });
 
   it('should retrieve the profile', () => {
-    user[_kuzzle] = kuzzle;
-
     return user.getProfiles()
       .then(p => {
         should(p).be.an.Array();
@@ -120,7 +129,6 @@ describe('Test: security/userTest', () => {
   });
 
   it('should use the isActionAllowed method from its profile', () => {
-    user[_kuzzle] = kuzzle;
     return user.isActionAllowed(new Request({}))
       .then(isActionAllowed => {
         should(isActionAllowed).be.a.Boolean();
@@ -139,8 +147,11 @@ describe('Test: security/userTest', () => {
       });
   });
 
-  it('should rejects if the loadProfiles throws an error', () => {
-    sinon.stub(user, 'getProfiles').rejects(new Error('error'));
-    return should(user.isActionAllowed(new Request({}))).be.rejectedWith('error');
+  it('should reject if loadProfiles throws an error', () => {
+    user[_kuzzle] = null;
+
+    return should(user.isActionAllowed(new Request({}))).be.rejectedWith(
+      PreconditionError,
+      {errorName: 'api.security.cannot_get_profiles_for_uninitialized_user'});
   });
 });
