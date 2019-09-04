@@ -99,11 +99,17 @@ describe('Test: core/indexCache', () => {
       should(indexCache.indexes).be.empty();
       should(kuzzle.emit).not.be.called();
     });
+
+    it('does not emit event when notify is set to false (call from cluster sync', () => {
+      indexCache.add({ index: 'foobar', collection: 'collection', notify: false });
+
+      should(kuzzle.emit).not.be.called();
+    });
   });
 
   describe('#remove', () => {
     beforeEach(() => {
-      indexCache.add({ index: 'foobar', collection: 'foolection' });
+      indexCache.add({ index: 'foobar', collection: 'foolection', notify: false });
     });
 
     it('should remove an index from the cache and emit an event', () => {
@@ -118,7 +124,7 @@ describe('Test: core/indexCache', () => {
     });
 
     it('should remove a single collection from the cache and emit an event', () => {
-      indexCache.add({ index: 'foobar', collection: 'foolection2' });
+      indexCache.add({ index: 'foobar', collection: 'foolection2', notify: false });
 
       indexCache.remove({ index: 'foobar', collection: 'foolection' });
 
@@ -142,7 +148,7 @@ describe('Test: core/indexCache', () => {
           collections: ['foolection']
         }
       });
-      should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit).not.be.called();
     });
 
     it('should do nothing if the collection does not exist', () => {
@@ -154,7 +160,13 @@ describe('Test: core/indexCache', () => {
           collections: ['foolection']
         }
       });
-      should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit).not.be.called();
+    });
+
+    it('does not emit event when notify is set to false (call from cluster sync', () => {
+      indexCache.remove({ index: 'foobar', collection: 'foolection', notify: false });
+
+      should(kuzzle.emit).not.be.called();
     });
   });
 

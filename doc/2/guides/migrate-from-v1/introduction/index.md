@@ -19,7 +19,7 @@ API Changes:
   - Remove permission closures (deprecated since Kuzzle 1.4.0)
   - Remove the documents trashcan (deprecated since Kuzzle 1.2.0)
   - Remove the `_meta` tag from documents and notifications (it was deprecated since Kuzzle 1.3.0)
-  - Fields linked to the documents trashcan have been removed from the dDocuments and notifications metadata : `deletedAt`, `active`
+  - Fields linked to the documents trashcan have been removed from the documents and notifications metadata : `deletedAt`, `active`
   - Remove the real-time notifications about events that were about to happen (deprecated since Kuzzle 1.5.0)
 
 Removed errors:
@@ -37,3 +37,7 @@ Removed errors:
 Removed events:
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
+
+Configuration changes:
+
+  - key `services.internalEngine` is renamed to `services.internalIndex`

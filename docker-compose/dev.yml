@@ -50,9 +50,13 @@ services:
 
   redis:
     image: redis:${REDIS_VERSION:-5}
+    ports:
+      - "6379:6379"
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7.3.0
+    ports:
+      - "9200:9200"
     ulimits:
       nofile: 65536
     environment:
