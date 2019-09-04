@@ -303,7 +303,6 @@ describe('Test: repositories/roleRepository', () => {
       should(result.controllers).match(controllers);
       should(result).not.have.property('_id');
       should(result).not.have.property('restrictedTo');
-      should(result).not.have.property('closures');
     });
   });
 
@@ -404,11 +403,10 @@ describe('Test: repositories/roleRepository', () => {
 
       role._id = 'anonymous';
       role.controllers = rights;
-
+      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
       return roleRepository.validateAndSaveRole(role)
         .then(response => {
-          should(response._id)
-            .be.eql('anonymous');
+          should(response._id).be.eql('anonymous');
         });
     });
 

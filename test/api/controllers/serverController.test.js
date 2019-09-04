@@ -75,21 +75,21 @@ describe('Test: server controller', () => {
     it('should call search with right query', () => {
       return serverController.adminExists()
         .then(() => {
-          should(kuzzle.internalEngine.bootstrap.adminExists).be.calledOnce();
+          should(kuzzle.internalEngine.adminExists).be.calledOnce();
         });
     });
 
     it('should return false if there is no result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.resolves(false);
+      kuzzle.internalEngine.adminExists.resolves(false);
 
       return serverController.adminExists()
-        .then((response) => {
+        .then(response => {
           should(response).match({ exists: false });
         });
     });
 
     it('should return true if there is result', () => {
-      kuzzle.internalEngine.bootstrap.adminExists.resolves(true);
+      kuzzle.internalEngine.adminExists.resolves(true);
 
       return serverController.adminExists()
         .then((response) => {
