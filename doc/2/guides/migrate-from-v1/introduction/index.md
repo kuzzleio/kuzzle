@@ -35,3 +35,7 @@ Removed errors:
 Removed events:
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
+
+Configuration changes:
+
+  - key `services.internalEngine` is renamed to `services.internalIndex`
