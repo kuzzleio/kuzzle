@@ -1,30 +1,37 @@
 const
   { BadRequestError } = require('kuzzle-common-objects').errors,
   should = require('should'),
+  KuzzleMock = require('../../mocks/kuzzle.mock'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
 describe('#base controller', () => {
-  it('should expose a kuzzle property', () => {
-    const base = new BaseController('foobar');
+  let
+    kuzzle,
+    actions,
+    baseController,
+    request;
 
-    should(base).have.properties({kuzzle: 'foobar'});
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+
+    actions = ['speak', 'fight'];
+
+    request = {
+      input: {}
+    }
+
+    baseController = new BaseController(kuzzle, actions);
   });
 
   it('should initialize its actions list from the constructor', () => {
-    const base = new BaseController('foobar', ['foo', 'bar']);
+    baseController.privateAction = () => {};
 
-    base.qux = () => {};
-
-    should(base.isAction('foo')).be.true();
-    should(base.isAction('bar')).be.true();
-    should(base.isAction('qux')).be.false();
+    should(baseController.isAction('speak')).be.true();
+    should(baseController.isAction('fight')).be.true();
+    should(baseController.isAction('privateAction')).be.false();
   });
 
   describe('#tryGetBoolean', () => {
-    let
-      baseController,
-      request;
-
     beforeEach(() => {
       request = {
         context: {
@@ -38,8 +45,6 @@ describe('#base controller', () => {
           }
         }
       };
-
-      baseController = new BaseController();
     });
 
     it('set the flag value to true if present in http', () => {
@@ -77,6 +82,60 @@ describe('#base controller', () => {
         should(error.message).be.eql('Invalid \'doha\' value (hamad).');
         done();
       }
+    });
+  });
+
+  describe('#arrayParam', () => {
+    beforeEach(() => {
+      request.input.body = {
+        names: ['Ender', 'Speaker for the Dead', 'Xenocide'],
+        age: 3000
+      };
+    });
+
+    it('should extract an array param', () => {
+      const param = baseController.arrayParam(request, 'body.names');
+
+      should(param).be.eql(['Ender', 'Speaker for the Dead', 'Xenocide']);
+    });
+
+    it('should throw if the param is missing', () => {
+      should(() => {
+        baseController.arrayParam(request, 'body.childhood')
+      }).throw({ errorName: 'api.base.missing_param' });
+    });
+
+    it('should throw if the param is not an array', () => {
+      should(() => {
+        baseController.arrayParam(request, 'body.age')
+      }).throw({ errorName: 'api.base.invalid_param_type' });
+    });
+  });
+
+  describe('#stringParam', () => {
+    beforeEach(() => {
+      request.input.body = {
+        name: 'Ender',
+        age: 3000
+      };
+    });
+
+    it('should extract an string param', () => {
+      const param = baseController.stringParam(request, 'body.name');
+
+      should(param).be.eql('Ender');
+    });
+
+    it('should throw if the param is missing', () => {
+      should(() => {
+        baseController.stringParam(request, 'body.childhood')
+      }).throw({ errorName: 'api.base.missing_param' });
+    });
+
+    it('should throw if the param is not an string', () => {
+      should(() => {
+        baseController.stringParam(request, 'body.age')
+      }).throw({ errorName: 'api.base.invalid_param_type' });
     });
   });
 });

@@ -42,3 +42,7 @@ Removed API methods:
 
 **Admin Controller**
   - `admin:resetKuzzleData`: this route can lead to inconsistency with the auth system in a cluster environment
+
+Removed CLI actions:
+
+  - `reset`: this action called for the `admin:resetKuzzleData` route

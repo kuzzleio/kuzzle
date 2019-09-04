@@ -125,9 +125,9 @@ class KuzzleMock extends Kuzzle {
       'kuzzle',
       this.services.internalStorage);
 
-    this.internalIndex._boostrap = {
-      startOrWait: sinon.stub().resolves(),
-      createInitialSecurities: sinon.stub().resolves()
+    this.internalIndex._bootstrap = {
+      startOrWait: this.sandbox.stub().resolves(),
+      createInitialSecurities: this.sandbox.stub().resolves()
     };
 
     this.once = this.sandbox.stub();
@@ -361,7 +361,7 @@ function getESMock (kuzzleMock, scope) {
     listCollections: kuzzleMock.sandbox.stub().resolves(),
     listIndexes: kuzzleMock.sandbox.stub().resolves(),
     listAliases: kuzzleMock.sandbox.stub().resolves(),
-    deleteIndexes: kuzzleMock.sandbox.stub().resolves(),
+    deleteIndexes: kuzzleMock.sandbox.stub().resolvesArg(0),
     deleteIndex: kuzzleMock.sandbox.stub().resolves(),
     refreshCollection: kuzzleMock.sandbox.stub().resolves(),
     exists: kuzzleMock.sandbox.stub().resolves(),

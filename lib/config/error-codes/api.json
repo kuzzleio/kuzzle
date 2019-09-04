@@ -14,9 +14,9 @@
           "message": "Missing param \"%s\"",
           "class": "BadRequestError"
         },
-        "invalid_param": {
+        "invalid_param_type": {
           "code": 3,
-          "message": "Invalid %s param \"%s\": \"%s\".",
+          "message": "Invalid %s param: \"%s\". Expecting %s.",
           "class": "BadRequestError"
         }
       }

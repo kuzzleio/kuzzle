@@ -6,7 +6,7 @@ const
   BaseController = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-describe('Test: index controller', () => {
+describe('IndexController', () => {
   let
     indexController,
     kuzzle,
