@@ -19,7 +19,7 @@ Dropped support for:
 
 API Changes:
   - Remove the `_meta` tag from documents and notifications (it was deprecated since Kuzzle 1.3.0)
-  - Fields linked to the documents trashcan have been removed from the dDocuments and notifications metadata : `deletedAt`, `active`
+  - Fields linked to the documents trashcan have been removed from the documents and notifications metadata : `deletedAt`, `active`
 
 Removed errors:
 
