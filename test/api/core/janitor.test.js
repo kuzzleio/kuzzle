@@ -19,7 +19,7 @@ const
  the shutdown is initiated using the CLI, to allow it
  to finish and exit while Kuzzle is shutting down.
  */
-describe('Test: core/janitor', () => {
+xdescribe('Test: core/janitor', () => {
   let
     Janitor,
     janitor,
@@ -137,7 +137,7 @@ describe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.list.storageEngine;
+      const storageEngine = kuzzle.services.publicStorage;
       storageEngine.import.onCall(0).resolves(false);
       storageEngine.import.onCall(1).resolves(true);
       storageEngine.import.onCall(2).resolves(false);
@@ -169,7 +169,7 @@ describe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.list.storageEngine;
+      const storageEngine = kuzzle.services.publicStorage;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);

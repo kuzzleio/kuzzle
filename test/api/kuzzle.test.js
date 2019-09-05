@@ -7,12 +7,13 @@ const
 
 describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
+
   const mockedProperties = [
     'entryPoints',
     'funnel',
     'router',
     'indexCache',
-    'internalEngine',
+    'internalIndex',
     'notifier',
     'gc',
     'pluginsManager',
@@ -52,20 +53,19 @@ describe('/lib/api/kuzzle.js', () => {
       return kuzzle.start(params)
         .then(() => {
           sinon.assert.callOrder(
-            kuzzle.internalEngine.init,
-            kuzzle.internalEngine.bootstrap.startOrWait,
+            kuzzle.services.init,
+            kuzzle.log.info, // services init
+            kuzzle.internalIndex.init,
             kuzzle.vault.prepareCrypto,
             kuzzle.vault.init,
-            kuzzle.services.init,
-            kuzzle.validation.init,
             kuzzle.indexCache.init,
+            kuzzle.validation.init,
             kuzzle.repositories.init,
             kuzzle.funnel.init,
             kuzzle.janitor.loadMappings,
             kuzzle.janitor.loadFixtures,
             kuzzle.pluginsManager.init,
             kuzzle.pluginsManager.run,
-            kuzzle.log.info, // services init
             kuzzle.log.info, // load securities
             kuzzle.janitor.loadSecurities,
             kuzzle.funnel.loadPluginControllers,
@@ -140,27 +140,18 @@ describe('/lib/api/kuzzle.js', () => {
           should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
         });
     });
+  });
 
-    xit('should not start if it fails initializing its internal storage', () => {
-      const error = new Error('error');
+  describe('#adminExists', () => {
+    it('should resolves to true if an admin exists', async () => {
+      kuzzle.internalIndex.count.resolves(42);
 
-      kuzzle.internalEngine.init.rejects(error);
+      const exists = await kuzzle.adminExists();
 
-      return should(kuzzle.start()).be.rejectedWith(error)
-        .then(() => {
-          should(kuzzle.internalEngine.bootstrap.startOrWait).not.be.called();
-          should(kuzzle.validation.init).not.be.called();
-          should(kuzzle.pluginsManager.init).not.be.called();
-          should(kuzzle.pluginsManager.run).not.be.called();
-          should(kuzzle.services.init).not.be.called();
-          should(kuzzle.indexCache.init).not.be.called();
-          should(kuzzle.funnel.init).not.be.called();
-          should(kuzzle.router.init).not.be.called();
-          should(kuzzle.statistics.init).not.be.called();
-          should(kuzzle.entryPoints.init).not.be.called();
-          should(kuzzle.repositories.init).not.be.called();
-          should(kuzzle.log.error).be.called();
-        });
+      should(exists).be.true();
+      should(kuzzle.internalIndex.count).be.calledWithMatch(
+        'users',
+        { query: { terms: { profileIds: ['admin'] } } });
     });
   });
 });

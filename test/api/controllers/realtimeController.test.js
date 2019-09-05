@@ -9,7 +9,7 @@ const
   } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-describe('Test: subscribe controller', () => {
+xdescribe('Test: subscribe controller', () => {
   let
     kuzzle,
     request,

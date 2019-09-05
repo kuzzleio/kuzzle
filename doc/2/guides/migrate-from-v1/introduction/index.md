@@ -31,6 +31,11 @@ Removed events:
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
 
-Other changes:
+Configuration changes:
+
+  - key `services.internalEngine` is renamed to `services.internalIndex`
+
+Plugin changes:
 
   - Plugins manifest files are now required
+

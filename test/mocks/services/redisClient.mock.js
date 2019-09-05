@@ -1,4 +1,5 @@
 const
+  sinon = require('sinon'),
   EventEmitter = require('eventemitter3'),
   IORedis = require('ioredis'),
   getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands,
@@ -15,23 +16,25 @@ class RedisClientMock extends EventEmitter {
     this.getBuiltinCommands = getBuiltinCommands;
 
     getBuiltinCommands().forEach(command => {
-      this[command] = this[command.toUpperCase()] = function () {
+      this[command] = this[command.toUpperCase()] = function (...args) {
         return Bluebird.resolve({
           name: command,
-          args: Array.prototype.slice.call(arguments)
+          args: Array.prototype.slice.call(args)
         });
       };
     });
 
-    this.select = this.SELECT = (key, callback) => key > 16 ? callback(new Error('Unknown database')) : callback(null);
+    this.select = this.SELECT = sinon.spy((key, callback) => key > 16
+      ? callback(new Error('Unknown database'))
+      : callback(null));
 
-    this.flushdb = this.FLUSHDB = callback => callback(null);
+    this.flushdb = this.FLUSHDB = sinon.spy(callback => callback(null));
 
     process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));
   }
 
   scanStream (options) {
-    var Stream = function () {
+    const Stream = function () {
       setTimeout(() => {
         var
           prefix = options && options.match ? options.match.replace(/[*?]/g, '') : 'k',

@@ -555,6 +555,17 @@
       "code": 8,
       "deprecated": true,
       "errors": {}
+    },
+    "index_cache": {
+      "code": 9,
+      "errors": {
+        "unknown_collection_alias": {
+          "code": 1,
+          "message": "Found alias \"%s\" on unknown collection \"%s\"",
+          "class": "InternalError"
+        }
+      }
     }
+
   }
 }

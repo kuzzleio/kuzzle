@@ -22,6 +22,7 @@ describe('Test: repositories/profileRepository', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
     profileRepository = new ProfileRepository(kuzzle);
 
     testProfile = new Profile();
@@ -31,7 +32,7 @@ describe('Test: repositories/profileRepository', () => {
       {roleId: 'test2'}
     ];
 
-    return profileRepository.init();
+    return profileRepository.init({ indexEngine: kuzzle.internalIndex });
   });
 
   describe('#load', () => {
@@ -61,7 +62,7 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should reject if the profile does not exist', () => {
-      kuzzle.internalEngine.get.rejects(new NotFoundError('Not found'));
+      profileRepository.indexEngine.get.rejects(new NotFoundError('Not found'));
 
       return should(profileRepository.load('idontexist'))
         .rejectedWith(NotFoundError, {message: 'Unable to find profiles with id \'idontexist\''});
@@ -408,8 +409,21 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
+    it('should throw a NotFoundError when trying to write unexisting role in profile. ', () => {
+      const invalidProfile = new Profile();
+      invalidProfile._id = 'awesomeProfile';
+      invalidProfile.policies = [{roleId: 'notSoAwesomeRole'}];
+
+      kuzzle.repositories.role.loadRoles = sinon.stub().rejects();
+      return should(profileRepository.validateAndSaveProfile(invalidProfile)).be.rejectedWith(
+        NotFoundError, {
+          message: 'Unable to hydrate the profile awesomeProfile: missing role(s) in the database'
+        });
+    });
+
     it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {
@@ -442,7 +456,7 @@ describe('Test: repositories/profileRepository', () => {
         {roleId: 'test'},
         {roleId: 'anonymous'}
       ];
-
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(profile);
       return profileRepository.validateAndSaveProfile(profile)
         .then(response => {
           should(response._id)
