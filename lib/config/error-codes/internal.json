@@ -585,6 +585,16 @@
           "class": "InternalError"
         }
       }
+    },
+    "index_cache": {
+      "code": 10,
+      "errors": {
+        "unknown_collection_alias": {
+          "code": 1,
+          "message": "Found alias \"%s\" on unknown collection \"%s\"",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }

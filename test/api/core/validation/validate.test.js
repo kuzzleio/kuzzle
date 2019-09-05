@@ -335,15 +335,15 @@ describe('Test: validation.validate', () => {
           action: 'update',
           _id: 'foo'
         });
-
+      kuzzle.services.publicStorage.get.resolves({ _id: 'foo' });
       validation.specification = {};
 
       return validation.validate(request, verbose)
         .then(result => {
           should(result).be.eql(request);
-          should(kuzzle.services.list.storageEngine.get).calledOnce();
-          should(kuzzle.services.list.storageEngine.get.firstCall.args[0]).instanceOf(Request);
-          should(kuzzle.services.list.storageEngine.get.firstCall.args[0].input.resource).match({
+          should(kuzzle.services.publicStorage.get).calledOnce();
+          should(kuzzle.services.publicStorage.get.firstCall.args[0]).instanceOf(Request);
+          should(kuzzle.services.publicStorage.get.firstCall.args[0].input.resource).match({
             index,
             collection,
             _id: 'foo'

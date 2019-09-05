@@ -9,7 +9,7 @@ const
   BaseController = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-describe('Test: index controller', () => {
+xdescribe('Test: index controller', () => {
   let
     indexController,
     kuzzle,
@@ -61,7 +61,7 @@ describe('Test: index controller', () => {
 
       return indexController.mDelete(request)
         .then(response => {
-          const engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.publicStorage;
 
           should(isActionAllowedStub).have.callCount(5);
 
@@ -90,7 +90,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return indexController.create(request)
         .then(response => {
-          const createIndex = kuzzle.services.list.storageEngine.createIndex;
+          const createIndex = kuzzle.services.publicStorage.createIndex;
 
           should(createIndex).be.calledOnce();
           should(createIndex).be.calledWith(request);
@@ -105,7 +105,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return indexController.delete(request)
         .then(response => {
-          const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
+          const deleteIndex = kuzzle.services.publicStorage.deleteIndex;
 
           should(deleteIndex).be.calledOnce();
           should(deleteIndex).be.calledWith(request);
@@ -123,7 +123,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       return indexController.refresh(request)
         .then(response => {
-          const engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.publicStorage;
           should(engine.refreshIndex).be.calledOnce();
           should(engine.refreshIndex).be.calledWith(request);
 
@@ -137,7 +137,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       return indexController.refreshInternal(request)
         .then(response => {
-          should(kuzzle.internalEngine.refresh).be.calledOnce();
+          should(kuzzle.internalIndex.refresh).be.calledOnce();
           should(response).be.instanceof(Object);
           should(response).match({ acknowledged: true });
         });
@@ -148,7 +148,7 @@ describe('Test: index controller', () => {
     it('should trigger the proper methods and resolve to a valid response', () => {
       return indexController.getAutoRefresh(request)
         .then(response => {
-          const engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.publicStorage;
 
           should(engine.getAutoRefresh).be.calledOnce();
           should(engine.getAutoRefresh).be.calledWith(request);
@@ -165,7 +165,7 @@ describe('Test: index controller', () => {
 
       return indexController.setAutoRefresh(request)
         .then(response => {
-          const engine = kuzzle.services.list.storageEngine;
+          const engine = kuzzle.services.publicStorage;
 
           should(engine.setAutoRefresh).be.calledOnce();
           should(engine.setAutoRefresh).be.calledWith(request);
@@ -208,18 +208,18 @@ describe('Test: index controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.list.storageEngine.listIndexes.rejects(new Error('foobar'));
+      kuzzle.services.publicStorage.listIndexes.rejects(new Error('foobar'));
       return should(indexController.list(request)).be.rejected();
     });
   });
 
   describe('#exists', () => {
     it('should call the storagEngine', () => {
-      kuzzle.services.list.storageEngine.indexExists.resolves(foo);
+      kuzzle.services.publicStorage.indexExists.resolves(foo);
       return indexController.exists(request)
         .then(response => {
           should(response).match(foo);
-          should(kuzzle.services.list.storageEngine.indexExists).be.calledOnce();
+          should(kuzzle.services.publicStorage.indexExists).be.calledOnce();
         });
     });
   });
