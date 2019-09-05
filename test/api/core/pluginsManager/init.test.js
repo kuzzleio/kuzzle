@@ -109,7 +109,7 @@ describe('PluginsManager', () => {
         '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
         {
           name: instanceName,
-          kuzzleVersion: '^1.x',
+          kuzzleVersion: '^2.x',
           errors: newPluginErrors
         });
 

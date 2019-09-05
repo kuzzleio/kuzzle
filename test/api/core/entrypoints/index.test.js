@@ -676,10 +676,10 @@ describe('lib/core/api/core/entrypoints/index', () => {
       should(entrypoint.clients[connection.id]).be.undefined();
     });
 
-    it('should dispatch connection:remove event', () => {
+    it('should dispatch connection:new event', () => {
       entrypoint.removeConnection(connection.id);
 
-      should(kuzzle.emit).be.calledWithMatch('connection:remove', {
+      should(kuzzle.emit).be.calledWithMatch('connection:new', {
         id: 'connectionId',
         protocol: 'protocol',
         headers: 'headers'
