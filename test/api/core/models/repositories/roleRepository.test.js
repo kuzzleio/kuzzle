@@ -424,7 +424,7 @@ describe('Test: repositories/roleRepository', () => {
       role.controllers = controllers;
 
       roleRepository.persistToDatabase = sinon.stub().resolves();
-
+      roleRepository.loadOneFromDatabase = sinon.stub().resolves();
       return roleRepository.validateAndSaveRole(role)
         .then(() => {
           should(roleRepository.persistToDatabase)

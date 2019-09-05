@@ -742,9 +742,8 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
           .be.calledOnce()
           .be.calledWithMatch(
             {id: 'connectionId'},
-            payload,
             response,
-            {message: 'foobar'});
+            {errorName: 'network.http.http_request_error'});
 
         should(response.setHeader).calledWith('Content-Encoding', 'gzip');
         should(zlibstub.deflate).not.called();
@@ -795,7 +794,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
             'network',
             'http',
             'http_request_error',
-            'Error: foobar'),
+            'foobar'),
           matcher = errorMatcher.fromError(kerr),
           expected = (new Request(payload, {connectionId, error: kerr})).serialize();
 

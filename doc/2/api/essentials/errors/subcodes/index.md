@@ -190,6 +190,15 @@ order: 500
 
 ---
 
+
+### Subdomain: index_cache, code: 9
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`589825`  | `Found alias "<placeholder>" on unknown collection "<placeholder>"` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | unknown_collection_alias | internal.index_cache.unknown_collection_alias
+
+---
+
 ---
 
 ## external, code: 1
@@ -268,7 +277,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`17039361`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
+`17039361`  | `[FATAL] Service "<placeholder>" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
 
 ---
 
@@ -647,7 +656,7 @@ order: 500
 `67239952`  | `The plugin "<placeholder>" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration.` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | privileged_mode_not_setted | plugins.runtime.privileged_mode_not_setted
 `67239953`  | `A plugin named <placeholder> already exists` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | plugin_name_already_exists | plugins.runtime.plugin_name_already_exists
 `67239954`  | `Plugin <placeholder> is not a constructor.` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | plugin_is_not_a_constructor | plugins.runtime.plugin_is_not_a_constructor
-`67239955`  | `<placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | plugin_error | plugins.runtime.plugin_error
+`67239955`  | `<placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | plugin_error | plugins.runtime.plugin_error
 `67239956`  | `<placeholder>` | [UnauthorizedError](https://docs.kuzzle.io/core/2/api/essentials/errors/#unauthorizederror) | missing_user_for_authentication | plugins.runtime.missing_user_for_authentication
 `67239957`  | `<placeholder>` | [GatewayTimeoutError](https://docs.kuzzle.io/core/2/api/essentials/errors/#gatewaytimeouterror) | register_pipe_timeout | plugins.runtime.register_pipe_timeout
 `67239958`  | `Unable to serialize response. Are you trying to return the request?` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | unable_to_serialize_response | plugins.runtime.unable_to_serialize_response
