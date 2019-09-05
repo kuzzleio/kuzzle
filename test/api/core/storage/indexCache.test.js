@@ -50,6 +50,13 @@ describe('Test: core/indexCache', () => {
         'barlection', 'barlection-alias'
       ]);
     });
+
+    it('should throw if a duplicated index is found between the 2 scopes', () => {
+      kuzzle.services.internalStorage.listIndexes.resolves(['foobar', 'barfoo']);
+      kuzzle.services.publicStorage.listIndexes.resolves(['foobar', 'ender']);
+
+      should(indexCache.init()).be.rejected();
+    });
   });
 
   describe('#add', () => {
