@@ -146,7 +146,7 @@ describe('Test redis service', () => {
     });
   });
 
-  it('#infos should return a properly formatted response', async () => {
+  it('#getInfos should return a properly formatted response', async () => {
     await redis.init();
 
     // eslint-disable-next-line require-atomic-updates
@@ -244,7 +244,7 @@ describe('Test redis service', () => {
     db5:keys=1,expires=0,avg_ttl=0
     `);
 
-    const promise = redis.infos();
+    const promise = redis.getInfos();
 
     return should(promise).be.fulfilled();
   });
