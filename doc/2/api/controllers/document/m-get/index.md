@@ -71,8 +71,13 @@ Each document is an object with the following properties:
 - `_id`: document unique identifier
 - `_source`: document content
 - `_version`: version number of the document
+- `found`: false if the document was missing
 
-If one or more document retrievals fail, the response status is set to `206`, and the `error` object contain a [partial error](/core/2/api/essentials/errors#partialerror) error.
+If one or more document retrievals fail, the response status is set to `206`, and the `error` object contain a [partial error](/core/1/api/essentials/errors#partialerror) error.  
+
+::: info
+You can use the `found` attribute on hits to identify missing documents.
+:::
 
 ```js
 {
@@ -90,14 +95,20 @@ If one or more document retrievals fail, the response status is set to `206`, an
         "_source": {
           // document content
         },
-        "_version": 4
+        "_version": 4,
+        "found": true
       },
       {
         "_id": "<anotherDocumentId>",
         "_source": {
           // document content
         },
-        "_version": 2
+        "_version": 2,
+        "found": true
+      },
+      {
+        "_id": "<anotherDocumentId>",
+        "found": false
       }
     ]
     "total": 2

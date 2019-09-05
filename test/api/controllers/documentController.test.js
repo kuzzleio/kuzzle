@@ -195,6 +195,21 @@ xdescribe('Test: document controller', () => {
         SizeLimitError,
         { message: 'Number of gets to perform exceeds the server configured value ( 1 ).' });
     });
+
+    it('should set a partial error if some documents are missing', () => {
+      request.input.body = {ids: ['foo', 'bar']};
+      kuzzle.services.list.storageEngine.mget.resolves({
+        hits: [
+          { _id: 'foo', found: true },
+          { _id: 'bar', found: false },
+        ]
+      });
+
+      return documentController.mGet(request)
+        .then(() => {
+          should(request.error).be.instanceOf(PartialError);
+        })
+    });
   });
 
   describe('#count', () => {

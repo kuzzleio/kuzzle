@@ -123,6 +123,11 @@
           "code": 7,
           "message": "Some document deletions failed : %s.",
           "class": "PartialError"
+        },
+        "some_document_missing": {
+          "code": 8,
+          "message": "Some document are missing.",
+          "class": "PartialError"
         }
       }
     },
