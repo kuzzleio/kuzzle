@@ -16,7 +16,7 @@ Dropped support for:
   - Kuzzle Proxy 
   - Permission Closures
 
-Removed errors:
+### Removed errors
 
 | Code | Unique name |
 |------|-------------|
@@ -27,11 +27,11 @@ Removed errors:
 | `0x03060008` | `network.http_router.unable_to_convert_http_body_to_json` |
 | `0x0008...` | (the entire `sandbox` error subdomain has been removed) |
 
-Removed events:
+### Removed events
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
 
-Removed API methods:
+### Removed API methods
 
 **Index Controller**
 
@@ -44,7 +44,7 @@ Removed API methods:
 
   - `admin:resetKuzzleData`: this route can lead to inconsistency with the auth system in a cluster environment
 
-Modified API Methods:
+### Modified API Methods
 
 **Bulk Controller**
 
@@ -54,6 +54,10 @@ Modified API Methods:
 
   - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
 
-Removed CLI actions:
+### Removed CLI actions
 
   - `reset`: this action called for the `admin:resetKuzzleData` route
+
+### Configuration changes
+
+  - key `services.internalEngine` is renamed to `services.internalIndex`
