@@ -242,7 +242,7 @@ xdescribe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification.resolves({isValid: true});
+      kuzzle.validation.validateFormat.resolves({isValid: true});
       kuzzle.validation.curateSpecification.resolves();
 
       return collectionController.updateSpecifications(request)
@@ -273,7 +273,7 @@ xdescribe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification.resolves({
+      kuzzle.validation.validateFormat.resolves({
         isValid: false,
         errors: ['bad bad is a bad type !']
       });
@@ -310,7 +310,7 @@ xdescribe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification.resolves({isValid: true});
+      kuzzle.validation.validateFormat.resolves({isValid: true});
       kuzzle.validation.curateSpecification.resolves();
 
       return collectionController.updateSpecifications(request)
@@ -344,7 +344,7 @@ xdescribe('Test: collection controller', () => {
         }
       };
 
-      kuzzle.validation.isValidSpecification.resolves({
+      kuzzle.validation.validateFormat.resolves({
         isValid: false,
         errors: ['bad bad is a bad type !']
       });

@@ -104,7 +104,17 @@ Body:
   "action": "updateMapping",
   "controller": "collection",
   "requestId": "<unique request identifier>",
-  "result": {}
+  "result": {
+    "dynamic": "false",
+    "_meta": {
+      "some": "metadata"
+    },
+    "properties": {
+      "field1": {
+        "type": "integer"
+      }
+    }
+  }
 }
 ```
 

@@ -50,6 +50,10 @@ Modified API Methods:
 
   - `bulk:import`: it's no longer allowed to specify different index and collection in bulk data array
 
+**Collection Controller**
+
+  - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+
 Removed CLI actions:
 
   - `reset`: this action called for the `admin:resetKuzzleData` route

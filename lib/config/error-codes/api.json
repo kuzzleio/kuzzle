@@ -221,7 +221,7 @@
         },
         "update_specifications": {
           "code": 5,
-          "message": "%s",
+          "message": "Some errors with provided specifications.",
           "class": "BadRequestError"
         }
       }
