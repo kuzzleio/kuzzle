@@ -22,6 +22,7 @@ order: 500
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
 `1`  | `Unknown error: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | unknown_error | internal.unexpected.unknown_error
+`2`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to init within <placeholder>ms` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | timeout | internal.unexpected.timeout
 
 ---
 
@@ -190,6 +191,27 @@ order: 500
 
 ---
 
+
+### Subdomain: configuration, code: 9
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`589825`  | `Invalid config.limits configuration format: please check your Kuzzle configuration files` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | invalid_limits_configuration_format | internal.configuration.invalid_limits_configuration_format
+`589826`  | `Invalid configuration: value set for "<placeholder>" limit is outside the allowed range` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | value_out_of_range | internal.configuration.value_out_of_range
+`589827`  | `Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | concurrentRequests_superior_to_requestsBufferSize | internal.configuration.concurrentRequests_superior_to_requestsBufferSize
+`589828`  | `Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | requestsBufferWarningThreshold_out_of_range | internal.configuration.requestsBufferWarningThreshold_out_of_range
+
+---
+
+
+### Subdomain: index_cache, code: 10
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`655361`  | `Found alias "<placeholder>" on unknown collection "<placeholder>"` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | unknown_collection_alias | internal.index_cache.unknown_collection_alias
+
+---
+
 ---
 
 ## external, code: 1
@@ -268,7 +290,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`17039361`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
+`17039361`  | `[FATAL] Service "<placeholder>" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
 
 ---
 
