@@ -111,7 +111,7 @@ xdescribe('Test: server controller', () => {
 
   describe('#healthCheck', () => {
     beforeEach(() => {
-      kuzzle.services.publicStorage.getInfos.resolves({status: 'green'});
+      kuzzle.services.publicStorage.infos.resolves({status: 'green'});
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
@@ -126,7 +126,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "yellow" and Redis is OK', () => {
-      kuzzle.services.publicStorage.getInfos.resolves({status: 'yellow'});
+      kuzzle.services.publicStorage.infos.resolves({status: 'yellow'});
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -139,7 +139,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
-      kuzzle.services.publicStorage.getInfos.resolves({status: 'red'});
+      kuzzle.services.publicStorage.infos.resolves({status: 'red'});
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -153,7 +153,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine is KO', () => {
-      kuzzle.services.publicStorage.getInfos.rejects(new Error());
+      kuzzle.services.publicStorage.infos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -167,7 +167,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if memoryStorage is KO', () => {
-      kuzzle.services.publicCache.getInfos.rejects(new Error());
+      kuzzle.services.publicCache.infos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -181,7 +181,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if internalCache is KO', () => {
-      kuzzle.services.internalCache.getInfos.rejects(new Error());
+      kuzzle.services.internalCache.infos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -264,7 +264,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.getInfos.rejects(new Error('foobar'));
+      kuzzle.services.publicStorage.infos.rejects(new Error('foobar'));
       return should(serverController.info()).be.rejected();
     });
   });
