@@ -190,6 +190,15 @@ order: 500
 
 ---
 
+
+### Subdomain: index_cache, code: 9
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`589825`  | `Found alias "<placeholder>" on unknown collection "<placeholder>"` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | unknown_collection_alias | internal.index_cache.unknown_collection_alias
+
+---
+
 ---
 
 ## external, code: 1
@@ -268,7 +277,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`17039361`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
+`17039361`  | `[FATAL] Service "<placeholder>" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
 
 ---
 
@@ -657,6 +666,7 @@ order: 500
 `67239961`  | `Rejected new connection - invalid arguments: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | rejected_new_connection_invalid_args | plugins.runtime.rejected_new_connection_invalid_args
 `67239962`  | `Unable to remove connection - invalid arguments: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | unable_to_remove_connection_invalid_args | plugins.runtime.unable_to_remove_connection_invalid_args
 `67239963`  | `Unable to remove connection - unknown connection identifier: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | unable_to_remove_connection_unknown_connection_identifier | plugins.runtime.unable_to_remove_connection_unknown_connection_identifier
+`67239964`  | `[<placeholder>] errors field in manifest.json badly formatted: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/2/api/essentials/errors/#pluginimplementationerror) | errors_configuration_file | plugins.runtime.errors_configuration_file
 
 ---
 
