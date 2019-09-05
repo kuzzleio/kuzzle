@@ -21,7 +21,7 @@
 
 const
   ColorOutput = require('./colorOutput'),
-  getSdk = require('./getSdk');
+  getSdk = require('../.utils/getSdk');
 
 async function commandDump (options) {
   const

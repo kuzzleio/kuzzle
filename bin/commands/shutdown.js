@@ -20,8 +20,8 @@
  */
 
 const
-  ColorOutput = require('./colorOutput'),
-  getSdk = require('./getSdk');
+  ColorOutput = require('../.utils/colorOutput'),
+  getSdk = require('../.utils/getSdk');
 
 function commandShutdown (options) {
   const

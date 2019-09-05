@@ -23,8 +23,8 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
-  ColorOutput = require('./colorOutput'),
-  getSdk = require('./getSdk');
+  ColorOutput = require('../.utils/colorOutput'),
+  getSdk = require('../.utils/getSdk');
 
 function commandResetKuzzleData (options) {
   const

@@ -23,10 +23,10 @@
 
 const
   fs = require('fs'),
-  ColorOutput = require('./colorOutput'),
+  ColorOutput = require('../.utils/colorOutput'),
   path = require('path'),
   ndjson = require('ndjson'),
-  getSdk = require('./getSdk');
+  getSdk = require('../.utils/getSdk');
 
 // @todo use 'recursive: true' with node.js 10
 function mkdirp (fullPath) {

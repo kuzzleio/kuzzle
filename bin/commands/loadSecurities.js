@@ -20,9 +20,9 @@
  */
 
 const
-  ColorOutput = require('./colorOutput'),
-  loadJson = require('./loadJson'),
-  getSdk = require('./getSdk');
+  ColorOutput = require('../.utils/colorOutput'),
+  loadJson = require('../.utils/loadJson'),
+  getSdk = require('../.utils/getSdk');
 
 function commandLoadSecurities (securitiesPath, options) {
   let

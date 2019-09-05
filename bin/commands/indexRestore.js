@@ -23,9 +23,9 @@
 
 const
   fs = require('fs'),
-  ColorOutput = require('./colorOutput'),
+  ColorOutput = require('../.utils/colorOutput'),
   ndjson = require('ndjson'),
-  getSdk = require('./getSdk');
+  getSdk = require('../.utils/getSdk');
 
 function handleError(cout, dumpFile, error) {
   if (error.status === 206) {
