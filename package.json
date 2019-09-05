@@ -22,7 +22,8 @@
     "doc-upload": "cd doc && bash doc.sh upload",
     "doc-cloudfront": "cd doc && bash doc.sh cloudfront",
     "doc-deploy": "npm run doc-upload && npm run doc-cloudfront",
-    "doc-netlify": "npm run doc-prepare && cd doc && bash doc.sh build-netlify"
+    "doc-netlify": "npm run doc-prepare && cd doc && bash doc.sh build-netlify",
+    "doc-generate-subcodes": "cd doc && node generate-subcodes-doc"
   },
   "directories": {
     "lib": "lib"
