@@ -33,7 +33,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
   });
 
   it('should notify subscribers when a replaced document entered their scope', () => {
-    const internalCache = kuzzle.services.list.internalCache;
+    const internalCache = kuzzle.services.internalCache;
     kuzzle.realtime.test.returns(['foo']);
 
     internalCache.get.resolves(JSON.stringify(['foo', 'bar']));

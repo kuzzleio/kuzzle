@@ -10,7 +10,7 @@ const
   AdminController = rewire('../../../lib/api/controllers/adminController'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-describe('Test: admin controller', () => {
+xdescribe('Test: admin controller', () => {
   let
     adminController,
     kuzzle,
@@ -38,7 +38,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should flush the cache for the specified database', done => {
-      kuzzle.services.list.memoryStorage.flushdb = flushdbStub.returns();
+      kuzzle.services.publicCache.flushdb = flushdbStub.returns();
       request.input.args.database = 'memoryStorage';
 
       adminController.resetCache(request)
@@ -67,22 +67,22 @@ describe('Test: admin controller', () => {
       return adminController.resetKuzzleData(request)
         .then(() => {
           should(kuzzle.repositories.user.truncate).be.calledOnce();
-          should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
-          should(kuzzle.services.list.internalCache.flushdb).be.calledOnce();
+          should(kuzzle.internalIndex.delete).be.calledOnce();
+          should(kuzzle.services.internalCache.flushdb).be.calledOnce();
 
           should(kuzzle.indexCache.remove)
             .be.calledOnce()
             .be.calledWithExactly('internalIndex');
 
-          should(kuzzle.internalEngine.bootstrap.startOrWait).be.calledOnce();
+          should(kuzzle.internalIndex.bootstrap.startOrWait).be.calledOnce();
           should(kuzzle.validation).be.an.Object();
           should(kuzzle.start).be.a.Function();
 
           sinon.assert.callOrder(
-            kuzzle.internalEngine.deleteIndex,
-            kuzzle.services.list.internalCache.flushdb,
+            kuzzle.internalIndex.deleteIndex,
+            kuzzle.services.internalCache.flushdb,
             kuzzle.indexCache.remove,
-            kuzzle.internalEngine.bootstrap.startOrWait
+            kuzzle.internalIndex.bootstrap.startOrWait
           );
         });
     });
@@ -99,14 +99,14 @@ describe('Test: admin controller', () => {
           should(kuzzle.repositories.user.truncate).be.calledOnce();
           should(kuzzle.repositories.profile.truncate).be.calledOnce();
           should(kuzzle.repositories.role.truncate).be.calledOnce();
-          should(kuzzle.internalEngine.bootstrap.createInitialSecurities)
+          should(kuzzle.internalIndex.bootstrap.createInitialSecurities)
             .be.calledOnce();
 
           sinon.assert.callOrder(
             kuzzle.repositories.user.truncate,
             kuzzle.repositories.profile.truncate,
             kuzzle.repositories.role.truncate,
-            kuzzle.internalEngine.bootstrap.createInitialSecurities
+            kuzzle.internalIndex.bootstrap.createInitialSecurities
           );
         });
     });
@@ -137,7 +137,7 @@ describe('Test: admin controller', () => {
     });
 
     it('remove all indexes handled by Kuzzle', done => {
-      const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
+      const deleteIndex = kuzzle.services.publicStorage.deleteIndex;
       kuzzle.indexCache.indexes = { halflife3: [], borealis: [], confirmed: [], '%kuzzle': [] };
       request.input.args.refresh = 'wait_for';
 

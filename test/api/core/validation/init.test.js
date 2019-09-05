@@ -93,7 +93,7 @@ describe('Test: validation initialization', () => {
       };
 
     beforeEach(() => {
-      kuzzle.internalEngine.search.returns(Bluebird.resolve({
+      kuzzle.internalIndex.search.returns(Bluebird.resolve({
         hits: [
           {_source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
           {_source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
@@ -112,7 +112,7 @@ describe('Test: validation initialization', () => {
         .then(() => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual(configurationMock);
-          should(kuzzle.log.info.callCount).be.eql(4);
+          should(kuzzle.log.info.callCount).be.eql(3);
         });
     });
 
@@ -126,7 +126,6 @@ describe('Test: validation initialization', () => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual({});
           should(kuzzle.log.error.callCount).be.eql(6);
-          should(kuzzle.log.info.callCount).be.eql(1);
         });
     });
   });

@@ -59,7 +59,7 @@ describe('Test: repositories/userRepository', () => {
 
     userRepository = new UserRepository(kuzzle);
 
-    return userRepository.init();
+    return userRepository.init({ indexEngine: kuzzle.internalIndex });
   });
 
   afterEach(() => {
@@ -197,11 +197,11 @@ describe('Test: repositories/userRepository', () => {
     it('should delete user from both cache and database', () => {
       return userRepository.delete({ _id: 'alyx' })
         .then(() => {
-          should(kuzzle.services.list.internalCache.del)
+          should(userRepository.cacheEngine.del)
             .calledOnce()
             .calledWith(userRepository.getCacheKey('alyx'));
 
-          should(kuzzle.internalEngine.delete)
+          should(userRepository.indexEngine.delete)
             .calledOnce()
             .calledWith(userRepository.collection, 'alyx');
         });
@@ -232,7 +232,7 @@ describe('Test: repositories/userRepository', () => {
 
       return userRepository.delete(user, options)
         .then(() => {
-          should(kuzzle.internalEngine.delete.firstCall.args[2]).match(options);
+          should(userRepository.indexEngine.delete.firstCall.args[2]).match(options);
         });
     });
   });
