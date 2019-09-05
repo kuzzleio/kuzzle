@@ -190,6 +190,15 @@ order: 500
 
 ---
 
+
+### Subdomain: index_cache, code: 9
+
+| Code | Message          | Class              | Error              | FullName           |
+------ | -----------------| ------------------ | ------------------ | ------------------ |
+`589825`  | `Found alias "<placeholder>" on unknown collection "<placeholder>"` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | unknown_collection_alias | internal.index_cache.unknown_collection_alias
+
+---
+
 ---
 
 ## external, code: 1
@@ -268,7 +277,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`17039361`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
+`17039361`  | `[FATAL] Service "<placeholder>" failed to initialize within <placeholder>ms.` | [InternalError](https://docs.kuzzle.io/core/2/api/essentials/errors/#internalerror) | service_initialization_timeout | external.common.service_initialization_timeout
 
 ---
 

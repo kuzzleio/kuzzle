@@ -420,10 +420,12 @@ describe('Test: repositories/roleRepository', () => {
           }
         },
         role = new Role();
+
       role._id = 'test';
       role.controllers = controllers;
 
       roleRepository.persistToDatabase = sinon.stub().resolves();
+      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
 
       return roleRepository.validateAndSaveRole(role)
         .then(() => {
@@ -432,7 +434,9 @@ describe('Test: repositories/roleRepository', () => {
             .be.calledWith(role);
           should(kuzzle.emit)
             .be.calledOnce()
-            .be.calledWith('core:roleRepository:save', {_id: 'test', controllers: controllers});
+            .be.calledWith(
+              'core:roleRepository:save',
+              { _id: 'test', controllers: controllers });
         });
     });
   });
