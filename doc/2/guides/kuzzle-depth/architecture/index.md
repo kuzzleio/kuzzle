@@ -29,6 +29,3 @@ Kuzzle currently implements the following Services:
 
 - [elasticsearch.js](https://github.com/kuzzleio/kuzzle/blob/master/lib/services/elasticsearch.js): interface to [Elasticsearch](https://www.elastic.co/products/elasticsearch), used for persistent data storage.
 - [redis.js](https://github.com/kuzzleio/kuzzle/blob/master/lib/services/redis.js): interface to the [redis](http://redis.io), used as a cache.
-- [internalEngine.js](https://github.com/kuzzleio/kuzzle/blob/master/lib/services/internalEngine): interface to Kuzzle's configuration index in Elastic Search.
-
-A Service can be used by more than one Service Component. For example, Redis is used by both the Internal Cache Service Component and the Memory Storage Service Component (see [default.config.js](https://github.com/kuzzleio/kuzzle/blob/master/default.config.js)).

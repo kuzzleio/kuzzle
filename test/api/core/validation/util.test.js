@@ -340,19 +340,19 @@ describe('Test: validation utilities', () => {
 
     it('should return the default configuration if nothing is returned from internal engine', () => {
       kuzzle.config.validation = genericMock;
-      kuzzle.internalEngine.search.resolves({hits: []});
+      kuzzle.internalIndex.search.resolves({hits: []});
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
           should(result).be.deepEqual(kuzzle.config.validation);
-          should(kuzzle.internalEngine.search.callCount).be.eql(1);
-          should(kuzzle.internalEngine.search.args[0][0]).be.eql('validations');
+          should(kuzzle.internalIndex.search.callCount).be.eql(1);
+          should(kuzzle.internalIndex.search.args[0][0]).be.eql('validations');
         });
     });
 
     it('should return an empty object if nothing is returned from internal engine and there is no configuration', () => {
       delete kuzzle.config.validation;
-      kuzzle.internalEngine.search.resolves({hits: []});
+      kuzzle.internalIndex.search.resolves({hits: []});
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
@@ -405,7 +405,7 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      kuzzle.internalEngine.search.resolves(internalEngineResponse);
+      kuzzle.internalIndex.search.resolves(internalEngineResponse);
 
       return getValidationConfiguration(kuzzle)
         .then(result => {

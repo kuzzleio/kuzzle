@@ -38,18 +38,18 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     const {_id, index, collection} = request.input.resource;
 
     kuzzle.realtime.test.returns(['foo']);
-    kuzzle.services.list.storageEngine.get.resolves({
+    kuzzle.services.publicStorage.get.resolves({
       _id,
       _source: {foo: 'bar'},
       _meta: request.input.body._kuzzle_info
     });
 
-    kuzzle.services.list.internalCache.get.resolves(
+    kuzzle.services.internalCache.get.resolves(
       JSON.stringify(['foo', 'bar']));
 
     return notifier.notifyDocumentUpdate(request)
       .then(() => {
-        should(kuzzle.services.list.storageEngine.get).calledOnce();
+        should(kuzzle.services.publicStorage.get).calledOnce();
 
         should(kuzzle.realtime.test)
           .calledOnce()
@@ -72,13 +72,13 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
         should(notifier.notifyDocument.getCall(1)).calledWith(
           ['bar'], request, 'out', 'done', 'update', { _id });
 
-        should(kuzzle.services.list.internalCache.get)
+        should(kuzzle.services.internalCache.get)
           .calledOnce()
           .calledWith(`{notif/${index}/${collection}}/${_id}`);
 
-        should(kuzzle.services.list.internalCache.del).not.be.called();
+        should(kuzzle.services.internalCache.del).not.be.called();
 
-        should(kuzzle.services.list.internalCache.setex)
+        should(kuzzle.services.internalCache.setex)
           .calledOnce()
           .calledWith(
             `{notif/${index}/${collection}}/${_id}`,
@@ -94,20 +94,20 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       kuzzle.config.limits.subscriptionDocumentTTL = 0;
 
       kuzzle.realtime.test.returns(['foo']);
-      kuzzle.services.list.storageEngine.get.resolves({
+      kuzzle.services.publicStorage.get.resolves({
         _id,
         _source: {foo: 'bar'},
         _meta: request.input.body._kuzzle_info
       });
 
-      kuzzle.services.list.internalCache.get.resolves(
+      kuzzle.services.internalCache.get.resolves(
         JSON.stringify(['foo', 'bar']));
 
       return notifier.notifyDocumentUpdate(request)
         .then(() => {
-          should(kuzzle.services.list.internalCache.setex).not.be.called();
+          should(kuzzle.services.internalCache.setex).not.be.called();
 
-          should(kuzzle.services.list.internalCache.set)
+          should(kuzzle.services.internalCache.set)
             .calledOnce()
             .calledWith(
               `{notif/${index}/${collection}}/${_id}`,
