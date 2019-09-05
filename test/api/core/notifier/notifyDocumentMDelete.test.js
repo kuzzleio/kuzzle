@@ -64,7 +64,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
       };
 
     kuzzle.realtime.test.returns(['foo', 'bar']);
-    kuzzle.services.list.storageEngine.mget.resolves({
+    kuzzle.services.publicStorage.mGet.resolves({
       hits: [
         {_id: 'foobar', _source: stillAlive._source, _meta: stillAlive._meta}
       ],
@@ -85,7 +85,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
   it('should notify for each document when multiple document have been deleted', () => {
     var ids = ['foo', 'bar'];
 
-    kuzzle.services.list.storageEngine.mget.resolves({
+    kuzzle.services.publicStorage.mGet.resolves({
       hits: [
         {_id: 'foo'},
         {_id: 'bar'}
