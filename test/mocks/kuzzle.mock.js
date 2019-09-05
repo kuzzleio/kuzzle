@@ -247,7 +247,7 @@ class KuzzleMock extends Kuzzle {
         exists: this.sandbox.stub().resolves(),
         expire: this.sandbox.stub().resolves(),
         flushdb: this.sandbox.stub().resolves(),
-        getInfos: this.sandbox.stub().resolves(),
+        info: this.sandbox.stub().resolves(),
         mget: this.sandbox.stub().resolves(),
         persist: this.sandbox.stub().resolves(),
         pexpire: this.sandbox.stub().resolves(),
@@ -259,7 +259,7 @@ class KuzzleMock extends Kuzzle {
       },
       publicCache: {
         flushdb: this.sandbox.stub().resolves(),
-        getInfos: this.sandbox.stub().resolves()
+        info: this.sandbox.stub().resolves()
       },
       internalStorage: getESMock(this, 'internal'),
       publicStorage: getESMock(this, 'public'),
@@ -341,7 +341,7 @@ function getESMock (kuzzleMock, scope) {
     indexPrefix: scope === 'public'
       ? '&'
       : '%',
-    getInfos: kuzzleMock.sandbox.stub().resolves(),
+    info: kuzzleMock.sandbox.stub().resolves(),
     scroll: kuzzleMock.sandbox.stub().resolves(),
     search: kuzzleMock.sandbox.stub().resolves(),
     get: kuzzleMock.sandbox.stub().resolves(),
