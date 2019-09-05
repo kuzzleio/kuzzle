@@ -4,6 +4,7 @@ const
   IndexController = require('../../../lib/api/controllers/indexController'),
   { Request } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/baseController'),
+  mockAssertions = require('../../mocks/mockAssertions'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('IndexController', () => {
@@ -23,7 +24,7 @@ describe('IndexController', () => {
 
     kuzzle = new KuzzleMock();
 
-    indexController = new IndexController(kuzzle);
+    indexController = mockAssertions(new IndexController(kuzzle));
     request = new Request(data);
   });
 
