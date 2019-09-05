@@ -15,7 +15,7 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-describe('Test: collection controller', () => {
+xdescribe('Test: collection controller', () => {
   let
     collectionController,
     kuzzle,
@@ -32,7 +32,7 @@ describe('Test: collection controller', () => {
       collection
     };
     kuzzle = new KuzzleMock();
-    engine = kuzzle.services.list.storageEngine;
+    engine = kuzzle.services.publicStorage;
     collectionController = new CollectionController(kuzzle);
     request = new Request(data);
   });
@@ -55,8 +55,8 @@ describe('Test: collection controller', () => {
       return collectionController.updateMapping(request)
         .then(response => {
 
-          should(kuzzle.services.list.storageEngine.updateMapping).be.calledOnce();
-          should(kuzzle.services.list.storageEngine.updateMapping).be.calledWith(request);
+          should(kuzzle.services.publicStorage.updateMapping).be.calledOnce();
+          should(kuzzle.services.publicStorage.updateMapping).be.calledWith(request);
 
           should(kuzzle.indexCache.add).be.calledOnce();
           should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
@@ -72,8 +72,8 @@ describe('Test: collection controller', () => {
       return collectionController.getMapping(request)
         .then(response => {
 
-          should(kuzzle.services.list.storageEngine.getMapping).be.calledOnce();
-          should(kuzzle.services.list.storageEngine.getMapping).be.calledWith(request);
+          should(kuzzle.services.publicStorage.getMapping).be.calledOnce();
+          should(kuzzle.services.publicStorage.getMapping).be.calledWith(request);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -85,7 +85,7 @@ describe('Test: collection controller', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return collectionController.truncate(request)
         .then(response => {
-          const truncate = kuzzle.services.list.storageEngine.truncateCollection;
+          const truncate = kuzzle.services.publicStorage.truncateCollection;
 
           should(truncate).be.calledOnce();
           should(truncate).be.calledWith(request);
@@ -97,14 +97,14 @@ describe('Test: collection controller', () => {
   });
 
   describe('#getSpecifications', () => {
-    it('should call internalEngine with the right id', () => {
-      kuzzle.internalEngine.get.resolves({_source: {foo: 'bar'}});
+    it('should call internalIndex with the right id', () => {
+      kuzzle.internalIndex.get.resolves({_source: {foo: 'bar'}});
       kuzzle.indexCache.exists.resolves(true);
 
       return collectionController.getSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.get).be.calledOnce();
-          should(kuzzle.internalEngine.get).be.calledWithMatch(
+          should(kuzzle.internalIndex.get).be.calledOnce();
+          should(kuzzle.internalIndex.get).be.calledWithMatch(
             'validations',
             `${index}#${collection}`);
           should(response).match(foo);
@@ -130,7 +130,7 @@ describe('Test: collection controller', () => {
 
     it('should give a meaningful message if there is no specifications', () => {
       kuzzle.indexCache.exists.resolves(true);
-      kuzzle.internalEngine.get.rejects(new NotFoundError('not found'));
+      kuzzle.internalIndex.get.rejects(new NotFoundError('not found'));
 
       return should(collectionController.getSpecifications(request))
         .be.rejectedWith(
@@ -145,14 +145,14 @@ describe('Test: collection controller', () => {
       request.input.args.from = 0;
       request.input.args.size = 20;
       request.input.action = 'searchSpecifications';
-      
+
       should(() => collectionController.searchSpecifications(request)).throw(
         SizeLimitError,
         { message: 'Search page size exceeds server configured documents limit ( 1 ).' });
     });
 
-    it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.search.resolves({
+    it('should call internalIndex with the right data', () => {
+      kuzzle.internalIndex.search.resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
@@ -171,8 +171,8 @@ describe('Test: collection controller', () => {
 
       return collectionController.searchSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.search).be.calledOnce();
-          should(kuzzle.internalEngine.search).be.calledWithMatch('validations', request.input.body.query, {
+          should(kuzzle.internalIndex.search).be.calledOnce();
+          should(kuzzle.internalIndex.search).be.calledWithMatch('validations', request.input.body.query, {
             from: request.input.args.from,
             size: request.input.args.size,
             scroll: request.input.args.scroll
@@ -188,8 +188,8 @@ describe('Test: collection controller', () => {
         .throw(BadRequestError, {message: 'The request must specify a scrollId.'});
     });
 
-    it('should call internalEngine with the right data', () => {
-      kuzzle.internalEngine.scroll.resolves({
+    it('should call internalIndex with the right data', () => {
+      kuzzle.internalIndex.scroll.resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
@@ -199,14 +199,14 @@ describe('Test: collection controller', () => {
 
       return collectionController.scrollSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.scroll).be.calledOnce();
-          should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', undefined);
+          should(kuzzle.internalIndex.scroll).be.calledOnce();
+          should(kuzzle.internalIndex.scroll).be.calledWithMatch('validations', 'foobar', undefined);
           should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
         });
     });
 
     it('should handle the optional scroll argument', () => {
-      kuzzle.internalEngine.scroll.resolves({
+      kuzzle.internalIndex.scroll.resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
@@ -216,8 +216,8 @@ describe('Test: collection controller', () => {
 
       return collectionController.scrollSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.scroll).be.calledOnce();
-          should(kuzzle.internalEngine.scroll).be.calledWithMatch('validations', 'foobar', 'qux');
+          should(kuzzle.internalIndex.scroll).be.calledOnce();
+          should(kuzzle.internalIndex.scroll).be.calledWithMatch('validations', 'foobar', 'qux');
           should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
         });
     });
@@ -247,10 +247,10 @@ describe('Test: collection controller', () => {
 
       return collectionController.updateSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.refresh).be.calledOnce();
+          should(kuzzle.internalIndex.refresh).be.calledOnce();
           should(kuzzle.validation.curateSpecification).be.called();
-          should(kuzzle.internalEngine.createOrReplace).be.calledOnce();
-          should(kuzzle.internalEngine.createOrReplace).be.calledWithMatch('validations', 'myindex#mycollection');
+          should(kuzzle.internalIndex.createOrReplace).be.calledOnce();
+          should(kuzzle.internalIndex.createOrReplace).be.calledWithMatch('validations', 'myindex#mycollection');
           should(response).match(request.input.body);
         });
     });
@@ -280,9 +280,9 @@ describe('Test: collection controller', () => {
 
       return collectionController.updateSpecifications(request)
         .catch(error => {
-          should(kuzzle.internalEngine.refresh).not.be.called();
+          should(kuzzle.internalIndex.refresh).not.be.called();
           should(kuzzle.validation.curateSpecification).not.be.called();
-          should(kuzzle.internalEngine.createOrReplace).not.be.called();
+          should(kuzzle.internalIndex.createOrReplace).not.be.called();
 
           should(error).be.an.instanceOf(BadRequestError);
           should(error.message).be.exactly('Some errors with provided specifications.');
@@ -315,9 +315,9 @@ describe('Test: collection controller', () => {
 
       return collectionController.updateSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.refresh).be.calledOnce();
+          should(kuzzle.internalIndex.refresh).be.calledOnce();
           should(kuzzle.validation.curateSpecification).be.called();
-          should(kuzzle.internalEngine.createOrReplace)
+          should(kuzzle.internalIndex.createOrReplace)
             .be.calledOnce()
             .be.calledWithMatch('validations', `${index}#${collection}`);
           should(response).match(request.input.body);
@@ -351,9 +351,9 @@ describe('Test: collection controller', () => {
 
       return collectionController.updateSpecifications(request)
         .catch(error => {
-          should(kuzzle.internalEngine.refresh).not.be.called();
+          should(kuzzle.internalIndex.refresh).not.be.called();
           should(kuzzle.validation.curateSpecification).not.be.called();
-          should(kuzzle.internalEngine.createOrReplace).not.be.called();
+          should(kuzzle.internalIndex.createOrReplace).not.be.called();
 
           should(error).be.an.instanceOf(BadRequestError);
           should(error.message).be.exactly('Some errors with provided specifications.');
@@ -542,7 +542,7 @@ describe('Test: collection controller', () => {
 
   describe('#deleteSpecifications', () => {
     it('should call the right functions and respond with the right response if the validation specification exists', () => {
-      kuzzle.internalEngine.delete.resolves();
+      kuzzle.internalIndex.delete.resolves();
 
       kuzzle.validation.specification = {};
       kuzzle.validation.specification[index] = {};
@@ -550,7 +550,7 @@ describe('Test: collection controller', () => {
 
       return collectionController.deleteSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.delete).be.calledOnce();
+          should(kuzzle.internalIndex.delete).be.calledOnce();
           should(response).match({acknowledged: true});
         });
     });
@@ -560,7 +560,7 @@ describe('Test: collection controller', () => {
 
       return collectionController.deleteSpecifications(request)
         .then(response => {
-          should(kuzzle.internalEngine.delete).not.be.called();
+          should(kuzzle.internalIndex.delete).not.be.called();
           should(response).match({acknowledged: true});
         });
     });
@@ -568,7 +568,7 @@ describe('Test: collection controller', () => {
 
   describe('#list', () => {
     beforeEach(() => {
-      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['foo']}});
+      kuzzle.services.publicStorage.listCollections.resolves({collections: {stored: ['foo']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
@@ -578,7 +578,7 @@ describe('Test: collection controller', () => {
       return collectionController.list(request)
         .then(response => {
           should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
-          should(kuzzle.services.list.storageEngine.listCollections).be.calledOnce();
+          should(kuzzle.services.publicStorage.listCollections).be.calledOnce();
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('all');
           should(response.collections).not.be.undefined().and.be.an.Array();
@@ -602,7 +602,7 @@ describe('Test: collection controller', () => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('stored');
           should(kuzzle.hotelClerk.getRealtimeCollections).not.be.called();
-          should(kuzzle.services.list.storageEngine.listCollections).be.called();
+          should(kuzzle.services.publicStorage.listCollections).be.called();
         });
     });
 
@@ -614,13 +614,13 @@ describe('Test: collection controller', () => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('realtime');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.list.storageEngine.listCollections).not.be.called();
+          should(kuzzle.services.publicStorage.listCollections).not.be.called();
         });
     });
 
     it('should return a portion of the collection list if from and size are specified', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
-      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.services.publicStorage.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -633,13 +633,13 @@ describe('Test: collection controller', () => {
           ]);
           should(response.type).be.exactly('all');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.list.storageEngine.listCollections).be.called();
+          should(kuzzle.services.publicStorage.listCollections).be.called();
         });
     });
 
     it('should return a portion of the collection list if from is specified', () => {
       request = new Request({index: 'index', type: 'all', from: 8});
-      kuzzle.services.list.storageEngine.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.services.publicStorage.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -651,13 +651,13 @@ describe('Test: collection controller', () => {
           ]);
           should(response).be.instanceof(Object);
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.list.storageEngine.listCollections).be.called();
+          should(kuzzle.services.publicStorage.listCollections).be.called();
         });
     });
 
     it('should return a portion of the collection list if size is specified', () => {
       request = new Request({index: 'index', type: 'all', size: 2});
-      kuzzle.services.list.storageEngine.listCollections.resolves({
+      kuzzle.services.publicStorage.listCollections.resolves({
         collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
       });
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
@@ -671,19 +671,19 @@ describe('Test: collection controller', () => {
           ]);
           should(response.type).be.exactly('all');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.list.storageEngine.listCollections).be.called();
+          should(kuzzle.services.publicStorage.listCollections).be.called();
         });
     });
 
 
     it('should reject an error if getting stored collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
+      kuzzle.services.publicStorage.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'stored'});
       return should(collectionController.list(request)).be.rejected();
     });
 
     it('should reject an error if getting all collections fails', () => {
-      kuzzle.services.list.storageEngine.listCollections.rejects(new Error('foobar'));
+      kuzzle.services.publicStorage.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'all'});
       return should(collectionController.list(request)).be.rejected();
     });
@@ -691,11 +691,11 @@ describe('Test: collection controller', () => {
 
   describe('#exists', () => {
     it('should call the storageEngine', () => {
-      kuzzle.services.list.storageEngine.collectionExists.resolves(foo);
+      kuzzle.services.publicStorage.collectionExists.resolves(foo);
       return collectionController.exists(request)
         .then(response => {
           should(response).match(foo);
-          should(kuzzle.services.list.storageEngine.collectionExists).be.calledOnce();
+          should(kuzzle.services.publicStorage.collectionExists).be.calledOnce();
         });
     });
   });
