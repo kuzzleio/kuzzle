@@ -312,6 +312,7 @@ order: 500
 `0x02030005`  | `Number of gets to perform exceeds the server configured value ( <placeholder> ).` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | get_limit_reached | api.document.get_limit_reached
 `0x02030006`  | `Some document creations failed : <placeholder>.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | creation_failed | api.document.creation_failed
 `0x02030007`  | `Some document deletions failed : <placeholder>.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | deletion_failed | api.document.deletion_failed
+`0x02030008`  | `Some document are missing.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | some_document_missing | api.document.some_document_missing
 
 ---
 
