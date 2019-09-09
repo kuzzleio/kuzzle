@@ -28,7 +28,7 @@ xdescribe('Test: document controller', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    engine = kuzzle.services.publicStorage;
+    engine = kuzzle.storageEngine.public;
     documentController = new DocumentController(kuzzle);
     request = new Request({
       controller: 'document',
@@ -81,7 +81,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.search.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.search.rejects(new Error('foobar'));
 
       return should(documentController.search(request)).be.rejectedWith('foobar');
     });
@@ -103,7 +103,7 @@ xdescribe('Test: document controller', () => {
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
-      kuzzle.services.publicStorage.scroll.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.scroll.rejects(new Error('foobar'));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');
     });
@@ -157,7 +157,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.get.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.get.rejects(new Error('foobar'));
       return should(documentController.get(request)).be.rejected();
     });
   });
@@ -165,7 +165,7 @@ xdescribe('Test: document controller', () => {
   describe('#mGet', () => {
     it('should fulfill with an array of documents', () => {
       request.input.body = {ids: ['anId', 'anotherId']};
-      kuzzle.services.publicStorage.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
+      kuzzle.storageEngine.public.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
 
 
       return documentController.mGet(request)
@@ -188,7 +188,7 @@ xdescribe('Test: document controller', () => {
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.body = {ids: ['anId', 'anotherId']};
-      kuzzle.services.publicStorage.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
+      kuzzle.storageEngine.public.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
       request.input.action = 'mGet';
 
       should(() => documentController.mGet(request)).throw(
@@ -226,7 +226,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.count.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.count.rejects(new Error('foobar'));
       return should(documentController.count(request)).be.rejected();
     });
   });
@@ -271,7 +271,7 @@ xdescribe('Test: document controller', () => {
 
   describe('#doMultipleActions', () => {
     it('mCreate should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mcreate.resolves({
+      kuzzle.storageEngine.public.mcreate.resolves({
         result: ['created', 'created'],
         error: []
       });
@@ -290,7 +290,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('mCreate should set a partial error if one of the action fails', () => {
-      kuzzle.services.publicStorage.mcreate.resolves({
+      kuzzle.storageEngine.public.mcreate.resolves({
         result: ['created'],
         error: [new KuzzleInternalError('some error')]
       });
@@ -320,7 +320,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('mCreateOrReplace should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mcreateOrReplace.resolves({
+      kuzzle.storageEngine.public.mcreateOrReplace.resolves({
         result: ['created', 'replaced'],
         error: []
       });
@@ -339,7 +339,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('mUpdate should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mupdate.resolves({
+      kuzzle.storageEngine.public.mupdate.resolves({
         result: ['updated', 'updated'],
         error: []
       });
@@ -358,7 +358,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('mReplace should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mreplace.resolves({
+      kuzzle.storageEngine.public.mreplace.resolves({
         result: ['replaced', 'replaced'],
         error: []
       });
@@ -552,7 +552,7 @@ xdescribe('Test: document controller', () => {
 
   describe('#mDelete', () => {
     it('should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mdelete.resolves({
+      kuzzle.storageEngine.public.mdelete.resolves({
         result: ['documentId', 'anotherDocumentId'],
         error: []
       });
@@ -566,7 +566,7 @@ xdescribe('Test: document controller', () => {
     });
 
     it('should set a partial error if one of the action fails', () => {
-      kuzzle.services.publicStorage.mdelete.resolves({
+      kuzzle.storageEngine.public.mdelete.resolves({
         result: ['documentId'],
         error: ['anotherDocumentId']
       });

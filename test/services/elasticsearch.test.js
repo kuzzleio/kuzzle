@@ -90,8 +90,8 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(kuzzle.services.internalCache.exists).be.called();
-          should(kuzzle.services.internalCache.pexpire).be.called();
+          should(kuzzle.cacheEngine.internal.exists).be.called();
+          should(kuzzle.cacheEngine.internal.pexpire).be.called();
           should(elasticsearch.client.scroll.firstCall.args[0]).be.deepEqual({
             index: esIndexName,
             scrollId: 'i-am-scroll-id',
@@ -117,7 +117,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should rejects if the scrollId does not exists in Kuzzle cache', () => {
-      kuzzle.services.internalCache.exists.resolves(0);
+      kuzzle.cacheEngine.internal.exists.resolves(0);
 
       const promise = elasticsearch.scroll(index, collection, 'i-am-scroll-id');
 
@@ -126,7 +126,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.esWrapper.reject).be.calledWithMatch({
             errorName: 'external.elasticsearch.unknown_scroll_identifier'
           });
-          should(kuzzle.services.internalCache.pexpire).not.be.called();
+          should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
           should(elasticsearch.client.scroll).not.be.called();
         });
     });
@@ -166,7 +166,7 @@ describe('Test: ElasticSearch service', () => {
             scroll: undefined
           });
 
-          should(kuzzle.services.internalCache.psetex.firstCall.args[1])
+          should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
             .be.eql(ms(elasticsearch.config.defaults.scrollTTL));
 
           should(result).match({
@@ -202,7 +202,7 @@ describe('Test: ElasticSearch service', () => {
             size: 1,
             scroll: '30s'
           });
-          should(kuzzle.services.internalCache.psetex.firstCall.args[1])
+          should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
             .be.eql(ms('30s'));
         });
     });
@@ -230,7 +230,7 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(() => {
-          should(kuzzle.services.internalCache.psetex).not.be.called();
+          should(kuzzle.cacheEngine.internal.psetex).not.be.called();
         });
     });
   });

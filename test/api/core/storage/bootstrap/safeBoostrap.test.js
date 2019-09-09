@@ -15,7 +15,6 @@ describe('SafeBootstrap', () => {
     kuzzle = new KuzzleMock();
 
     bootstrap = new SafeBootstrap(
-      kuzzle,
       kuzzle.internalIndex,
       42);
 
@@ -24,7 +23,7 @@ describe('SafeBootstrap', () => {
 
   describe('#startOrWait', () => {
     beforeEach(() => {
-      bootstrap.indexStorage.exists.resolves(false);
+      bootstrap._indexStorage.exists.resolves(false);
       bootstrap._isLocked = sinon.stub().resolves(false);
       bootstrap._waitTillUnlocked = sinon.stub().resolves();
       bootstrap._playBootstrap = sinon.stub().resolves();
@@ -83,7 +82,7 @@ describe('SafeBootstrap', () => {
 
       sinon.assert.callOrder(
         bootstrap._bootstrapSequence,
-        bootstrap.indexStorage.create,
+        bootstrap._indexStorage.create,
         bootstrap._unlock
       );
 
@@ -93,7 +92,7 @@ describe('SafeBootstrap', () => {
 
   describe('#_waitTillUnlocked', () => {
     it('should resolve if there is no active lock', () => {
-      bootstrap.indexStorage.exists.resolves(false);
+      bootstrap._indexStorage.exists.resolves(false);
 
       const promise = bootstrap._waitTillUnlocked(42);
 
@@ -101,7 +100,7 @@ describe('SafeBootstrap', () => {
     });
 
     it('should reject after 10 attempts', async () => {
-      bootstrap.indexStorage.exists.resolves(true);
+      bootstrap._indexStorage.exists.resolves(true);
       bootstrap.attemptDelay = 2;
 
       const promise = bootstrap._waitTillUnlocked();
@@ -111,14 +110,14 @@ describe('SafeBootstrap', () => {
 
     it('should make recurse call and resolve when the lock is not active', async () => {
       bootstrap.attemptDelay = 2;
-      bootstrap.indexStorage.exists
+      bootstrap._indexStorage.exists
         .onCall(0).resolves(true)
         .onCall(1).resolves(true)
         .onCall(2).resolves(false);
 
       await bootstrap._waitTillUnlocked();
 
-      should(bootstrap.indexStorage.exists.callCount).be.eql(3);
+      should(bootstrap._indexStorage.exists.callCount).be.eql(3);
     });
   });
 
@@ -126,46 +125,46 @@ describe('SafeBootstrap', () => {
     it('should delete the lock', async () => {
       await bootstrap._unlock();
 
-      should(bootstrap.indexStorage.delete)
+      should(bootstrap._indexStorage.delete)
         .be.calledWith('config', bootstrap._LOCK_ID);
     });
   });
 
   describe('#_isLocked', () => {
     it('should return true if the lock already exists', async () => {
-      bootstrap.indexStorage.get.resolves({ _source: { timestamp: Date.now() - 42 } });
+      bootstrap._indexStorage.get.resolves({ _source: { timestamp: Date.now() - 42 } });
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.true();
-      should(bootstrap.indexStorage.create).not.be.called();
-      should(bootstrap.indexStorage.createOrReplace).not.be.called();
+      should(bootstrap._indexStorage.create).not.be.called();
+      should(bootstrap._indexStorage.createOrReplace).not.be.called();
     });
 
     it('should acquire the lock and return false if the lock does not exists', async () => {
       const error = new Error('not found');
       error.status = 404;
-      bootstrap.indexStorage.get.rejects(error);
+      bootstrap._indexStorage.get.rejects(error);
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.false();
-      should(bootstrap.indexStorage.create).be.called();
+      should(bootstrap._indexStorage.create).be.called();
     });
 
     it('should acquire lock and return false if an old lock is present', async () => {
-      bootstrap.indexStorage.get.resolves({ _source: { timestamp: 42 } });
+      bootstrap._indexStorage.get.resolves({ _source: { timestamp: 42 } });
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.false();
-      should(bootstrap.indexStorage.createOrReplace).be.called();
+      should(bootstrap._indexStorage.createOrReplace).be.called();
     });
 
     it('should reject if the engine.get call is rejected with an unknown error', async () => {
       const error = new Error('not found');
       error.errorName = 'ender.game.xenocide';
-      bootstrap.indexStorage.get.rejects(error);
+      bootstrap._indexStorage.get.rejects(error);
 
       const promise = bootstrap._isLocked();
 

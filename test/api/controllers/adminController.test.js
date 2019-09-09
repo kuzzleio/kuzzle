@@ -40,7 +40,7 @@ describe('AdminController', () => {
     });
 
     it('should flush the cache for the specified database', done => {
-      kuzzle.services.publicCache.flushdb = flushdbStub.returns();
+      kuzzle.cacheEngine.public.flushdb = flushdbStub.returns();
       request.input.args.database = 'memoryStorage';
 
       adminController.resetCache(request)

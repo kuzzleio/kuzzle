@@ -19,11 +19,9 @@ describe('InternalIndexBootstrap', () => {
     kuzzle = new KuzzleMock();
 
     internalIndexStorage = new IndexStorageMock(
-      kuzzle,
       internalIndexName,
-      kuzzle.services.internalStorage);
+      kuzzle.storageEngine.internal);
 
-    kuzzle.indexCache.exists.resolves(false);
     kuzzle.config.services.internalIndex.bootstrapLockTimeout = 42000;
 
     internalIndexBootstrap = new InternalIndexBootstrap(
@@ -39,7 +37,7 @@ describe('InternalIndexBootstrap', () => {
     beforeEach(() => {
       jwtSecret = 'i-am-the-secret-now';
 
-      internalIndexBootstrap.createInternalIndex = sinon.stub().resolves();
+      internalIndexBootstrap.createInternalCollections = sinon.stub().resolves();
       internalIndexBootstrap._getJWTSecret = sinon.stub().resolves(jwtSecret);
 
       safeBootstrapStartOrWait = SafeBootstrap.prototype.startOrWait;
@@ -54,12 +52,12 @@ describe('InternalIndexBootstrap', () => {
       await internalIndexBootstrap.startOrWait();
 
       sinon.assert.callOrder(
-        internalIndexBootstrap.createInternalIndex,
+        internalIndexBootstrap.createInternalCollections,
         SafeBootstrap.prototype.startOrWait,
         internalIndexBootstrap._getJWTSecret
       );
 
-      should(internalIndexBootstrap.kuzzle.config.security.jwt.secret)
+      should(kuzzle.config.security.jwt.secret)
         .be.eql('i-am-the-secret-now');
     });
   });
@@ -83,9 +81,9 @@ describe('InternalIndexBootstrap', () => {
     });
   });
 
-  describe('#createInternalIndex', () => {
+  describe('#createInternalCollections', () => {
     it('should create internal collections', async () => {
-      await internalIndexBootstrap.createInternalIndex();
+      await internalIndexBootstrap.createInternalCollections();
 
       should(internalIndexStorage.createCollection.callCount).be.eql(5);
       should(internalIndexStorage.createCollection.getCall(0).args[0])

@@ -79,7 +79,7 @@ xdescribe('Test: memoryStorage controller', () => {
     });
 
     kuzzle = new KuzzleMock();
-    kuzzle.services.publicCache = new RedisClientMock();
+    kuzzle.cacheEngine.public = new RedisClientMock();
   });
 
   beforeEach(() => {

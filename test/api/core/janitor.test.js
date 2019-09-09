@@ -137,7 +137,7 @@ xdescribe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.publicStorage;
+      const storageEngine = kuzzle.storageEngine.public;
       storageEngine.import.onCall(0).resolves(false);
       storageEngine.import.onCall(1).resolves(true);
       storageEngine.import.onCall(2).resolves(false);
@@ -169,7 +169,7 @@ xdescribe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.publicStorage;
+      const storageEngine = kuzzle.storageEngine.public;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);

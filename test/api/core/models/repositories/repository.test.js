@@ -113,28 +113,28 @@ describe('Test: repositories/repository', () => {
 
   describe('#loadFromCache', () => {
     it('should return null for an non-existing id', () => {
-      kuzzle.services.internalCache.get.resolves(null);
+      kuzzle.cacheEngine.internal.get.resolves(null);
 
       return repository.loadFromCache(-999)
         .then(result => should(result).be.null());
     });
 
     it('should reject the promise in case of error', () => {
-      kuzzle.services.internalCache.get.rejects(new KuzzleInternalError('error'));
+      kuzzle.cacheEngine.internal.get.rejects(new KuzzleInternalError('error'));
 
       return should(repository.loadFromCache('error')).
         rejectedWith(KuzzleInternalError, {message: 'error'});
     });
 
     it('should reject the promise when loading an incorrect object', () => {
-      kuzzle.services.internalCache.get.resolves('bad type');
+      kuzzle.cacheEngine.internal.get.resolves('bad type');
 
       return should(repository.loadFromCache('string'))
         .rejectedWith(KuzzleInternalError, {message: 'Unexpected token b in JSON at position 0'});
     });
 
     it('should return a valid ObjectConstructor instance if found', () => {
-      kuzzle.services.internalCache.get.resolves(JSON.stringify(cachePojo));
+      kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(cachePojo));
 
       return repository.loadFromCache('persisted')
         .then(result => {
@@ -167,7 +167,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise when loading an incorrect object', () => {
-      kuzzle.services.internalCache.get.resolves('bad type');
+      kuzzle.cacheEngine.internal.get.resolves('bad type');
 
       return should(repository.load('string'))
         .rejectedWith(KuzzleInternalError, {message: 'Unexpected token b in JSON at position 0'});
@@ -185,7 +185,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a valid ObjectConstructor instance if found only in cache', () => {
-      kuzzle.services.internalCache.get.resolves(JSON.stringify(cachePojo));
+      kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(cachePojo));
 
       return repository.load('cached')
         .then(result => {
@@ -253,7 +253,7 @@ describe('Test: repositories/repository', () => {
     it('should call a cache deletion properly', () => {
       return repository.deleteFromCache('someId')
         .then(() => {
-          should(kuzzle.services.internalCache.del)
+          should(kuzzle.cacheEngine.internal.del)
             .calledOnce()
             .calledWith(repository.getCacheKey('someId'));
         });
@@ -278,7 +278,7 @@ describe('Test: repositories/repository', () => {
 
       return repository.delete(someObject)
         .then(() => {
-          should(kuzzle.services.internalCache.del)
+          should(kuzzle.cacheEngine.internal.del)
             .calledOnce()
             .calledWith(repository.getCacheKey('someId'));
 
@@ -293,7 +293,7 @@ describe('Test: repositories/repository', () => {
     it('should set the object if the ttl is false', () => {
       return repository.persistToCache(cachePojo, {ttl: false, key: 'someKey'})
         .then(() => {
-          should(kuzzle.services.internalCache.set)
+          should(kuzzle.cacheEngine.internal.set)
             .calledOnce()
             .calledWith('someKey', JSON.stringify(cachePojo));
         });
@@ -302,7 +302,7 @@ describe('Test: repositories/repository', () => {
     it('should set the object with a ttl by default', () => {
       return repository.persistToCache(cachePojo, {ttl: 500, key: 'someKey'})
         .then(() => {
-          should(kuzzle.services.internalCache.setex)
+          should(kuzzle.cacheEngine.internal.setex)
             .calledOnce()
             .calledWith('someKey', 500, JSON.stringify(cachePojo));
         });
@@ -313,7 +313,7 @@ describe('Test: repositories/repository', () => {
     it('should persist the object if the ttl is set to false', () => {
       repository.refreshCacheTTL(cachePojo, {ttl: false});
 
-      should(kuzzle.services.internalCache.persist)
+      should(kuzzle.cacheEngine.internal.persist)
         .calledOnce()
         .calledWith(repository.getCacheKey(cachePojo._id, repository.collection));
     });
@@ -321,7 +321,7 @@ describe('Test: repositories/repository', () => {
     it('should refresh the ttl with the provided TTL', () => {
       repository.refreshCacheTTL(cachePojo, {ttl: 500});
 
-      should(kuzzle.services.internalCache.expire)
+      should(kuzzle.cacheEngine.internal.expire)
         .calledOnce()
         .calledWith(repository.getCacheKey(cachePojo._id, repository.collection), 500);
     });
@@ -331,7 +331,7 @@ describe('Test: repositories/repository', () => {
 
       repository.refreshCacheTTL(pojo);
 
-      should(kuzzle.services.internalCache.expire)
+      should(kuzzle.cacheEngine.internal.expire)
         .calledOnce()
         .calledWith(repository.getCacheKey(pojo._id, repository.collection), 1234);
     });
@@ -341,7 +341,7 @@ describe('Test: repositories/repository', () => {
 
       repository.refreshCacheTTL(pojo, {ttl: 500});
 
-      should(kuzzle.services.internalCache.expire)
+      should(kuzzle.cacheEngine.internal.expire)
         .calledOnce()
         .calledWith(repository.getCacheKey(pojo._id, repository.collection), 500);
     });
@@ -351,7 +351,7 @@ describe('Test: repositories/repository', () => {
     it('should expire the object', () => {
       repository.expireFromCache(cachePojo);
 
-      should(kuzzle.services.internalCache.expire)
+      should(kuzzle.cacheEngine.internal.expire)
         .calledOnce()
         .calledWith(repository.getCacheKey(cachePojo._id, repository.collection), -1);
     });

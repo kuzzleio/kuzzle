@@ -7,6 +7,7 @@ const
   Bluebird = require('bluebird'),
   config = require('../../lib/config'),
   IndexStorageMock = require('./indexStorage.mock'),
+  ClientAdapterMock = require('./clientAdapter.mock'),
   foo = { foo: 'bar' };
 
 let _instance;
@@ -112,18 +113,45 @@ class KuzzleMock extends Kuzzle {
       loadSecurities: sinon.stub().resolves()
     };
 
-    this.indexCache = {
-      indexes: {},
-      add: this.sandbox.stub(),
-      exists: this.sandbox.stub(),
-      init: this.sandbox.stub().resolves(),
-      remove: this.sandbox.stub()
+    this.storageEngine = {
+      init: sinon.stub().resolves(),
+      indexCache: {
+        add: sinon.stub().resolves(),
+        remove: sinon.stub().resolves(),
+        exists: sinon.stub().resolves(),
+      },
+      public: new ClientAdapterMock(),
+      internal: new ClientAdapterMock(),
+      config: this.config.services.storageEngine
     };
 
+    this.cacheEngine = {
+      init: sinon.stub().resolves(),
+      internal: {
+        get: this.sandbox.stub().resolves(),
+        del: this.sandbox.stub().resolves(),
+        exists: this.sandbox.stub().resolves(),
+        expire: this.sandbox.stub().resolves(),
+        flushdb: this.sandbox.stub().resolves(),
+        info: this.sandbox.stub().resolves(),
+        mget: this.sandbox.stub().resolves(),
+        persist: this.sandbox.stub().resolves(),
+        pexpire: this.sandbox.stub().resolves(),
+        psetex: this.sandbox.stub().resolves(),
+        searchKeys: this.sandbox.stub().resolves(),
+        set: this.sandbox.stub().resolves(),
+        setex: this.sandbox.stub().resolves(),
+        setnx: this.sandbox.stub().resolves(),
+      },
+      public: {
+        flushdb: this.sandbox.stub().resolves(),
+        info: this.sandbox.stub().resolves()
+      }
+    }
+
     this.internalIndex = new IndexStorageMock(
-      this,
       'kuzzle',
-      this.services.internalStorage);
+      this.storageEngine.internal);
 
     this.internalIndex._bootstrap = {
       startOrWait: this.sandbox.stub().resolves(),
@@ -239,32 +267,6 @@ class KuzzleMock extends Kuzzle {
       }
     };
 
-    this.services = {
-      init: this.sandbox.stub().resolves(),
-      internalCache: {
-        get: this.sandbox.stub().resolves(),
-        del: this.sandbox.stub().resolves(),
-        exists: this.sandbox.stub().resolves(),
-        expire: this.sandbox.stub().resolves(),
-        flushdb: this.sandbox.stub().resolves(),
-        infos: this.sandbox.stub().resolves(),
-        mget: this.sandbox.stub().resolves(),
-        persist: this.sandbox.stub().resolves(),
-        pexpire: this.sandbox.stub().resolves(),
-        psetex: this.sandbox.stub().resolves(),
-        searchKeys: this.sandbox.stub().resolves(),
-        set: this.sandbox.stub().resolves(),
-        setex: this.sandbox.stub().resolves(),
-        setnx: this.sandbox.stub().resolves(),
-      },
-      publicCache: {
-        flushdb: this.sandbox.stub().resolves(),
-        infos: this.sandbox.stub().resolves()
-      },
-      internalStorage: getESMock(this, 'internal'),
-      publicStorage: getESMock(this, 'public'),
-    };
-
     this.start = sinon.stub().resolves();
 
     this.statistics = {
@@ -334,44 +336,4 @@ class KuzzleMock extends Kuzzle {
   }
 }
 
-
-function getESMock (kuzzleMock, scope) {
-  return {
-    scope,
-    indexPrefix: scope === 'public'
-      ? '&'
-      : '%',
-    infos: kuzzleMock.sandbox.stub().resolves(),
-    scroll: kuzzleMock.sandbox.stub().resolves(),
-    search: kuzzleMock.sandbox.stub().resolves(),
-    get: kuzzleMock.sandbox.stub().resolves(),
-    mGet: kuzzleMock.sandbox.stub().resolves(),
-    count: kuzzleMock.sandbox.stub().resolves(),
-    create: kuzzleMock.sandbox.stub().resolves(),
-    createOrReplace: kuzzleMock.sandbox.stub().resolves(),
-    update: kuzzleMock.sandbox.stub().resolves(),
-    replace: kuzzleMock.sandbox.stub().resolves(),
-    delete: kuzzleMock.sandbox.stub().resolves(),
-    deleteByQuery: kuzzleMock.sandbox.stub().resolves(),
-    createIndex: kuzzleMock.sandbox.stub().resolves(),
-    createCollection: kuzzleMock.sandbox.stub().resolves(),
-    getMapping: kuzzleMock.sandbox.stub().resolves(),
-    truncateCollection: kuzzleMock.sandbox.stub().resolves(),
-    import: kuzzleMock.sandbox.stub().resolves(),
-    listCollections: kuzzleMock.sandbox.stub().resolves(),
-    listIndexes: kuzzleMock.sandbox.stub().resolves(),
-    listAliases: kuzzleMock.sandbox.stub().resolves(),
-    deleteIndexes: kuzzleMock.sandbox.stub().resolvesArg(0),
-    deleteIndex: kuzzleMock.sandbox.stub().resolves(),
-    refreshCollection: kuzzleMock.sandbox.stub().resolves(),
-    exists: kuzzleMock.sandbox.stub().resolves(),
-    indexExists: kuzzleMock.sandbox.stub().resolves(),
-    collectionExists: kuzzleMock.sandbox.stub().resolves(),
-    mCreate: kuzzleMock.sandbox.stub().resolves(),
-    mCreateOrReplace: kuzzleMock.sandbox.stub().resolves(),
-    mUpdate: kuzzleMock.sandbox.stub().resolves(),
-    mReplace: kuzzleMock.sandbox.stub().resolves(),
-    mDelete: kuzzleMock.sandbox.stub().resolves()
-  };
-}
 module.exports = KuzzleMock;

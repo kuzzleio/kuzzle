@@ -111,7 +111,7 @@ xdescribe('Test: server controller', () => {
 
   describe('#healthCheck', () => {
     beforeEach(() => {
-      kuzzle.services.publicStorage.infos.resolves({status: 'green'});
+      kuzzle.storageEngine.public.infos.resolves({status: 'green'});
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
@@ -119,76 +119,76 @@ xdescribe('Test: server controller', () => {
         .then(response => {
           should(request.response.error).be.null();
           should(response.status).be.exactly('green');
-          should(response.services.internalCache).be.exactly('green');
+          should(response.cacheEngine.internal).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('green');
           should(response.services.storageEngine).be.exactly('green');
         });
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "yellow" and Redis is OK', () => {
-      kuzzle.services.publicStorage.infos.resolves({status: 'yellow'});
+      kuzzle.storageEngine.public.infos.resolves({status: 'yellow'});
 
       return serverController.healthCheck(request)
         .then(response => {
           should(request.response.error).be.null();
           should(response.status).be.exactly('green');
-          should(response.services.internalCache).be.exactly('green');
+          should(response.cacheEngine.internal).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('green');
           should(response.services.storageEngine).be.exactly('green');
         });
     });
 
     it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
-      kuzzle.services.publicStorage.infos.resolves({status: 'red'});
+      kuzzle.storageEngine.public.infos.resolves({status: 'red'});
 
       return serverController.healthCheck(request)
         .then(response => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
-          should(response.services.internalCache).be.exactly('green');
+          should(response.cacheEngine.internal).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('green');
           should(response.services.storageEngine).be.exactly('red');
         });
     });
 
     it('should return a 503 response with status "red" if storageEngine is KO', () => {
-      kuzzle.services.publicStorage.infos.rejects(new Error());
+      kuzzle.storageEngine.public.infos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
-          should(response.services.internalCache).be.exactly('green');
+          should(response.cacheEngine.internal).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('green');
           should(response.services.storageEngine).be.exactly('red');
         });
     });
 
     it('should return a 503 response with status "red" if memoryStorage is KO', () => {
-      kuzzle.services.publicCache.infos.rejects(new Error());
+      kuzzle.cacheEngine.public.infos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
-          should(response.services.internalCache).be.exactly('green');
+          should(response.cacheEngine.internal).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('red');
           should(response.services.storageEngine).be.exactly('green');
         });
     });
 
     it('should return a 503 response with status "red" if internalCache is KO', () => {
-      kuzzle.services.internalCache.infos.rejects(new Error());
+      kuzzle.cacheEngine.internal.infos.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
           should(request.response.error).be.instanceOf(ServiceUnavailableError);
           should(request.response.status).be.exactly(503);
           should(response.status).be.exactly('red');
-          should(response.services.internalCache).be.exactly('red');
+          should(response.cacheEngine.internal).be.exactly('red');
           should(response.services.memoryStorage).be.exactly('green');
           should(response.services.storageEngine).be.exactly('green');
         });
@@ -264,7 +264,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.infos.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.infos.rejects(new Error('foobar'));
       return should(serverController.info()).be.rejected();
     });
   });

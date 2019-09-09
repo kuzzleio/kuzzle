@@ -68,7 +68,7 @@ xdescribe('Test: GarbageCollector service', () => {
     });
 
     it('should clean all collections in all indexes', () => {
-      kuzzle.services.publicStorage.deleteByQueryFromTrash
+      kuzzle.storageEngine.public.deleteByQueryFromTrash
         .onFirstCall().resolves({ids: ['document1-1-1', 'document1-1-2']})
         .onSecondCall().resolves({ids: ['document2-1-1']})
         .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});
@@ -94,7 +94,7 @@ xdescribe('Test: GarbageCollector service', () => {
     });
 
     it('should skip collections if kuzzle becomes overloaded during the process', () => {
-      kuzzle.services.publicStorage.deleteByQueryFromTrash
+      kuzzle.storageEngine.public.deleteByQueryFromTrash
         .onFirstCall().resolves({ids: ['document1-1-1', 'document1-1-2']})
         .onSecondCall().callsFake(() => {
           kuzzle.funnel.overloaded = true;
@@ -122,7 +122,7 @@ xdescribe('Test: GarbageCollector service', () => {
     it('should discard errors', () => {
       const error = new Error('mocked error');
 
-      kuzzle.services.publicStorage.deleteByQueryFromTrash
+      kuzzle.storageEngine.public.deleteByQueryFromTrash
         .onFirstCall().rejects(error)
         .onSecondCall().resolves({ids: ['document2-1-1']})
         .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});

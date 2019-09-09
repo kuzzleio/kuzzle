@@ -45,7 +45,7 @@ describe('Test: notifier.publish', () => {
             _id: rawRequest._id
           });
 
-        should(kuzzle.services.internalCache.setex).not.be.called();
+        should(kuzzle.cacheEngine.internal.setex).not.be.called();
       });
   });
 });

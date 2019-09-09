@@ -32,7 +32,7 @@ xdescribe('Test: collection controller', () => {
       collection
     };
     kuzzle = new KuzzleMock();
-    engine = kuzzle.services.publicStorage;
+    engine = kuzzle.storageEngine.public;
     collectionController = new CollectionController(kuzzle);
     request = new Request(data);
   });
@@ -55,8 +55,8 @@ xdescribe('Test: collection controller', () => {
       return collectionController.updateMapping(request)
         .then(response => {
 
-          should(kuzzle.services.publicStorage.updateMapping).be.calledOnce();
-          should(kuzzle.services.publicStorage.updateMapping).be.calledWith(request);
+          should(kuzzle.storageEngine.public.updateMapping).be.calledOnce();
+          should(kuzzle.storageEngine.public.updateMapping).be.calledWith(request);
 
           should(kuzzle.indexCache.add).be.calledOnce();
           should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
@@ -72,8 +72,8 @@ xdescribe('Test: collection controller', () => {
       return collectionController.getMapping(request)
         .then(response => {
 
-          should(kuzzle.services.publicStorage.getMapping).be.calledOnce();
-          should(kuzzle.services.publicStorage.getMapping).be.calledWith(request);
+          should(kuzzle.storageEngine.public.getMapping).be.calledOnce();
+          should(kuzzle.storageEngine.public.getMapping).be.calledWith(request);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -85,7 +85,7 @@ xdescribe('Test: collection controller', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return collectionController.truncate(request)
         .then(response => {
-          const truncate = kuzzle.services.publicStorage.truncateCollection;
+          const truncate = kuzzle.storageEngine.public.truncateCollection;
 
           should(truncate).be.calledOnce();
           should(truncate).be.calledWith(request);
@@ -568,7 +568,7 @@ xdescribe('Test: collection controller', () => {
 
   describe('#list', () => {
     beforeEach(() => {
-      kuzzle.services.publicStorage.listCollections.resolves({collections: {stored: ['foo']}});
+      kuzzle.storageEngine.public.listCollections.resolves({collections: {stored: ['foo']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
@@ -578,7 +578,7 @@ xdescribe('Test: collection controller', () => {
       return collectionController.list(request)
         .then(response => {
           should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
-          should(kuzzle.services.publicStorage.listCollections).be.calledOnce();
+          should(kuzzle.storageEngine.public.listCollections).be.calledOnce();
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('all');
           should(response.collections).not.be.undefined().and.be.an.Array();
@@ -602,7 +602,7 @@ xdescribe('Test: collection controller', () => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('stored');
           should(kuzzle.hotelClerk.getRealtimeCollections).not.be.called();
-          should(kuzzle.services.publicStorage.listCollections).be.called();
+          should(kuzzle.storageEngine.public.listCollections).be.called();
         });
     });
 
@@ -614,13 +614,13 @@ xdescribe('Test: collection controller', () => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('realtime');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.publicStorage.listCollections).not.be.called();
+          should(kuzzle.storageEngine.public.listCollections).not.be.called();
         });
     });
 
     it('should return a portion of the collection list if from and size are specified', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
-      kuzzle.services.publicStorage.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.storageEngine.public.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -633,13 +633,13 @@ xdescribe('Test: collection controller', () => {
           ]);
           should(response.type).be.exactly('all');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.publicStorage.listCollections).be.called();
+          should(kuzzle.storageEngine.public.listCollections).be.called();
         });
     });
 
     it('should return a portion of the collection list if from is specified', () => {
       request = new Request({index: 'index', type: 'all', from: 8});
-      kuzzle.services.publicStorage.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      kuzzle.storageEngine.public.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -651,13 +651,13 @@ xdescribe('Test: collection controller', () => {
           ]);
           should(response).be.instanceof(Object);
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.publicStorage.listCollections).be.called();
+          should(kuzzle.storageEngine.public.listCollections).be.called();
         });
     });
 
     it('should return a portion of the collection list if size is specified', () => {
       request = new Request({index: 'index', type: 'all', size: 2});
-      kuzzle.services.publicStorage.listCollections.resolves({
+      kuzzle.storageEngine.public.listCollections.resolves({
         collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
       });
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
@@ -671,19 +671,19 @@ xdescribe('Test: collection controller', () => {
           ]);
           should(response.type).be.exactly('all');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.services.publicStorage.listCollections).be.called();
+          should(kuzzle.storageEngine.public.listCollections).be.called();
         });
     });
 
 
     it('should reject an error if getting stored collections fails', () => {
-      kuzzle.services.publicStorage.listCollections.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'stored'});
       return should(collectionController.list(request)).be.rejected();
     });
 
     it('should reject an error if getting all collections fails', () => {
-      kuzzle.services.publicStorage.listCollections.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'all'});
       return should(collectionController.list(request)).be.rejected();
     });
@@ -691,11 +691,11 @@ xdescribe('Test: collection controller', () => {
 
   describe('#exists', () => {
     it('should call the storageEngine', () => {
-      kuzzle.services.publicStorage.collectionExists.resolves(foo);
+      kuzzle.storageEngine.public.collectionExists.resolves(foo);
       return collectionController.exists(request)
         .then(response => {
           should(response).match(foo);
-          should(kuzzle.services.publicStorage.collectionExists).be.calledOnce();
+          should(kuzzle.storageEngine.public.collectionExists).be.calledOnce();
         });
     });
   });

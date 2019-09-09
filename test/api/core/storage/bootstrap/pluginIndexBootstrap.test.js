@@ -23,12 +23,12 @@ describe('PluginBoostrap', () => {
     pluginIndexStorage = new IndexStorage(
       kuzzle,
       pluginIndexName,
-      kuzzle.services.internalStorage);
+      kuzzle.storageEngine.internal);
 
     pluginIndexBootstrap = new PluginIndexBootstrap(
-      kuzzle,
       pluginName,
-      pluginIndexStorage);
+      pluginIndexStorage,
+      kuzzle.config.plugins.common.bootstrapLockTimeout);
 
     collections = {
       liia: { properties: { name: { type: 'keyword' } } },
@@ -54,19 +54,19 @@ describe('PluginBoostrap', () => {
 
   describe('#_createCollections', () => {
     it('should create collection with the indexStorage', async () => {
-      pluginIndexBootstrap.indexStorage.createCollection = sinon.stub().resolves();
+      pluginIndexBootstrap._indexStorage.createCollection = sinon.stub().resolves();
 
       await pluginIndexBootstrap._createCollections(collections);
 
-      should(pluginIndexBootstrap.indexStorage.createCollection)
+      should(pluginIndexBootstrap._indexStorage.createCollection)
         .be.calledTwice();
 
-      const firstCallArgs = pluginIndexBootstrap.indexStorage.createCollection
+      const firstCallArgs = pluginIndexBootstrap._indexStorage.createCollection
         .getCall(0).args;
       should(...firstCallArgs)
         .match('liia', { properties: { name: { type: 'keyword' } } });
 
-      const secondCallArgs = pluginIndexBootstrap.indexStorage.createCollection
+      const secondCallArgs = pluginIndexBootstrap._indexStorage.createCollection
         .getCall(1).args;
       should(...secondCallArgs)
         .match('mehry', { properties: { name: { type: 'text' } } });
