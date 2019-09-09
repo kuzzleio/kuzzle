@@ -30,8 +30,8 @@ class ColorOutput {
     // /!\ "opts" might be a string
     const noColors =
       typeof opts === 'object' &&
-      opts.parent &&
-      opts.parent.noColors;
+        opts.parent &&
+        opts.parent.noColors;
 
     this.format = {
       error: noColors ? noop : clc.red,

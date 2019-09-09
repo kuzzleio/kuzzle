@@ -23,10 +23,10 @@
 
 const
   fs = require('fs'),
-  ColorOutput = require('../.utils/colorOutput'),
+  ColorOutput = require('./colorOutput'),
   path = require('path'),
   ndjson = require('ndjson'),
-  getSdk = require('../.utils/getSdk');
+  getSdk = require('./getSdk');
 
 // @todo use 'recursive: true' with node.js 10
 function mkdirp (fullPath) {
@@ -88,7 +88,9 @@ async function dumpCollection (sdk, index, collection, batchSize, directoryPath)
         await new Promise(resolve => ndjsonStream.once('drain', resolve));
       }
     }
-  } while (results = await results.next());
+
+    results = await results.next();
+  } while (results);
 
   ndjsonStream.end();
   writeStream.end();

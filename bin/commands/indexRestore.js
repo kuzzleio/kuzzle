@@ -23,16 +23,16 @@
 
 const
   fs = require('fs'),
-  ColorOutput = require('../.utils/colorOutput'),
+  ColorOutput = require('./colorOutput'),
   ndjson = require('ndjson'),
-  getSdk = require('../.utils/getSdk');
+  getSdk = require('./getSdk');
 
 function handleError(cout, dumpFile, error) {
   if (error.status === 206) {
     const
       errorFile = `${dumpFile.split('.').slice(0, -1).join('.')}-errors.jsonl`,
       writeStream = fs.createWriteStream(errorFile, { flags: 'a' }),
-      serialize = ndjson.serialize().pipe(writeStream)
+      serialize = ndjson.serialize().pipe(writeStream);
 
     serialize.on('data', line => {
       writeStream.write(line);
@@ -105,7 +105,7 @@ function importCollection(sdk, cout, batchSize, dumpFile) {
               process.stdout.write(`  ${total} documents handled`);
               process.stdout.write('\r');
 
-              resolve()
+              resolve();
             });
         } else {
           resolve();
@@ -128,19 +128,18 @@ async function indexRestore (dumpDirectory, options) {
 
   const dumpFiles = fs.readdirSync(dumpDirectory).map(f => `${dumpDirectory}/${f}`);
 
-  try {
-    for (const dumpFile of dumpFiles) {
+  for (const dumpFile of dumpFiles) {
+    try {
       await importCollection(sdk, cout, batchSize, dumpFile);
-
-      cout.ok(`[✔] Dump file ${dumpFile} imported`);
+    } catch (error) {
+      cout.warn(`[ℹ] Error importing ${dumpFile}: ${error.message}`);
+      process.exit(1);
     }
 
-    process.exit(0);
-  } catch (error) {
-    cout.warn(`[ℹ] Error importing ${dumpFile}: ${error.message}`);
-
-    process.exit(1);
+    cout.ok(`[✔] Dump file ${dumpFile} imported`);
   }
+
+  process.exit(0);
 }
 
 module.exports = indexRestore;

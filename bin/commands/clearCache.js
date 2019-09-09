@@ -23,8 +23,8 @@ const
   rc = require('rc'),
   params = rc('kuzzle'),
   readlineSync = require('readline-sync'),
-  ColorOutput = require('../.utils/colorOutput'),
-  getSdk = require('../.utils/getSdk');
+  ColorOutput = require('./colorOutput'),
+  getSdk = require('./getSdk');
 
 function commandClearCache (database, options) {
   let

@@ -22,8 +22,8 @@
 const
   Bluebird = require('bluebird'),
   readlineSync = require('readline-sync'),
-  ColorOutput = require('../.utils/colorOutput'),
-  getSdk = require('../.utils/getSdk');
+  ColorOutput = require('./colorOutput'),
+  getSdk = require('./getSdk');
 
 /** @type ColorOutput */
 let cout;

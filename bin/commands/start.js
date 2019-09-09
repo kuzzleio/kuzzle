@@ -21,8 +21,8 @@
 
 const
   semver = require('semver'),
-  loadJson = require('../.utils/loadJson'),
-  ColorOutput = require('../.utils/colorOutput');
+  loadJson = require('./loadJson'),
+  ColorOutput = require('./colorOutput');
 
 function commandStart (options = {}) {
   let kuzzle;

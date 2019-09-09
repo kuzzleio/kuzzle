@@ -24,7 +24,7 @@ const
   fs = require('fs'),
   path = require('path'),
   readlineSync = require('readline-sync'),
-  ColorOutput = require('../.utils/colorOutput');
+  ColorOutput = require('./colorOutput');
 
 let Vault;
 

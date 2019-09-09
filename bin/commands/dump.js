@@ -21,7 +21,7 @@
 
 const
   ColorOutput = require('./colorOutput'),
-  getSdk = require('../.utils/getSdk');
+  getSdk = require('./getSdk');
 
 async function commandDump (options) {
   const
@@ -35,7 +35,7 @@ async function commandDump (options) {
       controller: 'admin',
       action: 'dump',
       suffix: 'cli'
-  };
+    };
 
   return sdk.query(request)
     .then(response => {

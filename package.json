@@ -14,7 +14,7 @@
     "functional-testing": "bash features/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./test ./features",
+    "lint": "eslint --max-warnings=0 ./lib ./test ./features ./bin",
     "build-cli": "node bin/build-cli.js",
     "doc-prepare": "cd doc && bash doc.sh prepare",
     "doc-dev": "cd doc && bash doc.sh dev",
@@ -49,6 +49,7 @@
     "eventemitter3": "^4.0.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.4",
+    "inquirer": "^7.0.0",
     "ioredis": "^4.11.2",
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",
@@ -79,7 +80,8 @@
     "winston-elasticsearch": "0.7.12",
     "winston-syslog": "^2.1.0",
     "winston-transport": "^4.3.0",
-    "ws": "^7.1.1"
+    "ws": "^7.1.1",
+    "yargs": "^14.0.0"
   },
   "repository": {
     "type": "git",

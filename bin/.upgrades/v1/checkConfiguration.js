@@ -18,32 +18,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-const
-  ColorOutput = require('./colorOutput'),
-  getSdk = require('./getSdk');
-
-function commandShutdown (options) {
-  const
-    cout = new ColorOutput(options);
-
-  cout.notice('[ℹ] Shutting down...');
-
-  const request = {
-    controller: 'admin',
-    action: 'shutdown'
-  };
-
-  return getSdk(options)
-    .then(sdk => sdk.query(request))
-    .then(() => {
-      cout.ok('[✔] Done');
-      process.exit(0);
-    })
-    .catch(err => {
-      cout.error(err);
-      process.exit(1);
-    });
-}
-
-module.exports = commandShutdown;
