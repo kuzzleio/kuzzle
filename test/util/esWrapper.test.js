@@ -224,5 +224,26 @@ describe('Test: ElasticSearch Wrapper', () => {
           });
         });
     });
+
+    it('should accept indices containing a dot', () => {
+      client.indices.getMapping.resolves({
+        '.foo.bar': {
+          mappings: {
+            foo: { properties: {} }
+          }
+        }
+      });
+
+      return esWrapper.getMapping()
+        .then(result => {
+          should(result).match({
+            '.foo.bar': {
+              mappings: {
+                foo: { properties: {} }
+              }
+            }
+          });
+        });
+    });
   });
 });
