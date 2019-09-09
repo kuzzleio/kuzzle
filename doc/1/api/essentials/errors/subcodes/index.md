@@ -21,8 +21,8 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00000001`  | `Unknown error: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unknown_error | internal.unexpected.unknown_error
-`0x00000002`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to init within <placeholder>ms` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | timeout | internal.unexpected.timeout
+`0x00000001`  | `Unknown error: <placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | unknown_error | internal.unexpected.unknown_error
+`0x00000002`  | `[FATAL] Service "<placeholder>[<placeholder>]" failed to init within <placeholder>ms` | [InternalError](/core/1/api/essentials/errors#internalerror) | timeout | internal.unexpected.timeout
 
 ---
 
@@ -31,7 +31,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00010001`  | `Service unavailable: <placeholder>.` | [ServiceUnavailableError](https://docs.kuzzle.io/core/1/api/essentials/errors/#serviceunavailableerror) | service_unavailable | internal.external_services.service_unavailable
+`0x00010001`  | `Service unavailable: <placeholder>.` | [ServiceUnavailableError](/core/1/api/essentials/errors#serviceunavailableerror) | service_unavailable | internal.external_services.service_unavailable
 
 ---
 
@@ -40,18 +40,18 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00020001`  | `The room Id "<placeholder>" does not exist.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | room_id_not_exists | internal.hotelclerk.room_id_not_exists
-`0x00020002`  | `No subscription found on index <placeholder> and collection <placeholder>.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | subscription_not_found | internal.hotelclerk.subscription_not_found
-`0x00020003`  | `The rooms attribute must be an array.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | rooms_attribute_type | internal.hotelclerk.rooms_attribute_type
-`0x00020004`  | `Incorrect value for the 'state' parameter. Expected: all, done or pending. Got: <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | incorrect_state_value | internal.hotelclerk.incorrect_state_value
-`0x00020005`  | `Incorrect value for the 'scope' parameter. Expected: all, done or pending. Got: <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | incorrect_scope_value | internal.hotelclerk.incorrect_scope_value
-`0x00020006`  | `Incorrect value for the 'users' parameter. Expected: all, done or pending. Got: <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | incorrect_users_value | internal.hotelclerk.incorrect_users_value
-`0x00020007`  | `Cannot subscribe without an index and a collection.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_subscription_parameter | internal.hotelclerk.missing_subscription_parameter
-`0x00020008`  | `Unable to subscribe: maximum number of minterms exceeded (max <placeholder>, received <placeholder>).` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | limit_minterms_reached | internal.hotelclerk.limit_minterms_reached
-`0x00020009`  | `Unable to subscribe: maximum number of unique rooms reached.` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | limit_unique_rooms_reached | internal.hotelclerk.limit_unique_rooms_reached
-`0x0002000a`  | `Unsubscribe error: no subscription found for that user.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | cant_unsubscribe_unknown_user | internal.hotelclerk.cant_unsubscribe_unknown_user
-`0x0002000b`  | `Unsubscribe error: not subscribed to <placeholder>.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | cant_unsubscribe_user_not_subscribed | internal.hotelclerk.cant_unsubscribe_user_not_subscribed
-`0x0002000c`  | `Unsubscribe error: room <placeholder> not found.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | cant_unsubscribe_unknown_room | internal.hotelclerk.cant_unsubscribe_unknown_room
+`0x00020001`  | `The room Id "<placeholder>" does not exist.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | room_id_not_exists | internal.hotelclerk.room_id_not_exists
+`0x00020002`  | `No subscription found on index <placeholder> and collection <placeholder>.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | subscription_not_found | internal.hotelclerk.subscription_not_found
+`0x00020003`  | `The rooms attribute must be an array.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | rooms_attribute_type | internal.hotelclerk.rooms_attribute_type
+`0x00020004`  | `Incorrect value for the 'state' parameter. Expected: all, done or pending. Got: <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | incorrect_state_value | internal.hotelclerk.incorrect_state_value
+`0x00020005`  | `Incorrect value for the 'scope' parameter. Expected: all, done or pending. Got: <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | incorrect_scope_value | internal.hotelclerk.incorrect_scope_value
+`0x00020006`  | `Incorrect value for the 'users' parameter. Expected: all, done or pending. Got: <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | incorrect_users_value | internal.hotelclerk.incorrect_users_value
+`0x00020007`  | `Cannot subscribe without an index and a collection.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_subscription_parameter | internal.hotelclerk.missing_subscription_parameter
+`0x00020008`  | `Unable to subscribe: maximum number of minterms exceeded (max <placeholder>, received <placeholder>).` | [SizeLimitError](/core/1/api/essentials/errors#sizelimiterror) | limit_minterms_reached | internal.hotelclerk.limit_minterms_reached
+`0x00020009`  | `Unable to subscribe: maximum number of unique rooms reached.` | [SizeLimitError](/core/1/api/essentials/errors#sizelimiterror) | limit_unique_rooms_reached | internal.hotelclerk.limit_unique_rooms_reached
+`0x0002000a`  | `Unsubscribe error: no subscription found for that user.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | cant_unsubscribe_unknown_user | internal.hotelclerk.cant_unsubscribe_unknown_user
+`0x0002000b`  | `Unsubscribe error: not subscribed to <placeholder>.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | cant_unsubscribe_user_not_subscribed | internal.hotelclerk.cant_unsubscribe_user_not_subscribed
+`0x0002000c`  | `Unsubscribe error: room <placeholder> not found.` | [InternalError](/core/1/api/essentials/errors#internalerror) | cant_unsubscribe_unknown_room | internal.hotelclerk.cant_unsubscribe_unknown_room
 
 ---
 
@@ -60,9 +60,9 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00030001`  | `Some data was not imported for <placeholder>/<placeholder> (<placeholder>/<placeholder>).` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | import_data | internal.janitor.import_data
-`0x00030002`  | `A dump is already being generated. Skipping.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | dump_already_generated | internal.janitor.dump_already_generated
-`0x00030003`  | `Cannot read log directory '<placeholder>' : <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | reading_log_directory | internal.janitor.reading_log_directory
+`0x00030001`  | `Some data was not imported for <placeholder>/<placeholder> (<placeholder>/<placeholder>).` | [PartialError](/core/1/api/essentials/errors#partialerror) | import_data | internal.janitor.import_data
+`0x00030002`  | `A dump is already being generated. Skipping.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | dump_already_generated | internal.janitor.dump_already_generated
+`0x00030003`  | `Cannot read log directory '<placeholder>' : <placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | reading_log_directory | internal.janitor.reading_log_directory
 
 ---
 
@@ -71,8 +71,8 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00040001`  | `Cannot decrypt secrets: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | decrypt_secrets | internal.vault.decrypt_secrets
-`0x00040002`  | `Cannot find vault key. Aborting.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | vault_key_not_found | internal.vault.vault_key_not_found
+`0x00040001`  | `Cannot decrypt secrets: <placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | decrypt_secrets | internal.vault.decrypt_secrets
+`0x00040002`  | `Cannot find vault key. Aborting.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | vault_key_not_found | internal.vault.vault_key_not_found
 
 ---
 
@@ -81,54 +81,54 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00050001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of lowercased letters, numbers, hyphens and underscores.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_plugin_name | internal.plugins.invalid_plugin_name
-`0x00050002`  | `[<placeholder>] Invalid "privileged" property: expected a boolean, got a <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_privileged_property | internal.plugins.invalid_privileged_property
-`0x00050003`  | `[<placeholder>] No package.json file found.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_package_json | internal.plugins.missing_package_json
-`0x00050004`  | `[<placeholder>] No "name" property provided in package.json.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_name_property_in_package_json | internal.plugins.missing_name_property_in_package_json
-`0x00050005`  | `You must provide a valid User object when adding context with as().` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_user_object | internal.plugins.invalid_user_object
-`0x00050006`  | `The collection must be specified.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | collection_not_specified | internal.plugins.collection_not_specified
-`0x00050007`  | `Invalid argument: Expected callback to be a function, received "<placeholder>".` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | callback_argument_expected | internal.plugins.callback_argument_expected
-`0x00050008`  | `Invalid argument: a Request object must be supplied.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_request_object | internal.plugins.missing_request_object
-`0x00050009`  | `Custom event invalid name (<placeholder>). Colons are not allowed in custom events.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_custom_event_name | internal.plugins.invalid_custom_event_name
-`0x0005000a`  | `A Request object and/or request data must be provided.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_request_data_or_object | internal.plugins.missing_request_data_or_object
-`0x0005000b`  | `[<placeholder>] Strategy <placeholder>: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_strategy_registration | internal.plugins.invalid_strategy_registration
-`0x0005000c`  | `Something went wrong during initialization of "<placeholder>" plugin.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_initialization_failed | internal.plugins.plugin_initialization_failed
-`0x0005000d`  | `<placeholder> expected the strategy description to be an object, got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | strategy_description_type | internal.plugins.strategy_description_type
-`0x0005000e`  | `<placeholder> expected a "methods" property of type "object", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | methods_property_type | internal.plugins.methods_property_type
-`0x0005000f`  | `<placeholder> expected a "<placeholder>" property of type "string", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | methodname_property_type | internal.plugins.methodname_property_type
-`0x00050010`  | `<placeholder> the strategy method "<placeholder>" must point to an exposed function.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_strategy_method | internal.plugins.invalid_strategy_method
-`0x00050011`  | `<placeholder> expected the "<placeholder>" property to be of type "string", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_property_type | internal.plugins.invalid_property_type
-`0x00050012`  | `<placeholder> expected a "config" property of type "object", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_config_property | internal.plugins.missing_config_property
-`0x00050013`  | `<placeholder> the "authenticator" and "constructor" parameters cannot both be set.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | cannot_set_ctor_and_authenticator | internal.plugins.cannot_set_ctor_and_authenticator
-`0x00050014`  | `<placeholder> invalid "constructor" property value: constructor expected.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_constructor_property_value | internal.plugins.invalid_constructor_property_value
-`0x00050015`  | `<placeholder> expected an "authenticator" property of type "string", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | authenticator_property_type | internal.plugins.authenticator_property_type
-`0x00050016`  | `<placeholder> unknown authenticator value: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unknown_authenticator_value | internal.plugins.unknown_authenticator_value
-`0x00050017`  | `<placeholder> expected the "<placeholder>" property to be of type "object", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | expected_object_type | internal.plugins.expected_object_type
-`0x00050018`  | `<placeholder> expected the "fields" property to be of type "array", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_fields_property_type | internal.plugins.invalid_fields_property_type
-`0x00050019`  | `Plugin <placeholder> pipe for event '<placeholder>' threw a non-Kuzzle error: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_threw_non_kuzzle_error | internal.plugins.plugin_threw_non_kuzzle_error
-`0x0005001a`  | `<placeholder> expected the "verify" to return a Promise, got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | verify_dont_return_promise | internal.plugins.verify_dont_return_promise
-`0x0005001b`  | `<placeholder> invalid authentication strategy result.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_authentication_strategy_result | internal.plugins.invalid_authentication_strategy_result
-`0x0005001c`  | `<placeholder> invalid authentication kuid returned: expected a string, got a <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_authentication_kuid | internal.plugins.invalid_authentication_kuid
-`0x0005001d`  | `<placeholder> returned an unknown Kuzzle user identifier.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unkown_kuzzle_user_identifier | internal.plugins.unkown_kuzzle_user_identifier
-`0x0005001e`  | `Cannot remove strategy <placeholder>: owned by another plugin.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | cannot_remove_others_plugin_strategy | internal.plugins.cannot_remove_others_plugin_strategy
-`0x0005001f`  | `Cannot remove strategy <placeholder>: strategy does not exist.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | cannot_remove_unexistant_strategy | internal.plugins.cannot_remove_unexistant_strategy
-`0x00050020`  | `<placeholder> Incorrect controller description type (expected object, got: "<placeholder>").` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | incorrect_controller_description_type | internal.plugins.incorrect_controller_description_type
-`0x00050021`  | `<placeholder> Unknown property "<placeholder>" in route definition. <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unknown_property_key_in_route_definition | internal.plugins.unknown_property_key_in_route_definition
-`0x00050022`  | `<placeholder> "<placeholder>" must be a non-empty string.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | key_cannot_be_empty_string | internal.plugins.key_cannot_be_empty_string
-`0x00050023`  | `Undefined controller "<placeholder>". <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | undefined_controller | internal.plugins.undefined_controller
-`0x00050024`  | `Undefined action "<placeholder>". <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | undefined_action | internal.plugins.undefined_action
-`0x00050025`  | `<placeholder> Only following http verbs are allowed: "<placeholder>". <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | http_verb_not_allowed | internal.plugins.http_verb_not_allowed
-`0x00050026`  | `<placeholder> the exposed "strategies" plugin property must be a non-empty object.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | strategies_plugin_property_empty | internal.plugins.strategies_plugin_property_empty
-`0x00050027`  | `<placeholder> the exposed "authenticators" plugin property must be of type "object".` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | authenticators_plugin_property_not_an_object | internal.plugins.authenticators_plugin_property_not_an_object
-`0x00050028`  | `<placeholder> invalid authenticator <placeholder>: expected a constructor.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_authenticator | internal.plugins.invalid_authenticator
-`0x00050029`  | `Unable to load plugins from directory "<placeholder>"; <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_load_plugin_from_directory | internal.plugins.unable_to_load_plugin_from_directory
-`0x0005002a`  | `Unable to load plugin from path "<placeholder>"; <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_load_plugin_from_path | internal.plugins.unable_to_load_plugin_from_path
-`0x0005002b`  | `Plugin <placeholder> is not a constructor.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_is_not_a_constructor | internal.plugins.plugin_is_not_a_constructor
-`0x0005002c`  | `[<placeholder>] No "init" method found.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | init_method_not_found | internal.plugins.init_method_not_found
-`0x0005002d`  | `The plugin "<placeholder>" is configured to run in privileged mode, but it does not seem to support it.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | privileged_mode_not_supported | internal.plugins.privileged_mode_not_supported
-`0x0005002e`  | `The plugin "<placeholder>" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | privileged_mode_not_setted | internal.plugins.privileged_mode_not_setted
-`0x0005002f`  | `A plugin named <placeholder> already exists` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_name_already_exists | internal.plugins.plugin_name_already_exists
-`0x00050030`  | `FunnelProtocol.constructor: Invalid User object "<placeholder>"` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | invalid_user_object_provided | internal.plugins.invalid_user_object_provided
+`0x00050001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of lowercased letters, numbers, hyphens and underscores.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_plugin_name | internal.plugins.invalid_plugin_name
+`0x00050002`  | `[<placeholder>] Invalid "privileged" property: expected a boolean, got a <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_privileged_property | internal.plugins.invalid_privileged_property
+`0x00050003`  | `[<placeholder>] No package.json file found.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_package_json | internal.plugins.missing_package_json
+`0x00050004`  | `[<placeholder>] No "name" property provided in package.json.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_name_property_in_package_json | internal.plugins.missing_name_property_in_package_json
+`0x00050005`  | `You must provide a valid User object when adding context with as().` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_user_object | internal.plugins.invalid_user_object
+`0x00050006`  | `The collection must be specified.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | collection_not_specified | internal.plugins.collection_not_specified
+`0x00050007`  | `Invalid argument: Expected callback to be a function, received "<placeholder>".` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | callback_argument_expected | internal.plugins.callback_argument_expected
+`0x00050008`  | `Invalid argument: a Request object must be supplied.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_request_object | internal.plugins.missing_request_object
+`0x00050009`  | `Custom event invalid name (<placeholder>). Colons are not allowed in custom events.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_custom_event_name | internal.plugins.invalid_custom_event_name
+`0x0005000a`  | `A Request object and/or request data must be provided.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_request_data_or_object | internal.plugins.missing_request_data_or_object
+`0x0005000b`  | `[<placeholder>] Strategy <placeholder>: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_strategy_registration | internal.plugins.invalid_strategy_registration
+`0x0005000c`  | `Something went wrong during initialization of "<placeholder>" plugin.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_initialization_failed | internal.plugins.plugin_initialization_failed
+`0x0005000d`  | `<placeholder> expected the strategy description to be an object, got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | strategy_description_type | internal.plugins.strategy_description_type
+`0x0005000e`  | `<placeholder> expected a "methods" property of type "object", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | methods_property_type | internal.plugins.methods_property_type
+`0x0005000f`  | `<placeholder> expected a "<placeholder>" property of type "string", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | methodname_property_type | internal.plugins.methodname_property_type
+`0x00050010`  | `<placeholder> the strategy method "<placeholder>" must point to an exposed function.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_strategy_method | internal.plugins.invalid_strategy_method
+`0x00050011`  | `<placeholder> expected the "<placeholder>" property to be of type "string", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_property_type | internal.plugins.invalid_property_type
+`0x00050012`  | `<placeholder> expected a "config" property of type "object", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_config_property | internal.plugins.missing_config_property
+`0x00050013`  | `<placeholder> the "authenticator" and "constructor" parameters cannot both be set.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | cannot_set_ctor_and_authenticator | internal.plugins.cannot_set_ctor_and_authenticator
+`0x00050014`  | `<placeholder> invalid "constructor" property value: constructor expected.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_constructor_property_value | internal.plugins.invalid_constructor_property_value
+`0x00050015`  | `<placeholder> expected an "authenticator" property of type "string", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | authenticator_property_type | internal.plugins.authenticator_property_type
+`0x00050016`  | `<placeholder> unknown authenticator value: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unknown_authenticator_value | internal.plugins.unknown_authenticator_value
+`0x00050017`  | `<placeholder> expected the "<placeholder>" property to be of type "object", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | expected_object_type | internal.plugins.expected_object_type
+`0x00050018`  | `<placeholder> expected the "fields" property to be of type "array", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_fields_property_type | internal.plugins.invalid_fields_property_type
+`0x00050019`  | `Plugin <placeholder> pipe for event '<placeholder>' threw a non-Kuzzle error: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_threw_non_kuzzle_error | internal.plugins.plugin_threw_non_kuzzle_error
+`0x0005001a`  | `<placeholder> expected the "verify" to return a Promise, got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | verify_dont_return_promise | internal.plugins.verify_dont_return_promise
+`0x0005001b`  | `<placeholder> invalid authentication strategy result.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_authentication_strategy_result | internal.plugins.invalid_authentication_strategy_result
+`0x0005001c`  | `<placeholder> invalid authentication kuid returned: expected a string, got a <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_authentication_kuid | internal.plugins.invalid_authentication_kuid
+`0x0005001d`  | `<placeholder> returned an unknown Kuzzle user identifier.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unkown_kuzzle_user_identifier | internal.plugins.unkown_kuzzle_user_identifier
+`0x0005001e`  | `Cannot remove strategy <placeholder>: owned by another plugin.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | cannot_remove_others_plugin_strategy | internal.plugins.cannot_remove_others_plugin_strategy
+`0x0005001f`  | `Cannot remove strategy <placeholder>: strategy does not exist.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | cannot_remove_unexistant_strategy | internal.plugins.cannot_remove_unexistant_strategy
+`0x00050020`  | `<placeholder> Incorrect controller description type (expected object, got: "<placeholder>").` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | incorrect_controller_description_type | internal.plugins.incorrect_controller_description_type
+`0x00050021`  | `<placeholder> Unknown property "<placeholder>" in route definition. <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unknown_property_key_in_route_definition | internal.plugins.unknown_property_key_in_route_definition
+`0x00050022`  | `<placeholder> "<placeholder>" must be a non-empty string.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | key_cannot_be_empty_string | internal.plugins.key_cannot_be_empty_string
+`0x00050023`  | `Undefined controller "<placeholder>". <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | undefined_controller | internal.plugins.undefined_controller
+`0x00050024`  | `Undefined action "<placeholder>". <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | undefined_action | internal.plugins.undefined_action
+`0x00050025`  | `<placeholder> Only following http verbs are allowed: "<placeholder>". <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | http_verb_not_allowed | internal.plugins.http_verb_not_allowed
+`0x00050026`  | `<placeholder> the exposed "strategies" plugin property must be a non-empty object.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | strategies_plugin_property_empty | internal.plugins.strategies_plugin_property_empty
+`0x00050027`  | `<placeholder> the exposed "authenticators" plugin property must be of type "object".` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | authenticators_plugin_property_not_an_object | internal.plugins.authenticators_plugin_property_not_an_object
+`0x00050028`  | `<placeholder> invalid authenticator <placeholder>: expected a constructor.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_authenticator | internal.plugins.invalid_authenticator
+`0x00050029`  | `Unable to load plugins from directory "<placeholder>"; <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_load_plugin_from_directory | internal.plugins.unable_to_load_plugin_from_directory
+`0x0005002a`  | `Unable to load plugin from path "<placeholder>"; <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_load_plugin_from_path | internal.plugins.unable_to_load_plugin_from_path
+`0x0005002b`  | `Plugin <placeholder> is not a constructor.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_is_not_a_constructor | internal.plugins.plugin_is_not_a_constructor
+`0x0005002c`  | `[<placeholder>] No "init" method found.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | init_method_not_found | internal.plugins.init_method_not_found
+`0x0005002d`  | `The plugin "<placeholder>" is configured to run in privileged mode, but it does not seem to support it.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | privileged_mode_not_supported | internal.plugins.privileged_mode_not_supported
+`0x0005002e`  | `The plugin "<placeholder>" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | privileged_mode_not_setted | internal.plugins.privileged_mode_not_setted
+`0x0005002f`  | `A plugin named <placeholder> already exists` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_name_already_exists | internal.plugins.plugin_name_already_exists
+`0x00050030`  | `FunnelProtocol.constructor: Invalid User object "<placeholder>"` | [InternalError](/core/1/api/essentials/errors#internalerror) | invalid_user_object_provided | internal.plugins.invalid_user_object_provided
 
 ---
 
@@ -137,40 +137,40 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00060001`  | `The typeName property must be defined in the validation type object.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_typename_property | internal.validation.missing_typename_property
-`0x00060002`  | `The type <placeholder> must implement the function 'validate'.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_function_validate | internal.validation.missing_function_validate
-`0x00060003`  | `The type <placeholder> must implement the function 'validateFieldSpecification'.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_function_validatefieldspecification | internal.validation.missing_function_validatefieldspecification
-`0x00060004`  | `The allowing children type <placeholder> must implement the function 'getStrictness'.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_function_getstrictness | internal.validation.missing_function_getstrictness
-`0x00060005`  | `The type <placeholder> is already defined.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | type_already_defined | internal.validation.type_already_defined
-`0x00060006`  | `All levels of an object have to be defined in the specification.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | object_format_error | internal.validation.object_format_error
-`0x00060007`  | `The field type <placeholder> is not allowed to have children fields.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | type_not_allowed | internal.validation.type_not_allowed
-`0x00060008`  | `The parent field of the field "<placeholder>" is not defined.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | parent_field_not_defined | internal.validation.parent_field_not_defined
-`0x00060009`  | `Document: <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | errorcontext_document | internal.validation.errorcontext_document
-`0x0006000a`  | `Invalid "formats" option: must be a non-empty array.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_formats_option | internal.validation.invalid_formats_option
-`0x0006000b`  | `Unrecognized format name<placeholder>: <placeholder>.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | unrecognized_format_name | internal.validation.unrecognized_format_name
-`0x0006000c`  | `Invalid "range" option definition.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_range_option | internal.validation.invalid_range_option
-`0x0006000d`  | `Invalid range: min > max.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_range | internal.validation.invalid_range
-`0x0006000e`  | `Invalid "range.<placeholder>" option: must be of type "number".` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_range_type | internal.validation.invalid_range_type
-`0x0006000f`  | `Option "<placeholder>": invalid format.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_range_format | internal.validation.invalid_range_format
-`0x00060010`  | `Unable to parse the range value "<placeholder>".` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | unable_to_parse_range_value | internal.validation.unable_to_parse_range_value
-`0x00060011`  | `Option "notEmpty" must be of type "boolean".` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | notempty_option_type | internal.validation.notempty_option_type
-`0x00060012`  | `Option "values" is required.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | missing_values_option | internal.validation.missing_values_option
-`0x00060013`  | `Option "values" must be a non-empty array.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | values_option_cannot_be_empty | internal.validation.values_option_cannot_be_empty
-`0x00060014`  | `Values must be of type "string". Invalid value<placeholder>: <placeholder>.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_values_format | internal.validation.invalid_values_format
-`0x00060015`  | `Option "shapeTypes" must be a non-empty array.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | shapetypes_option_cannot_be_empty | internal.validation.shapetypes_option_cannot_be_empty
-`0x00060016`  | `Invalid shape<placeholder>: <placeholder>.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_shape | internal.validation.invalid_shape
-`0x00060017`  | `Option "strict" must be of type "boolean".` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | strict_option_type | internal.validation.strict_option_type
-`0x00060018`  | `Invalid "length" option definition.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_length_option | internal.validation.invalid_length_option
-`0x00060019`  | `Invalid "length.<placeholder>" option: must be of type "number".` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_length_type | internal.validation.invalid_length_type
-`0x0006001a`  | `Invalid length range: min > max.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_length_range | internal.validation.invalid_length_range
-`0x0006001b`  | `<placeholder>` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | invalid_properties_for_collection_specification | internal.validation.invalid_properties_for_collection_specification
-`0x0006001c`  | `<placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | structure_collection_validation | internal.validation.structure_collection_validation
-`0x0006001d`  | `Validator specification of the collection <placeholder>.<placeholder> triggered an error` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | validator_specification_of_collection_error | internal.validation.validator_specification_of_collection_error
-`0x0006001e`  | `All levels of an object have to be defined in the specification.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | object_level_undefined_in_specification | internal.validation.object_level_undefined_in_specification
-`0x0006001f`  | `<placeholder>` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | throw_error | internal.validation.throw_error
-`0x00060020`  | `Field <placeholder>: <placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | manage_error_message | internal.validation.manage_error_message
-`0x00060021`  | `strictness` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | strictness | internal.validation.strictness
-`0x00060022`  | `Field <placeholder>: <placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | errorcontext | internal.validation.errorcontext
+`0x00060001`  | `The typeName property must be defined in the validation type object.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_typename_property | internal.validation.missing_typename_property
+`0x00060002`  | `The type <placeholder> must implement the function 'validate'.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_function_validate | internal.validation.missing_function_validate
+`0x00060003`  | `The type <placeholder> must implement the function 'validateFieldSpecification'.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_function_validatefieldspecification | internal.validation.missing_function_validatefieldspecification
+`0x00060004`  | `The allowing children type <placeholder> must implement the function 'getStrictness'.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_function_getstrictness | internal.validation.missing_function_getstrictness
+`0x00060005`  | `The type <placeholder> is already defined.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | type_already_defined | internal.validation.type_already_defined
+`0x00060006`  | `All levels of an object have to be defined in the specification.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | object_format_error | internal.validation.object_format_error
+`0x00060007`  | `The field type <placeholder> is not allowed to have children fields.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | type_not_allowed | internal.validation.type_not_allowed
+`0x00060008`  | `The parent field of the field "<placeholder>" is not defined.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | parent_field_not_defined | internal.validation.parent_field_not_defined
+`0x00060009`  | `Document: <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | errorcontext_document | internal.validation.errorcontext_document
+`0x0006000a`  | `Invalid "formats" option: must be a non-empty array.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_formats_option | internal.validation.invalid_formats_option
+`0x0006000b`  | `Unrecognized format name<placeholder>: <placeholder>.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | unrecognized_format_name | internal.validation.unrecognized_format_name
+`0x0006000c`  | `Invalid "range" option definition.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_range_option | internal.validation.invalid_range_option
+`0x0006000d`  | `Invalid range: min > max.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_range | internal.validation.invalid_range
+`0x0006000e`  | `Invalid "range.<placeholder>" option: must be of type "number".` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_range_type | internal.validation.invalid_range_type
+`0x0006000f`  | `Option "<placeholder>": invalid format.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_range_format | internal.validation.invalid_range_format
+`0x00060010`  | `Unable to parse the range value "<placeholder>".` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | unable_to_parse_range_value | internal.validation.unable_to_parse_range_value
+`0x00060011`  | `Option "notEmpty" must be of type "boolean".` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | notempty_option_type | internal.validation.notempty_option_type
+`0x00060012`  | `Option "values" is required.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | missing_values_option | internal.validation.missing_values_option
+`0x00060013`  | `Option "values" must be a non-empty array.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | values_option_cannot_be_empty | internal.validation.values_option_cannot_be_empty
+`0x00060014`  | `Values must be of type "string". Invalid value<placeholder>: <placeholder>.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_values_format | internal.validation.invalid_values_format
+`0x00060015`  | `Option "shapeTypes" must be a non-empty array.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | shapetypes_option_cannot_be_empty | internal.validation.shapetypes_option_cannot_be_empty
+`0x00060016`  | `Invalid shape<placeholder>: <placeholder>.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_shape | internal.validation.invalid_shape
+`0x00060017`  | `Option "strict" must be of type "boolean".` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | strict_option_type | internal.validation.strict_option_type
+`0x00060018`  | `Invalid "length" option definition.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_length_option | internal.validation.invalid_length_option
+`0x00060019`  | `Invalid "length.<placeholder>" option: must be of type "number".` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_length_type | internal.validation.invalid_length_type
+`0x0006001a`  | `Invalid length range: min > max.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_length_range | internal.validation.invalid_length_range
+`0x0006001b`  | `<placeholder>` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | invalid_properties_for_collection_specification | internal.validation.invalid_properties_for_collection_specification
+`0x0006001c`  | `<placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | structure_collection_validation | internal.validation.structure_collection_validation
+`0x0006001d`  | `Validator specification of the collection <placeholder>.<placeholder> triggered an error` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | validator_specification_of_collection_error | internal.validation.validator_specification_of_collection_error
+`0x0006001e`  | `All levels of an object have to be defined in the specification.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | object_level_undefined_in_specification | internal.validation.object_level_undefined_in_specification
+`0x0006001f`  | `<placeholder>` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | throw_error | internal.validation.throw_error
+`0x00060020`  | `Field <placeholder>: <placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | manage_error_message | internal.validation.manage_error_message
+`0x00060021`  | `strictness` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | strictness | internal.validation.strictness
+`0x00060022`  | `Field <placeholder>: <placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | errorcontext | internal.validation.errorcontext
 
 ---
 
@@ -179,7 +179,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00070001`  | `Invalid time value` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_time_value | internal.statistics.invalid_time_value
+`0x00070001`  | `Invalid time value` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_time_value | internal.statistics.invalid_time_value
 
 ---
 
@@ -188,8 +188,8 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00080001`  | `A process is already running for this sandbox` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | process_already_running | internal.sandbox.process_already_running
-`0x00080002`  | `Timeout. The sandbox did not respond within <placeholder>ms.` | [GatewayTimeoutError](https://docs.kuzzle.io/core/1/api/essentials/errors/#gatewaytimeouterror) | timeout | internal.sandbox.timeout
+`0x00080001`  | `A process is already running for this sandbox` | [InternalError](/core/1/api/essentials/errors#internalerror) | process_already_running | internal.sandbox.process_already_running
+`0x00080002`  | `Timeout. The sandbox did not respond within <placeholder>ms.` | [GatewayTimeoutError](/core/1/api/essentials/errors#gatewaytimeouterror) | timeout | internal.sandbox.timeout
 
 ---
 
@@ -198,10 +198,10 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x00090001`  | `Invalid config.limits configuration format: please check your Kuzzle configuration files` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | invalid_limits_configuration_format | internal.configuration.invalid_limits_configuration_format
-`0x00090002`  | `Invalid configuration: value set for "<placeholder>" limit is outside the allowed range` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | value_out_of_range | internal.configuration.value_out_of_range
-`0x00090003`  | `Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | concurrentRequests_superior_to_requestsBufferSize | internal.configuration.concurrentRequests_superior_to_requestsBufferSize
-`0x00090004`  | `Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | requestsBufferWarningThreshold_out_of_range | internal.configuration.requestsBufferWarningThreshold_out_of_range
+`0x00090001`  | `Invalid config.limits configuration format: please check your Kuzzle configuration files` | [InternalError](/core/1/api/essentials/errors#internalerror) | invalid_limits_configuration_format | internal.configuration.invalid_limits_configuration_format
+`0x00090002`  | `Invalid configuration: value set for "<placeholder>" limit is outside the allowed range` | [InternalError](/core/1/api/essentials/errors#internalerror) | value_out_of_range | internal.configuration.value_out_of_range
+`0x00090003`  | `Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize` | [InternalError](/core/1/api/essentials/errors#internalerror) | concurrentRequests_superior_to_requestsBufferSize | internal.configuration.concurrentRequests_superior_to_requestsBufferSize
+`0x00090004`  | `Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize` | [InternalError](/core/1/api/essentials/errors#internalerror) | requestsBufferWarningThreshold_out_of_range | internal.configuration.requestsBufferWarningThreshold_out_of_range
 
 ---
 
@@ -215,45 +215,45 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x01010001`  | `Your elasticsearch version is <placeholder>; Only elasticsearch version 5 is currently supported.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | wrong_elasticsearch_version | external.elasticsearch.wrong_elasticsearch_version
-`0x01010002`  | `Non-existing or expired scroll identifier.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | unknown_scroll_identifier | external.elasticsearch.unknown_scroll_identifier
-`0x01010003`  | `The action _search can't be done with a GET.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_get_action | external.elasticsearch.wrong_get_action
-`0x01010004`  | `Document not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | document_not_found | external.elasticsearch.document_not_found
-`0x01010005`  | `Index '<placeholder>' and/or collection '<placeholder>' don't exist.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | index_or_collection_does_not_exist | external.elasticsearch.index_or_collection_does_not_exist
-`0x01010006`  | `Document already exists.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | document_already_exists | external.elasticsearch.document_already_exists
-`0x01010007`  | `Document with id '<placeholder>' not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | document_id_not_found | external.elasticsearch.document_id_not_found
-`0x01010008`  | `Query cannot be empty.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | empty_query | external.elasticsearch.empty_query
-`0x01010009`  | `null is not a valid document ID.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | document_id_cannot_be_null | external.elasticsearch.document_id_cannot_be_null
-`0x0101000a`  | `Index '<placeholder>' does not exist.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | index_does_not_exist | external.elasticsearch.index_does_not_exist
-`0x0101000b`  | `import must specify a body attribute 'bulkData' of type Object.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_or_invalid_import_attribute | external.elasticsearch.missing_or_invalid_import_attribute
-`0x0101000c`  | `Missing data collection argument.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_data_collection_argument | external.elasticsearch.missing_data_collection_argument
-`0x0101000d`  | `Missing data index argument.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_data_index_argument | external.elasticsearch.missing_data_index_argument
-`0x0101000e`  | `Index '<placeholder>' is protected, please use appropriated routes instead.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | index_protected | external.elasticsearch.index_protected
+`0x01010001`  | `Your elasticsearch version is <placeholder>; Only elasticsearch version 5 is currently supported.` | [InternalError](/core/1/api/essentials/errors#internalerror) | wrong_elasticsearch_version | external.elasticsearch.wrong_elasticsearch_version
+`0x01010002`  | `Non-existing or expired scroll identifier.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | unknown_scroll_identifier | external.elasticsearch.unknown_scroll_identifier
+`0x01010003`  | `The action _search can't be done with a GET.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | wrong_get_action | external.elasticsearch.wrong_get_action
+`0x01010004`  | `Document not found.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | document_not_found | external.elasticsearch.document_not_found
+`0x01010005`  | `Index '<placeholder>' and/or collection '<placeholder>' don't exist.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | index_or_collection_does_not_exist | external.elasticsearch.index_or_collection_does_not_exist
+`0x01010006`  | `Document already exists.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | document_already_exists | external.elasticsearch.document_already_exists
+`0x01010007`  | `Document with id '<placeholder>' not found.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | document_id_not_found | external.elasticsearch.document_id_not_found
+`0x01010008`  | `Query cannot be empty.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | empty_query | external.elasticsearch.empty_query
+`0x01010009`  | `null is not a valid document ID.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | document_id_cannot_be_null | external.elasticsearch.document_id_cannot_be_null
+`0x0101000a`  | `Index '<placeholder>' does not exist.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | index_does_not_exist | external.elasticsearch.index_does_not_exist
+`0x0101000b`  | `import must specify a body attribute 'bulkData' of type Object.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_or_invalid_import_attribute | external.elasticsearch.missing_or_invalid_import_attribute
+`0x0101000c`  | `Missing data collection argument.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_data_collection_argument | external.elasticsearch.missing_data_collection_argument
+`0x0101000d`  | `Missing data index argument.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_data_index_argument | external.elasticsearch.missing_data_index_argument
+`0x0101000e`  | `Index '<placeholder>' is protected, please use appropriated routes instead.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | index_protected | external.elasticsearch.index_protected
 `0x0101000f`  | `Error refreshing index <placeholder>:
-<placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | error_on_index_refresh | external.elasticsearch.error_on_index_refresh
-`0x01010010`  | `Number of documents exceeds the server configured value (<placeholder>).` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | limit_documents_reached | external.elasticsearch.limit_documents_reached
-`0x01010011`  | `Indexes starting with a '%' are reserved for internal use. Cannot process index <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | index_reserved | external.elasticsearch.index_reserved
-`0x01010012`  | `Kuzzle does not support '_routing' in create action.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | create_action_does_not_support_routing | external.elasticsearch.create_action_does_not_support_routing
-`0x01010013`  | `Refresh parameter only supports the value 'wait_for' or false.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_refresh_parameter | external.elasticsearch.wrong_refresh_parameter
-`0x01010014`  | `Incorrect mapping property "mapping.<placeholder>".<placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | incorrect_mapping_property | external.elasticsearch.incorrect_mapping_property
-`0x01010015`  | `"<placeholder>" threads buffer exceeded. Too many operations received at once.` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | too_many_operations | external.elasticsearch.too_many_operations
-`0x01010016`  | `Can not change mapping for field "<placeholder>" from nested to another type.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_change_from_nested | external.elasticsearch.invalid_change_from_nested
-`0x01010017`  | `Can not change mapping for field "<placeholder>" from object to another type.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_change_to_nested | external.elasticsearch.invalid_change_to_nested
-`0x01010018`  | `Can not change mapping for field "<placeholder>" from object to a scalar type.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_change_to_scalar | external.elasticsearch.invalid_change_to_scalar
-`0x01010019`  | `Can not set mapping for field "<placeholder>" on collection "<placeholder>" because the field name is already used in another collection with a different type.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | duplicate_field_name | external.elasticsearch.duplicate_field_name
-`0x0101001a`  | `Can not change type of field "<placeholder>" from "<placeholder>" to "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_type_change | external.elasticsearch.invalid_type_change
-`0x0101001b`  | `Parameter "<placeholder>" is not supported for field "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unsupported_parameter_for_field | external.elasticsearch.unsupported_parameter_for_field
-`0x0101001c`  | `Can not set mapping for field "<placeholder>" because type "<placeholder>" does not exist` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | type_does_not_exist | external.elasticsearch.type_does_not_exist
-`0x0101001d`  | `Failed to validate value of field "<placeholder>". Are you trying to insert nested value in a non-nested field ?` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | fail_to_parse_field | external.elasticsearch.fail_to_parse_field
-`0x0101001e`  | `Mapping for field "<placeholder>" must be an object with a property "type".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_mapping_property | external.elasticsearch.wrong_mapping_property
-`0x0101001f`  | `Unable to modify document "<placeholder>": cluster sync failed (too many simultaneous changes applied)` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | too_many_changes | external.elasticsearch.too_many_changes
-`0x01010020`  | `Elasticsearch service is not connected.` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | elasticsearch_service_not_connected | external.elasticsearch.elasticsearch_service_not_connected
-`0x01010021`  | `<placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unexpected_bad_request_error | external.elasticsearch.unexpected_bad_request_error
-`0x01010022`  | `<placeholder>` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | unexpected_not_found_error | external.elasticsearch.unexpected_not_found_error
-`0x01010023`  | `<placeholder>` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | unexpected_conflict_error | external.elasticsearch.unexpected_conflict_error
-`0x01010024`  | `<placeholder>` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | unexpected_error | external.elasticsearch.unexpected_error
-`0x01010025`  | `No mapping found for index "<placeholder>".` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | no_mapping_found | external.elasticsearch.no_mapping_found
-`0x01010026`  | `Index or collection "<placeholder>" does not exist, please create it first.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | index_or_collection_not_found | external.elasticsearch.index_or_collection_not_found
+<placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | error_on_index_refresh | external.elasticsearch.error_on_index_refresh
+`0x01010010`  | `Number of documents exceeds the server configured value (<placeholder>).` | [SizeLimitError](/core/1/api/essentials/errors#sizelimiterror) | limit_documents_reached | external.elasticsearch.limit_documents_reached
+`0x01010011`  | `Indexes starting with a '%' are reserved for internal use. Cannot process index <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | index_reserved | external.elasticsearch.index_reserved
+`0x01010012`  | `Kuzzle does not support '_routing' in create action.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | create_action_does_not_support_routing | external.elasticsearch.create_action_does_not_support_routing
+`0x01010013`  | `Refresh parameter only supports the value 'wait_for' or false.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | wrong_refresh_parameter | external.elasticsearch.wrong_refresh_parameter
+`0x01010014`  | `Incorrect mapping property "mapping.<placeholder>".<placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | incorrect_mapping_property | external.elasticsearch.incorrect_mapping_property
+`0x01010015`  | `"<placeholder>" threads buffer exceeded. Too many operations received at once.` | [ExternalServiceError](/core/1/api/essentials/errors#externalserviceerror) | too_many_operations | external.elasticsearch.too_many_operations
+`0x01010016`  | `Can not change mapping for field "<placeholder>" from nested to another type.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_change_from_nested | external.elasticsearch.invalid_change_from_nested
+`0x01010017`  | `Can not change mapping for field "<placeholder>" from object to another type.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_change_to_nested | external.elasticsearch.invalid_change_to_nested
+`0x01010018`  | `Can not change mapping for field "<placeholder>" from object to a scalar type.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_change_to_scalar | external.elasticsearch.invalid_change_to_scalar
+`0x01010019`  | `Can not set mapping for field "<placeholder>" on collection "<placeholder>" because the field name is already used in another collection with a different type.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | duplicate_field_name | external.elasticsearch.duplicate_field_name
+`0x0101001a`  | `Can not change type of field "<placeholder>" from "<placeholder>" to "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_type_change | external.elasticsearch.invalid_type_change
+`0x0101001b`  | `Parameter "<placeholder>" is not supported for field "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unsupported_parameter_for_field | external.elasticsearch.unsupported_parameter_for_field
+`0x0101001c`  | `Can not set mapping for field "<placeholder>" because type "<placeholder>" does not exist` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | type_does_not_exist | external.elasticsearch.type_does_not_exist
+`0x0101001d`  | `Failed to validate value of field "<placeholder>". Are you trying to insert nested value in a non-nested field ?` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | fail_to_parse_field | external.elasticsearch.fail_to_parse_field
+`0x0101001e`  | `Mapping for field "<placeholder>" must be an object with a property "type".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | wrong_mapping_property | external.elasticsearch.wrong_mapping_property
+`0x0101001f`  | `Unable to modify document "<placeholder>": cluster sync failed (too many simultaneous changes applied)` | [ExternalServiceError](/core/1/api/essentials/errors#externalserviceerror) | too_many_changes | external.elasticsearch.too_many_changes
+`0x01010020`  | `Elasticsearch service is not connected.` | [ExternalServiceError](/core/1/api/essentials/errors#externalserviceerror) | elasticsearch_service_not_connected | external.elasticsearch.elasticsearch_service_not_connected
+`0x01010021`  | `<placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unexpected_bad_request_error | external.elasticsearch.unexpected_bad_request_error
+`0x01010022`  | `<placeholder>` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | unexpected_not_found_error | external.elasticsearch.unexpected_not_found_error
+`0x01010023`  | `<placeholder>` | [ExternalServiceError](/core/1/api/essentials/errors#externalserviceerror) | unexpected_conflict_error | external.elasticsearch.unexpected_conflict_error
+`0x01010024`  | `<placeholder>` | [ExternalServiceError](/core/1/api/essentials/errors#externalserviceerror) | unexpected_error | external.elasticsearch.unexpected_error
+`0x01010025`  | `No mapping found for index "<placeholder>".` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | no_mapping_found | external.elasticsearch.no_mapping_found
+`0x01010026`  | `Index or collection "<placeholder>" does not exist, please create it first.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | index_or_collection_not_found | external.elasticsearch.index_or_collection_not_found
 
 ---
 
@@ -262,8 +262,8 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x01020001`  | `Internal engine bootstrap - lock wait timeout exceeded.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | lock_wait_timeout | external.internal_engine.lock_wait_timeout
-`0x01020002`  | `Plugin <placeholder> bootstrap - lock wait timeout exceeded.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | plugin_bootstrap_lock_wait_timeout | external.internal_engine.plugin_bootstrap_lock_wait_timeout
+`0x01020001`  | `Internal engine bootstrap - lock wait timeout exceeded.` | [InternalError](/core/1/api/essentials/errors#internalerror) | lock_wait_timeout | external.internal_engine.lock_wait_timeout
+`0x01020002`  | `Plugin <placeholder> bootstrap - lock wait timeout exceeded.` | [InternalError](/core/1/api/essentials/errors#internalerror) | plugin_bootstrap_lock_wait_timeout | external.internal_engine.plugin_bootstrap_lock_wait_timeout
 
 ---
 
@@ -272,7 +272,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x01030001`  | `Redis service is not connected.` | [ServiceUnavailableError](https://docs.kuzzle.io/core/1/api/essentials/errors/#serviceunavailableerror) | redis_service_not_connected | external.redis.redis_service_not_connected
+`0x01030001`  | `Redis service is not connected.` | [ServiceUnavailableError](/core/1/api/essentials/errors#serviceunavailableerror) | redis_service_not_connected | external.redis.redis_service_not_connected
 
 ---
 
@@ -286,7 +286,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02010001`  | `Invalid '<placeholder>' value (<placeholder>).` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_value_type | api.base.invalid_value_type
+`0x02010001`  | `Invalid '<placeholder>' value (<placeholder>).` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_value_type | api.base.invalid_value_type
 
 ---
 
@@ -295,8 +295,8 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02020001`  | `ElasticSearch is down: <placeholder>.` | [ExternalServiceError](https://docs.kuzzle.io/core/1/api/essentials/errors/#externalserviceerror) | elasticsearch_down | api.server.elasticsearch_down
-`0x02020002`  | `Error : <placeholder>.` | [ServiceUnavailableError](https://docs.kuzzle.io/core/1/api/essentials/errors/#serviceunavailableerror) | service_unavailable | api.server.service_unavailable
+`0x02020001`  | `ElasticSearch is down: <placeholder>.` | [ExternalServiceError](/core/1/api/essentials/errors#externalserviceerror) | elasticsearch_down | api.server.elasticsearch_down
+`0x02020002`  | `Error : <placeholder>.` | [ServiceUnavailableError](/core/1/api/essentials/errors#serviceunavailableerror) | service_unavailable | api.server.service_unavailable
 
 ---
 
@@ -305,14 +305,14 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02030001`  | `The document does not exist: <placeholder>.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | not_found | api.document.not_found
-`0x02030002`  | `Search on multiple indexes is not available.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | search_on_multiple_indexes | api.document.search_on_multiple_indexes
-`0x02030003`  | `Search on multiple collections is not available.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | search_on_multiple_collections | api.document.search_on_multiple_collections
-`0x02030004`  | `Missing 'scrollId' argument.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_scroll_id | api.document.missing_scroll_id
-`0x02030005`  | `Number of gets to perform exceeds the server configured value ( <placeholder> ).` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | get_limit_reached | api.document.get_limit_reached
-`0x02030006`  | `Some document creations failed : <placeholder>.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | creation_failed | api.document.creation_failed
-`0x02030007`  | `Some document deletions failed : <placeholder>.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | deletion_failed | api.document.deletion_failed
-`0x02030008`  | `Some document are missing.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | some_document_missing | api.document.some_document_missing
+`0x02030001`  | `The document does not exist: <placeholder>.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | not_found | api.document.not_found
+`0x02030002`  | `Search on multiple indexes is not available.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | search_on_multiple_indexes | api.document.search_on_multiple_indexes
+`0x02030003`  | `Search on multiple collections is not available.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | search_on_multiple_collections | api.document.search_on_multiple_collections
+`0x02030004`  | `Missing 'scrollId' argument.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_scroll_id | api.document.missing_scroll_id
+`0x02030005`  | `Number of gets to perform exceeds the server configured value ( <placeholder> ).` | [SizeLimitError](/core/1/api/essentials/errors#sizelimiterror) | get_limit_reached | api.document.get_limit_reached
+`0x02030006`  | `Some document creations failed : <placeholder>.` | [PartialError](/core/1/api/essentials/errors#partialerror) | creation_failed | api.document.creation_failed
+`0x02030007`  | `Some document deletions failed : <placeholder>.` | [PartialError](/core/1/api/essentials/errors#partialerror) | deletion_failed | api.document.deletion_failed
+`0x02030008`  | `Some document are missing.` | [PartialError](/core/1/api/essentials/errors#partialerror) | some_document_missing | api.document.some_document_missing
 
 ---
 
@@ -321,8 +321,8 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02040001`  | `Database <placeholder> not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | database_not_found | api.admin.database_not_found
-`0x02040002`  | `Lock action error: <placeholder>.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | action_locked | api.admin.action_locked
+`0x02040001`  | `Database <placeholder> not found.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | database_not_found | api.admin.database_not_found
+`0x02040002`  | `Lock action error: <placeholder>.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | action_locked | api.admin.action_locked
 
 ---
 
@@ -331,16 +331,16 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02050001`  | `Error while forcing token expiration.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | token_force_expire | api.auth.token_force_expire
-`0x02050002`  | `Invalid token.` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | invalid_token | api.auth.invalid_token
-`0x02050003`  | `Unknown authentication strategy "<placeholder>"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unknown_authentication_strategy | api.auth.unknown_authentication_strategy
-`0x02050004`  | `Unknown User : cannot generate token` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | cannot_generate_token_with_unknown_user | api.auth.cannot_generate_token_with_unknown_user
-`0x02050005`  | `Unknown context : cannot generate token` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | cannot_generate_token_with_unknown_context | api.auth.cannot_generate_token_with_unknown_context
-`0x02050006`  | `expiresIn value exceeds maximum allowed value` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | expiresIn_limit_reached | api.auth.expiresIn_limit_reached
-`0x02050007`  | `Error while generating token` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | generate_token_error | api.auth.generate_token_error
-`0x02050008`  | `Token expired` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | token_expired | api.auth.token_expired
-`0x02050009`  | `Json Web Token Error` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | json_web_token_error | api.auth.json_web_token_error
-`0x0205000a`  | `Error verifying token` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | error_verifying_token | api.auth.error_verifying_token
+`0x02050001`  | `Error while forcing token expiration.` | [InternalError](/core/1/api/essentials/errors#internalerror) | token_force_expire | api.auth.token_force_expire
+`0x02050002`  | `Invalid token.` | [UnauthorizedError](/core/1/api/essentials/errors#unauthorizederror) | invalid_token | api.auth.invalid_token
+`0x02050003`  | `Unknown authentication strategy "<placeholder>"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unknown_authentication_strategy | api.auth.unknown_authentication_strategy
+`0x02050004`  | `Unknown User : cannot generate token` | [InternalError](/core/1/api/essentials/errors#internalerror) | cannot_generate_token_with_unknown_user | api.auth.cannot_generate_token_with_unknown_user
+`0x02050005`  | `Unknown context : cannot generate token` | [InternalError](/core/1/api/essentials/errors#internalerror) | cannot_generate_token_with_unknown_context | api.auth.cannot_generate_token_with_unknown_context
+`0x02050006`  | `expiresIn value exceeds maximum allowed value` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | expiresIn_limit_reached | api.auth.expiresIn_limit_reached
+`0x02050007`  | `Error while generating token` | [InternalError](/core/1/api/essentials/errors#internalerror) | generate_token_error | api.auth.generate_token_error
+`0x02050008`  | `Token expired` | [UnauthorizedError](/core/1/api/essentials/errors#unauthorizederror) | token_expired | api.auth.token_expired
+`0x02050009`  | `Json Web Token Error` | [UnauthorizedError](/core/1/api/essentials/errors#unauthorizederror) | json_web_token_error | api.auth.json_web_token_error
+`0x0205000a`  | `Error verifying token` | [InternalError](/core/1/api/essentials/errors#internalerror) | error_verifying_token | api.auth.error_verifying_token
 
 ---
 
@@ -349,11 +349,11 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02060001`  | `The index <placeholder> does not exist.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | index_does_not_exist | api.collection.index_does_not_exist
-`0x02060002`  | `The collection <placeholder> does not exist.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | collection_does_not_exist | api.collection.collection_does_not_exist
-`0x02060003`  | `Search page size exceeds server configured documents limit ( <placeholder> ).` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | search_page_size | api.collection.search_page_size
-`0x02060004`  | `Must specify a valid type argument; Expected: 'all', 'stored' or 'realtime'; Received: <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_type_argument | api.collection.invalid_type_argument
-`0x02060005`  | `<placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | update_specifications | api.collection.update_specifications
+`0x02060001`  | `The index <placeholder> does not exist.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | index_does_not_exist | api.collection.index_does_not_exist
+`0x02060002`  | `The collection <placeholder> does not exist.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | collection_does_not_exist | api.collection.collection_does_not_exist
+`0x02060003`  | `Search page size exceeds server configured documents limit ( <placeholder> ).` | [SizeLimitError](/core/1/api/essentials/errors#sizelimiterror) | search_page_size | api.collection.search_page_size
+`0x02060004`  | `Must specify a valid type argument; Expected: 'all', 'stored' or 'realtime'; Received: <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_type_argument | api.collection.invalid_type_argument
+`0x02060005`  | `<placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | update_specifications | api.collection.update_specifications
 
 ---
 
@@ -362,14 +362,14 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02070001`  | `Request discarded: Kuzzle Server is temporarily overloaded.` | [ServiceUnavailableError](https://docs.kuzzle.io/core/1/api/essentials/errors/#serviceunavailableerror) | server_overloaded | api.funnel.server_overloaded
-`0x02070002`  | `Unauthorized action [ <placeholder> / <placeholder> / <placeholder> / <placeholder> ] for anonymous user.` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | anonymous_user_permissions | api.funnel.anonymous_user_permissions
-`0x02070003`  | `Forbidden action [ <placeholder> / <placeholder> / <placeholder> / <placeholder> ] for user <placeholder>.` | [ForbiddenError](https://docs.kuzzle.io/core/1/api/essentials/errors/#forbiddenerror) | insufficient_permissions | api.funnel.insufficient_permissions
-`0x02070004`  | `Unknown controller <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unknown_controller | api.funnel.unknown_controller
-`0x02070005`  | `No corresponding action <placeholder> in controller <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unknown_action | api.funnel.unknown_action
-`0x02070006`  | `Unauthorized action <placeholder> for anonymous user.` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | unauthorized_action | api.funnel.unauthorized_action
-`0x02070007`  | `Forbidden action <placeholder> for user <placeholder>.` | [ForbiddenError](https://docs.kuzzle.io/core/1/api/essentials/errors/#forbiddenerror) | forbidden_action | api.funnel.forbidden_action
-`0x02070008`  | `Client connection dropped` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | client_connection_dropped | api.funnel.client_connection_dropped
+`0x02070001`  | `Request discarded: Kuzzle Server is temporarily overloaded.` | [ServiceUnavailableError](/core/1/api/essentials/errors#serviceunavailableerror) | server_overloaded | api.funnel.server_overloaded
+`0x02070002`  | `Unauthorized action [ <placeholder> / <placeholder> / <placeholder> / <placeholder> ] for anonymous user.` | [UnauthorizedError](/core/1/api/essentials/errors#unauthorizederror) | anonymous_user_permissions | api.funnel.anonymous_user_permissions
+`0x02070003`  | `Forbidden action [ <placeholder> / <placeholder> / <placeholder> / <placeholder> ] for user <placeholder>.` | [ForbiddenError](/core/1/api/essentials/errors#forbiddenerror) | insufficient_permissions | api.funnel.insufficient_permissions
+`0x02070004`  | `Unknown controller <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unknown_controller | api.funnel.unknown_controller
+`0x02070005`  | `No corresponding action <placeholder> in controller <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unknown_action | api.funnel.unknown_action
+`0x02070006`  | `Unauthorized action <placeholder> for anonymous user.` | [UnauthorizedError](/core/1/api/essentials/errors#unauthorizederror) | unauthorized_action | api.funnel.unauthorized_action
+`0x02070007`  | `Forbidden action <placeholder> for user <placeholder>.` | [ForbiddenError](/core/1/api/essentials/errors#forbiddenerror) | forbidden_action | api.funnel.forbidden_action
+`0x02070008`  | `Client connection dropped` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | client_connection_dropped | api.funnel.client_connection_dropped
 
 ---
 
@@ -378,8 +378,8 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02080001`  | `Some document creations failed: <placeholder>.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | document_creations_failed | api.bulk.document_creations_failed
-`0x02080002`  | `Some data was not imported: <placeholder>.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | data_not_imported | api.bulk.data_not_imported
+`0x02080001`  | `Some document creations failed: <placeholder>.` | [PartialError](/core/1/api/essentials/errors#partialerror) | document_creations_failed | api.bulk.document_creations_failed
+`0x02080002`  | `Some data was not imported: <placeholder>.` | [PartialError](/core/1/api/essentials/errors#partialerror) | data_not_imported | api.bulk.data_not_imported
 
 ---
 
@@ -388,69 +388,69 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x02090001`  | `Role with id <placeholder> not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | role_not_found | api.security.role_not_found
-`0x02090002`  | `Profile with id <placeholder> not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | profile_not_found | api.security.profile_not_found
-`0x02090003`  | `User with id <placeholder> not found.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | user_not_found | api.security.user_not_found
-`0x02090004`  | `Admin user is already set.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | admin_exists | api.security.admin_exists
-`0x02090005`  | `Cannot create credentials: unknown kuid <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cant_create_creds | api.security.cant_create_creds
-`0x02090006`  | `Cannot update credentials: unknown kuid <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cant_update_creds | api.security.cant_update_creds
-`0x02090007`  | `The number of deletes to perform exceeds the server configured value <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | delete_limit_reached | api.security.delete_limit_reached
-`0x02090008`  | `security:mDelete <placeholder> Error(s) deleting <placeholder> items, <placeholder>.` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | mdelete | api.security.mdelete
-`0x02090009`  | `Search page size exceeds server configured documents limit <placeholder>.` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | search_page_size_limit_reached | api.security.search_page_size_limit_reached
-`0x0209000a`  | `Cannot update non-existing <placeholder> <placeholder>.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | cant_update_non_existing | api.security.cant_update_non_existing
-`0x0209000b`  | `User <placeholder> already exists.` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | user_already_exists | api.security.user_already_exists
-`0x0209000c`  | `Strategy <placeholder> is not a known strategy.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unknown_strategy | api.security.unknown_strategy
-`0x0209000d`  | `Internal database inconsistency detected: existing credentials found on non-existing user <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | creds_on_non_existing_user | api.security.creds_on_non_existing_user
-`0x0209000e`  | `<placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | validate_method | api.security.validate_method
-`0x0209000f`  | `Missing profileId` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_profile_id | api.security.missing_profile_id
-`0x02090010`  | `Missing profileIds` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_profile_ids | api.security.missing_profile_ids
-`0x02090011`  | `An array of strings must be provided as profileIds` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | profile_ids_must_be_array_of_string | api.security.profile_ids_must_be_array_of_string
-`0x02090012`  | `Invalid argument: Expected profile id to be a string, received "<placeholder>"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | expected_profile_id_to_be_a_string | api.security.expected_profile_id_to_be_a_string
-`0x02090013`  | `<placeholder> is one of the basic profiles of Kuzzle, you cannot delete it, but you can edit it.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cannot_delete_basic_profile | api.security.cannot_delete_basic_profile
-`0x02090014`  | `The profile "<placeholder>" cannot be deleted since it is used by some users.` | [ForbiddenError](https://docs.kuzzle.io/core/1/api/essentials/errors/#forbiddenerror) | cannot_delete_profile_being_used | api.security.cannot_delete_profile_being_used
-`0x02090015`  | `Anonymous profile must include the anonymous role` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_anonymous_role | api.security.missing_anonymous_role
-`0x02090016`  | `Unable to hydrate the profile <placeholder>: missing role(s) in the database` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | unable_to_hydrate_profile | api.security.unable_to_hydrate_profile
-`0x02090017`  | `Unable to find <placeholder> with id '<placeholder>'` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | unable_to_find_collection_with_id | api.security.unable_to_find_collection_with_id
-`0x02090018`  | `Bad argument: <placeholder> is not an array.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | ids_must_be_an_array | api.security.ids_must_be_an_array
-`0x02090019`  | `<placeholder>` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | load_from_cache | api.security.load_from_cache
-`0x0209001a`  | `Repository <placeholder>: nothing to delete` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | nothing_to_delete_in_repository | api.security.nothing_to_delete_in_repository
-`0x0209001b`  | `Repository <placeholder>: missing _id` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | missing_id_in_repository | api.security.missing_id_in_repository
-`0x0209001c`  | `Missing role id` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_role_id | api.security.missing_role_id
-`0x0209001d`  | `Invalid argument: Expected role id to be a string, received "<placeholder>"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | expected_role_id_to_be_a_string | api.security.expected_role_id_to_be_a_string
-`0x0209001e`  | `Cannot remove login permission from anonymous role` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cannot_remove_login_permission_from_anonymous_role | api.security.cannot_remove_login_permission_from_anonymous_role
-`0x0209001f`  | `<placeholder> is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cannot_delete_basic_role | api.security.cannot_delete_basic_role
-`0x02090020`  | `The role "<placeholder>" cannot be deleted since it is used by some profile.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | cannot_delete_role_being_used | api.security.cannot_delete_role_being_used
-`0x02090021`  | `was not able to remove bad credentials of user '<placeholder>'` | [PartialError](https://docs.kuzzle.io/core/1/api/essentials/errors/#partialerror) | unable_remove_bad_credentials | api.security.unable_remove_bad_credentials
-`0x02090022`  | `Anonymous user must be assigned the anonymous profile` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | anonymous_user_not_assigned_to_anonymous_profile | api.security.anonymous_user_not_assigned_to_anonymous_profile
-`0x02090023`  | `Unable to hydrate the user <placeholder>: missing profile(s) in the database` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | unable_to_hydrate_user | api.security.unable_to_hydrate_user
-`0x02090024`  | `Cannot get roles for uninitialized profile <placeholder>` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | cannot_get_roles_for_uninitialized_profile | api.security.cannot_get_roles_for_uninitialized_profile
-`0x02090025`  | `The "policies" attribute is mandatory and must be an array` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_mandatory_policies_attribute | api.security.missing_mandatory_policies_attribute
-`0x02090026`  | `The "policies" attribute array cannot be empty` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | empty_policies_attribute | api.security.empty_policies_attribute
-`0x02090027`  | `policies[<placeholder>] Missing mandatory attribute "roleId"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_mandatory_roleId_attribute | api.security.missing_mandatory_roleId_attribute
-`0x02090028`  | `policies[<placeholder>] Unexpected attribute "<placeholder>". Valid attributes are "roleId" and "restrictedTo"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unexpected_attribute_in_policies | api.security.unexpected_attribute_in_policies
-`0x02090029`  | `policies[<placeholder>] Expected "restrictedTo" to be an array of objects` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | attribute_restrictedTo_not_an_array_of_objects | api.security.attribute_restrictedTo_not_an_array_of_objects
-`0x0209002a`  | `policies[<placeholder>].restrictedTo[<placeholder>] should be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | restrictedTo_field_must_be_an_object | api.security.restrictedTo_field_must_be_an_object
-`0x0209002b`  | `policies[<placeholder>].restrictedTo[<placeholder>] Missing mandatory attribute "index"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_mandatory_index_attribute_in_restrictedTo_array | api.security.missing_mandatory_index_attribute_in_restrictedTo_array
-`0x0209002c`  | `policies[<placeholder>].restrictedTo[<placeholder>] Attribute "index" must be a non-empty string value` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | index_attribute_is_empty_string | api.security.index_attribute_is_empty_string
-`0x0209002d`  | `policies[<placeholder>].restrictedTo[<placeholder>] Attribute "collections" must be of type "array"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | attribute_collections_not_an_array_in_retrictedTo | api.security.attribute_collections_not_an_array_in_retrictedTo
-`0x0209002e`  | `policies[<placeholder>].restrictedTo[<placeholder>] Attribute "collections" can only contain non-empty string values` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | attribute_collections_not_contains_not_only_non_empty_strings | api.security.attribute_collections_not_contains_not_only_non_empty_strings
-`0x0209002f`  | `policies[<placeholder>].restrictedTo[<placeholder>] Unexpected attribute "<placeholder>". Valid attributes are "index" and "collections"` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unexptected_attribute_in_restrictedTo_array | api.security.unexptected_attribute_in_restrictedTo_array
-`0x02090030`  | `Cannot get profiles for uninitialized user <placeholder>` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | cannot_get_profiles_for_uninitialized_user | api.security.cannot_get_profiles_for_uninitialized_user
-`0x02090031`  | `Cannot check permissions on uninitialized role <placeholder>` | [PreconditionError](https://docs.kuzzle.io/core/1/api/essentials/errors/#preconditionerror) | cannot_check_permissions_on_uninitialized_role | api.security.cannot_check_permissions_on_uninitialized_role
-`0x02090032`  | `Invalid rights given for role <placeholder>(<placeholder>) : <placeholder>` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | invalid_rights_given | api.security.invalid_rights_given
-`0x02090033`  | `The "controllers" definition must be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | controllers_definition_not_an_object | api.security.controllers_definition_not_an_object
-`0x02090034`  | `The "controllers" definition cannot be empty` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | empty_controllers_definition | api.security.empty_controllers_definition
-`0x02090035`  | `Invalid definition for [<placeholder>]: must be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | controller_definition_not_an_object | api.security.controller_definition_not_an_object
-`0x02090036`  | `Invalid definition for [<placeholder>]: cannot be empty` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | empty_controller_definition | api.security.empty_controller_definition
-`0x02090037`  | `Invalid definition for [<placeholder>]: "actions" attribute missing` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | actions_attribute_missing_in_controller_definition | api.security.actions_attribute_missing_in_controller_definition
-`0x02090038`  | `Invalid definition for [<placeholder>]: "actions" attribute must be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | actions_attribute_not_an_object_in_controller_definition | api.security.actions_attribute_not_an_object_in_controller_definition
-`0x02090039`  | `Invalid definition for [<placeholder>]: "actions" attribute cannot be empty` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | actions_attribute_empty_in_controller_definition | api.security.actions_attribute_empty_in_controller_definition
-`0x0209003a`  | `Invalid definition for [<placeholder>, <placeholder>]: must be a boolean or an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_type_in_definition_for_controller_action | api.security.invalid_type_in_definition_for_controller_action
-`0x0209003b`  | `Invalid definition for [<placeholder>, <placeholder>]. Permissions defined as closures must have a "test" element.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_test_element_for_controller_action | api.security.missing_test_element_for_controller_action
-`0x0209003c`  | `Invalid definition for [<placeholder>, <placeholder>]: error executing function` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | error_executing_function_for_controller_action | api.security.error_executing_function_for_controller_action
-`0x0209003d`  | `Error parsing rights for role <placeholder> (<placeholder>) : <placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | parsing_rights_for_role | api.security.parsing_rights_for_role
-`0x0209003e`  | `<placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | parsing_closure_rights_for_role | api.security.parsing_closure_rights_for_role
-`0x0209003f`  | `<placeholder>` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | rights_action_closure_execution | api.security.rights_action_closure_execution
+`0x02090001`  | `Role with id <placeholder> not found.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | role_not_found | api.security.role_not_found
+`0x02090002`  | `Profile with id <placeholder> not found.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | profile_not_found | api.security.profile_not_found
+`0x02090003`  | `User with id <placeholder> not found.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | user_not_found | api.security.user_not_found
+`0x02090004`  | `Admin user is already set.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | admin_exists | api.security.admin_exists
+`0x02090005`  | `Cannot create credentials: unknown kuid <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | cant_create_creds | api.security.cant_create_creds
+`0x02090006`  | `Cannot update credentials: unknown kuid <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | cant_update_creds | api.security.cant_update_creds
+`0x02090007`  | `The number of deletes to perform exceeds the server configured value <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | delete_limit_reached | api.security.delete_limit_reached
+`0x02090008`  | `security:mDelete <placeholder> Error(s) deleting <placeholder> items, <placeholder>.` | [PartialError](/core/1/api/essentials/errors#partialerror) | mdelete | api.security.mdelete
+`0x02090009`  | `Search page size exceeds server configured documents limit <placeholder>.` | [SizeLimitError](/core/1/api/essentials/errors#sizelimiterror) | search_page_size_limit_reached | api.security.search_page_size_limit_reached
+`0x0209000a`  | `Cannot update non-existing <placeholder> <placeholder>.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | cant_update_non_existing | api.security.cant_update_non_existing
+`0x0209000b`  | `User <placeholder> already exists.` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | user_already_exists | api.security.user_already_exists
+`0x0209000c`  | `Strategy <placeholder> is not a known strategy.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unknown_strategy | api.security.unknown_strategy
+`0x0209000d`  | `Internal database inconsistency detected: existing credentials found on non-existing user <placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | creds_on_non_existing_user | api.security.creds_on_non_existing_user
+`0x0209000e`  | `<placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | validate_method | api.security.validate_method
+`0x0209000f`  | `Missing profileId` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_profile_id | api.security.missing_profile_id
+`0x02090010`  | `Missing profileIds` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_profile_ids | api.security.missing_profile_ids
+`0x02090011`  | `An array of strings must be provided as profileIds` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | profile_ids_must_be_array_of_string | api.security.profile_ids_must_be_array_of_string
+`0x02090012`  | `Invalid argument: Expected profile id to be a string, received "<placeholder>"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | expected_profile_id_to_be_a_string | api.security.expected_profile_id_to_be_a_string
+`0x02090013`  | `<placeholder> is one of the basic profiles of Kuzzle, you cannot delete it, but you can edit it.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | cannot_delete_basic_profile | api.security.cannot_delete_basic_profile
+`0x02090014`  | `The profile "<placeholder>" cannot be deleted since it is used by some users.` | [ForbiddenError](/core/1/api/essentials/errors#forbiddenerror) | cannot_delete_profile_being_used | api.security.cannot_delete_profile_being_used
+`0x02090015`  | `Anonymous profile must include the anonymous role` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_anonymous_role | api.security.missing_anonymous_role
+`0x02090016`  | `Unable to hydrate the profile <placeholder>: missing role(s) in the database` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | unable_to_hydrate_profile | api.security.unable_to_hydrate_profile
+`0x02090017`  | `Unable to find <placeholder> with id '<placeholder>'` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | unable_to_find_collection_with_id | api.security.unable_to_find_collection_with_id
+`0x02090018`  | `Bad argument: <placeholder> is not an array.` | [InternalError](/core/1/api/essentials/errors#internalerror) | ids_must_be_an_array | api.security.ids_must_be_an_array
+`0x02090019`  | `<placeholder>` | [InternalError](/core/1/api/essentials/errors#internalerror) | load_from_cache | api.security.load_from_cache
+`0x0209001a`  | `Repository <placeholder>: nothing to delete` | [InternalError](/core/1/api/essentials/errors#internalerror) | nothing_to_delete_in_repository | api.security.nothing_to_delete_in_repository
+`0x0209001b`  | `Repository <placeholder>: missing _id` | [InternalError](/core/1/api/essentials/errors#internalerror) | missing_id_in_repository | api.security.missing_id_in_repository
+`0x0209001c`  | `Missing role id` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_role_id | api.security.missing_role_id
+`0x0209001d`  | `Invalid argument: Expected role id to be a string, received "<placeholder>"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | expected_role_id_to_be_a_string | api.security.expected_role_id_to_be_a_string
+`0x0209001e`  | `Cannot remove login permission from anonymous role` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | cannot_remove_login_permission_from_anonymous_role | api.security.cannot_remove_login_permission_from_anonymous_role
+`0x0209001f`  | `<placeholder> is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | cannot_delete_basic_role | api.security.cannot_delete_basic_role
+`0x02090020`  | `The role "<placeholder>" cannot be deleted since it is used by some profile.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | cannot_delete_role_being_used | api.security.cannot_delete_role_being_used
+`0x02090021`  | `was not able to remove bad credentials of user '<placeholder>'` | [PartialError](/core/1/api/essentials/errors#partialerror) | unable_remove_bad_credentials | api.security.unable_remove_bad_credentials
+`0x02090022`  | `Anonymous user must be assigned the anonymous profile` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | anonymous_user_not_assigned_to_anonymous_profile | api.security.anonymous_user_not_assigned_to_anonymous_profile
+`0x02090023`  | `Unable to hydrate the user <placeholder>: missing profile(s) in the database` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | unable_to_hydrate_user | api.security.unable_to_hydrate_user
+`0x02090024`  | `Cannot get roles for uninitialized profile <placeholder>` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | cannot_get_roles_for_uninitialized_profile | api.security.cannot_get_roles_for_uninitialized_profile
+`0x02090025`  | `The "policies" attribute is mandatory and must be an array` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_mandatory_policies_attribute | api.security.missing_mandatory_policies_attribute
+`0x02090026`  | `The "policies" attribute array cannot be empty` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | empty_policies_attribute | api.security.empty_policies_attribute
+`0x02090027`  | `policies[<placeholder>] Missing mandatory attribute "roleId"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_mandatory_roleId_attribute | api.security.missing_mandatory_roleId_attribute
+`0x02090028`  | `policies[<placeholder>] Unexpected attribute "<placeholder>". Valid attributes are "roleId" and "restrictedTo"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unexpected_attribute_in_policies | api.security.unexpected_attribute_in_policies
+`0x02090029`  | `policies[<placeholder>] Expected "restrictedTo" to be an array of objects` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | attribute_restrictedTo_not_an_array_of_objects | api.security.attribute_restrictedTo_not_an_array_of_objects
+`0x0209002a`  | `policies[<placeholder>].restrictedTo[<placeholder>] should be an object` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | restrictedTo_field_must_be_an_object | api.security.restrictedTo_field_must_be_an_object
+`0x0209002b`  | `policies[<placeholder>].restrictedTo[<placeholder>] Missing mandatory attribute "index"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_mandatory_index_attribute_in_restrictedTo_array | api.security.missing_mandatory_index_attribute_in_restrictedTo_array
+`0x0209002c`  | `policies[<placeholder>].restrictedTo[<placeholder>] Attribute "index" must be a non-empty string value` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | index_attribute_is_empty_string | api.security.index_attribute_is_empty_string
+`0x0209002d`  | `policies[<placeholder>].restrictedTo[<placeholder>] Attribute "collections" must be of type "array"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | attribute_collections_not_an_array_in_retrictedTo | api.security.attribute_collections_not_an_array_in_retrictedTo
+`0x0209002e`  | `policies[<placeholder>].restrictedTo[<placeholder>] Attribute "collections" can only contain non-empty string values` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | attribute_collections_not_contains_not_only_non_empty_strings | api.security.attribute_collections_not_contains_not_only_non_empty_strings
+`0x0209002f`  | `policies[<placeholder>].restrictedTo[<placeholder>] Unexpected attribute "<placeholder>". Valid attributes are "index" and "collections"` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unexptected_attribute_in_restrictedTo_array | api.security.unexptected_attribute_in_restrictedTo_array
+`0x02090030`  | `Cannot get profiles for uninitialized user <placeholder>` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | cannot_get_profiles_for_uninitialized_user | api.security.cannot_get_profiles_for_uninitialized_user
+`0x02090031`  | `Cannot check permissions on uninitialized role <placeholder>` | [PreconditionError](/core/1/api/essentials/errors#preconditionerror) | cannot_check_permissions_on_uninitialized_role | api.security.cannot_check_permissions_on_uninitialized_role
+`0x02090032`  | `Invalid rights given for role <placeholder>(<placeholder>) : <placeholder>` | [InternalError](/core/1/api/essentials/errors#internalerror) | invalid_rights_given | api.security.invalid_rights_given
+`0x02090033`  | `The "controllers" definition must be an object` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | controllers_definition_not_an_object | api.security.controllers_definition_not_an_object
+`0x02090034`  | `The "controllers" definition cannot be empty` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | empty_controllers_definition | api.security.empty_controllers_definition
+`0x02090035`  | `Invalid definition for [<placeholder>]: must be an object` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | controller_definition_not_an_object | api.security.controller_definition_not_an_object
+`0x02090036`  | `Invalid definition for [<placeholder>]: cannot be empty` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | empty_controller_definition | api.security.empty_controller_definition
+`0x02090037`  | `Invalid definition for [<placeholder>]: "actions" attribute missing` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | actions_attribute_missing_in_controller_definition | api.security.actions_attribute_missing_in_controller_definition
+`0x02090038`  | `Invalid definition for [<placeholder>]: "actions" attribute must be an object` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | actions_attribute_not_an_object_in_controller_definition | api.security.actions_attribute_not_an_object_in_controller_definition
+`0x02090039`  | `Invalid definition for [<placeholder>]: "actions" attribute cannot be empty` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | actions_attribute_empty_in_controller_definition | api.security.actions_attribute_empty_in_controller_definition
+`0x0209003a`  | `Invalid definition for [<placeholder>, <placeholder>]: must be a boolean or an object` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_type_in_definition_for_controller_action | api.security.invalid_type_in_definition_for_controller_action
+`0x0209003b`  | `Invalid definition for [<placeholder>, <placeholder>]. Permissions defined as closures must have a "test" element.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_test_element_for_controller_action | api.security.missing_test_element_for_controller_action
+`0x0209003c`  | `Invalid definition for [<placeholder>, <placeholder>]: error executing function` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | error_executing_function_for_controller_action | api.security.error_executing_function_for_controller_action
+`0x0209003d`  | `Error parsing rights for role <placeholder> (<placeholder>) : <placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | parsing_rights_for_role | api.security.parsing_rights_for_role
+`0x0209003e`  | `<placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | parsing_closure_rights_for_role | api.security.parsing_closure_rights_for_role
+`0x0209003f`  | `<placeholder>` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | rights_action_closure_execution | api.security.rights_action_closure_execution
 
 ---
 
@@ -459,23 +459,23 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x020a0001`  | `Invalid match parameter.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | match_parameter | api.memory_storage.match_parameter
-`0x020a0002`  | `Invalid limit parameter.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | limit_parameter | api.memory_storage.limit_parameter
-`0x020a0003`  | `Cannot add an empty points list.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | add_empty_points_list | api.memory_storage.add_empty_points_list
-`0x020a0004`  | `Invalid points parameter.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | points_parameter | api.memory_storage.points_parameter
-`0x020a0005`  | `Invalid entries parameter.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | entries_parameter | api.memory_storage.entries_parameter
-`0x020a0006`  | `Invalid aggregate parameter.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | aggregate_parameter | api.memory_storage.aggregate_parameter
-`0x020a0007`  | `Invalid value for parameter <placeholder>: float expected.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | float_expected | api.memory_storage.float_expected
-`0x020a0008`  | `Invalid value for parameter <placeholder>: integer expected.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | integer_expected | api.memory_storage.integer_expected
-`0x020a0009`  | `At least 1 source key must be provided.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | no_source_key | api.memory_storage.no_source_key
-`0x020a000a`  | `At least 1 score/member pair must be provided.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | no_score_member_pair | api.memory_storage.no_score_member_pair
-`0x020a000b`  | `No more than 1 score/member pair can be specified when the 'incr' option is set.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | too_many_score_member_pairs | api.memory_storage.too_many_score_member_pairs
-`0x020a000c`  | `Invalid score/member pair argument.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_score_member_pair | api.memory_storage.invalid_score_member_pair
-`0x020a000d`  | `Missing argument <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_argument | api.memory_storage.missing_argument
-`0x020a000e`  | `Accepts only scalar values (number, string).` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | non_scalar_value | api.memory_storage.non_scalar_value
-`0x020a000f`  | `NX and XX options are mutually exclusive.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | nx_xx_exclusive_opts | api.memory_storage.nx_xx_exclusive_opts
-`0x020a0010`  | `EX and PX options are mutually exclusive.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | ex_px_exclusive_opts | api.memory_storage.ex_px_exclusive_opts
-`0x020a0011`  | `Invalid direction argument (expected: ASC or DESC).` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | direction_argument | api.memory_storage.direction_argument
+`0x020a0001`  | `Invalid match parameter.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | match_parameter | api.memory_storage.match_parameter
+`0x020a0002`  | `Invalid limit parameter.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | limit_parameter | api.memory_storage.limit_parameter
+`0x020a0003`  | `Cannot add an empty points list.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | add_empty_points_list | api.memory_storage.add_empty_points_list
+`0x020a0004`  | `Invalid points parameter.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | points_parameter | api.memory_storage.points_parameter
+`0x020a0005`  | `Invalid entries parameter.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | entries_parameter | api.memory_storage.entries_parameter
+`0x020a0006`  | `Invalid aggregate parameter.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | aggregate_parameter | api.memory_storage.aggregate_parameter
+`0x020a0007`  | `Invalid value for parameter <placeholder>: float expected.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | float_expected | api.memory_storage.float_expected
+`0x020a0008`  | `Invalid value for parameter <placeholder>: integer expected.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | integer_expected | api.memory_storage.integer_expected
+`0x020a0009`  | `At least 1 source key must be provided.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | no_source_key | api.memory_storage.no_source_key
+`0x020a000a`  | `At least 1 score/member pair must be provided.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | no_score_member_pair | api.memory_storage.no_score_member_pair
+`0x020a000b`  | `No more than 1 score/member pair can be specified when the 'incr' option is set.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | too_many_score_member_pairs | api.memory_storage.too_many_score_member_pairs
+`0x020a000c`  | `Invalid score/member pair argument.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_score_member_pair | api.memory_storage.invalid_score_member_pair
+`0x020a000d`  | `Missing argument <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_argument | api.memory_storage.missing_argument
+`0x020a000e`  | `Accepts only scalar values (number, string).` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | non_scalar_value | api.memory_storage.non_scalar_value
+`0x020a000f`  | `NX and XX options are mutually exclusive.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | nx_xx_exclusive_opts | api.memory_storage.nx_xx_exclusive_opts
+`0x020a0010`  | `EX and PX options are mutually exclusive.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | ex_px_exclusive_opts | api.memory_storage.ex_px_exclusive_opts
+`0x020a0011`  | `Invalid direction argument (expected: ASC or DESC).` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | direction_argument | api.memory_storage.direction_argument
 
 ---
 
@@ -484,23 +484,23 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x020b0001`  | `The request must specify a body.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_specify_body | api.request_assertions.must_specify_body
-`0x020b0002`  | `The request must specify a body attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_body_attribute | api.request_assertions.missing_body_attribute
-`0x020b0003`  | `The request must specify an attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_attribute | api.request_assertions.missing_attribute
-`0x020b0004`  | `The request must not specify the body attribute "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_not_specify_body_attribute | api.request_assertions.must_not_specify_body_attribute
-`0x020b0005`  | `An unexepected type assertion "<placeholder>" has been invoked on attribute "<placeholder>".` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unexpected_type_assertion_on_attribute | api.request_assertions.unexpected_type_assertion_on_attribute
-`0x020b0006`  | `The request must specify the body attribute "<placeholder>" of type "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_body_attribute_type | api.request_assertions.wrong_body_attribute_type
-`0x020b0007`  | `The request must specify an _id.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_id | api.request_assertions.missing_id
-`0x020b0008`  | `The request must not specify an _id that starts with an underscore (_).` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_id_format | api.request_assertions.wrong_id_format
-`0x020b0009`  | `The request must specify an index.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_index | api.request_assertions.missing_index
-`0x020b000a`  | `The request must specify a collection.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_collection | api.request_assertions.missing_collection
-`0x020b000b`  | `The request must specify a strategy.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_strategy | api.request_assertions.missing_strategy
-`0x020b000c`  | `The request argument's strategy must be a string.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_strategy_type | api.request_assertions.wrong_strategy_type
-`0x020b000d`  | `The request must specify a scrollId.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | missing_scrollId | api.request_assertions.missing_scrollId
-`0x020b000e`  | `The request argument's scrollId must be a string.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | wrong_scrollId_type | api.request_assertions.wrong_scrollId_type
-`0x020b000f`  | `You must be authenticated to execute that action` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | must_be_authenticated_to_execute_action | api.request_assertions.must_be_authenticated_to_execute_action
-`0x020b0010`  | `The strategy "<placeholder>" is not a known strategy.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unknown_strategy | api.request_assertions.unknown_strategy
-`0x020b0011`  | `Expected '<placeholder>' to be an object` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | must_be_an_object | api.request_assertions.must_be_an_object
+`0x020b0001`  | `The request must specify a body.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | must_specify_body | api.request_assertions.must_specify_body
+`0x020b0002`  | `The request must specify a body attribute "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_body_attribute | api.request_assertions.missing_body_attribute
+`0x020b0003`  | `The request must specify an attribute "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_attribute | api.request_assertions.missing_attribute
+`0x020b0004`  | `The request must not specify the body attribute "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | must_not_specify_body_attribute | api.request_assertions.must_not_specify_body_attribute
+`0x020b0005`  | `An unexepected type assertion "<placeholder>" has been invoked on attribute "<placeholder>".` | [InternalError](/core/1/api/essentials/errors#internalerror) | unexpected_type_assertion_on_attribute | api.request_assertions.unexpected_type_assertion_on_attribute
+`0x020b0006`  | `The request must specify the body attribute "<placeholder>" of type "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | wrong_body_attribute_type | api.request_assertions.wrong_body_attribute_type
+`0x020b0007`  | `The request must specify an _id.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_id | api.request_assertions.missing_id
+`0x020b0008`  | `The request must not specify an _id that starts with an underscore (_).` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | wrong_id_format | api.request_assertions.wrong_id_format
+`0x020b0009`  | `The request must specify an index.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_index | api.request_assertions.missing_index
+`0x020b000a`  | `The request must specify a collection.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_collection | api.request_assertions.missing_collection
+`0x020b000b`  | `The request must specify a strategy.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_strategy | api.request_assertions.missing_strategy
+`0x020b000c`  | `The request argument's strategy must be a string.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | wrong_strategy_type | api.request_assertions.wrong_strategy_type
+`0x020b000d`  | `The request must specify a scrollId.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | missing_scrollId | api.request_assertions.missing_scrollId
+`0x020b000e`  | `The request argument's scrollId must be a string.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | wrong_scrollId_type | api.request_assertions.wrong_scrollId_type
+`0x020b000f`  | `You must be authenticated to execute that action` | [UnauthorizedError](/core/1/api/essentials/errors#unauthorizederror) | must_be_authenticated_to_execute_action | api.request_assertions.must_be_authenticated_to_execute_action
+`0x020b0010`  | `The strategy "<placeholder>" is not a known strategy.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unknown_strategy | api.request_assertions.unknown_strategy
+`0x020b0011`  | `Expected '<placeholder>' to be an object` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | must_be_an_object | api.request_assertions.must_be_an_object
 
 ---
 
@@ -514,11 +514,11 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x03010001`  | `<placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | http_request_error | network.http.http_request_error
-`0x03010002`  | `Maximum HTTP request size exceeded.` | [SizeLimitError](https://docs.kuzzle.io/core/1/api/essentials/errors/#sizelimiterror) | http_request_size_exceeded | network.http.http_request_size_exceeded
-`0x03010003`  | `Too many encodings.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | too_many_encodings | network.http.too_many_encodings
-`0x03010004`  | `Unsupported compression algorithm "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unsupported_compression_algorithm | network.http.unsupported_compression_algorithm
-`0x03010005`  | `Compression support is disabled.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | compression_support_disabled | network.http.compression_support_disabled
+`0x03010001`  | `<placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | http_request_error | network.http.http_request_error
+`0x03010002`  | `Maximum HTTP request size exceeded.` | [SizeLimitError](/core/1/api/essentials/errors#sizelimiterror) | http_request_size_exceeded | network.http.http_request_size_exceeded
+`0x03010003`  | `Too many encodings.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | too_many_encodings | network.http.too_many_encodings
+`0x03010004`  | `Unsupported compression algorithm "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unsupported_compression_algorithm | network.http.unsupported_compression_algorithm
+`0x03010005`  | `Compression support is disabled.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | compression_support_disabled | network.http.compression_support_disabled
 
 ---
 
@@ -527,7 +527,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x03020001`  | `<placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | mqtt_request_error | network.mqtt.mqtt_request_error
+`0x03020001`  | `<placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | mqtt_request_error | network.mqtt.mqtt_request_error
 
 ---
 
@@ -536,7 +536,7 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x03030001`  | `<placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | websocket_request_error | network.websocket.websocket_request_error
+`0x03030001`  | `<placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | websocket_request_error | network.websocket.websocket_request_error
 
 ---
 
@@ -553,9 +553,9 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x03050001`  | `Unknown event received: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unknown_event_received | network.entrypoint.unknown_event_received
-`0x03050002`  | `Invalid network port number: <placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | invalid_network_port_number | network.entrypoint.invalid_network_port_number
-`0x03050003`  | `Conflicting protocol name "<placeholder>".` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | conflicting_protocol_name | network.entrypoint.conflicting_protocol_name
+`0x03050001`  | `Unknown event received: <placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | unknown_event_received | network.entrypoint.unknown_event_received
+`0x03050002`  | `Invalid network port number: <placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | invalid_network_port_number | network.entrypoint.invalid_network_port_number
+`0x03050003`  | `Conflicting protocol name "<placeholder>".` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | conflicting_protocol_name | network.entrypoint.conflicting_protocol_name
 
 ---
 
@@ -564,15 +564,15 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x03060001`  | `Unrecognized HTTP method <placeholder>.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unrecognized_http_method | network.http_router.unrecognized_http_method
-`0x03060002`  | `API URL not found: <placeholder>.` | [NotFoundError](https://docs.kuzzle.io/core/1/api/essentials/errors/#notfounderror) | api_url_not_found | network.http_router.api_url_not_found
-`0x03060003`  | `Invalid request content-type. Expected "application/json", got: "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_request_content_type | network.http_router.invalid_request_content_type
-`0x03060004`  | `Invalid request charset. Expected "utf-8", got: "<placeholder>".` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | invalid_request_charset | network.http_router.invalid_request_charset
-`0x03060005`  | `Unable to attach URL <placeholder>: URL path already exists.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | unable_to_attach_url | network.http_router.unable_to_attach_url
-`0x03060006`  | `part already exists.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | part_already_exists | network.http_router.part_already_exists
-`0x03060007`  | `Unable to convert HTTP x-kuzzle-volatile header to JSON.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unable_to_convert_http_header_to_json | network.http_router.unable_to_convert_http_header_to_json
-`0x03060008`  | `Unable to convert HTTP body to JSON.` | [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) | unable_to_convert_http_body_to_json | network.http_router.unable_to_convert_http_body_to_json
-`0x03060009`  | `<placeholder>.` | [InternalError](https://docs.kuzzle.io/core/1/api/essentials/errors/#internalerror) | request_error | network.http_router.request_error
+`0x03060001`  | `Unrecognized HTTP method <placeholder>.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unrecognized_http_method | network.http_router.unrecognized_http_method
+`0x03060002`  | `API URL not found: <placeholder>.` | [NotFoundError](/core/1/api/essentials/errors#notfounderror) | api_url_not_found | network.http_router.api_url_not_found
+`0x03060003`  | `Invalid request content-type. Expected "application/json", got: "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_request_content_type | network.http_router.invalid_request_content_type
+`0x03060004`  | `Invalid request charset. Expected "utf-8", got: "<placeholder>".` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | invalid_request_charset | network.http_router.invalid_request_charset
+`0x03060005`  | `Unable to attach URL <placeholder>: URL path already exists.` | [InternalError](/core/1/api/essentials/errors#internalerror) | unable_to_attach_url | network.http_router.unable_to_attach_url
+`0x03060006`  | `part already exists.` | [InternalError](/core/1/api/essentials/errors#internalerror) | part_already_exists | network.http_router.part_already_exists
+`0x03060007`  | `Unable to convert HTTP x-kuzzle-volatile header to JSON.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unable_to_convert_http_header_to_json | network.http_router.unable_to_convert_http_header_to_json
+`0x03060008`  | `Unable to convert HTTP body to JSON.` | [BadRequestError](/core/1/api/essentials/errors#badrequesterror) | unable_to_convert_http_body_to_json | network.http_router.unable_to_convert_http_body_to_json
+`0x03060009`  | `<placeholder>.` | [InternalError](/core/1/api/essentials/errors#internalerror) | request_error | network.http_router.request_error
 
 ---
 
@@ -586,43 +586,43 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x04010001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_plugin_name | plugins.validation.invalid_plugin_name
-`0x04010002`  | `[<placeholder>] Invalid "privileged" property: expected a boolean, got a <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_privileged_property | plugins.validation.invalid_privileged_property
-`0x04010003`  | `[<placeholder>] No package.json file found.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_package_json | plugins.validation.missing_package_json
-`0x04010004`  | `You must provide a valid User object when adding context with as().` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_user_object | plugins.validation.invalid_user_object
-`0x04010005`  | `[<placeholder>] No "name" property provided in package.json.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_name_property_in_package_json | plugins.validation.missing_name_property_in_package_json
-`0x04010006`  | `The collection must be specified.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | collection_not_specified | plugins.validation.collection_not_specified
-`0x04010007`  | `Invalid argument: Expected callback to be a function, received "<placeholder>".` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | callback_argument_expected | plugins.validation.callback_argument_expected
-`0x04010008`  | `Invalid argument: a Request object must be supplied.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_request_object | plugins.validation.missing_request_object
-`0x04010009`  | `Custom event invalid name (<placeholder>). Colons are not allowed in custom events.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_custom_event_name | plugins.validation.invalid_custom_event_name
-`0x0401000a`  | `A Request object and/or request data must be provided.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_request_data_or_object | plugins.validation.missing_request_data_or_object
-`0x0401000b`  | `[<placeholder>] Strategy <placeholder>: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_strategy_registration | plugins.validation.invalid_strategy_registration
-`0x0401000c`  | `<placeholder> expected the strategy description to be an object, got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | strategy_description_type | plugins.validation.strategy_description_type
-`0x0401000d`  | `<placeholder> expected a "methods" property of type "object", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | methods_property_type | plugins.validation.methods_property_type
-`0x0401000e`  | `<placeholder> expected a "<placeholder>" property of type "string", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | methodname_property_type | plugins.validation.methodname_property_type
-`0x0401000f`  | `<placeholder> the strategy method "<placeholder>" must point to an exposed function.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_strategy_method | plugins.validation.invalid_strategy_method
-`0x04010010`  | `<placeholder> expected the "<placeholder>" property to be of type "string", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_property_type | plugins.validation.invalid_property_type
-`0x04010012`  | `<placeholder> expected a "config" property of type "object", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_config_property | plugins.validation.missing_config_property
-`0x04010013`  | `<placeholder> the "authenticator" and "constructor" parameters cannot both be set.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | cannot_set_ctor_and_authenticator | plugins.validation.cannot_set_ctor_and_authenticator
-`0x04010014`  | `<placeholder> invalid "constructor" property value: constructor expected.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_constructor_property_value | plugins.validation.invalid_constructor_property_value
-`0x04010015`  | `<placeholder> expected an "authenticator" property of type "string", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | authenticator_property_type | plugins.validation.authenticator_property_type
-`0x04010016`  | `<placeholder> unknown authenticator value: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unknown_authenticator_value | plugins.validation.unknown_authenticator_value
-`0x04010017`  | `<placeholder> expected the "<placeholder>" property to be of type "object", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | expected_object_type | plugins.validation.expected_object_type
-`0x04010018`  | `<placeholder> expected the "fields" property to be of type "array", got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_fields_property_type | plugins.validation.invalid_fields_property_type
-`0x04010019`  | `<placeholder> "<placeholder>" must be a non-empty string.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | key_cannot_be_empty_string | plugins.validation.key_cannot_be_empty_string
-`0x0401001a`  | `<placeholder> Incorrect controller description type (expected object, got: "<placeholder>").` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | incorrect_controller_description_type | plugins.validation.incorrect_controller_description_type
-`0x0401001b`  | `<placeholder> Unknown property "<placeholder>" in route definition. <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unknown_property_key_in_route_definition | plugins.validation.unknown_property_key_in_route_definition
-`0x0401001c`  | `<placeholder> the exposed "strategies" plugin property must be a non-empty object.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | strategies_plugin_property_empty | plugins.validation.strategies_plugin_property_empty
-`0x0401001d`  | `<placeholder> the exposed "authenticators" plugin property must be of type "object".` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | authenticators_plugin_property_not_an_object | plugins.validation.authenticators_plugin_property_not_an_object
-`0x0401001e`  | `<placeholder> invalid authenticator <placeholder>: expected a constructor.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_authenticator | plugins.validation.invalid_authenticator
-`0x0401001f`  | `<placeholder> Only following http verbs are allowed: "<placeholder>". <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | http_verb_not_allowed | plugins.validation.http_verb_not_allowed
-`0x04010020`  | `[<placeholder>/manifest.json] Invalid "name" property: expected a non-empty string.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_name_property | plugins.validation.invalid_name_property
-`0x04010021`  | `[<placeholder>/manifest.json] A "name" property is required.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | missing_name_property | plugins.validation.missing_name_property
-`0x04010022`  | `The type <placeholder> must implement the function 'validate'.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | function_validate_not_implemented | plugins.validation.function_validate_not_implemented
-`0x04010023`  | `The type <placeholder> must implement the function 'validateFieldSpecification'.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | function_validateFieldSpecification_not_implemented | plugins.validation.function_validateFieldSpecification_not_implemented
-`0x04010024`  | `The allowing children type <placeholder> must implement the function 'getStrictness'.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | function_getStrictness_not_implemented | plugins.validation.function_getStrictness_not_implemented
-`0x04010025`  | `[<placeholder>] Unable to load the file 'manifest.json'.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_load_manifest | plugins.validation.unable_to_load_manifest
-`0x04010026`  | `[<placeholder>/manifest.json] Version mismatch: current Kuzzle version <placeholder> does not match the manifest requirements (<placeholder>).` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | version_mismatch | plugins.validation.version_mismatch
+`0x04010001`  | `[<placeholder>] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_plugin_name | plugins.validation.invalid_plugin_name
+`0x04010002`  | `[<placeholder>] Invalid "privileged" property: expected a boolean, got a <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_privileged_property | plugins.validation.invalid_privileged_property
+`0x04010003`  | `[<placeholder>] No package.json file found.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_package_json | plugins.validation.missing_package_json
+`0x04010004`  | `You must provide a valid User object when adding context with as().` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_user_object | plugins.validation.invalid_user_object
+`0x04010005`  | `[<placeholder>] No "name" property provided in package.json.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_name_property_in_package_json | plugins.validation.missing_name_property_in_package_json
+`0x04010006`  | `The collection must be specified.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | collection_not_specified | plugins.validation.collection_not_specified
+`0x04010007`  | `Invalid argument: Expected callback to be a function, received "<placeholder>".` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | callback_argument_expected | plugins.validation.callback_argument_expected
+`0x04010008`  | `Invalid argument: a Request object must be supplied.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_request_object | plugins.validation.missing_request_object
+`0x04010009`  | `Custom event invalid name (<placeholder>). Colons are not allowed in custom events.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_custom_event_name | plugins.validation.invalid_custom_event_name
+`0x0401000a`  | `A Request object and/or request data must be provided.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_request_data_or_object | plugins.validation.missing_request_data_or_object
+`0x0401000b`  | `[<placeholder>] Strategy <placeholder>: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_strategy_registration | plugins.validation.invalid_strategy_registration
+`0x0401000c`  | `<placeholder> expected the strategy description to be an object, got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | strategy_description_type | plugins.validation.strategy_description_type
+`0x0401000d`  | `<placeholder> expected a "methods" property of type "object", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | methods_property_type | plugins.validation.methods_property_type
+`0x0401000e`  | `<placeholder> expected a "<placeholder>" property of type "string", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | methodname_property_type | plugins.validation.methodname_property_type
+`0x0401000f`  | `<placeholder> the strategy method "<placeholder>" must point to an exposed function.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_strategy_method | plugins.validation.invalid_strategy_method
+`0x04010010`  | `<placeholder> expected the "<placeholder>" property to be of type "string", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_property_type | plugins.validation.invalid_property_type
+`0x04010012`  | `<placeholder> expected a "config" property of type "object", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_config_property | plugins.validation.missing_config_property
+`0x04010013`  | `<placeholder> the "authenticator" and "constructor" parameters cannot both be set.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | cannot_set_ctor_and_authenticator | plugins.validation.cannot_set_ctor_and_authenticator
+`0x04010014`  | `<placeholder> invalid "constructor" property value: constructor expected.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_constructor_property_value | plugins.validation.invalid_constructor_property_value
+`0x04010015`  | `<placeholder> expected an "authenticator" property of type "string", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | authenticator_property_type | plugins.validation.authenticator_property_type
+`0x04010016`  | `<placeholder> unknown authenticator value: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unknown_authenticator_value | plugins.validation.unknown_authenticator_value
+`0x04010017`  | `<placeholder> expected the "<placeholder>" property to be of type "object", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | expected_object_type | plugins.validation.expected_object_type
+`0x04010018`  | `<placeholder> expected the "fields" property to be of type "array", got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_fields_property_type | plugins.validation.invalid_fields_property_type
+`0x04010019`  | `<placeholder> "<placeholder>" must be a non-empty string.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | key_cannot_be_empty_string | plugins.validation.key_cannot_be_empty_string
+`0x0401001a`  | `<placeholder> Incorrect controller description type (expected object, got: "<placeholder>").` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | incorrect_controller_description_type | plugins.validation.incorrect_controller_description_type
+`0x0401001b`  | `<placeholder> Unknown property "<placeholder>" in route definition. <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unknown_property_key_in_route_definition | plugins.validation.unknown_property_key_in_route_definition
+`0x0401001c`  | `<placeholder> the exposed "strategies" plugin property must be a non-empty object.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | strategies_plugin_property_empty | plugins.validation.strategies_plugin_property_empty
+`0x0401001d`  | `<placeholder> the exposed "authenticators" plugin property must be of type "object".` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | authenticators_plugin_property_not_an_object | plugins.validation.authenticators_plugin_property_not_an_object
+`0x0401001e`  | `<placeholder> invalid authenticator <placeholder>: expected a constructor.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_authenticator | plugins.validation.invalid_authenticator
+`0x0401001f`  | `<placeholder> Only following http verbs are allowed: "<placeholder>". <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | http_verb_not_allowed | plugins.validation.http_verb_not_allowed
+`0x04010020`  | `[<placeholder>/manifest.json] Invalid "name" property: expected a non-empty string.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_name_property | plugins.validation.invalid_name_property
+`0x04010021`  | `[<placeholder>/manifest.json] A "name" property is required.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | missing_name_property | plugins.validation.missing_name_property
+`0x04010022`  | `The type <placeholder> must implement the function 'validate'.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | function_validate_not_implemented | plugins.validation.function_validate_not_implemented
+`0x04010023`  | `The type <placeholder> must implement the function 'validateFieldSpecification'.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | function_validateFieldSpecification_not_implemented | plugins.validation.function_validateFieldSpecification_not_implemented
+`0x04010024`  | `The allowing children type <placeholder> must implement the function 'getStrictness'.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | function_getStrictness_not_implemented | plugins.validation.function_getStrictness_not_implemented
+`0x04010025`  | `[<placeholder>] Unable to load the file 'manifest.json'.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_load_manifest | plugins.validation.unable_to_load_manifest
+`0x04010026`  | `[<placeholder>/manifest.json] Version mismatch: current Kuzzle version <placeholder> does not match the manifest requirements (<placeholder>).` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | version_mismatch | plugins.validation.version_mismatch
 
 ---
 
@@ -631,35 +631,35 @@ order: 500
 
 | Code | Message          | Class              | Error              | FullName           |
 ------ | -----------------| ------------------ | ------------------ | ------------------ |
-`0x04020001`  | `"realtime:<placeholder>" method is not available in plugins. You should use plugin hooks instead.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | cannot_use_realtime_method | plugins.runtime.cannot_use_realtime_method
-`0x04020002`  | `Something went wrong during initialization of "<placeholder>" plugin.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_initialization_failed | plugins.runtime.plugin_initialization_failed
-`0x04020003`  | `Plugin <placeholder> pipe for event '<placeholder>' threw a non-Kuzzle error: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_threw_non_kuzzle_error | plugins.runtime.plugin_threw_non_kuzzle_error
-`0x04020004`  | `<placeholder> expected the "verify" to return a Promise, got: <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | verify_dont_return_promise | plugins.runtime.verify_dont_return_promise
-`0x04020005`  | `<placeholder> invalid authentication strategy result.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_authentication_strategy_result | plugins.runtime.invalid_authentication_strategy_result
-`0x04020006`  | `<placeholder> invalid authentication kuid returned: expected a string, got a <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | invalid_authentication_kuid | plugins.runtime.invalid_authentication_kuid
-`0x04020007`  | `<placeholder> returned an unknown Kuzzle user identifier.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unknown_kuzzle_user_identifier | plugins.runtime.unknown_kuzzle_user_identifier
-`0x04020008`  | `Cannot remove strategy <placeholder>: owned by another plugin.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | cannot_remove_others_plugin_strategy | plugins.runtime.cannot_remove_others_plugin_strategy
-`0x04020009`  | `Cannot remove strategy <placeholder>: strategy does not exist.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | cannot_remove_unexistant_strategy | plugins.runtime.cannot_remove_unexistant_strategy
-`0x0402000a`  | `Undefined controller "<placeholder>". <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | undefined_controller | plugins.runtime.undefined_controller
-`0x0402000b`  | `Undefined action "<placeholder>". <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | undefined_action | plugins.runtime.undefined_action
-`0x0402000c`  | `Unable to load plugins from directory "<placeholder>"; <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_load_plugin_from_directory | plugins.runtime.unable_to_load_plugin_from_directory
-`0x0402000d`  | `Unable to load plugin from path "<placeholder>"; <placeholder>.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_load_plugin_from_path | plugins.runtime.unable_to_load_plugin_from_path
-`0x0402000e`  | `[<placeholder>] No "init" method found.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | init_method_not_found | plugins.runtime.init_method_not_found
-`0x0402000f`  | `The plugin "<placeholder>" is configured to run in privileged mode, but it does not seem to support it.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | privileged_mode_not_supported | plugins.runtime.privileged_mode_not_supported
-`0x04020010`  | `The plugin "<placeholder>" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | privileged_mode_not_setted | plugins.runtime.privileged_mode_not_setted
-`0x04020011`  | `A plugin named <placeholder> already exists` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_name_already_exists | plugins.runtime.plugin_name_already_exists
-`0x04020012`  | `Plugin <placeholder> is not a constructor.` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_is_not_a_constructor | plugins.runtime.plugin_is_not_a_constructor
-`0x04020013`  | `<placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | plugin_error | plugins.runtime.plugin_error
-`0x04020014`  | `<placeholder>` | [UnauthorizedError](https://docs.kuzzle.io/core/1/api/essentials/errors/#unauthorizederror) | missing_user_for_authentication | plugins.runtime.missing_user_for_authentication
-`0x04020015`  | `<placeholder>` | [GatewayTimeoutError](https://docs.kuzzle.io/core/1/api/essentials/errors/#gatewaytimeouterror) | register_pipe_timeout | plugins.runtime.register_pipe_timeout
-`0x04020016`  | `Unable to serialize response. Are you trying to return the request?` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_serialize_response | plugins.runtime.unable_to_serialize_response
+`0x04020001`  | `"realtime:<placeholder>" method is not available in plugins. You should use plugin hooks instead.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | cannot_use_realtime_method | plugins.runtime.cannot_use_realtime_method
+`0x04020002`  | `Something went wrong during initialization of "<placeholder>" plugin.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_initialization_failed | plugins.runtime.plugin_initialization_failed
+`0x04020003`  | `Plugin <placeholder> pipe for event '<placeholder>' threw a non-Kuzzle error: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_threw_non_kuzzle_error | plugins.runtime.plugin_threw_non_kuzzle_error
+`0x04020004`  | `<placeholder> expected the "verify" to return a Promise, got: <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | verify_dont_return_promise | plugins.runtime.verify_dont_return_promise
+`0x04020005`  | `<placeholder> invalid authentication strategy result.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_authentication_strategy_result | plugins.runtime.invalid_authentication_strategy_result
+`0x04020006`  | `<placeholder> invalid authentication kuid returned: expected a string, got a <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | invalid_authentication_kuid | plugins.runtime.invalid_authentication_kuid
+`0x04020007`  | `<placeholder> returned an unknown Kuzzle user identifier.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unknown_kuzzle_user_identifier | plugins.runtime.unknown_kuzzle_user_identifier
+`0x04020008`  | `Cannot remove strategy <placeholder>: owned by another plugin.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | cannot_remove_others_plugin_strategy | plugins.runtime.cannot_remove_others_plugin_strategy
+`0x04020009`  | `Cannot remove strategy <placeholder>: strategy does not exist.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | cannot_remove_unexistant_strategy | plugins.runtime.cannot_remove_unexistant_strategy
+`0x0402000a`  | `Undefined controller "<placeholder>". <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | undefined_controller | plugins.runtime.undefined_controller
+`0x0402000b`  | `Undefined action "<placeholder>". <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | undefined_action | plugins.runtime.undefined_action
+`0x0402000c`  | `Unable to load plugins from directory "<placeholder>"; <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_load_plugin_from_directory | plugins.runtime.unable_to_load_plugin_from_directory
+`0x0402000d`  | `Unable to load plugin from path "<placeholder>"; <placeholder>.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_load_plugin_from_path | plugins.runtime.unable_to_load_plugin_from_path
+`0x0402000e`  | `[<placeholder>] No "init" method found.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | init_method_not_found | plugins.runtime.init_method_not_found
+`0x0402000f`  | `The plugin "<placeholder>" is configured to run in privileged mode, but it does not seem to support it.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | privileged_mode_not_supported | plugins.runtime.privileged_mode_not_supported
+`0x04020010`  | `The plugin "<placeholder>" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | privileged_mode_not_setted | plugins.runtime.privileged_mode_not_setted
+`0x04020011`  | `A plugin named <placeholder> already exists` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_name_already_exists | plugins.runtime.plugin_name_already_exists
+`0x04020012`  | `Plugin <placeholder> is not a constructor.` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_is_not_a_constructor | plugins.runtime.plugin_is_not_a_constructor
+`0x04020013`  | `<placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | plugin_error | plugins.runtime.plugin_error
+`0x04020014`  | `<placeholder>` | [UnauthorizedError](/core/1/api/essentials/errors#unauthorizederror) | missing_user_for_authentication | plugins.runtime.missing_user_for_authentication
+`0x04020015`  | `<placeholder>` | [GatewayTimeoutError](/core/1/api/essentials/errors#gatewaytimeouterror) | register_pipe_timeout | plugins.runtime.register_pipe_timeout
+`0x04020016`  | `Unable to serialize response. Are you trying to return the request?` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_serialize_response | plugins.runtime.unable_to_serialize_response
 `0x04020017`  | `An error occurred during the creation of user "<placeholder>":
-<placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | user_creation | plugins.runtime.user_creation
-`0x04020018`  | `Unexpected return value from action "<placeholder>:<placeholder>": expected a Promise` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unexpected_return_value | plugins.runtime.unexpected_return_value
-`0x04020019`  | `Rejected new connection - invalid arguments: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | rejected_new_connection_invalid_args | plugins.runtime.rejected_new_connection_invalid_args
-`0x0402001a`  | `Unable to remove connection - invalid arguments: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_remove_connection_invalid_args | plugins.runtime.unable_to_remove_connection_invalid_args
-`0x0402001b`  | `Unable to remove connection - unknown connection identifier: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | unable_to_remove_connection_unknown_connection_identifier | plugins.runtime.unable_to_remove_connection_unknown_connection_identifier
-`0x0402001c`  | `[<placeholder>] errors field in manifest.json badly formatted: <placeholder>` | [PluginImplementationError](https://docs.kuzzle.io/core/1/api/essentials/errors/#pluginimplementationerror) | errors_configuration_file | plugins.runtime.errors_configuration_file
+<placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | user_creation | plugins.runtime.user_creation
+`0x04020018`  | `Unexpected return value from action "<placeholder>:<placeholder>": expected a Promise` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unexpected_return_value | plugins.runtime.unexpected_return_value
+`0x04020019`  | `Rejected new connection - invalid arguments: <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | rejected_new_connection_invalid_args | plugins.runtime.rejected_new_connection_invalid_args
+`0x0402001a`  | `Unable to remove connection - invalid arguments: <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_remove_connection_invalid_args | plugins.runtime.unable_to_remove_connection_invalid_args
+`0x0402001b`  | `Unable to remove connection - unknown connection identifier: <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | unable_to_remove_connection_unknown_connection_identifier | plugins.runtime.unable_to_remove_connection_unknown_connection_identifier
+`0x0402001c`  | `[<placeholder>] errors field in manifest.json badly formatted: <placeholder>` | [PluginImplementationError](/core/1/api/essentials/errors#pluginimplementationerror) | errors_configuration_file | plugins.runtime.errors_configuration_file
 
 ---
 
