@@ -103,7 +103,7 @@ When(/I create a collection "([\w-]+)":"([\w-]+)"( with "([\d]+)" documents)?/, 
 Then('The mapping dynamic field of {string}:{string} is {string}', function (index, collection, dynamicValue) {
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
-      const expectedValue = dynamicValue === 'the default value' ? this.kuzzleConfig.services.db.dynamic.toString() : dynamicValue;
+      const expectedValue = dynamicValue === 'the default value' ? this.kuzzleConfig.services.storageEngine.dynamic.toString() : dynamicValue;
 
       should(result[index].mappings[collection].dynamic)
         .not.be.undefined()
@@ -122,7 +122,7 @@ Then('The mapping properties field of {string}:{string} is {string}', function (
 
   return this.api.getCollectionMapping(index, collection, includeKuzzleMeta)
     .then(({ result }) => {
-      const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.db.commonMapping : JSON.parse(rawMapping);
+      const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.storageEngine.commonMapping : JSON.parse(rawMapping);
 
       should(result[index].mappings[collection].properties)
         .not.be.undefined()
