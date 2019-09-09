@@ -1,27 +1,37 @@
 {
-  "code": 1,
+  "code": 2,
   "subdomains": {
-    "server": {
+    "base": {
       "code": 1,
+      "errors": {
+        "invalid_value_type": {
+          "code": 1,
+          "message": "Invalid '%s' value (%s).",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "server": {
+      "code": 2,
       "errors": {
         "elasticsearch_down": {
           "code": 1,
-          "message": "ElasticSearch is down: %s",
+          "message": "ElasticSearch is down: %s.",
           "class": "ExternalServiceError"
         },
         "service_unavailable": {
           "code": 2,
-          "message": "Error : %s",
+          "message": "Error : %s.",
           "class": "ServiceUnavailableError"
         }
       }
     },
     "document": {
-      "code": 2,
+      "code": 3,
       "errors": {
         "not_found": {
           "code": 1,
-          "message": "The document does not exist: %s",
+          "message": "The document does not exist: %s.",
           "class": "NotFoundError"
         },
         "search_on_multiple_indexes": {
@@ -41,92 +51,682 @@
         },
         "get_limit_reached": {
           "code": 5,
-          "message": "Number of gets to perform exceeds the server configured value ( %s )",
+          "message": "Number of gets to perform exceeds the server configured value ( %s ).",
           "class": "SizeLimitError"
         },
         "creation_failed": {
           "code": 6,
-          "message": "Some document creations failed : %s",
+          "message": "Some document creations failed : %s.",
+          "class": "PartialError"
+        },
+        "deletion_failed": {
+          "code": 7,
+          "message": "Some document deletions failed : %s.",
+          "class": "PartialError"
+        },
+        "some_document_missing": {
+          "code": 8,
+          "message": "Some document are missing.",
           "class": "PartialError"
         }
       }
     },
     "admin": {
-      "code": 3,
+      "code": 4,
       "errors": {
         "database_not_found": {
           "code": 1,
-          "message": "Database %s not found",
+          "message": "Database %s not found.",
           "class": "NotFoundError"
+        },
+        "action_locked": {
+          "code": 2,
+          "message": "Lock action error: %s.",
+          "class": "PreconditionError"
         }
       }
     },
     "auth": {
-      "code": 4,
+      "code": 5,
       "errors": {
         "token_force_expire": {
           "code": 1,
-          "message": "Error while forcing token expiration",
+          "message": "Error while forcing token expiration.",
           "class": "InternalError"
         },
         "invalid_token": {
           "code": 2,
-          "message": "Invalid token",
+          "message": "Invalid token.",
           "class": "UnauthorizedError"
+        },
+        "unknown_authentication_strategy": {
+          "code": 3,
+          "message": "Unknown authentication strategy \"%s\"",
+          "class": "BadRequestError"
+        },
+        "cannot_generate_token_with_unknown_user": {
+          "code": 4,
+          "message": "Unknown User : cannot generate token",
+          "class": "InternalError"
+        },
+        "cannot_generate_token_with_unknown_context": {
+          "code": 5,
+          "message": "Unknown context : cannot generate token",
+          "class": "InternalError"
+        },
+        "expiresIn_limit_reached": {
+          "code": 6,
+          "message": "expiresIn value exceeds maximum allowed value",
+          "class": "BadRequestError"
+        },
+        "generate_token_error": {
+          "code": 7,
+          "message": "Error while generating token",
+          "class": "InternalError"
+        },
+        "token_expired": {
+          "code": 8,
+          "message": "Token expired",
+          "class": "UnauthorizedError"
+        },
+        "json_web_token_error": {
+          "code": 9,
+          "message": "Json Web Token Error",
+          "class": "UnauthorizedError"
+        },
+        "error_verifying_token": {
+          "code": 10,
+          "message": "Error verifying token",
+          "class": "InternalError"
         }
       }
     },
     "collection": {
-      "code": 5,
+      "code": 6,
       "errors": {
-        "index_not_exist": {
+        "index_does_not_exist": {
           "code": 1,
-          "message": "The index %s does not exist",
+          "message": "The index %s does not exist.",
           "class": "PreconditionError"
         },
-        "collection_not_exist": {
+        "collection_does_not_exist": {
           "code": 2,
-          "message": "The collection %s does not exist",
+          "message": "The collection %s does not exist.",
           "class": "PreconditionError"
         },
         "search_page_size": {
           "code": 3,
-          "message": "Search page size exceeds server configured documents limit ( %s )",
+          "message": "Search page size exceeds server configured documents limit ( %s ).",
           "class": "SizeLimitError"
         },
         "invalid_type_argument": {
           "code": 4,
-          "message": "Must specify a valid type argument; Expected: 'all', 'stored' or 'realtime'; Received: %s",
+          "message": "Must specify a valid type argument; Expected: 'all', 'stored' or 'realtime'; Received: %s.",
+          "class": "BadRequestError"
+        },
+        "update_specifications": {
+          "code": 5,
+          "message": "%s",
           "class": "BadRequestError"
         }
       }
     },
     "funnel": {
-      "code": 6,
+      "code": 7,
       "errors": {
         "server_overloaded": {
           "code": 1,
-          "message": "Request discarded: Kuzzle Server is temporarily overloaded",
+          "message": "Request discarded: Kuzzle Server is temporarily overloaded.",
           "class": "ServiceUnavailableError"
         },
-        "anonymous_user": {
+        "anonymous_user_permissions": {
           "code": 2,
-          "message": "Unauthorized action [ %s / %s / %s / %s ] for anonymous user",
+          "message": "Unauthorized action [ %s / %s / %s / %s ] for anonymous user.",
           "class": "UnauthorizedError"
         },
         "insufficient_permissions": {
           "code": 3,
-          "message": "Forbidden action [ %s / %s / %s / %s ] for user %s",
+          "message": "Forbidden action [ %s / %s / %s / %s ] for user %s.",
           "class": "ForbiddenError"
         },
         "unknown_controller": {
           "code": 4,
-          "message": "Unknown controller %s",
+          "message": "Unknown controller %s.",
           "class": "BadRequestError"
         },
         "unknown_action": {
           "code": 5,
-          "message": "No corresponding action %s in controller %s",
+          "message": "No corresponding action %s in controller %s.",
+          "class": "BadRequestError"
+        },
+        "unauthorized_action": {
+          "code": 6,
+          "message": "Unauthorized action %s for anonymous user.",
+          "class": "UnauthorizedError"
+        },
+        "forbidden_action": {
+          "code": 7,
+          "message": "Forbidden action %s for user %s.",
+          "class": "ForbiddenError"
+        },
+        "client_connection_dropped": {
+          "code": 8,
+          "message": "Client connection dropped",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "bulk": {
+      "code": 8,
+      "errors": {
+        "document_creations_failed": {
+          "code": 1,
+          "message": "Some document creations failed: %s.",
+          "class": "PartialError"
+        },
+        "data_not_imported": {
+          "code": 2,
+          "message": "Some data was not imported: %s.",
+          "class": "PartialError"
+        }
+      }
+    },
+    "security": {
+      "code": 9,
+      "errors": {
+        "role_not_found": {
+          "code": 1,
+          "message": "Role with id %s not found.",
+          "class": "NotFoundError"
+        },
+        "profile_not_found": {
+          "code": 2,
+          "message": "Profile with id %s not found.",
+          "class": "NotFoundError"
+        },
+        "user_not_found": {
+          "code": 3,
+          "message": "User with id %s not found.",
+          "class": "NotFoundError"
+        },
+        "admin_exists": {
+          "code": 4,
+          "message": "Admin user is already set.",
+          "class": "PreconditionError"
+        },
+        "cant_create_creds": {
+          "code": 5,
+          "message": "Cannot create credentials: unknown kuid %s.",
+          "class": "BadRequestError"
+        },
+        "cant_update_creds": {
+          "code": 6,
+          "message": "Cannot update credentials: unknown kuid %s.",
+          "class": "BadRequestError"
+        },
+        "delete_limit_reached": {
+          "code": 7,
+          "message": "The number of deletes to perform exceeds the server configured value %s.",
+          "class": "BadRequestError"
+        },
+        "mdelete": {
+          "code": 8,
+          "message": "security:mDelete %s Error(s) deleting %s items, %s.",
+          "class": "PartialError"
+        },
+        "search_page_size_limit_reached": {
+          "code": 9,
+          "message": "Search page size exceeds server configured documents limit %s.",
+          "class": "SizeLimitError"
+        },
+        "cant_update_non_existing": {
+          "code": 10,
+          "message": "Cannot update non-existing %s %s.",
+          "class": "NotFoundError"
+        },
+        "user_already_exists": {
+          "code": 11,
+          "message": "User %s already exists.",
+          "class": "PreconditionError"
+        },
+        "unknown_strategy": {
+          "code": 12,
+          "message": "Strategy %s is not a known strategy.",
+          "class": "BadRequestError"
+        },
+        "creds_on_non_existing_user": {
+          "code": 13,
+          "message": "Internal database inconsistency detected: existing credentials found on non-existing user %s.",
+          "class": "InternalError"
+        },
+        "validate_method": {
+          "code": 14,
+          "message": "%s.",
+          "class": "BadRequestError"
+        },
+        "missing_profile_id": {
+          "code": 15,
+          "message": "Missing profileId",
+          "class": "BadRequestError"
+        },
+        "missing_profile_ids": {
+          "code": 16,
+          "message": "Missing profileIds",
+          "class": "BadRequestError"
+        },
+        "profile_ids_must_be_array_of_string": {
+          "code": 17,
+          "message": "An array of strings must be provided as profileIds",
+          "class": "BadRequestError"
+        },
+        "expected_profile_id_to_be_a_string": {
+          "code": 18,
+          "message": "Invalid argument: Expected profile id to be a string, received \"%s\"",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_basic_profile": {
+          "code": 19,
+          "message": "%s is one of the basic profiles of Kuzzle, you cannot delete it, but you can edit it.",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_profile_being_used": {
+          "code": 20,
+          "message": "The profile \"%s\" cannot be deleted since it is used by some users.",
+          "class": "ForbiddenError"
+        },
+        "missing_anonymous_role": {
+          "code": 21,
+          "message": "Anonymous profile must include the anonymous role",
+          "class": "BadRequestError"
+        },
+        "unable_to_hydrate_profile": {
+          "code": 22,
+          "message": "Unable to hydrate the profile %s: missing role(s) in the database",
+          "class": "NotFoundError"
+        },
+        "unable_to_find_collection_with_id": {
+          "code": 23,
+          "message": "Unable to find %s with id '%s'",
+          "class": "NotFoundError"
+        },
+        "ids_must_be_an_array": {
+          "code": 24,
+          "message": "Bad argument: %s is not an array.",
+          "class": "InternalError"
+        },
+        "load_from_cache": {
+          "code": 25,
+          "message": "%s",
+          "class": "InternalError"
+        },
+        "nothing_to_delete_in_repository": {
+          "code": 26,
+          "message": "Repository %s: nothing to delete",
+          "class": "InternalError"
+        },
+        "missing_id_in_repository": {
+          "code": 27,
+          "message": "Repository %s: missing _id",
+          "class": "InternalError"
+        },
+        "missing_role_id": {
+          "code": 28,
+          "message": "Missing role id",
+          "class": "BadRequestError"
+        },
+        "expected_role_id_to_be_a_string": {
+          "code": 29,
+          "message": "Invalid argument: Expected role id to be a string, received \"%s\"",
+          "class": "BadRequestError"
+        },
+        "cannot_remove_login_permission_from_anonymous_role": {
+          "code": 30,
+          "message": "Cannot remove login permission from anonymous role",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_basic_role": {
+          "code": 31,
+          "message": "%s is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.",
+          "class": "BadRequestError"
+        },
+        "cannot_delete_role_being_used": {
+          "code": 32,
+          "message": "The role \"%s\" cannot be deleted since it is used by some profile.",
+          "class": "BadRequestError"
+        },
+        "unable_remove_bad_credentials": {
+          "code": 33,
+          "message": "was not able to remove bad credentials of user '%s'",
+          "class": "PartialError"
+        },
+        "anonymous_user_not_assigned_to_anonymous_profile": {
+          "code": 34,
+          "message": "Anonymous user must be assigned the anonymous profile",
+          "class": "BadRequestError"
+        },
+        "unable_to_hydrate_user": {
+          "code": 35,
+          "message": "Unable to hydrate the user %s: missing profile(s) in the database",
+          "class": "NotFoundError"
+        },
+        "cannot_get_roles_for_uninitialized_profile": {
+          "code": 36,
+          "message": "Cannot get roles for uninitialized profile %s",
+          "class": "PreconditionError"
+        },
+        "missing_mandatory_policies_attribute": {
+          "code": 37,
+          "message": "The \"policies\" attribute is mandatory and must be an array",
+          "class": "BadRequestError"
+        },
+        "empty_policies_attribute": {
+          "code": 38,
+          "message": "The \"policies\" attribute array cannot be empty",
+          "class": "BadRequestError"
+        },
+        "missing_mandatory_roleId_attribute": {
+          "code": 39,
+          "message": "policies[%s] Missing mandatory attribute \"roleId\"",
+          "class": "BadRequestError"
+        },
+        "unexpected_attribute_in_policies": {
+          "code": 40,
+          "message": "policies[%s] Unexpected attribute \"%s\". Valid attributes are \"roleId\" and \"restrictedTo\"",
+          "class": "BadRequestError"
+        },
+        "attribute_restrictedTo_not_an_array_of_objects": {
+          "code": 41,
+          "message": "policies[%s] Expected \"restrictedTo\" to be an array of objects",
+          "class": "BadRequestError"
+        },
+        "restrictedTo_field_must_be_an_object": {
+          "code": 42,
+          "message": "policies[%s].restrictedTo[%s] should be an object",
+          "class": "BadRequestError"
+        },
+        "missing_mandatory_index_attribute_in_restrictedTo_array": {
+          "code": 43,
+          "message": "policies[%s].restrictedTo[%s] Missing mandatory attribute \"index\"",
+          "class": "BadRequestError"
+        },
+        "index_attribute_is_empty_string": {
+          "code": 44,
+          "message": "policies[%s].restrictedTo[%s] Attribute \"index\" must be a non-empty string value",
+          "class": "BadRequestError"
+        },
+        "attribute_collections_not_an_array_in_retrictedTo": {
+          "code": 45,
+          "message": "policies[%s].restrictedTo[%s] Attribute \"collections\" must be of type \"array\"",
+          "class": "BadRequestError"
+        },
+        "attribute_collections_not_contains_not_only_non_empty_strings": {
+          "code": 46,
+          "message": "policies[%s].restrictedTo[%s] Attribute \"collections\" can only contain non-empty string values",
+          "class": "BadRequestError"
+        },
+        "unexptected_attribute_in_restrictedTo_array": {
+          "code": 47,
+          "message": "policies[%s].restrictedTo[%s] Unexpected attribute \"%s\". Valid attributes are \"index\" and \"collections\"",
+          "class": "BadRequestError"
+        },
+        "cannot_get_profiles_for_uninitialized_user": {
+          "code": 48,
+          "message": "Cannot get profiles for uninitialized user %s",
+          "class": "PreconditionError"
+        },
+        "cannot_check_permissions_on_uninitialized_role": {
+          "code": 49,
+          "message": "Cannot check permissions on uninitialized role %s",
+          "class": "PreconditionError"
+        },
+        "invalid_rights_given": {
+          "code": 50,
+          "message": "Invalid rights given for role %s(%s) : %s",
+          "class": "InternalError"
+        },
+        "controllers_definition_not_an_object": {
+          "code": 51,
+          "message": "The \"controllers\" definition must be an object",
+          "class": "BadRequestError"
+        },
+        "empty_controllers_definition": {
+          "code": 52,
+          "message": "The \"controllers\" definition cannot be empty",
+          "class": "BadRequestError"
+        },
+        "controller_definition_not_an_object": {
+          "code": 53,
+          "message": "Invalid definition for [%s]: must be an object",
+          "class": "BadRequestError"
+        },
+        "empty_controller_definition": {
+          "code": 54,
+          "message": "Invalid definition for [%s]: cannot be empty",
+          "class": "BadRequestError"
+        },
+        "actions_attribute_missing_in_controller_definition": {
+          "code": 55,
+          "message": "Invalid definition for [%s]: \"actions\" attribute missing",
+          "class": "BadRequestError"
+        },
+        "actions_attribute_not_an_object_in_controller_definition": {
+          "code": 56,
+          "message": "Invalid definition for [%s]: \"actions\" attribute must be an object",
+          "class": "BadRequestError"
+        },
+        "actions_attribute_empty_in_controller_definition": {
+          "code": 57,
+          "message": "Invalid definition for [%s]: \"actions\" attribute cannot be empty",
+          "class": "BadRequestError"
+        },
+        "invalid_type_in_definition_for_controller_action": {
+          "code": 58,
+          "message": "Invalid definition for [%s, %s]: must be a boolean or an object",
+          "class": "BadRequestError"
+        },
+        "missing_test_element_for_controller_action": {
+          "code": 59,
+          "message": "Invalid definition for [%s, %s]. Permissions defined as closures must have a \"test\" element.",
+          "class": "BadRequestError"
+        },
+        "error_executing_function_for_controller_action": {
+          "code": 60,
+          "message": "Invalid definition for [%s, %s]: error executing function",
+          "class": "BadRequestError"
+        },
+        "parsing_rights_for_role": {
+          "code": 61,
+          "message": "Error parsing rights for role %s (%s) : %s",
+          "class": "BadRequestError"
+        },
+        "parsing_closure_rights_for_role": {
+          "code": 62,
+          "message": "%s",
+          "class": "BadRequestError"
+        },
+        "rights_action_closure_execution": {
+          "code": 63,
+          "message": "%s",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "memory_storage": {
+      "code": 10,
+      "errors": {
+        "match_parameter": {
+          "code": 1,
+          "message": "Invalid match parameter.",
+          "class": "BadRequestError"
+        },
+        "limit_parameter": {
+          "code": 2,
+          "message": "Invalid limit parameter.",
+          "class": "BadRequestError"
+        },
+        "add_empty_points_list": {
+          "code": 3,
+          "message": "Cannot add an empty points list.",
+          "class": "BadRequestError"
+        },
+        "points_parameter": {
+          "code": 4,
+          "message": "Invalid points parameter.",
+          "class": "BadRequestError"
+        },
+        "entries_parameter": {
+          "code": 5,
+          "message": "Invalid entries parameter.",
+          "class": "BadRequestError"
+        },
+        "aggregate_parameter": {
+          "code": 6,
+          "message": "Invalid aggregate parameter.",
+          "class": "BadRequestError"
+        },
+        "float_expected": {
+          "code": 7,
+          "message": "Invalid value for parameter %s: float expected.",
+          "class": "BadRequestError"
+        },
+        "integer_expected": {
+          "code": 8,
+          "message": "Invalid value for parameter %s: integer expected.",
+          "class": "BadRequestError"
+        },
+        "no_source_key": {
+          "code": 9,
+          "message": "At least 1 source key must be provided.",
+          "class": "BadRequestError"
+        },
+        "no_score_member_pair": {
+          "code": 10,
+          "message": "At least 1 score/member pair must be provided.",
+          "class": "BadRequestError"
+        },
+        "too_many_score_member_pairs": {
+          "code": 11,
+          "message": "No more than 1 score/member pair can be specified when the 'incr' option is set.",
+          "class": "BadRequestError"
+        },
+        "invalid_score_member_pair": {
+          "code": 12,
+          "message": "Invalid score/member pair argument.",
+          "class": "BadRequestError"
+        },
+        "missing_argument": {
+          "code": 13,
+          "message": "Missing argument %s.",
+          "class": "BadRequestError"
+        },
+        "non_scalar_value": {
+          "code": 14,
+          "message": "Accepts only scalar values (number, string).",
+          "class": "BadRequestError"
+        },
+        "nx_xx_exclusive_opts": {
+          "code": 15,
+          "message": "NX and XX options are mutually exclusive.",
+          "class": "BadRequestError"
+        },
+        "ex_px_exclusive_opts": {
+          "code": 16,
+          "message": "EX and PX options are mutually exclusive.",
+          "class": "BadRequestError"
+        },
+        "direction_argument": {
+          "code": 17,
+          "message": "Invalid direction argument (expected: ASC or DESC).",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "request_assertions": {
+      "code": 11,
+      "errors": {
+        "must_specify_body": {
+          "code": 1,
+          "message": "The request must specify a body.",
+          "class": "BadRequestError"
+        },
+        "missing_body_attribute": {
+          "code": 2,
+          "message": "The request must specify a body attribute \"%s\".",
+          "class": "BadRequestError"
+        },
+        "missing_attribute": {
+          "code": 3,
+          "message": "The request must specify an attribute \"%s\".",
+          "class": "BadRequestError"
+        },
+        "must_not_specify_body_attribute": {
+          "code": 4,
+          "message": "The request must not specify the body attribute \"%s\".",
+          "class": "BadRequestError"
+        },
+        "unexpected_type_assertion_on_attribute": {
+          "code": 5,
+          "message": "An unexepected type assertion \"%s\" has been invoked on attribute \"%s\".",
+          "class": "InternalError"
+        },
+        "wrong_body_attribute_type": {
+          "code": 6,
+          "message": "The request must specify the body attribute \"%s\" of type \"%s\".",
+          "class": "BadRequestError"
+        },
+        "missing_id": {
+          "code": 7,
+          "message": "The request must specify an _id.",
+          "class": "BadRequestError"
+        },
+        "wrong_id_format": {
+          "code": 8,
+          "message": "The request must not specify an _id that starts with an underscore (_).",
+          "class": "BadRequestError"
+        },
+        "missing_index": {
+          "code": 9,
+          "message": "The request must specify an index.",
+          "class": "BadRequestError"
+        },
+        "missing_collection": {
+          "code": 10,
+          "message": "The request must specify a collection.",
+          "class": "BadRequestError"
+        },
+        "missing_strategy": {
+          "code": 11,
+          "message": "The request must specify a strategy.",
+          "class": "BadRequestError"
+        },
+        "wrong_strategy_type": {
+          "code": 12,
+          "message": "The request argument's strategy must be a string.",
+          "class": "BadRequestError"
+        },
+        "missing_scrollId": {
+          "code": 13,
+          "message": "The request must specify a scrollId.",
+          "class": "BadRequestError"
+        },
+        "wrong_scrollId_type": {
+          "code": 14,
+          "message": "The request argument's scrollId must be a string.",
+          "class": "BadRequestError"
+        },
+        "must_be_authenticated_to_execute_action": {
+          "code": 15,
+          "message": "You must be authenticated to execute that action",
+          "class": "UnauthorizedError"
+        },
+        "unknown_strategy": {
+          "code": 16,
+          "message": "The strategy \"%s\" is not a known strategy.",
+          "class": "BadRequestError"
+        },
+        "must_be_an_object": {
+          "code": 17,
+          "message": "Expected '%s' to be an object",
           "class": "BadRequestError"
         }
       }

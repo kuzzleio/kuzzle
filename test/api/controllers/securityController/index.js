@@ -2,6 +2,7 @@
 
 const
   rewire = require('rewire'),
+  sinon = require('sinon'),
   should = require('should'),
   Bluebird = require('bluebird'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
@@ -16,16 +17,23 @@ const
       InternalError: KuzzleInternalError,
       PartialError
     }
-  } = require('kuzzle-common-objects');
+  } = require('kuzzle-common-objects'),
+  errorsManager = require('../../../../lib/config/error-codes/throw');
 
 describe('/api/controllers/security', () => {
   let
     funnelController,
+    sandbox = sinon.createSandbox(),
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnelController = new FunnelController(kuzzle);
+    errorsManager.throw = sandbox.spy(errorsManager, 'throw');
+  });
+
+  afterEach(() => {
+    errorsManager.throw.restore();
   });
 
   describe('#constructor', () => {
@@ -109,10 +117,9 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
-
       return should(() => {
         mDelete(kuzzle, 'type', request);
-      }).throw('Number of delete to perform exceeds the server configured value (1)');
+      }).throw('The number of deletes to perform exceeds the server configured value 1.');
     });
 
     it('should return the input ids if everything went fine', () => {
@@ -160,7 +167,6 @@ describe('/api/controllers/security', () => {
         .then(() => {
           should(request.error)
             .be.an.instanceOf(PartialError);
-
           should(request.error.errors)
             .be.an.Array()
             .and.have.length(1);

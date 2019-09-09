@@ -108,7 +108,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       return should(esWrapper.getMapping(mappingRequest))
         .be.rejectedWith(
           NotFoundError,
-          {message: `No mapping found for index "${mappingRequest.index}"`})
+          {message: `No mapping found for index "${mappingRequest.index}".`})
         .then(() => {
           client.indices.getMapping.resolves({
             foo: {
@@ -120,7 +120,7 @@ describe('Test: ElasticSearch Wrapper', () => {
 
           return should(esWrapper.getMapping(mappingRequest)).be.rejectedWith(
             NotFoundError,
-            {message: `No mapping found for index "${mappingRequest.index}"`});
+            {message: `No mapping found for index "${mappingRequest.index}".`});
         });
     });
 
@@ -221,6 +221,27 @@ describe('Test: ElasticSearch Wrapper', () => {
         .then(result => {
           should(result).be.an.Object().and.eql({
             qux: { mappings: { bar: { properties: {} } } }
+          });
+        });
+    });
+
+    it('should accept indices containing a dot', () => {
+      client.indices.getMapping.resolves({
+        '.foo.bar': {
+          mappings: {
+            foo: { properties: {} }
+          }
+        }
+      });
+
+      return esWrapper.getMapping()
+        .then(result => {
+          should(result).match({
+            '.foo.bar': {
+              mappings: {
+                foo: { properties: {} }
+              }
+            }
           });
         });
     });

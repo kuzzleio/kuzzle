@@ -16,7 +16,8 @@ const
   should = require('should'),
   sinon = require('sinon'),
   { Writable } = require('stream'),
-  errorMatcher = require(`${root}/test/util/errorMatcher`);
+  errorMatcher = require(`${root}/test/util/errorMatcher`),
+  errorsManager = require(`${root}/lib/config/error-codes/throw`);
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   const
@@ -126,7 +127,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     });
 
     it('should set decoders with throwables if compression is disabled', () => {
-      const message = 'Compression support is disabled';
+      const message = 'Compression support is disabled.';
       entrypoint.config.protocols.http.allowCompression = false;
 
       return protocol.init(entrypoint)
@@ -135,7 +136,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
           should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
           should(protocol.decoders.identity).be.a.Function();
-
           should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
           should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
           should(protocol.decoders.identity('foobar')).eql(null);
@@ -203,7 +203,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            {message: 'Maximum HTTP request size exceeded'});
+            {message: 'Maximum HTTP request size exceeded.'});
       });
 
       it('should handle json content', done => {
@@ -257,7 +257,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            {message: 'Too many encodings'});
+            {message: 'Too many encodings.'});
       });
 
       it('should reject if an unknown compression algorithm is provided', () => {
@@ -271,7 +271,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            {message: 'Unsupported compression algorithm "foobar"'});
+            {message: 'Unsupported compression algorithm "foobar".'});
       });
 
       it('should handle chain pipes properly to match multi-layered compression', () => {
@@ -357,7 +357,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           try {
             should(error)
               .instanceOf(SizeLimitError)
-              .match({message: 'Maximum HTTP request size exceeded'});
+              .match({message: 'Maximum HTTP request size exceeded.'});
 
             // called automatically when a pipe rejects a callback, but not
             // by our mock obviously
@@ -384,7 +384,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
                 sinon.match.instanceOf(ClientConnection),
                 { url: request.url, method: request.method },
                 response,
-                { message: 'Maximum HTTP request size exceeded' });
+                { message: 'Maximum HTTP request size exceeded.' });
             done();
           } catch (e) {
             done(e);
@@ -406,7 +406,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            { message: 'Unsupported content type: foo/bar' });
+            { message: 'Unsupported content type: foo/bar.' });
       });
 
       it('should reply with error if the binary file size sent exceeds the maxFormFileSize', () => {
@@ -500,16 +500,21 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             cb = kuzzle.router.http.route.firstCall.args[1],
             result = new Request({});
 
-          result.setError(new BadRequestError('foobar'));
+          result.setError(errorsManager.get('network', 'http', 'http_request_error', 'foobar'));
 
           cb(result);
+
+          should(result.response.getHeader('Content-Length'))
+            .eql(String(response.end.firstCall.args[0].length));
 
           should(response.writeHead)
             .be.calledOnce()
             .be.calledWithMatch(400, result.response.headers);
 
           const matcher = errorMatcher.fromMessage(
-            'BadRequestError',
+            'network',
+            'http',
+            'http_request_error',
             'foobar');
 
           should(response.end)
@@ -542,6 +547,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         const sent = response.end.firstCall.args[0];
 
         should(content.toString()).eql(sent.toString());
+
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(sent.length));
       });
 
       it('should output a stringified buffer as a raw buffer result', () => {
@@ -563,6 +571,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(sent).be.an.instanceof(Buffer);
         should(sent.toString()).eql('test');
+
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(sent.length));
       });
 
       it('should output serialized JS objects marked as raw', () => {
@@ -578,8 +589,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         cb(result);
 
-        should(response.end)
-          .be.calledWith(Buffer.from(JSON.stringify([{foo: 'bar'}])));
+        const expected = Buffer.from(JSON.stringify([{foo: 'bar'}]));
+
+        should(response.end).be.calledWith(expected);
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(expected.length));
       });
 
       it('should output scalar content as-is if marked as raw', () => {
@@ -595,9 +609,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         cb(result);
 
+        const expected = Buffer.from('content');
+
         should(response.end)
           .be.calledOnce()
-          .be.calledWithExactly(Buffer.from('content'));
+          .be.calledWithExactly(expected);
+
+        should(result.response.getHeader('Content-Length'))
+          .eql(String(expected.length));
       });
 
       it('should send a 0-length-content response if marked as raw and content is null', () => {
@@ -613,7 +632,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         cb(result);
 
         should(response.end).be.calledWith(Buffer.from(''));
-        should(result.response.headers['Content-Length']).be.eql('0');
+        should(result.response.getHeader('Content-Length')).eql('0');
       });
 
       it('should compress the outgoing message with deflate if asked to', () => {
@@ -666,7 +685,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         cb(result);
 
-        should(response.setHeader).not.calledWith('Content-Encoding', sinon.match.string);
+        should(response.setHeader).not.calledWith(
+          'Content-Encoding',
+          sinon.match.string);
         should(zlibstub.deflate).not.called();
         should(zlibstub.gzip).not.called();
       });
@@ -710,7 +731,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             {id: 'connectionId'},
             payload,
             response,
-            {message: 'foobar'});
+            {message: 'foobar.'});
 
         should(protocol._replyWithError.firstCall.args[3])
           .be.instanceOf(BadRequestError);
@@ -718,8 +739,29 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(zlibstub.deflate).not.called();
         should(zlibstub.gzip).calledOnce();
       });
-    });
 
+      it('should overwrite the content-length even if one was set', () => {
+        protocol._sendRequest({id: 'connectionId'}, response, payload);
+        const
+          cb = kuzzle.router.http.route.firstCall.args[1],
+          request = new Request({}),
+          result = 'foobar';
+
+        request.setResult(result, {
+          raw : true
+        });
+
+        request.response.setHeader(
+          'Content-Length',
+          'one does not simply set a content length');
+
+        cb(request);
+
+        should(response.end).be.calledWith(Buffer.from(result));
+        should(request.response.getHeader('Content-Length'))
+          .eql(String(result.length));
+      });
+    });
   });
 
   describe('#_replyWithError', () => {
@@ -738,9 +780,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         process.env.NODE_ENV = env;
 
         const
-          kerr = new BadRequestError('test'),
+          kerr = errorsManager.get('network', 'http', 'http_request_error', 'test'),
           matcher = errorMatcher.fromMessage(
-            'BadRequestError',
+            'network',
+            'http',
+            'http_request_error',
             'test'),
           expected = (new Request(payload, {connectionId, kerr})).serialize();
 
@@ -753,6 +797,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         should(entrypoint.logAccess.firstCall.args[0].serialize())
           .match(expected);
 
+        should(response.end)
+          .calledOnce()
+          .calledWith(sinon.match(matcher));
+
         should(response.writeHead)
           .be.calledOnce()
           .be.calledWith(
@@ -761,12 +809,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
               'Content-Type': 'application/json',
               'Access-Control-Allow-Origin': '*',
               'Access-Control-Allow-Methods' : 'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile'
+              'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile',
+              'Content-Length': String(response.end.firstCall.args[0].length)
             });
-
-        should(response.end)
-          .calledOnce()
-          .calledWith(sinon.match(matcher));
 
         entrypoint.logAccess.resetHistory();
         response.writeHead.resetHistory();
@@ -799,7 +844,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         protocol._createWritableStream(request, {});
       } catch (e) {
         should(e).be.instanceOf(BadRequestError);
-        should(e.message).be.equals('Unsupported content type: application/toto');
+        should(e.message).be.equals('Unsupported content type: application/toto.');
       }
     });
   });

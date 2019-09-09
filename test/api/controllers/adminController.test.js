@@ -4,11 +4,8 @@ const
   sinon = require('sinon'),
   {
     Request,
-    errors: {
-      BadRequestError,
-      PreconditionError
-    }
   } = require('kuzzle-common-objects'),
+  { PreconditionError, NotFoundError } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
   BaseController = require('../../../lib/api/controllers/baseController');
@@ -52,16 +49,12 @@ describe('Test: admin controller', () => {
         .catch(error => done(error));
     });
 
-    it('should raise an error if database does not exist', done => {
+    it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
-
-      try {
-        adminController.resetCache(request);
-        done(new Error('Should not resolves'));
-      } catch (e) {
-        should(e).be.instanceOf(BadRequestError);
-        done();
-      }
+      
+      should(() => adminController.resetCache(request)).throw(
+        NotFoundError,
+        { message: 'Database city17 not found.' });
     });
   });
 

@@ -76,7 +76,7 @@ describe('Test: validation/types/ipAddress', () => {
 
     it('should throw if "notEmpty" is not set properly', () => {
       should(() => ipAddressType.validateFieldSpecification({notEmpty: null}))
-        .throw(PreconditionError, {message: 'Option "notEmpty" must be of type "boolean"'});
+        .throw(PreconditionError, {message: 'Option "notEmpty" must be of type "boolean".'});
     });
   });
 });

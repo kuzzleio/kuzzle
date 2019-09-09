@@ -399,7 +399,7 @@ describe('Test: repositories/profileRepository', () => {
           done(new Error('The promise is not rejected'));
         })
         .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError).and.match({message: 'Missing profile id'});
+          should(e).be.an.instanceOf(BadRequestError).and.match({message: 'Missing profileId'});
           should(kuzzle.emit).not.be.called();
           done();
         })
@@ -408,8 +408,22 @@ describe('Test: repositories/profileRepository', () => {
         });
     });
 
+    it('should throw a NotFoundError when trying to write unexisting role in profile. ', () => {
+      const invalidProfile = new Profile();
+      invalidProfile._id = 'awesomeProfile';
+      invalidProfile.policies = [{roleId: 'notSoAwesomeRole'}];
+
+      kuzzle.repositories.role.loadRoles = sinon.stub().rejects();
+
+      return should(profileRepository.validateAndSaveProfile(invalidProfile)).be.rejectedWith(
+        NotFoundError, { message: 'Unable to hydrate the profile awesomeProfile: missing role(s) in the database'
+        });
+
+    });
+
     it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
 
       return profileRepository.validateAndSaveProfile(testProfile)
         .then((result) => {
@@ -442,7 +456,7 @@ describe('Test: repositories/profileRepository', () => {
         {roleId: 'test'},
         {roleId: 'anonymous'}
       ];
-
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(profile);
       return profileRepository.validateAndSaveProfile(profile)
         .then(response => {
           should(response._id)

@@ -189,9 +189,16 @@ describe('Test the auth controller', () => {
         });
     });
 
+    it('should expire all tokens at once', () => {
+      request.input.args.global = true;
+      return authController.logout(request)
+        .then(() => {
+          should(kuzzle.repositories.token.deleteByUserId).calledWith('foo');
+        });
+    });
+
     it('should emit an error if the token cannot be expired', () => {
       const error = new Error('Mocked error');
-
       kuzzle.repositories.token.expire.rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(KuzzleInternalError);
@@ -293,7 +300,7 @@ describe('Test the auth controller', () => {
           user: {_id: 'bar'}
         }
       )))
-        .throw(UnauthorizedError, {message: 'Invalid token'});
+        .throw(UnauthorizedError, {message: 'Invalid token.'});
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {

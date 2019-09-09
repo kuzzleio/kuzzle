@@ -294,7 +294,9 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         protocol.onClientMessage(connection, 'ohnoes');
 
         const matcher = errorMatcher.fromMessage(
-          'BadRequestError',
+          'network',
+          'websocket',
+          'websocket_request_error',
           'Unexpected token o in JSON at position 0');
 
         should(entrypoint.execute).not.be.called();
@@ -649,6 +651,50 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       should(activeConnection.alive).be.true();
       should(activeConnection.socket.terminate).not.be.called();
       should(activeConnection.socket.ping).not.be.called();
+    });
+
+    it('should mark a socket as dead if not available for PING', () => {
+      const
+        Connection = function (alive, lastActivity) {
+          return {
+            alive,
+            lastActivity,
+            socket: {
+              OPEN: 'OPEN',
+              readyState: 'OPEN',
+              terminate: sinon.stub(),
+              ping: sinon.stub()
+            }
+          };
+        };
+
+      protocol.connectionPool = new Map([
+        ['ahAhAhAhStayinAliveStayinAlive', new Connection(true, 0)],
+        ['I just met you, and this is cr...gargl', new Connection(true, 0)],
+        ['ahAhAhAhStayinAliiiiiiiiive', new Connection(true, 0)]
+      ]);
+
+      const deadConnection = protocol.connectionPool.get('I just met you, and this is cr...gargl');
+      deadConnection.socket.readyState = 'CLOSED';
+
+      protocol.config.heartbeat = 1000;
+      protocol._doHeartbeat();
+
+      // inactive sockets are pinged
+      for (const id of [
+        'ahAhAhAhStayinAliveStayinAlive',
+        'ahAhAhAhStayinAliiiiiiiiive'
+      ]) {
+        const connection = protocol.connectionPool.get(id);
+
+        should(connection.alive).be.false();
+        should(connection.socket.terminate).not.be.called();
+        should(connection.socket.ping).be.calledOnce();
+      }
+
+      // dead sockets are terminated
+      should(deadConnection.socket.ping).not.be.called();
+      should(deadConnection.socket.terminate).be.calledOnce();
     });
   });
 

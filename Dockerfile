@@ -6,7 +6,7 @@ FROM debian:stretch-slim as plugin-dev
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
-ENV NODE_VERSION=8.11.3
+ENV NODE_VERSION=10.16.3
 ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 
 ADD https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz /tmp/
@@ -43,7 +43,8 @@ WORKDIR /var/app
 
 RUN  npm install --unsafe-perm \
   && npm rebuild all --unsafe-perm \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done
+  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app
+  && for plugin in plugins/available/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done
 
 ################################################################################
 # Production image
@@ -53,7 +54,7 @@ FROM debian:stretch-slim as kuzzle
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
-ENV NODE_VERSION=8.11.3
+ENV NODE_VERSION=10.16.3
 ENV NODE_ENV=production
 ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 
