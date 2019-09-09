@@ -10,6 +10,6 @@ title: http:post
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | [`Request`](/core/1/plugins/plugin-context/constructors/request/) | The normalized API request |
+| `request` | [`Request`](/core/1/plugins/plugin-context/constructors/request) | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP POST methods.
