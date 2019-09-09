@@ -47,6 +47,7 @@ Returns a confirmation that the command is being executed.
   "action": "resetSecurity",
   "collection": null,
   "index": null,
-  "result": { "acknowledge": true }
+  "result": { "deletedUsers": 5, "deletedProfiles": 2, "deletedRoles": 1 },
+  "room": "4f9f6301-b2f8-4d13-b227-1598310f4750"
 }
 ```
