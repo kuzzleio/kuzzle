@@ -212,7 +212,7 @@ module.exports = {
         port: 6379
       }
     },
-    memoryStorage: {
+    publicCache: {
       backend: 'redis',
       database: 5,
       node: {
@@ -223,14 +223,14 @@ module.exports = {
     internalIndex: {
       bootstrapLockTimeout: 5000
     },
-    db: {
+    storageEngine: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
       client: {
         node: 'http://localhost:9200'
       },
       commonMapping: {
-        dynamic: 'true',
+        dynamic: 'false',
         properties: {
           _kuzzle_info: {
             properties: {

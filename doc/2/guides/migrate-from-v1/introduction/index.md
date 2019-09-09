@@ -61,3 +61,6 @@ Dropped support for:
 ### Configuration changes
 
   - key `services.internalEngine` is renamed to `services.internalIndex`
+  - key `services.db` has been renamed in `services.storageEngine`
+  - key `services.db.dynamic` has been moved to `services.storageEngine.commonMapping.dynamic` and is now `false` by default, meaning that Elasticsearch will not infer mapping of new introduced fields
+  - key `services.memoryStorage` has been renamed in `services.publicCache`

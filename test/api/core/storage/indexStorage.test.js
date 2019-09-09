@@ -3,17 +3,17 @@ const
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   InternalIndexBootstrap = require('../../../../lib/api/core/storage/bootstrap/internalIndexBootstrap'),
-  IndexEngine = require('../../../../lib/api/core/storage/indexEngine');
+  IndexStorage = require('../../../../lib/api/core/storage/indexStorage');
 
-describe('IndexEngine', () => {
+describe('IndexStorage', () => {
   let
-    indexEngine,
+    indexStorage,
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    indexEngine = new IndexEngine(
+    indexStorage = new IndexStorage(
       kuzzle,
       'kuzzle',
       kuzzle.services.internalStorage);
@@ -21,22 +21,22 @@ describe('IndexEngine', () => {
 
   describe('#init', () => {
     it('should call bootstrap.startOrWait if a bootstrap is setup', async () => {
-      indexEngine.bootstrap = new InternalIndexBootstrap(
+      indexStorage.bootstrap = new InternalIndexBootstrap(
         kuzzle,
-        indexEngine.storageEngine);
-      indexEngine.bootstrap.startOrWait = sinon.stub().resolves();
+        indexStorage.storageEngine);
+      indexStorage.bootstrap.startOrWait = sinon.stub().resolves();
 
-      await indexEngine.init();
+      await indexStorage.init();
 
-      should(indexEngine.bootstrap.startOrWait).be.called();
+      should(indexStorage.bootstrap.startOrWait).be.called();
     });
   });
 
   describe('#get', () => {
     it('should call storageEngine.get with the good arguments', async () => {
-      await indexEngine.get('users', 'user-kuid');
+      await indexStorage.get('users', 'user-kuid');
 
-      should(indexEngine.storageEngine.get).be.calledWith(
+      should(indexStorage.storageEngine.get).be.calledWith(
         'kuzzle',
         'users',
         'user-kuid');
@@ -45,9 +45,9 @@ describe('IndexEngine', () => {
 
   describe('#mGet', () => {
     it('should call storageEngine.mGet with the good arguments', async () => {
-      await indexEngine.mGet('users', ['user-kuid']);
+      await indexStorage.mGet('users', ['user-kuid']);
 
-      should(indexEngine.storageEngine.mGet).be.calledWith(
+      should(indexStorage.storageEngine.mGet).be.calledWith(
         'kuzzle',
         'users',
         ['user-kuid']);
@@ -56,12 +56,12 @@ describe('IndexEngine', () => {
 
   describe('#search', () => {
     it('should call storageEngine.search with the good arguments', async () => {
-      await indexEngine.search(
+      await indexStorage.search(
         'users',
         { query: { match_all: {} } },
         { from: 0, size: 1, scroll: '10m'});
 
-      should(indexEngine.storageEngine.search).be.calledWith(
+      should(indexStorage.storageEngine.search).be.calledWith(
         'kuzzle',
         'users',
         { query: { match_all: {} } },
@@ -71,9 +71,9 @@ describe('IndexEngine', () => {
 
   describe('#scroll', () => {
     it('should call storageEngine.scroll with the good arguments', async () => {
-      await indexEngine.scroll('users', 'scroll-id', '15m');
+      await indexStorage.scroll('users', 'scroll-id', '15m');
 
-      should(indexEngine.storageEngine.scroll).be.calledWith(
+      should(indexStorage.storageEngine.scroll).be.calledWith(
         'kuzzle',
         'users',
         'scroll-id',
@@ -83,9 +83,9 @@ describe('IndexEngine', () => {
 
   describe('#count', () => {
     it('should call storageEngine.count with the good arguments', async () => {
-      await indexEngine.count('users', { query: { match_all: {} } });
+      await indexStorage.count('users', { query: { match_all: {} } });
 
-      should(indexEngine.storageEngine.count).be.calledWith(
+      should(indexStorage.storageEngine.count).be.calledWith(
         'kuzzle',
         'users',
         { query: { match_all: {} } });
@@ -94,13 +94,13 @@ describe('IndexEngine', () => {
 
   describe('#create', () => {
     it('should call storageEngine.create with the good arguments', async () => {
-      await indexEngine.create(
+      await indexStorage.create(
         'users',
         'user-kuid',
         { name: 'aschen' },
         { refresh: 'wait_for' });
 
-      should(indexEngine.storageEngine.create).be.calledWith(
+      should(indexStorage.storageEngine.create).be.calledWith(
         'kuzzle',
         'users',
         { name: 'aschen' },
@@ -110,13 +110,13 @@ describe('IndexEngine', () => {
 
   describe('#createOrReplace', () => {
     it('should call storageEngine.createOrReplace with the good arguments', async () => {
-      await indexEngine.createOrReplace(
+      await indexStorage.createOrReplace(
         'users',
         'user-kuid',
         { name: 'aschen' },
         { refresh: 'wait_for' });
 
-      should(indexEngine.storageEngine.createOrReplace).be.calledWith(
+      should(indexStorage.storageEngine.createOrReplace).be.calledWith(
         'kuzzle',
         'users',
         'user-kuid',
@@ -127,13 +127,13 @@ describe('IndexEngine', () => {
 
   describe('#replace', () => {
     it('should call storageEngine.replace with the good arguments', async () => {
-      await indexEngine.replace(
+      await indexStorage.replace(
         'users',
         'user-kuid',
         { name: 'aschen' },
         { refresh: 'wait_for' });
 
-      should(indexEngine.storageEngine.replace).be.calledWith(
+      should(indexStorage.storageEngine.replace).be.calledWith(
         'kuzzle',
         'users',
         'user-kuid',
@@ -144,13 +144,13 @@ describe('IndexEngine', () => {
 
   describe('#update', () => {
     it('should call storageEngine.update with the good arguments', async () => {
-      await indexEngine.update(
+      await indexStorage.update(
         'users',
         'user-kuid',
         { name: 'aschen' },
         { refresh: 'wait_for' });
 
-      should(indexEngine.storageEngine.update).be.calledWith(
+      should(indexStorage.storageEngine.update).be.calledWith(
         'kuzzle',
         'users',
         'user-kuid',
@@ -161,9 +161,9 @@ describe('IndexEngine', () => {
 
   describe('#delete', () => {
     it('should call storageEngine.delete with the good arguments', async () => {
-      await indexEngine.delete('users', 'user-kuid', { refresh: 'wait_for' });
+      await indexStorage.delete('users', 'user-kuid', { refresh: 'wait_for' });
 
-      should(indexEngine.storageEngine.delete).be.calledWith(
+      should(indexStorage.storageEngine.delete).be.calledWith(
         'kuzzle',
         'users',
         'user-kuid',
@@ -173,9 +173,9 @@ describe('IndexEngine', () => {
 
   describe('#exists', () => {
     it('should call storageEngine.exists with the good arguments', async () => {
-      await indexEngine.exists('users', 'user-kuid');
+      await indexStorage.exists('users', 'user-kuid');
 
-      should(indexEngine.storageEngine.exists).be.calledWith(
+      should(indexStorage.storageEngine.exists).be.calledWith(
         'kuzzle',
         'users',
         'user-kuid');
@@ -184,23 +184,23 @@ describe('IndexEngine', () => {
 
   describe('#createCollection', () => {
     it('should call storageEngine.createCollection with the good arguments', async () => {
-      await indexEngine.createCollection(
+      await indexStorage.createCollection(
         'admins',
         { properties: { name: { type: 'keyword '} } });
 
-      should(indexEngine.storageEngine.createCollection).be.calledWith(
+      should(indexStorage.storageEngine.createCollection).be.calledWith(
         'kuzzle',
         'admins',
         { properties: { name: { type: 'keyword '} } });
     });
 
     it('should add the collection to the indexCache', async () => {
-      await indexEngine.createCollection('admins');
+      await indexStorage.createCollection('admins');
 
       should(kuzzle.indexCache.add).be.calledWithMatch({
         index: 'kuzzle',
         collection: 'admins',
-        scope: indexEngine.storageEngine.scope
+        scope: indexStorage.storageEngine.scope
       });
     });
   });

@@ -6,7 +6,7 @@ const
   Kuzzle = require('../../lib/api/kuzzle'),
   Bluebird = require('bluebird'),
   config = require('../../lib/config'),
-  IndexEngineMock = require('./indexEngine.mock'),
+  IndexStorageMock = require('./indexStorage.mock'),
   foo = { foo: 'bar' };
 
 let _instance;
@@ -120,7 +120,7 @@ class KuzzleMock extends Kuzzle {
       remove: this.sandbox.stub()
     };
 
-    this.internalIndex = new IndexEngineMock(
+    this.internalIndex = new IndexStorageMock(
       this,
       'kuzzle',
       this.services.internalStorage);

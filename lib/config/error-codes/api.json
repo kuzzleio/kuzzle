@@ -54,18 +54,8 @@
           "message": "The request must specify and _id of type string.",
           "class": "BadRequestError"
         },
-        "unknown_index": {
-          "code": 11,
-          "message": "Unknown index \"%s\".",
-          "class": "NotFoundError"
-        },
-        "unknown_collection": {
-          "code": 12,
-          "message": "Unknown collection \"%s\" in index \"%s\".",
-          "class": "NotFoundError"
-        },
         "search_page_size": {
-          "code": 13,
+          "code": 11,
           "message": "Search page size exceeds server configured documents limit ( %s ).",
           "class": "SizeLimitError"
         }

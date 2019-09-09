@@ -2,7 +2,7 @@ const
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
-  IndexEngine = require('../../../../../lib/api/core/storage/indexEngine'),
+  IndexStorage = require('../../../../../lib/api/core/storage/indexStorage'),
   PluginIndexBootstrap = require('../../../../../lib/api/core/storage/bootstrap/pluginIndexBootstrap');
 
 describe('PluginBoostrap', () => {
@@ -10,7 +10,7 @@ describe('PluginBoostrap', () => {
     kuzzle,
     pluginName,
     pluginIndexName,
-    pluginIndexEngine,
+    pluginIndexStorage,
     pluginIndexBootstrap,
     collections;
 
@@ -20,7 +20,7 @@ describe('PluginBoostrap', () => {
     pluginName = 'test-plugin';
     pluginIndexName = 'plugin:test-plugin';
 
-    pluginIndexEngine = new IndexEngine(
+    pluginIndexStorage = new IndexStorage(
       kuzzle,
       pluginIndexName,
       kuzzle.services.internalStorage);
@@ -28,7 +28,7 @@ describe('PluginBoostrap', () => {
     pluginIndexBootstrap = new PluginIndexBootstrap(
       kuzzle,
       pluginName,
-      pluginIndexEngine);
+      pluginIndexStorage);
 
     collections = {
       liia: { properties: { name: { type: 'keyword' } } },
@@ -53,20 +53,20 @@ describe('PluginBoostrap', () => {
   });
 
   describe('#_createCollections', () => {
-    it('should create collection with the indexEngine', async () => {
-      pluginIndexBootstrap.indexEngine.createCollection = sinon.stub().resolves();
+    it('should create collection with the indexStorage', async () => {
+      pluginIndexBootstrap.indexStorage.createCollection = sinon.stub().resolves();
 
       await pluginIndexBootstrap._createCollections(collections);
 
-      should(pluginIndexBootstrap.indexEngine.createCollection)
+      should(pluginIndexBootstrap.indexStorage.createCollection)
         .be.calledTwice();
 
-      const firstCallArgs = pluginIndexBootstrap.indexEngine.createCollection
+      const firstCallArgs = pluginIndexBootstrap.indexStorage.createCollection
         .getCall(0).args;
       should(...firstCallArgs)
         .match('liia', { properties: { name: { type: 'keyword' } } });
 
-      const secondCallArgs = pluginIndexBootstrap.indexEngine.createCollection
+      const secondCallArgs = pluginIndexBootstrap.indexStorage.createCollection
         .getCall(1).args;
       should(...secondCallArgs)
         .match('mehry', { properties: { name: { type: 'text' } } });

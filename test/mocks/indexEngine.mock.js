@@ -2,9 +2,9 @@
 
 const
   sinon = require('sinon'),
-  IndexEngine = require('../../lib/api/core/storage/indexEngine');
+  IndexStorage = require('../../lib/api/core/storage/indexStorage');
 
-class IndexEngineMock extends IndexEngine {
+class IndexStorageMock extends IndexStorage {
   constructor (...args) {
     super(...args);
 
@@ -24,4 +24,4 @@ class IndexEngineMock extends IndexEngine {
   }
 }
 
-module.exports = IndexEngineMock;
+module.exports = IndexStorageMock;
