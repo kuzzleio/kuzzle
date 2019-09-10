@@ -147,7 +147,7 @@ class KuzzleMock extends Kuzzle {
         flushdb: this.sandbox.stub().resolves(),
         info: this.sandbox.stub().resolves()
       }
-    }
+    };
 
     this.internalIndex = new IndexStorageMock(
       'kuzzle',

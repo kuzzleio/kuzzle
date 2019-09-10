@@ -7,7 +7,7 @@ const
   mockAssertions = require('../../mocks/mockAssertions'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-describe('IndexController', () => {
+xdescribe('IndexController', () => {
   let
     indexController,
     kuzzle,

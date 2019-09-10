@@ -10,7 +10,7 @@ const
   AdminController = rewire('../../../lib/api/controllers/adminController'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-describe('AdminController', () => {
+xdescribe('AdminController', () => {
   let
     adminController,
     kuzzle,

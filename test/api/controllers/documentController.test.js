@@ -208,7 +208,7 @@ xdescribe('Test: document controller', () => {
       return documentController.mGet(request)
         .then(() => {
           should(request.error).be.instanceOf(PartialError);
-        })
+        });
     });
   });
 

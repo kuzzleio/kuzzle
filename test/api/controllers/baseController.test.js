@@ -4,7 +4,7 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-describe('#base controller', () => {
+xdescribe('#base controller', () => {
   let
     kuzzle,
     actions,
@@ -18,7 +18,7 @@ describe('#base controller', () => {
 
     request = {
       input: {}
-    }
+    };
 
     baseController = new BaseController(kuzzle, actions);
   });
@@ -101,13 +101,13 @@ describe('#base controller', () => {
 
     it('should throw if the param is missing', () => {
       should(() => {
-        baseController.arrayParam(request, 'body.childhood')
+        baseController.arrayParam(request, 'body.childhood');
       }).throw({ errorName: 'api.base.missing_param' });
     });
 
     it('should throw if the param is not an array', () => {
       should(() => {
-        baseController.arrayParam(request, 'body.age')
+        baseController.arrayParam(request, 'body.age');
       }).throw({ errorName: 'api.base.invalid_param_type' });
     });
   });
@@ -128,13 +128,13 @@ describe('#base controller', () => {
 
     it('should throw if the param is missing', () => {
       should(() => {
-        baseController.stringParam(request, 'body.childhood')
+        baseController.stringParam(request, 'body.childhood');
       }).throw({ errorName: 'api.base.missing_param' });
     });
 
     it('should throw if the param is not an string', () => {
       should(() => {
-        baseController.stringParam(request, 'body.age')
+        baseController.stringParam(request, 'body.age');
       }).throw({ errorName: 'api.base.invalid_param_type' });
     });
   });

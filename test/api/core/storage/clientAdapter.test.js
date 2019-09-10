@@ -3,7 +3,6 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  mockrequire = require('mock-require'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   ElasticsearchMock = require('../../../mocks/elasticsearch.mock'),
   ClientAdapter = require('../../../../lib/api/core/storage/clientAdapter');

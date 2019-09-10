@@ -6,7 +6,7 @@ const
   sinon = require('sinon'),
   RedisClientMock = require('../mocks/services/redisClient.mock');
 
-describe('Test redis service', () => {
+describe('Redis', () => {
   let
     kuzzle,
     redis,
@@ -41,8 +41,8 @@ describe('Test redis service', () => {
   it('should init a redis client with default (0) database', async () => {
     await redis.init();
 
-    should(redis.client).be.an.Object();
-    should(redis.client.select).not.be.called();
+    should(redis._client).be.an.Object();
+    should(redis._client.select).not.be.called();
   });
 
   it('should select the good database at init if > 0', async () => {
@@ -50,15 +50,15 @@ describe('Test redis service', () => {
 
     await redis.init();
 
-    should(redis.client).be.an.Object();
-    should(redis.client.select).be.calledWith(1);
+    should(redis._client).be.an.Object();
+    should(redis._client.select).be.calledWith(1);
   });
 
   it('should not flush publicCache', async () => {
     await redis.init();
 
-    should(redis.client).be.an.Object();
-    should(redis.client.flushdb).not.be.called();
+    should(redis._client).be.an.Object();
+    should(redis._client.flushdb).not.be.called();
   });
 
   it('should raise an error if unable to connect', () => {
@@ -146,11 +146,11 @@ describe('Test redis service', () => {
     });
   });
 
-  it('#infos should return a properly formatted response', async () => {
+  it('#info should return a properly formatted response', async () => {
     await redis.init();
 
     // eslint-disable-next-line require-atomic-updates
-    redis.client.info = sinon.stub().resolves(`redis_version:3.0.7
+    redis._client.info = sinon.stub().resolves(`redis_version:3.0.7
     redis_git_sha1:00000000
     redis_git_dirty:0
     redis_build_id:fcba39adccee99b1
@@ -244,7 +244,7 @@ describe('Test redis service', () => {
     db5:keys=1,expires=0,avg_ttl=0
     `);
 
-    const promise = redis.infos();
+    const promise = redis.info();
 
     return should(promise).be.fulfilled();
   });

@@ -33,7 +33,7 @@ describe('StorageEngine', () => {
 
       should(storageEngine.config).be.eql(kuzzle.config.services.storageEngine);
     });
-  })
+  });
 
   describe('#init', () => {
     it('should initialize storage clients and populate cache', async () => {

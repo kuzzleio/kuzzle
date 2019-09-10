@@ -9,7 +9,7 @@ const
   mockAssertions = require('../../mocks/mockAssertions'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-describe('Test the bulk controller', () => {
+xdescribe('Test the bulk controller', () => {
   let
     controller,
     kuzzle,
@@ -111,11 +111,11 @@ describe('Test the bulk controller', () => {
       should(kuzzle.notifier.notifyDocumentCreate).not.be.called();
       should(kuzzle.notifier.notifyDocumentReplace).not.be.called();
       should(controller.storageEngine.createOrReplace).be.calledWith(
-          index,
-          collection,
-          id,
-          content,
-          { refresh: 'false', injectKuzzleMeta: false});
+        index,
+        collection,
+        id,
+        content,
+        { refresh: 'false', injectKuzzleMeta: false});
 
       should(response).match({
         _id: id,

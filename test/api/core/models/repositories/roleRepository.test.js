@@ -422,6 +422,7 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
+      roleRepository.indexStorage._storageEngine.get.resolves({});
 
       roleRepository.persistToDatabase = sinon.stub().resolves();
 
