@@ -21,6 +21,7 @@ class IndexStorageMock extends IndexStorage {
     this.delete = sinon.stub().resolves();
     this.exists = sinon.stub().resolves();
     this.createCollection = sinon.stub().resolves();
+    this.refreshCollection = sinon.stub().resolves();
 
     this._bootstrap = {
       startOrWait: sinon.stub().resolves()

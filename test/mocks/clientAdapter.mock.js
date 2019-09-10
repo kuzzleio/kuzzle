@@ -24,6 +24,7 @@ class ClientAdapterMock extends ClientAdapter {
     this.createIndex = sinon.stub().resolves();
     this.createCollection = sinon.stub().resolves();
     this.getMapping = sinon.stub().resolves();
+    this.updateMapping = sinon.stub().resolves();
     this.truncateCollection = sinon.stub().resolves();
     this.import = sinon.stub().resolves();
     this.listCollections = sinon.stub().resolves();

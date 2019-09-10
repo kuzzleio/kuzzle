@@ -1,8 +1,7 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  rewire = require('rewire'),
-  CollectionController = rewire('../../../lib/api/controllers/collectionController'),
+  CollectionController = require('../../../lib/api/controllers/collectionController'),
   {
     Request,
     errors: {
@@ -15,15 +14,13 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-xdescribe('Test: collection controller', () => {
+describe('Test: collection controller', () => {
   let
     collectionController,
     kuzzle,
-    foo = {foo: 'bar'},
     index = '%text',
     collection = 'unit-test-collectionController',
-    request,
-    engine;
+    request;
 
   beforeEach(() => {
     const data = {
@@ -31,9 +28,11 @@ xdescribe('Test: collection controller', () => {
       index,
       collection
     };
+
     kuzzle = new KuzzleMock();
-    engine = kuzzle.storageEngine.public;
+
     collectionController = new CollectionController(kuzzle);
+
     request = new Request(data);
   });
 
@@ -50,92 +49,102 @@ xdescribe('Test: collection controller', () => {
       }).throw(BadRequestError);
     });
 
-    it('should activate a hook on a mapping update call and add the collection to the cache', () => {
-      request.input.body = {foo: 'bar'};
-      return collectionController.updateMapping(request)
-        .then(response => {
+    it('should call updateMapping on publicStorage', async () => {
+      const mappings = {
+        dynamic: 'false',
+        _meta: 'data',
+        properties: 'properties'
+      };
+      request.input.body = mappings;
+      collectionController.publicStorage.updateMapping.resolves(mappings);
 
-          should(kuzzle.storageEngine.public.updateMapping).be.calledOnce();
-          should(kuzzle.storageEngine.public.updateMapping).be.calledWith(request);
+      const response = await collectionController.updateMapping(request);
 
-          should(kuzzle.indexCache.add).be.calledOnce();
-          should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
+      should(collectionController.publicStorage.updateMapping)
+        .be.calledWith(index, collection, mappings);
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(response).match({
+        dynamic: 'false',
+        _meta: 'data',
+        properties: 'properties'
+      });
     });
   });
 
   describe('#getMapping', () => {
-    it('should fulfill with a response object', () => {
-      return collectionController.getMapping(request)
-        .then(response => {
+    it('should call getMapping on publicStorage', async () => {
+      const mappings = {
+        dynamic: 'false',
+        _meta: 'data',
+        properties: 'properties'
+      };
+      collectionController.publicStorage.getMapping.resolves(mappings);
 
-          should(kuzzle.storageEngine.public.getMapping).be.calledOnce();
-          should(kuzzle.storageEngine.public.getMapping).be.calledWith(request);
+      const response = await collectionController.getMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(collectionController.publicStorage.getMapping)
+        .be.calledWith(index, collection, { includeKuzzleMeta: false });
+
+      should(response).match({
+        [index]: {
+          mappings: {
+            [collection]: mappings
+          }
+        }
+      });
+    });
+
+    it('should include kuzzleMeta if specified', async () => {
+      const mappings = {
+        dynamic: 'false',
+        _meta: 'data',
+        properties: 'properties'
+      };
+      request.input.args.includeKuzzleMeta = true;
+      collectionController.publicStorage.getMapping.resolves(mappings);
+
+      await collectionController.getMapping(request);
+
+      should(collectionController.publicStorage.getMapping)
+        .be.calledWith(index, collection, { includeKuzzleMeta: true });
     });
   });
 
   describe('#truncate', () => {
-    it('should trigger the proper methods and return a valid response', () => {
-      return collectionController.truncate(request)
-        .then(response => {
-          const truncate = kuzzle.storageEngine.public.truncateCollection;
+    it('should trigger the proper methods and return a valid response', async () => {
+      const response = await collectionController.truncate(request)
 
-          should(truncate).be.calledOnce();
-          should(truncate).be.calledWith(request);
+      should(collectionController.publicStorage.truncateCollection)
+        .be.calledWith(index, collection);
 
-          should(response).be.instanceof(Object);
-          should(response).match({ acknowledged: true });
-        });
+      should(response).match({
+        acknowledged: true
+      });
     });
   });
 
   describe('#getSpecifications', () => {
-    it('should call internalIndex with the right id', () => {
-      kuzzle.internalIndex.get.resolves({_source: {foo: 'bar'}});
-      kuzzle.indexCache.exists.resolves(true);
+    it('should trigger the proper methods and return a valid response', async () => {
+      kuzzle.internalIndex.get.resolves({ _source: { some: 'validation' } });
 
-      return collectionController.getSpecifications(request)
-        .then(response => {
-          should(kuzzle.internalIndex.get).be.calledOnce();
-          should(kuzzle.internalIndex.get).be.calledWithMatch(
-            'validations',
-            `${index}#${collection}`);
-          should(response).match(foo);
-        });
-    });
+      const response = await collectionController.getSpecifications(request);
 
-    it('should return a dedicated error if the index does not exist', () => {
-      kuzzle.indexCache.exists.resolves(false);
+      should(kuzzle.internalIndex.get).be.calledWithMatch(
+        'validations',
+        `${index}#${collection}`);
 
-      return should(collectionController.getSpecifications(request))
-        .be.rejectedWith(
-          PreconditionError,
-          {message: `The index ${index} does not exist.`});
-    });
-
-    it('should return a dedicated error if the collection does not exist', () => {
-      kuzzle.indexCache.exists.onFirstCall().resolves(true);
-      kuzzle.indexCache.exists.onSecondCall().resolves(false);
-
-      return should(collectionController.getSpecifications(request))
-        .be.rejectedWith(PreconditionError, {message: `The collection ${collection} does not exist.`});
+      should(response).match({
+        some: 'validation'
+      });
     });
 
     it('should give a meaningful message if there is no specifications', () => {
-      kuzzle.indexCache.exists.resolves(true);
       kuzzle.internalIndex.get.rejects(new NotFoundError('not found'));
 
       return should(collectionController.getSpecifications(request))
         .be.rejectedWith(
           NotFoundError,
-          {message: `No specifications defined for index ${index} and collection ${collection}`});
+          { message: `No specifications defined for index ${index} and collection ${collection}`});
     });
   });
 
@@ -144,7 +153,6 @@ xdescribe('Test: collection controller', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.from = 0;
       request.input.args.size = 20;
-      request.input.action = 'searchSpecifications';
 
       should(() => collectionController.searchSpecifications(request)).throw(
         SizeLimitError,
@@ -171,201 +179,82 @@ xdescribe('Test: collection controller', () => {
 
       return collectionController.searchSpecifications(request)
         .then(response => {
-          should(kuzzle.internalIndex.search).be.calledOnce();
-          should(kuzzle.internalIndex.search).be.calledWithMatch('validations', request.input.body.query, {
-            from: request.input.args.from,
-            size: request.input.args.size,
-            scroll: request.input.args.scroll
+          should(kuzzle.internalIndex.search).be.calledWithMatch(
+            'validations',
+            request.input.body.query,
+            {
+              from: request.input.args.from,
+              size: request.input.args.size,
+              scroll: request.input.args.scroll
+            });
+
+          should(response).match({
+            total: 123,
+            scrollId: 'foobar',
+            hits: [{ _id: 'bar' }]
           });
-          should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
         });
     });
   });
 
   describe('#scrollSpecifications', () => {
     it('should throw if no scrollId is provided', () => {
-      should(() => collectionController.scrollSpecifications(new Request({controller: 'collection', action: 'scrollSpecifications'})))
-        .throw(BadRequestError, {message: 'The request must specify a scrollId.'});
+      request = new Request({
+        controller: 'collection',
+        action: 'scrollSpecifications'
+      });
+
+      should(() => collectionController.scrollSpecifications(request))
+        .throw(BadRequestError, { errorName: 'api.base.missing_param' });
     });
 
-    it('should call internalIndex with the right data', () => {
+    it('should call internalIndex with the right data', async () => {
       kuzzle.internalIndex.scroll.resolves({
-        hits: [{_id: 'bar'}],
+        hits: [{ _id: 'bar' }],
         scrollId: 'foobar',
         total: 123
       });
 
-      request = new Request({scrollId: 'foobar'});
+      request = new Request({ scrollId: 'foobar' });
 
-      return collectionController.scrollSpecifications(request)
-        .then(response => {
-          should(kuzzle.internalIndex.scroll).be.calledOnce();
-          should(kuzzle.internalIndex.scroll).be.calledWithMatch('validations', 'foobar', undefined);
-          should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
-        });
+      const response = await collectionController.scrollSpecifications(request);
+
+      should(kuzzle.internalIndex.scroll).be.calledWithMatch(
+        'validations',
+        'foobar',
+        collectionController.defaultScrollTTL);
+
+      should(response).match({
+        total: 123,
+        scrollId: 'foobar',
+        hits: [{ _id: 'bar' }]
+      });
     });
 
-    it('should handle the optional scroll argument', () => {
+    it('should handle the optional scroll argument', async () => {
       kuzzle.internalIndex.scroll.resolves({
-        hits: [{_id: 'bar'}],
+        hits: [{ _id: 'bar' }],
         scrollId: 'foobar',
         total: 123
       });
 
-      request = new Request({scrollId: 'foobar', scroll: 'qux'});
+      request = new Request({ scrollId: 'foobar', scroll: 'qux' });
 
-      return collectionController.scrollSpecifications(request)
-        .then(response => {
-          should(kuzzle.internalIndex.scroll).be.calledOnce();
-          should(kuzzle.internalIndex.scroll).be.calledWithMatch('validations', 'foobar', 'qux');
-          should(response).match({total: 123, scrollId: 'foobar', hits: [{_id: 'bar'}]});
-        });
+      const response = await collectionController.scrollSpecifications(request);
+
+      should(kuzzle.internalIndex.scroll)
+        .be.calledWithMatch('validations', 'foobar', 'qux');
+
+      should(response).match({
+        total: 123,
+        scrollId: 'foobar',
+        hits: [{ _id: 'bar' }]
+      });
     });
   });
 
   describe('#updateSpecifications', () => {
-    it('should create or replace specifications', () => {
-      request.input.resource.index = 'myindex';
-      request.input.resource.collection = 'mycollection';
-      request.input.body = {
-        myindex: {
-          mycollection: {
-            strict: true,
-            fields: {
-              myField: {
-                mandatory: true,
-                type: 'integer',
-                defaultValue: 42
-              }
-            }
-          }
-        }
-      };
-
-      kuzzle.validation.validateFormat.resolves({isValid: true});
-      kuzzle.validation.curateSpecification.resolves();
-
-      return collectionController.updateSpecifications(request)
-        .then(response => {
-          should(kuzzle.internalIndex.refresh).be.calledOnce();
-          should(kuzzle.validation.curateSpecification).be.called();
-          should(kuzzle.internalIndex.createOrReplace).be.calledOnce();
-          should(kuzzle.internalIndex.createOrReplace).be.calledWithMatch('validations', 'myindex#mycollection');
-          should(response).match(request.input.body);
-        });
-    });
-
-    it('should rejects and do not create or replace specifications if the specs are wrong', () => {
-      request.input.resource.index = 'myindex';
-      request.input.resource.collection = 'mycollection';
-      request.input.body = {
-        myindex: {
-          mycollection: {
-            strict: true,
-            fields: {
-              myField: {
-                mandatory: true,
-                type: 'bad bad',
-                defaultValue: 42
-              }
-            }
-          }
-        }
-      };
-
-      kuzzle.validation.validateFormat.resolves({
-        isValid: false,
-        errors: ['bad bad is a bad type !']
-      });
-
-      return collectionController.updateSpecifications(request)
-        .catch(error => {
-          should(kuzzle.internalIndex.refresh).not.be.called();
-          should(kuzzle.validation.curateSpecification).not.be.called();
-          should(kuzzle.internalIndex.createOrReplace).not.be.called();
-
-          should(error).be.an.instanceOf(BadRequestError);
-          should(error.message).be.exactly('Some errors with provided specifications.');
-          should(error.details).match([ 'bad bad is a bad type !' ]);
-        });
-    });
-
-    it('should create or replace specifications when requested with deprecated way', () => {
-      request.input.resource.index = undefined;
-      request.input.resource.collection = undefined;
-      index = 'myindex';
-      collection = 'mycollection';
-      request.input.body = {
-        myindex: {
-          mycollection: {
-            strict: true,
-            fields: {
-              myField: {
-                mandatory: true,
-                type: 'integer',
-                defaultValue: 42
-              }
-            }
-          }
-        }
-      };
-
-      kuzzle.validation.validateFormat.resolves({isValid: true});
-      kuzzle.validation.curateSpecification.resolves();
-
-      return collectionController.updateSpecifications(request)
-        .then(response => {
-          should(kuzzle.internalIndex.refresh).be.calledOnce();
-          should(kuzzle.validation.curateSpecification).be.called();
-          should(kuzzle.internalIndex.createOrReplace)
-            .be.calledOnce()
-            .be.calledWithMatch('validations', `${index}#${collection}`);
-          should(response).match(request.input.body);
-        });
-    });
-
-    it('should rejects and do not create or replace specifications if the specs are wrong when requested with deprecated way', () => {
-      request.input.resource.index = undefined;
-      request.input.resource.collection = undefined;
-      index = 'myindex';
-      collection = 'mycollection';
-      request.input.body = {
-        myindex: {
-          mycollection: {
-            strict: true,
-            fields: {
-              myField: {
-                mandatory: true,
-                type: 'bad bad',
-                defaultValue: 42
-              }
-            }
-          }
-        }
-      };
-
-      kuzzle.validation.validateFormat.resolves({
-        isValid: false,
-        errors: ['bad bad is a bad type !']
-      });
-
-      return collectionController.updateSpecifications(request)
-        .catch(error => {
-          should(kuzzle.internalIndex.refresh).not.be.called();
-          should(kuzzle.validation.curateSpecification).not.be.called();
-          should(kuzzle.internalIndex.createOrReplace).not.be.called();
-
-          should(error).be.an.instanceOf(BadRequestError);
-          should(error.message).be.exactly('Some errors with provided specifications.');
-          should(error.details).match([ 'bad bad is a bad type !' ]);
-        });
-    });
-  });
-
-  describe('#validateSpecifications', () => {
-    it('should call the right functions and respond with the right response', () => {
-      request.input.resource.index = 'myindex';
-      request.input.resource.collection = 'mycollection';
+    it('should create or replace specifications', async () => {
       request.input.body = {
         strict: true,
         fields: {
@@ -376,214 +265,128 @@ xdescribe('Test: collection controller', () => {
           }
         }
       };
+      kuzzle.validation.validateFormat.resolves({ isValid: true });
+      kuzzle.validation.curateSpecification.resolves();
 
-      const specifications = [{
-        _id: 'indexcollection',
-        _source: {
-          validation: 'validation',
-          index: 'index',
-          collection: 'collection'
-        }
-      }];
+      const response = await collectionController.updateSpecifications(request);
 
-      const createSpecificationList = sinon.stub().resolves(specifications);
-      const validateSpecificationList = sinon.stub().resolves({valid: true});
+      should(kuzzle.internalIndex.refreshCollection).be.calledWith('validations');
+      should(kuzzle.validation.curateSpecification).be.called();
+      should(kuzzle.internalIndex.createOrReplace).be.calledWithMatch(
+        'validations',
+        `${index}#${collection}`,
+        request.input.body);
 
-      CollectionController.__set__({
-        createSpecificationList,
-        validateSpecificationList
-      });
-
-      return collectionController.validateSpecifications(request)
-        .then(response => {
-          should(response).match({valid: true});
-          should(validateSpecificationList)
-            .be.calledOnce()
-            .be.calledWith(kuzzle.validation, specifications);
-        });
+      should(response).match(request.input.body);
     });
 
-    it('should call the right functions and respond with the right response if there is an error', () => {
-      const errorResponse = {
-        valid: false,
-        details: ['bad bad is a bad type'],
-        message: 'Some error message'
-      };
-
-      request.input.resource.index = 'myindex';
-      request.input.resource.collection = 'mycollection';
+    it('should rejects and do not create or replace specifications if the specs are wrong', () => {
       request.input.body = {
         strict: true,
         fields: {
           myField: {
             mandatory: true,
-            type: 'bad bad',
+            type: 'zorglub',
             defaultValue: 42
           }
         }
       };
-
-      const specifications = [{
-        _id: 'indexcollection',
-        _source: {
-          validation: 'validation',
-          index: 'index',
-          collection: 'collection'
-        }
-      }];
-
-      const createSpecificationList = sinon.stub().resolves(specifications);
-      const validateSpecificationList = sinon.stub().resolves(errorResponse);
-
-      CollectionController.__set__({
-        createSpecificationList,
-        validateSpecificationList
+      kuzzle.validation.validateFormat.resolves({
+        isValid: false,
+        errors: ['zorglub is a bad type !']
       });
 
-      return collectionController.validateSpecifications(request)
-        .then(response => {
-          should(response).match(errorResponse);
-          should(validateSpecificationList).be.calledOnce();
-        });
-    });
+      const promise = collectionController.updateSpecifications(request);
 
-    it('should call the right functions and respond with the right response when requested with deprecated way', () => {
-      request.input.resource.index = undefined;
-      request.input.resource.collection = undefined;
-      request.input.body = {
-        myindex: {
-          mycollection: {
-            strict: true,
-            fields: {
-              myField: {
-                mandatory: true,
-                type: 'integer',
-                defaultValue: 42
-              }
-            }
-          }
-        }
-      };
 
-      const specifications = [{
-        _id: 'indexcollection',
-        _source: {
-          validation: 'validation',
-          index: 'index',
-          collection: 'collection'
-        }
-      }];
-
-      const createSpecificationList = sinon.stub().resolves(specifications);
-      const validateSpecificationList = sinon.stub().resolves({valid: true});
-
-      CollectionController.__set__({
-        createSpecificationList,
-        validateSpecificationList
-      });
-
-      return collectionController.validateSpecifications(request)
-        .then(response => {
-          should(response).match({valid: true});
-          should(validateSpecificationList)
-            .be.calledOnce()
-            .be.calledWith(kuzzle.validation, specifications);
-        });
-    });
-
-    it('should call the right functions and respond with the right response if there is an error when requested with deprecated way', () => {
-      request.input.resource.index = undefined;
-      request.input.resource.collection = undefined;
-      const errorResponse = {
-        valid: false,
-        details: ['bad bad is a bad type'],
-        message: 'Some error message'
-      };
-
-      request.input.body = {
-        myindex: {
-          mycollection: {
-            strict: true,
-            fields: {
-              myField: {
-                mandatory: true,
-                type: 'bad bad',
-                defaultValue: 42
-              }
-            }
-          }
-        }
-      };
-
-      const specifications = [{
-        _id: 'indexcollection',
-        _source: {
-          validation: 'validation',
-          index: 'index',
-          collection: 'collection'
-        }
-      }];
-
-      const createSpecificationList = sinon.stub().resolves(specifications);
-      const validateSpecificationList = sinon.stub().resolves(errorResponse);
-
-      CollectionController.__set__({
-        createSpecificationList,
-        validateSpecificationList
-      });
-
-      return collectionController.validateSpecifications(request)
-        .then(response => {
-          should(response).match(errorResponse);
-          should(validateSpecificationList).be.calledOnce();
+      return should(promise).be.rejectedWith(BadRequestError, { errorName: 'api.collection.update_specifications' })
+        .then(() => {
+          should(kuzzle.validation.curateSpecification).not.be.called();
+          should(kuzzle.internalIndex.createOrReplace).not.be.called();
         });
     });
   });
 
-  describe('#deleteSpecifications', () => {
-    it('should call the right functions and respond with the right response if the validation specification exists', () => {
-      kuzzle.internalIndex.delete.resolves();
-
-      kuzzle.validation.specification = {};
-      kuzzle.validation.specification[index] = {};
-      kuzzle.validation.specification[index][collection] = {};
-
-      return collectionController.deleteSpecifications(request)
-        .then(response => {
-          should(kuzzle.internalIndex.delete).be.calledOnce();
-          should(response).match({acknowledged: true});
-        });
+  describe('#validateSpecifications', () => {
+    beforeEach(() => {
+      request.input.body = {
+        strict: true,
+        fields: {
+          myField: {
+            mandatory: true,
+            type: 'integer',
+            defaultValue: 42
+          }
+        }
+      };
     });
 
-    it('should resolves if there is no specification set', () => {
-      kuzzle.validation.specification = {};
+    it('should call the right functions and respond with the right response', async () => {
+      kuzzle.validation.validateFormat.resolves({ isValid: true });
 
-      return collectionController.deleteSpecifications(request)
-        .then(response => {
-          should(kuzzle.internalIndex.delete).not.be.called();
-          should(response).match({acknowledged: true});
-        });
+      const response = await collectionController.validateSpecifications(request);
+
+      should(kuzzle.validation.validateFormat)
+        .be.calledWith(index, collection, request.input.body, true);
+      should(response).match({
+        valid: true
+      });
+    });
+
+    it('should return an error if specifications are invalid', async () => {
+      kuzzle.validation.validateFormat.resolves({
+        isValid: false,
+        errors: 'errors'
+      });
+
+      const response = await collectionController.validateSpecifications(request);
+
+      should(response).match({
+        valid: false,
+        details: 'errors',
+        description: 'Some errors with provided specifications.'
+      });
+    });
+  });
+
+  describe('#deleteSpecifications', () => {
+    it('should call the right functions and respond with the right response if the validation specification exists', async () => {
+      kuzzle.internalIndex.delete.resolves();
+
+      const response = await collectionController.deleteSpecifications(request);
+
+      should(kuzzle.internalIndex.delete)
+        .be.calledWith('validations', `${index}#${collection}`);
+      should(kuzzle.internalIndex.refreshCollection).be.calledWith('validations');
+      should(kuzzle.validation.curateSpecification).be.calledOnce();
+
+      should(response).match({
+        acknowledged: true
+      });
     });
   });
 
   describe('#list', () => {
     beforeEach(() => {
-      kuzzle.storageEngine.public.listCollections.resolves({collections: {stored: ['foo']}});
+      collectionController.publicStorage.listCollections.resolves(['col', 'loc']);
       kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
     });
 
-    it('should resolve to a full collections list', () => {
-      request = new Request({index: 'index'});
+    it('should resolve to a full collections list', async () => {
+      const response = await collectionController.list(request);
 
-      return collectionController.list(request)
-        .then(response => {
-          should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
-          should(kuzzle.storageEngine.public.listCollections).be.calledOnce();
-          should(response).be.instanceof(Object);
-          should(response.type).be.exactly('all');
-          should(response.collections).not.be.undefined().and.be.an.Array();
-          should(response.collections).deepEqual([{name: 'bar', type: 'realtime'}, {name: 'foo', type: 'realtime'}, {name: 'foo', type: 'stored'}]);
-        });
+      should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
+      should(collectionController.publicStorage.listCollections)
+        .be.calledWith(index);
+
+      should(response.type).be.exactly('all');
+      should(response.collections).be.an.Array();
+      should(response.collections).deepEqual([
+        { name: 'bar', type: 'realtime' },
+        { name: 'col', type: 'stored' },
+        { name: 'foo', type: 'realtime' },
+        { name: 'loc', type: 'stored' }
+      ]);
     });
 
     it('should reject the request if an invalid "type" argument is provided', () => {
@@ -602,7 +405,7 @@ xdescribe('Test: collection controller', () => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('stored');
           should(kuzzle.hotelClerk.getRealtimeCollections).not.be.called();
-          should(kuzzle.storageEngine.public.listCollections).be.called();
+          should(collectionController.publicStorage.listCollections).be.called();
         });
     });
 
@@ -614,13 +417,13 @@ xdescribe('Test: collection controller', () => {
           should(response).be.instanceof(Object);
           should(response.type).be.exactly('realtime');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.storageEngine.public.listCollections).not.be.called();
+          should(collectionController.publicStorage.listCollections).not.be.called();
         });
     });
 
     it('should return a portion of the collection list if from and size are specified', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
-      kuzzle.storageEngine.public.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      collectionController.publicStorage.listCollections.resolves(['astored', 'bstored', 'cstored', 'dstored', 'estored']);
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -633,13 +436,13 @@ xdescribe('Test: collection controller', () => {
           ]);
           should(response.type).be.exactly('all');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.storageEngine.public.listCollections).be.called();
+          should(collectionController.publicStorage.listCollections).be.called();
         });
     });
 
     it('should return a portion of the collection list if from is specified', () => {
       request = new Request({index: 'index', type: 'all', from: 8});
-      kuzzle.storageEngine.public.listCollections.resolves({collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}});
+      collectionController.publicStorage.listCollections.resolves(['astored', 'bstored', 'cstored', 'dstored', 'estored']);
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -651,15 +454,13 @@ xdescribe('Test: collection controller', () => {
           ]);
           should(response).be.instanceof(Object);
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.storageEngine.public.listCollections).be.called();
+          should(collectionController.publicStorage.listCollections).be.called();
         });
     });
 
     it('should return a portion of the collection list if size is specified', () => {
       request = new Request({index: 'index', type: 'all', size: 2});
-      kuzzle.storageEngine.public.listCollections.resolves({
-        collections: {stored: ['astored', 'bstored', 'cstored', 'dstored', 'estored']}
-      });
+      collectionController.publicStorage.listCollections.resolves(['astored', 'bstored', 'cstored', 'dstored', 'estored']);
       kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
 
       return collectionController.list(request)
@@ -671,19 +472,18 @@ xdescribe('Test: collection controller', () => {
           ]);
           should(response.type).be.exactly('all');
           should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(kuzzle.storageEngine.public.listCollections).be.called();
+          should(collectionController.publicStorage.listCollections).be.called();
         });
     });
 
-
     it('should reject an error if getting stored collections fails', () => {
-      kuzzle.storageEngine.public.listCollections.rejects(new Error('foobar'));
+      collectionController.publicStorage.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'stored'});
       return should(collectionController.list(request)).be.rejected();
     });
 
     it('should reject an error if getting all collections fails', () => {
-      kuzzle.storageEngine.public.listCollections.rejects(new Error('foobar'));
+      collectionController.publicStorage.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'all'});
       return should(collectionController.list(request)).be.rejected();
     });
@@ -691,36 +491,27 @@ xdescribe('Test: collection controller', () => {
 
   describe('#exists', () => {
     it('should call the storageEngine', () => {
-      kuzzle.storageEngine.public.collectionExists.resolves(foo);
+      collectionController.publicStorage.collectionExists.resolves(true);
+
       return collectionController.exists(request)
         .then(response => {
-          should(response).match(foo);
-          should(kuzzle.storageEngine.public.collectionExists).be.calledOnce();
+          should(response).match(true);
+          should(collectionController.publicStorage.collectionExists).be.calledOnce();
         });
     });
   });
 
   describe('#create', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
+    it('should resolve to a valid response', async () => {
+      const response = await collectionController.create(request);
 
-      return collectionController.create(request)
-        .then(response => {
-          should(engine.createCollection).be.calledOnce();
-          should(engine.createCollection).be.calledWith(request);
+      should(collectionController.publicStorage.createCollection)
+        .be.calledWith(index, collection);
 
-          should(kuzzle.indexCache.add).be.calledOnce();
-          should(kuzzle.indexCache.add).be.calledWith(request.input.resource.index, request.input.resource.collection);
-
-          sinon.assert.callOrder(
-            engine.createCollection,
-            kuzzle.indexCache.add
-          );
-
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(response).be.instanceof(Object);
+      should(response).match({
+        acknowledged: true
+      });
     });
   });
 });
