@@ -10,7 +10,7 @@ const
   AdminController = rewire('../../../lib/api/controllers/adminController'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-xdescribe('AdminController', () => {
+describe('AdminController', () => {
   let
     adminController,
     kuzzle,
@@ -108,14 +108,13 @@ xdescribe('AdminController', () => {
     });
 
     it('remove all indexes handled by Kuzzle', async () => {
-      adminController.storageEngine.listIndexes.resolves(['a', 'b', 'c']);
+      adminController.publicStorage.listIndexes.resolves(['a', 'b', 'c']);
 
       const response = await adminController.resetDatabase(request);
 
-      should(adminController.storageEngine.listIndexes).be.calledOnce();
-      should(adminController.storageEngine.deleteIndexes)
+      should(adminController.publicStorage.listIndexes).be.calledOnce();
+      should(adminController.publicStorage.deleteIndexes)
         .be.calledWith(['a', 'b', 'c']);
-      should(adminController.indexCache.remove).have.callCount(3);
 
       should(response).match({ acknowledge: true });
     });

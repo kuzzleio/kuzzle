@@ -85,7 +85,7 @@ xdescribe('#base controller', () => {
     });
   });
 
-  describe('#arrayParam', () => {
+  describe('#getArrayParam', () => {
     beforeEach(() => {
       request.input.body = {
         names: ['Ender', 'Speaker for the Dead', 'Xenocide'],
@@ -94,25 +94,25 @@ xdescribe('#base controller', () => {
     });
 
     it('should extract an array param', () => {
-      const param = baseController.arrayParam(request, 'body.names');
+      const param = baseController.getArrayParam(request, 'body.names');
 
       should(param).be.eql(['Ender', 'Speaker for the Dead', 'Xenocide']);
     });
 
     it('should throw if the param is missing', () => {
       should(() => {
-        baseController.arrayParam(request, 'body.childhood');
+        baseController.getArrayParam(request, 'body.childhood');
       }).throw({ errorName: 'api.base.missing_param' });
     });
 
     it('should throw if the param is not an array', () => {
       should(() => {
-        baseController.arrayParam(request, 'body.age');
+        baseController.getArrayParam(request, 'body.age');
       }).throw({ errorName: 'api.base.invalid_param_type' });
     });
   });
 
-  describe('#stringParam', () => {
+  describe('#getStringParam', () => {
     beforeEach(() => {
       request.input.body = {
         name: 'Ender',
@@ -121,20 +121,20 @@ xdescribe('#base controller', () => {
     });
 
     it('should extract an string param', () => {
-      const param = baseController.stringParam(request, 'body.name');
+      const param = baseController.getStringParam(request, 'body.name');
 
       should(param).be.eql('Ender');
     });
 
     it('should throw if the param is missing', () => {
       should(() => {
-        baseController.stringParam(request, 'body.childhood');
+        baseController.getStringParam(request, 'body.childhood');
       }).throw({ errorName: 'api.base.missing_param' });
     });
 
     it('should throw if the param is not an string', () => {
       should(() => {
-        baseController.stringParam(request, 'body.age');
+        baseController.getStringParam(request, 'body.age');
       }).throw({ errorName: 'api.base.invalid_param_type' });
     });
   });

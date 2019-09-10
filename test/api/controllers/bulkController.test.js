@@ -9,7 +9,7 @@ const
   mockAssertions = require('../../mocks/mockAssertions'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-xdescribe('Test the bulk controller', () => {
+describe('Test the bulk controller', () => {
   let
     controller,
     kuzzle,
@@ -49,7 +49,7 @@ xdescribe('Test the bulk controller', () => {
 
       request.input.body = { bulkData };
 
-      controller.storageEngine.import.resolves({
+      controller.publicStorage.import.resolves({
         result: ['fake', 'data'],
         errors: []
       });
@@ -58,7 +58,7 @@ xdescribe('Test the bulk controller', () => {
     it('should trigger the proper methods and resolve to a valid response', async () => {
       const response = await controller.import(request);
 
-      should(controller.storageEngine.import)
+      should(controller.publicStorage.import)
         .be.calledWith(index, collection, bulkData, { refresh: 'false', userId: null });
 
       should(response).match({
@@ -68,7 +68,7 @@ xdescribe('Test the bulk controller', () => {
     });
 
     it('should handle partial errors', async () => {
-      controller.storageEngine.import.resolves({
+      controller.publicStorage.import.resolves({
         result: [],
         errors: ['fake', 'data']
       });
@@ -97,7 +97,7 @@ xdescribe('Test the bulk controller', () => {
       request.input.body = content;
       request.input.resource._id = id;
 
-      controller.storageEngine.createOrReplace.resolves({
+      controller.publicStorage.createOrReplace.resolves({
         _id: id,
         _version: 1,
         _source: content,
@@ -110,7 +110,7 @@ xdescribe('Test the bulk controller', () => {
 
       should(kuzzle.notifier.notifyDocumentCreate).not.be.called();
       should(kuzzle.notifier.notifyDocumentReplace).not.be.called();
-      should(controller.storageEngine.createOrReplace).be.calledWith(
+      should(controller.publicStorage.createOrReplace).be.calledWith(
         index,
         collection,
         id,
@@ -157,7 +157,7 @@ xdescribe('Test the bulk controller', () => {
         { _id: 'magl', _source: { name: 'Maglor' }, _version: 1, created: true }
       ];
 
-      controller.storageEngine.mCreateOrReplace.resolves({
+      controller.publicStorage.mCreateOrReplace.resolves({
         result: mCreateOrReplaceResult,
         errors: []
       });
@@ -167,7 +167,7 @@ xdescribe('Test the bulk controller', () => {
       const response = await controller.mWrite(request);
 
       should(kuzzle.notifier.notifyDocumentMChanges).not.be.called();
-      should(controller.storageEngine.mCreateOrReplace).be.calledWith(
+      should(controller.publicStorage.mCreateOrReplace).be.calledWith(
         index,
         collection,
         documents,
