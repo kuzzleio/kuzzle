@@ -12,7 +12,7 @@ const
   } = require('kuzzle-common-objects'),
   MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js');
 
-xdescribe('Test: memoryStorage controller', () => {
+describe('MemoryStorageController', () => {
   let
     msController,
     called,
