@@ -94,7 +94,7 @@ jobs:
         - bash .ci/sonar.sh
 
     - stage: Unit Tests & Linters
-      name: Documentation dead links & subcodes check
+      name: Documentation dead links
       cache:
         directories:
           - $HOME/.gem/specs
@@ -108,9 +108,6 @@ jobs:
       script:
         - echo "Checking dead links..."
         - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
-        - echo "Checking subcodes..."
-        - npm run doc-generate-subcodes -- --output $TRAVIS_BUILD_DIR/subcodes-doc-test.md
-        - diff $TRAVIS_BUILD_DIR/subcodes-doc-test.md $TRAVIS_BUILD_DIR/doc/1/api/essentials/errors/subcodes/index.md
 
     # ---------------------------------------
     # Integration tests
