@@ -1,0 +1,165 @@
+{
+  "code": 5,
+  "subdomains": {
+    "format": {
+      "code": 1,
+      "errors": {
+        "missing_nested_spec": {
+          "code": 1,
+          "message": "All levels of an object have to be defined in the specification.",
+          "class": "PreconditionError"
+        },
+        "unallowed_children": {
+          "code": 2,
+          "message": "The field type %s is not allowed to have children fields.",
+          "class": "PreconditionError"
+        },
+        "missing_parent": {
+          "code": 3,
+          "message": "The parent field of the field \"%s\" is not defined.",
+          "class": "PreconditionError"
+        },
+        "invalid_properties": {
+          "code": 4,
+          "message": "The object \"%s\" contains invalid properties.",
+          "class": "PreconditionError"
+        },
+        "missing_type": {
+          "code": 5,
+          "message": "Missing property \"type\" in field \"%s\".",
+          "class": "PreconditionError"
+        },
+        "unknown_type": {
+          "code": 6,
+          "message": "In \"%s\": unknown type \"%s\".",
+          "class": "PreconditionError"
+        },
+        "missing_value": {
+          "code": 7,
+          "message": "Missing property \"value\" in field \"%s\".",
+          "class": "PreconditionError"
+        },
+        "expected_boolean": {
+          "code": 8,
+          "message": "\"%s\" must be of type \"boolean\".",
+          "class": "PreconditionError"
+        },
+        "unexpected_property": {
+          "code": 9,
+          "message": "Field \"%s\": cannot set a \"%s\" property if the field is not multivalued.",
+          "class": "PreconditionError"
+        },
+        "invalid_range": {
+          "code": 10,
+          "message": "Field \"%s\": invalid range (minCount > maxCount).",
+          "class": "PreconditionError"
+        },
+        "invalid_specifications": {
+          "code": 10,
+          "message": "The provided specifications are invalid. Check the \"details\" property for a list of errors.",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "extension": {
+      "code": 2,
+      "errors": {
+        "missing_validate": {
+          "code": 1,
+          "message": "The type %s must implement the function 'validate'.",
+          "class": "PluginImplementationError"
+        },
+        "missing_typeName": {
+          "code": 2,
+          "message": "The typeName property must be defined in the validation type object.",
+          "class": "PluginImplementationError"
+        },
+        "missing_validateFieldSpecification": {
+          "code": 3,
+          "message": "The type %s must implement the function 'validateFieldSpecification'.",
+          "class": "PluginImplementationError"
+        },
+        "missing_getStrictness": {
+          "code": 4,
+          "message": "The allowing children type %s must implement the function 'getStrictness'.",
+          "class": "PluginImplementationError"
+        },
+        "type_already_defined": {
+          "code": 5,
+          "message": "The type %s is already defined.",
+          "class": "PluginImplementationError"
+        }
+      }
+    },
+    "types": {
+      "code": 3,
+      "errors": {
+        "expected_array": {
+          "code": 1,
+          "message": "Invalid option \"%s\": must be a non-empty array.",
+          "class": "PreconditionError"
+        },
+        "unrecognized_names": {
+          "code": 2,
+          "message": "Unrecognized format name%s: %s.",
+          "class": "PreconditionError"
+        },
+        "invalid_option_def": {
+          "code": 3,
+          "message": "Invalid \"%s\" option definition.",
+          "class": "PreconditionError"
+        },
+        "invalid_range": {
+          "code": 4,
+          "message": "Invalid range: min > max.",
+          "class": "PreconditionError"
+        },
+        "expected_number": {
+          "code": 5,
+          "message": "Invalid option \"%s\": must be of type \"number\".",
+          "class": "PreconditionError"
+        },
+        "cannot_parse": {
+          "code": 6,
+          "message": "Unable to parse the value \"%s = %s\".",
+          "class": "PreconditionError"
+        },
+        "expected_boolean": {
+          "code": 7,
+          "message": "Invalid option \"%s\": must be of type \"boolean\".",
+          "class": "PreconditionError"
+        },
+        "missing_option": {
+          "code": 8,
+          "message": "Option \"%s\" is required.",
+          "class": "PreconditionError"
+        },
+        "expected_all_strings": {
+          "code": 9,
+          "message": "Values must all be of type \"string\". Invalid value%s: %s.",
+          "class": "PreconditionError"
+        },
+        "invalid_shape": {
+          "code": 10,
+          "message": "Invalid shape%s: %s.",
+          "class": "PreconditionError"
+        },
+      }
+    },
+    "check" {
+      "code": 4,
+      "errors": {
+        "failed_document": {
+          "code": 1,
+          "message": "Failed to validate document: %s",
+          "class": "BadRequestError"
+        },
+        "failed_field": {
+          "code": 2,
+          "message": "Validation failed. Field \"%s\": %s.",
+          "class": "BadRequestError"
+        }
+      }
+    }
+  }
+}
