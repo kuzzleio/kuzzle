@@ -27,9 +27,9 @@ describe('Service', () => {
     it('should use provided timeout or service default timeout', () => {
       const service2 = new Service(name, kuzzle, { initTimeout: 1000 });
 
-      should(service.initTimeout)
+      should(service._initTimeout)
         .be.eql(kuzzle.config.services.common.defaultInitTimeout);
-      should(service2.initTimeout)
+      should(service2._initTimeout)
         .be.eql(1000);
     });
   });
@@ -46,7 +46,7 @@ describe('Service', () => {
     });
 
     it('should rejects if _initSequence take too long to resolve', () => {
-      service.initTimeout = 10;
+      service._initTimeout = 10;
       service._initSequence = () => new Promise(() => {});
 
       const promise = service.init();

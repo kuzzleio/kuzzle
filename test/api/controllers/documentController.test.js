@@ -2,16 +2,11 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   DocumentController = require('../../../lib/api/controllers/documentController'),
   {
     Request,
     errors: {
-      InternalError: KuzzleInternalError,
-      NotFoundError,
-      PartialError,
       BadRequestError,
       SizeLimitError
     }
@@ -19,7 +14,6 @@ const
   BaseController = require('../../../lib/api/controllers/baseController');
 
 describe('DocumentController', () => {
-  const foo = {foo: 'bar'};
   let
     documentController,
     kuzzle,
@@ -360,7 +354,7 @@ describe('DocumentController', () => {
 
       const response = await documentController._mChanges(request, 'mCreate', true);
 
-      should(documentController.publicStorage['mCreate']).be.calledWith(
+      should(documentController.publicStorage.mCreate).be.calledWith(
         index,
         collection,
         documents,
@@ -380,7 +374,7 @@ describe('DocumentController', () => {
     it('should have default values for userId and refresh params', async () => {
       await documentController._mChanges(request, 'mCreate', true);
 
-      should(documentController.publicStorage['mCreate']).be.calledWith(
+      should(documentController.publicStorage.mCreate).be.calledWith(
         index,
         collection,
         documents,

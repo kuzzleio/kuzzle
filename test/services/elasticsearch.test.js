@@ -797,6 +797,8 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
+      elasticsearch._getAllIdsFromQuery = sinon.stub().resolves(['id1', 'id2']);
+
       elasticsearch._client.deleteByQuery.resolves({
         body: {
           total: 2,
@@ -826,6 +828,7 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).match({
+            ids: ['id1', 'id2'],
             total: 2,
             deleted: 1,
             failures: [
@@ -2756,6 +2759,7 @@ describe('Test: ElasticSearch service', () => {
                 status: 201,
                 _version: 1,
                 result: 'created',
+                created: true,
                 foo: 'bar'
               }
             },
@@ -2783,14 +2787,16 @@ describe('Test: ElasticSearch service', () => {
             {
               _id: 'liia',
               _source: { city: 'Kathmandu' },
-              _status: 201,
+              status: 201,
               _version: 1,
+              created: true,
               result: 'created'
             }
           ];
           const expectedErrors = [
             {
               document: { body: { some: 'document' } },
+              status: 400,
               reason: 'some reason'
             },
             {

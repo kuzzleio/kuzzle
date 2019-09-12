@@ -311,7 +311,7 @@ describe('#base controller', () => {
 
       request.input.body = {
         query: { foo: 'bar' }
-      }
+      };
     });
 
     it('should extract search params', () => {
@@ -391,7 +391,7 @@ describe('#base controller', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
 
       should(() => {
-        baseController.assertNotExceedMaxFetch(3)
+        baseController.assertNotExceedMaxFetch(3);
       }).throw({ errorName: 'api.base.search_page_size' });
     });
   });

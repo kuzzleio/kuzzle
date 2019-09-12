@@ -138,17 +138,16 @@ describe('Test: core/janitor', () => {
 
     it('create index and collection that does not exists', () => {
       const storageEngine = kuzzle.storageEngine.public;
-      storageEngine.import.onCall(0).resolves(false);
-      storageEngine.import.onCall(1).resolves(true);
-      storageEngine.import.onCall(2).resolves(false);
+      storageEngine.import.onCall(0).resolves({ errors: []});
+      storageEngine.import.onCall(1).resolves({ errors: []});
+      storageEngine.import.onCall(2).resolves({ errors: []});
 
       return janitor.loadFixtures(fixtures)
         .then(() => {
           should(storageEngine.import.callCount).be.eql(3);
-          should(storageEngine.import.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
-          should(storageEngine.import.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
-          should(storageEngine.import.getCall(0).args[0].input.body.bulkData[1]).be.eql({ name: 'alyx' });
-          should(storageEngine.refreshIndex.callCount).be.eql(3);
+          should(storageEngine.import.getCall(0).args[0]).be.eql('nyc-open-data');
+          should(storageEngine.import.getCall(0).args[1]).be.eql('yellow-taxi');
+          should(storageEngine.import.getCall(0).args[2][1]).be.eql({ name: 'alyx' });
         });
     });
 
@@ -178,15 +177,11 @@ describe('Test: core/janitor', () => {
         .then(() => {
           should(storageEngine.indexExists.callCount).be.eql(3);
           should(storageEngine.createIndex.callCount).be.eql(2);
-          should(storageEngine.createIndex.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
+          should(storageEngine.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
 
           should(storageEngine.createCollection.callCount).be.eql(3);
-          should(storageEngine.createCollection.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
-          should(storageEngine.createCollection.getCall(0).args[0].input.body.properties).be.eql({ name: { type: 'text' } });
-
-          should(storageEngine.refreshIndex.callCount).be.eql(3);
-
-          should(kuzzle.indexCache.add.callCount).be.eql(3);
+          should(storageEngine.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
+          should(storageEngine.createCollection.getCall(0).args[2].properties).be.eql({ name: { type: 'text' } });
         });
     });
 

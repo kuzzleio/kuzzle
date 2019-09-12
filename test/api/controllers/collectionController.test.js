@@ -1,12 +1,10 @@
 const
   should = require('should'),
-  sinon = require('sinon'),
   CollectionController = require('../../../lib/api/controllers/collectionController'),
   {
     Request,
     errors: {
       BadRequestError,
-      PreconditionError,
       NotFoundError,
       SizeLimitError
     }
@@ -112,7 +110,7 @@ describe('Test: collection controller', () => {
 
   describe('#truncate', () => {
     it('should trigger the proper methods and return a valid response', async () => {
-      const response = await collectionController.truncate(request)
+      const response = await collectionController.truncate(request);
 
       should(collectionController.publicStorage.truncateCollection)
         .be.calledWith(index, collection);
