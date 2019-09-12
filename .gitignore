@@ -10,7 +10,7 @@ coverage
 
 # Plugin config folder
 config/plugins/
-dump
+/dump
 
 # IDE
 .idea

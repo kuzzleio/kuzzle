@@ -12,61 +12,58 @@ describe('PluginsManager: strategy management', () => {
   let
     kuzzle,
     pluginsManager,
-    plugin = {
-      object: null,
-      config: {},
-      manifest: {
-        name: 'some-plugin-name',
-        path: ''
-      }
-    },
+    plugin,
     pluginManagerStrategy,
     foo = {foo: 'bar'};
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    /** @type {PluginsManager} */
-    pluginsManager = new PluginsManager(kuzzle);
-    pluginsManager.plugins[plugin.manifest.name] = plugin;
 
-    plugin.object = {
-      authenticators: {
-        SomeStrategy: sinon.stub()
+    plugin = {
+      config: {},
+      manifest: {
+        name: 'some-plugin-name',
+        path: ''
       },
-      strategies: {
-        someStrategy: {
-          config: {
-            authenticator: 'SomeStrategy',
-            strategyOptions: {
-              someStrategy: 'options'
+      object: {
+        authenticators: {
+          SomeStrategy: sinon.stub()
+        },
+        strategies: {
+          someStrategy: {
+            config: {
+              authenticator: 'SomeStrategy',
+              strategyOptions: {
+                someStrategy: 'options'
+              },
+              authenticateOptions: {
+                someAuthenticate: 'options'
+              },
+              fields: ['aField', 'anotherField']
             },
-            authenticateOptions: {
-              someAuthenticate: 'options'
-            },
-            fields: ['aField', 'anotherField']
-          },
-          methods: {
-            afterRegister: 'afterRegisterFunction',
-            create: 'createFunction',
-            delete: 'deleteFunction',
-            exists: 'existsFunction',
-            getById: 'getByIdFunction',
-            getInfo: 'getInfoFunction',
-            update: 'updateFunction',
-            validate: 'validateFunction',
-            verify: 'verifyFunction'
+            methods: {
+              afterRegister: 'afterRegisterFunction',
+              create: 'createFunction',
+              delete: 'deleteFunction',
+              exists: 'existsFunction',
+              getById: 'getByIdFunction',
+              getInfo: 'getInfoFunction',
+              update: 'updateFunction',
+              validate: 'validateFunction',
+              verify: 'verifyFunction'
+            }
           }
-        }
-      },
-      afterRegisterFunction: sinon.stub(),
-      createFunction: sinon.stub(),
-      existsFunction: sinon.stub(),
-      deleteFunction: sinon.stub(),
-      getByIdFunction: sinon.stub(),
-      getInfoFunction: sinon.stub(),
-      updateFunction: sinon.stub(),
-      validateFunction: sinon.stub(),
-      verifyFunction: sinon.stub()
+        },
+        afterRegisterFunction: sinon.stub(),
+        createFunction: sinon.stub(),
+        existsFunction: sinon.stub(),
+        deleteFunction: sinon.stub(),
+        getByIdFunction: sinon.stub(),
+        getInfoFunction: sinon.stub(),
+        updateFunction: sinon.stub(),
+        validateFunction: sinon.stub(),
+        verifyFunction: sinon.stub()
+      }
     };
 
     pluginManagerStrategy = {
@@ -84,6 +81,8 @@ describe('PluginsManager: strategy management', () => {
       owner: plugin.manifest.name
     };
 
+    pluginsManager = new PluginsManager(kuzzle);
+    pluginsManager.plugins[plugin.manifest.name] = plugin;
     pluginsManager.strategies.someStrategy = pluginManagerStrategy;
     sinon.resetHistory();
   });
@@ -168,6 +167,27 @@ describe('PluginsManager: strategy management', () => {
           const verifyAdapter = plugin.object.authenticators.SomeStrategy.firstCall.args[1];
           verifyAdapter({}, error => done(error));
         });
+    });
+
+    it('should handle plugin names using uppercases', () => {
+      // plugin names are stored lowercased
+      pluginsManager.plugins[plugin.manifest.name] = plugin;
+
+      plugin.manifest.name = plugin.manifest.name.toUpperCase();
+
+      pluginsManager.authenticators = {
+        [plugin.manifest.name]: {
+          SomeStrategy: plugin.object.authenticators.SomeStrategy
+        }
+      };
+
+      plugin.object.existsFunction = sinon.stub().returns(foo);
+      plugin.object.verifyFunction = sinon.stub().resolves({kuid: 'foo'});
+
+      pluginsManager._initStrategies(plugin);
+      should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(
+        plugin.object.strategies.someStrategy);
+      should(plugin.object.afterRegisterFunction).be.calledOnce();
     });
 
     it('method invocation should intercept a thrown error to transform it into PluginImplementationError', () => {
