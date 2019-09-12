@@ -3,7 +3,7 @@ code: true
 type: page
 title: customize errors
 ---
-
+foobar
 # Customize errors
 
 When creating a Kuzzle plugin, custom [API errors](https://docs.kuzzle.io/core/1/api/essentials/errors/) can be defined and thrown, using the `errorsManager`.
