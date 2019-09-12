@@ -1,266 +1,264 @@
 Feature: Kuzzle functional tests
 
-  Scenario: API method server:publicApi
-    When I get the public API
-    Then I have the definition of kuzzle and plugins controllers
+  # Scenario: API method server:publicApi
+  #   When I get the public API
+  #   Then I have the definition of kuzzle and plugins controllers
 
-  Scenario: CLI: dump and restore index
-    And I create an index named "tolkien"
-    When I create a collection "tolkien":"noldor" with "5" documents
-    And I create a collection "tolkien":"angband" with "3" documents
-    And I refresh the index "tolkien"
-    And I use the CLI command 'indexDump tolkien ./index-dump'
-    Then A file "index-dump/tolkien--noldor--data.jsonl" exists
-    And A file "index-dump/tolkien--angband--data.jsonl" exists
-    And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
-    And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
-    When I'm able to delete the index named "tolkien"
-    And I create an index named "tolkien"
-    When I create a collection "tolkien":"noldor"
-    And I create a collection "tolkien":"angband"
-    And I use the CLI command 'indexRestore ./index-dump'
-    And I refresh the index "tolkien"
-    Then I count 5 documents in index "tolkien":"noldor"
-    Then I count 3 documents in index "tolkien":"angband"
-    Then I'm able to delete the index named "tolkien"
+  # Scenario: CLI: dump and restore index
+  #   And I create an index named "tolkien"
+  #   When I create a collection "tolkien":"noldor" with "5" documents
+  #   And I create a collection "tolkien":"angband" with "3" documents
+  #   And I refresh the collection "tolkien:noldor"
+  #   And I refresh the collection "tolkien:angband"
+  #   And I use the CLI command 'indexDump tolkien ./index-dump'
+  #   Then A file "index-dump/tolkien--noldor--data.jsonl" exists
+  #   And A file "index-dump/tolkien--angband--data.jsonl" exists
+  #   And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
+  #   And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
+  #   When I'm able to delete the index named "tolkien"
+  #   And I create an index named "tolkien"
+  #   When I create a collection "tolkien":"noldor"
+  #   And I create a collection "tolkien":"angband"
+  #   And I use the CLI command 'indexRestore ./index-dump'
+  #   And I refresh the collection "tolkien:noldor"
+  #   And I refresh the collection "tolkien:angband"
+  #   Then I count 5 documents in index "tolkien":"noldor"
+  #   Then I count 3 documents in index "tolkien":"angband"
+  #   Then I'm able to delete the index named "tolkien"
 
-  Scenario: CLI: encrypt and decrypt secrets
-    When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-    And I use the CLI command 'encryptSecrets config/testsecrets.json --noint --vault-key azerty --outputFile config/testsecrets.enc.json'
-    Then A file "config/testsecrets.enc.json" exists
-    When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
-    Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
+  # Scenario: CLI: encrypt and decrypt secrets
+  #   When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
+  #   And I use the CLI command 'encryptSecrets config/testsecrets.json --noint --vault-key azerty --outputFile config/testsecrets.enc.json'
+  #   Then A file "config/testsecrets.enc.json" exists
+  #   When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
+  #   Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
 
-  Scenario: Bulk mWrite
-    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
-    When I use bulk:mWrite action with
-    """
-    {
-      "documents": [
-        { "body": { "name": "Maedhros" } },
-        { "body": { "name": "Maglor" } },
-        { "body": { "name": "Celegorm" } },
-        { "body": { "name": "Caranthis" } },
-        { "body": { "name": "Curufin" } },
-        { "body": { "name": "Amrod" } },
-        { "body": { "name": "Amras" } }
-      ]
-    }
-    """
-    Then I count 7 documents
-    And The documents does not have kuzzle metadata
+  # Scenario: Bulk mWrite
+  #   When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+  #   When I use bulk:mWrite action with
+  #   """
+  #   {
+  #     "documents": [
+  #       { "body": { "name": "Maedhros" } },
+  #       { "body": { "name": "Maglor" } },
+  #       { "body": { "name": "Celegorm" } },
+  #       { "body": { "name": "Caranthis" } },
+  #       { "body": { "name": "Curufin" } },
+  #       { "body": { "name": "Amrod" } },
+  #       { "body": { "name": "Amras" } }
+  #     ]
+  #   }
+  #   """
+  #   Then I count 7 documents
+  #   And The documents does not have kuzzle metadata
 
-  Scenario: Bulk write
-    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
-    When I use bulk:write action with '{ "name": "Feanor", "_kuzzle_info": { "author": "Tolkien" } }'
-    Then I count 1 documents
-    And The documents have the following kuzzle metadata '{ "author": "Tolkien" }'
+  # Scenario: Bulk write
+  #   When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+  #   When I use bulk:write action with '{ "name": "Feanor", "_kuzzle_info": { "author": "Tolkien" } }'
+  #   Then I count 1 documents
+  #   And The documents have the following kuzzle metadata '{ "author": "Tolkien" }'
 
-  Scenario: Bulk write with _id
-    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
-    When I use bulk:write action with id "wandered" and content '{ "name": "Feanor" }'
-    Then I count 1 documents
-    And I can found a document "wandered"
+  # Scenario: Bulk write with _id
+  #   When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+  #   When I use bulk:write action with id "wandered" and content '{ "name": "Feanor" }'
+  #   Then I count 1 documents
+  #   And I can found a document "wandered"
 
-  Scenario: Create a collection
-    When I create a collection "kuzzle-test-index":"my-collection1"
-    Then The mapping properties field of "kuzzle-test-index":"my-collection1" is "the default value"
-    Then The mapping dynamic field of "kuzzle-test-index":"my-collection1" is "the default value"
+  # Scenario: Create a collection
+  #   When I create a collection "kuzzle-test-index":"my-collection1"
+  #   Then The mapping properties field of "kuzzle-test-index":"my-collection1" is "the default value"
+  #   Then The mapping dynamic field of "kuzzle-test-index":"my-collection1" is "the default value"
 
-  Scenario: Update collection mapping: dynamic field
-    When I create a collection "kuzzle-test-index":"my-collection2"
-    And I update the mapping of "kuzzle-test-index":"my-collection2" with '{ "dynamic": "strict" }'
-    Then The mapping dynamic field of "kuzzle-test-index":"my-collection2" is "strict"
+  # Scenario: Update collection mapping: dynamic field
+  #   When I create a collection "kuzzle-test-index":"my-collection2"
+  #   And I update the mapping of "kuzzle-test-index":"my-collection2" with '{ "dynamic": "strict" }'
+  #   Then The mapping dynamic field of "kuzzle-test-index":"my-collection2" is "strict"
 
-  Scenario: Update collection mapping: properties field
-    When I create a collection "kuzzle-test-index":"my-collection3"
-    And I update the mapping of "kuzzle-test-index":"my-collection3" with '{ "properties": { "age": { "type": "integer" } } }'
-    Then The mapping dynamic field of "kuzzle-test-index":"my-collection3" is "the default value"
-    Then The mapping properties field of "kuzzle-test-index":"my-collection3" is '{ "age": { "type": "integer" } }'
+  # Scenario: Update collection mapping: properties field
+  #   When I create a collection "kuzzle-test-index":"my-collection3"
+  #   And I update the mapping of "kuzzle-test-index":"my-collection3" with '{ "properties": { "age": { "type": "integer" } } }'
+  #   Then The mapping dynamic field of "kuzzle-test-index":"my-collection3" is "the default value"
+  #   Then The mapping properties field of "kuzzle-test-index":"my-collection3" is '{ "age": { "type": "integer" } }'
 
-  Scenario: Update collection mapping: _meta field
-    When I create a collection "kuzzle-test-index":"my-collection4"
-    And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "_meta": { "nepali": "liia meh ry" } }'
-    And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "properties": { "age": { "type": "integer" } } }'
-    Then The mapping _meta field of "kuzzle-test-index":"my-collection4" is '{ "_meta": { "nepali": "liia meh ry" } }'
+  # Scenario: Update collection mapping: _meta field
+  #   When I create a collection "kuzzle-test-index":"my-collection4"
+  #   And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "_meta": { "nepali": "liia meh ry" } }'
+  #   And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "properties": { "age": { "type": "integer" } } }'
+  #   Then The mapping _meta field of "kuzzle-test-index":"my-collection4" is '{ "_meta": { "nepali": "liia meh ry" } }'
 
-  @http
-  Scenario: Send a request compressed with gzip
-    Given a request compressed with "gzip"
-    When I write the document
-    Then I should receive a document id
-    Then I'm able to get the document
+  # @http
+  # Scenario: Send a request compressed with gzip
+  #   Given a request compressed with "gzip"
+  #   When I write the document
+  #   Then I should receive a document id
+  #   Then I'm able to get the document
 
-  @http
-  Scenario: Send a request compressed with deflate
-    Given a request compressed with "deflate"
-    When I write the document
-    Then I should receive a document id
-    Then I'm able to get the document
+  # @http
+  # Scenario: Send a request compressed with deflate
+  #   Given a request compressed with "deflate"
+  #   When I write the document
+  #   Then I should receive a document id
+  #   Then I'm able to get the document
 
-  @http
-  Scenario: Send a request compressed with multiple algorithms
-    Given a request compressed with "deflate, gzip, identity"
-    When I write the document
-    Then I should receive a document id
-    Then I'm able to get the document
+  # @http
+  # Scenario: Send a request compressed with multiple algorithms
+  #   Given a request compressed with "deflate, gzip, identity"
+  #   When I write the document
+  #   Then I should receive a document id
+  #   Then I'm able to get the document
 
-  @http
-  Scenario: Receive a request compressed with gzip
-    Given an expected response compressed with "gzip"
-    When I write the document
-    Then I should receive a document id
-    Then I'm able to get the document
+  # @http
+  # Scenario: Receive a request compressed with gzip
+  #   Given an expected response compressed with "gzip"
+  #   When I write the document
+  #   Then I should receive a document id
+  #   Then I'm able to get the document
 
-  @http
-  Scenario: Receive a request compressed with deflate
-    Given an expected response compressed with "deflate"
-    When I write the document
-    Then I should receive a document id
-    Then I'm able to get the document
+  # @http
+  # Scenario: Receive a request compressed with deflate
+  #   Given an expected response compressed with "deflate"
+  #   When I write the document
+  #   Then I should receive a document id
+  #   Then I'm able to get the document
 
-  Scenario: Check server Health
-    When I check server health
+  # Scenario: Check server Health
+  #   When I check server health
 
-  Scenario: Get server information
-    When I get server informations
+  # Scenario: Get server information
+  #   When I get server informations
 
-  Scenario: Get server configuration
-    When I get server configuration
+  # Scenario: Get server configuration
+  #   When I get server configuration
 
-  @validation
-  Scenario: Publish a realtime message
-    When I publish a message
-    Then I should receive a request id
-    Then I'm not able to get the document
+  # @validation
+  # Scenario: Publish a realtime message
+  #   When I publish a message
+  #   Then I should receive a request id
+  #   Then I'm not able to get the document
 
-  Scenario: Create a new document and get it
-    When I write the document
-    Then I should receive a document id
-    Then I'm able to get the document
-    And I'm not able to get the document in index "kuzzle-test-index-alt"
+  # Scenario: Create a new document and get it
+  #   When I write the document
+  #   Then I should receive a document id
+  #   Then I'm able to get the document
+  #   And I'm not able to get the document in index "kuzzle-test-index-alt"
 
-  Scenario: Create or Replace a document (no notification)
-    When I write the document "documentGrace"
-    And I createOrReplace it
-    Then I should have updated the document
+  # Scenario: Create or Replace a document (no notification)
+  #   When I write the document "documentGrace"
+  #   And I createOrReplace it
+  #   Then I should have updated the document
 
-  @realtime
-  Scenario: Create or Replace a document
-    Given A room subscription listening to "info.city" having value "NYC"
-    When I write the document "documentGrace"
-    And I createOrReplace it
-    Then I should have updated the document
-    And I should receive a document notification with field action equal to "replace"
-    And The notification should have volatile
+  # @realtime
+  # Scenario: Create or Replace a document
+  #   Given A room subscription listening to "info.city" having value "NYC"
+  #   When I write the document "documentGrace"
+  #   And I createOrReplace it
+  #   Then I should have updated the document
+  #   And I should receive a document notification with field action equal to "replace"
+  #   And The notification should have volatile
 
-  Scenario: Replace a document
-    When I write the document "documentGrace"
-    Then I replace the document with "documentAda" document
-    Then my document has the value "Ada" in field "firstName"
+  # Scenario: Replace a document
+  #   When I write the document "documentGrace"
+  #   Then I replace the document with "documentAda" document
+  #   Then my document has the value "Ada" in field "firstName"
 
-  Scenario: Update a document
-    When I write the document
-    Then I update the document with value "foo" in field "firstName"
-    Then my document has the value "foo" in field "firstName"
+  # Scenario: Update a document
+  #   When I write the document
+  #   Then I update the document with value "foo" in field "firstName"
+  #   Then my document has the value "foo" in field "firstName"
 
-  Scenario: Delete a document
-    When I write the document
-    Then I remove the document
-    Then I'm not able to get the document
+  # Scenario: Delete a document
+  #   When I write the document
+  #   Then I remove the document
+  #   Then I'm not able to get the document
 
-  Scenario: Search a document
-    When I write the document "documentGrace"
-    And I refresh the index
-    Then I find a document with "grace" in field "firstName"
-    And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
+  # Scenario: Search a document
+  #   When I write the document "documentGrace"
+  #   And I refresh the collection
+  #   Then I find a document with "grace" in field "firstName"
+  #   And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
 
-  Scenario: Bulk import
-    When I do a bulk import
-    Then I can retrieve actions from bulk import
+  # Scenario: Bulk import
+  #   When I do a bulk import
+  #   Then I can retrieve actions from bulk import
 
-  Scenario: Can't do a bulk import on internal index
-    When I can't do a bulk import from index "%kuzzle"
+  # Scenario: Can't do a bulk import on internal index
+  #   When I can't do a bulk import from index "%kuzzle"
 
-  Scenario: Global Bulk import
-    When I do a global bulk import
-    Then I can retrieve actions from bulk import
+  # Scenario: Truncate collection
+  #   When I write the document
+  #   Then I refresh the collection
+  #   Then I truncate the collection
+  #   Then I'm not able to get the document
 
-  Scenario: Truncate collection
-    When I write the document
-    Then I refresh the index
-    Then I truncate the collection
-    Then I'm not able to get the document
+  # Scenario: Count document
+  #   When I write the document "documentGrace"
+  #   When I write the document "documentAda"
+  #   When I write the document "documentGrace"
+  #   When I write the document "documentAda"
+  #   Then I count 4 documents
+  #   And I count 0 documents in index "kuzzle-test-index-alt"
+  #   And I count 2 documents with "NYC" in field "info.city"
+  #   Then I truncate the collection
+  #   And I count 0 documents
 
-  Scenario: Count document
-    When I write the document "documentGrace"
-    When I write the document "documentAda"
-    When I write the document "documentGrace"
-    When I write the document "documentAda"
-    Then I count 4 documents
-    And I count 0 documents in index "kuzzle-test-index-alt"
-    And I count 2 documents with "NYC" in field "info.city"
-    Then I truncate the collection
-    And I count 0 documents
+  # Scenario: delete multiple documents with no error
+  #   When I write the document "documentGrace" with id "Grace"
+  #   When I write the document "documentAda" with id "Ada"
+  #   Then I count 2 documents
+  #   Then I remove the documents '["Grace", "Ada"]'
+  #   And I count 0 documents
 
-  Scenario: delete multiple documents with no error
-    When I write the document "documentGrace" with id "Grace"
-    When I write the document "documentAda" with id "Ada"
-    Then I count 2 documents
-    Then I remove the documents '["Grace", "Ada"]'
-    And I count 0 documents
+  # Scenario: delete multiple documents with partial errors
+  #   When I write the document "documentGrace" with id "Grace"
+  #   When I write the document "documentAda" with id "Ada"
+  #   Then I count 2 documents
+  #   Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
+  #   And I count 0 documents
 
-  Scenario: delete multiple documents with partial errors
-    When I write the document "documentGrace" with id "Grace"
-    When I write the document "documentAda" with id "Ada"
-    Then I count 2 documents
-    Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
-    And I count 0 documents
+  # Scenario: create multiple documents
+  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+  #   Then I count 2 documents
+  #   Then I truncate the collection
+  #   And I count 0 documents
 
-  Scenario: create multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
+  # Scenario: replace multiple documents
+  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+  #   Then I count 2 documents
+  #   Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+  #   Then I count 2 documents
+  #   Then I truncate the collection
+  #   And I count 0 documents
 
-  Scenario: replace multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
+  # Scenario: replace multiple documents with partial errors
+  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+  #   Then I count 2 documents
+  #   Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
+  #   Then I count 2 documents
+  #   Then I truncate the collection
+  #   And I count 0 documents
 
-  Scenario: replace multiple documents with partial errors
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
+  # Scenario: update multiple documents
+  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+  #   Then I count 2 documents
+  #   Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+  #   Then I count 2 documents
+  #   Then I truncate the collection
+  #   And I count 0 documents
 
-  Scenario: update multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
+  # Scenario: create and replace multiple documents
+  #   Then I count 0 documents
+  #   When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+  #   Then I count 2 documents
+  #   Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+  #   Then I count 2 documents
+  #   Then I truncate the collection
+  #   And I count 0 documents
 
-  Scenario: create and replace multiple documents
-    Then I count 0 documents
-    When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: Checking that documents exist or not
-    When I write the document with id "documentGrace"
-    Then I check that the document "documentGrace" exists
-    Then I remove the document
-    Then I check that the document "documentGrace" doesn't exists
+  # Scenario: Checking that documents exist or not
+  #   When I write the document with id "documentGrace"
+  #   Then I check that the document "documentGrace" exists
+  #   Then I remove the document
+  #   Then I check that the document "documentGrace" doesn't exists
 
   Scenario: get multiple documents
     When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
@@ -274,7 +272,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     When I write the document "documentGrace"
-    And I refresh the index
+    And I refresh the collection
     Then I find a document with "Grace" in field "firstName" with scroll "5m"
     And I am able to scroll previous search
 
@@ -283,7 +281,7 @@ Feature: Kuzzle functional tests
     Then I don't find a document with "Grace" in field "firstName"
     Then I change the mapping
     When I write the document "documentGrace"
-    And I refresh the index
+    And I refresh the collection
     Then I find a document with "Grace" in field "newFirstName"
 
   @realtime
@@ -370,7 +368,7 @@ Feature: Kuzzle functional tests
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I write the document "documentAda"
-    And I refresh the index
+    And I refresh the collection
     Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a document notification with field action equal to "delete"
     And The notification should not have a "_source" member
@@ -1844,23 +1842,6 @@ Feature: Kuzzle functional tests
       """
     Then The ms result should match the json ["Agrigento", "Palermo"]
 
-
-  Scenario: autorefresh
-    When I check the autoRefresh status
-    Then The result should match the json false
-    When I write the document "documentGrace"
-    Then I don't find a document with "grace" in field "firstName"
-    Given I refresh the index
-    And I enable the autoRefresh
-    And I truncate the collection
-    When I write the document "documentGrace"
-    Then I find a document with "grace" in field "firstName"
-    When I check the autoRefresh status
-    Then The result should match the json true
-    Given I truncate the collection
-    And I write the document "documentGrace"
-    When I update the document with value "Josepha" in field "firstName"
-    Then I find a document with "josepha" in field "firstName"
 
   @validation
   Scenario: Validation - getSpecification & updateSpecification

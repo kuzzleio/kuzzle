@@ -140,18 +140,14 @@ describe('Test: ElasticSearch service', () => {
     let filter;
 
     beforeEach(() => {
-      filter = {
-        query: {
-          match_all: {}
-        }
-      };
+      filter = { };
     });
 
     it('should be able to search documents', () => {
       elasticsearch._client.search.resolves({
         body: {
           total: 1,
-          hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
+          hits: { hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, other: 'thing' } ] },
           body: filter,
           aggregations: { some: 'aggregs' },
           scrollId: 'i-am-scroll-id'
@@ -164,7 +160,7 @@ describe('Test: ElasticSearch service', () => {
         .then(result => {
           should(elasticsearch._client.search.firstCall.args[0]).match({
             index: esIndexName,
-            body: filter,
+            body: { query: { match_all: {} } },
             from: undefined,
             size: undefined,
             scroll: undefined
@@ -186,7 +182,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.search.resolves({
         body: {
           total: 0,
-          hits: [],
+          hits: { hits: [] },
           scrollId: 'i-am-scroll-id'
         }
       });
@@ -226,7 +222,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.search.resolves({
         body: {
           total: 0,
-          hits: []
+          hits: { hits: [] }
         }
       });
 
@@ -368,6 +364,10 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#create', () => {
+    beforeEach(() => {
+      elasticsearch.exists = sinon.stub().resolves(false);
+    });
+
     it('should allow creating document an ID is provided', () => {
       elasticsearch._client.index.resolves({
         body: {
@@ -385,6 +385,7 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
+          should(elasticsearch.exists).be.calledWith(index, collection, 'liia');
           should(elasticsearch._client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
@@ -395,8 +396,7 @@ describe('Test: ElasticSearch service', () => {
               }
             },
             id: 'liia',
-            refresh: 'wait_for',
-            op_type: 'create'
+            refresh: 'wait_for'
           });
 
           should(result).match({
@@ -423,6 +423,7 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
+          should(elasticsearch.exists).not.be.called();
           should(elasticsearch._client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
@@ -797,7 +798,10 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
-      elasticsearch._getAllIdsFromQuery = sinon.stub().resolves(['id1', 'id2']);
+      elasticsearch._getAllDocumentsFromQuery = sinon.stub().resolves([
+        { _id: '_id1', _source: '_source1' },
+        { _id: '_id2', _source: '_source2' },
+      ]);
 
       elasticsearch._client.deleteByQuery.resolves({
         body: {
@@ -828,7 +832,10 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).match({
-            ids: ['id1', 'id2'],
+            documents: [
+              { _id: '_id1', _source: '_source1' },
+              { _id: '_id2', _source: '_source2' },
+            ],
             total: 2,
             deleted: 1,
             failures: [
@@ -946,7 +953,6 @@ describe('Test: ElasticSearch service', () => {
     it('should allow creating a new collection and inject commonMappings', () => {
       const
         mappings = { properties: { city: { type: 'keyword' } } },
-        mergedMappings = _.merge(mappings, elasticsearch.config.commonMapping),
         promise = elasticsearch.createCollection(
           index,
           collection,
@@ -956,13 +962,43 @@ describe('Test: ElasticSearch service', () => {
       return promise
         .then(result => {
           should(elasticsearch.collectionExists).be.calledWith(index, collection);
-          should(elasticsearch._checkMappings).be.calledWithMatch(
-            mergedMappings
-          );
+          should(elasticsearch._checkMappings).be.calledWithMatch({
+            properties: mappings.properties
+          });
           should(elasticsearch._client.indices.create).be.calledWithMatch({
             index: esIndexName,
             body: {
-              mappings: mergedMappings
+              mappings: {
+                dynamic: elasticsearch.config.commonMapping.dynamic,
+                _meta: elasticsearch.config.commonMapping._meta,
+                properties: mappings.properties
+              }
+            }
+          });
+
+          should(result).be.undefined();
+        });
+    });
+
+    it('should allow to set dynamic and _meta fields', () => {
+      const
+        mappings = { dynamic: 'true', _meta: { some: 'meta' } },
+        promise = elasticsearch.createCollection(
+          index,
+          collection,
+          mappings
+        );
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.indices.create).be.calledWithMatch({
+            index: esIndexName,
+            body: {
+              mappings: {
+                dynamic: 'true',
+                _meta: { some: 'meta' },
+                properties: elasticsearch.config.commonMapping.properties
+              }
             }
           });
 
@@ -1019,6 +1055,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should not overwrite kuzzle commonMapping', () => {
       elasticsearch.config.commonMapping = {
+        dynamic: 'false',
         properties: {
           gordon: { type: 'text' },
           _kuzzle_info: {
@@ -1053,6 +1090,8 @@ describe('Test: ElasticSearch service', () => {
           const
             esReq = elasticsearch._client.indices.create.firstCall.args[0],
             expectedMapping = {
+              _meta: undefined,
+              dynamic: 'false',
               properties: {
                 gordon:   { type: 'text' },
                 freeman:  { type: 'keyword' },
@@ -1298,10 +1337,12 @@ describe('Test: ElasticSearch service', () => {
           });
           should(elasticsearch._client.indices.create).be.calledWithMatch({
             index: esIndexName,
-            mappings: {
-              dynamic: 'false',
-              properties: {
-                name: { type: 'keyword' }
+            body: {
+              mappings: {
+                dynamic: 'false',
+                properties: {
+                  name: { type: 'keyword' }
+                }
               }
             }
           });
@@ -1947,7 +1988,7 @@ describe('Test: ElasticSearch service', () => {
         { body: { city: 'Ho Chi Minh City' } }
       ];
 
-      mExecuteResult = { result: [], errors: [] };
+      mExecuteResult = { items: [], errors: [] };
 
       elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
     });
@@ -2131,7 +2172,7 @@ describe('Test: ElasticSearch service', () => {
         { _id: 'liia', body: { city: 'Ho Chi Minh City' } }
       ];
 
-      mExecuteResult = { result: [], errors: [] };
+      mExecuteResult = { items: [], errors: [] };
 
       elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
     });
@@ -2405,7 +2446,7 @@ describe('Test: ElasticSearch service', () => {
         { _id: 'liia', body: { city: 'Ho Chi Minh City' } }
       ];
 
-      mExecuteResult = { result: [], errors: [] };
+      mExecuteResult = { items: [], errors: [] };
 
       elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
 
@@ -2806,7 +2847,7 @@ describe('Test: ElasticSearch service', () => {
             }
           ];
           should(result).match({
-            result: expectedResult,
+            items: expectedResult,
             errors: expectedErrors
           });
         });
@@ -2826,7 +2867,7 @@ describe('Test: ElasticSearch service', () => {
             }
           ];
           should(result).match({
-            result: [],
+            items: [],
             errors: expectedErrors
           });
         });

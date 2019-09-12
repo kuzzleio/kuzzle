@@ -3,26 +3,25 @@ const
     When,
     Then
   } = require('cucumber'),
-  async = require('async'),
-  Bluebird = require('bluebird');
+  async = require('async');
 
-When(/^I create an index named "([^"]*)"$/, function (index, callback) {
-  this.api.createIndex(index)
-    .then(body => {
-      if (body.error) {
-        callback(new Error(body.error.message));
-        return false;
-      }
+When(/^I create an index named "([^"]*)"$/, async function (index) {
+  const { result: exists } = await this.api.indexExists(index);
 
-      if (!body.result) {
-        callback(new Error('No result provided'));
-        return false;
-      }
+  if (exists) {
+    await this.api.deleteIndex(index);
+  }
 
-      this.result = body.result;
-      callback();
-    })
-    .catch(error => callback(error));
+  const body = await this.api.createIndex(index)
+  if (body.error) {
+    throw new Error(body.error.message);
+  }
+
+  if (!body.result) {
+    throw new Error('No result provided');
+  }
+
+  this.result = body.result;
 });
 
 Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, function (not, index, callback) {

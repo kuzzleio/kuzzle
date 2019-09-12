@@ -20,14 +20,15 @@ Then(/^I remove the document(?: in index "([^"]*)")?$/, function (index, callbac
 });
 
 Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in index "([^"]*)")?$/, function (field, value, index, callback) {
-  var main = function (callbackAsync) {
+  const main = function (callbackAsync) {
     setTimeout(function () {
-      var query = { query: { match: {} } };
+      const query = { query: { match: {} } };
 
       query.query.match[field] = value;
 
       this.api.deleteByQuery(query, index)
         .then(body => {
+
           if (body.error) {
             callbackAsync(body.error.message);
             return false;
@@ -61,7 +62,7 @@ Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (d
 
   this.api.mDelete({ids: documents})
     .then(response => {
-      
+
       if (response.error && !withErrors) {
         callback(response.error.message);
         return false;
@@ -77,4 +78,3 @@ Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (d
       callback(error);
     });
 });
-

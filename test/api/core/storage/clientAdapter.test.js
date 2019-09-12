@@ -132,11 +132,14 @@ describe('ClientAdapter', () => {
     it('should call client method and add index/collection to cache', async () => {
       clientAdapter._client.createCollection.resolves('ret');
 
-      const ret = await clientAdapter.createCollection('index', 'collection');
+      const ret = await clientAdapter.createCollection(
+        'index',
+        'collection',
+        { dynamic: 'strict' });
 
       should(ret).be.eql('ret');
       should(clientAdapter._client.createCollection)
-        .be.calledWith('index', 'collection');
+        .be.calledWith('index', 'collection', { dynamic: 'strict' });
       should(clientAdapter._indexCache.add).be.calledWithMatch({
         index: 'index',
         collection: 'collection',

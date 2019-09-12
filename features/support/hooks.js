@@ -25,14 +25,15 @@ BeforeAll(function () {
     promises.push(() => http.deleteIndex(index)
       .catch(() => true));
   }
+  const mappings = { dynamic: 'true', properties: { foo: { type: 'keyword' } } };
 
   promises.push(() => http.createIndex(world.fakeIndex));
-  promises.push(() => http.createCollection(world.fakeIndex, world.fakeCollection));
-  promises.push(() => http.createCollection(world.fakeIndex, world.fakeAltCollection));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeCollection, mappings));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeAltCollection, mappings));
 
   promises.push(() => http.createIndex(world.fakeAltIndex));
-  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeCollection));
-  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeCollection, mappings));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection, mappings));
 
   return Bluebird.each(promises, promise => promise());
 });
@@ -44,23 +45,22 @@ AfterAll(function () {
     world = new World({parameters: parseWorldParameters()}),
     http = new Http(world);
 
-  for (const index of [
-    world.fakeIndex,
-    world.fakeAltIndex,
-    world.fakeNewIndex
-  ]) {
-    promises.push(http.deleteIndex(index)
-      .catch(() => true));
-    promises.push(http.setAutoRefresh(index, false));
-  }
+  // for (const index of [
+  //   world.fakeIndex,
+  //   world.fakeAltIndex,
+  //   world.fakeNewIndex,
+  //   'tolkien'
+  // ]) {
+  //   promises.push(http.deleteIndex(index)
+  //     .catch(() => true));
+  // }
 
   return Bluebird.all(promises);
 });
 
 Before(function () {
   return this.api.truncateCollection()
-    .then(() => this.api.truncateCollection(this.fakeAltIndex))
-    .then(() => this.api.refreshIndex(this.fakeIndex));
+    .then(() => this.api.truncateCollection(this.fakeAltIndex));
 });
 
 After(function () {
@@ -114,8 +114,7 @@ function cleanSecurity () {
     delete this.currentUser;
   }
 
-  return this.api.refreshInternalIndex()
-    .then(() => this.api.searchUsers({match_all: {}}, {from: 0, size: 999}))
+  return this.api.searchUsers({match_all: {}}, {from: 0, size: 999})
     .then(results => {
       const regex = new RegExp('^' + this.idPrefix);
       results = results.result.hits

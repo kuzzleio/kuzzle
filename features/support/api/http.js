@@ -313,10 +313,11 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  createCollection (index, collection) {
+  createCollection (index, collection, mappings) {
     const options = {
       url: this.apiPath(`${index}/${collection}`),
-      method: 'PUT'
+      method: 'PUT',
+      body: mappings
     };
 
     return this.callApi(options);
@@ -749,16 +750,6 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  globalBulkImport (bulk) {
-    const options = {
-      url: this.apiPath('_bulk'),
-      method: 'POST',
-      body: {bulkData: bulk}
-    };
-
-    return this.callApi(options);
-  }
-
   hasCredentials (strategy, userId) {
     const options = {
       url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
@@ -779,6 +770,15 @@ class HttpApi {
 
   indexExists (index) {
     return this.callApi(this._getRequest(index, null, 'index', 'exists'));
+  }
+
+  refreshCollection (index, collection) {
+    const options = {
+      url: this.apiPath(`${index}/${collection}/_refresh`),
+      method: 'POST'
+    };
+
+    return this.callApi(options);
   }
 
   listCollections (index = this.world.fakeIndex, type) {

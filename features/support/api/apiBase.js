@@ -713,17 +713,6 @@ class ApiBase {
     });
   }
 
-  globalBulkImport (bulk) {
-    const
-      msg = {
-        controller: 'bulk',
-        action: 'import',
-        body: {bulkData: bulk}
-      };
-
-    return this.send(msg);
-  }
-
   hasCredentials (strategy, userId) {
     return this.send({
       controller: 'security',
@@ -749,6 +738,18 @@ class ApiBase {
       controller: 'index',
       action: 'exists'
     });
+  }
+
+  refreshCollection (index, collection) {
+    const
+      msg = {
+        controller: 'collection',
+        action: 'refresh',
+        index: index || this.world.fakeIndex,
+        collection: collection || this.world.fakeCollection
+      };
+
+    return this.send(msg);
   }
 
   listCollections (index, type) {
