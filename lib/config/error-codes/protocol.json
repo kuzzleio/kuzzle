@@ -1,0 +1,22 @@
+{
+  "code": "6",
+  "subdomains": {
+    "runtime": {
+      "code": 1,
+      "errors": {
+        "invalid_connection": {
+          "description": "Connection objects must have both their id and protocol set",
+          "code": 1,
+          "message": "Invalid connection: %s (missing id or protocol)",
+          "class": "PluginImplementationError"
+        },
+        "unknown_connection": {
+          "description": "The provided connection identifier is unknown",
+          "code": 2,
+          "message": "Unable to remove connection - unknown connection identifier: %s",
+          "class": "PluginImplementationError"
+        },
+      }
+    }
+  }
+}

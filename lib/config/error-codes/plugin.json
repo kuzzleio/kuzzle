@@ -5,67 +5,80 @@
       "code": 1,
       "errors" : {
         "invalid_plugins_dir": {
+          "description": "The enabled plugins directory cannot be opened",
           "code": 1,
           "message": "Unable to read plugins directory \"%s\"; %s.",
           "class": "InternalError"
         },
         "cannot_load": {
+          "description": "Kuzzle is unable to load a plugin",
           "code": 2,
           "message": "Unable to load plugin from path \"%s\"; %s.",
           "class": "PluginImplementationError"
         },
         "invalid_plugin_name": {
+          "description": "Invalid characters in a plugin's name",
           "code": 3,
           "message": "[%s] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores.",
           "class": "PluginImplementationError"
         },
         "invalid_privileged_property": {
+          "description": "The 'privileged' property contains invalid characters",
           "code": 4,
           "message": "[%s] Invalid \"privileged\" property: expected a boolean, got a %s.",
           "class": "PluginImplementationError"
         },
         "missing_package_json": {
+          "description": "The plugin is missing a 'package.json' file (run 'npm init' to create one)",
           "code": 5,
           "message": "[%s] No package.json file found.",
           "class": "PluginImplementationError"
         },
         "missing_package_name": {
+          "description": "A 'name' property in the 'package.json' file is required by Kuzzle, as it is used as the plugin's unique name",
           "code": 6,
           "message": "[%s] No \"name\" property provided in package.json.",
           "class": "PluginImplementationError"
         },
         "invalid_hook": {
+          "description": "A hook must point to either a function named directly exposed by the plugin, or a function. This error is thrown when a hook property is configured with neither of these values",
           "code": 7,
           "message": "Unable to configure a hook for the event \"%s\": \"%s\" should be a plugin method name, or a function. %s",
           "class": "PluginImplementationError"
         },
         "invalid_pipe": {
+          "description": "A pipe must point to either a function named directly exposed by the plugin, or a function. This error is thrown when a hook property is configured with neither of these values",
           "code": 8,
           "message": "Unable to configure a pipe for the event \"%s\": \"%s\" should be a plugin method name, or a function. %s",
           "class": "PluginImplementationError"
         }
         "init_not_found": {
+          "description": "The plugin does not have an 'init' function",
           "code": 9,
           "message": "Plugin \"%s\": No \"init\" method found.",
           "class": "PluginImplementationError"
         },
         "privileged_not_supported": {
+          "description": "The 'privileged' flag has been set in Kuzzle's configuration for that plugin, but not in the plugin's manifest",
           "code": 10,
           "message": "The plugin \"%s\" is configured to run in privileged mode, but it does not seem to support it.",
           "class": "PluginImplementationError"
         },
         "privileged_not_set": {
+          "description": "The 'privileged' flag has been set in the plugin's manifest file, but it needs also to be added in Kuzzle's configuration",
           "code": 11,
           "message": "The plugin \"%s\" needs to run in privileged mode to work, you have to explicitly set \"privileged: true\" in its configuration.",
           "class": "PluginImplementationError"
         },
         "expected_constructor": {
-          "code": 18,
+          "description": "Expected a class constructor",
+          "code": 12,
           "message": "Plugin %s is not a constructor.",
           "class": "PluginImplementationError"
         },
         "name_already_exists": {
-          "code": 19,
+          "description": "Another plugin with the same name has already been loaded",
+          "code": 13,
           "message": "A plugin named %s already exists",
           "class": "PluginImplementationError"
         },
@@ -75,60 +88,32 @@
       "code": 2,
       "errors": {
         "unavailable_realtime": {
+          "description": "Due to technical limitations, plugins have limited access to the realtime API controller",
           "code": 1,
           "message": "The method \"realtime:%s\" is unavailable in plugins. Use a plugin hook instead.",
           "class": "PluginImplementationError"
         },
         "failed_init": {
+          "description": "An exception was thrown by a plugin's init function",
           "code": 2,
           "message": "Something went wrong during initialization of \"%s\" plugin.",
           "class": "PluginImplementationError"
         },
         "unexpected_error": {
-          // Used to embed unexpected plugin errors into a standardized
-          // KuzzleError object
+          "description": "Embeds an unexpected plugin errors into a standardized KuzzleError object",
           "code": 3,
           "message": "Caught an unexpected plugin error: %s",
           "class": "PluginImplementationError"
         },
-        "missing_user": {
-          "code": 4,
-          "message": "%s",
-          "class": "UnauthorizedError"
-        },
         "pipe_timeout": {
-          "code": 5,
+          "description": "A pipe function execution exceeded the defined delay. If needed, the allowed delay can be extended in Kuzzle's configuration",
+          "code": 4,
           "message": "Plugin \"%s\": Timeout error. Pipe for event \"%s\" exceeded the timeout delay (%sms). Aborting.",
           "class": "GatewayTimeoutError"
-        },
-        "unserializable_response": {
-          "code": 6,
-          "message": "Unable to serialize response. Are you trying to return the request?",
-          "class": "PluginImplementationError"
-        },
-        "user_creation": {
-          "code": 7,
-          "message": "An error occurred during the creation of user \"%s\":\n%s",
-          "class": "PluginImplementationError"
-        },
-        "unexpected_return_value": {
-          "code": 24,
-          "message": "Unexpected return value from action \"%s:%s\": expected a Promise",
-          "class": "PluginImplementationError"
-        },
-        "invalid_connection": {
-          "code": 25,
-          "message": "Invalid connection: %s",
-          "class": "PluginImplementationError"
         },
         "missing_collection": {
           "code": 26,
           "message": "The collection must be specified.",
-          "class": "PluginImplementationError"
-        },
-        "unknown_connection": {
-          "code": 27,
-          "message": "Unable to remove connection - unknown connection identifier: %s",
           "class": "PluginImplementationError"
         },
         "errors_configuration_file": {
@@ -266,6 +251,28 @@
           "message": "Cannot remove strategy %s: strategy does not exist.",
           "class": "NotFoundError"
         },
+        "invalid_authenticators": {
+          "code": 8,
+          "message": "%s the exposed \"authenticators\" plugin property must be of type \"object\".",
+          "class": "PluginImplementationError"
+        },
+        "invalid_authenticator": {
+          "code": 9,
+          "message": "%s invalid authenticator %s: expected a constructor.",
+          "class": "PluginImplementationError"
+        },
+        "user_creation": {
+          "description": "An authentication plugin rejected a user's credentials during their creation",
+          "code": 10,
+          "message": "An error occurred during the creation of user \"%s\":\n%s",
+          "class": "PluginImplementationError"
+        },
+        "missing_user": {
+          "description": "An authentication plugin approved credentials without providing a user object to Kuzzle",
+          "code": 4,
+          "message": "%s",
+          "class": "UnauthorizedError"
+        }
       }
     },
     "controller": {
@@ -306,14 +313,16 @@
           "message": "%s Only the following http verbs are allowed: \"%s\". %s",
           "class": "PluginImplementationError"
         },
-        "invalid_authenticators": {
+        "unserializable_response": {
+          "description": "A plugin controller action returned a non-serializable response",
           "code": 8,
-          "message": "%s the exposed \"authenticators\" plugin property must be of type \"object\".",
+          "message": "Unable to serialize response. Are you trying to return the request?",
           "class": "PluginImplementationError"
         },
-        "invalid_authenticator": {
+        "expected_promise": {
+          "description": "API actions added by plugins must return a promise",
           "code": 9,
-          "message": "%s invalid authenticator %s: expected a constructor.",
+          "message": "Unexpected return value from action \"%s:%s\": expected a Promise",
           "class": "PluginImplementationError"
         },
       }
