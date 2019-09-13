@@ -314,6 +314,8 @@ class HttpApi {
   }
 
   createCollection (index, collection, mappings) {
+    index = index || this.world.fakeIndex;
+
     const options = {
       url: this.apiPath(`${index}/${collection}`),
       method: 'PUT',

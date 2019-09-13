@@ -24,6 +24,20 @@ When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (ty
     .catch(error => callback(error));
 });
 
+When("I try to create the collection {string}", async function (collection) {
+  try {
+    const response = await this.api.createCollection(null, collection);
+
+    this.result = response;
+  } catch (error) {
+    this.result = { error };
+  }
+});
+
+When('I create a collection named {string} in index {string}', async function (collection, index) {
+  await this.api.createCollection(index, collection);
+});
+
 Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, collection, callback) {
   if (!this.result.collections) {
     return callback('Expected a collections list result, got: ' + this.result);

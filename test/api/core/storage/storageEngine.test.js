@@ -86,21 +86,6 @@ describe('StorageEngine', () => {
   });
 
   describe('#add', () => {
-    it('should add a single index to the index cache and emit an event', () => {
-      storageEngine.add({ index: 'foobar' });
-
-      should(storageEngine._indexes).have.keys('foobar');
-      should(storageEngine._indexes.foobar.scope).eql('public');
-      should(storageEngine._indexes.foobar.collections)
-        .be.an.Array()
-        .and.be.empty();
-      should(kuzzle.emit).be.calledWithMatch(
-        'core:indexCache:add',
-        {
-          index: 'foobar', scope: 'public'
-        });
-    });
-
     it('should add a new collection to the index cache and emit an event', () => {
       storageEngine.add({ index: 'foobar', collection: 'collection' });
 
@@ -126,8 +111,8 @@ describe('StorageEngine', () => {
       should(kuzzle.emit).be.calledOnce();
     });
 
-    it('should do nothing if no index is provided', () => {
-      storageEngine.add();
+    it('should do nothing if no collection is provided', () => {
+      storageEngine.add('foobar');
 
       should(storageEngine._indexes).be.empty();
       should(kuzzle.emit).not.be.called();
@@ -143,17 +128,6 @@ describe('StorageEngine', () => {
   describe('#remove', () => {
     beforeEach(() => {
       storageEngine.add({ index: 'foobar', collection: 'foolection', notify: false });
-    });
-
-    it('should remove an index from the cache and emit an event', () => {
-      storageEngine.remove({ index: 'foobar' });
-
-      should(storageEngine._indexes).be.empty();
-      should(kuzzle.emit).be.calledWithMatch(
-        'core:indexCache:remove',
-        {
-          index: 'foobar', scope: 'public'
-        });
     });
 
     it('should remove a single collection from the cache and emit an event', () => {
@@ -200,6 +174,12 @@ describe('StorageEngine', () => {
       storageEngine.remove({ index: 'foobar', collection: 'foolection', notify: false });
 
       should(kuzzle.emit).not.be.called();
+    });
+
+    it('should deletes the index when the last collection is removed', () => {
+      storageEngine.remove({ index: 'foobar', collection: 'foolection' });
+
+      should(storageEngine._indexes.foobar).be.undefined();
     });
   });
 

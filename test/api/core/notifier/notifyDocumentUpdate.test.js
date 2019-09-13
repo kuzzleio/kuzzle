@@ -49,7 +49,8 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
     return notifier.notifyDocumentUpdate(request)
       .then(() => {
-        should(kuzzle.storageEngine.public.get).calledOnce();
+        should(kuzzle.storageEngine.public.get)
+          .be.calledWith(index, collection, _id);
 
         should(kuzzle.realtime.test)
           .calledOnce()

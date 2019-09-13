@@ -45,15 +45,15 @@ AfterAll(function () {
     world = new World({parameters: parseWorldParameters()}),
     http = new Http(world);
 
-  // for (const index of [
-  //   world.fakeIndex,
-  //   world.fakeAltIndex,
-  //   world.fakeNewIndex,
-  //   'tolkien'
-  // ]) {
-  //   promises.push(http.deleteIndex(index)
-  //     .catch(() => true));
-  // }
+  for (const index of [
+    world.fakeIndex,
+    world.fakeAltIndex,
+    world.fakeNewIndex,
+    'tolkien'
+  ]) {
+    promises.push(http.deleteIndex(index)
+      .catch(() => true));
+  }
 
   return Bluebird.all(promises);
 });
@@ -77,7 +77,7 @@ Before({tags: '@security'}, function () {
 });
 
 After({tags: '@security'}, function () {
-  return cleanSecurity.call(this);
+  // return cleanSecurity.call(this);
 });
 
 Before({tags: '@firstAdmin'}, function () {
@@ -121,7 +121,9 @@ function cleanSecurity () {
         .filter(r => r._id.match(regex))
         .map(r => r._id);
 
-      return results.length > 0 ? this.api.deleteUsers(results, true) : Bluebird.resolve();
+      return results.length > 0
+        ? this.api.deleteUsers(results, true)
+        : Bluebird.resolve();
     })
     .then(() => this.api.searchProfiles({match_all: {}}, {from: 0, size: 999}))
     .then(results => {

@@ -261,7 +261,12 @@ module.exports = {
           },
           roles: {
             dynamic: 'false',
-            properties: {}
+            properties: {
+              controllers: {
+                dynamic: false,
+                properties: {}
+              }
+            }
           },
           validations: {
             properties: {

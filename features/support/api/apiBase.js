@@ -193,13 +193,14 @@ class ApiBase {
     return this.send(msg);
   }
 
-  createCollection (index, collection) {
+  createCollection (index, collection, mappings) {
     const
       msg = {
         controller: 'collection',
         action: 'create',
-        index,
-        collection
+        index: index || this.world.fakeIndex,
+        collection,
+        body: mappings
       };
 
     return this.send(msg);

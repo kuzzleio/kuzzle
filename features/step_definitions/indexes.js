@@ -24,6 +24,16 @@ When(/^I create an index named "([^"]*)"$/, async function (index) {
   this.result = body.result;
 });
 
+When("I try to create the index {string}", async function (index) {
+  try {
+    const response = await this.api.createIndex(index);
+
+    this.result = response;
+  } catch (error) {
+    this.result = { error };
+  }
+});
+
 Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, function (not, index, callback) {
   var main = function (callbackAsync) {
     this.api.listIndexes()

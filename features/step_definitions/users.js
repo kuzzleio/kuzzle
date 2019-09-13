@@ -116,6 +116,7 @@ Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, functi
 
     this.api.searchUsers(JSON.parse('{' + query + '}'))
       .then(body => {
+        console.log(body)
         if (body.error) {
           return cb(new Error(body.error.message));
         }
