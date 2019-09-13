@@ -52,7 +52,6 @@ describe('InternalIndexBootstrap', () => {
       await internalIndexBootstrap.startOrWait();
 
       sinon.assert.callOrder(
-        internalIndexBootstrap.createInternalCollections,
         SafeBootstrap.prototype.startOrWait,
         internalIndexBootstrap._getJWTSecret
       );
@@ -78,19 +77,6 @@ describe('InternalIndexBootstrap', () => {
         internalIndexBootstrap._persistJWTSecret,
         internalIndexStorage.create
       );
-    });
-  });
-
-  describe('#createInternalCollections', () => {
-    it('should create internal collections', async () => {
-      await internalIndexBootstrap.createInternalCollections();
-
-      should(internalIndexStorage.createCollection.callCount).be.eql(5);
-      should(internalIndexStorage.createCollection.getCall(0).args[0])
-        .be.eql('users');
-      should(internalIndexStorage.createCollection.getCall(4).args).be.eql([
-        'config',
-        { dynamic: false, properties: {} }]);
     });
   });
 

@@ -14,6 +14,8 @@ class IndexStorageMock extends IndexStorage {
 
     this.init = sinon.stub().resolves();
 
+    this.createCollections = sinon.stub().resolves();
+
     this._bootstrap = {
       startOrWait: sinon.stub().resolves()
     };

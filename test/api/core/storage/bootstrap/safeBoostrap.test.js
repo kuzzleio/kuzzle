@@ -30,11 +30,10 @@ describe('SafeBootstrap', () => {
     });
 
     it('should play the bootstrap sequence if it\'s the first node to start', async () => {
-      await bootstrap.startOrWait('liia');
+      await bootstrap.startOrWait();
 
       should(bootstrap._playBootstrap)
-        .be.calledOnce()
-        .be.calledWith('liia');
+        .be.calledOnce();
     });
 
     it('should reject if bootstrap on this node takes too long', async () => {
@@ -52,7 +51,7 @@ describe('SafeBootstrap', () => {
     it('should wait for bootstrap to finish if it\' currently playing on another node', async () => {
       bootstrap._isLocked.resolves(true);
 
-      await bootstrap.startOrWait('liia');
+      await bootstrap.startOrWait();
 
       should(bootstrap._waitTillUnlocked).be.calledOnce();
       should(bootstrap._playBootstrap).not.be.called();
@@ -62,7 +61,7 @@ describe('SafeBootstrap', () => {
       bootstrap._isLocked.resolves(true);
       bootstrap._waitTillUnlocked.rejects(new Error('timeout'));
 
-      const promise = bootstrap.startOrWait('liia');
+      const promise = bootstrap.startOrWait();
 
       return should(promise).be.rejected()
         .then(() => {
@@ -78,7 +77,7 @@ describe('SafeBootstrap', () => {
     });
 
     it('should call the _playSequence methods and then unlock the lock', async () => {
-      await bootstrap._playBootstrap('liia');
+      await bootstrap._playBootstrap();
 
       sinon.assert.callOrder(
         bootstrap._bootstrapSequence,
@@ -86,7 +85,7 @@ describe('SafeBootstrap', () => {
         bootstrap._unlock
       );
 
-      should(bootstrap._bootstrapSequence).be.calledWith('liia');
+      should(bootstrap._bootstrapSequence).be.calledWith();
     });
   });
 

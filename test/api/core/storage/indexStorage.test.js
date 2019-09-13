@@ -40,6 +40,27 @@ describe('IndexStorage', () => {
       should(indexStorage._storageEngine.createIndex).be.calledWith('kuzzle');
       should(indexStorage.bootstrap.startOrWait).be.called();
     });
+
+    it('should create provided collections', async () => {
+      const collections = {
+        users: {
+          properties: {
+            name: { type: 'keyword' }
+          }
+        },
+        tokens: {
+          properties: {
+            id: { type: 'keyword' }
+          }
+        }
+      };
+
+      await indexStorage.init(collections);
+
+      should(indexStorage._storageEngine.createCollection)
+        .be.calledWith('kuzzle', 'users', collections.users)
+        .be.calledWith('kuzzle', 'tokens', collections.tokens);
+    });
   });
 
   describe('raw methods', () => {

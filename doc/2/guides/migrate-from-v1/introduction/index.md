@@ -64,3 +64,15 @@ Dropped support for:
   - key `services.db` has been renamed in `services.storageEngine`
   - key `services.db.dynamic` has been moved to `services.storageEngine.commonMapping.dynamic` and is now `false` by default, meaning that Elasticsearch will not infer mapping of new introduced fields
   - key `services.memoryStorage` has been renamed in `services.publicCache`
+
+### Internal storage changes
+
+**New index and collection naming policy:**
+
+ - internal indexes: `%<index name>.<collection name>`
+ - public indexes: `&<index name>.<collection name>`
+
+**Internal datamodel changes:**
+
+  - `kuzzle` index and its collections changes according to our new naming policy
+  - plugins indexes changes from `plugin:<plugin name>` to `plugin-<plugin name>`
