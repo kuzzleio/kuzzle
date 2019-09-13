@@ -81,152 +81,121 @@
           "code": 13,
           "message": "A plugin named %s already exists",
           "class": "PluginImplementationError"
-        },
+        }
       }
     },
     "runtime": {
       "code": 2,
       "errors": {
-        "unavailable_realtime": {
-          "description": "Due to technical limitations, plugins have limited access to the realtime API controller",
-          "code": 1,
-          "message": "The method \"realtime:%s\" is unavailable in plugins. Use a plugin hook instead.",
-          "class": "PluginImplementationError"
-        },
         "failed_init": {
           "description": "An exception was thrown by a plugin's init function",
-          "code": 2,
+          "code": 1,
           "message": "Something went wrong during initialization of \"%s\" plugin.",
           "class": "PluginImplementationError"
         },
         "unexpected_error": {
           "description": "Embeds an unexpected plugin errors into a standardized KuzzleError object",
-          "code": 3,
+          "code": 2,
           "message": "Caught an unexpected plugin error: %s",
           "class": "PluginImplementationError"
         },
         "pipe_timeout": {
           "description": "A pipe function execution exceeded the defined delay. If needed, the allowed delay can be extended in Kuzzle's configuration",
-          "code": 4,
+          "code": 3,
           "message": "Plugin \"%s\": Timeout error. Pipe for event \"%s\" exceeded the timeout delay (%sms). Aborting.",
           "class": "GatewayTimeoutError"
-        },
-        "missing_collection": {
-          "code": 26,
-          "message": "The collection must be specified.",
-          "class": "PluginImplementationError"
-        },
-        "errors_configuration_file": {
-          "code": 28,
-          "message": "[%s] errors field in manifest.json badly formatted: %s",
-          "class": "PluginImplementationError"
-        },
-        "invalid_user_object": {
-          "code": 29,
-          "message": "You must provide a valid User object when adding context with as().",
-          "class": "PluginImplementationError"
-        },
-        "invalid_callback": {
-          "code": 30,
-          "message": "Invalid argument: Expected callback to be a function, received \"%s\".",
-          "class": "PluginImplementationError"
-        },
-        "missing_request": {
-          "code": 31,
-          "message": "Invalid argument: a Request object must be supplied.",
-          "class": "PluginImplementationError"
-        },
-        "missing_request_data": {
-          "code": 32,
-          "message": "A Request object and/or request data must be provided.",
-          "class": "PluginImplementationError"
-        },
+        }
       }
     },
     "strategy": {
       "code": 3,
       "errors" : {
-        "missing_authenticators": {
-          "code": 1,
-          "message": "[%s] Strategy %s: dynamic strategy registration can only be done using an \"authenticator\" option (see https://tinyurl.com/y7boozbk).",
-          "class": "PluginImplementationError"
-        },
         "invalid_description": {
-          "code": 2,
+          "description": "The strategy.description field must be an object",
+          "code": 1,
           "message": "%s expected the strategy description to be an object, got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_methods": {
-          "code": 3,
+          "description": "The strategy.methods field must be an object",
+          "code": 2,
           "message": "%s expected a \"methods\" property of type \"object\", got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_method_type": {
-          "code": 4,
+          "description": "Method definitions in the strategy.methods configuration must be of type string",
+          "code": 3,
           "message": "%s expected a \"%s\" property of type \"string\", got: %s.",
           "class": "PluginImplementationError"
         },
         "missing_method_function": {
-          "code": 5,
+          "description": "A required strategy method is missing",
+          "code": 4,
           "message": "%s the strategy method \"%s\" must point to an exposed function.",
           "class": "PluginImplementationError"
         },
-        "invalid_property_type": {
-          "code": 6,
-          "message": "%s expected the \"%s\" property to be of type \"string\", got: %s.",
-          "class": "PluginImplementationError"
-        },
         "invalid_config": {
-          "code": 7,
+          "description": "The strategy.config field must be an object",
+          "code": 5,
           "message": "%s expected a \"config\" property of type \"object\", got: %s.",
           "class": "PluginImplementationError"
         },
         "unexpected_constructor": {
-          "code": 8,
+          "description": "The (deprecated) constructor property can only be set if there is no authenticator defined",
+          "code": 6,
           "message": "%s the \"authenticator\" and \"constructor\" parameters cannot both be set.",
           "class": "PluginImplementationError"
         },
         "invalid_constructor": {
-          "code": 9,
+          "description": "The strategy.constructor field must be a constructor",
+          "code": 7,
           "message": "%s invalid \"constructor\" property value: constructor expected.",
           "class": "PluginImplementationError"
         },
         "invalid_authenticator": {
-          "code": 10,
+          "description": "The strategy.authenticator field must be a string",
+          "code": 8,
           "message": "%s expected an \"authenticator\" property of type \"string\", got: %s.",
           "class": "PluginImplementationError"
         },
         "unknown_authenticator": {
-          "code": 11,
+          "description": "This strategy uses an authenticator that hasn't been declared in this.authenticators",
+          "code": 9,
           "message": "%s unknown authenticator: %s.",
           "class": "PluginImplementationError"
         },
         "expected_object": {
-          "code": 12,
+          "description": "Expected an object property, but another type was used instead",
+          "code": 10,
           "message": "%s expected the \"%s\" property to be of type \"object\", got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_fields": {
-          "code": 13,
+          "description": "The field strategy.config.fields must be an array or null",
+          "code": 11,
           "message": "%s expected the \"fields\" property to be of type \"array\", got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_definition": {
-          "code": 14,
+          "description": "The strategies property must be a non-empty object",
+          "code": 12,
           "message": "%s the exposed \"strategies\" plugin property must be a non-empty object.",
           "class": "PluginImplementationError"
         },
         "failed_registration": {
-          "code": 15,
+          "description": "Passportjs rejected this strategy (see the message for more information)",
+          "code": 13,
           "message": "Failed to register strategy \"%s\": %s",
           "class": "PluginImplementationError"
         },
         "expected_promise": {
-          "code": 16,
+          "description": "A strategy method was expected to return a promise, but didn't",
+          "code": 14,
           "message": "%s \"%s\" was expected to return a Promise, got: %s.",
           "class": "PluginImplementationError"
         },
         "invalid_result": {
+          "description": "The result returned by the strategy's authentication method must be an object",
           "code": 17,
           "message": "%s invalid authentication strategy result (expected an object).",
           "class": "PluginImplementationError"
@@ -348,6 +317,64 @@
         "missing_name": {
           "code": 4,
           "message": "[%s/manifest.json] A \"name\" property is required.",
+          "class": "PluginImplementationError"
+        },
+        "invalid_errors": {
+          "description": "The 'errors' property format is invalid",
+          "code": 5,
+          "message": "[%s] errors field in manifest.json badly formatted: %s",
+          "class": "PluginImplementationError"
+        }
+      }
+    },
+    "context": {
+      "code": 6,
+      "errors": {
+        "missing_collection": {
+          "description": "The 'collection' argument is required, but none was provided",
+          "code": 1,
+          "message": "Missing collection argument.",
+          "class": "PluginImplementationError"
+        },
+        "unavailable_realtime": {
+          "description": "Due to technical limitations, plugins have limited access to the realtime API controller",
+          "code": 2,
+          "message": "The method \"realtime:%s\" is unavailable in plugins. Use a plugin hook instead.",
+          "class": "PluginImplementationError"
+        },
+        "invalid_user": {
+          "description": "The user object provided to the sdk.as() method is not of type User",
+          "code": 3,
+          "message": "You must provide a valid User object when adding context with as().",
+          "class": "PluginImplementationError"
+        },
+        "invalid_callback": {
+          "description": "A non-function callback has been provided",
+          "code": 4,
+          "message": "Invalid argument: Expected callback to be a function, received \"%s\".",
+          "class": "PluginImplementationError"
+        },
+        "missing_request": {
+          "description": "A Request object is required, but none was supplied",
+          "code": 5,
+          "message": "Invalid argument: a Request object must be supplied.",
+          "class": "PluginImplementationError"
+        },
+        "missing_request_data": {
+          "description": "A Request object and/or request data must be provided",
+          "code": 6,
+          "message": "A Request object and/or request data must be provided.",
+          "class": "PluginImplementationError"
+        },
+        "invalid_event": {
+          "description": "Invalid event name (colons are not allowed in event names)",
+          "code": 7,
+          "message": "Custom event invalid name (%s). Colons are not allowed in custom events.",
+          "class": "PluginImplementationError"
+        },
+        "missing_authenticators": {
+          "code": 8,
+          "message": "[%s] Strategy %s: dynamic strategy registration can only be done using an \"authenticator\" option (see https://tinyurl.com/y7boozbk).",
           "class": "PluginImplementationError"
         }
       }
