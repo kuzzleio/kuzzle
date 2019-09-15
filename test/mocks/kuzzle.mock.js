@@ -338,44 +338,4 @@ class KuzzleMock extends Kuzzle {
   }
 }
 
-
-function getESMock (kuzzleMock, scope) {
-  return {
-    scope,
-    indexPrefix: scope === 'public'
-      ? '&'
-      : '%',
-    info: kuzzleMock.sandbox.stub().resolves(),
-    scroll: kuzzleMock.sandbox.stub().resolves(),
-    search: kuzzleMock.sandbox.stub().resolves(),
-    get: kuzzleMock.sandbox.stub().resolves(),
-    mGet: kuzzleMock.sandbox.stub().resolves(),
-    count: kuzzleMock.sandbox.stub().resolves(),
-    create: kuzzleMock.sandbox.stub().resolves(),
-    createOrReplace: kuzzleMock.sandbox.stub().resolves(),
-    update: kuzzleMock.sandbox.stub().resolves(),
-    replace: kuzzleMock.sandbox.stub().resolves(),
-    delete: kuzzleMock.sandbox.stub().resolves(),
-    deleteByQuery: kuzzleMock.sandbox.stub().resolves(),
-    createIndex: kuzzleMock.sandbox.stub().resolves(),
-    createCollection: kuzzleMock.sandbox.stub().resolves(),
-    getMapping: kuzzleMock.sandbox.stub().resolves(),
-    truncateCollection: kuzzleMock.sandbox.stub().resolves(),
-    import: kuzzleMock.sandbox.stub().resolves(),
-    listCollections: kuzzleMock.sandbox.stub().resolves(),
-    listIndexes: kuzzleMock.sandbox.stub().resolves(),
-    listAliases: kuzzleMock.sandbox.stub().resolves(),
-    deleteIndexes: kuzzleMock.sandbox.stub().resolves(),
-    deleteIndex: kuzzleMock.sandbox.stub().resolves(),
-    refreshCollection: kuzzleMock.sandbox.stub().resolves(),
-    exists: kuzzleMock.sandbox.stub().resolves(),
-    indexExists: kuzzleMock.sandbox.stub().resolves(),
-    collectionExists: kuzzleMock.sandbox.stub().resolves(),
-    mCreate: kuzzleMock.sandbox.stub().resolves(),
-    mCreateOrReplace: kuzzleMock.sandbox.stub().resolves(),
-    mUpdate: kuzzleMock.sandbox.stub().resolves(),
-    mReplace: kuzzleMock.sandbox.stub().resolves(),
-    mDelete: kuzzleMock.sandbox.stub().resolves()
-  };
-}
 module.exports = KuzzleMock;
