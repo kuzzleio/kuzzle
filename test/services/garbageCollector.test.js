@@ -12,7 +12,7 @@ const
   oneHour = 3600000,
   oneDay = oneHour * 24;
 
-xdescribe('Test: GarbageCollector service', () => {
+describe('Test: GarbageCollector service', () => {
   let
     GarbageCollector,
     gc,

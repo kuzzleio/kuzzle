@@ -18,7 +18,7 @@ const
   } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-xdescribe('Test the auth controller', () => {
+describe('Test the auth controller', () => {
   let
     request,
     kuzzle,

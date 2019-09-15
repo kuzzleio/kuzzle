@@ -9,7 +9,7 @@ const
   mockAssertions = require('../../mocks/mockAssertions'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-xdescribe('Test the bulk controller', () => {
+describe('Test the bulk controller', () => {
   let
     controller,
     kuzzle,
