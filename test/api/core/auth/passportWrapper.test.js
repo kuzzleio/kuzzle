@@ -102,7 +102,7 @@ describe('Test the passport Wrapper', () => {
       .catch(err => {
         try {
           should(err).be.instanceOf(PluginImplementationError);
-          should(err.message).startWith('foobar.\n');
+          should(err.message).startWith('foobar\n');
           done();
         }
         catch (e) {

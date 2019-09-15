@@ -1760,6 +1760,66 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#listAliases', () => {
+    beforeEach(() => {
+      elasticsearch.client.cat.aliases.resolves({
+        body: [
+          { alias: 'alias-mehry', index: '&nepali.mehry' },
+          { alias: 'alias-liia', index: '&nepali.liia' },
+          { alias: 'alias-taxi', index: '&nyc-open-data.taxi' }
+        ]
+      });
+    });
+
+    it('should allow listing all available aliases', () => {
+      const promise = elasticsearch.listAliases();
+
+      return promise
+        .then(result => {
+          should(elasticsearch.client.cat.aliases).be.calledWithMatch({
+            format: 'json'
+          });
+
+          should(result).match([
+            { name: 'alias-mehry', index: 'nepali', collection: 'mehry' },
+            { name: 'alias-liia', index: 'nepali', collection: 'liia' },
+            { name: 'alias-taxi', index: 'nyc-open-data', collection: 'taxi' },
+          ]);
+        });
+    });
+
+    it('should not list unauthorized aliases', () => {
+      elasticsearch.client.cat.aliases.resolves({
+        body: [
+          { alias: 'alias-mehry', index: '%nepali.mehry' },
+          { alias: 'alias-liia', index: '%nepali.liia' },
+          { alias: 'alias-taxi', index: '%nyc-open-data.taxi' },
+          { alias: 'alias-lfiduras', index: '&vietnam.lfiduras' }
+        ]
+      });
+
+      const promise = elasticsearch.listAliases();
+
+      return promise
+        .then(result => {
+          should(result).match([
+            { name: 'alias-lfiduras', index: 'vietnam', collection: 'lfiduras' },
+          ]);
+        });
+    });
+
+    it('should return a rejected promise if client fails', () => {
+      elasticsearch.client.cat.aliases.rejects(esClientError);
+
+      const promise = elasticsearch.listAliases();
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+  });
+
   describe('#deleteIndexes', () => {
     beforeEach(() => {
       elasticsearch._client.cat.indices.resolves({

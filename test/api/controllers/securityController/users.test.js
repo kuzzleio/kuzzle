@@ -19,7 +19,7 @@ const
   } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
-describe('Test: security controller - users', () => {
+xdescribe('Test: security controller - users', () => {
   let
     kuzzle,
     request,

@@ -19,7 +19,7 @@ const
  the shutdown is initiated using the CLI, to allow it
  to finish and exit while Kuzzle is shutting down.
  */
-describe('Test: core/janitor', () => {
+xdescribe('Test: core/janitor', () => {
   let
     Janitor,
     janitor,

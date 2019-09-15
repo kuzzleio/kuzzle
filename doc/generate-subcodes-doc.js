@@ -19,14 +19,17 @@
  * limitations under the License.
  */
 
-const path = '../lib/config/error-codes/';
+const path = `${__dirname}/../lib/config/error-codes/`;
+
+const
+  internal = require(`${path}internal`),
+  external = require(`${path}external`),
+  api = require(`${path}/api`),
+  network = require(`${path}network`),
+  plugins = require(`${path}plugins`),
+  fs = require('fs');
+
 const kuzzleVersion = 2;
-const internal = require(`${path}internal`);
-const external = require(`${path}external`);
-const api = require(`${path}/api`);
-const network = require(`${path}network`);
-const plugins = require(`${path}plugins`);
-const fs = require('fs');
 
 function buildSubcodesDoc(errorCodesFiles) {
 
@@ -35,7 +38,7 @@ function buildSubcodesDoc(errorCodesFiles) {
   doc += '[//]: # (If you want to update this page, it is useless to modify this markdown file)\n';
   doc += '[//]: # (You have to use the script once you modify the json files where subcodes are defined)\n';
   doc += '[//]: # (Execute at the root of the repo : npm doc-generate-subcodes)\n\n';
-  doc += '# Error subcodes definitions\n'
+  doc += '# Error subcodes definitions\n';
   for (const domainName of Object.keys(errorCodesFiles)) {
     const domain = errorCodesFiles[domainName];
 
@@ -51,7 +54,7 @@ function buildSubcodesDoc(errorCodesFiles) {
         const code = domain.code << 24
           | subdomain.code << 16
           | error.code;
-        doc += `\`${code}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/${kuzzleVersion}/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
+        doc += `\`${code}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](o/core/${kuzzleVersion}/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
       }
       doc += '\n---\n';
     }
@@ -59,7 +62,7 @@ function buildSubcodesDoc(errorCodesFiles) {
   }
   const output = process.argv[2] === '-o' || process.argv[2] === '--output'
     ? process.argv[3]
-    : `./${kuzzleVersion}/api/essentials/errors/subcodes/index.md`;
+    : `${__dirname}/${kuzzleVersion}/api/essentials/errors/subcodes/index.md`;
   fs.writeFileSync(output, doc);
 }
 

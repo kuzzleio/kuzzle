@@ -12,7 +12,7 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-describe('Test: collection controller', () => {
+xdescribe('Test: collection controller', () => {
   let
     collectionController,
     kuzzle,
@@ -28,7 +28,6 @@ describe('Test: collection controller', () => {
     };
 
     kuzzle = new KuzzleMock();
-
     collectionController = new CollectionController(kuzzle);
 
     request = new Request(data);

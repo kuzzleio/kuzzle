@@ -9,7 +9,7 @@ title: core:hotelClerk:removeRoomForCustomer
 
 | Arguments        | Type              | Description                                                                                  |
 | -----------------| ----------------- | -------------------------------------------------------------------------------------------- |
-| `RequestContest` | <pre>object</pre> | [requestContext](https://docs.kuzzle.io/core/1/protocols/api/context/requestcontext/) object |
+| `RequestContest` | <pre>object</pre> | [requestContext](/core/2/protocols/api/context/requestcontext/) object |
 | `room`           | <pre>object</pre> | Joined room information in Koncorde format                                                   |
 
 Triggered whenever a user is removed from a room. 

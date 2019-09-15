@@ -27,7 +27,6 @@ describe('DocumentController', () => {
     collection = 'huma';
 
     kuzzle = new KuzzleMock();
-
     documentController = new DocumentController(kuzzle);
 
     request = new Request({
