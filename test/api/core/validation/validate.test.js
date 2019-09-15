@@ -341,13 +341,12 @@ describe('Test: validation.validate', () => {
       return validation.validate(request, verbose)
         .then(result => {
           should(result).be.eql(request);
-          should(kuzzle.storageEngine.public.get).calledOnce();
-          should(kuzzle.storageEngine.public.get.firstCall.args[0]).instanceOf(Request);
-          should(kuzzle.storageEngine.public.get.firstCall.args[0].input.resource).match({
+          should(kuzzle.storageEngine.public.get).be.calledOnce();
+          should(kuzzle.storageEngine.public.get).be.calledWith(
             index,
             collection,
-            _id: 'foo'
-          });
+            'foo'
+          );
         });
     });
   });

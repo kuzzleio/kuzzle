@@ -69,7 +69,7 @@ describe('Test: security controller - users', () => {
             .be.calledWith('users');
 
           should(response).be.instanceof(Object);
-          should(response).match({ foo: 'bar' });
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });
@@ -143,7 +143,7 @@ describe('Test: security controller - users', () => {
       return securityController.searchUsers(request)
         .then(() => {
           should(kuzzle.repositories.user.search)
-            .be.calledWith({aggregations: 'aggregations'}, {});
+            .be.calledWithMatch({ aggregations: 'aggregations' });
 
           // highlight only
           return securityController.searchUsers(new Request({
@@ -154,24 +154,24 @@ describe('Test: security controller - users', () => {
         })
         .then(() => {
           should(kuzzle.repositories.user.search)
-            .be.calledWith({highlight: 'highlight'}, {});
+            .be.calledWithMatch({ highlight: 'highlight' });
 
           // all in one
           return securityController.searchUsers(new Request({
             body: {
-              query: 'query',
+              query: { match_all: {} },
               aggregations: 'aggregations',
               highlight: 'highlight'
             }
           }));
         })
         .then(() => {
-          should(kuzzle.repositories.user.search)
-            .be.calledWith({
+          should(kuzzle.repositories.user.search).be.calledWithMatch(
+            {
               aggregations: 'aggregations',
               highlight: 'highlight',
-              query: 'query'
-            }, {});
+              query: { match_all: {} },
+            });
         });
     });
 

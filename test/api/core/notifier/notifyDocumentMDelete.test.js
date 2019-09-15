@@ -28,7 +28,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
     notifier.notifyDocument = sinon.stub();
   });
 
-  it('should do nothing if no id is provided', () => {
+  it('should do nothing if no document is provided', () => {
     return notifier.notifyDocumentMDelete(request, [])
       .then(() => {
         should(notifier.notifyDocument).not.be.called();
@@ -65,13 +65,13 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
 
     kuzzle.realtime.test.returns(['foo', 'bar']);
     kuzzle.storageEngine.public.mGet.resolves({
-      hits: [
-        {_id: 'foobar', _source: stillAlive._source, _meta: stillAlive._meta}
+      items: [
+        {_id: 'foobar', ...stillAlive }
       ],
       total: 1
     });
 
-    return notifier.notifyDocumentMDelete(request, ['foobar'])
+    return notifier.notifyDocumentMDelete(request, [{_id: 'foobar', ...stillAlive }])
       .then(() => {
         should(notifier.notifyDocument)
           .calledOnce()
@@ -83,17 +83,17 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
   });
 
   it('should notify for each document when multiple document have been deleted', () => {
-    var ids = ['foo', 'bar'];
+    const documents = [{ _id: 'foo' }, { _id: 'bar' }];
 
     kuzzle.storageEngine.public.mGet.resolves({
-      hits: [
+      items: [
         {_id: 'foo'},
         {_id: 'bar'}
       ],
       total: 2
     });
 
-    return notifier.notifyDocumentMDelete(request, ids)
+    return notifier.notifyDocumentMDelete(request, documents)
       .then(() => {
         should(notifier.notifyDocument.callCount).be.eql(2);
         should(notifier.notifyDocument.getCall(0).args[5]._id).be.eql('foo');

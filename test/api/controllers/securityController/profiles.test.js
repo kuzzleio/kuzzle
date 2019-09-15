@@ -65,7 +65,7 @@ describe('Test: security controller - profiles', () => {
             .be.calledWith('profiles');
 
           should(response).be.instanceof(Object);
-          should(response).match({ foo: 'bar' });
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });

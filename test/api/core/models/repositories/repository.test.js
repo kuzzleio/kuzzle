@@ -61,7 +61,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#loadMultiFromDatabase', () => {
     it('should return an empty array for an non existing id', () => {
-      repository.indexStorage.mGet.resolves({hits: []});
+      repository.indexStorage.mGet.resolves({items: []});
       return repository.loadMultiFromDatabase([-999, -998, -997])
         .then(results => should(results).be.an.Array().and.have.length(0));
     });
@@ -72,7 +72,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a list of plain object', () => {
-      repository.indexStorage.mGet.resolves({hits: [dbPojo, dbPojo]});
+      repository.indexStorage.mGet.resolves({items: [dbPojo, dbPojo]});
 
       return repository.loadMultiFromDatabase(['persisted', 'persisted'])
         .then(results => {
@@ -87,7 +87,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should handle list of objects as an argument', () => {
-      repository.indexStorage.mGet.resolves({hits: [dbPojo, dbPojo]});
+      repository.indexStorage.mGet.resolves({items: [dbPojo, dbPojo]});
 
       return repository.loadMultiFromDatabase([{_id:'persisted'}, {_id:'persisted'}])
         .then(results => {
@@ -102,7 +102,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should respond with an empty array if no result found', () => {
-      repository.indexStorage.mGet.resolves({ hits: [] });
+      repository.indexStorage.mGet.resolves({ items: [] });
 
       return repository.loadMultiFromDatabase([{_id:'null'}])
         .then(results => {
@@ -442,7 +442,7 @@ describe('Test: repositories/repository', () => {
           should(response).be.an.Object();
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
-          should(repository.indexStorage.scroll).be.calledWithMatch(repository.collection, 'foo', undefined);
+          should(repository.indexStorage.scroll).be.calledWithMatch('foo', undefined);
         });
     });
 
@@ -459,7 +459,7 @@ describe('Test: repositories/repository', () => {
           should(response.hits).be.an.Array();
           should(response.total).be.exactly(1);
           should(response.scrollId).be.eql('foobar');
-          should(repository.indexStorage.scroll).be.calledWithMatch(repository.collection, 'foo', 'bar');
+          should(repository.indexStorage.scroll).be.calledWithMatch('foo', 'bar');
         });
     });
 

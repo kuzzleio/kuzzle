@@ -4,7 +4,6 @@ const
   should = require('should'),
   sinon = require('sinon'),
   ms = require('ms'),
-  _ = require('lodash'),
   KuzzleMock = require('../mocks/kuzzle.mock'),
   ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
   ES = require('../../lib/services/elasticsearch');

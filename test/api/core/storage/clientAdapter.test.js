@@ -71,7 +71,7 @@ describe('ClientAdapter', () => {
     });
 
     it('should use index cache to assert index existence and call client method', async () => {
-      const method = clientAdapter._assertIndexMethods[1];
+      const method = clientAdapter._assertIndexMethods[0];
       clientAdapter._client[method].resolves('ret');
 
       const ret = await clientAdapter[method](
@@ -114,22 +114,18 @@ describe('ClientAdapter', () => {
   });
 
   describe('#createIndex', () => {
-    it('should call client method and add index to cache', async () => {
+    it('should call client method', async () => {
       clientAdapter._client.createIndex.resolves('ret');
 
       const ret = await clientAdapter.createIndex('index');
 
       should(ret).be.eql('ret');
       should(clientAdapter._client.createIndex).be.calledWith('index');
-      should(clientAdapter._indexCache.add).be.calledWithMatch({
-        index: 'index',
-        scope: 'public'
-      });
     });
   });
 
   describe('#createCollection', () => {
-    it('should call client method and add index/collection to cache', async () => {
+    it('should call client method and add collection to cache', async () => {
       clientAdapter._client.createCollection.resolves('ret');
 
       const ret = await clientAdapter.createCollection(
@@ -145,25 +141,17 @@ describe('ClientAdapter', () => {
         collection: 'collection',
         scope: 'public'
       });
-      should(indexCache.exists).be.calledWithMatch({
-        index: 'index',
-        scope: 'public'
-      });
     });
   });
 
   describe('#deleteIndex', () => {
-    it('should call client method and remove index from cache', async () => {
+    it('should call client method', async () => {
       clientAdapter._client.deleteIndex.resolves('ret');
 
       const ret = await clientAdapter.deleteIndex('index');
 
       should(ret).be.eql('ret');
       should(clientAdapter._client.deleteIndex).be.calledWith('index');
-      should(clientAdapter._indexCache.remove).be.calledWithMatch({
-        index: 'index',
-        scope: 'public'
-      });
       should(indexCache.exists).be.calledWithMatch({
         index: 'index',
         scope: 'public'
@@ -172,7 +160,7 @@ describe('ClientAdapter', () => {
   });
 
   describe('#deleteIndexes', () => {
-    it('should call client method and remove indexes from cache', async () => {
+    it('should call client method', async () => {
       clientAdapter._client.deleteIndexes.resolves('ret');
 
       const ret = await clientAdapter.deleteIndexes(['index1', 'index2']);
@@ -180,22 +168,6 @@ describe('ClientAdapter', () => {
       should(ret).be.eql('ret');
       should(clientAdapter._client.deleteIndexes)
         .be.calledWith(['index1', 'index2']);
-      should(clientAdapter._indexCache.remove).be.calledWithMatch({
-        index: 'index1',
-        scope: 'public'
-      });
-      should(clientAdapter._indexCache.remove).be.calledWithMatch({
-        index: 'index2',
-        scope: 'public'
-      });
-      should(indexCache.exists).be.calledWithMatch({
-        index: 'index1',
-        scope: 'public'
-      });
-      should(indexCache.exists).be.calledWithMatch({
-        index: 'index2',
-        scope: 'public'
-      });
     });
   });
 });

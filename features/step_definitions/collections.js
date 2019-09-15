@@ -24,7 +24,7 @@ When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (ty
     .catch(error => callback(error));
 });
 
-When("I try to create the collection {string}", async function (collection) {
+When('I try to create the collection {string}', async function (collection) {
   try {
     const response = await this.api.createCollection(null, collection);
 

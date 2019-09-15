@@ -89,7 +89,7 @@ describe('IndexStorage', () => {
 
       should(indexStorage._storageEngine.scroll).be.calledWith(
         'scroll-id',
-        { scroll: '15m' });
+        { scrollTTL: '15m' });
     });
   });
 

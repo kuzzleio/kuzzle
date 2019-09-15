@@ -273,16 +273,6 @@ describe('#base controller', () => {
         baseController.getId(request);
       }).throw({ errorName: 'api.base.wrong_id_type' });
     });
-
-    it('should throw if the id is the wrong format', () => {
-      request.input.resource = {
-        _id: '_id'
-      };
-
-      should(() => {
-        baseController.getId(request);
-      }).throw({ errorName: 'api.base.wrong_id_format' });
-    });
   });
 
   describe('#getUserId', () => {
@@ -316,11 +306,11 @@ describe('#base controller', () => {
 
     it('should extract search params', () => {
       const
-        { from, size, scroll, query, searchBody } = baseController.getSearchParams(request);
+        { from, size, scrollTTL, query, searchBody } = baseController.getSearchParams(request);
 
       should(from).be.eql(1);
       should(size).be.eql(11);
-      should(scroll).be.eql('10m');
+      should(scrollTTL).be.eql('10m');
       should(query).be.eql({ foo: 'bar' });
       should(searchBody).be.eql({ query: { foo: 'bar' } });
     });
@@ -330,11 +320,11 @@ describe('#base controller', () => {
       request.input.body = {};
 
       const
-        { from, size, scroll, query, searchBody } = baseController.getSearchParams(request);
+        { from, size, scrollTTL, query, searchBody } = baseController.getSearchParams(request);
 
       should(from).be.eql(0);
       should(size).be.eql(10);
-      should(scroll).be.undefined();
+      should(scrollTTL).be.undefined();
       should(query).be.eql({});
       should(searchBody).be.eql({});
     });

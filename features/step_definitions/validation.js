@@ -113,7 +113,7 @@ When(/^I post a(n in)? ?valid ?specification$/, {}, function(not, callback) {
     index = this.fakeIndex,
     collection = this.fakeCollection,
     specifications = not ? notValidSpecifications : validSpecifications,
-    body = specifications
+    body = specifications;
 
   this.api.validateSpecifications(
     index,

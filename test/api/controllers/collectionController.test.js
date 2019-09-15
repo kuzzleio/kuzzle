@@ -179,7 +179,7 @@ describe('Test: collection controller', () => {
         .then(response => {
           should(kuzzle.internalIndex.search).be.calledWithMatch(
             'validations',
-            request.input.body.query,
+            request.input.body,
             {
               from: request.input.args.from,
               size: request.input.args.size,
@@ -218,7 +218,6 @@ describe('Test: collection controller', () => {
       const response = await collectionController.scrollSpecifications(request);
 
       should(kuzzle.internalIndex.scroll).be.calledWithMatch(
-        'validations',
         'foobar',
         collectionController.defaultScrollTTL);
 
@@ -241,7 +240,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.scrollSpecifications(request);
 
       should(kuzzle.internalIndex.scroll)
-        .be.calledWithMatch('validations', 'foobar', 'qux');
+        .be.calledWithMatch('foobar', 'qux');
 
       should(response).match({
         total: 123,

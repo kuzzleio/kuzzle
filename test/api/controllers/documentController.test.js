@@ -122,10 +122,8 @@ describe('DocumentController', () => {
       const response = await documentController.scroll(request);
 
       should(documentController.publicStorage.scroll).be.calledWith(
-        index,
-        collection,
         'SomeScrollIdentifier',
-        { scroll: '1m' });
+        { scrollTTL: '1m' });
 
       should(response).match({
         scrollId: 'scrollId',
@@ -192,7 +190,7 @@ describe('DocumentController', () => {
       };
 
       documentController.publicStorage.mGet.resolves(({
-        result: [
+        items: [
           { _id: 'id', _source: 'source', _version: 1, found: true, some: 'some' },
           { _id: 'id2', _source: 'source', _version: 1, found: true, some: 'some' }
         ],
@@ -227,7 +225,7 @@ describe('DocumentController', () => {
 
     it('should set a partial error if some documents are missing', async () => {
       documentController.publicStorage.mGet.resolves(({
-        result: [
+        items: [
           { _id: 'id', _source: 'source', _version: 1, found: true, some: 'some' }
         ],
         errors: [
@@ -261,7 +259,7 @@ describe('DocumentController', () => {
         collection,
         { query: {} });
 
-      should(response).be.eql(42);
+      should(response).be.eql({ count: 42 });
     });
   });
 
@@ -325,7 +323,7 @@ describe('DocumentController', () => {
   describe('#_mChanges', () => {
     let
       documents,
-      result;
+      items;
 
     beforeEach(() => {
       documents = [
@@ -336,14 +334,14 @@ describe('DocumentController', () => {
 
       request.input.body = { documents };
 
-      result = [
+      items = [
         { _id: '_id1', _source: '_source', _version: '_version', created: true, result: 'created' },
         { _id: '_id2', _source: '_source', _version: '_version', created: true, result: 'created' },
         { _id: '_id3', _source: '_source', _version: '_version', created: true, result: 'created' }
       ];
 
       documentController.publicStorage.mCreate.resolves(({
-        result,
+        items,
         errors: []
       }));
     });
@@ -362,11 +360,11 @@ describe('DocumentController', () => {
 
       should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
         request,
-        result,
+        items,
         true);
 
       should(response).match({
-        result,
+        hits: items,
         errors: []
       });
     });
@@ -383,7 +381,7 @@ describe('DocumentController', () => {
 
     it('should set a partial error if some actions failed', async () => {
       documentController.publicStorage.mCreate.resolves(({
-        result,
+        items,
         errors: [
           {
             document: { _id: '_id42', _source: '_source' },
@@ -595,6 +593,10 @@ describe('DocumentController', () => {
 
   describe('#delete', () => {
     it('should call publicStorage delete method and notify', async () => {
+      documentController.publicStorage.get.resolves({
+        _id: 'foobar',
+        _source: '_source'
+      });
       request.input.resource._id = 'foobar';
 
       const response = await documentController.delete(request);
@@ -608,7 +610,7 @@ describe('DocumentController', () => {
 
       should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
         request,
-        ['foobar']);
+        [{ _id: 'foobar', _source: '_source' }]);
 
       should(response).match({
         _id: 'foobar'
@@ -619,17 +621,21 @@ describe('DocumentController', () => {
   describe('#mDelete', () => {
     let
       ids,
-      result;
+      documents;
 
     beforeEach(() => {
       ids = ['id1', 'id2', 'id3'];
 
       request.input.body = { ids };
 
-      result = ['id1', 'id2', 'id3'];
+      documents = [
+        { _id: 'id1', _source: '_source1' },
+        { _id: 'id2', _source: '_source2' },
+        { _id: 'id3', _source: '_source3' }
+      ];
 
       documentController.publicStorage.mDelete.resolves(({
-        result,
+        documents,
         errors: []
       }));
     });
@@ -645,14 +651,15 @@ describe('DocumentController', () => {
         ids,
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(request, result);
+      should(kuzzle.notifier.notifyDocumentMDelete)
+        .be.calledWith(request, documents);
 
-      should(response).match(result);
+      should(response).match(['id1', 'id2', 'id3']);
     });
 
     it('should set a partial error if some actions failed', async () => {
       documentController.publicStorage.mDelete.resolves(({
-        result,
+        documents,
         errors: [
           { id: 'id1', reason: 'reason' }
         ]
@@ -671,7 +678,10 @@ describe('DocumentController', () => {
   describe('#deleteByQuery', () => {
     beforeEach(() => {
       documentController.publicStorage.deleteByQuery.resolves(({
-        ids: ['id1', 'id2'],
+        documents: [
+          { _id: 'id1', _source: '_source1' },
+          { _id: 'id2', _source: '_source2' }
+        ],
         total: 2,
         deleted: 2,
         failures: []
@@ -692,9 +702,12 @@ describe('DocumentController', () => {
 
       should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
         request,
-        ['id1', 'id2']);
+        [
+          { _id: 'id1', _source: '_source1' },
+          { _id: 'id2', _source: '_source2' }
+        ]);
 
-      should(response).be.eql(['id1', 'id2']);
+      should(response).be.eql({ ids: ['id1', 'id2'] });
     });
   });
 

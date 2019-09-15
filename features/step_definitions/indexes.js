@@ -12,7 +12,8 @@ When(/^I create an index named "([^"]*)"$/, async function (index) {
     await this.api.deleteIndex(index);
   }
 
-  const body = await this.api.createIndex(index)
+  const body = await this.api.createIndex(index);
+
   if (body.error) {
     throw new Error(body.error.message);
   }
@@ -24,7 +25,7 @@ When(/^I create an index named "([^"]*)"$/, async function (index) {
   this.result = body.result;
 });
 
-When("I try to create the index {string}", async function (index) {
+When('I try to create the index {string}', async function (index) {
   try {
     const response = await this.api.createIndex(index);
 

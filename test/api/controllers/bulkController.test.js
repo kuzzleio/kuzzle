@@ -50,7 +50,7 @@ describe('Test the bulk controller', () => {
       request.input.body = { bulkData };
 
       controller.publicStorage.import.resolves({
-        result: ['fake', 'data'],
+        items: ['fake', 'data'],
         errors: []
       });
     });
@@ -69,7 +69,7 @@ describe('Test the bulk controller', () => {
 
     it('should handle partial errors', async () => {
       controller.publicStorage.import.resolves({
-        result: [],
+        items: [],
         errors: ['fake', 'data']
       });
 
@@ -158,7 +158,7 @@ describe('Test the bulk controller', () => {
       ];
 
       controller.publicStorage.mCreateOrReplace.resolves({
-        result: mCreateOrReplaceResult,
+        items: mCreateOrReplaceResult,
         errors: []
       });
     });
