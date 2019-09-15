@@ -340,7 +340,7 @@ describe('#base controller', () => {
     });
   });
 
-  describe('#getScrollParam', () => {
+  describe('#getScrollTTLParam', () => {
     beforeEach(() => {
       request.input.args = {
         scroll: '10s'
@@ -348,7 +348,7 @@ describe('#base controller', () => {
     });
 
     it('should extract scroll param', () => {
-      const param = baseController.getScrollParam(request);
+      const param = baseController.getScrollTTLParam(request);
 
       should(param).be.eql('10s');
     });
@@ -357,7 +357,7 @@ describe('#base controller', () => {
       request.input.args.scroll = 32;
 
       should(() => {
-        baseController.getScrollParam(request);
+        baseController.getScrollTTLParam(request);
       }).throw({ errorName: 'api.base.invalid_param_type' });
     });
   });

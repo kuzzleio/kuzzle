@@ -80,31 +80,26 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to scroll an old search', () => {
       elasticsearch._client.scroll.resolves({
         body: {
-          total: 0,
-          hits: [],
-          scrollId: 'azerty'
+          hits: { hits: [], total: { value: 0 } },
+          _scroll_id: 'azerty'
         }
       });
 
-      const promise = elasticsearch.scroll(
-        index,
-        collection,
-        'i-am-scroll-id',
-        { scroll: '10s' });
+      const promise = elasticsearch.scroll('i-am-scroll-id', { scrollTTL: '10s' });
 
       return promise
         .then(result => {
           should(kuzzle.cacheEngine.internal.exists).be.called();
           should(kuzzle.cacheEngine.internal.pexpire).be.called();
           should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
-            index: esIndexName,
             scrollId: 'i-am-scroll-id',
             scroll: '10s'
           });
           should(result).be.deepEqual({
             total: 0,
             hits: [],
-            scrollId: 'azerty'
+            scrollId: 'azerty',
+            aggregations: undefined
           });
         });
     });
@@ -112,7 +107,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if a scroll fails', () => {
       elasticsearch._client.scroll.rejects(esClientError);
 
-      const promise = elasticsearch.scroll(index, collection, 'i-am-scroll-id');
+      const promise = elasticsearch.scroll('i-am-scroll-id');
 
       return should(promise).be.rejected()
         .then(() => {
@@ -123,7 +118,7 @@ describe('Test: ElasticSearch service', () => {
     it('should rejects if the scrollId does not exists in Kuzzle cache', () => {
       kuzzle.cacheEngine.internal.exists.resolves(0);
 
-      const promise = elasticsearch.scroll(index, collection, 'i-am-scroll-id');
+      const promise = elasticsearch.scroll('i-am-scroll-id');
 
       return should(promise).be.rejected()
         .then(() => {
@@ -146,11 +141,13 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to search documents', () => {
       elasticsearch._client.search.resolves({
         body: {
-          total: 1,
-          hits: { hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, other: 'thing' } ] },
+          hits: {
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, other: 'thing' } ],
+            total: { value: 1 },
+          },
           body: filter,
           aggregations: { some: 'aggregs' },
-          scrollId: 'i-am-scroll-id'
+          _scroll_id: 'i-am-scroll-id'
         }
       });
 
@@ -181,9 +178,8 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to search with from/size and scroll arguments', () => {
       elasticsearch._client.search.resolves({
         body: {
-          total: 0,
-          hits: { hits: [] },
-          scrollId: 'i-am-scroll-id'
+          hits: { hits: [], total: { value: 0 } },
+          _scroll_id: 'i-am-scroll-id'
         }
       });
 
@@ -221,8 +217,7 @@ describe('Test: ElasticSearch service', () => {
     it('should not save the scrollId in the cache if not present in response', () => {
       elasticsearch._client.search.resolves({
         body: {
-          total: 0,
-          hits: { hits: [] }
+          hits: { hits: [], total: { value: 0 } }
         }
       });
 
@@ -307,8 +302,8 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).match({
-            result: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1 } ],
-            errors: [ { _id: 'mhery' } ]
+            items: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1, found: true } ],
+            errors: [ { _id: 'mhery', found: false } ]
           });
         });
     });
@@ -2295,7 +2290,7 @@ describe('Test: ElasticSearch service', () => {
       ];
 
       mExecuteResult = {
-        result: [
+        items: [
           {
             _id: 'mehry',
             _source: { city: 'Kathmandu' },
@@ -2339,7 +2334,7 @@ describe('Test: ElasticSearch service', () => {
             []);
 
           should(result).match({
-            result: [
+            items: [
               {
                 _id: 'mehry',
                 _source: { city: 'Kathmandu', age: 26 }
@@ -2631,8 +2626,21 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       documentIds = ['mehry', 'liia'];
 
+      elasticsearch._getAllDocumentsFromQuery = sinon.stub().resolves([
+        { _id: 'mehry', _source: { city: 'Kathmandu' } },
+        { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
+      ]);
+
+      elasticsearch._client.deleteByQuery.resolves({
+        body: {
+          total: 2,
+          deleted: 2,
+          failures: [ ]
+        }
+      });
+
       elasticsearch.mGet = sinon.stub().resolves({
-        hits: [
+        items: [
           { _id: 'mehry', _source: { city: 'Kathmandu' } },
           { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
         ]
@@ -2651,14 +2659,15 @@ describe('Test: ElasticSearch service', () => {
 
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
-            body: { ids: { values: ['mehry', 'liia'] } },
-            scroll: '30s',
-            refresh: undefined,
-            timeout: undefined
+            body: { query: { ids: { values: ['mehry', 'liia'] } } },
+            scroll: '5m'
           });
 
           should(result).match({
-            result: ['mehry', 'liia'],
+            documents: [
+              { _id: 'mehry', _source: { city: 'Kathmandu' } },
+              { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
+            ],
             errors: []
           });
         });
@@ -2666,7 +2675,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should add non existing documents to rejected', () => {
       elasticsearch.mGet = sinon.stub().resolves({
-        hits: [ { _id: 'mehry', _source: { city: 'Kathmandu' } } ]
+        items: [ { _id: 'mehry', _source: { city: 'Kathmandu' } } ]
       });
 
       const promise = elasticsearch.mDelete(index, collection, documentIds);
@@ -2676,18 +2685,18 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.mGet).be.calledWithMatch(
             index,
             collection,
-            ['mehry']);
+            ['mehry', 'liia']);
 
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
-            body: { ids: { values: ['mehry'] } },
-            scroll: '30s',
-            refresh: undefined,
-            timeout: undefined
+            body: { query: { ids: { values: ['mehry'] } } },
+            scroll: '5m'
           });
 
           should(result).match({
-            result: ['mehry'],
+            documents: [
+              { _id: 'mehry', _source: { city: 'Kathmandu' } }
+            ],
             errors: [
               { id: 'liia', reason: 'cannot find document' }
             ]
@@ -2697,7 +2706,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should add document with ID non string to rejected', () => {
       elasticsearch.mGet = sinon.stub().resolves({
-        hits: [ { _id: 'mehry', _source: { city: 'Kathmandu' } } ]
+        items: [ { _id: 'mehry', _source: { city: 'Kathmandu' } } ]
       });
 
       const promise = elasticsearch.mDelete(index, collection, ['mehry', 42]);
@@ -2711,14 +2720,14 @@ describe('Test: ElasticSearch service', () => {
 
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
-            body: { ids: { values: ['mehry'] } },
-            scroll: '30s',
-            refresh: undefined,
-            timeout: undefined
+            body: { query: { ids: { values: ['mehry'] } } },
+            scroll: '5m'
           });
 
           should(result).match({
-            result: ['mehry'],
+            documents: [
+              { _id: 'mehry', _source: { city: 'Kathmandu' } }
+            ],
             errors: [
               { id: 42, reason: 'the document ID must be a string' }
             ]
@@ -2731,21 +2740,15 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         documentIds,
-        { refresh: 'wait_for', timeout: '10m' });
+        { refresh: 'wait_for' });
 
       return promise
-        .then(result => {
+        .then(() => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
-            body: { ids: { values: ['mehry', 'liia'] } },
-            scroll: '30s',
-            refresh: 'wait_for',
-            timeout: '10m'
-          });
-
-          should(result).match({
-            result: ['mehry', 'liia'],
-            errors: []
+            body: { query: { ids: { values: ['mehry', 'liia'] } } },
+            scroll: '5m',
+            refresh: 'wait_for'
           });
         });
     });

@@ -1,628 +1,628 @@
 Feature: Kuzzle functional tests
 
-  # Scenario: API method server:publicApi
-  #   When I get the public API
-  #   Then I have the definition of kuzzle and plugins controllers
-
-  # Scenario: CLI: dump and restore index
-  #   And I create an index named "tolkien"
-  #   When I create a collection "tolkien":"noldor" with "5" documents
-  #   And I create a collection "tolkien":"angband" with "3" documents
-  #   And I refresh the collection "tolkien:noldor"
-  #   And I refresh the collection "tolkien:angband"
-  #   And I use the CLI command 'indexDump tolkien ./index-dump'
-  #   Then A file "index-dump/tolkien--noldor--data.jsonl" exists
-  #   And A file "index-dump/tolkien--angband--data.jsonl" exists
-  #   And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
-  #   And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
-  #   When I'm able to delete the index named "tolkien"
-  #   And I create an index named "tolkien"
-  #   When I create a collection "tolkien":"noldor"
-  #   And I create a collection "tolkien":"angband"
-  #   And I use the CLI command 'indexRestore ./index-dump'
-  #   And I refresh the collection "tolkien:noldor"
-  #   And I refresh the collection "tolkien:angband"
-  #   Then I count 5 documents in index "tolkien":"noldor"
-  #   Then I count 3 documents in index "tolkien":"angband"
-  #   Then I'm able to delete the index named "tolkien"
-
-  # Scenario: CLI: encrypt and decrypt secrets
-  #   When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-  #   And I use the CLI command 'encryptSecrets config/testsecrets.json --noint --vault-key azerty --outputFile config/testsecrets.enc.json'
-  #   Then A file "config/testsecrets.enc.json" exists
-  #   When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
-  #   Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-
-  # Scenario: Bulk mWrite
-  #   When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
-  #   When I use bulk:mWrite action with
-  #   """
-  #   {
-  #     "documents": [
-  #       { "body": { "name": "Maedhros" } },
-  #       { "body": { "name": "Maglor" } },
-  #       { "body": { "name": "Celegorm" } },
-  #       { "body": { "name": "Caranthis" } },
-  #       { "body": { "name": "Curufin" } },
-  #       { "body": { "name": "Amrod" } },
-  #       { "body": { "name": "Amras" } }
-  #     ]
-  #   }
-  #   """
-  #   Then I count 7 documents
-  #   And The documents does not have kuzzle metadata
-
-  # Scenario: Bulk write
-  #   When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
-  #   When I use bulk:write action with '{ "name": "Feanor", "_kuzzle_info": { "author": "Tolkien" } }'
-  #   Then I count 1 documents
-  #   And The documents have the following kuzzle metadata '{ "author": "Tolkien" }'
-
-  # Scenario: Bulk write with _id
-  #   When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
-  #   When I use bulk:write action with id "wandered" and content '{ "name": "Feanor" }'
-  #   Then I count 1 documents
-  #   And I can found a document "wandered"
-
-  # Scenario: Create a collection
-  #   When I create a collection "kuzzle-test-index":"my-collection1"
-  #   Then The mapping properties field of "kuzzle-test-index":"my-collection1" is "the default value"
-  #   Then The mapping dynamic field of "kuzzle-test-index":"my-collection1" is "the default value"
-
-  # Scenario: Update collection mapping: dynamic field
-  #   When I create a collection "kuzzle-test-index":"my-collection2"
-  #   And I update the mapping of "kuzzle-test-index":"my-collection2" with '{ "dynamic": "strict" }'
-  #   Then The mapping dynamic field of "kuzzle-test-index":"my-collection2" is "strict"
-
-  # Scenario: Update collection mapping: properties field
-  #   When I create a collection "kuzzle-test-index":"my-collection3"
-  #   And I update the mapping of "kuzzle-test-index":"my-collection3" with '{ "properties": { "age": { "type": "integer" } } }'
-  #   Then The mapping dynamic field of "kuzzle-test-index":"my-collection3" is "the default value"
-  #   Then The mapping properties field of "kuzzle-test-index":"my-collection3" is '{ "age": { "type": "integer" } }'
-
-  # Scenario: Update collection mapping: _meta field
-  #   When I create a collection "kuzzle-test-index":"my-collection4"
-  #   And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "_meta": { "nepali": "liia meh ry" } }'
-  #   And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "properties": { "age": { "type": "integer" } } }'
-  #   Then The mapping _meta field of "kuzzle-test-index":"my-collection4" is '{ "_meta": { "nepali": "liia meh ry" } }'
-
-  # @http
-  # Scenario: Send a request compressed with gzip
-  #   Given a request compressed with "gzip"
-  #   When I write the document
-  #   Then I should receive a document id
-  #   Then I'm able to get the document
-
-  # @http
-  # Scenario: Send a request compressed with deflate
-  #   Given a request compressed with "deflate"
-  #   When I write the document
-  #   Then I should receive a document id
-  #   Then I'm able to get the document
-
-  # @http
-  # Scenario: Send a request compressed with multiple algorithms
-  #   Given a request compressed with "deflate, gzip, identity"
-  #   When I write the document
-  #   Then I should receive a document id
-  #   Then I'm able to get the document
-
-  # @http
-  # Scenario: Receive a request compressed with gzip
-  #   Given an expected response compressed with "gzip"
-  #   When I write the document
-  #   Then I should receive a document id
-  #   Then I'm able to get the document
-
-  # @http
-  # Scenario: Receive a request compressed with deflate
-  #   Given an expected response compressed with "deflate"
-  #   When I write the document
-  #   Then I should receive a document id
-  #   Then I'm able to get the document
-
-  # Scenario: Check server Health
-  #   When I check server health
-
-  # Scenario: Get server information
-  #   When I get server informations
-
-  # Scenario: Get server configuration
-  #   When I get server configuration
-
-  # @validation
-  # Scenario: Publish a realtime message
-  #   When I publish a message
-  #   Then I should receive a request id
-  #   Then I'm not able to get the document
-
-  # Scenario: Create a new document and get it
-  #   When I write the document
-  #   Then I should receive a document id
-  #   Then I'm able to get the document
-  #   And I'm not able to get the document in index "kuzzle-test-index-alt"
-
-  # Scenario: Create or Replace a document (no notification)
-  #   When I write the document "documentGrace"
-  #   And I createOrReplace it
-  #   Then I should have updated the document
-
-  # @realtime
-  # Scenario: Create or Replace a document
-  #   Given A room subscription listening to "info.city" having value "NYC"
-  #   When I write the document "documentGrace"
-  #   And I createOrReplace it
-  #   Then I should have updated the document
-  #   And I should receive a document notification with field action equal to "replace"
-  #   And The notification should have volatile
-
-  # Scenario: Replace a document
-  #   When I write the document "documentGrace"
-  #   Then I replace the document with "documentAda" document
-  #   Then my document has the value "Ada" in field "firstName"
-
-  # Scenario: Update a document
-  #   When I write the document
-  #   Then I update the document with value "foo" in field "firstName"
-  #   Then my document has the value "foo" in field "firstName"
-
-  # Scenario: Delete a document
-  #   When I write the document
-  #   Then I remove the document
-  #   Then I'm not able to get the document
-
-  # Scenario: Search a document
-  #   When I write the document "documentGrace"
-  #   And I refresh the collection
-  #   Then I find a document with "grace" in field "firstName"
-  #   And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
-
-  # Scenario: Bulk import
-  #   When I do a bulk import
-  #   Then I can retrieve actions from bulk import
-
-  # Scenario: Can't do a bulk import on internal index
-  #   When I can't do a bulk import from index "%kuzzle"
-
-  # Scenario: Truncate collection
-  #   When I write the document
-  #   Then I refresh the collection
-  #   Then I truncate the collection
-  #   Then I'm not able to get the document
-
-  # Scenario: Count document
-  #   When I write the document "documentGrace"
-  #   When I write the document "documentAda"
-  #   When I write the document "documentGrace"
-  #   When I write the document "documentAda"
-  #   Then I count 4 documents
-  #   And I count 0 documents in index "kuzzle-test-index-alt"
-  #   And I count 2 documents with "NYC" in field "info.city"
-  #   Then I truncate the collection
-  #   And I count 0 documents
-
-  # Scenario: delete multiple documents with no error
-  #   When I write the document "documentGrace" with id "Grace"
-  #   When I write the document "documentAda" with id "Ada"
-  #   Then I count 2 documents
-  #   Then I remove the documents '["Grace", "Ada"]'
-  #   And I count 0 documents
-
-  # Scenario: delete multiple documents with partial errors
-  #   When I write the document "documentGrace" with id "Grace"
-  #   When I write the document "documentAda" with id "Ada"
-  #   Then I count 2 documents
-  #   Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
-  #   And I count 0 documents
-
-  # Scenario: create multiple documents
-  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-  #   Then I count 2 documents
-  #   Then I truncate the collection
-  #   And I count 0 documents
-
-  # Scenario: replace multiple documents
-  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-  #   Then I count 2 documents
-  #   Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-  #   Then I count 2 documents
-  #   Then I truncate the collection
-  #   And I count 0 documents
-
-  # Scenario: replace multiple documents with partial errors
-  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-  #   Then I count 2 documents
-  #   Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
-  #   Then I count 2 documents
-  #   Then I truncate the collection
-  #   And I count 0 documents
-
-  # Scenario: update multiple documents
-  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-  #   Then I count 2 documents
-  #   Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-  #   Then I count 2 documents
-  #   Then I truncate the collection
-  #   And I count 0 documents
-
-  # Scenario: create and replace multiple documents
-  #   Then I count 0 documents
-  #   When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-  #   Then I count 2 documents
-  #   Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-  #   Then I count 2 documents
-  #   Then I truncate the collection
-  #   And I count 0 documents
-
-  # Scenario: Checking that documents exist or not
-  #   When I write the document with id "documentGrace"
-  #   Then I check that the document "documentGrace" exists
-  #   Then I remove the document
-  #   Then I check that the document "documentGrace" doesn't exists
-
-  # Scenario: get multiple documents
-  #   When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-  #   Then I count 2 documents
-  #   Then I get 2 documents '["Ada", "Grace"]'
-  #   Then I truncate the collection
-  #   And I count 0 documents
-
-  # Scenario: Search with scroll documents
-  #   When I write the document "documentGrace"
-  #   When I write the document "documentGrace"
-  #   When I write the document "documentGrace"
-  #   When I write the document "documentGrace"
-  #   And I refresh the collection
-  #   Then I find a document with "Grace" in field "firstName" with scroll "5m"
-  #   And I am able to scroll previous search
-
-  # Scenario: Change mapping
-  #   When I write the document "documentGrace"
-  #   Then I don't find a document with "Grace" in field "firstName"
-  #   Then I change the mapping
-  #   When I write the document "documentGrace"
-  #   And I refresh the collection
-  #   Then I find a document with "Grace" in field "newFirstName"
-
-  # @realtime
-  # Scenario: Document creation notifications
-  #   Given A room subscription listening to "info.city" having value "NYC"
-  #   When I write the document "documentGrace"
-  #   Then I should receive a document notification with field action equal to "create"
-  #   And The notification should have a "_source" member
-  #   And The notification should have volatile
-
-  # @security
-  # @realtime
-  # Scenario: Notification subscription on metadata
-  #   Given I create a user "useradmin" with id "useradmin-id"
-  #   When I log in as useradmin:testpwd expiring in 1h
-  #   And A room subscription listening to "_kuzzle_info.author" having value "kuzzle-functional-tests-useradmin-id"
-  #   When I write the document "documentGrace"
-  #   Then I should receive a document notification with field action equal to "create"
-
-  # @realtime
-  # Scenario: Document creation notifications with not exists
-  #   Given A room subscription listening field "toto" doesn't exists
-  #   When I write the document "documentGrace"
-  #   Then I should receive a document notification with field action equal to "create"
-  #   And The notification should have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Document delete notifications
-  #   Given A room subscription listening to "info.city" having value "NYC"
-  #   When I write the document "documentGrace"
-  #   Then I remove the document
-  #   Then I should receive a document notification with field action equal to "delete"
-  #   And The notification should not have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Document update: new document notification
-  #   Given A room subscription listening to "info.hobby" having value "computer"
-  #   When I write the document "documentAda"
-  #   Then I update the document with value "Hopper" in field "lastName"
-  #   Then I should receive a document notification with field action equal to "update"
-  #   And The notification should have "_updatedFields" array with 1 element
-  #   And The notification should have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Document update: removed document notification
-  #   Given A room subscription listening to "lastName" having value "Hopper"
-  #   When I write the document "documentGrace"
-  #   Then I update the document with value "Foo" in field "lastName"
-  #   Then I should receive a document notification with field action equal to "update"
-  #   And The notification should not have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Document replace: new document notification
-  #   Given A room subscription listening to "info.hobby" having value "computer"
-  #   When I write the document "documentAda"
-  #   Then I replace the document with "documentGrace" document
-  #   Then I should receive a document notification with field action equal to "replace"
-  #   And The notification should have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Document replace: removed document notification
-  #   Given A room subscription listening to "info.city" having value "NYC"
-  #   When I write the document "documentGrace"
-  #   Then I replace the document with "documentAda" document
-  #   Then I should receive a document notification with field action equal to "replace"
-  #   And The notification should not have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Subscribe to a collection
-  #   Given A room subscription listening to the whole collection
-  #   When I write the document "documentGrace"
-  #   Then I should receive a document notification with field action equal to "create"
-  #   And The notification should have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Delete a document with a query
-  #   Given A room subscription listening to "info.city" having value "NYC"
-  #   When I write the document "documentGrace"
-  #   And I write the document "documentAda"
-  #   And I refresh the collection
-  #   Then I remove documents with field "info.hobby" equals to value "computer"
-  #   Then I should receive a document notification with field action equal to "delete"
-  #   And The notification should not have a "_source" member
-  #   And The notification should have volatile
-
-  # @realtime
-  # Scenario: Count how many subscription on a room
-  #   Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
-  #   Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
-  #   # a little time for cluster replication
-  #   And I wait 0.1s
-  #   Then I can count "2" subscription
-
-  # @realtime
-  # Scenario: Subscription notifications
-  #   Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
-  #   Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
-  #   Then I should receive a user notification with field action equal to "subscribe"
-  #   And The notification should have volatile
-  #   Then I unsubscribe socket "client1"
-  #   And I should receive a user notification with field action equal to "unsubscribe"
-  #   And The notification should have volatile
-
-  # Scenario: Getting the last statistics frame
-  #   When I get the last statistics frame
-  #   Then I get at least 1 statistic frame
-
-  # Scenario: Getting the statistics frame from a date
-  #   When I get the statistics frame from a date
-  #   Then I get at least 1 statistic frame
-
-  # Scenario: Getting all statistics frame
-  #   When I get server informations
-  #   And I get all statistics frames
-  #   Then I get at least 1 statistic frame
-
-  # Scenario: list known stored collections
-  #   When I write the document "documentGrace"
-  #   And I list "stored" data collections
-  #   Then I can find a stored collection kuzzle-collection-test
-
-  # Scenario: Restricted index and collection creation
-  #   When I try to create the index "%kuzzle"
-  #   Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
-  #   When I try to create the index "&kuzzle"
-  #   Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
-  #   When I try to create the index "kuz.zle"
-  #   Then The result should raise an error with message 'Forbidden character "." in index or collection name'
-  #   When I try to create the collection "%users"
-  #   Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
-  #   When I try to create the collection "&users"
-  #   Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
-  #   When I try to create the collection "use.rs"
-  #   Then The result should raise an error with message 'Forbidden character "." in index or collection name'
-
-  # Scenario: Index and collection existence
-  #   When I check if index "%kuzzle" exists
-  #   Then The result should match the json false
-  #   When I check if index "idontexist" exists
-  #   Then The result should match the json false
-  #   When I check if collection "users" exists on index "%kuzzle"
-  #   Then The result should match the json false
-  #   When I write the document "documentGrace"
-  #   When I check if index "kuzzle-test-index" exists
-  #   Then The result should match the json true
-  #   When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index"
-  #   Then The result should match the json true
-
-  # @realtime
-  # Scenario: list known realtime collections
-  #   Given A room subscription listening to "lastName" having value "Hopper"
-  #   When I list "realtime" data collections
-  #   Then I can find a realtime collection kuzzle-collection-test
-
-  # Scenario: get the Kuzzle timestamp
-  #   When I get the server timestamp
-  #   Then I can read the timestamp
-
-  # @realtime
-  # Scenario: get list of subscriptions
-  #   Given A room subscription listening to "lastName" having value "Hopper"
-  #   And I wait 0.1s
-  #   And I get the list subscriptions
-  #   Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
-
-  # @realtime
-  # Scenario: remove a specific room in subscriptions
-  #   Given A room subscription listening to "lastName" having value "Hopper"
-  #   Given A room subscription listening to "firstName" having value "Grace"
-  #   And I get the list subscriptions
-  #   Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
-
-  # Scenario: Indexes are virtual and does not exists without a collection
-  #   When I create an index named "kuzzle-test-index-new"
-  #   Then I'm not able to find the index named "kuzzle-test-index-new" in index list
-  #   When I create a collection named "collection" in index "kuzzle-test-index-new"
-  #   Then I'm able to find the index named "kuzzle-test-index-new" in index list
-  #   Then I'm able to delete the index named "kuzzle-test-index-new"
-
-  # @security
-  # Scenario: login user
-  #   Given I create a user "useradmin" with id "useradmin-id"
-  #   When I log in as useradmin:testpwd expiring in 1h
-  #   Then I write the document
-  #   Then I check the JWT Token
-  #   And The token is valid
-  #   Then I logout
-  #   Then I can't write the document
-  #   Then I check the JWT Token
-  #   And The token is invalid
-
-  # @security
-  # Scenario: logout all sessions at once
-  #   Given I create a user "useradmin" with id "useradmin-id"
-  #   When I log in as useradmin:testpwd expiring in 1h
-  #   Then I check the JWT Token
-  #   And The token is valid
-  #   Then I logout all sessions at once
-  #   Then I can't write the document
-  #   Then I check the JWT Token
-  #   And The token is invalid
-
-  # @security
-  # Scenario: refresh token
-  #   Given I create a user "useradmin" with id "useradmin-id"
-  #   When I log in as useradmin:testpwd expiring in 1h
-  #   Then I write the document
-  #   Then I check the JWT Token
-  #   And The token is valid
-  #   Then I refresh the JWT Token
-  #   And I check the JWT Token
-  #   And The token is valid
-  #   Then I logout
-
-  # @security
-  # Scenario: user token deletion
-  #   Given I create a user "useradmin" with id "useradmin-id"
-  #   When I log in as useradmin:testpwd expiring in 1h
-  #   Then I write the document
-  #   Then I check the JWT Token
-  #   And The token is valid
-  #   Then I delete the user "useradmin-id"
-  #   Then I check the JWT Token
-  #   And The token is invalid
-
-  # @security
-  # Scenario: create restricted user
-  #   Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
-
-  # @security
-  # Scenario: Role mapping
-  #   Given I get the role mapping
-  #   Then The mapping should contain "controllers" field of type "object"
-  #   When I change the role mapping
-  #   Then I get the role mapping
-  #   Then The mapping should contain "foo" field of type "text"
-  #   And The mapping should contain "bar" field of type "keyword"
-
-  # @security
-  # Scenario: Create/get/search/update/delete role
-  #   When I create a new role "foo" with id "test"
-  #   Then I'm able to find a role with id "test"
-  #   And I update the role "test" with the test content "bar"
-  #   Then I'm able to find a role with id "test" equivalent to role "bar"
-  #   Then I'm able to find "3" role by searching controller "foo"
-  #   And I'm able to find "4" role by searching controller "foo,bar"
-  #   And I'm able to find "4" role by searching controller "bar"
-  #   And I delete the role with id "test"
-  #   Then I'm not able to find a role with id "test"
-  #   Then I create a new role "foobar" with id "test"
-  #   And I create a new role "foo" with id "test2"
-  #   And I create a new role "foo" with id "test3"
-  #   Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
-  #   Then I'm able to find "6" role by searching controller "foo"
-  #   And I'm able to find "3" role by searching controller "foo" with maximum "3" results starting from "1"
-  #   And I'm able to find "2" role by searching controller "foo" with maximum "10" results starting from "4"
-  #   And I'm able to find "4" role by searching controller "bar"
-
-  # @security
-  # Scenario: create an invalid profile with unexisting role triggers an error
-  #   Then I cannot create an invalid profile
-
-  # @security
-  # Scenario: get profile without id triggers an error
-  #   Then I cannot get a profile without ID
-
-  # @security
-  # Scenario: creating a profile with an empty set of roles triggers an error
-  #   Then I cannot create a profile with an empty set of roles
-
-  # @security
-  # Scenario: Profile mapping
-  #   Given I get the profile mapping
-  #   Then The mapping should contain a nested "policies" field with property "roleId" of type "keyword"
-  #   When I change the profile mapping
-  #   Then I get the profile mapping
-  #   Then The mapping should contain "foo" field of type "text"
-  #   And The mapping should contain "bar" field of type "keyword"
-
-  # @security
-  # Scenario: create, get and delete a profile
-  #   Given I create a new role "role1" with id "role1"
-  #   And I create a new role "role2" with id "role2"
-  #   When I create a new profile "profile1" with id "my-new-profile"
-  #   Then I'm able to find the profile with id "my-new-profile"
-  #   Given I delete the profile with id "my-new-profile"
-  #   Then I'm not able to find the profile with id "my-new-profile"
-
-  # @security
-  # Scenario: search and update profiles
-  #   Given I create a new role "role1" with id "role1"
-  #   And I create a new role "role2" with id "role2"
-  #   And I create a new profile "profile1" with id "my-profile-1"
-  #   And I create a new profile "profile3" with id "my-profile-2"
-  #   Then I'm able to find "1" profiles containing the role with id "role1"
-  #   Then I'm able to find "2" profiles
-  #   Then I'm able to find "0" profiles containing the role with id "undefined-role"
-  #   Then I'm able to do a multi get with "my-profile-1,my-profile-2" and get "2" profiles
-  #   Given I update the profile with id "my-profile-2" by adding the role "role1"
-  #   Then I'm able to find "2" profiles
-  #   Then I'm able to find "2" profiles containing the role with id "role1"
-  #   Given A scrolled search on profiles
-  #   Then I am able to perform a scrollProfiles request
-  #   Then I delete the profile "my-profile-1"
-  #   Then I delete the profile "my-profile-2"
-
-  # @security
-  # Scenario: get profile rights
-  #   Given I create a new role "role1" with id "role1"
-  #   And I create a new role "role2" with id "role2"
-  #   And I create a new profile "profile1" with id "profile1"
-  #   And I create a new profile "profile2" with id "profile2"
-  #   Then I'm able to find rights for profile "profile2"
-  #   Then I'm able to find rights for profile "profile1"
-  #   Then I'm not able to find rights for profile "fake-profile"
-
-  # @security
-  # Scenario: User mapping
-  #   Given I get the user mapping
-  #   Then The mapping should contain "profileIds" field of type "keyword"
-  #   When I change the user mapping
-  #   Then I get the user mapping
-  #   Then The mapping should contain "foo" field of type "text"
-  #   And The mapping should contain "bar" field of type "keyword"
-
-  # @security
-  # Scenario: revoke user's tokens
-  #   When I create a new role "role1" with id "role1"
-  #   And I create a new profile "profile1" with id "profile1"
-  #   And I create a user "user1" with id "user1-id"
-  #   Then I log in as user1:testpwd1 expiring in 1h
-  #   Then I'm able to check the token for current user
-  #   Then I revoke all tokens of the user "user1-id"
-  #   Then I'm not able to check the token for current user
+  Scenario: API method server:publicApi
+    When I get the public API
+    Then I have the definition of kuzzle and plugins controllers
+
+  Scenario: CLI: dump and restore index
+    And I create an index named "tolkien"
+    When I create a collection "tolkien":"noldor" with "5" documents
+    And I create a collection "tolkien":"angband" with "3" documents
+    And I refresh the collection "tolkien:noldor"
+    And I refresh the collection "tolkien:angband"
+    And I use the CLI command 'indexDump tolkien ./index-dump'
+    Then A file "index-dump/tolkien--noldor--data.jsonl" exists
+    And A file "index-dump/tolkien--angband--data.jsonl" exists
+    And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
+    And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
+    When I'm able to delete the index named "tolkien"
+    And I create an index named "tolkien"
+    When I create a collection "tolkien":"noldor"
+    And I create a collection "tolkien":"angband"
+    And I use the CLI command 'indexRestore ./index-dump'
+    And I refresh the collection "tolkien:noldor"
+    And I refresh the collection "tolkien:angband"
+    Then I count 5 documents in index "tolkien":"noldor"
+    Then I count 3 documents in index "tolkien":"angband"
+    Then I'm able to delete the index named "tolkien"
+
+  Scenario: CLI: encrypt and decrypt secrets
+    When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
+    And I use the CLI command 'encryptSecrets config/testsecrets.json --noint --vault-key azerty --outputFile config/testsecrets.enc.json'
+    Then A file "config/testsecrets.enc.json" exists
+    When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
+    Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
+
+  Scenario: Bulk mWrite
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I use bulk:mWrite action with
+    """
+    {
+      "documents": [
+        { "body": { "name": "Maedhros" } },
+        { "body": { "name": "Maglor" } },
+        { "body": { "name": "Celegorm" } },
+        { "body": { "name": "Caranthis" } },
+        { "body": { "name": "Curufin" } },
+        { "body": { "name": "Amrod" } },
+        { "body": { "name": "Amras" } }
+      ]
+    }
+    """
+    Then I count 7 documents
+    And The documents does not have kuzzle metadata
+
+  Scenario: Bulk write
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I use bulk:write action with '{ "name": "Feanor", "_kuzzle_info": { "author": "Tolkien" } }'
+    Then I count 1 documents
+    And The documents have the following kuzzle metadata '{ "author": "Tolkien" }'
+
+  Scenario: Bulk write with _id
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I use bulk:write action with id "wandered" and content '{ "name": "Feanor" }'
+    Then I count 1 documents
+    And I can found a document "wandered"
+
+  Scenario: Create a collection
+    When I create a collection "kuzzle-test-index":"my-collection1"
+    Then The mapping properties field of "kuzzle-test-index":"my-collection1" is "the default value"
+    Then The mapping dynamic field of "kuzzle-test-index":"my-collection1" is "the default value"
+
+  Scenario: Update collection mapping: dynamic field
+    When I create a collection "kuzzle-test-index":"my-collection2"
+    And I update the mapping of "kuzzle-test-index":"my-collection2" with '{ "dynamic": "strict" }'
+    Then The mapping dynamic field of "kuzzle-test-index":"my-collection2" is "strict"
+
+  Scenario: Update collection mapping: properties field
+    When I create a collection "kuzzle-test-index":"my-collection3"
+    And I update the mapping of "kuzzle-test-index":"my-collection3" with '{ "properties": { "age": { "type": "integer" } } }'
+    Then The mapping dynamic field of "kuzzle-test-index":"my-collection3" is "the default value"
+    Then The mapping properties field of "kuzzle-test-index":"my-collection3" is '{ "age": { "type": "integer" } }'
+
+  Scenario: Update collection mapping: _meta field
+    When I create a collection "kuzzle-test-index":"my-collection4"
+    And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "_meta": { "nepali": "liia meh ry" } }'
+    And I update the mapping of "kuzzle-test-index":"my-collection4" with '{ "properties": { "age": { "type": "integer" } } }'
+    Then The mapping _meta field of "kuzzle-test-index":"my-collection4" is '{ "_meta": { "nepali": "liia meh ry" } }'
+
+  @http
+  Scenario: Send a request compressed with gzip
+    Given a request compressed with "gzip"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Send a request compressed with deflate
+    Given a request compressed with "deflate"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Send a request compressed with multiple algorithms
+    Given a request compressed with "deflate, gzip, identity"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Receive a request compressed with gzip
+    Given an expected response compressed with "gzip"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Receive a request compressed with deflate
+    Given an expected response compressed with "deflate"
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  Scenario: Check server Health
+    When I check server health
+
+  Scenario: Get server information
+    When I get server informations
+
+  Scenario: Get server configuration
+    When I get server configuration
+
+  @validation
+  Scenario: Publish a realtime message
+    When I publish a message
+    Then I should receive a request id
+    Then I'm not able to get the document
+
+  Scenario: Create a new document and get it
+    When I write the document
+    Then I should receive a document id
+    Then I'm able to get the document
+    And I'm not able to get the document in index "kuzzle-test-index-alt"
+
+  Scenario: Create or Replace a document (no notification)
+    When I write the document "documentGrace"
+    And I createOrReplace it
+    Then I should have updated the document
+
+  @realtime
+  Scenario: Create or Replace a document
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    And I createOrReplace it
+    Then I should have updated the document
+    And I should receive a document notification with field action equal to "replace"
+    And The notification should have volatile
+
+  Scenario: Replace a document
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
+    Then my document has the value "Ada" in field "firstName"
+
+  Scenario: Update a document
+    When I write the document
+    Then I update the document with value "foo" in field "firstName"
+    Then my document has the value "foo" in field "firstName"
+
+  Scenario: Delete a document
+    When I write the document
+    Then I remove the document
+    Then I'm not able to get the document
+
+  Scenario: Search a document
+    When I write the document "documentGrace"
+    And I refresh the collection
+    Then I find a document with "grace" in field "firstName"
+    And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
+
+  Scenario: Bulk import
+    When I do a bulk import
+    Then I can retrieve actions from bulk import
+
+  Scenario: Can't do a bulk import on internal index
+    When I can't do a bulk import from index "%kuzzle"
+
+  Scenario: Truncate collection
+    When I write the document
+    Then I refresh the collection
+    Then I truncate the collection
+    Then I'm not able to get the document
+
+  Scenario: Count document
+    When I write the document "documentGrace"
+    When I write the document "documentAda"
+    When I write the document "documentGrace"
+    When I write the document "documentAda"
+    Then I count 4 documents
+    And I count 0 documents in index "kuzzle-test-index-alt"
+    And I count 2 documents with "NYC" in field "info.city"
+    Then I truncate the collection
+    And I count 0 documents
+
+  Scenario: delete multiple documents with no error
+    When I write the document "documentGrace" with id "Grace"
+    When I write the document "documentAda" with id "Ada"
+    Then I count 2 documents
+    Then I remove the documents '["Grace", "Ada"]'
+    And I count 0 documents
+
+  Scenario: delete multiple documents with partial errors
+    When I write the document "documentGrace" with id "Grace"
+    When I write the document "documentAda" with id "Ada"
+    Then I count 2 documents
+    Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
+    And I count 0 documents
+
+  Scenario: create multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  Scenario: replace multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  Scenario: replace multiple documents with partial errors
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  Scenario: update multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  Scenario: create and replace multiple documents
+    Then I count 0 documents
+    When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
+    Then I count 2 documents
+    Then I truncate the collection
+    And I count 0 documents
+
+  Scenario: Checking that documents exist or not
+    When I write the document with id "documentGrace"
+    Then I check that the document "documentGrace" exists
+    Then I remove the document
+    Then I check that the document "documentGrace" doesn't exists
+
+  Scenario: get multiple documents
+    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
+    Then I count 2 documents
+    Then I get 2 documents '["Ada", "Grace"]'
+    Then I truncate the collection
+    And I count 0 documents
+
+  Scenario: Search with scroll documents
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    When I write the document "documentGrace"
+    And I refresh the collection
+    Then I find a document with "Grace" in field "firstName" with scroll "5m"
+    And I am able to scroll previous search
+
+  Scenario: Change mapping
+    When I write the document "documentGrace"
+    Then I don't find a document with "Grace" in field "firstName"
+    Then I change the mapping
+    When I write the document "documentGrace"
+    And I refresh the collection
+    Then I find a document with "Grace" in field "newFirstName"
+
+  @realtime
+  Scenario: Document creation notifications
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    Then I should receive a document notification with field action equal to "create"
+    And The notification should have a "_source" member
+    And The notification should have volatile
+
+  @security
+  @realtime
+  Scenario: Notification subscription on metadata
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    And A room subscription listening to "_kuzzle_info.author" having value "kuzzle-functional-tests-useradmin-id"
+    When I write the document "documentGrace"
+    Then I should receive a document notification with field action equal to "create"
+
+  @realtime
+  Scenario: Document creation notifications with not exists
+    Given A room subscription listening field "toto" doesn't exists
+    When I write the document "documentGrace"
+    Then I should receive a document notification with field action equal to "create"
+    And The notification should have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Document delete notifications
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    Then I remove the document
+    Then I should receive a document notification with field action equal to "delete"
+    And The notification should not have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Document update: new document notification
+    Given A room subscription listening to "info.hobby" having value "computer"
+    When I write the document "documentAda"
+    Then I update the document with value "Hopper" in field "lastName"
+    Then I should receive a document notification with field action equal to "update"
+    And The notification should have "_updatedFields" array with 1 element
+    And The notification should have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Document update: removed document notification
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I write the document "documentGrace"
+    Then I update the document with value "Foo" in field "lastName"
+    Then I should receive a document notification with field action equal to "update"
+    And The notification should not have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Document replace: new document notification
+    Given A room subscription listening to "info.hobby" having value "computer"
+    When I write the document "documentAda"
+    Then I replace the document with "documentGrace" document
+    Then I should receive a document notification with field action equal to "replace"
+    And The notification should have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Document replace: removed document notification
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    Then I replace the document with "documentAda" document
+    Then I should receive a document notification with field action equal to "replace"
+    And The notification should not have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Subscribe to a collection
+    Given A room subscription listening to the whole collection
+    When I write the document "documentGrace"
+    Then I should receive a document notification with field action equal to "create"
+    And The notification should have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Delete a document with a query
+    Given A room subscription listening to "info.city" having value "NYC"
+    When I write the document "documentGrace"
+    And I write the document "documentAda"
+    And I refresh the collection
+    Then I remove documents with field "info.hobby" equals to value "computer"
+    Then I should receive a document notification with field action equal to "delete"
+    And The notification should not have a "_source" member
+    And The notification should have volatile
+
+  @realtime
+  Scenario: Count how many subscription on a room
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
+    # a little time for cluster replication
+    And I wait 0.1s
+    Then I can count "2" subscription
+
+  @realtime
+  Scenario: Subscription notifications
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client1"
+    Given A room subscription listening to "lastName" having value "Hopper" with socket "client2"
+    Then I should receive a user notification with field action equal to "subscribe"
+    And The notification should have volatile
+    Then I unsubscribe socket "client1"
+    And I should receive a user notification with field action equal to "unsubscribe"
+    And The notification should have volatile
+
+  Scenario: Getting the last statistics frame
+    When I get the last statistics frame
+    Then I get at least 1 statistic frame
+
+  Scenario: Getting the statistics frame from a date
+    When I get the statistics frame from a date
+    Then I get at least 1 statistic frame
+
+  Scenario: Getting all statistics frame
+    When I get server informations
+    And I get all statistics frames
+    Then I get at least 1 statistic frame
+
+  Scenario: list known stored collections
+    When I write the document "documentGrace"
+    And I list "stored" data collections
+    Then I can find a stored collection kuzzle-collection-test
+
+  Scenario: Restricted index and collection creation
+    When I try to create the index "%kuzzle"
+    Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
+    When I try to create the index "&kuzzle"
+    Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
+    When I try to create the index "kuz.zle"
+    Then The result should raise an error with message 'Forbidden character "." in index or collection name'
+    When I try to create the collection "%users"
+    Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
+    When I try to create the collection "&users"
+    Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
+    When I try to create the collection "use.rs"
+    Then The result should raise an error with message 'Forbidden character "." in index or collection name'
+
+  Scenario: Index and collection existence
+    When I check if index "%kuzzle" exists
+    Then The result should match the json false
+    When I check if index "idontexist" exists
+    Then The result should match the json false
+    When I check if collection "users" exists on index "%kuzzle"
+    Then The result should match the json false
+    When I write the document "documentGrace"
+    When I check if index "kuzzle-test-index" exists
+    Then The result should match the json true
+    When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index"
+    Then The result should match the json true
+
+  @realtime
+  Scenario: list known realtime collections
+    Given A room subscription listening to "lastName" having value "Hopper"
+    When I list "realtime" data collections
+    Then I can find a realtime collection kuzzle-collection-test
+
+  Scenario: get the Kuzzle timestamp
+    When I get the server timestamp
+    Then I can read the timestamp
+
+  @realtime
+  Scenario: get list of subscriptions
+    Given A room subscription listening to "lastName" having value "Hopper"
+    And I wait 0.1s
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 1 room and 1 subscriber
+
+  @realtime
+  Scenario: remove a specific room in subscriptions
+    Given A room subscription listening to "lastName" having value "Hopper"
+    Given A room subscription listening to "firstName" having value "Grace"
+    And I get the list subscriptions
+    Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
+
+  Scenario: Indexes are virtual and does not exists without a collection
+    When I create an index named "kuzzle-test-index-new"
+    Then I'm not able to find the index named "kuzzle-test-index-new" in index list
+    When I create a collection named "collection" in index "kuzzle-test-index-new"
+    Then I'm able to find the index named "kuzzle-test-index-new" in index list
+    Then I'm able to delete the index named "kuzzle-test-index-new"
+
+  @security
+  Scenario: login user
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I write the document
+    Then I check the JWT Token
+    And The token is valid
+    Then I logout
+    Then I can't write the document
+    Then I check the JWT Token
+    And The token is invalid
+
+  @security
+  Scenario: logout all sessions at once
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I check the JWT Token
+    And The token is valid
+    Then I logout all sessions at once
+    Then I can't write the document
+    Then I check the JWT Token
+    And The token is invalid
+
+  @security
+  Scenario: refresh token
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I write the document
+    Then I check the JWT Token
+    And The token is valid
+    Then I refresh the JWT Token
+    And I check the JWT Token
+    And The token is valid
+    Then I logout
+
+  @security
+  Scenario: user token deletion
+    Given I create a user "useradmin" with id "useradmin-id"
+    When I log in as useradmin:testpwd expiring in 1h
+    Then I write the document
+    Then I check the JWT Token
+    And The token is valid
+    Then I delete the user "useradmin-id"
+    Then I check the JWT Token
+    And The token is invalid
+
+  @security
+  Scenario: create restricted user
+    Then I create a restricted user "restricteduser1" with id "restricteduser1-id"
+
+  @security
+  Scenario: Role mapping
+    Given I get the role mapping
+    Then The mapping should contain "controllers" field of type "object"
+    When I change the role mapping
+    Then I get the role mapping
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
+
+  @security
+  Scenario: Create/get/search/update/delete role
+    When I create a new role "foo" with id "test"
+    Then I'm able to find a role with id "test"
+    And I update the role "test" with the test content "bar"
+    Then I'm able to find a role with id "test" equivalent to role "bar"
+    Then I'm able to find "3" role by searching controller "foo"
+    And I'm able to find "4" role by searching controller "foo,bar"
+    And I'm able to find "4" role by searching controller "bar"
+    And I delete the role with id "test"
+    Then I'm not able to find a role with id "test"
+    Then I create a new role "foobar" with id "test"
+    And I create a new role "foo" with id "test2"
+    And I create a new role "foo" with id "test3"
+    Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
+    Then I'm able to find "6" role by searching controller "foo"
+    And I'm able to find "3" role by searching controller "foo" with maximum "3" results starting from "1"
+    And I'm able to find "2" role by searching controller "foo" with maximum "10" results starting from "4"
+    And I'm able to find "4" role by searching controller "bar"
+
+  @security
+  Scenario: create an invalid profile with unexisting role triggers an error
+    Then I cannot create an invalid profile
+
+  @security
+  Scenario: get profile without id triggers an error
+    Then I cannot get a profile without ID
+
+  @security
+  Scenario: creating a profile with an empty set of roles triggers an error
+    Then I cannot create a profile with an empty set of roles
+
+  @security
+  Scenario: Profile mapping
+    Given I get the profile mapping
+    Then The mapping should contain a nested "policies" field with property "roleId" of type "keyword"
+    When I change the profile mapping
+    Then I get the profile mapping
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
+
+  @security
+  Scenario: create, get and delete a profile
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    When I create a new profile "profile1" with id "my-new-profile"
+    Then I'm able to find the profile with id "my-new-profile"
+    Given I delete the profile with id "my-new-profile"
+    Then I'm not able to find the profile with id "my-new-profile"
+
+  @security
+  Scenario: search and update profiles
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile1" with id "my-profile-1"
+    And I create a new profile "profile3" with id "my-profile-2"
+    Then I'm able to find "1" profiles containing the role with id "role1"
+    Then I'm able to find "2" profiles
+    Then I'm able to find "0" profiles containing the role with id "undefined-role"
+    Then I'm able to do a multi get with "my-profile-1,my-profile-2" and get "2" profiles
+    Given I update the profile with id "my-profile-2" by adding the role "role1"
+    Then I'm able to find "2" profiles
+    Then I'm able to find "2" profiles containing the role with id "role1"
+    Given A scrolled search on profiles
+    Then I am able to perform a scrollProfiles request
+    Then I delete the profile "my-profile-1"
+    Then I delete the profile "my-profile-2"
+
+  @security
+  Scenario: get profile rights
+    Given I create a new role "role1" with id "role1"
+    And I create a new role "role2" with id "role2"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a new profile "profile2" with id "profile2"
+    Then I'm able to find rights for profile "profile2"
+    Then I'm able to find rights for profile "profile1"
+    Then I'm not able to find rights for profile "fake-profile"
+
+  @security
+  Scenario: User mapping
+    Given I get the user mapping
+    Then The mapping should contain "profileIds" field of type "keyword"
+    When I change the user mapping
+    Then I get the user mapping
+    Then The mapping should contain "foo" field of type "text"
+    And The mapping should contain "bar" field of type "keyword"
+
+  @security
+  Scenario: revoke user's tokens
+    When I create a new role "role1" with id "role1"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a user "user1" with id "user1-id"
+    Then I log in as user1:testpwd1 expiring in 1h
+    Then I'm able to check the token for current user
+    Then I revoke all tokens of the user "user1-id"
+    Then I'm not able to check the token for current user
 
   @security
   Scenario: user crudl
@@ -1867,10 +1867,6 @@ Feature: Kuzzle functional tests
     Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    Then I put a not valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    And There is an error message
-    Then I put a valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    And There is no error message
 
 
   @validation
@@ -1878,10 +1874,6 @@ Feature: Kuzzle functional tests
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
-    Then There is an error message in the response body
-    When I post a valid deprecated specification
-    Then There is no error message
-    When I post an invalid deprecated specification
     Then There is an error message in the response body
 
   @validation

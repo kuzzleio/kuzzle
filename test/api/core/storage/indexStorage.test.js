@@ -85,11 +85,9 @@ describe('IndexStorage', () => {
 
   describe('#scroll', () => {
     it('should call storageEngine.scroll with the good arguments', async () => {
-      await indexStorage.scroll('users', 'scroll-id', '15m');
+      await indexStorage.scroll('scroll-id', '15m');
 
       should(indexStorage._storageEngine.scroll).be.calledWith(
-        'kuzzle',
-        'users',
         'scroll-id',
         { scroll: '15m' });
     });
