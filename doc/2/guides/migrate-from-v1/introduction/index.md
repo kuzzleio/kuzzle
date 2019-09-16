@@ -77,3 +77,7 @@ Dropped support for:
 
   - `kuzzle` index and its collections changes according to our new naming policy
   - plugins indexes changes from `plugin:<plugin name>` to `plugin-<plugin name>`
+
+### Plugins
+
+  - Plugins manifest files are now required
