@@ -53,6 +53,7 @@ Dropped support for:
 **Collection Controller**
 
   - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+  - `collection:validateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
 
 ### Removed CLI actions
 

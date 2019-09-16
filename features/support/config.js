@@ -8,7 +8,7 @@ module.exports = rc('kuzzle', {
   host: 'localhost',
   port: 7512,
   services: {
-    engineEngine: {
+    storageEngine: {
       commonMapping: kuzzleConfig.services.storageEngine.commonMapping
     }
   }
