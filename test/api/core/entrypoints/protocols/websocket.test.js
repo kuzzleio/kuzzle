@@ -411,7 +411,7 @@ describe('/lib/api/core/entrypoints/protocols/websocket', () => {
       protocol.broadcast(data);
 
       data.payload.room = 'c1';
-      frame = Buffer.from(JSON.stringify(data.payload));
+      const frame = Buffer.from(JSON.stringify(data.payload));
 
       for (const connId of ['cx1', 'cx2', 'cx3']) {
         should(protocol.connectionPool.get(connId).socket._sender.sendFrame)
