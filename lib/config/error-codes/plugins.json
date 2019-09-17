@@ -333,6 +333,11 @@
           "code": 27,
           "message": "Unable to remove connection - unknown connection identifier: %s",
           "class": "PluginImplementationError"
+        },
+        "errors_configuration_file": {
+          "code": 28,
+          "message": "[%s] errors field in manifest.json badly formatted: %s",
+          "class": "PluginImplementationError"
         }
       }
     }
