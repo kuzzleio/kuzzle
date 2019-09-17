@@ -41,3 +41,7 @@ Removed events:
 Configuration changes:
 
   - key `services.internalEngine` is renamed to `services.internalIndex`
+
+Plugin changes:
+
+  - Plugins manifest files are now required

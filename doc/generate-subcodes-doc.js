@@ -54,7 +54,7 @@ function buildSubcodesDoc(errorCodesFiles) {
         const code = domain.code << 24
           | subdomain.code << 16
           | error.code;
-        doc += `\`${code}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](https://docs.kuzzle.io/core/${kuzzleVersion}/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
+        doc += `\`${code}\`  | \`${error.message.replace(/%s/g, '<placeholder>')}\` | [${error.class}](o/core/${kuzzleVersion}/api/essentials/errors/#${error.class.toLowerCase()}) | ${errorName} | ${domainName}.${subdomainName}.${errorName}\n`;
       }
       doc += '\n---\n';
     }
