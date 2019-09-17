@@ -853,7 +853,7 @@ describe('Test: ElasticSearch service', () => {
             body: { query: { filter: 'term' } },
             from: 1,
             size: 3,
-            refresh: 'wait_for'
+            refresh: true
           });
 
           should(result).match({
@@ -1762,7 +1762,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#listAliases', () => {
     beforeEach(() => {
-      elasticsearch.client.cat.aliases.resolves({
+      elasticsearch._client.cat.aliases.resolves({
         body: [
           { alias: 'alias-mehry', index: '&nepali.mehry' },
           { alias: 'alias-liia', index: '&nepali.liia' },
@@ -1776,7 +1776,7 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(elasticsearch.client.cat.aliases).be.calledWithMatch({
+          should(elasticsearch._client.cat.aliases).be.calledWithMatch({
             format: 'json'
           });
 
@@ -1789,7 +1789,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should not list unauthorized aliases', () => {
-      elasticsearch.client.cat.aliases.resolves({
+      elasticsearch._client.cat.aliases.resolves({
         body: [
           { alias: 'alias-mehry', index: '%nepali.mehry' },
           { alias: 'alias-liia', index: '%nepali.liia' },
@@ -1809,13 +1809,13 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return a rejected promise if client fails', () => {
-      elasticsearch.client.cat.aliases.rejects(esClientError);
+      elasticsearch._client.cat.aliases.rejects(esClientError);
 
       const promise = elasticsearch.listAliases();
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch.esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
         });
     });
   });
@@ -2807,7 +2807,7 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName,
             body: { query: { ids: { values: ['mehry', 'liia'] } } },
             scroll: '5m',
-            refresh: 'wait_for'
+            refresh: true
           });
         });
     });
