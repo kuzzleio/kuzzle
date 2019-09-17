@@ -639,7 +639,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
         .be.calledWithMatch(new RequestContext({connection}));
     });
 
-    it('should dispatch connection:new event if there are listeners on it', () => {
+    it('should dispatch connection:new event', () => {
       entrypoint.newConnection(connection);
       should(kuzzle.emit).calledOnce().calledWith('connection:new', connection);
     });
