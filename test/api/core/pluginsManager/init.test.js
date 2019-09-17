@@ -25,7 +25,7 @@ describe('PluginsManager', () => {
         R_OK: true
       }
     };
-    Manifest = rewire('../../../../lib/api/core/plugins/manifest');
+    Manifest = rewire('../../../../lib/api/core/plugins/pluginManifest');
     Manifest.__set__({
       fs: manifestFsStub
     });
@@ -47,7 +47,7 @@ describe('PluginsManager', () => {
     manifestFsStub.accessSync.returns();
 
     mockrequire('fs', fsStub);
-    mockrequire('../../../../lib/api/core/plugins/manifest', Manifest);
+    mockrequire('../../../../lib/api/core/plugins/pluginManifest', Manifest);
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -152,7 +152,7 @@ describe('PluginsManager', () => {
       should(() => pluginsManager.init()).throw(PluginImplementationError);
     });
 
-    it('should throw if a plugin does not contain a manifest.json file nor a package.json one', () => {
+    it('should throw if a plugin does not contain a manifest.json file', () => {
       pluginsManager = new PluginsManager(kuzzle);
       manifestFsStub.accessSync.throws(new Error('foobar'));
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
@@ -163,7 +163,7 @@ describe('PluginsManager', () => {
       });
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        {message:  /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\] No package\.json file found\./});
+        {message:  /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\] Unable to load the file 'manifest.json'\./});
       should(pluginsManager.plugins).be.empty();
     });
 

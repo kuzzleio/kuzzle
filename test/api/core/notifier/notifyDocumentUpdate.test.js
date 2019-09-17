@@ -40,12 +40,10 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     kuzzle.realtime.test.returns(['foo']);
     kuzzle.services.publicStorage.get.resolves({
       _id,
-      _source: {foo: 'bar'},
-      _meta: request.input.body._kuzzle_info
+      _source: {foo: 'bar'}
     });
 
-    kuzzle.services.internalCache.get.resolves(
-      JSON.stringify(['foo', 'bar']));
+    kuzzle.services.internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
 
     return notifier.notifyDocumentUpdate(request)
       .then(() => {
@@ -64,8 +62,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           'update',
           {
             _id,
-            _meta: {canIhas: 'cheezburgers?'},
-            _source: {foo: 'bar'},
+            _source: { foo: 'bar' },
             _updatedFields: ['foo']
           });
 
@@ -96,8 +93,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       kuzzle.realtime.test.returns(['foo']);
       kuzzle.services.publicStorage.get.resolves({
         _id,
-        _source: {foo: 'bar'},
-        _meta: request.input.body._kuzzle_info
+        _source: {foo: 'bar'}
       });
 
       kuzzle.services.internalCache.get.resolves(

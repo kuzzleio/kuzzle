@@ -22,7 +22,7 @@ To handle larger result sets, you have to either create a cursor by providing a 
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_search[?from=<int>][&size=<int>][&scroll=<time to live>][&includeTrash=<boolean>]
+URL: http://kuzzle:7512/<index>/<collection>/_search[?from=<int>][&size=<int>][&scroll=<time to live>]
 Method: POST
 Body:
 ```
@@ -64,8 +64,7 @@ Body:
   // optional:
   "from": <starting offset>,
   "size": <page size>,
-  "scroll": "<scroll duration>",
-  "includeTrash": <boolean>
+  "scroll": "<scroll duration>"
 }
 ```
 
@@ -79,7 +78,6 @@ Body:
 ### Optional:
 
 - `from`: paginates search results by defining the offset from the first result you want to fetch. Usually used with the `size` argument
-- `includeTrash`: if true, include documents in the [trashcan](/core/2/guides/essentials/document-metadata)
 - `scroll`: creates a forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` is returned in the results. This cursor can then be moved forward using the [scroll](/core/2/api/controllers/document/scroll) API action
 - `size`: set the maximum number of documents returned per result page
 

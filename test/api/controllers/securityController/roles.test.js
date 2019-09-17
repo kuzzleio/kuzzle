@@ -143,18 +143,16 @@ xdescribe('Test: security controller - roles', () => {
       return should(securityController.mGetRoles(new Request({body: {ids: ['test']}}))).be.rejected();
     });
 
-    it('should resolve to an object', done => {
-      kuzzle.repositories.role.loadMultiFromDatabase.resolves([{_id: 'test', _source: null, _meta: {}}]);
-      securityController.mGetRoles(new Request({body: {ids: ['test']}}))
+    it('should resolve to an object', () => {
+      kuzzle.repositories.role.loadMultiFromDatabase.resolves([
+        { _id: 'test', _source: null }
+      ]);
+
+      return securityController.mGetRoles(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits).not.be.empty();
-
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
   });

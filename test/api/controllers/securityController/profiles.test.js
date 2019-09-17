@@ -68,9 +68,18 @@ xdescribe('Test: security controller - profiles', () => {
 
   describe('#createOrReplaceProfile', () => {
     it('should resolve to an object on a createOrReplaceProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
+        _id: 'test',
+        _source: {}
+      });
 
-      return securityController.createOrReplaceProfile(new Request({_id: 'test', body: {policies: [{roleId: 'role1'}]}}))
+      return securityController
+        .createOrReplaceProfile(new Request({
+          _id: 'test',
+          body: {
+            policies: [{ roleId: 'role1' }]
+          }
+        }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -88,15 +97,19 @@ xdescribe('Test: security controller - profiles', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
-
-      return securityController.createOrReplaceProfile(new Request({
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
         _id: 'test',
-        body: {
-          policies: [{roleId: 'role1'}]
-        },
-        refresh: 'wait_for'
-      }))
+        _source: {}
+      });
+
+      return securityController
+        .createOrReplaceProfile(new Request({
+          _id: 'test',
+          body: {
+            policies: [{roleId: 'role1'}]
+          },
+          refresh: 'wait_for'
+        }))
         .then(() => {
           should(kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1])
             .match({
@@ -139,7 +152,10 @@ xdescribe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object on a createProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
+        _id: 'test',
+        _source: {}
+      });
 
       return should(securityController.createProfile(new Request({_id: 'test', body: {policies: [{roleId:'role1'}]}})))
         .be.fulfilled();
@@ -152,22 +168,25 @@ xdescribe('Test: security controller - profiles', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
-
-      return securityController.createProfile(new Request({
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
         _id: 'test',
-        body: {
-          policies: [{roleId:'role1'}]
-        },
-        refresh: 'wait_for'
-      }))
-        .then(() => {
-          const options = kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1];
+        _source: {}
+      });
 
-          should(options)
-            .match({
-              refresh: 'wait_for'
-            });
+      return securityController
+        .createProfile(new Request({
+          _id: 'test',
+          body: {
+            policies: [{roleId:'role1'}]
+          },
+          refresh: 'wait_for'
+        }))
+        .then(() => {
+          const options = kuzzle.repositories.profile.validateAndSaveProfile
+            .firstCall
+            .args[1];
+
+          should(options).match({ refresh: 'wait_for' });
         });
     });
 
@@ -198,8 +217,7 @@ xdescribe('Test: security controller - profiles', () => {
     it('should resolve to an object on a getProfile call', () => {
       kuzzle.repositories.profile.load.resolves({
         _id: 'test',
-        _source: {},
-        _meta: {}
+        _source: {}
       });
 
       return securityController.getProfile(new Request({_id: 'test'}))
@@ -253,11 +271,14 @@ xdescribe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object with roles on a mGetProfiles call with hydrate', () => {
-      kuzzle.repositories.profile.loadMultiFromDatabase.resolves([{_id: 'test', _source: {}, _meta: {}}]);
+      kuzzle.repositories.profile.loadMultiFromDatabase.resolves([
+        { _id: 'test', _source: {} }
+      ]);
 
-      return securityController.mGetProfiles(new Request({
-        body: {ids: ['test'], hydrate: true}
-      }))
+      return securityController
+        .mGetProfiles(new Request({
+          body: { ids: ['test'], hydrate: true }
+        }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
@@ -301,7 +322,6 @@ xdescribe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
-          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.searchProfiles).be.calledWithMatch(['role1'], {});
@@ -348,7 +368,6 @@ xdescribe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
-          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', undefined);
@@ -371,7 +390,6 @@ xdescribe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
-          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', '4s');

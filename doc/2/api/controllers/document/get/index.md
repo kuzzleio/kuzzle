@@ -6,8 +6,6 @@ title: get
 
 # get
 
-
-
 Gets a document.
 
 ---
@@ -17,7 +15,7 @@ Gets a document.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<documentId>[?includeTrash=<boolean>]
+URL: http://kuzzle:7512/<index>/<collection>/<documentId>
 Method: GET
 ```
 
@@ -29,8 +27,7 @@ Method: GET
   "collection": "<collection>",
   "controller": "document",
   "action": "get",
-  "_id": "<documentId>",
-  "includeTrash": false
+  "_id": "<documentId>"
 }
 ```
 
@@ -41,10 +38,6 @@ Method: GET
 - `collection`: collection name
 - `documentId`: document unique identifier
 - `index`: index name
-
-### Optional:
-
-- `includeTrash`: if true, documents in the [trashcan](/core/2/guides/essentials/document-metadata) can be returned
 
 ---
 
@@ -78,9 +71,7 @@ Returns an object with the following properties:
         "author": "Bob",
         "createdAt": 1481816934209,
         "updatedAt": null,
-        "updater": null,
-        "active": true,
-        "deletedAt": null
+        "updater": null
       }
     }
   }
