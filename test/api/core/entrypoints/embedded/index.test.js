@@ -641,31 +641,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
     it('should dispatch connection:new event if there are listeners on it', () => {
       entrypoint.newConnection(connection);
-
-      should(kuzzle.emit).not.be.called();
-
-      kuzzle.on('connection:new', sinon.stub());
-      entrypoint.newConnection(connection);
-
-      should(kuzzle.emit).calledOnce().calledWithMatch(
-        'connection:new',
-        {
-          id: 'connectionId',
-          protocol: 'protocol',
-          headers: 'headers'
-        });
-    });
-
-    it('should provide a copy of the underlying connection object', () => {
-      kuzzle.on('connection:new', sinon.stub());
-
-      entrypoint.newConnection(connection);
-
-      should(kuzzle.emit).calledOnce();
-
-      const payload = kuzzle.emit.firstCall.args[1];
-
-      should(payload).match(connection).and.not.exactly(connection);
+      should(kuzzle.emit).calledOnce().calledWith('connection:new', connection);
     });
   });
 
