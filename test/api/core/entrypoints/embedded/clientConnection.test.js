@@ -22,16 +22,5 @@ describe('core/clientConnection', () => {
     it('should set headers', () => {
       should(connection.headers).be.exactly(headers);
     });
-
-    it('should be frozen', () => {
-      connection.id = 'not-set';
-      connection.protocol = 'not-set';
-      connection.headers.foo = 'not-set';
-
-      should(() => connection.ips.push('not-pushed')).throw(TypeError);
-      should(connection.headers.foo).not.be.eql('not-set');
-      should(connection.id).not.be.eql('not-set');
-      should(connection.protocol).not.be.eql('not-set');
-    });
   });
 });
