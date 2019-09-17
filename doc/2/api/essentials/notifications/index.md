@@ -50,7 +50,6 @@ The `result` object is the notification content, and it has the following struct
 | Property  | Type   | Description                                                                                                                      |
 | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | `_id`     | string | Document unique ID<br/>`null` if the notification is from a real-time message                                                    |
-| `_meta`   | object | <DeprecatedBadge version="1.3.0" /><br/>Document metadata information (creation time, last update time, and so on). Can be null. |
 | `_source` | object | The message or full document content. Not present if the event is about a document deletion                                      |
 
 ### Example
@@ -71,8 +70,7 @@ The `result` object is the notification content, and it has the following struct
       "some": "document content",
       "_kuzzle_info": {
         "author": "<author kuid>",
-        "createdAt": 1497866996975,
-        "active": true
+        "createdAt": 1497866996975
       }
     },
     "_id": "<document identifier>"
