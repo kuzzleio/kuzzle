@@ -14,17 +14,19 @@ Dropped support for:
   - Redis versions 3 and 4
   - Elasticsearch v5 
   - Kuzzle Proxy 
-  - Permission Closures (deprecated since Kuzzle 1.4.0)
-  - Document trashcan (deprecated since Kuzzle 1.2.0)
 
 API Changes:
+  - Remove permission closures (deprecated since Kuzzle 1.4.0)
+  - Remove the documents trashcan (deprecated since Kuzzle 1.2.0)
   - Remove the `_meta` tag from documents and notifications (it was deprecated since Kuzzle 1.3.0)
   - Fields linked to the documents trashcan have been removed from the documents and notifications metadata : `deletedAt`, `active`
+  - Remove the real-time notifications about events that were about to happen (deprecated since Kuzzle 1.5.0)
 
 Removed errors:
 
 | Code | Unique name |
 |------|-------------|
+| `0x00020004` | `internal.hotelclerk.incorrect_state_value` |
 | `0x01090032` | `api.security.invalid_rights_given` |
 | `0x0109003b` | `api.security.missing_test_element_for_controller_action` |
 | `0x0109003e` | `api.security.parsing_closure_rights_for_role` |
@@ -43,4 +45,3 @@ Configuration changes:
 Plugin changes:
 
   - Plugins manifest files are now required
-

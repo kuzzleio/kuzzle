@@ -18,13 +18,11 @@ The following notifications are sent by Kuzzle whenever one of the following eve
 - A real-time message is sent
 - A new document has been created
 - A document has been updated or replaced
-- <DeprecatedBadge version="1.5.0" /> A document is about to be created (creation not guaranteed)
 
 Real-time notifications are also sent when documents, previously in the subscription scope, are leaving it because of the following events:
 
 - document is deleted
 - document is updated/replaced and its new content do not match the subscription filters anymore
-- <DeprecatedBadge version="1.5.0" /> document is about to be deleted (deletion not guaranteed)
 
 ### Format
 
@@ -40,7 +38,6 @@ A document notification contains the following fields:
 | `result`     | object | Notification content                                                                                                     |
 | `room`       | string | Subscription channel identifier. Can be used to link a notification to its corresponding subscription                    |
 | `scope`      | string | `in`: document enters (or stays) in the scope<br/>`out`: document leaves the scope                                       |
-| `state`      | string | <DeprecatedBadge version="1.5.0" /><br/>`done`: the change has been applied<br/>`pending`: the change is about to happen | `pending`, `done` |
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                                           |
 | `type`       | string | `document`: the notification type                                                                                        |
 | `volatile`   | object | Request [volatile data](/core/2/api/essentials/volatile-data)                                                           |
@@ -64,7 +61,6 @@ The `result` object is the notification content, and it has the following struct
   "timestamp": 1497513122738,
   "volatile": null,
   "scope": "in",
-  "state": "done",
   "result":{
     "_source":{
       "some": "document content",

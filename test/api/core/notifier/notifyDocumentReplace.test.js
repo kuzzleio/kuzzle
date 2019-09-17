@@ -49,7 +49,6 @@ describe('Test: notifier.notifyDocumentReplace', () => {
             ['foo'],
             request,
             'in',
-            'done',
             'replace',
             {
               _id,
@@ -60,7 +59,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
             });
 
         should(notifier.notifyDocument.getCall(1))
-          .calledWith(['bar'], request, 'out', 'done', 'replace', { _id });
+          .calledWith(['bar'], request, 'out', 'replace', { _id });
 
         should(internalCache.get.callCount).be.eql(1);
         internalCache.get.getCall(0)
