@@ -67,7 +67,7 @@ function commandStart (options = {}) {
     kuzzleParams.additionalPlugins = options.enablePlugins
       .trim()
       .split(',')
-      .map(x => x.trim().replace (/(^")|("$)/g, ''));
+      .map(x => x.trim().replace(/(^")|("$)/g, ''));
   }
 
   return Promise.all(promises)
