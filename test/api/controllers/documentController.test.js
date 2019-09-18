@@ -315,7 +315,7 @@ describe('DocumentController', () => {
         index,
         collection,
         content,
-        { id: null, userId: null, refresh: 'false' });
+        { id: null, userId: undefined, refresh: 'false' });
     });
   });
 
@@ -375,7 +375,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: null, refresh: 'false' });
+        { userId: undefined, refresh: 'false' });
     });
 
     it('should set a partial error if some actions failed', async () => {
@@ -477,7 +477,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: null, refresh: 'false' });
+        { userId: undefined, refresh: 'false' });
     });
   });
 
@@ -531,7 +531,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: null, refresh: 'false', retryOnConflict: undefined });
+        { userId: undefined, refresh: 'false', retryOnConflict: undefined });
     });
   });
 
@@ -586,7 +586,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: null, refresh: 'false' });
+        { userId: undefined, refresh: 'false' });
     });
   });
 
@@ -599,8 +599,6 @@ describe('DocumentController', () => {
       request.input.resource._id = 'foobar';
 
       const response = await documentController.delete(request);
-
-      should(kuzzle.notifier.publish).be.calledWith(request);
 
       should(documentController.publicStorage.delete).be.calledWith(
         index,

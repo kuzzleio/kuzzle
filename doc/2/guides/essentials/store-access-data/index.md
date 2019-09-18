@@ -162,9 +162,7 @@ curl -X POST -H "Content-Type: application/json" -d '{ "driver": "liia", "arrive
         "author": "-1",
         "createdAt": 1561443009768,
         "updatedAt": null,
-        "updater": null,
-        "active": true,
-        "deletedAt": null
+        "updater": null
       }
     }
   }
@@ -240,9 +238,7 @@ curl http://localhost:7512/nyc-open-data/yellow-taxi/document-uniq-id?pretty
         "author": "-1",
         "createdAt": 1561443222474,
         "updatedAt": 1561443279526,
-        "updater": "-1",
-        "active": true,
-        "deletedAt": null
+        "updater": "-1"
       },
       "car": "rickshaw"
     }
@@ -309,9 +305,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837342,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       },
@@ -327,9 +321,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837239,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       },
@@ -345,9 +337,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837391,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       },
@@ -363,9 +353,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837290,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       }

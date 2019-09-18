@@ -38,45 +38,30 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
   it('should notify when a document has been deleted', () => {
     const
       stillAlive = {
-        _meta: {
-          'This is a triumph': 'I\'m making a not here: HUGE SUCCESS',
-          'It\'s hard to overstate': 'my satisfaction',
-          'Aperture Science': 'We do what we must, because we can',
-          'For the good of all of us': 'Except the ones who are dead',
+        'I\'m not even angry': 'I\'m being so sincere right now',
+        'Even though you broke my heart': 'and killed me',
+        'And tore me to pieces': 'And threw every piece into A FIRE',
+        'As they burned it hurt because': 'I was so happy for you',
 
-          'There\'s no point crying': 'over every mistake',
-
-          'You just keep on trying': 'till you run out of cake',
-          'And the science gets done': 'and you make a neat gun',
-          'For the people who are': 'still alive'
-        },
-        _source: {
-          'I\'m not even angry': 'I\'m being so sincere right now',
-          'Even though you broke my heart': 'and killed me',
-          'And tore me to pieces': 'And threw every piece into A FIRE',
-          'As they burned it hurt because': 'I was so happy for you',
-
-          'Now these points of data': 'make a beautiful line',
-          'We\'re out of beta': 'we\'re releasing on time',
-          'And I\'m GLaD I got burned': 'think of all the things we learned',
-          'For the people who are': 'still alive'
-        }
+        'Now these points of data': 'make a beautiful line',
+        'We\'re out of beta': 'we\'re releasing on time',
+        'And I\'m GLaD I got burned': 'think of all the things we learned',
+        'For the people who are': 'still alive'
       };
 
     kuzzle.realtime.test.returns(['foo', 'bar']);
     kuzzle.storageEngine.public.mGet.resolves({
       items: [
-        {_id: 'foobar', ...stillAlive }
+        {_id: 'foobar', _source: stillAlive }
       ],
       total: 1
     });
 
-    return notifier.notifyDocumentMDelete(request, [{_id: 'foobar', ...stillAlive }])
+    return notifier.notifyDocumentMDelete(request, [{_id: 'foobar', _source: stillAlive }])
       .then(() => {
         should(notifier.notifyDocument)
           .calledOnce()
-          .calledWith(['foo', 'bar'], request, 'out', 'done', 'delete', {
-            _meta: stillAlive._meta,
+          .calledWith(['foo', 'bar'], request, 'out', 'delete', {
             _id: 'foobar'
           });
       });
@@ -96,8 +81,8 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
     return notifier.notifyDocumentMDelete(request, documents)
       .then(() => {
         should(notifier.notifyDocument.callCount).be.eql(2);
-        should(notifier.notifyDocument.getCall(0).args[5]._id).be.eql('foo');
-        should(notifier.notifyDocument.getCall(1).args[5]._id).be.eql('bar');
+        should(notifier.notifyDocument.getCall(0).args[4]._id).be.eql('foo');
+        should(notifier.notifyDocument.getCall(1).args[4]._id).be.eql('bar');
       });
   });
 });

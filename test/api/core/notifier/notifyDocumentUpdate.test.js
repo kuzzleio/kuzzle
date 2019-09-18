@@ -40,8 +40,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     kuzzle.realtime.test.returns(['foo']);
     kuzzle.storageEngine.public.get.resolves({
       _id,
-      _source: {foo: 'bar'},
-      _meta: request.input.body._kuzzle_info
+      _source: {foo: 'bar'}
     });
 
     kuzzle.cacheEngine.internal.get.resolves(
@@ -61,17 +60,15 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
           ['foo'],
           request,
           'in',
-          'done',
           'update',
           {
             _id,
-            _meta: {canIhas: 'cheezburgers?'},
-            _source: {foo: 'bar'},
+            _source: { foo: 'bar' },
             _updatedFields: ['foo']
           });
 
         should(notifier.notifyDocument.getCall(1)).calledWith(
-          ['bar'], request, 'out', 'done', 'update', { _id });
+          ['bar'], request, 'out', 'update', { _id });
 
         should(kuzzle.cacheEngine.internal.get)
           .calledOnce()
@@ -97,8 +94,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       kuzzle.realtime.test.returns(['foo']);
       kuzzle.storageEngine.public.get.resolves({
         _id,
-        _source: {foo: 'bar'},
-        _meta: request.input.body._kuzzle_info
+        _source: {foo: 'bar'}
       });
 
       kuzzle.cacheEngine.internal.get.resolves(

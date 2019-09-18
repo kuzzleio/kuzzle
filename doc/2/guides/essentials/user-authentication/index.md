@@ -46,12 +46,6 @@ You should get the following response:
     "_source": {
       "profileIds": ["default"],
       "name": "John Doe"
-    },
-    "_meta": {
-      "author": "-1",
-      "createdAt": 1516186256993,
-      "updatedAt": null,
-      "updater": null
     }
   }
 }

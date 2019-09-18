@@ -36,11 +36,11 @@ describe('Test: notifier.publish', () => {
 
     const request = new Request(rawRequest);
 
-    return notifier.publish(request, 'foo', 'bar')
+    return notifier.publish(request)
       .then(() => {
         should(notifier.notifyDocument)
           .calledOnce()
-          .calledWith(rooms, request, 'foo', 'bar', rawRequest.action, {
+          .calledWith(rooms, request, 'in', rawRequest.action, {
             _source: rawRequest.body,
             _id: rawRequest._id
           });

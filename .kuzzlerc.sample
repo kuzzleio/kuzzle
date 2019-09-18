@@ -475,22 +475,9 @@
         "port": 6379
       }
     },
-
-    // [garbageCollector]
-    // The document garbage collector service: permanently delete
-    // documents in the trashcan area
-    //
-    //   * cleanInterval:
-    //      Delay between each garbage collection, in milliseconds
-    //    * maxDelete:
-    //      Maximum number of documents to delete **per data collection**
-    "garbageCollector": {
-      "cleanInterval": 86400000,
-      "maxDelete": 1000
-    },
     // [storageEngine]
-    // The default database layer is Elasticsearch and it is
-    // currently the only database layer we support.
+    // The default storage layer is Elasticsearch and it is
+    // currently the only storage layer we support.
     //   * client:
     //       Elasticsearch constructor options. Use this field to specify your
     //       Elasticsearch config options, this object is passed through to the

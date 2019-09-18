@@ -42,7 +42,8 @@
         "incorrect_state_value": {
           "code": 4,
           "message": "Incorrect value for the 'state' parameter. Expected: all, done or pending. Got: %s.",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": "true"
         },
         "incorrect_scope_value": {
           "code": 5,
@@ -586,6 +587,5 @@
         }
       }
     }
-
   }
 }

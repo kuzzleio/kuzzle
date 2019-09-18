@@ -6,8 +6,6 @@ title: mGet
 
 # mGet
 
-
-
 Gets multiple documents.
 
 ---
@@ -17,7 +15,7 @@ Gets multiple documents.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_mGet[?includeTrash=<true|false>]
+URL: http://kuzzle:7512/<index>/<collection>/_mGet
 Method: POST
 Body:
 ```
@@ -38,8 +36,7 @@ Body:
   "action": "mGet",
   "body": {
     "ids": ["<documentId>", "<anotherDocumentId>"]
-  },
-  "includeTrash": false
+  }
 }
 ```
 
@@ -49,10 +46,6 @@ Body:
 
 - `collection`: collection name
 - `index`: index name
-
-### Optional:
-
-- `includeTrash`: if set, documents in the [trashcan](/core/2/guides/essentials/document-metadata) can be returned.
 
 ---
 
