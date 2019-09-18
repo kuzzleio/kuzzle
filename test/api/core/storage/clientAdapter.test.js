@@ -156,6 +156,10 @@ describe('ClientAdapter', () => {
         index: 'index',
         scope: 'public'
       });
+      should(indexCache.remove).be.calledWithMatch({
+        index: 'index',
+        scope: 'public'
+      });
     });
   });
 
@@ -168,6 +172,9 @@ describe('ClientAdapter', () => {
       should(ret).be.eql('ret');
       should(clientAdapter._client.deleteIndexes)
         .be.calledWith(['index1', 'index2']);
-    });
+        should(indexCache.remove)
+          .be.calledWithMatch({ index: 'index1', scope: 'public' })
+          .be.calledWithMatch({ index: 'index2', scope: 'public' });
+      });
   });
 });

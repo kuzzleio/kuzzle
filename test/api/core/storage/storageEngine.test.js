@@ -87,7 +87,7 @@ describe('StorageEngine', () => {
 
   describe('#add', () => {
     it('should add a new collection to the index cache and emit an event', () => {
-      storageEngine.add({ index: 'foobar', collection: 'collection' });
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'collection' });
 
       should(storageEngine._indexes).have.keys('foobar');
       should(storageEngine._indexes.foobar.collections)
@@ -101,8 +101,8 @@ describe('StorageEngine', () => {
     });
 
     it('should not add a collection if it is already in cache', () => {
-      storageEngine.add({ index: 'foobar', collection: 'collection' });
-      storageEngine.add({ index: 'foobar', collection: 'collection' });
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'collection' });
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'collection' });
 
       should(storageEngine._indexes).have.keys('foobar');
       should(storageEngine._indexes.foobar.collections)
@@ -112,14 +112,14 @@ describe('StorageEngine', () => {
     });
 
     it('should do nothing if no collection is provided', () => {
-      storageEngine.add('foobar');
+      storageEngine.indexCache.add('foobar');
 
       should(storageEngine._indexes).be.empty();
       should(kuzzle.emit).not.be.called();
     });
 
     it('does not emit event when notify is set to false (call from cluster sync', () => {
-      storageEngine.add({ index: 'foobar', collection: 'collection', notify: false });
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'collection', notify: false });
 
       should(kuzzle.emit).not.be.called();
     });
@@ -127,13 +127,13 @@ describe('StorageEngine', () => {
 
   describe('#remove', () => {
     beforeEach(() => {
-      storageEngine.add({ index: 'foobar', collection: 'foolection', notify: false });
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'foolection', notify: false });
     });
 
     it('should remove a single collection from the cache and emit an event', () => {
-      storageEngine.add({ index: 'foobar', collection: 'foolection2', notify: false });
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'foolection2', notify: false });
 
-      storageEngine.remove({ index: 'foobar', collection: 'foolection' });
+      storageEngine.indexCache.remove({ index: 'foobar', collection: 'foolection' });
 
       should(storageEngine._indexes.foobar).match({
         scope: 'public',
@@ -147,7 +147,7 @@ describe('StorageEngine', () => {
     });
 
     it('should do nothing if the index does not exist', () => {
-      storageEngine.remove({ index: 'barfoo' });
+      storageEngine.indexCache.remove({ index: 'barfoo' });
 
       should(storageEngine._indexes).match({
         foobar: {
@@ -159,7 +159,7 @@ describe('StorageEngine', () => {
     });
 
     it('should do nothing if the collection does not exist', () => {
-      storageEngine.remove({ index: 'foobar', collection: 'barlection' });
+      storageEngine.indexCache.remove({ index: 'foobar', collection: 'barlection' });
 
       should(storageEngine._indexes).match({
         foobar: {
@@ -171,13 +171,19 @@ describe('StorageEngine', () => {
     });
 
     it('does not emit event when notify is set to false (call from cluster sync', () => {
-      storageEngine.remove({ index: 'foobar', collection: 'foolection', notify: false });
+      storageEngine.indexCache.remove({ index: 'foobar', collection: 'foolection', notify: false });
 
       should(kuzzle.emit).not.be.called();
     });
 
     it('should deletes the index when the last collection is removed', () => {
-      storageEngine.remove({ index: 'foobar', collection: 'foolection' });
+      storageEngine.indexCache.remove({ index: 'foobar', collection: 'foolection' });
+
+      should(storageEngine._indexes.foobar).be.undefined();
+    });
+
+    it('should delete an index from cache', () => {
+      storageEngine.indexCache.remove({ index: 'foobar' });
 
       should(storageEngine._indexes.foobar).be.undefined();
     });
@@ -185,38 +191,38 @@ describe('StorageEngine', () => {
 
   describe('#exists', () => {
     beforeEach(() => {
-      storageEngine.add({ index: 'foobar', collection: 'foolection' });
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'foolection' });
     });
 
     it('should returns true if the index exists in Kuzzle', () => {
-      const exists = storageEngine.exists({ index: 'foobar' });
+      const exists = storageEngine.indexCache.exists({ index: 'foobar' });
 
       should(exists).be.true();
     });
 
     it('should returns true if the collection exists in Kuzzle', () => {
-      const exists = storageEngine.exists({ index: 'foobar', collection: 'foolection' });
+      const exists = storageEngine.indexCache.exists({ index: 'foobar', collection: 'foolection' });
 
       should(exists).be.true();
     });
 
     it('should returns false if the index does not exists in Kuzzle', () => {
-      const exists = storageEngine.exists({ index: 'barfoo' });
+      const exists = storageEngine.indexCache.exists({ index: 'barfoo' });
 
       should(exists).be.false();
     });
 
     it('should returns false if the collection does not exists in Kuzzle', () => {
-      const exists = storageEngine.exists({ index: 'foobar', collection: 'barlection' });
+      const exists = storageEngine.indexCache.exists({ index: 'foobar', collection: 'barlection' });
 
       should(exists).be.false();
     });
 
     it('should return false if the index is not the same type', () => {
-      storageEngine.add({ index: 'kuzzle', collection: 'users', scope: 'internal' });
+      storageEngine.indexCache.add({ index: 'kuzzle', collection: 'users', scope: 'internal' });
 
-      const indexExists = storageEngine.exists({ index: 'kuzzle' });
-      const collectionExists = storageEngine.exists({
+      const indexExists = storageEngine.indexCache.exists({ index: 'kuzzle' });
+      const collectionExists = storageEngine.indexCache.exists({
         index: 'kuzzle',
         collection: 'users'
       });

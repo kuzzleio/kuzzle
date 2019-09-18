@@ -76,10 +76,6 @@ Before({tags: '@security'}, function () {
   return cleanSecurity.call(this);
 });
 
-After({tags: '@security'}, function () {
-  // return cleanSecurity.call(this);
-});
-
 Before({tags: '@firstAdmin'}, function () {
   return cleanSecurity.call(this);
 });
