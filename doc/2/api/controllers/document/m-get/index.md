@@ -76,7 +76,7 @@ Each document is an object with the following properties:
 If one or more document retrievals fail, the response status is set to `206`, and the `error` object contains a [partial error](/core/1/api/essentials/errors#partialerror) error.  
 
 ::: info
-You can use the `found` attribute on hits to identify missing documents.
+You can use the `found` attribute to identify missing documents.
 :::
 
 ```js
