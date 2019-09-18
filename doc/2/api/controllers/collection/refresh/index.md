@@ -46,7 +46,7 @@ Method: POST
 
 ## Response
 
-Returns a response with `status` 200 if refresh succeed.
+Returns a response with `status` 200 if the refresh succeeds.
 
 ```js
 {
