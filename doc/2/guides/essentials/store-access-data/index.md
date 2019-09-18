@@ -257,7 +257,7 @@ Requests must be made through Kuzzle using the [document:search](/core/2/api/con
 ::: warning
 When a document is created or modified, its latest version is not immediately available in the results of a search.  
 First, you have to wait until Elasticsearch has finished updating its index.  
-It is possible to makes Elasticsearch wait for the indexation before sending the answer by setting `refresh=wait_for`.
+It is possible to make Elasticsearch wait for the indexation before sending the answer by setting `refresh=wait_for`.
 ::: 
 
 For example, to retrieve documents between the ages of 25 and 28:
