@@ -75,7 +75,7 @@ Dropped support for:
 
 **Internal datamodel changes:**
 
-  - `kuzzle` index and its collections changes according to our new naming policy
+  - `kuzzle` index and its collections now follow our new naming policy
   - plugins indexes changes from `plugin:<plugin name>` to `plugin-<plugin name>`
 
 ### Plugins
