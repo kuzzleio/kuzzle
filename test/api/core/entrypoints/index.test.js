@@ -613,11 +613,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should dispatch connection:new event', () => {
       entrypoint.newConnection(connection);
 
-      should(kuzzle.emit).be.calledWithMatch('connection:new', {
-        id: 'connectionId',
-        protocol: 'protocol',
-        headers: 'headers'
-      });
+      should(kuzzle.emit).be.calledWithMatch('connection:new', connection);
     });
   });
 
