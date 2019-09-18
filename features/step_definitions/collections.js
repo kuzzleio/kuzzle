@@ -24,6 +24,20 @@ When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (ty
     .catch(error => callback(error));
 });
 
+When('I try to create the collection {string}', async function (collection) {
+  try {
+    const response = await this.api.createCollection(null, collection);
+
+    this.result = response;
+  } catch (error) {
+    this.result = { error };
+  }
+});
+
+When('I create a collection named {string} in index {string}', async function (collection, index) {
+  await this.api.createCollection(index, collection);
+});
+
 Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, collection, callback) {
   if (!this.result.collections) {
     return callback('Expected a collections list result, got: ' + this.result);
@@ -77,6 +91,13 @@ Then(/^I truncate the collection(?: "(.*?)")?(?: in index "([^"]*)")?$/, functio
     .catch(error => callback(error));
 });
 
+Then(/I refresh the collection( "(.*?)")?/, function (indexCollection) {
+  indexCollection = indexCollection ? indexCollection : '';
+  const [index, collection] = indexCollection.split(':');
+
+  return this.api.refreshCollection(index, collection);
+});
+
 When(/^I check if index "(.*?)" exists$/, function (index, cb) {
   return stepUtils.getReturn.call(this, 'indexExists', index, cb);
 });
@@ -103,7 +124,9 @@ When(/I create a collection "([\w-]+)":"([\w-]+)"( with "([\d]+)" documents)?/, 
 Then('The mapping dynamic field of {string}:{string} is {string}', function (index, collection, dynamicValue) {
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
-      const expectedValue = dynamicValue === 'the default value' ? this.kuzzleConfig.services.db.dynamic.toString() : dynamicValue;
+      const expectedValue = dynamicValue === 'the default value'
+        ? this.kuzzleConfig.services.storageEngine.commonMapping.dynamic.toString()
+        : dynamicValue;
 
       should(result[index].mappings[collection].dynamic)
         .not.be.undefined()
@@ -122,10 +145,11 @@ Then('The mapping properties field of {string}:{string} is {string}', function (
 
   return this.api.getCollectionMapping(index, collection, includeKuzzleMeta)
     .then(({ result }) => {
-      const expectedValue = rawMapping === 'the default value' ? this.kuzzleConfig.services.db.commonMapping : JSON.parse(rawMapping);
+      const expectedValue = rawMapping === 'the default value'
+        ? this.kuzzleConfig.services.storageEngine.commonMapping.properties
+        : JSON.parse(rawMapping);
 
       should(result[index].mappings[collection].properties)
-        .not.be.undefined()
         .be.eql(expectedValue);
     });
 });

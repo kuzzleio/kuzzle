@@ -12,7 +12,7 @@ const
   } = require('kuzzle-common-objects'),
   MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js');
 
-xdescribe('Test: memoryStorage controller', () => {
+describe('MemoryStorageController', () => {
   let
     msController,
     called,
@@ -79,7 +79,7 @@ xdescribe('Test: memoryStorage controller', () => {
     });
 
     kuzzle = new KuzzleMock();
-    kuzzle.services.publicCache = new RedisClientMock();
+    kuzzle.cacheEngine.public = new RedisClientMock();
   });
 
   beforeEach(() => {

@@ -84,16 +84,6 @@ class KWorld {
       { doc: { title: 'foobar' } },
       { delete: {_id: 2 } }
     ];
-    this.globalBulk = [
-      { index:  {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
-      { title: 'foo' },
-      { index:  {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } },
-      { title: 'bar' },
-      { update: {_id: 1, _type: this.fakeCollection, _index: this.fakeIndex } },
-      { doc: { title: 'foobar' } },
-      { delete: {_id: 2, _type: this.fakeCollection, _index: this.fakeIndex } }
-    ];
-
 
     this.mapping = {
       properties: {

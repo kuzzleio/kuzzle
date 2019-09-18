@@ -15,7 +15,7 @@ const
   } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
-xdescribe('Test: security controller - profiles', () => {
+describe('Test: security controller - profiles', () => {
   let
     kuzzle,
     request,
@@ -40,7 +40,9 @@ xdescribe('Test: security controller - profiles', () => {
     });
 
     it('should update the profile mapping', () => {
+      kuzzle.internalIndex.updateMapping.resolves(foo);
       request.input.body = foo;
+
       return securityController.updateProfileMapping(request)
         .then(response => {
           should(kuzzle.internalIndex.updateMapping).be.calledOnce();
@@ -54,14 +56,16 @@ xdescribe('Test: security controller - profiles', () => {
 
   describe('#getProfileMapping', () => {
     it('should fulfill with a response object', () => {
+      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+
       return securityController.getProfileMapping(request)
         .then(response => {
           should(kuzzle.internalIndex.getMapping)
             .be.calledOnce()
-            .be.calledWith(kuzzle.internalIndex.index, 'profiles');
+            .be.calledWith('profiles');
 
           should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });

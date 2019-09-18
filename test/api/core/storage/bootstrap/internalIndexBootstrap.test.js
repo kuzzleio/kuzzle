@@ -4,31 +4,29 @@ const
   sinon = require('sinon'),
   should = require('should'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
-  IndexEngineMock = require('../../../../mocks/indexEngine.mock'),
+  IndexStorageMock = require('../../../../mocks/indexStorage.mock'),
   SafeBootstrap = require('../../../../../lib/api/core/storage/bootstrap/safeBootstrap'),
   InternalIndexBootstrap = require('../../../../../lib/api/core/storage/bootstrap/internalIndexBootstrap');
 
 describe('InternalIndexBootstrap', () => {
   let
     internalIndexName,
-    internalIndexEngine,
+    internalIndexStorage,
     internalIndexBootstrap,
     kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    internalIndexEngine = new IndexEngineMock(
-      kuzzle,
+    internalIndexStorage = new IndexStorageMock(
       internalIndexName,
-      kuzzle.services.internalStorage);
+      kuzzle.storageEngine.internal);
 
-    kuzzle.indexCache.exists.resolves(false);
     kuzzle.config.services.internalIndex.bootstrapLockTimeout = 42000;
 
     internalIndexBootstrap = new InternalIndexBootstrap(
       kuzzle,
-      internalIndexEngine);
+      internalIndexStorage);
   });
 
   describe('#startOrWait', () => {
@@ -39,7 +37,7 @@ describe('InternalIndexBootstrap', () => {
     beforeEach(() => {
       jwtSecret = 'i-am-the-secret-now';
 
-      internalIndexBootstrap.createInternalIndex = sinon.stub().resolves();
+      internalIndexBootstrap.createInternalCollections = sinon.stub().resolves();
       internalIndexBootstrap._getJWTSecret = sinon.stub().resolves(jwtSecret);
 
       safeBootstrapStartOrWait = SafeBootstrap.prototype.startOrWait;
@@ -54,12 +52,11 @@ describe('InternalIndexBootstrap', () => {
       await internalIndexBootstrap.startOrWait();
 
       sinon.assert.callOrder(
-        internalIndexBootstrap.createInternalIndex,
         SafeBootstrap.prototype.startOrWait,
         internalIndexBootstrap._getJWTSecret
       );
 
-      should(internalIndexBootstrap.kuzzle.config.security.jwt.secret)
+      should(kuzzle.config.security.jwt.secret)
         .be.eql('i-am-the-secret-now');
     });
   });
@@ -78,21 +75,8 @@ describe('InternalIndexBootstrap', () => {
         internalIndexBootstrap.createInitialSecurities,
         internalIndexBootstrap.createInitialValidations,
         internalIndexBootstrap._persistJWTSecret,
-        internalIndexEngine.create
+        internalIndexStorage.create
       );
-    });
-  });
-
-  describe('#createInternalIndex', () => {
-    it('should create internal collections', async () => {
-      await internalIndexBootstrap.createInternalIndex();
-
-      should(internalIndexEngine.createCollection.callCount).be.eql(5);
-      should(internalIndexEngine.createCollection.getCall(0).args[0])
-        .be.eql('users');
-      should(internalIndexEngine.createCollection.getCall(4).args).be.eql([
-        'config',
-        { dynamic: false, properties: {} }]);
     });
   });
 
@@ -100,10 +84,10 @@ describe('InternalIndexBootstrap', () => {
     it('should create initial roles and profiles', async () => {
       await internalIndexBootstrap.createInitialSecurities();
 
-      should(internalIndexEngine.createOrReplace.callCount).be.eql(6);
-      should(internalIndexEngine.createOrReplace.getCall(0).args[0])
+      should(internalIndexStorage.createOrReplace.callCount).be.eql(6);
+      should(internalIndexStorage.createOrReplace.getCall(0).args[0])
         .be.eql('roles');
-      should(internalIndexEngine.createOrReplace.getCall(3).args[0])
+      should(internalIndexStorage.createOrReplace.getCall(3).args[0])
         .be.eql('profiles');
     });
   });
@@ -127,8 +111,8 @@ describe('InternalIndexBootstrap', () => {
 
       await internalIndexBootstrap.createInitialValidations();
 
-      should(internalIndexEngine.createOrReplace.callCount).be.eql(2);
-      should(internalIndexEngine.createOrReplace.getCall(0).args).be.eql([
+      should(internalIndexStorage.createOrReplace.callCount).be.eql(2);
+      should(internalIndexStorage.createOrReplace.getCall(0).args).be.eql([
         'validations',
         'nepali#liia',
         {
@@ -147,22 +131,22 @@ describe('InternalIndexBootstrap', () => {
       const jwt = await internalIndexBootstrap._getJWTSecret();
 
       should(jwt).be.eql('i-am-the-secret');
-      should(internalIndexEngine.get).not.be.called();
+      should(internalIndexStorage.get).not.be.called();
     });
 
     it('should get the secret from storage if it exists', async () => {
-      internalIndexEngine.get.resolves({ _source: { seed: 'i-am-another-secret' } });
+      internalIndexStorage.get.resolves({ _source: { seed: 'i-am-another-secret' } });
 
       const jwt = await internalIndexBootstrap._getJWTSecret();
 
       should(jwt).be.eql('i-am-another-secret');
-      should(internalIndexEngine.get).be.calledWith('config', internalIndexBootstrap._JWT_SECRET_ID);
+      should(internalIndexStorage.get).be.calledWith('config', internalIndexBootstrap._JWT_SECRET_ID);
     });
 
     it('should reject if the JWT does not exists', () => {
       const error = new Error('not found');
       error.status = 404;
-      internalIndexEngine.get.rejects(error);
+      internalIndexStorage.get.rejects(error);
 
       const promise = internalIndexBootstrap._getJWTSecret();
 
@@ -170,7 +154,7 @@ describe('InternalIndexBootstrap', () => {
         errorName: 'external.internal_engine.no_jwt_secret_available'
       })
         .then(() => {
-          should(internalIndexEngine.get).be.calledWith('config', internalIndexBootstrap._JWT_SECRET_ID);
+          should(internalIndexStorage.get).be.calledWith('config', internalIndexBootstrap._JWT_SECRET_ID);
         });
     });
   });
@@ -181,7 +165,7 @@ describe('InternalIndexBootstrap', () => {
 
       const jwt = await internalIndexBootstrap._persistJWTSecret();
 
-      should(internalIndexEngine.create).be.calledWith(
+      should(internalIndexStorage.create).be.calledWith(
         'config',
         internalIndexBootstrap._JWT_SECRET_ID,
         { seed: 'i-am-the-secret' });
@@ -191,7 +175,7 @@ describe('InternalIndexBootstrap', () => {
     it('should generate and persist a random secret', async () => {
       await internalIndexBootstrap._persistJWTSecret();
 
-      should(internalIndexEngine.create).be.called();
+      should(internalIndexStorage.create).be.called();
     });
   });
 });

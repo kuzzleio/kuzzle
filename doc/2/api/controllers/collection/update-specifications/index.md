@@ -15,8 +15,6 @@ When the validation specification is not formatted correctly, a detailed error m
 
 ## Query Syntax
 
-<SinceBadge version="1.8.0" />
-
 ### HTTP
 
 ```http
@@ -55,54 +53,7 @@ Body:
 
 ---
 
-<DeprecatedBadge version="1.8.0" />
-
-### HTTP
-
-```http
-URL: http://kuzzle:7512/_specifications
-Method: PUT  
-Body:
-```
-
-```js
-{
-  "myindex": {
-    "mycollection": {
-      "strict": <boolean>,
-      "fields": {
-        // ... specification for each field
-      }
-    }
-  }
-}
-```
-
-### Other protocols
-
-```js
-{
-  "controller": "collection",
-  "action": "updateSpecifications",
-  "body": {
-    "myindex": {
-      "mycollection": {
-        "strict": <boolean>,
-        "fields": {
-          // ... specification for each field
-        }
-      }
-    }
-  }
-
-}
-```
-
----
-
 ## Body properties
-
-<SinceBadge version="1.8.0" />
 
 The provided body must have the following structure:
 
@@ -111,25 +62,6 @@ The provided body must have the following structure:
   "strict": <boolean>,
   "fields": {
     // field validation rules
-  }
-}
-```
-
----
-
-<DeprecatedBadge version="1.8.0" />
-
-The provided body must have the following structure:
-
-```json
-{
-  "<index>": {
-    "<collection>": {
-      "strict": <boolean>,
-      "fields": {
-        // field validation rules
-      }
-    }
   }
 }
 ```
@@ -149,13 +81,9 @@ The returned result contains the updated specification:
   "action": "updateSpecifications",
   "controller": "collection",
   "result": {
-    "myindex": {
-      "mycollection": {
-        "strict": <boolean>,
-        "fields": {
-          // ... specification for each field
-        }
-      }
+    "strict": <boolean>,
+    "fields": {
+      // ... specification for each field
     }
   }
 }

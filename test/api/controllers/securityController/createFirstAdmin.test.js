@@ -80,10 +80,6 @@ describe('Test: security controller - createFirstAdmin', () => {
       kuzzle.funnel.controllers.server.adminExists.resolves({exists: false});
       kuzzle.repositories.user.load.resolves(kuzzle.repositories.user.anonymous());
 
-      kuzzle.funnel.controllers.index = {
-        refreshInternal: sinon.stub().resolves()
-      };
-
       return adminController.createFirstAdmin(new Request({
         controller: 'security',
         action: 'createFirstAdmin',
@@ -96,6 +92,7 @@ describe('Test: security controller - createFirstAdmin', () => {
           should(createUser.firstCall.args[0]).be.instanceOf(Request);
           should(resetRolesStub).have.callCount(1);
           should(resetProfilesStub).have.callCount(1);
+          should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
         });
     });
   });

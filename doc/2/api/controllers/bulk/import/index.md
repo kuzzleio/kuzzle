@@ -29,9 +29,12 @@ Body:
   "bulkData": [
     { "index": {} },
     { "new": "document", "with": "any", "number": "of fields" },
+    
     { "create": {"_id": "foobar"} },
     { "another": "document", "with": "a preset id" },
+
     { "delete": {"_id": "existing_document_identifier"} },
+
     { "update": {"_id": "another_document"} },
     { "doc": {"partial": "update"}, "upsert": {"if": "document doesn't exist"} }
   ]
@@ -50,9 +53,12 @@ Body:
     "bulkData": [
       { "index": {} },
       { "new": "document", "with": "any", "number": "of fields" },
+
       { "create": {"_id": "foobar"} },
       { "another": "document", "with": "a preset id" },
+
       { "delete": {"_id": "existing_document_identifier"} },
+
       { "update": {"_id": "another_document"} },
       { "doc": {"partial": "update"}, "upsert": {"if": "document doesn't exist"} }
     ]
@@ -84,7 +90,10 @@ Returns an object containing 2 properties:
 Each query result contains the following properties:
 
   - `_id`: document unique identifier
-  - `status`: HTTP status code for that query. `201` (created) or `206` (partial error)
+  - `status`: HTTP status code for that query
+  - `error`: (only if status >= `400`)
+    - `type`: elasticsearch client error type
+    - `reason`: human readable error message
 
 ```js
 {
@@ -98,20 +107,26 @@ Each query result contains the following properties:
   "result": {
     "items": [
       {
-        "create": {
-          "_id": "<documentId>",
+        "index": {
+          "_id": "hQ10_GwBB2Y5786Pu_NO",
           "status": 201
         }
       },
       {
         "create": {
-          "_id": "<documentId>",
+          "_id": "foobar",
           "status": 201
         }
       },
       {
-        "create": {
-          "_id": "<documentId>",
+        "delete": {
+          "_id": "existing_document_identifier",
+          "status": 200
+        }
+      },
+      {
+        "update": {
+          "_id": "another_document",
           "status": 201
         }
       }

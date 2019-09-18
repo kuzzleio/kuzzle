@@ -8,8 +8,8 @@ module.exports = rc('kuzzle', {
   host: 'localhost',
   port: 7512,
   services: {
-    db: {
-      commonMapping: kuzzleConfig.services.db.commonMapping
+    storageEngine: {
+      commonMapping: kuzzleConfig.services.storageEngine.commonMapping
     }
   }
 });
