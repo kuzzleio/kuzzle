@@ -212,7 +212,7 @@ module.exports = {
         port: 6379
       }
     },
-    publicCache: {
+    memoryStorage: {
       backend: 'redis',
       database: 5,
       node: {

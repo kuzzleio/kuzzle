@@ -462,12 +462,12 @@
     //  ]
     //},
 
-    // [publicCache]
-    // The Redis publicCache Engine
+    // [memoryStorage]
+    // The Redis memoryStorage Engine
     // (see "internalCache" above for sample settings)
-    // By default, the publicCache engine uses the same Redis server
+    // By default, the memoryStorage engine uses the same Redis server
     // as internalCache, on database ID "5"
-    "publicCache": {
+    "memoryStorage": {
       "backend": "redis",
       "database": 5,
       "node": {

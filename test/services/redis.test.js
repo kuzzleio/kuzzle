@@ -54,7 +54,7 @@ describe('Redis', () => {
     should(redis._client.select).be.calledWith(1);
   });
 
-  it('should not flush publicCache', async () => {
+  it('should not flush memoryStorage', async () => {
     await redis.init();
 
     should(redis._client).be.an.Object();

@@ -34,7 +34,7 @@ services:
     environment:
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
-      - kuzzle_services__publicCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=${NODE_ENV:-development}
