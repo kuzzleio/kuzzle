@@ -38,10 +38,10 @@ The name of the environment variable must match the path of the configuration pa
 - Use the prefix `kuzzle_`,
 - then append the parameter path (as defined in the `.kuzzlerc` file) by using a **double underscore** `__` to separate each level of its hierarchy.
 
-For example, the `.kuzzlerc` parameter `services.db.host` in example 1, is represented by the environment variable `kuzzle_services__db__host`:
+For example, the `.kuzzlerc` parameter `services.storageEngine.host` in example 1, is represented by the environment variable `kuzzle_services__storageEngine__host`:
 
 ```bash
-export kuzzle_services__db__host="<DB_HOST>"
+export kuzzle_services__storageEngine__host="<DB_HOST>"
 ```
 
 Environment variables are particularly handy when running Kuzzle in a **Docker** container. Using **Docker Compose**, they can easily be configured in the `environment` section of the `docker-compose.yml` file. For example, here's how we pass environment variables to Kuzzle in our default docker-compose file:

@@ -25,14 +25,15 @@ BeforeAll(function () {
     promises.push(() => http.deleteIndex(index)
       .catch(() => true));
   }
+  const mappings = { dynamic: 'true', properties: { foo: { type: 'keyword' } } };
 
   promises.push(() => http.createIndex(world.fakeIndex));
-  promises.push(() => http.createCollection(world.fakeIndex, world.fakeCollection));
-  promises.push(() => http.createCollection(world.fakeIndex, world.fakeAltCollection));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeCollection, mappings));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeAltCollection, mappings));
 
   promises.push(() => http.createIndex(world.fakeAltIndex));
-  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeCollection));
-  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeCollection, mappings));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection, mappings));
 
   return Bluebird.each(promises, promise => promise());
 });
@@ -47,11 +48,11 @@ AfterAll(function () {
   for (const index of [
     world.fakeIndex,
     world.fakeAltIndex,
-    world.fakeNewIndex
+    world.fakeNewIndex,
+    'tolkien'
   ]) {
     promises.push(http.deleteIndex(index)
       .catch(() => true));
-    promises.push(http.setAutoRefresh(index, false));
   }
 
   return Bluebird.all(promises);
@@ -59,8 +60,7 @@ AfterAll(function () {
 
 Before(function () {
   return this.api.truncateCollection()
-    .then(() => this.api.truncateCollection(this.fakeAltIndex))
-    .then(() => this.api.refreshIndex(this.fakeIndex));
+    .then(() => this.api.truncateCollection(this.fakeAltIndex));
 });
 
 After(function () {
@@ -73,10 +73,6 @@ After({tags: '@realtime'}, function () {
 });
 
 Before({tags: '@security'}, function () {
-  return cleanSecurity.call(this);
-});
-
-After({tags: '@security'}, function () {
   return cleanSecurity.call(this);
 });
 
@@ -114,15 +110,16 @@ function cleanSecurity () {
     delete this.currentUser;
   }
 
-  return this.api.refreshInternalIndex()
-    .then(() => this.api.searchUsers({match_all: {}}, {from: 0, size: 999}))
+  return this.api.searchUsers({match_all: {}}, {from: 0, size: 999})
     .then(results => {
       const regex = new RegExp('^' + this.idPrefix);
       results = results.result.hits
         .filter(r => r._id.match(regex))
         .map(r => r._id);
 
-      return results.length > 0 ? this.api.deleteUsers(results, true) : Bluebird.resolve();
+      return results.length > 0
+        ? this.api.deleteUsers(results, true)
+        : Bluebird.resolve();
     })
     .then(() => this.api.searchProfiles({match_all: {}}, {from: 0, size: 999}))
     .then(results => {

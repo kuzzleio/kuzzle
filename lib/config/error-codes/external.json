@@ -199,6 +199,11 @@
           "code": 40,
           "message": "Index %s already exists.%s",
           "class": "BadRequestError"
+        },
+        "forbidden_character": {
+          "code": 41,
+          "message": "Forbidden character \"%s\" in index or collection name",
+          "class": "BadRequestError"
         }
       }
     },

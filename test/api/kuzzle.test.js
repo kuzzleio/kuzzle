@@ -12,8 +12,6 @@ describe('/lib/api/kuzzle.js', () => {
     'entryPoints',
     'funnel',
     'router',
-    'indexCache',
-    'internalIndex',
     'notifier',
     'gc',
     'pluginsManager',
@@ -25,7 +23,10 @@ describe('/lib/api/kuzzle.js', () => {
     'emit',
     'vault',
     'janitor',
-    'log'
+    'log',
+    'internalIndex',
+    'cacheEngine',
+    'storageEngine'
   ];
 
   beforeEach(() => {
@@ -43,7 +44,7 @@ describe('/lib/api/kuzzle.js', () => {
   });
 
   describe('#start', () => {
-    xit('should init the components in proper order', () => {
+    it('should init the components in proper order', () => {
       const params = {
         mappings: {},
         fixtures: {},
@@ -53,12 +54,13 @@ describe('/lib/api/kuzzle.js', () => {
       return kuzzle.start(params)
         .then(() => {
           sinon.assert.callOrder(
-            kuzzle.services.init,
-            kuzzle.log.info, // services init
+            kuzzle.cacheEngine.init,
+            kuzzle.log.info, // cacheEngine init
+            kuzzle.storageEngine.init,
             kuzzle.internalIndex.init,
+            kuzzle.log.info, // storageEngine init
             kuzzle.vault.prepareCrypto,
             kuzzle.vault.init,
-            kuzzle.indexCache.init,
             kuzzle.validation.init,
             kuzzle.repositories.init,
             kuzzle.funnel.init,
@@ -66,8 +68,10 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.janitor.loadFixtures,
             kuzzle.pluginsManager.init,
             kuzzle.pluginsManager.run,
-            kuzzle.log.info, // load securities
+            kuzzle.log.info, // core components loaded
+            kuzzle.log.info, // load default rights
             kuzzle.janitor.loadSecurities,
+            kuzzle.log.info, // default rights loaded
             kuzzle.funnel.loadPluginControllers,
             kuzzle.router.init,
             kuzzle.statistics.init,

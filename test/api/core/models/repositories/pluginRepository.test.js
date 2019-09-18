@@ -18,7 +18,7 @@ describe('models/repositories/pluginRepository', () => {
     kuzzle = new KuzzleMock();
     pluginRepository = new PluginRepository(kuzzle, 'pluginName', someCollection);
     pluginRepository.init({
-      indexEngine: kuzzle.internalIndex,
+      indexStorage: kuzzle.internalIndex,
       ObjectConstructor: SomeConstructor
     });
   });
@@ -28,7 +28,7 @@ describe('models/repositories/pluginRepository', () => {
       should(pluginRepository.index).be.equal('pluginName');
       should(pluginRepository.collection).be.equal(someCollection);
       should(pluginRepository.ObjectConstructor).be.exactly(SomeConstructor);
-      should(pluginRepository.indexEngine).be.exactly(kuzzle.internalIndex);
+      should(pluginRepository.indexStorage).be.exactly(kuzzle.internalIndex);
       should(pluginRepository.cacheEngine).be.exactly(null);
     });
   });

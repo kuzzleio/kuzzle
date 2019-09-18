@@ -130,14 +130,14 @@ describe('Test: validation initialization', () => {
     });
   });
 
-  describe('#isValidSpecification', () => {
+  describe('#validateFormat', () => {
     it('should resolve true if the specification is correct', () => {
       const
         curateCollectionSpecificationStub = sinon.stub().resolves({});
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
-      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'specification'})
+      return validation.validateFormat('anIndex', 'aCollection', {a: 'specification'})
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.true();
@@ -149,7 +149,7 @@ describe('Test: validation initialization', () => {
         curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
           .rejects(new Error('Mocked Error'));
 
-      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
+      return validation.validateFormat('anIndex', 'aCollection', {a: 'bad specification'})
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.false();
@@ -161,7 +161,7 @@ describe('Test: validation initialization', () => {
         curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
           .resolves({isValid: false, errors: ['some error']});
 
-      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'}, true)
+      return validation.validateFormat('anIndex', 'aCollection', {a: 'bad specification'}, true)
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.false();

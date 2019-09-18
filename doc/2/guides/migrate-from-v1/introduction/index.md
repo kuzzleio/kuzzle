@@ -22,7 +22,7 @@ API Changes:
   - Fields linked to the documents trashcan have been removed from the documents and notifications metadata : `deletedAt`, `active`
   - Remove the real-time notifications about events that were about to happen (deprecated since Kuzzle 1.5.0)
 
-Removed errors:
+### Removed errors
 
 | Code | Unique name |
 |------|-------------|
@@ -34,14 +34,57 @@ Removed errors:
 | `0x03060008` | `network.http_router.unable_to_convert_http_body_to_json` |
 | `0x0008...` | (the entire `sandbox` error subdomain has been removed) |
 
-Removed events:
+### Removed events
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
 
-Configuration changes:
+### Removed API methods
+
+**Index Controller**
+
+  - `index:refresh`: you should use the new `collection:refresh` method instead
+  - `index:getAutoRefresh`
+  - `index:setAutoRefresh`
+  - `index:refreshInternal`
+
+**Admin Controller**
+
+  - `admin:resetKuzzleData`: this route can lead to inconsistency with the auth system in a cluster environment
+
+### Modified API Methods
+
+**Bulk Controller**
+
+  - `bulk:import`: it's no longer allowed to specify different indexes and collections in the same bulk data array
+
+**Collection Controller**
+
+  - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+  - `collection:validateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+
+### Removed CLI actions
+
+  - `reset`: this action called for the `admin:resetKuzzleData` route
+
+### Configuration changes
 
   - key `services.internalEngine` is renamed to `services.internalIndex`
+  - key `services.db` has been renamed in `services.storageEngine`
+  - key `services.db.dynamic` has been moved to `services.storageEngine.commonMapping.dynamic` and is now `false` by default, meaning that Elasticsearch will not infer mapping of new introduced fields
+  - key `services.memoryStorage` has been renamed in `services.memoryStorage`
 
-Plugin changes:
+### Internal storage changes
+
+**New index and collection naming policy:**
+
+ - internal indexes: `%<index name>.<collection name>`
+ - public indexes: `&<index name>.<collection name>`
+
+**Internal datamodel changes:**
+
+  - `kuzzle` index and its collections now follow our new naming policy
+  - plugins indexes change from `plugin:<plugin name>` to `plugin-<plugin name>`
+
+### Plugins
 
   - Plugins manifest files are now required

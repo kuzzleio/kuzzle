@@ -6,9 +6,7 @@ title: refresh
 
 # refresh
 
-
-
-Forces an immediate [reindexation](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-refresh.html) of the provided index.
+Forces an immediate [reindexation](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/docs-refresh.html) of the provided collection.
 
 When writing or deleting documents in Kuzzle, the changes need to be indexed before being reflected in the search results.
 By default, this operation can take up to 1 second.
@@ -22,7 +20,7 @@ By default, this operation can take up to 1 second.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/_refresh
+URL: http://kuzzle:7512/<index>/<collection>/_refresh
 Method: POST
 ```
 
@@ -31,7 +29,8 @@ Method: POST
 ```js
 {
   "index": "<index>",
-  "controller": "index",
+  "collection": "<collection>",
+  "controller": "collection",
   "action": "refresh"
 }
 ```
@@ -41,28 +40,24 @@ Method: POST
 ## Arguments
 
 - `index`: index name to refresh
+- `collection`: collection name to refresh
 
 ---
 
 ## Response
 
-Returns an object detailing the status of the forced refresh.
+Returns a response with `status` 200 if the refresh succeeds.
 
 ```js
 {
   "status": 200,
   "error": null,
   "index": "<index>",
-  "controller": "index",
+  "collection": "<collection>",
+  "controller": "collection",
   "action": "refresh",
   "requestId": "<unique request identifier>",
-  "result": {
-    "_shards": {
-        "failed": 0,
-        "succressful": 5,
-        "total": 10
-    }
-  }
+  "result": null
 }
 ```
 
@@ -70,5 +65,5 @@ Returns an object detailing the status of the forced refresh.
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors#common-errors)
-- [NotFoundError](/core/2/api/essentials/errors#notfounderror)
+- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [NotFoundError](/core/1/api/essentials/errors#notfounderror)

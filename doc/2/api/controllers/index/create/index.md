@@ -51,10 +51,7 @@ Returns a confirmation that the index is being created:
   "action": "create",
   "controller": "index",
   "requestId": "<unique request identifier>",
-  "result": {
-    "acknowledged": true,
-    "shards_acknowledged": true
-  }
+  "result": {}
 }
 ```
 

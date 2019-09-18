@@ -38,16 +38,18 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     const {_id, index, collection} = request.input.resource;
 
     kuzzle.realtime.test.returns(['foo']);
-    kuzzle.services.publicStorage.get.resolves({
+    kuzzle.storageEngine.public.get.resolves({
       _id,
       _source: {foo: 'bar'}
     });
 
-    kuzzle.services.internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
+    kuzzle.cacheEngine.internal.get.resolves(
+      JSON.stringify(['foo', 'bar']));
 
     return notifier.notifyDocumentUpdate(request)
       .then(() => {
-        should(kuzzle.services.publicStorage.get).calledOnce();
+        should(kuzzle.storageEngine.public.get)
+          .be.calledWith(index, collection, _id);
 
         should(kuzzle.realtime.test)
           .calledOnce()
@@ -68,13 +70,13 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
         should(notifier.notifyDocument.getCall(1)).calledWith(
           ['bar'], request, 'out', 'update', { _id });
 
-        should(kuzzle.services.internalCache.get)
+        should(kuzzle.cacheEngine.internal.get)
           .calledOnce()
           .calledWith(`{notif/${index}/${collection}}/${_id}`);
 
-        should(kuzzle.services.internalCache.del).not.be.called();
+        should(kuzzle.cacheEngine.internal.del).not.be.called();
 
-        should(kuzzle.services.internalCache.setex)
+        should(kuzzle.cacheEngine.internal.setex)
           .calledOnce()
           .calledWith(
             `{notif/${index}/${collection}}/${_id}`,
@@ -90,19 +92,19 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       kuzzle.config.limits.subscriptionDocumentTTL = 0;
 
       kuzzle.realtime.test.returns(['foo']);
-      kuzzle.services.publicStorage.get.resolves({
+      kuzzle.storageEngine.public.get.resolves({
         _id,
         _source: {foo: 'bar'}
       });
 
-      kuzzle.services.internalCache.get.resolves(
+      kuzzle.cacheEngine.internal.get.resolves(
         JSON.stringify(['foo', 'bar']));
 
       return notifier.notifyDocumentUpdate(request)
         .then(() => {
-          should(kuzzle.services.internalCache.setex).not.be.called();
+          should(kuzzle.cacheEngine.internal.setex).not.be.called();
 
-          should(kuzzle.services.internalCache.set)
+          should(kuzzle.cacheEngine.internal.set)
             .calledOnce()
             .calledWith(
               `{notif/${index}/${collection}}/${_id}`,

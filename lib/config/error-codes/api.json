@@ -8,6 +8,56 @@
           "code": 1,
           "message": "Invalid '%s' value (%s).",
           "class": "BadRequestError"
+        },
+        "missing_param": {
+          "code": 2,
+          "message": "The request must specify the param \"%s\".",
+          "class": "BadRequestError"
+        },
+        "invalid_param_type": {
+          "code": 3,
+          "message": "Invalid %s param: \"%s\". Expecting %s.",
+          "class": "BadRequestError"
+        },
+        "missing_index": {
+          "code": 4,
+          "message": "The request must specify an index.",
+          "class": "BadRequestError"
+        },
+        "must_not_specify_body_attribute": {
+          "code": 5,
+          "message": "The request must not specify the body attribute \"%s\".",
+          "class": "BadRequestError"
+        },
+        "unknown_strategy": {
+          "code": 6,
+          "message": "Strategy %s is not a known strategy.",
+          "class": "BadRequestError"
+        },
+        "missing_collection": {
+          "code": 7,
+          "message": "The request must specify a collection.",
+          "class": "BadRequestError"
+        },
+        "missing_id": {
+          "code": 8,
+          "message": "The request must specify an _id.",
+          "class": "BadRequestError"
+        },
+        "wrong_id_format": {
+          "code": 9,
+          "message": "The request must not specify an _id that starts with an underscore (_).",
+          "class": "BadRequestError"
+        },
+        "wrong_id_type": {
+          "code": 10,
+          "message": "The request must specify and _id of type string.",
+          "class": "BadRequestError"
+        },
+        "search_page_size": {
+          "code": 11,
+          "message": "Search page size exceeds server configured documents limit ( %s ).",
+          "class": "SizeLimitError"
         }
       }
     },
@@ -166,7 +216,7 @@
         },
         "update_specifications": {
           "code": 5,
-          "message": "%s",
+          "message": "Some errors with provided specifications.",
           "class": "BadRequestError"
         }
       }
@@ -552,6 +602,11 @@
           "message": "%s",
           "class": "BadRequestError",
           "deprecated": true
+        },
+        "must_be_authenticated_to_execute_action": {
+          "code": 64,
+          "message": "You must be authenticated to execute that action",
+          "class": "UnauthorizedError"
         }
       }
     },

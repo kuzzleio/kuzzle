@@ -25,7 +25,7 @@ The ttl to use for the CacheEngine. If set to false, the objects get an unlimite
 
 The constructor function for the business objects. The load* methods will return some new instances of this function.
 
-* *function* indexEngine (optional)
+* *function* indexStorage (optional)
 
 The read engine to use to retrieve the business objects to/from the database. Defaults to Kuzzle's internalStorage (elasticsearch).
 
@@ -71,13 +71,13 @@ If no matching document could be found, an empty array is returned.
 Repository.prototype.search = function (filter, from, size) {...}
 ```
 
-This method tries to load documents matching the given ids from the indexEngine.
+This method tries to load documents matching the given ids from the indexStorage.
 
 ### parameters
 
 * *object* query
 
-The query sent to the indexEngine in order to retrieve documents.
+The query sent to the indexStorage in order to retrieve documents.
 
 * *Integer* from
 
@@ -89,7 +89,7 @@ Number of hits to return (default: 20).
 
 ### returns
 
-Returns a promise that resolves to an object that contains a list of documents from indexEngine.
+Returns a promise that resolves to an object that contains a list of documents from indexStorage.
 
 
 ## loadFromCache

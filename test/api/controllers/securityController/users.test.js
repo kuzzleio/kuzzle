@@ -19,7 +19,7 @@ const
   } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
-xdescribe('Test: security controller - users', () => {
+describe('Test: security controller - users', () => {
   let
     kuzzle,
     request,
@@ -44,6 +44,8 @@ xdescribe('Test: security controller - users', () => {
 
     it('should update the user mapping', () => {
       request.input.body = foo;
+      kuzzle.internalIndex.updateMapping.resolves(foo);
+
       return securityController.updateUserMapping(request)
         .then(response => {
           should(kuzzle.internalIndex.updateMapping)
@@ -58,14 +60,16 @@ xdescribe('Test: security controller - users', () => {
 
   describe('#getUserMapping', () => {
     it('should fulfill with a response object', () => {
+      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+
       return securityController.getUserMapping(request)
         .then(response => {
           should(kuzzle.internalIndex.getMapping)
             .be.calledOnce()
-            .be.calledWith(kuzzle.internalIndex.index, 'users');
+            .be.calledWith('users');
 
           should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });
@@ -139,7 +143,7 @@ xdescribe('Test: security controller - users', () => {
       return securityController.searchUsers(request)
         .then(() => {
           should(kuzzle.repositories.user.search)
-            .be.calledWith({aggregations: 'aggregations'}, {});
+            .be.calledWithMatch({ aggregations: 'aggregations' });
 
           // highlight only
           return securityController.searchUsers(new Request({
@@ -150,24 +154,24 @@ xdescribe('Test: security controller - users', () => {
         })
         .then(() => {
           should(kuzzle.repositories.user.search)
-            .be.calledWith({highlight: 'highlight'}, {});
+            .be.calledWithMatch({ highlight: 'highlight' });
 
           // all in one
           return securityController.searchUsers(new Request({
             body: {
-              query: 'query',
+              query: { match_all: {} },
               aggregations: 'aggregations',
               highlight: 'highlight'
             }
           }));
         })
         .then(() => {
-          should(kuzzle.repositories.user.search)
-            .be.calledWith({
+          should(kuzzle.repositories.user.search).be.calledWithMatch(
+            {
               aggregations: 'aggregations',
               highlight: 'highlight',
-              query: 'query'
-            }, {});
+              query: { match_all: {} },
+            });
         });
     });
 

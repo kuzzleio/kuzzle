@@ -12,7 +12,6 @@ Kuzzle ships with a [Command line interface](https://en.wikipedia.org/wiki/Comma
 - Start Kuzzle
 - Gracefully shutdown Kuzzle
 - Create the first Administrator
-- Reset Kuzzle internal data _(use with caution!)_
 - Reset user created indexes _(use with caution!)_
 - Reset users, roles and profiles _(use with caution!)_
 
@@ -35,7 +34,6 @@ To get a list of commands and options run the CLI:
 #
 #   createFirstAdmin [options]          create the first administrator user
 #   clearCache [options]                clear internal caches in Redis
-#   reset [options]                     reset all users, profiles, roles and documents validation specifications
 #   resetSecurity [options]             reset all users, profiles and roles
 #   resetDatabase [options]             remove all data stored on Kuzzle
 #   shutdown [options]                  gracefully exits after processing remaining requests
@@ -114,34 +112,6 @@ The `dump` command creates a snapshot of the state of Kuzzle, including:
 The generated directory can be used to feed a crash report to the support team.
 
 This call the action [admin#dump](/core/2/api/controllers/admin/reset-security)
-
----
-
-## reset
-
-```bash
-./bin/kuzzle reset --help
-
-#    Usage: reset [options]
-#
-#    reset all users, profiles, roles and documents validation specifications
-#
-#    Options:
-#
-#      -h, --help             output usage information
-#      --noint                non interactive mode
-```
-
-Asynchronously start the following sequence in Kuzzle, in this order:
-
-- Invalidate and delete all users along with their credentials
-- Delete all user-defined roles and profiles
-- Reset the default roles and profiles to their default values
-- Delete all document validation specifications
-
-This action has no impact on Plugin and Document storage.
-
-This call the action [admin#resetKuzzleData](/core/2/api/controllers/admin/reset-kuzzle-data)
 
 ---
 

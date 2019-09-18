@@ -216,4 +216,3 @@ When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$
       callback(error);
     });
 });
-
