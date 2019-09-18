@@ -22,6 +22,10 @@ describe('StorageEngine', () => {
     storageEngine = new StorageEngine(kuzzle);
   });
 
+  afterEach(() => {
+    mockrequire.stopAll();
+  });
+
   describe('#constructor', () => {
     it('should initialize the storage clients', () => {
       should(storageEngine.indexCache.add).be.a.Function();
