@@ -48,7 +48,7 @@ Dropped support for:
 
 **Bulk Controller**
 
-  - `bulk:import`: it's no longer allowed to specify different index and collection in bulk data array
+  - `bulk:import`: it's no longer allowed to specify different indexes and collections in the same bulk data array
 
 **Collection Controller**
 
