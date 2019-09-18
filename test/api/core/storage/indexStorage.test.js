@@ -37,7 +37,6 @@ describe('IndexStorage', () => {
 
       await indexStorage.init();
 
-      should(indexStorage._storageEngine.createIndex).be.calledWith('kuzzle');
       should(indexStorage.bootstrap.startOrWait).be.called();
     });
 

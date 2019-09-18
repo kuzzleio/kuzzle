@@ -77,10 +77,7 @@ describe('IndexController', () => {
 
       should(indexController.publicStorage.createIndex).be.calledWith(index);
 
-      should(response).match({
-        acknowledged: true,
-        shards_acknowledged: true
-      });
+      should(response).be.undefined();
     });
   });
 

@@ -65,7 +65,7 @@ describe('InternalIndexBootstrap', () => {
     beforeEach(() => {
       internalIndexBootstrap._persistJWTSecret = sinon.stub().resolves();
       internalIndexBootstrap.createInitialSecurities = sinon.stub().resolves();
-      internalIndexBootstrap._createInitialValidations = sinon.stub().resolves();
+      internalIndexBootstrap.createInitialValidations = sinon.stub().resolves();
     });
 
     it('should call the initialization methods', async () => {
@@ -73,7 +73,7 @@ describe('InternalIndexBootstrap', () => {
 
       sinon.assert.callOrder(
         internalIndexBootstrap.createInitialSecurities,
-        internalIndexBootstrap._createInitialValidations,
+        internalIndexBootstrap.createInitialValidations,
         internalIndexBootstrap._persistJWTSecret,
         internalIndexStorage.create
       );
@@ -92,7 +92,7 @@ describe('InternalIndexBootstrap', () => {
     });
   });
 
-  describe('#_createInitialValidations', () => {
+  describe('#createInitialValidations', () => {
     it('should create initial validations from kuzzlerc', async () => {
       kuzzle.config.validation = {
         nepali: {
@@ -109,7 +109,7 @@ describe('InternalIndexBootstrap', () => {
         }
       };
 
-      await internalIndexBootstrap._createInitialValidations();
+      await internalIndexBootstrap.createInitialValidations();
 
       should(internalIndexStorage.createOrReplace.callCount).be.eql(2);
       should(internalIndexStorage.createOrReplace.getCall(0).args).be.eql([
