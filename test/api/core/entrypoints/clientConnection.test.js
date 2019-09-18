@@ -22,11 +22,5 @@ describe('core/clientConnection', () => {
     it('should set headers', () => {
       should(connection.headers).be.exactly(headers);
     });
-
-    it('should be frozen', () => {
-      should(Object.isFrozen(connection)).be.true();
-      should(Object.isFrozen(connection.headers)).be.true();
-      should(Object.isFrozen(connection.ips)).be.true();
-    });
   });
 });
