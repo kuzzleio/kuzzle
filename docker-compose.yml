@@ -8,16 +8,16 @@ services:
     ports:
       - "7443:7443"
     volumes:
-      - ./nginx:/etc/nginx/conf.d
+      - ./docker-compose/nginx:/etc/nginx/conf.d
 
   kuzzle:
     image: kuzzleio/core-dev:2.x
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
-      - "..:/var/app"
-      - "./scripts/run-dev.sh:/run.sh"
-      - "./config/pm2-dev.json:/config/pm2.json"
-      - "./fixtures:/fixtures"
+      - ".:/var/app"
+      - "./docker-compose/scripts/run-dev.sh:/run.sh"
+      - "./docker-compose/config/pm2-dev.json:/config/pm2.json"
+      - "./docker-compose/fixtures:/fixtures"
     cap_add:
       - SYS_PTRACE
     ulimits:
@@ -37,6 +37,7 @@ services:
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
+      - kuzzle_services__storageEngine__commonMapping__dynamic=true
       - NODE_ENV=${NODE_ENV:-development}
       # - DEBUG=kuzzle:*,-kuzzle:entry-point:protocols:websocket
       - DEBUG=${DEBUG:-none}
