@@ -16,6 +16,12 @@
           "message": "Unable to remove connection - unknown connection identifier: %s",
           "class": "PluginImplementationError"
         },
+        "already_exists": {
+          "description": "A protocol of the same name already exists",
+          "code": 3,
+          "message": "A protocol of the same name already exists: %s",
+          "class": "PluginImplementationError"
+        }
       }
     }
   }

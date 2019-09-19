@@ -1,29 +1,24 @@
 {
   "code": 0,
   "subdomains": {
-    "unexpected": {
+    "fatal": {
       "code": 0,
       "errors": {
-        "unknown_error": {
+        "unexpected_error": {
           "code": 1,
           "message": "Unknown error: %s.",
           "class": "InternalError"
         },
-        "timeout": {
-          "code": 2,
-          "message": "[FATAL] Service \"%s[%s]\" failed to init within %sms",
-          "class": "InternalError"
-        }
-      }
-    },
-    "external_services": {
-      "code": 1,
-      "errors": {
         "service_unavailable": {
-          "code": 1,
+          "code": 2,
           "message": "Service unavailable: %s.",
           "class": "ServiceUnavailableError"
-        }
+        },
+        "service_timeout": {
+          "code": 3,
+          "message": "[FATAL] Service \"%s\": initialization timeout",
+          "class": "InternalError"
+        },
       }
     },
     "hotelclerk" : {

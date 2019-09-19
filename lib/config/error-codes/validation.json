@@ -1,7 +1,7 @@
 {
   "code": 5,
   "subdomains": {
-    "format": {
+    "assert": {
       "code": 1,
       "errors": {
         "missing_nested_spec": {
@@ -55,9 +55,16 @@
           "class": "PreconditionError"
         },
         "invalid_specifications": {
-          "code": 10,
-          "message": "The provided specifications are invalid. Check the \"details\" property for a list of errors.",
+          "description": "The provided specifications are invalid",
+          "code": 11,
+          "message": "Errors occured with the provided specifications:\n%s",
           "class": "BadRequestError"
+        },
+        "not_found": {
+          "description": "Attempted to access to a non-existent collection specifications",
+          "code": 12,
+          "message": "No specifications defined for index %s and collection %s",
+          "class": "NotFoundError"
         }
       }
     },

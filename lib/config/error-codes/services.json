@@ -1,9 +1,76 @@
 {
   "code": 1,
   "subdomains": {
-    "elasticsearch": {
+    "storage": {
       "code": 1,
       "errors": {
+        "unknown_index": {
+          "description": "The provided data index does not exist",
+          "code": 1,
+          "message": "The index \"%s\" does not exist.",
+          "class": "PreconditionError"
+        },
+        "unknown_collection": {
+          "description": "The provided data collection does not exist",
+          "code": 2,
+          "message": "The collection \"%s\" does not exist.",
+          "class": "PreconditionError"
+        },
+        "get_limit_exceeded": {
+          "description": "The number of documents returned by this request exceeds the configured server limit",
+          "code": 3,
+          "message": "The number of documents returned by this request exceeds the configured server limit ( %s ).",
+          "class": "SizeLimitError"
+        },
+        "write_limit_exceeded": {
+          "description": "The number of documents edited by this request exceeds the configured server limit",
+          "code": 4,
+          "message": "The number of documents edited by this request exceeds the configured server limit ( %s ).",
+          "class": "SizeLimitError"
+        },
+        "import_failed": {
+          "description": "Failed to import some or all documents",
+          "code": 5,
+          "message": "Some document creations failed: %s.",
+          "class": "PartialError"
+        },
+        "no_multi_indexes": {
+          "description": "Cannot be run on multiple indexes"
+          "code": 6,
+          "message": "Cannot be run on multiple indexes.",
+          "class": "BadRequestError"
+        },
+        "no_multi_collections": {
+          "description": "Cannot be run on multiple collections",
+          "code": 7,
+          "message": "Cannot be run on multiple collections.",
+          "class": "BadRequestError"
+        },
+        "incomplete_fetch": {
+          "description": "Couldn't retrieve all the requested documents",
+          "code": 8,
+          "message": "Couldn't retrieve all the requested documents.",
+          "class": "PartialError"
+        },
+        "incomplete_delete": {
+          "description": "Couldn't delete all the requested documents",
+          "code": 9,
+          "message": "Couldn't delete all the requested documents: %s",
+          "class": "PartialError"
+        },
+        "incomplete_create": {
+          "description": "Couldn't create all the requested documents",
+          "code": 10,
+          "message": "Couldn't create all the requested documents: %s",
+          "class": "PartialError"
+        },
+        "not_found": {
+          "description": "Document not found",
+          "code": 11,
+          "message": "Document \"%s\" not found.",
+          "class": "NotFoundError"
+        }
+
         "wrong_elasticsearch_version": {
           "code": 1,
           "message": "Your elasticsearch version is %s; Only elasticsearch version 5 is currently supported.",
@@ -211,9 +278,22 @@
         }
       }
     },
-    "redis": {
+    "cache": {
       "code": 3,
       "errors": {
+        "database_not_found": {
+          "description": "Unknown cache database name",
+          "code": 1,
+          "message": "Cache database \"%s\" not found.",
+          "class": "NotFoundError"
+        },
+        "read_failed": {
+          "description": "An attempt to read from the cache failed",
+          "code": 2,
+          "message": "Cache read fail: %s",
+          "class": "InternalError"
+        }
+
         "redis_service_not_connected": {
           "code": 1,
           "message": "Redis service is not connected.",

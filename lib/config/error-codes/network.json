@@ -4,27 +4,32 @@
     "http": {
       "code": 1,
       "errors": {
-        "http_request_error": {
+        "request_too_large": {
+          "description": "The size of the request exceeds the server configured limit",
           "code": 1,
-          "message": "%s.",
-          "class": "BadRequestError"
-        },
-        "http_request_size_exceeded": {
-          "code": 2,
           "message": "Maximum HTTP request size exceeded.",
           "class": "SizeLimitError"
         },
+        "unexpected_error": {
+          "description": "Caught an unexpected HTTP parsing error",
+          "code": 2,"
+          "message": "%s",
+          "class": "BadRequestError"
+        },
         "too_many_encodings": {
+          "description": "The number of encodings exceeds the server configured limit",
           "code": 3,
           "message": "Too many encodings.",
           "class": "BadRequestError"
         },
-        "unsupported_compression_algorithm": {
+        "unsupported_compression": {
+          "description": "The request has been compressed using an unsupported compression algorithm",
           "code": 4,
           "message": "Unsupported compression algorithm \"%s\".",
           "class": "BadRequestError"
         },
-        "compression_support_disabled": {
+        "compression_disabled": {
+          "desscription": "The server has been configured to refuse compressed requests",
           "code": 5,
           "message": "Compression support is disabled.",
           "class": "BadRequestError"
@@ -50,28 +55,21 @@
           "class": "BadRequestError"
         }
       }
-    },
-    "socketio": {
-      "code": 4,
-      "errors": {}
-    },
+    }
     "entrypoint": {
       "code": 5,
       "errors": {
-        "unknown_event_received": {
+        "unexpected_event": {
+          "description": "Received an erroneous network event",
           "code": 1,
-          "message": "Unknown event received: %s.",
+          "message": "Unexpected event received: %s.",
           "class": "InternalError"
         },
-        "invalid_network_port_number": {
+        "invalid_port": {
+          "description": "Invalid network port",
           "code": 2,
           "message": "Invalid network port number: %s.",
           "class": "InternalError"
-        },
-        "conflicting_protocol_name": {
-          "code": 3,
-          "message": "Conflicting protocol name \"%s\".",
-          "class": "PluginImplementationError"
         }
       }
     },
