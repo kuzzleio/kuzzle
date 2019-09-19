@@ -91,3 +91,6 @@ const options = yargs
   .argv
 
 startKuzzle(options);
+
+// Used for tests only
+module.exports = startKuzzle;
