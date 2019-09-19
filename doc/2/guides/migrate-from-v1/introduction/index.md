@@ -62,9 +62,12 @@ API Changes:
   - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
   - `collection:validateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
 
-### Removed CLI actions
+### Remove the CLI
 
-  - `reset`: this action called for the `admin:resetKuzzleData` route
+The CLI is now independant from Kuzzle: https://github.com/kuzzleio/kuzzle-cli/
+
+To start Kuzzle, you can run the script `bin/start-kuzzle-server`.  
+It accepts the same arguments as the `kuzzle start` command from the CLI.
 
 ### Configuration changes
 

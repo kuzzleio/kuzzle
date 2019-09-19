@@ -2,9 +2,8 @@
   "apps": [
     {
       "name": "KuzzleServer",
-      "script": "bin/kuzzle",
+      "script": "bin/start-kuzzle-server",
       "args": [
-        "start",
         "--mappings",
         "/fixtures/mappings.json",
         "--fixtures",
