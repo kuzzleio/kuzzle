@@ -55,8 +55,9 @@ function startKuzzle (options = {}) {
 
   if (options.enablePlugins) {
     kuzzleParams.additionalPlugins = options.enablePlugins
+      .trim()
       .split(',')
-      .map(x => x.trim());
+      .map(x => x.trim().replace(/(^")|("$)/g, ''));
   }
 
   return kuzzle.start(kuzzleParams)
