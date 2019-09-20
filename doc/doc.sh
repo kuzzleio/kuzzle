@@ -4,6 +4,7 @@ set -eu
 
 DOC_VERSION=2
 DOC_PATH=/core/2
+NETLIFY=${REVIEW_ID:-0}
 
 # Used by vuepress
 export DOC_DIR=$DOC_VERSION
