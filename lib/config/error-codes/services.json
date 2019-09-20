@@ -31,7 +31,7 @@
         "import_failed": {
           "description": "Failed to import some or all documents",
           "code": 5,
-          "message": "Some document creations failed: %s.",
+          "message": "Failed to import some or all documents: %s.",
           "class": "PartialError"
         },
         "no_multi_indexes": {
@@ -69,212 +69,156 @@
           "code": 11,
           "message": "Document \"%s\" not found.",
           "class": "NotFoundError"
-        }
-
-        "wrong_elasticsearch_version": {
-          "code": 1,
+        },
+        "bootstrap_timeout": {
+          "description": "Bootstrap of a storage instance failed because it has been locked for too much time",
+          "code": 12,
+          "message": "%s: bootstrap failed - lock wait timeout exceeded.",
+          "class": "InternalError"
+        },
+        "version_mismatch": {
+          "description": "The version of the target Elasticsearch is not compatible with this version of Kuzzle",
+          "code": 13,
           "message": "Your elasticsearch version is %s; Only elasticsearch version 5 is currently supported.",
           "class": "InternalError"
         },
-        "unknown_scroll_identifier": {
-          "code": 2,
+        "unknown_scroll_id": {
+          "description": "The scroll identifier does not exist or has expired",
+          "code": 14,
           "message": "Non-existing or expired scroll identifier.",
           "class": "NotFoundError"
         },
-        "wrong_get_action": {
-          "code": 3,
-          "message": "The action _search can't be done with a GET.",
+        "search_as_an_id": {
+          "description": "Used \"_search\" as a document identifier, which conflicts with the _search HTTP route",
+          "code": 15,
+          "message": "_search is not a valid document identifier",
           "class": "BadRequestError"
         },
-        "document_not_found": {
-          "code": 4,
-          "message": "Document not found.",
-          "class": "NotFoundError"
-        },
-        "index_or_collection_does_not_exist": {
-          "code": 5,
-          "message": "Index '%s' and/or collection '%s' don't exist.",
+        "unknown_index_collection": {
+          "description": "The provided index and/or collection doesn't exist",
+          "code": 16,
+          "message": "The provided index and/or collection doesn't exist.",
           "class": "PreconditionError"
         },
         "document_already_exists": {
-          "code": 6,
+          "description": "A document with the same identifier already exists",
+          "code": 17,
           "message": "Document already exists.",
           "class": "BadRequestError"
         },
-        "document_id_not_found": {
-          "code": 7,
-          "message": "Document with id '%s' not found.",
-          "class": "NotFoundError"
-        },
-        "empty_query": {
-          "code": 8,
-          "message": "Query cannot be empty.",
+        "missing_argument": {
+          "description": "A required argument is missing or is empty",
+          "code": 18,
+          "message": "Required argument \"%s\" is missing or is empty",
           "class": "BadRequestError"
         },
-        "document_id_cannot_be_null": {
-          "code": 9,
-          "message": "null is not a valid document ID.",
+        "invalid_argument": {
+          "description": "Invalid argument provided",
+          "code": 19,
+          "message": "Argument \"%s\" is invalid (expected: %s)",
           "class": "BadRequestError"
-        },
-        "index_does_not_exist": {
-          "code": 10,
-          "message": "Index '%s' does not exist.",
-          "class": "PreconditionError"
-        },
-        "missing_or_invalid_import_attribute": {
-          "code": 11,
-          "message": "import must specify a body attribute 'bulkData' of type Object.",
-          "class": "BadRequestError"
-        },
-        "missing_data_collection_argument": {
-          "code": 12,
-          "message": "Missing data collection argument.",
-          "class": "BadRequestError"
-        },
-        "missing_data_index_argument": {
-          "code": 13,
-          "message": "Missing data index argument.",
-          "class": "BadRequestError"
-        },
+        }
         "index_protected": {
-          "code": 14,
-          "message": "Index '%s' is protected, please use appropriated routes instead.",
+          "description": "The content of a protected index cannot be modified with generic API routes",
+          "code": 20,
+          "message": "Index '%s' is protected, use the appropriated routes instead.",
           "class": "BadRequestError"
         },
-        "error_on_index_refresh": {
-          "code": 15,
-          "message": "Error refreshing index %s:\n%s.",
-          "class": "InternalError"
-        },
-        "limit_documents_reached": {
-          "code": 16,
-          "message": "Number of documents exceeds the server configured value (%s).",
-          "class": "SizeLimitError"
+        "invalid_mapping": {
+          "description": "The provided mapping is invalid",
+          "code": 21,
+          "message": "Invalid mapping property \"mapping.%s\".%s",
+          "class": "BadRequestError"
         },
         "index_reserved": {
-          "code": 17,
+          "description": "Index names starting with a \"%\" are reserved and cannot be used",
+          "code": 22,
           "message": "Indexes starting with a '%' are reserved for internal use. Cannot process index %s.",
           "class": "BadRequestError"
         },
-        "create_action_does_not_support_routing": {
-          "code": 18,
-          "message": "Kuzzle does not support '_routing' in create action.",
-          "class": "BadRequestError"
-        },
-        "wrong_refresh_parameter": {
-          "code": 19,
-          "message": "Refresh parameter only supports the value 'wait_for' or false.",
-          "class": "BadRequestError"
-        },
-        "incorrect_mapping_property": {
-          "code": 20,
-          "message": "Incorrect mapping property \"mapping.%s\".%s",
-          "class": "BadRequestError"
-        },
-        "too_many_operations": {
-          "code": 21,
-          "message": "\"%s\" threads buffer exceeded. Too many operations received at once.",
-          "class": "ExternalServiceError"
-        },
-        "invalid_change_from_nested": {
-          "code": 22,
-          "message": "Can not change mapping for field \"%s\" from nested to another type.",
-          "class": "BadRequestError"
-        },
-        "invalid_change_to_nested": {
+        "no_routing": {
+          "description": "The \"_routing\" keyword is forbidden",
           "code": 23,
-          "message": "Can not change mapping for field \"%s\" from object to another type.",
+          "message": "The \"_routing\" keyword is forbidden.",
           "class": "BadRequestError"
         },
-        "invalid_change_to_scalar": {
+        "not_connected":{
+          "description": "Unable to connect to the storage instance",
           "code": 24,
-          "message": "Can not change mapping for field \"%s\" from object to a scalar type.",
-          "class": "BadRequestError"
-        },
-        "duplicate_field_name": {
-          "code": 25,
-          "message": "Can not set mapping for field \"%s\" on collection \"%s\" because the field name is already used in another collection with a different type.",
-          "class": "BadRequestError"
-        },
-        "invalid_type_change": {
-          "code": 26,
-          "message": "Can not change type of field \"%s\" from \"%s\" to \"%s\".",
-          "class": "BadRequestError"
-        },
-        "unsupported_parameter_for_field": {
-          "code": 27,
-          "message": "Parameter \"%s\" is not supported for field \"%s\".",
-          "class": "BadRequestError"
-        },
-        "type_does_not_exist": {
-          "code": 28,
-          "message": "Can not set mapping for field \"%s\" because type \"%s\" does not exist",
-          "class": "BadRequestError"
-        },
-        "fail_to_parse_field": {
-          "code": 29,
-          "message": "Failed to validate value of field \"%s\". Are you trying to insert nested value in a non-nested field ?",
-          "class": "BadRequestError"
-        },
-        "wrong_mapping_property": {
-          "code": 30,
-          "message": "Mapping for field \"%s\" must be an object with a property \"type\".",
-          "class": "BadRequestError"
-        },
-        "too_many_changes": {
-          "code": 31,
-          "message": "Unable to modify document \"%s\": cluster sync failed (too many simultaneous changes applied)",
-          "class": "ExternalServiceError"
-        },
-        "elasticsearch_service_not_connected":{
-          "code": 32,
           "message": "Elasticsearch service is not connected.",
           "class": "ExternalServiceError"
         },
-        "unexpected_bad_request_error": {
+        "too_many_operations": {
+          "description": "Too many operations received",
+          "code": 25,
+          "message": "\"%s\" threads buffer exceeded. Too many operations received at once.",
+          "class": "ExternalServiceError"
+        },
+        "cannot_change_mapping": {
+          "description": "Cannot change the mapping of a field (once set, a field mapping cannot be changed)",
+          "code": 26,
+          "message": "Field \"%s\" already has a mapping, and it cannot be changed",
+          "class": "BadRequestError"
+        },
+        "duplicate_field_mapping": {
+          "description": "A same field cannot have different mappings within the same index (fields are shared to all of an index collections)",
+          "code": 27,
+          "message": "Cannot set mapping for field \"%s\" on collection \"%s\" because this field name is already used in another collection, with a different type.",
+          "class": "BadRequestError"
+        },
+        "unexpected_properties": {
+          "description": "Unexpected properties found",
+          "code": 28,
+          "message": "Property \"%s\" is not supported for field \"%s\".",
+          "class": "BadRequestError"
+        },
+        "invalid_mapping_type": {
+          "description": "Unrecognized mapping data type",
+          "code": 29,
+          "message": "Field \"%s\": the data type \"%s\" doesn't exist",
+          "class": "BadRequestError"
+        },
+        "field_parse_failed": {
+          "description": "The mapping field cannot be parsed",
+          "code": 30,
+          "message": "Failed to validate value of field \"%s\". Are you trying to insert a nested value in a non-nested field?",
+          "class": "BadRequestError"
+        },
+        "invalid_mapping_argument": {
+          "description": "Invalid mapping property",
+          "code": 31,
+          "message": "Field \"%s\": invalid mapping property \"%s\".",
+          "class": "BadRequestError"
+        },
+        "too_many_changes": {
+          "description": "Too many changes occured on the same resource in a small amount of time. Try with the \"retryOnConflict\" option",
+          "code": 32,
+          "message": "Unable to modify document \"%s\": cluster sync failed (too many simultaneous changes applied)",
+          "class": "ExternalServiceError"
+        },
+        "unexpected_bad_request": {
+          "description": "Embeds an unexpected bad request error from Elasticsearch",
           "code": 33,
           "message": "%s",
           "class": "BadRequestError"
         },
-        "unexpected_not_found_error": {
+        "unexpected_not_found": {
+          "description": "Embeds an unexpected notfound error from Elasticsearch",
           "code": 34,
           "message": "%s",
           "class": "NotFoundError"
         },
-        "unexpected_conflict_error": {
+        "unexpected_error": {
+          "description": "Embeds an unexpected error from Elasticsearch",
           "code": 35,
           "message": "%s",
           "class": "ExternalServiceError"
         },
-        "unexpected_error": {
-          "code": 36,
-          "message": "%s",
-          "class": "ExternalServiceError"
-        },
         "no_mapping_found": {
+          "description": "Attempted to read a non-existent mapping",
           "code": 37,
           "message": "No mapping found for index \"%s\".",
           "class": "NotFoundError"
-        },
-        "index_or_collection_not_found": {
-          "code": 38,
-          "message": "Index or collection \"%s\" does not exist, please create it first.",
-          "class": "NotFoundError"
-        }
-      }
-    },
-    "internal_engine": {
-      "code": 2,
-      "errors": {
-        "lock_wait_timeout": {
-          "code": 1,
-          "message": "Internal engine bootstrap - lock wait timeout exceeded.",
-          "class": "InternalError"
-        },
-        "plugin_bootstrap_lock_wait_timeout": {
-          "code": 2,
-          "message": "Plugin %s bootstrap - lock wait timeout exceeded.",
-          "class": "InternalError"
         }
       }
     },
@@ -292,11 +236,11 @@
           "code": 2,
           "message": "Cache read fail: %s",
           "class": "InternalError"
-        }
-
-        "redis_service_not_connected": {
-          "code": 1,
-          "message": "Redis service is not connected.",
+        },
+        "not_connected": {
+          "description": "Unable to connect to the cache server",
+          "code": 3,
+          "message": "Unable to connect to the cache server.",
           "class": "ServiceUnavailableError"
         }
       }

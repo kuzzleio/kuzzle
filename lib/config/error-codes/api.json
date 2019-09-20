@@ -87,17 +87,17 @@
           "message": "Client connection dropped",
           "class": "BadRequestError"
         },
-        "unknown_controller": {
-          "description": "Unknown API controller",
+        "controller_not_found": {
+          "description": "API controller not found",
           "code": 4,
-          "message": "Unknown controller %s.",
-          "class": "BadRequestError"
+          "message": "API controller \"%s\" not found.",
+          "class": "NotFoundError"
         },
-        "unknown_action": {
-          "description": "Unknown API controller action",
+        "action_not_found": {
+          "description": "API controller action not found",
           "code": 5,
-          "message": "No corresponding action %s in controller %s.",
-          "class": "BadRequestError"
+          "message": "Controller action \"%s\" not found.",
+          "class": "NotFoundError"
         }
       }
     }

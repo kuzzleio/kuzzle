@@ -47,9 +47,9 @@
           "class": "PluginImplementationError"
         },
         "not_a_constructor": {
-          "description": "Expected a class constructor",
+          "description": "The exposed plugin is not a constructor",
           "code": 12,
-          "message": "Plugin %s is not a constructor.",
+          "message": "Plugin \"%s\" is not a constructor.",
           "class": "PluginImplementationError"
         },
         "name_already_exists": {
@@ -76,9 +76,9 @@
           "class": "PluginImplementationError"
         },
         "pipe_timeout": {
-          "description": "A pipe function execution exceeded the defined delay. If needed, the allowed delay can be extended in Kuzzle's configuration",
+          "description": "A pipe function execution took more than the configured server limit",
           "code": 3,
-          "message": "Plugin \"%s\": Timeout error. Pipe for event \"%s\" exceeded the timeout delay (%sms). Aborting.",
+          "message": "Plugin \"%s\": timeout error. A pipe on the event \"%s\" exceeded the timeout delay (%sms). Aborting.",
           "class": "GatewayTimeoutError"
         }
       }

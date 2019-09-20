@@ -13,7 +13,7 @@
         "unexpected_error": {
           "description": "Caught an unexpected HTTP parsing error",
           "code": 2,"
-          "message": "%s",
+          "message": "Caught an unexpected HTTP error: %s",
           "class": "BadRequestError"
         },
         "too_many_encodings": {
@@ -29,19 +29,68 @@
           "class": "BadRequestError"
         },
         "compression_disabled": {
-          "desscription": "The server has been configured to refuse compressed requests",
+          "description": "The server has been configured to refuse compressed requests",
           "code": 5,
           "message": "Compression support is disabled.",
           "class": "BadRequestError"
+        },
+        "unsupported_verb": {
+          "description": "An HTTP request has been submitted using an unsupported verb",
+          "code": 6,
+          "message": "Unsupported HTTP verb %s.",
+          "class": "BadRequestError"
+        },
+        "url_not_found": {
+          "description": "API URL not found"
+          "code": 7,
+          "message": "API URL not found: %s.",
+          "class": "NotFoundError"
+        },
+        "unsupported_content": {
+          "description": "The content described in the content-type header is not supported",
+          "code": 8,
+          "message": "Invalid request content-type. Expected \"application/json\", got: \"%s\".",
+          "class": "BadRequestError"
+        },
+        "unsupported_charset": {
+          "description": "Unsupported content charset",
+          "code": 9,
+          "message": "Unsupported request charset. Expected \"utf-8\", got: \"%s\".",
+          "class": "BadRequestError"
+        },
+        "duplicate_url": {
+          "description": "Triggered when an attempt is made to register a duplicate URL in the HTTP router",
+          "code": 10,
+          "message": "Unable to attach URL %s: this path already exists.",
+          "class": "InternalError"
+        },
+        "volatile_parse_failed": {
+          "description": "The x-kuzzle-volatile header received is not in JSON format",
+          "code": 11,
+          "message": "Unable to convert the \"x-kuzzle-volatile\" HTTP header to JSON: %s",
+          "class": "BadRequestError"
+        },
+        "body_parse_failed": {
+          "descripion": "The request body is not in JSON format",
+          "code": 12,
+          "message": "Unable to convert the HTTP body to JSON: %s",
+          "class": "BadRequestError"
+        },
+        "file_too_large": {
+          "description": "The submitted file exceeds the server configured limit",
+          "code": 13,
+          "message": "Maximum HTTP file size exceeded",
+          "class": "SizeLimitError"
         }
       }
     },
     "mqtt": {
       "code": 2,
       "errors": {
-        "mqtt_request_error": {
+        "unexpected_error": {
+          "description": "Caught an unexpected MQTT error",
           "code": 1,
-          "message": "%s.",
+          "message": "Caught an unexpected MQTT error: %s",
           "class": "BadRequestError"
         }
       }
@@ -49,15 +98,16 @@
     "websocket": {
       "code": 3,
       "errors": {
-        "websocket_request_error": {
+        "unexpected_error": {
+          "description": "Caught an unexpected WebSocket error",
           "code": 1,
-          "message": "%s.",
+          "message": "Caught an unexpected WebSocket error: %s",
           "class": "BadRequestError"
         }
       }
     }
     "entrypoint": {
-      "code": 5,
+      "code": 4,
       "errors": {
         "unexpected_event": {
           "description": "Received an erroneous network event",
@@ -69,56 +119,6 @@
           "description": "Invalid network port",
           "code": 2,
           "message": "Invalid network port number: %s.",
-          "class": "InternalError"
-        }
-      }
-    },
-    "http_router": {
-      "code": 6,
-      "errors": {
-        "unrecognized_http_method": {
-          "code": 1,
-          "message": "Unrecognized HTTP method %s.",
-          "class": "BadRequestError"
-        },
-        "api_url_not_found": {
-          "code": 2,
-          "message": "API URL not found: %s.",
-          "class": "NotFoundError"
-        },
-        "invalid_request_content_type": {
-          "code": 3,
-          "message": "Invalid request content-type. Expected \"application/json\", got: \"%s\".",
-          "class": "BadRequestError"
-        },
-        "invalid_request_charset": {
-          "code": 4,
-          "message": "Invalid request charset. Expected \"utf-8\", got: \"%s\".",
-          "class": "BadRequestError"
-        },
-        "unable_to_attach_url": {
-          "code": 5,
-          "message": "Unable to attach URL %s: URL path already exists.",
-          "class": "InternalError"
-        },
-        "part_already_exists": {
-          "code": 6,
-          "message": "part already exists.",
-          "class": "InternalError"
-        },
-        "unable_to_convert_http_header_to_json": {
-          "code": 7,
-          "message": "Unable to convert HTTP x-kuzzle-volatile header to JSON.",
-          "class": "BadRequestError"
-        },
-        "unable_to_convert_http_body_to_json": {
-          "code": 8,
-          "message": "Unable to convert HTTP body to JSON.",
-          "class": "BadRequestError"
-        },
-        "request_error": {
-          "code": 9,
-          "message": "%s.",
           "class": "InternalError"
         }
       }

@@ -5,53 +5,63 @@
       "code": 1,
       "errors": {
         "missing_nested_spec": {
+          "description": "All levels of an object have to be defined in the specification",
           "code": 1,
           "message": "All levels of an object have to be defined in the specification.",
           "class": "PreconditionError"
         },
-        "unallowed_children": {
+        "unexpected_children": {
+          "description": "The field configuration does not allow children fields",
           "code": 2,
-          "message": "The field type %s is not allowed to have children fields.",
+          "message": "The field type \"%s\" is not allowed to have children fields.",
           "class": "PreconditionError"
         },
         "missing_parent": {
+          "description": "Missing parent field",
           "code": 3,
           "message": "The parent field of the field \"%s\" is not defined.",
           "class": "PreconditionError"
         },
-        "invalid_properties": {
+        "unexpected_properties": {
+          "description": "Unexpected properties found",
           "code": 4,
-          "message": "The object \"%s\" contains invalid properties.",
+          "message": "The object \"%s\" contains unexpected properties (allowed: %s).",
           "class": "PreconditionError"
         },
         "missing_type": {
+          "description": "The property \"type\" is required",
           "code": 5,
           "message": "Missing property \"type\" in field \"%s\".",
           "class": "PreconditionError"
         },
         "unknown_type": {
+          "description": "Unknown \"type\" defined",
           "code": 6,
           "message": "In \"%s\": unknown type \"%s\".",
           "class": "PreconditionError"
         },
         "missing_value": {
+          "description": "The \"value\" field is required",
           "code": 7,
           "message": "Missing property \"value\" in field \"%s\".",
           "class": "PreconditionError"
         },
-        "expected_boolean": {
+        "invalid_type": {
+          "description": "Wrong parameter type",
           "code": 8,
-          "message": "\"%s\" must be of type \"boolean\".",
+          "message": "Wrong type for parameter \"%s\" (expected: %s).",
           "class": "PreconditionError"
         },
-        "unexpected_property": {
+        "not_multivalued": {
+          "description": "Expected the field to be multivalued",
           "code": 9,
-          "message": "Field \"%s\": cannot set a \"%s\" property if the field is not multivalued.",
+          "message": "Field \"%s\": cannot set a property \"%s\" if the field is not multivalued.",
           "class": "PreconditionError"
         },
         "invalid_range": {
+          "description": "A range has been defined with its lower bound greater than its upper one",
           "code": 10,
-          "message": "Field \"%s\": invalid range (minCount > maxCount).",
+          "message": "Property \"%s\": invalid range (%s > %s).",
           "class": "PreconditionError"
         },
         "invalid_specifications": {
@@ -68,100 +78,64 @@
         }
       }
     },
-    "extension": {
+    "types": {
       "code": 2,
       "errors": {
-        "missing_validate": {
+        "invalid_date_type": {
+          "description": "One or multiple date format types are invalid",
           "code": 1,
-          "message": "The type %s must implement the function 'validate'.",
-          "class": "PluginImplementationError"
+          "message": "The following date types are invalid: %s.",
+          "class": "PreconditionError"
         },
-        "missing_typeName": {
+        "invalid_date": {
+          "description": "The date value is invalid and cannot be parsed",
           "code": 2,
-          "message": "The typeName property must be defined in the validation type object.",
-          "class": "PluginImplementationError"
+          "message": "Cannot parse the date value: \"%s\".",
+          "class": "PreconditionError"
         },
-        "missing_validateFieldSpecification": {
+        "missing_enum_values": {
+          "description": "The \"enum\" type requires a \"values\" property holding the list of the enum values",
           "code": 3,
-          "message": "The type %s must implement the function 'validateFieldSpecification'.",
-          "class": "PluginImplementationError"
+          "message": "The \"enum\" type requires a \"values\" property holding the list of the enum values.",
+          "class": "PreconditionError"
         },
-        "missing_getStrictness": {
+        "invalid_geoshape": {
+          "description": "One or multiple geoshape types are invalid",
           "code": 4,
-          "message": "The allowing children type %s must implement the function 'getStrictness'.",
+          "message": "The following shapes are invalid: %s.",
+          "class": "PreconditionError"
+        },
+        "missing_type_name": {
+          "description": "Type definitions must have a \"typeName\" defined",
+          "code": 5,
+          "message": "Missing property \"typeName\"",
           "class": "PluginImplementationError"
         },
-        "type_already_defined": {
-          "code": 5,
-          "message": "The type %s is already defined.",
+        "missing_function": {
+          "description": "A required function is missing from the new validation data type",
+          "code": 6,
+          "message": "The type \"%s\" must implement a function \"%s\".",
+          "class": "PluginImplementationError"
+        },
+        "type_already_exists": {
+          "description": "Duplicate data type definition",
+          "code": 7,
+          "message": "The type \"%s\" already exists.",
           "class": "PluginImplementationError"
         }
       }
     },
-    "types": {
+    "check" {
       "code": 3,
       "errors": {
-        "expected_array": {
-          "code": 1,
-          "message": "Invalid option \"%s\": must be a non-empty array.",
-          "class": "PreconditionError"
-        },
-        "unrecognized_names": {
-          "code": 2,
-          "message": "Unrecognized format name%s: %s.",
-          "class": "PreconditionError"
-        },
-        "invalid_option_def": {
-          "code": 3,
-          "message": "Invalid \"%s\" option definition.",
-          "class": "PreconditionError"
-        },
-        "invalid_range": {
-          "code": 4,
-          "message": "Invalid range: min > max.",
-          "class": "PreconditionError"
-        },
-        "expected_number": {
-          "code": 5,
-          "message": "Invalid option \"%s\": must be of type \"number\".",
-          "class": "PreconditionError"
-        },
-        "cannot_parse": {
-          "code": 6,
-          "message": "Unable to parse the value \"%s = %s\".",
-          "class": "PreconditionError"
-        },
-        "expected_boolean": {
-          "code": 7,
-          "message": "Invalid option \"%s\": must be of type \"boolean\".",
-          "class": "PreconditionError"
-        },
-        "missing_option": {
-          "code": 8,
-          "message": "Option \"%s\" is required.",
-          "class": "PreconditionError"
-        },
-        "expected_all_strings": {
-          "code": 9,
-          "message": "Values must all be of type \"string\". Invalid value%s: %s.",
-          "class": "PreconditionError"
-        },
-        "invalid_shape": {
-          "code": 10,
-          "message": "Invalid shape%s: %s.",
-          "class": "PreconditionError"
-        },
-      }
-    },
-    "check" {
-      "code": 4,
-      "errors": {
         "failed_document": {
+          "description": "Document rejected because it does not validate the collection specifications",
           "code": 1,
           "message": "Failed to validate document: %s",
           "class": "BadRequestError"
         },
         "failed_field": {
+          "description": "Document rejected because one of its field does not validate the collection specifications",
           "code": 2,
           "message": "Validation failed. Field \"%s\": %s.",
           "class": "BadRequestError"
