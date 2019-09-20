@@ -18,7 +18,7 @@ const
       PartialError
     }
   } = require('kuzzle-common-objects'),
-  errorsManager = require('../../../../lib/config/error-codes/throw');
+  errorsManager = require('../../../../lib/util/errors');
 
 describe('/api/controllers/security', () => {
   let

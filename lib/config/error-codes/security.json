@@ -17,7 +17,7 @@
           "class": "InternalError"
         },
         "unknown_connection": {
-          "description": "Missing connection identifier"
+          "description": "Missing connection identifier",
           "code": 3,
           "message": "Unknown connection : cannot generate token",
           "class": "InternalError"
@@ -75,13 +75,13 @@
       "code": 3,
       "errors": {
         "unauthorized": {
-          "description": "Authentication required"
+          "description": "Authentication required",
           "code": 1,
           "message": "Unauthorized: authentication required.",
           "class": "UnauthorizedError"
         },
         "forbidden": {
-          "description": "Insufficient permissions to execute this action"
+          "description": "Insufficient permissions to execute this action",
           "code": 2,
           "message": "Insufficient permissions to execute this action.",
           "class": "ForbiddenError"
@@ -116,7 +116,7 @@
           "class": "InternalError"
         },
         "uninitialized": {
-          "description": "Attempted to access to an unitialized User object"
+          "description": "Attempted to access to an unitialized User object",
           "code": 5,
           "message": "Cannot get profiles for uninitialized user \"%s\"",
           "class": "InternalError"
@@ -136,41 +136,41 @@
           "description": "Cannot remove the \"login\" action from the anonymous role",
           "code": 2,
           "message": "Cannot remove the \"login\" action from the anonymous role.",
-          "class", "BadRequestError"
+          "class": "BadRequestError"
         },
         "cannot_delete": {
           "description": "Attempted to delete a base role (anonymous, default, admin)",
-          "code": 2,
+          "code": 3,
           "message": "The following roles are protected and cannot be deleted: anonymous, default, admin",
           "class": "BadRequestError"
         },
         "in_use": {
           "description": "A role still assigned to profiles cannot be deleted",
-          "code": 3,
+          "code": 4,
           "message": "The role \"%s\" is still used and cannot be deleted.",
           "class": "PreconditionError"
         },
         "uninitialized": {
-          "description": "Attempted to access to an unitialized Role object"
-          "code": 4,
+          "description": "Attempted to access to an unitialized Role object",
+          "code": 5,
           "message": "Cannot check permissions on the uninitialized role \"%s\"",
           "class": "InternalError"
         },
         "invalid_rights": {
           "description": "Invalid rights",
-          "code": 5,
+          "code": 6,
           "message": "Invalid rights for role \"%s\" (path: \"%s\"): %s",
-          "BadRequestError"
+          "class": "BadRequestError"
         },
         "closure_exec_failed": {
           "description": "Execution failed on the provided closure",
-          "code": 6,
+          "code": 7,
           "message": "Invalid definition for [%s, %s]: %s",
           "class": "BadRequestError"
         },
         "closure_missing_test": {
           "description": "Closures must specify a \"test\" attribute",
-          "code": 7,
+          "code": 8,
           "message": "Missing or malformed \"test\" attribute  for role %s (%s) : %s",
           "class": "BadRequestError"
         }
@@ -210,7 +210,7 @@
           "class": "BadRequestError"
         },
         "uninitialized": {
-          "description": "Attempted to access to an unitialized Profile object"
+          "description": "Attempted to access to an unitialized Profile object",
           "code": 6,
           "message": "Cannot get roles for uninitialized profile \"%s\"",
           "class": "InternalError"

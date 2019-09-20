@@ -17,7 +17,7 @@
           "class": "BadRequestError"
         },
         "missing_argument": {
-          "description": "A required argument is missing"
+          "description": "A required argument is missing",
           "code": 3,
           "message": "Missing agument \"%s\".",
           "class": "BadRequestError"

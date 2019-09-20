@@ -12,7 +12,7 @@
         },
         "unexpected_error": {
           "description": "Caught an unexpected HTTP parsing error",
-          "code": 2,"
+          "code": 2,
           "message": "Caught an unexpected HTTP error: %s",
           "class": "BadRequestError"
         },
@@ -41,7 +41,7 @@
           "class": "BadRequestError"
         },
         "url_not_found": {
-          "description": "API URL not found"
+          "description": "API URL not found",
           "code": 7,
           "message": "API URL not found: %s.",
           "class": "NotFoundError"
@@ -71,7 +71,7 @@
           "class": "BadRequestError"
         },
         "body_parse_failed": {
-          "descripion": "The request body is not in JSON format",
+          "description": "The request body is not in JSON format",
           "code": 12,
           "message": "Unable to convert the HTTP body to JSON: %s",
           "class": "BadRequestError"
@@ -105,7 +105,7 @@
           "class": "BadRequestError"
         }
       }
-    }
+    },
     "entrypoint": {
       "code": 4,
       "errors": {

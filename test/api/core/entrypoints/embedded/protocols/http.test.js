@@ -17,7 +17,7 @@ const
   sinon = require('sinon'),
   { Writable } = require('stream'),
   errorMatcher = require(`${root}/test/util/errorMatcher`),
-  errorsManager = require(`${root}/lib/config/error-codes/throw`);
+  errorsManager = require(`${root}/lib/util/errors`).wrap('network', 'http');
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   const
@@ -500,7 +500,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             cb = kuzzle.router.http.route.firstCall.args[1],
             result = new Request({});
 
-          result.setError(errorsManager.get('network', 'http', 'http_request_error', 'foobar'));
+          result.setError(errorsManager.get('unexpected_error', 'foobar'));
 
           cb(result);
 
@@ -780,11 +780,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         process.env.NODE_ENV = env;
 
         const
-          kerr = errorsManager.get('network', 'http', 'http_request_error', 'test'),
+          kerr = errorsManager.get('unexpected_error', 'test'),
           matcher = errorMatcher.fromMessage(
             'network',
             'http',
-            'http_request_error',
+            'unexpected_error',
             'test'),
           expected = (new Request(payload, {connectionId, kerr})).serialize();
 

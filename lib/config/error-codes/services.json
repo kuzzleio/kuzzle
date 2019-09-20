@@ -31,11 +31,11 @@
         "import_failed": {
           "description": "Failed to import some or all documents",
           "code": 5,
-          "message": "Failed to import some or all documents: %s.",
+          "message": "Failed to import some or all documents.",
           "class": "PartialError"
         },
         "no_multi_indexes": {
-          "description": "Cannot be run on multiple indexes"
+          "description": "Cannot be run on multiple indexes",
           "code": 6,
           "message": "Cannot be run on multiple indexes.",
           "class": "BadRequestError"
@@ -117,7 +117,7 @@
           "code": 19,
           "message": "Argument \"%s\" is invalid (expected: %s)",
           "class": "BadRequestError"
-        }
+        },
         "index_protected": {
           "description": "The content of a protected index cannot be modified with generic API routes",
           "code": 20,

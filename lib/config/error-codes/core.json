@@ -5,22 +5,26 @@
       "code": 0,
       "errors": {
         "unexpected_error": {
+          "description": "Caught an unexpected error. Please contact your support.",
           "code": 1,
-          "message": "Unknown error: %s.",
+          "message": "Caught an unexpected error: %s.",
           "class": "InternalError"
         },
         "service_unavailable": {
+          "description": "An external service is unavailable",
           "code": 2,
           "message": "Service unavailable: %s.",
           "class": "ServiceUnavailableError"
         },
         "service_timeout": {
+          "description": "Service initialization timeout",
           "code": 3,
           "message": "[FATAL] Service \"%s\": initialization timeout",
           "class": "InternalError"
         },
         "unreadable_log_dir": {
-          "code": 3,
+          "description": "Cannot read the content of the log directory",
+          "code": 4,
           "message": "Cannot read log directory '%s' : %s.",
           "class": "InternalError"
         }
@@ -28,18 +32,18 @@
       }
     },
     "realtime": {
-      "code": 2,
+      "code": 1,
       "errors": {
         "room_not_found": {
           "description": "The provided room identifier doesn't exist",
           "code": 1,
-          "description": "The room \"%s\" doesn't exist",
+          "message": "The room \"%s\" doesn't exist",
           "class": "NotFoundError"
         },
         "invalid_rooms": {
           "description": "The provided \"rooms\" argument is invalid",
           "code": 2,
-          "description": "The \"rooms\" attribute must be an array.",
+          "message": "The \"rooms\" attribute must be an array.",
           "class": "BadRequestError"
         },
         "invalid_state": {
@@ -81,7 +85,7 @@
       }
     },
     "vault": {
-      "code": 3,
+      "code": 2,
       "errors": {
         "cannot_decrypt": {
           "description": "Decryption of a vault file failed",
@@ -97,18 +101,8 @@
         }
       }
     },
-    "statistics": {
-      "code": 4,
-      "errors": {
-        "invalid_time_value": {
-          "code": 1,
-          "message": "Invalid time value",
-          "class": "BadRequestError"
-        }
-      }
-    },
     "configuration": {
-      "code": 5,
+      "code": 3,
       "errors": {
         "invalid_type": {
           "description": "Wrong configuration parameter type",
@@ -125,7 +119,7 @@
       }
     },
     "sandbox": {
-      "code": 6,
+      "code": 4,
       "errors": {
         "process_already_running": {
           "description": "A process is already running for this sandbox",
