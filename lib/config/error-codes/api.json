@@ -19,7 +19,7 @@
         "missing_argument": {
           "description": "A required argument is missing",
           "code": 3,
-          "message": "Missing agument \"%s\".",
+          "message": "Missing argument \"%s\".",
           "class": "BadRequestError"
         },
         "empty_argument": {
@@ -62,6 +62,12 @@
           "description": "_id values cannot start with an underscore",
           "code": 10,
           "message": "Invalid \"_id\" value: cannot start with an underscore",
+          "class": "BadRequestError"
+        },
+        "forbidden_argument": {
+          "description": "A forbidden argument has been provided",
+          "code": 11,
+          "message": "The argument \"%s\" is not allowed by this API action.",
           "class": "BadRequestError"
         }
       }

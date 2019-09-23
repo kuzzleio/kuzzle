@@ -19,14 +19,8 @@
  * limitations under the License.
  */
 
-const path = `${__dirname}/../lib/config/error-codes/`;
-
 const
-  internal = require(`${path}internal`),
-  external = require(`${path}external`),
-  api = require(`${path}/api`),
-  network = require(`${path}network`),
-  plugins = require(`${path}plugins`),
+  codes = require(`${__dirname}/../lib/config/error-codes/`),
   fs = require('fs'),
   { errors } = require('kuzzle-common-objects');
 
@@ -46,15 +40,20 @@ order: 500
 
 `;
 
-function buildErrorCodes(errorCodesFiles) {
-  const buffer = Buffer.allocUnsafe(4);
+function buildErrorCodes(domains) {
+  const
+    buffer = Buffer.allocUnsafe(4),
+    domainKeys = Object
+      .keys(domains)
+      .sort((a, b) => domains[a].code - domains[b].code);
   let doc = header;
 
-  for (const domainName of Object.keys(errorCodesFiles)) {
-    const domain = errorCodesFiles[domainName];
+  for (const domainName of domainKeys) {
+    const domain = domains[domainName];
 
     buffer.writeUInt8(domain.code, 3);
     doc += `\n## 0x${buffer.toString('hex', 3)}: ${domainName}\n\n`;
+
     for (const subdomainName of Object.keys(domain.subdomains)) {
       const subdomain = domain.subdomains[subdomainName];
 
@@ -62,6 +61,7 @@ function buildErrorCodes(errorCodesFiles) {
 
       doc += `\n\n### Subdomain: 0x${buffer.toString('hex', 2)}: ${subdomainName}\n\n`;
       doc += '| Id | Error Type (Status Code)             | Message           |\n| ------ | -----------------| ------------------ | ------------------ |\n';
+
       for (const errorName of Object.keys(subdomain.errors)) {
         const
           error = subdomain.errors[errorName],
@@ -72,7 +72,7 @@ function buildErrorCodes(errorCodesFiles) {
           buffer.writeUInt32BE(
             domain.code << 24 | subdomain.code << 16 | error.code,
             0);
-          doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> | [${error.class}](/core/1/api/essentials/errors/handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message.replace(/%s/g, '&lt;placeholder&gt;')} |\n`;
+          doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> | [${error.class}](/core/1/api/essentials/errors/handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.description} |\n`;
         }
       }
       doc += '\n---\n';
@@ -87,6 +87,6 @@ const output = process.argv[2] === '-o' || process.argv[2] === '--output'
   ? process.argv[3]
   : `${__dirname}/1/api/essentials/errors/codes/index.md`;
 
-const doc = buildErrorCodes({ internal, external, api, network, plugins });
+const doc = buildErrorCodes(codes.domains);
 
 fs.writeFileSync(output, doc);

@@ -6,7 +6,7 @@ const
   {
     Request,
     errors: {
-      InternalError
+      PluginImplementationError
     }
   } = require('kuzzle-common-objects'),
   User = require('../../../../lib/api/core/models/security/user'),
@@ -35,7 +35,7 @@ describe('Test: sdk/funnelProtocol', () => {
     it('should throw an InternalError if the funnel is instantiated without a valid User object', () => {
       should(() => {
         new FunnelProtocol(funnel, { _id: 'gordon' });
-      }).throw(InternalError);
+      }).throw(PluginImplementationError, { errorName: 'plugin.context.invalid_user' });
     });
   });
 

@@ -6,7 +6,10 @@ const
   _ = require('lodash'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager'),
-  { PluginImplementationError } = require('kuzzle-common-objects').errors;
+  {
+    NotFoundError,
+    PluginImplementationError
+  } = require('kuzzle-common-objects').errors;
 
 describe('PluginsManager: strategy management', () => {
   let
@@ -112,22 +115,18 @@ describe('PluginsManager: strategy management', () => {
 
   describe('#initAuthenticators', () => {
     it('should throw if the provided authenticators property is not an object', () => {
-      const message = /\[some-plugin-name\]: the exposed "authenticators" plugin property must be of type "object"/;
-
       [[], 'foobar', 123, true].forEach(authenticators => {
         plugin.object.authenticators = authenticators;
         should(() => pluginsManager._initAuthenticators(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, { errorName: 'plugin.authenticators.not_an_object'});
       });
     });
 
     it('should throw if one of the provided authenticators is not a constructor', () => {
-      const message = /\[some-plugin-name\]: invalid authenticator foo: expected a constructor/;
-
       [() => {}, 'foobar', true, 123].forEach(ctor => {
         plugin.object.authenticators.foo = ctor;
         should(() => pluginsManager._initAuthenticators(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, { errorName: 'plugin.authenticators.invalid_authenticator' });
       });
     });
   });
@@ -217,19 +216,17 @@ describe('PluginsManager: strategy management', () => {
 
     it('should throw if the provided strategy is not an object', () => {
       [[], null, undefined, 'foobar', 123, true].forEach(strategy => {
-        const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the strategy description to be an object, got: ${strategy}`);
         plugin.object.strategies.someStrategy = strategy;
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, { errorName: 'plugin.strategy.invalid_definition' });
       });
     });
 
     it('should throw if methods is not an object', () => {
       [[], null, undefined, 'foobar', 123, true].forEach(methods => {
-        const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected a "methods" property of type "object", got: ${methods}`);
         plugin.object.strategies.someStrategy.methods = methods;
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, { errorName: 'plugin.strategy.invalid_methods' });
       });
     });
 
@@ -242,25 +239,27 @@ describe('PluginsManager: strategy management', () => {
       });
     });
 
-    it('should throw if a required method is missing or invalid', () => {
+    it('should throw if a required method is invalid', () => {
       [[], null, undefined, {}, 123, true].forEach(fn => {
-        const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected a "exists" property of type "string", got: ${_.escapeRegExp(fn)}`);
         plugin.object.strategies.someStrategy.methods.exists = fn;
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.invalid_method_type'
+          });
       });
     });
 
     it('should throw if a mandatory method is not exposed by the plugin object', () => {
       ['exists', 'create', 'update', 'delete', 'validate', 'verify'].forEach(methodName => {
         const
-          fnName = methodName + 'Function',
-          message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: the strategy method "${fnName}" must point to an exposed function`);
+          fnName = methodName + 'Function';
 
         delete plugin.object[fnName];
 
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.missing_method_function'
+          });
 
         plugin.object[fnName] = sinon.stub();
       });
@@ -271,24 +270,25 @@ describe('PluginsManager: strategy management', () => {
         const clone = JSON.parse(JSON.stringify(plugin));
 
         [[], {}, 123, false].forEach(name => {
-          const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "${methodName}" property to be of type "string", got: ${_.escapeRegExp(name)}`);
           clone.object.strategies.someStrategy.methods[methodName] = name;
           should(() => pluginsManager._initStrategies(clone))
-            .throw(PluginImplementationError, {message});
+            .throw(PluginImplementationError, {
+              errorName: 'plugin.strategy.invalid_method_type'
+            });
         });
       });
     });
 
     it('should throw if an optional method is specified but does not point to a function', () => {
       ['getInfo', 'getById', 'afterRegister'].forEach(methodName => {
-        const
-          fnName = methodName + 'Function',
-          message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: the strategy method "${fnName}" must point to an exposed function`);
+        const fnName = methodName + 'Function';
 
         delete plugin.object[fnName];
 
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.missing_method_function'
+          });
 
         plugin.object[fnName] = sinon.stub();
       });
@@ -296,50 +296,59 @@ describe('PluginsManager: strategy management', () => {
 
     it('should throw if the strategy authenticator is invalid or missing', () => {
       [[], {}, 123, null, undefined, true].forEach(authenticator => {
-        const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected an "authenticator" property of type "string", got: ${_.escapeRegExp(authenticator)}`);
         plugin.object.strategies.someStrategy.config.authenticator = authenticator;
 
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.invalid_authenticator'
+          });
       });
     });
 
     it('should throw if the provided authenticator is not listed in this.authenticators', () => {
       plugin.object.strategies.someStrategy.config.authenticator = 'foobar';
       should(() => pluginsManager._initStrategies(plugin))
-        .throw(PluginImplementationError, {message: /\[some-plugin-name\] Strategy someStrategy: unknown authenticator value: foobar/});
+        .throw(PluginImplementationError, {
+          errorName: 'plugin.strategy.unknown_authenticator'
+        });
     });
 
     it('should throw if both an authenticator and a constructor are provided', () => {
       plugin.object.strategies.someStrategy.config.constructor = function () {};
       should(() => pluginsManager._initStrategies(plugin))
-        .throw(PluginImplementationError, {message: /\[some-plugin-name\] Strategy someStrategy: the "authenticator" and "constructor" parameters cannot both be set/});
+        .throw(PluginImplementationError, {
+          errorName: 'plugin.strategy.unexpected_constructor'
+        });
     });
 
     it('should throw if the provided constructor is not a constructor', () => {
       plugin.object.strategies.someStrategy.config.constructor = () => {};
       delete plugin.object.strategies.someStrategy.config.authenticator;
       should(() => pluginsManager._initStrategies(plugin))
-        .throw(PluginImplementationError, {message: /\[some-plugin-name\] Strategy someStrategy: invalid "constructor" property value: constructor expected/});
+        .throw(PluginImplementationError, {
+          errorName: 'plugin.strategy.invalid_constructor'
+        });
     });
 
     it('should throw if the "strategyOptions" config is invalid', () => {
       [[], 'foobar', 123, false].forEach(opts => {
-        const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "strategyOptions" property to be of type "object", got: ${_.escapeRegExp(opts)}`);
         plugin.object.strategies.someStrategy.config.strategyOptions = opts;
 
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.invalid_option'
+          });
       });
     });
 
     it('should throw if the "authenticateOptions" config is invalid', () => {
       [[], 'foobar', 123, false].forEach(opts => {
-        const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "authenticateOptions" property to be of type "object", got: ${_.escapeRegExp(opts)}`);
         plugin.object.strategies.someStrategy.config.authenticateOptions = opts;
 
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.invalid_option'
+          });
       });
     });
 
@@ -349,7 +358,9 @@ describe('PluginsManager: strategy management', () => {
         plugin.object.strategies.someStrategy.config.fields = opts;
 
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, {message});
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.invalid_fields'
+          });
       });
     });
 
@@ -504,12 +515,12 @@ describe('PluginsManager: strategy management', () => {
 
     it('should throw if the strategy does not exist', () => {
       should(() => pluginsManager.unregisterStrategy(plugin.manifest.name, 'foobar'))
-        .throw(/Cannot remove strategy foobar: strategy does not exist/i);
+        .throw(NotFoundError, { errorName: 'plugin.strategy.strategy_not_found' });
     });
 
     it('should throw if not the owner of the strategy', () => {
       should(() => pluginsManager.unregisterStrategy('Frank William Abagnale Jr.', 'someStrategy'))
-        .throw(/Cannot remove strategy someStrategy: owned by another plugin/i);
+        .throw(PluginImplementationError, { errorName: 'plugin.strategy.unauthorized_removal' });
     });
   });
 });

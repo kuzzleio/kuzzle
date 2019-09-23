@@ -75,7 +75,7 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', undefined);
 
       should(() => pluginsManager.init())
-        .throw(PluginImplementationError, {message: /unable to load plugin from path "\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test"/i});
+        .throw(PluginImplementationError, { errorName: 'plugin.assert.cannot_load' });
       should(pluginsManager.plugins).be.empty();
     });
 
@@ -149,7 +149,9 @@ describe('PluginsManager', () => {
             }
           }
         });
-      should(() => pluginsManager.init()).throw(PluginImplementationError);
+      should(() => pluginsManager.init()).throw(PluginImplementationError, {
+        errorName: 'plugin.manifest.invalid_errors'
+      });
     });
 
     it('should throw if a plugin does not contain a manifest.json file nor a package.json one', () => {
@@ -163,7 +165,7 @@ describe('PluginsManager', () => {
       });
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        {message:  /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\] No package\.json file found\./});
+        { errorName: 'plugin.manifest.missing_package' });
       should(pluginsManager.plugins).be.empty();
     });
 
@@ -187,7 +189,7 @@ describe('PluginsManager', () => {
 
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        {message: /A plugin named foobar already exists/});
+        { errorName: 'plugin.assert.name_already_exists' });
     });
 
     it('should throw if a plugin does not expose a "init" method', () => {
@@ -205,7 +207,7 @@ describe('PluginsManager', () => {
 
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        {message: /\[kuzzle-plugin-test\] No "init" method found\./});
+        { errorName: 'plugin.assert.init_not_found' });
     });
 
     it('should return a well-formed plugin instance if a valid requirable plugin is enabled', () => {
@@ -279,10 +281,8 @@ describe('PluginsManager', () => {
       kuzzle.config.version = '1.0.0';
       pluginsManager = new PluginsManager(kuzzle);
 
-      const message = new RegExp(`\\[/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest\\.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the manifest requirements \\(\\^5\\.x\\).`);
-
       should(() => pluginsManager.init())
-        .throw(PluginImplementationError, {message});
+        .throw(PluginImplementationError, { errorName: 'plugin.manifest.version_mismatch' });
     });
 
     it('should load custom plugin configuration if exists', () => {
@@ -337,7 +337,9 @@ describe('PluginsManager', () => {
 
       pluginsManager = new PluginsManager(kuzzle);
 
-      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" is configured to run in privileged mode, but it does not seem to support it/i);
+      should(() => pluginsManager.init()).throw(PluginImplementationError, {
+        errorName: 'plugin.assert.privileged_not_supported'
+      });
     });
 
     it('should throw if a plugin requires to be in a privileged mode but user has not acknowledged this', () => {
@@ -363,14 +365,17 @@ describe('PluginsManager', () => {
 
       pluginsManager = new PluginsManager(kuzzle);
 
-      should(() => pluginsManager.init()).throw(/the plugin "kuzzle-plugin-test" needs to run in privileged mode to work, you have to explicitly set "privileged: true" in its configuration/i);
+      should(() => pluginsManager.init()).throw(PluginImplementationError, {
+        errroName: 'plugin.assert.privileged_not_set'
+      });
     });
 
     it('should throw if the enabled plugins directory cannot be required', () => {
       fsStub.readdirSync.throws();
 
-      should(() => pluginsManager.init())
-        .throw(PluginImplementationError, {message: /Unable to load plugins from directory/});
+      should(() => pluginsManager.init()).throw(PluginImplementationError, {
+        errorName: 'plugin.assert.invalid_plugin_dir'
+      });
       should(pluginsManager.plugins).be.empty();
     });
 
@@ -380,11 +385,15 @@ describe('PluginsManager', () => {
         isDirectory: () => true
       });
 
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () { throw new Error('foobar'); });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {
+        throw new Error('foobar');
+      });
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^1.x' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
-      should(() => pluginsManager.init()).throw(PluginImplementationError, {message: /foobar/});
+      should(() => pluginsManager.init()).throw(PluginImplementationError, {
+        errorName: 'plugin.runtime.unexpected_error'
+      });
       should(pluginsManager.plugins).be.empty();
     });
 
@@ -398,8 +407,9 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^1.x' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
-      should(() => pluginsManager.init())
-        .throw(PluginImplementationError, {message: /Plugin kuzzle-plugin-test is not a constructor/});
+      should(() => pluginsManager.init()).throw(PluginImplementationError, {
+        errorName: 'plugin.assert.not_a_constructor'
+      });
       should(pluginsManager.plugins).be.empty();
     });
 

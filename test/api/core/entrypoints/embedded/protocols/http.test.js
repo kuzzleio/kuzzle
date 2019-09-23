@@ -127,7 +127,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     });
 
     it('should set decoders with throwables if compression is disabled', () => {
-      const message = 'Compression support is disabled.';
       entrypoint.config.protocols.http.allowCompression = false;
 
       return protocol.init(entrypoint)
@@ -136,8 +135,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
           should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
           should(protocol.decoders.identity).be.a.Function();
-          should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
-          should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
+          should(() => protocol.decoders.gzip()).throw(BadRequestError, {
+            errorName: 'network.http.compression_disabled'
+          });
+          should(() => protocol.decoders.deflate()).throw(BadRequestError, {
+            errorName: 'network.http.compression_disabled'
+          });
           should(protocol.decoders.identity('foobar')).eql(null);
         });
     });
@@ -406,7 +409,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            { message: 'Unsupported content type: foo/bar.' });
+            {
+              errorName: 'network.http.unexpected_error',
+              message: 'Caught an unexpected HTTP error: Unsupported content type: foo/bar'
+            });
       });
 
       it('should reply with error if the binary file size sent exceeds the maxFormFileSize', () => {

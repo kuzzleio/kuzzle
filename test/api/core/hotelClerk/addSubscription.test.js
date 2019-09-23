@@ -170,7 +170,9 @@ describe('Test: hotelClerk.addSubscription', () => {
       body: {roomId: 'no way I can exist'}
     }, context);
 
-    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError);
+    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError, {
+      errorName: 'core.realtime.room_not_found'
+    });
   });
 
   it('should reject the subscription if the given state argument is incorrect', () => {
