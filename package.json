@@ -1,21 +1,19 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.0.0",
+  "version": "2.0.0-rc.1",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "main": "./lib/index.js",
   "bin": {
     "kuzzle": "./bin/kuzzle"
   },
   "scripts": {
-    "postinstall": "npm run build-cli",
     "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing",
     "unit-testing": "nyc --reporter=text-summary --reporter=lcov mocha",
     "functional-testing": "bash features/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
     "lint": "eslint --max-warnings=0 ./lib ./test ./features",
-    "build-cli": "node bin/build-cli.js",
     "doc-prepare": "cd doc && bash doc.sh prepare",
     "doc-dev": "cd doc && bash doc.sh dev",
     "doc-build": "cd doc && bash doc.sh build",
@@ -41,7 +39,6 @@
     "busboy": "^0.3.1",
     "bytes": "^3.1.0",
     "cli-color": "^1.4.0",
-    "commander": "^2.20.0",
     "debug": "^4.1.1",
     "denque": "^1.4.1",
     "didyoumean": "^1.2.1",
@@ -54,7 +51,7 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^1.2.2",
-    "kuzzle-common-objects": "^3.0.15",
+    "kuzzle-common-objects": "^4.0.0",
     "kuzzle-sdk": "^6.2.0",
     "lodash": "4.17.14",
     "moment": "^2.24.0",
@@ -79,7 +76,8 @@
     "winston-elasticsearch": "0.7.12",
     "winston-syslog": "^2.1.0",
     "winston-transport": "^4.3.0",
-    "ws": "^7.1.1"
+    "ws": "^7.1.1",
+    "yargs": "^14.0.0"
   },
   "repository": {
     "type": "git",

@@ -7,6 +7,8 @@ order: 150
 
 # Generic Document Events
 
+<SinceBadge version="1.9.0" />
+
 Some actions in the document controller trigger generic events. Generic events are used to apply modifications on the documents in the request or result of these actions.
 
 Generic "before" events (`generic:document:before*`) are triggered **before** the regular `document:before*` event.  

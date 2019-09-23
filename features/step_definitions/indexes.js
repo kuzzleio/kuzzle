@@ -17,12 +17,6 @@ When(/^I create an index named "([^"]*)"$/, async function (index) {
   if (body.error) {
     throw new Error(body.error.message);
   }
-
-  if (!body.result) {
-    throw new Error('No result provided');
-  }
-
-  this.result = body.result;
 });
 
 When('I try to create the index {string}', async function (index) {

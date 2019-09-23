@@ -71,7 +71,7 @@ ${comparedStr}
 }
 
 function fromMessage (domain, subdomain, errorName, message) {
-  const error = errorsManager.getError(domain, subdomain, errorName, message);
+  const error = errorsManager.get(domain, subdomain, errorName, message);
 
   return fromError(error);
 }
