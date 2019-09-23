@@ -7,8 +7,7 @@ title: create
 # create
 
 
-
-Creates a new [index](/core/2/guides/essentials/store-access-data) in Kuzzle.
+Creates a new [index](/core/2/guides/essentials/store-access-data) in Kuzzle.  
 
 ---
 

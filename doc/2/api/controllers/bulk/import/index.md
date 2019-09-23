@@ -130,7 +130,8 @@ Each query result contains the following properties:
           "status": 201
         }
       }
-    ]
+    ],
+    "errors": false
   }
 }
 ```
