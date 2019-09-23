@@ -1,5 +1,12 @@
 Feature: Kuzzle functional tests
 
+  Scenario: Admin reset database
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I create a collection "kuzzle-test-index-alt":"kuzzle-collection-test-alt"
+    And I reset public database
+    Then I'm not able to find the index named "kuzzle-test-index" in index list
+    Then I'm not able to find the index named "kuzzle-test-index-alt" in index list
+
   Scenario: API method server:publicApi
     When I get the public API
     Then I have the definition of kuzzle and plugins controllers

@@ -38,7 +38,6 @@ services:
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
-      - kuzzle_services__storageEngine__commonMapping__dynamic=true
       - NODE_ENV=${NODE_ENV:-development}
       # - DEBUG=kuzzle:*,-kuzzle:entry-point:protocols:websocket
       - DEBUG=${DEBUG:-none}

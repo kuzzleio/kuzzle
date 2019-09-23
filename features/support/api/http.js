@@ -148,6 +148,15 @@ class HttpApi {
     return encodeURI(this.baseUri + '/' + path);
   }
 
+  adminResetDatabase () {
+    const options = {
+      url: this.apiPath('/admin/_resetDatabase/'),
+      method: 'POST'
+    };
+
+    return this.callApi(options);
+  }
+
   serverPublicApi () {
     const options = {
       url: this.apiPath('/_publicApi'),

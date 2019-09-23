@@ -28,6 +28,15 @@ class ApiBase {
     throw new Error('not implemented');
   }
 
+  adminResetDatabase () {
+    const msg = {
+      controller: 'admin',
+      action: 'resetDatabase'
+    };
+
+    return this.send(msg);
+  }
+
   serverPublicApi () {
     const msg = {
       controller: 'server',
