@@ -77,7 +77,7 @@ Body:
 
 ## Body properties
 
-The body must contain a `bulkData` array, detailing the bulk operations to perform, following [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-bulk.html).
+The body must contain a `bulkData` array, detailing the bulk operations to perform, following [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/docs-bulk.html).
 
 ---
 
@@ -130,7 +130,8 @@ Each query result contains the following properties:
           "status": 201
         }
       }
-    ]
+    ],
+    "errors": false
   }
 }
 ```

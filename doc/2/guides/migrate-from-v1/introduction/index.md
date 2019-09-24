@@ -55,12 +55,18 @@ API Changes:
 
 **Bulk Controller**
 
-  - `bulk:import`: it's no longer allowed to specify different indexes and collections in the same bulk data array
+  - `bulk:import`: it's no longer allowed to specify different indexes and collections in the same bulk data array. Also this method does not return a partial error on document creation fail
+  - `bulk:mWrite`: This method does not return a partial error on document creation fail.
 
 **Collection Controller**
 
   - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
   - `collection:validateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+
+**Document Controller**
+
+ - `document:mXXX`: these routes does not return a partial error when some actions fail. Errors are returned in the `errors` array.
+ - `document:mDelete`: does not return a partial error but returns deletion errors in the `errors` array
 
 ### Remove the CLI
 

@@ -4,13 +4,13 @@ set -e
 
 elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
 
-npm install --unsafe-perm
+# npm install --unsafe-perm
 # We only need to rebuild for tests against differents version of Node.js
 if [ ! -z "$TRAVIS" ]; then
     npm rebuild all --unsafe-perm
 fi
 chmod -R 777 node_modules/
-docker-compose/scripts/install-plugins.sh
+# docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "$elastic_host"

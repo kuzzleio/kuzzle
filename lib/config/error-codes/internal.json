@@ -539,6 +539,11 @@
           "code": 34,
           "message": "Field %s: %s",
           "class": "BadRequestError"
+        },
+        "incorrect_validation_format": {
+          "code": 35,
+          "message": "Incorrect validation format for collection \"%s\": missing \"%s\" property.",
+          "class": "PreconditionError"
         }
       }
     },

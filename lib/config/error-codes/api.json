@@ -106,12 +106,12 @@
         },
         "creation_failed": {
           "code": 6,
-          "message": "Some document creations failed : %s.",
+          "message": "Some document creations failed.",
           "class": "PartialError"
         },
         "deletion_failed": {
           "code": 7,
-          "message": "Some document deletions failed : %s.",
+          "message": "Some document deletions failed.",
           "class": "PartialError"
         },
         "some_document_missing": {

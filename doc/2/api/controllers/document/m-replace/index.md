@@ -6,8 +6,6 @@ title: mReplace
 
 # mReplace
 
-
-
 Replaces multiple documents.
 
 ---
@@ -91,15 +89,19 @@ Body:
 
 ## Response
 
-Returns a `hits` array containing the list of replaced documents.
+Returns an object containing 2 arrays: `hits` and `errors`
 
-Each document has the following properties:
+Each replaced document is an object of the `hits` array with the following properties:
 
 - `_id`: document unique identifier
 - `_source`: document content
-- `_version`: version number of the document
+- `_version`: version of the document (should be `1`)
 
-If one or more document cannot be replaced, the response status is set to `206`, and the `error` object contain a [partial error](/core/2/api/essentials/errors#partialerror) error.
+Each errored document is an object of the `errors` array with the following properties:
+
+- `document`: original document that caused the error
+- `status`: HTTP error status code
+- `reason`: human readable reason
 
 ```js
 {
@@ -127,7 +129,7 @@ If one or more document cannot be replaced, the response status is set to `206`,
         "_version": 4
       }
     ],
-    "total": 2
+    "errors": []
   }
 }
 ```

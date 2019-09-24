@@ -31,7 +31,7 @@ Before launching Kuzzle using Docker containers, ensure that your system meets t
 - **Docker Compose v1.8+**, see [instructions here](https://docs.docker.com/compose/install)
 
 ::: info
-Before starting the docker stack, you need to increase the maximum amount of virtual memory in order to run Elasticsearch, which is part of our stack (see why [here](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/_maximum_map_count_check.html)):
+Before starting the docker stack, you need to increase the maximum amount of virtual memory in order to run Elasticsearch, which is part of our stack (see why [here](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/_maximum_map_count_check.html)):
 
 ```bash
 sudo sysctl -w vm.max_map_count=262144

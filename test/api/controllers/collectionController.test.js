@@ -271,7 +271,11 @@ describe('Test: collection controller', () => {
       should(kuzzle.internalIndex.createOrReplace).be.calledWithMatch(
         'validations',
         `${index}#${collection}`,
-        request.input.body);
+        {
+          index,
+          collection,
+          validation: request.input.body
+        });
 
       should(response).match(request.input.body);
     });

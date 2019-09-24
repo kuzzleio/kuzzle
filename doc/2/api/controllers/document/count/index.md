@@ -60,7 +60,7 @@ Body:
 
 ### Optional:
 
-- `query`: if provided, will count only documents matching this search query. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/query-dsl.html) syntax.
+- `query`: if provided, will count only documents matching this search query. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl.html) syntax.
 
 ---
 
