@@ -511,7 +511,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
             cb = kuzzle.router.http.route.firstCall.args[1],
             result = new Request({});
 
-          result.setError(errorsManager.getError('network', 'http', 'http_request_error', 'foobar'));
+          result.setError(errorsManager.get('network', 'http', 'http_request_error', 'foobar'));
 
           cb(result);
 
@@ -790,7 +790,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
         process.env.NODE_ENV = env;
 
         const
-          kerr = errorsManager.getError(
+          kerr = errorsManager.get(
             'network',
             'http',
             'http_request_error',
