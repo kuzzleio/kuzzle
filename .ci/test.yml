@@ -16,7 +16,6 @@ services:
     environment:
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
       - kuzzle_services__storageEngine__commonMapping__dynamic=true
-      - kuzzle_services__storageEngine__internalIndex__collections__users__dynamic=true
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=production
