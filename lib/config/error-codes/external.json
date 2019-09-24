@@ -204,6 +204,11 @@
           "code": 41,
           "message": "Forbidden character \"%s\" in index or collection name",
           "class": "BadRequestError"
+        },
+        "cannot_parse_query": {
+          "code": 42,
+          "message": "Illegal root property \"%s\" in the search body.",
+          "class": "BadRequestError"
         }
       }
     },
