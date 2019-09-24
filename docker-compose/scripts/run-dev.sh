@@ -4,7 +4,6 @@ set -e
 
 elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
 
-# We only need to rebuild for tests against differents version of Node.js
 if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
     npm install --unsafe-perm
     chmod -R 777 node_modules/

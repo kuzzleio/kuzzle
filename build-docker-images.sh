@@ -112,14 +112,14 @@ elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]];
     docker_push 'kuzzle' 'latest'
   fi
 
-  # Also push the n-stable tag.
+  # Also push the major tag.
   # This tag is a pointer to the latest version of a major version
-  #   image name example: kuzzleio/kuzzle:1-stable
-  docker_tag 'plugin-dev' "$RELEASE_TAG" "$MAJOR_VERSION-stable"
-  docker_tag 'kuzzle' "$RELEASE_TAG" "$MAJOR_VERSION-stable"
+  #   image name example: kuzzleio/kuzzle:1
+  docker_tag 'plugin-dev' "$RELEASE_TAG" "$MAJOR_VERSION"
+  docker_tag 'kuzzle' "$RELEASE_TAG" "$MAJOR_VERSION"
 
-  docker_push 'plugin-dev' "$MAJOR_VERSION-stable"
-  docker_push 'kuzzle' "$MAJOR_VERSION-stable"
+  docker_push 'plugin-dev' "$MAJOR_VERSION"
+  docker_push 'kuzzle' "$MAJOR_VERSION"
 else
   echo "Could not find TRAVIS_BRANCH variable. Exiting."
 fi

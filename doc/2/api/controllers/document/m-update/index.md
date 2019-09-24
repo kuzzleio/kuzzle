@@ -92,9 +92,9 @@ Body:
 
 ## Response
 
-Returns an object containing 2 arrays: `hits` and `errors`
+Returns an object containing 2 arrays: `successes` and `errors`
 
-Each updated document is an object of the `hits` array with the following properties:
+Each updated document is an object of the `successes` array with the following properties:
 
 - `_id`: document unique identifier
 - `_source`: document content
@@ -116,7 +116,7 @@ Each errored document is an object of the `errors` array with the following prop
   "controller": "document",
   "requestId": "<unique request identifier>",
   "result": {
-    "hits": [
+    "successes": [
       {
         "_id": "<documentId>",
         "_version": 2,
@@ -132,7 +132,7 @@ Each errored document is an object of the `errors` array with the following prop
         }
       }
     ],
-    "total": 2
+    "errors": 2
   }
 }
 ```
