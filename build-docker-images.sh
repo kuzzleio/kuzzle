@@ -24,7 +24,6 @@ print_something() {
   echo "#"
   echo "#      $something"
   echo "#"
-  echo "##############################################################"
   echo ""
 }
 
@@ -34,7 +33,7 @@ run_or_echo () {
   if [ "$MODE" == "production" ] || [ "$MODE" == "local" ]; then
     $command
   else
-    echo "$command"
+    echo "> $command"
   fi
 }
 
@@ -62,6 +61,10 @@ docker_push() {
   image=$1
   tag=$2
 
+  if [ "$MODE" == "local" ]; then
+    return
+  fi
+
   print_something "Push image kuzzleio/$image:$tag to Dockerhub"
 
 
@@ -79,29 +82,19 @@ fi
 
 if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
   # Build triggered by a merge on branch *-dev
-  # Images are built in Travis
-
+  #   image name example: kuzzleio/kuzzle:2-dev
   docker_build 'plugin-dev' "$TRAVIS_BRANCH"
   docker_build 'kuzzle' "$TRAVIS_BRANCH"
 
   docker_push 'plugin-dev' "$TRAVIS_BRANCH"
   docker_push 'kuzzle' "$TRAVIS_BRANCH"
 
-  # Keep develop tag for now
-  # If this is a release of the current major version
-  # we can push with the 'develop' tag
-  if [ "$TRAVIS_BRANCH" == "$KUZZLE_LATEST_MAJOR-dev" ]; then
-    docker_tag 'plugin-dev' "$TRAVIS_BRANCH" 'develop'
-    docker_tag 'kuzzle' "$TRAVIS_BRANCH" 'develop'
-
-    docker_push 'plugin-dev' 'develop'
-    docker_push 'kuzzle' 'develop'
-  fi
-elif [[ "$TRAVIS_BRANCH" == "master" ]]; then
+elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]]; then
   RELEASE_TAG=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
-  # Build triggered by a new release
-  # Images are built in Travis
+  MAJOR_VERSION=$(echo $RELEASE_TAG | cut -d. -f 1)
 
+  # Build triggered by a new release
+  #   image name example: kuzzleio/kuzzle:1.10.3
   docker_build 'plugin-dev' "$RELEASE_TAG"
   docker_build 'kuzzle' "$RELEASE_TAG"
 
@@ -110,6 +103,7 @@ elif [[ "$TRAVIS_BRANCH" == "master" ]]; then
 
   # If this is a release of the current major version
   # we can push with the 'latest' tag
+  #   image name example: kuzzleio/kuzzle:latest
   if [[ "$RELEASE_TAG" == "$KUZZLE_LATEST_MAJOR."* ]]; then
     docker_tag 'plugin-dev' "$RELEASE_TAG" 'latest'
     docker_tag 'kuzzle' "$RELEASE_TAG" 'latest'
@@ -117,6 +111,15 @@ elif [[ "$TRAVIS_BRANCH" == "master" ]]; then
     docker_push 'plugin-dev' 'latest'
     docker_push 'kuzzle' 'latest'
   fi
+
+  # Also push the n-stable tag.
+  # This tag is a pointer to the latest version of a major version
+  #   image name example: kuzzleio/kuzzle:1-stable
+  docker_tag 'plugin-dev' "$RELEASE_TAG" "$MAJOR_VERSION-stable"
+  docker_tag 'kuzzle' "$RELEASE_TAG" "$MAJOR_VERSION-stable"
+
+  docker_push 'plugin-dev' "$MAJOR_VERSION-stable"
+  docker_push 'kuzzle' "$MAJOR_VERSION-stable"
 else
   echo "Could not find RELEASE_TAG or TRAVIS_BRANCH variables. Exiting."
 fi
