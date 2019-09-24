@@ -498,14 +498,18 @@ describe('Plugin Context', () => {
               controller: 'realtime',
               action: 'subscribe'
             })))
-              .be.rejectedWith(/"realtime:subscribe" method is not available in plugins\. You should use plugin hooks instead/);
+              .be.rejectedWith(PluginImplementationError, {
+                errorName: 'plugin.context.unavailable_realtime'
+              });
           })
           .then(() => {
             return should(context.accessors.execute(new Request({
               controller: 'realtime',
               action: 'unsubscribe'
             })))
-              .be.rejectedWith(/"realtime:unsubscribe" method is not available in plugins\. You should use plugin hooks instead/);
+              .be.rejectedWith(PluginImplementationError, {
+                errorName: 'plugin.context.unavailable_realtime'
+              });
           });
       });
     });

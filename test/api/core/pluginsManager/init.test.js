@@ -6,7 +6,12 @@ const
   rewire = require('rewire'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
+  {
+    errors: {
+      PluginImplementationError,
+      InternalError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('PluginsManager', () => {
   let
@@ -80,25 +85,27 @@ describe('PluginsManager', () => {
     });
 
     it('should properly load custom errors from manifest.json', () => {
-      const errors = rewire('../../../../lib/config/error-codes/index');
+      const errors = rewire('../../../../lib/config/error-codes');
 
       const instanceName = 'kuzzle-plugin-test',
         newPluginErrors = {
           'some_error': {
+            'description': 'foo',
             'code': 1,
             'message': 'Some error occured %s',
             'class': 'BadRequestError'
           },
           'some_other_error': {
+            'description': 'bar',
             'code': 2,
             'message': 'Some other error occured %s',
             'class': 'ForbiddenError'
           }
         };
 
-      let pluginErrors = errors.__get__('plugins').subdomains;
+      // let pluginErrors = errors.__get__('plugin').subdomains;
 
-      should(pluginErrors).not.have.ownProperty(instanceName);
+      should(errors.domains.plugin).not.have.ownProperty(instanceName);
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory: () => true
@@ -119,7 +126,7 @@ describe('PluginsManager', () => {
         .calledOnce()
         .calledWith('[kuzzle-plugin-test] Custom errors successfully loaded.');
 
-      pluginErrors = errors.__get__('plugins').subdomains;
+      const pluginErrors = errors.domains.plugin.subdomains;
 
       should(pluginErrors).have.ownProperty(instanceName);
       should(pluginErrors[instanceName]).have.ownProperty('errors');
@@ -366,15 +373,15 @@ describe('PluginsManager', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errroName: 'plugin.assert.privileged_not_set'
+        errorName: 'plugin.assert.privileged_not_set'
       });
     });
 
     it('should throw if the enabled plugins directory cannot be required', () => {
       fsStub.readdirSync.throws();
 
-      should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.assert.invalid_plugin_dir'
+      should(() => pluginsManager.init()).throw(InternalError, {
+        errorName: 'plugin.assert.invalid_plugins_dir'
       });
       should(pluginsManager.plugins).be.empty();
     });

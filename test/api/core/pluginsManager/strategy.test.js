@@ -218,7 +218,9 @@ describe('PluginsManager: strategy management', () => {
       [[], null, undefined, 'foobar', 123, true].forEach(strategy => {
         plugin.object.strategies.someStrategy = strategy;
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, { errorName: 'plugin.strategy.invalid_definition' });
+          .throw(PluginImplementationError, {
+            errorName: 'plugin.strategy.invalid_description'
+          });
       });
     });
 
@@ -398,7 +400,7 @@ describe('PluginsManager: strategy management', () => {
           should(msg).be.undefined();
           should(err)
             .instanceOf(PluginImplementationError)
-            .match({message: /\[some-plugin-name\] Strategy someStrategy: expected the "verify" to return a Promise, got: /});
+            .match({ errorName: 'plugin.strategy.invalid_verify_return' });
           done();
         }
         catch (e) {

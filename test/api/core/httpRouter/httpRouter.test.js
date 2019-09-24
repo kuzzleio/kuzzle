@@ -5,9 +5,11 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  InternalError = require('kuzzle-common-objects').errors.InternalError,
   Router = require('../../../../lib/api/core/httpRouter'),
-  Request = require('kuzzle-common-objects').Request;
+  {
+    Request,
+    errors: { InternalError }
+  } = require('kuzzle-common-objects');
 
 describe('core/httpRouter', () => {
   let
@@ -319,7 +321,7 @@ describe('core/httpRouter', () => {
               content: {
                 error: {
                   status: 400,
-                  message: 'Unrecognized HTTP method FOOBAR.'
+                  errorName: 'network.http.unsupported_verb'
                 },
                 requestId: 'requestId',
                 result: null
@@ -354,7 +356,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Unable to convert HTTP body to JSON.'
+                errorName: 'network.http.body_parse_failed'
               },
               requestId: 'requestId',
               result: null
@@ -389,7 +391,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Unable to convert HTTP x-kuzzle-volatile header to JSON.'
+                errorName: 'network.http.volatile_parse_failed'
               },
               requestId: 'requestId',
               result: null
@@ -424,7 +426,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Invalid request content-type. Expected "application/json", got: "application/foobar".'
+                errorName: 'network.http.unsupported_content'
               },
               requestId: 'requestId',
               result: null
@@ -459,7 +461,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Invalid request charset. Expected "utf-8", got: "iso8859-1".'
+                errorName: 'network.http.unsupported_charset'
               },
               requestId: 'requestId',
               result: null
@@ -494,7 +496,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 404,
-                message: 'API URL not found: /foo/bar.'
+                errorName: 'network.http.url_not_found'
               },
               requestId: 'requestId',
               result: null

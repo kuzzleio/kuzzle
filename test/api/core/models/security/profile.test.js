@@ -215,7 +215,16 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'The "policies" attribute is mandatory and must be an array'});
+        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.missing_argument' });
+    });
+
+    it('should reject if invalid policies are provided', () => {
+      const profile = new Profile();
+      profile.policies = 'foo';
+      profile._id = 'test';
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.invalid_type' });
     });
 
     it('should reject if an empty policies array is provided', () => {
@@ -223,7 +232,7 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'The "policies" attribute array cannot be empty'});
+        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.empty_argument' });
     });
 
     it('should reject if no roleId is given', () => {
@@ -232,7 +241,10 @@ describe('Test: security/profileTest', () => {
       profile.policies = [{}];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0] Missing mandatory attribute "roleId"'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.missing_argument',
+          message: 'Missing argument "policies[0].roleId".'
+        });
     });
 
     it('should reject if an invalid attribute is given', () => {
@@ -244,7 +256,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0] Unexpected attribute "foo". Valid attributes are "roleId" and "restrictedTo"'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.unexpected_argument',
+        });
     });
 
     it('should reject if restrictedTo is not an array', () => {
@@ -256,7 +270,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0] Expected "restrictedTo" to be an array of objects'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo contains a non-object value', () => {
@@ -268,7 +284,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] should be an object'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo does not contain an index', () => {
@@ -282,7 +300,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Missing mandatory attribute "index"'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.missing_argument'
+        });
     });
 
     it('should reject if restrictedTo is given an invalid attribute', () => {
@@ -297,7 +317,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Unexpected attribute "foo". Valid attributes are "index" and "collections"'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.unexpected_argument'
+        });
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -312,7 +334,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" must be of type "array"'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.collections is not an array of strings', () => {
@@ -327,7 +351,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" can only contain non-empty string values'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.collections contains an empty string', () => {
@@ -342,7 +368,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "collections" can only contain non-empty string values'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.index is not a string', () => {
@@ -357,7 +385,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "index" must be a non-empty string value'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.index is an empty string', () => {
@@ -372,7 +402,9 @@ describe('Test: security/profileTest', () => {
       }];
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {message: 'policies[0].restrictedTo[0] Attribute "index" must be a non-empty string value'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
   });
 });

@@ -75,13 +75,19 @@
           "code": 12,
           "message": "No specifications defined for index %s and collection %s",
           "class": "NotFoundError"
+        },
+        "invalid_filters": {
+          "description": "The Koncorde filters provided as a validator are invalid",
+          "code": 13,
+          "message": "Invalid filters validator: %s",
+          "class": "BadRequestError"
         }
       }
     },
     "types": {
       "code": 2,
       "errors": {
-        "invalid_date_type": {
+        "invalid_date_format": {
           "description": "One or multiple date format types are invalid",
           "code": 1,
           "message": "The following date types are invalid: %s.",
@@ -117,7 +123,7 @@
           "message": "The type \"%s\" must implement a function \"%s\".",
           "class": "PluginImplementationError"
         },
-        "type_already_exists": {
+        "already_exists": {
           "description": "Duplicate data type definition",
           "code": 7,
           "message": "The type \"%s\" already exists.",

@@ -242,6 +242,12 @@
           "code": 3,
           "message": "Unable to connect to the cache server.",
           "class": "ServiceUnavailableError"
+        },
+        "write_failed": {
+          "description": "An attempt to write to the cache failed",
+          "code": 4,
+          "message": "Cache write fail: %s",
+          "class": "InternalError"
         }
       }
     }

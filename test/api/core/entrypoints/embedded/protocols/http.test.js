@@ -434,7 +434,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           .calledOnce()
           .calledWith('error', sinon.match.instanceOf(SizeLimitError));
 
-        should(request.emit.firstCall.args[1].message).be.eql('Maximum HTTP file size exceeded');
+        should(request.emit.firstCall.args[1].errorName).be.eql('network.http.file_too_large');
       });
     });
 
@@ -520,7 +520,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           const matcher = errorMatcher.fromMessage(
             'network',
             'http',
-            'http_request_error',
+            'unexpected_error',
             'foobar');
 
           should(response.end)
@@ -737,7 +737,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             {id: 'connectionId'},
             payload,
             response,
-            {message: 'foobar.'});
+            {errorName: 'network.http.unexpected_error'});
 
         should(protocol._replyWithError.firstCall.args[3])
           .be.instanceOf(BadRequestError);
@@ -850,7 +850,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         protocol._createWritableStream(request, {});
       } catch (e) {
         should(e).be.instanceOf(BadRequestError);
-        should(e.message).be.equals('Unsupported content type: application/toto.');
+        should(e.errorName).be.equals('network.http.unexpected_error');
       }
     });
   });

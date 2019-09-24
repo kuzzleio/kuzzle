@@ -86,10 +86,10 @@ describe('Test: core/janitor', () => {
 
     it('should reject if the securities object is null', () => {
       return should(janitor.loadSecurities(null))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'null\' to be an object'}
-        );
+        .rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_argument',
+          message: 'Invalid argument "null". Expected: object'
+        });
     });
 
     it('should reject if roles contains non-object properties', () => {
@@ -98,10 +98,10 @@ describe('Test: core/janitor', () => {
         profiles: securities.profiles,
         users: securities.users
       }))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'123\' to be an object'}
-        );
+        .rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_argument',
+          message: 'Invalid argument "123". Expected: object'
+        });
     });
 
     it('should reject if profiles contains non-object properties', () => {
@@ -110,10 +110,10 @@ describe('Test: core/janitor', () => {
         profiles: { foo: 123},
         users: securities.users
       }))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'123\' to be an object'}
-        );
+        .rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_argument',
+          message: 'Invalid argument "123". Expected: object'
+        });
     });
 
     it('should reject if users contains non-object properties', () => {
@@ -122,10 +122,10 @@ describe('Test: core/janitor', () => {
         profiles: securities.profiles,
         users: { foo: 123},
       }))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'123\' to be an object'}
-        );
+        .rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_argument',
+          message: 'Invalid argument "123". Expected: object'
+        });
     });
   });
 
@@ -154,10 +154,10 @@ describe('Test: core/janitor', () => {
 
     it('should reject if fixtures contain non-object properties', () => {
       return should(janitor.loadFixtures({foo: 123}))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'123\' to be an object'}
-        );
+        .rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_argument',
+          message: 'Invalid argument "123". Expected: object'
+        });
     });
   });
 
@@ -192,10 +192,10 @@ describe('Test: core/janitor', () => {
 
     it('should reject if a mapping contains non-object properties', () => {
       return should(janitor.loadMappings({foo: 123}))
-        .rejectedWith(
-          BadRequestError,
-          {message: 'Expected \'123\' to be an object'}
-        );
+        .rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_argument',
+          message: 'Invalid argument "123". Expected: object'
+        });
     });
   });
 
@@ -273,8 +273,15 @@ describe('Test: core/janitor', () => {
       janitor.dump(suffix)
         .then(() => done(new Error('Should reject with error')))
         .catch(error => {
-          should(error).be.instanceOf(PreconditionError);
-          done();
+          try {
+            should(error).be.instanceOf(PreconditionError, {
+              errorName: 'api.assert.action_locked'
+            });
+            done();
+          }
+          catch (e) {
+            done(e);
+          }
         });
     });
 

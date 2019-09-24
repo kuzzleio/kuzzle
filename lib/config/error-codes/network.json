@@ -37,7 +37,7 @@
         "unsupported_verb": {
           "description": "An HTTP request has been submitted using an unsupported verb",
           "code": 6,
-          "message": "Unsupported HTTP verb %s.",
+          "message": "Unsupported HTTP verb \"%s\".",
           "class": "BadRequestError"
         },
         "url_not_found": {
