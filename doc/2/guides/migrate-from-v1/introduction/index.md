@@ -66,6 +66,7 @@ API Changes:
 **Document Controller**
 
  - `document:mXXX`: these routes does not return a partial error when some actions fail. Errors are returned in the `errors` array.
+ - `document:mDelete`: does not return a partial error but returns deletion errors in the `errors` array
 
 ### Remove the CLI
 
