@@ -6,8 +6,6 @@ title: mDelete
 
 # mDelete
 
-
-
 Deletes multiple documents.
 
 ---
