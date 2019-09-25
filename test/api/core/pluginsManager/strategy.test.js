@@ -3,7 +3,6 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  _ = require('lodash'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   PluginsManager = require('../../../../lib/api/core/plugins/pluginsManager'),
   {
@@ -356,7 +355,6 @@ describe('PluginsManager: strategy management', () => {
 
     it('should throw if the "fields" config is invalid', () => {
       [{}, 'foobar', 123, false].forEach(opts => {
-        const message = new RegExp(`\\[some-plugin-name\\] Strategy someStrategy: expected the "fields" property to be of type "array", got: ${_.escapeRegExp(opts)}`);
         plugin.object.strategies.someStrategy.config.fields = opts;
 
         should(() => pluginsManager._initStrategies(plugin))

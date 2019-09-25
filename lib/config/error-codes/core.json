@@ -14,7 +14,7 @@
           "description": "An external service is unavailable",
           "code": 2,
           "message": "Service unavailable: %s.",
-          "class": "ServiceUnavailableError"
+          "class": "ExternalServiceError"
         },
         "service_timeout": {
           "description": "Service initialization timeout",

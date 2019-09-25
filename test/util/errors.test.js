@@ -43,7 +43,7 @@ describe('#errorsManager', () => {
         NotFoundError,
         {
           errorName: 'services.storage.not_found',
-          code: parseInt('01010011', 16),
+          code: parseInt('0101000b', 16),
           message: 'Document "fake_id" not found.'
         }
       );
@@ -80,6 +80,7 @@ describe('#errorsManager', () => {
         {
           errorName: 'services.storage.import_failed',
           errors: ['foo', 'bar'],
+          count: 2,
           code: parseInt('01010005', 16),
           message: 'Failed to import some or all documents.'
         }

@@ -1,9 +1,10 @@
 const
   should = require('should'),
-  Request = require('kuzzle-common-objects').Request,
   Koncorde = require('koncorde'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  {
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 

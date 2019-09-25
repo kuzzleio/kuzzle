@@ -22,7 +22,7 @@ order: 500
 | Id | Error Type (Status Code)             | Message           |
 | ------ | -----------------| ------------------ | ------------------ |
 | core.fatal.unexpected_error<br/><pre>0x00000001</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Caught an unexpected error. Please contact your support. |
-| core.fatal.service_unavailable<br/><pre>0x00000002</pre> | [ServiceUnavailableError](/core/1/api/essentials/errors/handling#serviceunavailableerror) <pre>(503)</pre> | An external service is unavailable |
+| core.fatal.service_unavailable<br/><pre>0x00000002</pre> | [ExternalServiceError](/core/1/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | An external service is unavailable |
 | core.fatal.service_timeout<br/><pre>0x00000003</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Service initialization timeout |
 | core.fatal.unreadable_log_dir<br/><pre>0x00000004</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Cannot read the content of the log directory |
 
@@ -131,6 +131,7 @@ order: 500
 | services.cache.database_not_found<br/><pre>0x01030001</pre> | [NotFoundError](/core/1/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | Unknown cache database name |
 | services.cache.read_failed<br/><pre>0x01030002</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | An attempt to read from the cache failed |
 | services.cache.not_connected<br/><pre>0x01030003</pre> | [ServiceUnavailableError](/core/1/api/essentials/errors/handling#serviceunavailableerror) <pre>(503)</pre> | Unable to connect to the cache server |
+| services.cache.write_failed<br/><pre>0x01030004</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | An attempt to write to the cache failed |
 
 ---
 
@@ -154,6 +155,7 @@ order: 500
 | api.assert.body_required<br/><pre>0x02010008</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A request body is required |
 | api.assert.unexpected_type_assertion<br/><pre>0x02010009</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Unexpected type assertion |
 | api.assert.invalid_id<br/><pre>0x0201000a</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | _id values cannot start with an underscore |
+| api.assert.forbidden_argument<br/><pre>0x0201000b</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A forbidden argument has been provided |
 
 ---
 
@@ -367,6 +369,7 @@ order: 500
 | validation.assert.invalid_range<br/><pre>0x0501000a</pre> | [PreconditionError](/core/1/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | A range has been defined with its lower bound greater than its upper one |
 | validation.assert.invalid_specifications<br/><pre>0x0501000b</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The provided specifications are invalid |
 | validation.assert.not_found<br/><pre>0x0501000c</pre> | [NotFoundError](/core/1/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | Attempted to access to a non-existent collection specifications |
+| validation.assert.invalid_filters<br/><pre>0x0501000d</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The Koncorde filters provided as a validator are invalid |
 
 ---
 
@@ -375,13 +378,13 @@ order: 500
 
 | Id | Error Type (Status Code)             | Message           |
 | ------ | -----------------| ------------------ | ------------------ |
-| validation.types.invalid_date_type<br/><pre>0x05020001</pre> | [PreconditionError](/core/1/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | One or multiple date format types are invalid |
+| validation.types.invalid_date_format<br/><pre>0x05020001</pre> | [PreconditionError](/core/1/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | One or multiple date format types are invalid |
 | validation.types.invalid_date<br/><pre>0x05020002</pre> | [PreconditionError](/core/1/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | The date value is invalid and cannot be parsed |
 | validation.types.missing_enum_values<br/><pre>0x05020003</pre> | [PreconditionError](/core/1/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | The "enum" type requires a "values" property holding the list of the enum values |
 | validation.types.invalid_geoshape<br/><pre>0x05020004</pre> | [PreconditionError](/core/1/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | One or multiple geoshape types are invalid |
 | validation.types.missing_type_name<br/><pre>0x05020005</pre> | [PluginImplementationError](/core/1/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | Type definitions must have a "typeName" defined |
 | validation.types.missing_function<br/><pre>0x05020006</pre> | [PluginImplementationError](/core/1/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | A required function is missing from the new validation data type |
-| validation.types.type_already_exists<br/><pre>0x05020007</pre> | [PluginImplementationError](/core/1/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | Duplicate data type definition |
+| validation.types.already_exists<br/><pre>0x05020007</pre> | [PluginImplementationError](/core/1/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | Duplicate data type definition |
 
 ---
 
