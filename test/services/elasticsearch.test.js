@@ -301,8 +301,8 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).match({
-            items: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1, found: true } ],
-            errors: [ { _id: 'mhery', found: false } ]
+            items: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1 } ],
+            errors: [ 'mhery' ]
           });
         });
     });
@@ -796,6 +796,10 @@ describe('Test: ElasticSearch service', () => {
         { _id: '_id1', _source: '_source1' },
         { _id: '_id2', _source: '_source2' },
       ]);
+
+      elasticsearch._client.indices.refresh.resolves({
+        body: { _shards: 1 }
+      });
 
       elasticsearch._client.deleteByQuery.resolves({
         body: {
@@ -2119,7 +2123,7 @@ describe('Test: ElasticSearch service', () => {
             {
               document: {
                 _id: 'liia',
-                _source: { city: 'Ho Chi Minh City', ...kuzzleMeta }
+                _source: { city: 'Ho Chi Minh City' }
               },
               reason: 'document already exists'
             }
@@ -2466,8 +2470,8 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
-              reason: 'document ID is required'
+              document: { _source: { city: 'Ho Chi Minh City' } },
+              reason: 'document "_id" is required'
             }
           ];
           should(elasticsearch._mExecute).be.calledWithMatch(
@@ -2583,7 +2587,7 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
+              document: { _id: 'liia', _source: { city: 'Ho Chi Minh City' } },
               reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'
             }
           ];
@@ -2631,7 +2635,7 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
+              document: { _source: { city: 'Ho Chi Minh City' } },
               reason: 'the document ID must be a string'
             }
           ];
@@ -2696,6 +2700,10 @@ describe('Test: ElasticSearch service', () => {
           deleted: 2,
           failures: [ ]
         }
+      });
+
+      elasticsearch._client.indices.refresh.resolves({
+        body: { _shards: 1 }
       });
 
       elasticsearch.mGet = sinon.stub().resolves({

@@ -61,9 +61,9 @@ Body:
 
 ## Response
 
-Returns an object containing 2 arrays: `deleted` and `errors`
+Returns an object containing 2 arrays: `successes` and `errors`
 
-The `deleted` array contain the successfuly deleted document IDs.
+The `successes` array contain the successfuly deleted document IDs.
 
 Each deletion error is an object of the `errors` array with the following properties:
 - `id`: document ID
@@ -79,7 +79,7 @@ Each deletion error is an object of the `errors` array with the following proper
   "controller": "document",
   "requestId": "<unique request identifier>",
   "result": {
-    "deleted": ["<documentId>"],
+    "successes": ["<documentId>"],
     "errors": [
       { "id": "anotherDocumentId", "reason": "cannot find document" }
     ]
