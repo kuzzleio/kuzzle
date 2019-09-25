@@ -19,12 +19,14 @@ Example:
         "some_error": {
             "code": 1,
             "message": "An error occurred: %s",
-            "class": "BadRequestError"
+            "class": "BadRequestError",
+            "description": "Short and understandable error description"
 	},
         "some_other_error": {
             "code": 2,
             "message": "An other error occurred: %s",
-            "class": "ForbiddenError"
+            "class": "ForbiddenError",
+            "description": "Short and understandable error description"
 	}
     }
 }
@@ -34,7 +36,7 @@ The `errorsManager` provides two functions:
 - To throw : `context.errorsManager.throw(error, placeholders);`.
 - To get the built error: `context.errorsManager.get(error, placeholders);`
 
-Note that the `domain` is `plugins`, meaning that its code is fixed to `04` and cannot be changed.
+Note that the `domain` is `plugin`, meaning that its code is fixed to `04` and cannot be changed.
 By default, the [subdomain](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/) code for plugins is set to `0`. A subdomain can be defined for a plugin in its configuration section in the [kuzzlerc file](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/config/). 
 
 Example, for a plugin name `foobar-plugin`:
@@ -61,5 +63,5 @@ Taking the configuration example above, if an error is thrown with:
 Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) error, with the following properties:
 
 - message : `An error occured: request badly formatted`
-- errorName : `plugins.foobar-plugin.some_error`
+- errorName : `plugin.foobar-plugin.some_error`
 - code : 0x04020033
