@@ -113,7 +113,7 @@ order: 500
 | services.storage.duplicate_field_mapping<br/><pre>0x0101001b</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A same field cannot have different mappings within the same index (fields are shared to all of an index collections) |
 | services.storage.unexpected_properties<br/><pre>0x0101001c</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Unexpected properties found |
 | services.storage.invalid_mapping_type<br/><pre>0x0101001d</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Unrecognized mapping data type |
-| services.storage.field_parse_failed<br/><pre>0x0101001e</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The mapping field cannot be parsed |
+| services.storage.wrong_mapping_property<br/><pre>0x0101001e</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A mapping property cannot be parsed |
 | services.storage.invalid_mapping_argument<br/><pre>0x0101001f</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Invalid mapping property |
 | services.storage.too_many_changes<br/><pre>0x01010020</pre> | [ExternalServiceError](/core/1/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | Too many changes occured on the same resource in a small amount of time. Try with the "retryOnConflict" option |
 | services.storage.unexpected_bad_request<br/><pre>0x01010021</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Embeds an unexpected bad request error from Elasticsearch |
