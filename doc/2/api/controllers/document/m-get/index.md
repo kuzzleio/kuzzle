@@ -57,18 +57,17 @@ Body:
 
 ## Response
 
-Returns a `hits` array with the list of retrieved documents.
+Returns an object containing 2 arrays: `successes` and `errors`
+
+The `successes` array contain the list of retrieved documents.
 
 Each document is an object with the following properties:
 
 - `_id`: document unique identifier
 - `_source`: document content
 - `_version`: version number of the document
-- `found`: false if the document was missing
 
-::: info
-You can use the `found` attribute to identify missing documents.
-:::
+The `errors` array contain the IDs of not found documents.
 
 ```js
 {
@@ -86,23 +85,17 @@ You can use the `found` attribute to identify missing documents.
         "_source": {
           // document content
         },
-        "_version": 4,
-        "found": true
+        "_version": 4
       },
       {
         "_id": "<anotherDocumentId>",
         "_source": {
           // document content
         },
-        "_version": 2,
-        "found": true
-      },
-      {
-        "_id": "<anotherDocumentId>",
-        "found": false
+        "_version": 2
       }
     ]
-    "total": 2
+    "errors": ["<anotherDocumentId>"]
   }
 }
 ```

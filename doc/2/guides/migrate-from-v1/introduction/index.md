@@ -76,16 +76,16 @@ API Changes:
 **Document Controller**
 
 `document:mCreate`, `document:mCreateOrReplace`, `document:mReplace`, `document:mUpdate`: 
-  - does not returns a partial error if some writes fail
+  - does not returns a partial error if some action fail
   - returns two arrays: `successes` and `errors` that contains successful and failed document writes
 
 `document:mDelete`:
-  - does not returns a partial error if some deletions fail
-  - returns two arrays: `deleted` and `errors` that contains deleted document ids and failed deletions
+  - does not returns a partial error if some action fail
+  - returns two arrays: `successes` that contains the deleted document IDs and `errors` that contains error objects
 
 `document:mGet`:
-  - does not returns a partial error if some documents cannot be found
-  - documents not found can be identified in the `hits` array with the boolean `found` property
+  - does not returns a partial error if some action fail
+  - returns two arrays: `successes` that contains document content and `errors` that contains not found document IDs
 
 ### Remove the CLI
 
