@@ -905,10 +905,13 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should resolves if index does not exists', () => {
-      const promise = elasticsearch.createIndex('lfiduras');
+    it('should resolves and creates hidden collection if index does not exists', async () => {
+      await elasticsearch.createIndex('lfiduras');
 
-      return should(promise).be.resolved();
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: '&lfiduras._kuzzle_keep',
+        body: {}
+      });
     });
 
     it('should rejects if the index already exists', () => {
@@ -1607,7 +1610,8 @@ describe('Test: ElasticSearch service', () => {
         body: [
           { index: '&nepali.mehry' },
           { index: '&nepali.liia' },
-          { index: '&nyc-open-data.taxi' }
+          { index: '&nyc-open-data.taxi' },
+          { index: '&nepali._kuzzle_keep' }
         ]
       });
     });
