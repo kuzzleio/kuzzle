@@ -110,7 +110,7 @@ describe('StorageEngine', () => {
       should(storageEngine._indexes.foobar.collections)
         .be.an.Array()
         .and.match(['collection']);
-        should(kuzzle.emit).be.calledOnce();
+      should(kuzzle.emit).be.calledOnce();
     });
 
     it('should add a new collection to the index cache and emit an event', () => {

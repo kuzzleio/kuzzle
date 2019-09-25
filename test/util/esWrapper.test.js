@@ -4,8 +4,7 @@ const
   should = require('should'),
   {
     errors: {
-      ExternalServiceError,
-      NotFoundError
+      ExternalServiceError
     }
   } = require('kuzzle-common-objects'),
   ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
