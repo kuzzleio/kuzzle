@@ -52,7 +52,7 @@
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^1.2.2",
     "kuzzle-common-objects": "^4.0.0",
-    "kuzzle-sdk": "git://github.com/kuzzleio/sdk-javascript.git#7-beta",
+    "kuzzle-sdk": "git://github.com/kuzzleio/sdk-javascript.git#7-dev",
     "lodash": "4.17.14",
     "moment": "^2.24.0",
     "mosca": "^2.8.3",
