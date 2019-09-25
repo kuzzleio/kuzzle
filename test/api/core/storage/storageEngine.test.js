@@ -90,6 +90,29 @@ describe('StorageEngine', () => {
   });
 
   describe('#add', () => {
+    it('should add a new index to the cache and emit an event', () => {
+      storageEngine.indexCache.add({ index: 'foobar' });
+
+      should(storageEngine._indexes).have.keys('foobar');
+      should(kuzzle.emit).be.calledWithMatch(
+        'core:indexCache:add',
+        {
+          index: 'foobar', scope: 'public'
+        });
+    });
+
+    it('should not add an index if it already exists', () => {
+      storageEngine.indexCache.add({ index: 'foobar', collection: 'collection' });
+
+      storageEngine.indexCache.add({ index: 'foobar'});
+
+      should(storageEngine._indexes).have.keys('foobar');
+      should(storageEngine._indexes.foobar.collections)
+        .be.an.Array()
+        .and.match(['collection']);
+        should(kuzzle.emit).be.calledOnce();
+    });
+
     it('should add a new collection to the index cache and emit an event', () => {
       storageEngine.indexCache.add({ index: 'foobar', collection: 'collection' });
 
@@ -178,12 +201,6 @@ describe('StorageEngine', () => {
       storageEngine.indexCache.remove({ index: 'foobar', collection: 'foolection', notify: false });
 
       should(kuzzle.emit).not.be.called();
-    });
-
-    it('should deletes the index when the last collection is removed', () => {
-      storageEngine.indexCache.remove({ index: 'foobar', collection: 'foolection' });
-
-      should(storageEngine._indexes.foobar).be.undefined();
     });
 
     it('should delete an index from cache', () => {
