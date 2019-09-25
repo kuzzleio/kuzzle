@@ -640,14 +640,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
     it('should dispatch connection:new event', () => {
       entrypoint.newConnection(connection);
-
-      should(kuzzle.emit).be.calledWithMatch(
-        'connection:new',
-        {
-          id: 'connectionId',
-          protocol: 'protocol',
-          headers: 'headers'
-        });
+      should(kuzzle.emit).calledOnce().calledWith('connection:new', connection);
     });
   });
 

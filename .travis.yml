@@ -31,8 +31,7 @@ _doc-deploy: &doc-deploy
     - NODE_ENV=production
     - AWS_DEFAULT_REGION=us-west-2
     - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
-    # AWS_SECRET_ACCESS_KEY
-    - secure: h8n58Siclba6vRZEUcVzH2UTCBaA2src/mJvPaiXln1dPP4+/CICkfoljggA/qZDv9pv1ck07u7fHf6EJa7ONO2aNKD/r9CyyKHbZsgT5Wz6zLaOJfu/DmLZq9yclG/e9XmlK7qpjW+H7vCPn98GNVaU2h8cjqNVZ3KpkLwQ0j2RBoM6x4jpOFUsbiwnKWaHxS2u3JHpZ/L8PM9uy2JDoRm52HW5k+fmvyxwNis+R5ezteJJYcqhYhun9CRDVjGg47t8YFkO+fXjtgl5EAhNlOtE1UixV7h8+MVbmS0XJQm4Xen76J0a2O3xEGOggsdMJebTuDlHk97jhR17pMFu0lfM4V2YmiC8BclY/fdnxX7aoc9hPi9Zf6ReHOqVo8jWP4ArS7awHdKW8c5zkH2itf7M6tw89hnDmoXVk/48joOyj+vMwhvI2wJ3oUjhsjpZWG7Mks4hY2CYmkA5n56K/6+qgPq19qZr4MKqW1zr8066TNzqa2ZtdbtSzIyP0jcXLyNOxhwXejyBnHTyJ7ZVbiNxyGTvLQcOP1UYNn1LxmDTJWvDCguXbwLQ2oHzD032xVuNCS2XjZ1dDFtEtEfDniVnOGosEzJWK2kkRCaOzW5GT+VunfZnN9j4MNZVfI1iCW3EQ4CI7n/Ct89y4YrezwRoFjvMQvhb64pVLwMeOp4=
+    # AWS_SECRET_ACCESS_KEY in Travis CI UI
   cache:
     npm: true
     directories:

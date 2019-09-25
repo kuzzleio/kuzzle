@@ -249,6 +249,15 @@ describe('Test: admin controller', () => {
             .be.calledWith({ city: { seventeen: [] } });
         });
     });
+
+    it('should handle rejections if the janitor rejects when not waiting for a refresh', () => {
+      const err = new Error('err');
+      kuzzle.janitor.loadFixtures.rejects(err);
+      request.input.args.refresh = null;
+
+      return adminController.loadFixtures(request)
+        .then(() => should(kuzzle.log.error).calledWith(err));
+    });
   });
 
   describe('#loadSecurities', () => {
