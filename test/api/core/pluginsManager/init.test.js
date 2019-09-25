@@ -103,8 +103,6 @@ describe('PluginsManager', () => {
           }
         };
 
-      // let pluginErrors = errors.__get__('plugin').subdomains;
-
       should(errors.domains.plugin).not.have.ownProperty(instanceName);
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({

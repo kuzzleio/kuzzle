@@ -178,10 +178,10 @@
           "message": "Field \"%s\": the data type \"%s\" doesn't exist",
           "class": "BadRequestError"
         },
-        "field_parse_failed": {
-          "description": "The mapping field cannot be parsed",
+        "wrong_mapping_property": {
+          "description": "A mapping property cannot be parsed",
           "code": 30,
-          "message": "Failed to validate value of field \"%s\". Are you trying to insert a nested value in a non-nested field?",
+          "message": "Cannot parse mapping property \"%s\"",
           "class": "BadRequestError"
         },
         "invalid_mapping_argument": {
