@@ -8,8 +8,7 @@ const
   UserRepository = require('../../../../../lib/api/core/models/repositories/userRepository'),
   {
     BadRequestError,
-    InternalError: KuzzleInternalError,
-    NotFoundError,
+    InternalError: KuzzleInternalError
   } = require('kuzzle-common-objects').errors;
 
 describe('Test: repositories/userRepository', () => {
@@ -99,7 +98,9 @@ describe('Test: repositories/userRepository', () => {
       kuzzle.repositories.profile.loadProfiles.resolves([null]);
 
       return should(userRepository.fromDTO(userInvalidProfile))
-        .be.rejectedWith(NotFoundError);
+        .be.rejectedWith(KuzzleInternalError, {
+          errorName: 'security.user.cannot_hydrate'
+        });
     });
 
     it('should add the default profile if none is set', () => {
@@ -120,9 +121,9 @@ describe('Test: repositories/userRepository', () => {
     });
 
     it('should resolve to user if good credentials are given', () => {
-      kuzzle.repositories.profile.loadProfiles.returns(Bluebird.resolve([
+      kuzzle.repositories.profile.loadProfiles.resolves([
         {_id: userInCache.profileIds[0]}
-      ]));
+      ]);
 
       return userRepository.load('userInCache')
         .then(user => {
@@ -184,16 +185,13 @@ describe('Test: repositories/userRepository', () => {
           user.profileIds = ['test'];
           return userRepository.persist(user);
         }))
-        .be.rejectedWith(BadRequestError, {message: 'Anonymous user must be assigned the anonymous profile'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'security.user.anonymous_profile_required'
+        });
     });
   });
 
   describe('#delete', () => {
-    it('should throw an error when no user id is given', () => {
-      return should(userRepository.delete({ profileIds: [], name: 'gordon' }))
-        .rejectedWith(KuzzleInternalError, {message: 'Repository users: missing _id'});
-    });
-
     it('should delete user from both cache and database', () => {
       return userRepository.delete({ _id: 'alyx' })
         .then(() => {

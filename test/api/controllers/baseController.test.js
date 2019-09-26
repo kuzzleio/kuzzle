@@ -1,5 +1,5 @@
 const
-  { BadRequestError } = require('kuzzle-common-objects').errors,
+  { errors: { BadRequestError } } = require('kuzzle-common-objects'),
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
@@ -80,117 +80,161 @@ describe('#base controller', () => {
         done(new Error('Should throw BadRequestError'));
       } catch (error) {
         should(error).be.instanceOf(BadRequestError);
-        should(error.message).be.eql('Invalid \'doha\' value (hamad).');
+        should(error.errorName).be.eql('api.assert.invalid_type');
         done();
       }
     });
   });
 
-  describe('#getArrayParam', () => {
+  describe('#getBodyArg', () => {
     beforeEach(() => {
       request.input.body = {
+        fullname: 'Andrew Wiggin',
         names: ['Ender', 'Speaker for the Dead', 'Xenocide'],
-        age: 3000
+        age: '3011.5',
+        relatives: {
+          Peter: 'brother',
+          Valentine: 'sister'
+        },
+        year: 5270
       };
     });
 
     it('should extract an array param', () => {
-      const param = baseController.getArrayParam(request, 'body.names');
+      const param = baseController.getBodyArg(request, 'names', 'array');
 
       should(param).be.eql(['Ender', 'Speaker for the Dead', 'Xenocide']);
     });
 
     it('should throw if the param is missing', () => {
       should(() => {
-        baseController.getArrayParam(request, 'body.childhood');
-      }).throw({ errorName: 'api.base.missing_param' });
+        baseController.getBodyArg(request, 'childhood', 'array');
+      }).throw({ errorName: 'api.assert.missing_argument' });
+    });
+
+    it('should not throw and return the default value if one is provided', () => {
+      const def = ['foo'];
+      should(baseController.getBodyArg(request, 'childhood', 'array', def)).exactly(def);
     });
 
     it('should throw if the param is not an array', () => {
       should(() => {
-        baseController.getArrayParam(request, 'body.age');
-      }).throw({ errorName: 'api.base.invalid_param_type' });
-    });
-  });
-
-  describe('#getStringParam', () => {
-    beforeEach(() => {
-      request.input.body = {
-        name: 'Ender',
-        age: 3000
-      };
+        baseController.getBodyArg(request, 'age', 'array');
+      }).throw({ errorName: 'api.assert.invalid_type' });
     });
 
-    it('should extract an string param', () => {
-      const param = baseController.getStringParam(request, 'body.name');
+    it('should extract a string param', () => {
+      const param = baseController.getBodyArg(request, 'fullname', 'string');
 
-      should(param).be.eql('Ender');
-    });
-
-    it('should throw if the param is missing', () => {
-      should(() => {
-        baseController.getStringParam(request, 'body.childhood');
-      }).throw({ errorName: 'api.base.missing_param' });
-    });
-
-    it('should throw if the param is not an string', () => {
-      should(() => {
-        baseController.getStringParam(request, 'body.age');
-      }).throw({ errorName: 'api.base.invalid_param_type' });
-    });
-  });
-
-  describe('#getObjectParam', () => {
-    beforeEach(() => {
-      request.input.body = {
-        name: 'Ender',
-        age: { value: 3000 }
-      };
+      should(param).be.eql(request.input.body.fullname);
     });
 
     it('should extract an object param', () => {
-      const param = baseController.getObjectParam(request, 'body.age');
+      const param = baseController.getBodyArg(request, 'relatives', 'object');
 
-      should(param).be.eql({ value: 3000 });
-    });
-
-    it('should throw if the param is missing', () => {
-      should(() => {
-        baseController.getObjectParam(request, 'body.childhood');
-      }).throw({ errorName: 'api.base.missing_param' });
-    });
-
-    it('should throw if the param is not an object', () => {
-      should(() => {
-        baseController.getObjectParam(request, 'body.name');
-      }).throw({ errorName: 'api.base.invalid_param_type' });
-    });
-  });
-
-  describe('#getNumberParam', () => {
-    beforeEach(() => {
-      request.input.body = {
-        name: 'Ender',
-        age: 3000
-      };
+      should(param).be.eql(request.input.body.relatives);
     });
 
     it('should extract a number param', () => {
-      const param = baseController.getNumberParam(request, 'body.age');
+      const param = baseController.getBodyArg(request, 'age', 'number');
 
-      should(param).be.eql(3000);
+      should(param).eql(3011.5);
+    });
+
+    it('should extract an integer param', () => {
+      const param = baseController.getBodyArg(request, 'year', 'integer');
+      should(param).eql(5270);
+    });
+
+    it('should throw if not a string', () => {
+      should(() => baseController.getBodyArg(request, 'year', 'string'))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+    });
+
+    it('should throw if not a number', () => {
+      should(() => baseController.getBodyArg(request, 'fullname', 'number'))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+    });
+
+    it('should throw if not an integer', () => {
+      should(() => baseController.getBodyArg(request, 'age', 'integer'))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+    });
+  });
+
+  describe('#getArg', () => {
+    beforeEach(() => {
+      request.input.args = {
+        fullname: 'Andrew Wiggin',
+        names: ['Ender', 'Speaker for the Dead', 'Xenocide'],
+        age: '3011.5',
+        relatives: {
+          Peter: 'brother',
+          Valentine: 'sister'
+        },
+        year: 5270
+      };
+    });
+
+    it('should extract an array param', () => {
+      const param = baseController.getArg(request, 'names', 'array');
+
+      should(param).be.eql(['Ender', 'Speaker for the Dead', 'Xenocide']);
     });
 
     it('should throw if the param is missing', () => {
       should(() => {
-        baseController.getNumberParam(request, 'body.childhood');
-      }).throw({ errorName: 'api.base.missing_param' });
+        baseController.getArg(request, 'childhood', 'array');
+      }).throw({ errorName: 'api.assert.missing_argument' });
     });
 
-    it('should throw if the param is not a number', () => {
+    it('should not throw and return the default value if one is provided', () => {
+      const def = ['foo'];
+      should(baseController.getArg(request, 'childhood', 'array', def)).exactly(def);
+    });
+
+    it('should throw if the param is not an array', () => {
       should(() => {
-        baseController.getNumberParam(request, 'body.name');
-      }).throw({ errorName: 'api.base.invalid_param_type' });
+        baseController.getArg(request, 'age', 'array');
+      }).throw({ errorName: 'api.assert.invalid_type' });
+    });
+
+    it('should extract a string param', () => {
+      const param = baseController.getArg(request, 'fullname', 'string');
+
+      should(param).be.eql(request.input.args.fullname);
+    });
+
+    it('should extract an object param', () => {
+      const param = baseController.getArg(request, 'relatives', 'object');
+
+      should(param).be.eql(request.input.args.relatives);
+    });
+
+    it('should extract a number param', () => {
+      const param = baseController.getArg(request, 'age', 'number');
+
+      should(param).eql(3011.5);
+    });
+
+    it('should extract an integer param', () => {
+      const param = baseController.getArg(request, 'year', 'integer');
+      should(param).eql(5270);
+    });
+
+    it('should throw if not a string', () => {
+      should(() => baseController.getArg(request, 'year', 'string'))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+    });
+
+    it('should throw if not a number', () => {
+      should(() => baseController.getArg(request, 'fullname', 'number'))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+    });
+
+    it('should throw if not an integer', () => {
+      should(() => baseController.getArg(request, 'age', 'integer'))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
     });
   });
 
@@ -212,7 +256,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getIndex(request);
-      }).throw({ errorName: 'api.base.missing_index' });
+      }).throw({ errorName: 'api.assert.missing_argument' });
     });
   });
 
@@ -231,15 +275,30 @@ describe('#base controller', () => {
       should(collection).be.eql('collection');
     });
 
+    it('should throw if the index is missing', () => {
+      request.input.resource = {
+        collection: 'collection'
+      };
+
+      should(() => {
+        baseController.getIndexAndCollection(request);
+      }).throw(BadRequestError, {
+        errorName: 'api.assert.missing_argument',
+        message: 'Missing argument "index".'
+      });
+    });
+
     it('should throw if the collection is missing', () => {
       request.input.resource = {
         index: 'index'
       };
-      request.input.resource = {};
 
       should(() => {
-        baseController.getIndex(request);
-      }).throw({ errorName: 'api.base.missing_index' });
+        baseController.getIndexAndCollection(request);
+      }).throw(BadRequestError, {
+        errorName: 'api.assert.missing_argument',
+        message: 'Missing argument "collection".'
+      });
     });
   });
 
@@ -261,7 +320,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getId(request);
-      }).throw({ errorName: 'api.base.missing_id' });
+      }).throw({ errorName: 'api.assert.missing_argument' });
     });
 
     it('should throw if the id is wrong type', () => {
@@ -271,7 +330,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getId(request);
-      }).throw({ errorName: 'api.base.wrong_id_type' });
+      }).throw({ errorName: 'api.assert.invalid_type' });
     });
   });
 
@@ -348,7 +407,31 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getScrollTTLParam(request);
-      }).throw({ errorName: 'api.base.invalid_param_type' });
+      }).throw({ errorName: 'api.assert.invalid_type' });
+    });
+  });
+
+  describe('#getBody', () => {
+    it('should throw if the request does not have a body', () => {
+      request.input.body = null;
+
+      should(() => baseController.getBody(request)).throw(BadRequestError, {
+        errorName: 'api.assert.body_required'
+      });
+    });
+
+    it('should return the default value instead of throwing if one is provided', () => {
+      request.input.body = null;
+
+      should(baseController.getBody(request, 'foo')).eql('foo');
+    });
+
+    it('should return the request body', () => {
+      const body = {foo: 'bar'};
+
+      request.input.body = body;
+
+      should(baseController.getBody(request)).exactly(body);
     });
   });
 
@@ -362,7 +445,7 @@ describe('#base controller', () => {
     it('should throw', () => {
       should(() => {
         baseController.assertBodyHasNotAttributes(request, ['invalid']);
-      }).throw({ errorName: 'api.base.must_not_specify_body_attribute' });
+      }).throw({ errorName: 'api.assert.forbidden_argument' });
     });
   });
 
@@ -372,7 +455,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.assertIsStrategyRegistered('glob');
-      }).throw({ errorName: 'api.base.unknown_strategy' });
+      }).throw({ errorName: 'security.credentials.unknown_strategy' });
     });
   });
 
@@ -382,7 +465,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.assertNotExceedMaxFetch(3);
-      }).throw({ errorName: 'api.base.search_page_size' });
+      }).throw({ errorName: 'services.storage.get_limit_exceeded' });
     });
   });
 

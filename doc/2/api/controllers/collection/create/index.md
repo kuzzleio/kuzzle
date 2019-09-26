@@ -124,5 +124,6 @@ Returns a confirmation that the collection is being created:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors#common-errors)
-- [PreconditionError](/core/2/api/essentials/errors#preconditionerror)
+- [Common errors](/core/2/api/essentials/errors/handling#common-errors)
+- [PreconditionError](/core/2/api/essentials/errors/handling#preconditionerror)
+

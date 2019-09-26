@@ -1,9 +1,10 @@
 const
   should = require('should'),
-  Request = require('kuzzle-common-objects').Request,
   Koncorde = require('koncorde'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  NotFoundError = require('kuzzle-common-objects').errors.NotFoundError,
+  {
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
@@ -31,42 +32,6 @@ describe('Test: hotelClerk.removeRooms', () => {
     kuzzle.realtime = new Koncorde();
     context = {connectionId, token: {userId: ''}, user: {_id: ''}};
 
-  });
-
-  it('should reject an error if there is no subscription on this index', () => {
-    const request = new Request({
-      controller: 'none',
-      action: 'removeRooms',
-      index: index,
-      collection: collection1,
-      body: {}
-    }, context);
-
-    return should(() => kuzzle.hotelClerk.removeRooms(request)).throw(NotFoundError);
-  });
-
-  it('should reject an error if there is no subscription on this collection', () => {
-    const
-      subscribeRequest = new Request({
-        controller: 'realtime',
-        action: 'subscribe',
-        index: index,
-        collection: collection1,
-        body: {}
-      }, context),
-      removeRequest = new Request({
-        controller: 'none',
-        action: 'removeRooms',
-        index: index,
-        collection: collection2,
-        body: {}
-      }, context);
-
-    return kuzzle.hotelClerk.addSubscription(subscribeRequest)
-      .then(() => {
-        return should(() => kuzzle.hotelClerk.removeRooms(removeRequest))
-          .throw(NotFoundError);
-      });
   });
 
   it('should remove room in global subscription for provided collection', () => {
@@ -217,7 +182,7 @@ describe('Test: hotelClerk.removeRooms', () => {
     return kuzzle.hotelClerk.addSubscription(subscribeCollection1)
       .then(() => {
         return should(() => kuzzle.hotelClerk.removeRooms(removeRequest))
-          .throw(BadRequestError);
+          .throw(BadRequestError, { errorName: 'core.realtime.invalid_rooms' });
       });
   });
 

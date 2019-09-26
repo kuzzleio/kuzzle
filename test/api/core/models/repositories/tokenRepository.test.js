@@ -76,38 +76,43 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should reject the promise if the jwt is invalid', () => {
-      return should(tokenRepository.verifyToken('invalidToken')).be.rejectedWith(UnauthorizedError, {
-        details: {
-          subCode: UnauthorizedError.prototype.subCodes.JsonWebTokenError,
-          description: 'jwt malformed'
-        }
-      });
+      return should(tokenRepository.verifyToken('invalidToken'))
+        .be.rejectedWith(UnauthorizedError, {
+          errorName: 'security.token.invalid'
+        });
     });
 
     it('should reject the token if the uuid is not known', () => {
       const token = jwt.sign({_id: -99999}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
 
-      return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
-        message: 'Invalid token.'
-      });
+      return should(tokenRepository.verifyToken(token))
+        .be.rejectedWith(UnauthorizedError, {
+          errorName: 'security.token.invalid'
+        });
     });
 
     it('shoud reject the promise if the jwt is expired', () => {
       const token = jwt.sign({_id: -1}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm, expiresIn: 0});
 
-      return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {
-        details: {
-          subCode: UnauthorizedError.prototype.subCodes.TokenExpired
-        }
-      });
+      return should(tokenRepository.verifyToken(token))
+        .be.rejectedWith(UnauthorizedError, {
+          errorName: 'security.token.expired'
+        });
     });
 
     it('should reject the promise if an error occurred while fetching the user from the cache', () => {
-      const token = jwt.sign({_id: 'auser'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
+      const token = jwt.sign(
+        { _id: 'auser' },
+        kuzzle.config.security.jwt.secret,
+        { algorithm: kuzzle.config.security.jwt.algorithm });
 
-      sinon.stub(tokenRepository, 'loadFromCache').rejects(new KuzzleInternalError('Error'));
+      sinon.stub(tokenRepository, 'loadFromCache')
+        .rejects(new KuzzleInternalError('Error'));
 
-      return should(tokenRepository.verifyToken(token)).be.rejectedWith(KuzzleInternalError);
+      return should(tokenRepository.verifyToken(token))
+        .be.rejectedWith(KuzzleInternalError, {
+          errorName: 'security.token.verification_error'
+        });
     });
 
     it('should load the anonymous user if the token is null', () => {
@@ -118,7 +123,10 @@ describe('Test: repositories/tokenRepository', () => {
     it('should reject the token if it does not contain the user id', () => {
       const token = jwt.sign({forged: 'token'}, kuzzle.config.security.jwt.secret, {algorithm: kuzzle.config.security.jwt.algorithm});
 
-      return should(tokenRepository.verifyToken(token)).be.rejectedWith(UnauthorizedError, {message: 'Json Web Token Error'});
+      return should(tokenRepository.verifyToken(token))
+        .be.rejectedWith(UnauthorizedError, {
+          errorName: 'security.token.invalid'
+        });
     });
 
     it('should return the token loaded from cache', () => {
@@ -143,7 +151,10 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#generateToken', () => {
     it('should reject the promise if the username is null', () => {
-      return should(tokenRepository.generateToken(null)).be.rejectedWith(KuzzleInternalError);
+      return should(tokenRepository.generateToken(null))
+        .be.rejectedWith(KuzzleInternalError, {
+          errorName: 'security.token.unknown_user'
+        });
     });
 
     it('should reject the promise if the context is null', () => {
@@ -151,7 +162,10 @@ describe('Test: repositories/tokenRepository', () => {
 
       user._id = 'foobar';
 
-      return should(tokenRepository.generateToken(user, new Request({}))).be.rejectedWith(KuzzleInternalError);
+      return should(tokenRepository.generateToken(user, new Request({})))
+        .be.rejectedWith(KuzzleInternalError, {
+          errorName: 'security.token.unknown_connection'
+        });
     });
 
     it('should reject the promise if an error occurred while generating the token', () => {
@@ -162,7 +176,9 @@ describe('Test: repositories/tokenRepository', () => {
       user._id = 'foobar';
 
       return should(tokenRepository.generateToken(user, request, {expiresIn: 'foo'}))
-        .be.rejectedWith(KuzzleInternalError, {message: 'Error while generating token'});
+        .be.rejectedWith(KuzzleInternalError, {
+          errorName: 'security.token.generation_failed'
+        });
     });
 
     it('should resolve to a token signed with the provided username', () => {
@@ -201,7 +217,9 @@ describe('Test: repositories/tokenRepository', () => {
       tokenRepository.cacheEngine.setex.rejects(new Error('error'));
 
       return should(tokenRepository.generateToken(user, request))
-        .be.rejectedWith(KuzzleInternalError, { message: 'Unknown User : cannot generate token'});
+        .be.rejectedWith(KuzzleInternalError, {
+          errorName: 'services.cache.write_failed'
+        });
     });
 
     it('should allow a big ttl if no maxTTL is set', () => {

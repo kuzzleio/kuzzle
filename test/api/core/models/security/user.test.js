@@ -6,7 +6,7 @@ const
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   User = require('../../../../../lib/api/core/models/security/user'),
   { Request,
-    errors: { PreconditionError }
+    errors: { InternalError }
   } = require('kuzzle-common-objects');
 
 const
@@ -151,7 +151,7 @@ describe('Test: security/userTest', () => {
     user[_kuzzle] = null;
 
     return should(user.isActionAllowed(new Request({}))).be.rejectedWith(
-      PreconditionError,
-      {errorName: 'api.security.cannot_get_profiles_for_uninitialized_user'});
+      InternalError,
+      { errorName: 'security.user.uninitialized' });
   });
 });

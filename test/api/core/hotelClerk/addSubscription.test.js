@@ -169,7 +169,9 @@ describe('Test: hotelClerk.addSubscription', () => {
       body: {roomId: 'no way I can exist'}
     }, context);
 
-    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError);
+    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError, {
+      errorName: 'core.realtime.room_not_found'
+    });
   });
 
   it('should reject the subscription if the given scope argument is incorrect', () => {
@@ -203,15 +205,15 @@ describe('Test: hotelClerk.addSubscription', () => {
       .catch(error => {
         should(error)
           .be.an.instanceof(SizeLimitError);
-        should(error.message)
-          .eql('Unable to subscribe: maximum number of minterms exceeded (max 8, received 9).');
+        should(error.errorName).eql('core.realtime.too_many_terms');
       });
   });
 
   it('should refuse a subscription if the rooms limit has been reached', () => {
     hotelClerk.roomsCount = kuzzle.config.limits.subscriptionRooms;
 
-    return should(hotelClerk.addSubscription(request)).be.rejectedWith(SizeLimitError);
+    return should(hotelClerk.addSubscription(request))
+      .be.rejectedWith(SizeLimitError, { errorName: 'core.realtime.too_many_rooms' });
   });
 
   it('should impose no limit to the number of rooms if the limit is set to 0', () => {

@@ -210,18 +210,25 @@ describe('Test: security/profileTest', () => {
       profile.policies = null;
       profile._id = 'test';
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.missing_mandatory_policies_attribute' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.missing_argument' });
+    });
+
+    it('should reject if invalid policies are provided', () => {
+      const profile = new Profile();
+      profile.policies = 'foo';
+      profile._id = 'test';
+
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.invalid_type' });
     });
 
     it('should reject if an empty policies array is provided', () => {
       const profile = new Profile();
       profile._id = 'test';
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.empty_policies_attribute' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.empty_argument' });
     });
 
     it('should reject if no roleId is given', () => {
@@ -229,9 +236,11 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{}];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.missing_mandatory_roleId_attribute' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.missing_argument',
+          message: 'Missing argument "policies[0].roleId".'
+        });
     });
 
     it('should reject if an invalid attribute is given', () => {
@@ -239,9 +248,10 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{ roleId: 'admin', foo: 'bar' }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.unexpected_attribute_in_policies' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.unexpected_argument',
+        });
     });
 
     it('should reject if restrictedTo is not an array', () => {
@@ -249,9 +259,10 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{ roleId: 'admin', restrictedTo: 'bar' }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.attribute_restrictedTo_not_an_array_of_objects' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo contains a non-object value', () => {
@@ -259,9 +270,10 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{ roleId: 'admin', restrictedTo: [null] }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.restrictedTo_field_must_be_an_object' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo does not contain an index', () => {
@@ -269,9 +281,10 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
       profile.policies = [{ roleId: 'admin', restrictedTo: [{ foo: 'bar' }] }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.missing_mandatory_index_attribute_in_restrictedTo_array' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.missing_argument'
+        });
     });
 
     it('should reject if restrictedTo is given an invalid attribute', () => {
@@ -282,9 +295,10 @@ describe('Test: security/profileTest', () => {
         restrictedTo: [{ index: 'index', foo: 'bar' }]
       }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.unexptected_attribute_in_restrictedTo_array' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.unexpected_argument'
+        });
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -295,9 +309,10 @@ describe('Test: security/profileTest', () => {
         restrictedTo: [{ index: 'index', collections: 'bar' }]
       }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.attribute_collections_not_an_array_in_retrictedTo' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.collections is not an array of strings', () => {
@@ -308,9 +323,10 @@ describe('Test: security/profileTest', () => {
         restrictedTo: [{ index: 'index', collections: ['bar', 123] }]
       }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.attribute_collections_not_contains_not_only_non_empty_strings' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.collections contains an empty string', () => {
@@ -321,9 +337,10 @@ describe('Test: security/profileTest', () => {
         restrictedTo: [{ index: 'index', collections: ['bar', ''] }]
       }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.attribute_collections_not_contains_not_only_non_empty_strings' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.index is not a string', () => {
@@ -334,9 +351,10 @@ describe('Test: security/profileTest', () => {
         restrictedTo: [{ index: false, collections: ['bar', 'baz'] }]
       }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.index_attribute_is_empty_string' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
 
     it('should reject if restrictedTo.index is an empty string', () => {
@@ -347,9 +365,10 @@ describe('Test: security/profileTest', () => {
         restrictedTo: [{ index: '', collections: ['bar', 'baz'] }]
       }];
 
-      return should(profile.validateDefinition()).be.rejectedWith(
-        BadRequestError,
-        { errorName: 'api.security.index_attribute_is_empty_string' });
+      return should(profile.validateDefinition())
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'api.assert.invalid_type'
+        });
     });
   });
 });

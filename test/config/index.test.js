@@ -69,8 +69,11 @@ describe('lib/config/index.js', () => {
       };
 
     it('should throw if an invalid limits configuration is submitted', () => {
-      should(() => checkLimits({limits: true})).throw(KuzzleInternalError, {message: 'Invalid config.limits configuration format: please check your Kuzzle configuration files'});
-      should(() => checkLimits({limits: ['foo', 'bar']})).throw(KuzzleInternalError, {message: 'Invalid config.limits configuration format: please check your Kuzzle configuration files'});
+      should(() => checkLimits({limits: true}))
+        .throw(KuzzleInternalError, { errorName: 'core.configuration.invalid_type' });
+
+      should(() => checkLimits({limits: ['foo', 'bar']}))
+        .throw(KuzzleInternalError, { errorName: 'core.configuration.invalid_type' });
     });
 
     it('should throw on negative limit values', () => {
@@ -81,7 +84,8 @@ describe('lib/config/index.js', () => {
           }
         });
 
-        should(() => checkLimits(config)).throw(KuzzleInternalError, {message: `Invalid configuration: value set for "${limit}" limit is outside the allowed range`});
+        should(() => checkLimits(config))
+          .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
       }
     });
 
@@ -104,7 +108,8 @@ describe('lib/config/index.js', () => {
           should(config.limits[limit]).be.eql(0);
         }
         else {
-          should(() => checkLimits(config)).throw(KuzzleInternalError, {message: `Invalid configuration: value set for "${limit}" limit is outside the allowed range`});
+          should(() => checkLimits(config))
+            .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
         }
       }
     });
@@ -117,10 +122,12 @@ describe('lib/config/index.js', () => {
         }
       });
 
-      should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize'});
+      should(() => checkLimits(config))
+        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
 
       config.limits.concurrentRequests = config.limits.requestsBufferSize;
-      should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: the concurrentRequests limit configuration must be strictly inferior to requestsBufferSize'});
+      should(() => checkLimits(config))
+        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
     });
 
     it('should throw on an invalid buffer limit threshold warning configuration', () => {
@@ -132,10 +139,12 @@ describe('lib/config/index.js', () => {
         }
       });
 
-      should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize'});
+      should(() => checkLimits(config))
+        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
 
       config.limits.requestsBufferWarningThreshold = 101;
-      should(() => checkLimits(config)).throw(KuzzleInternalError, {message: 'Invalid configuration: limits.requestsBufferWarningThreshold should be comprised between limits.concurrentRequests and limits.requestsBufferSize'});
+      should(() => checkLimits(config))
+        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
     });
   });
 });

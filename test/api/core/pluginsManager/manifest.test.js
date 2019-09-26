@@ -38,23 +38,25 @@ describe('Plugins manifest class', () => {
 
   it('should throw if the provided name contains invalid characters', () => {
     const
-      message = new RegExp(`^\\[${pluginPath}\\] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores`),
       manifest = new Manifest(kuzzle, pluginPath);
 
     for (const name of ['foo$Bar', 'foobâr', 'foobar!']) {
       manifest.name = name;
       should(() => manifest.load())
-        .throw(PluginImplementationError, {message});
+        .throw(PluginImplementationError, {
+          errorName: 'plugin.manifest.invalid_name'
+        });
     }
   });
 
   it('should throw if an invalid privileged value is provided', () => {
     const
-      message = new RegExp(`\\[.*?${pluginPath}\\] Invalid "privileged" property: expected a boolean, got a number`),
       manifest = new Manifest(kuzzle, pluginPath);
 
     manifest.raw = {privileged: 123};
-    should(() => manifest.load()).throw(PluginImplementationError, {message});
+    should(() => manifest.load()).throw(PluginImplementationError, {
+      errorName: 'plugin.manifest.invalid_privileged'
+    });
   });
 
   it('should properly set its privileged value according to the manifest.json one', () => {

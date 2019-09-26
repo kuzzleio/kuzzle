@@ -7,11 +7,14 @@ const
   Profile = require('../../../../../lib/api/core/models/security/profile'),
   ProfileRepository = require('../../../../../lib/api/core/models/repositories/profileRepository'),
   {
-    BadRequestError,
-    ForbiddenError,
-    NotFoundError
-  } = require('kuzzle-common-objects').errors,
-  Request = require('kuzzle-common-objects').Request,
+    Request,
+    errors: {
+      BadRequestError,
+      PreconditionError,
+      NotFoundError,
+      InternalError
+    }
+  } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock');
 
 describe('Test: repositories/profileRepository', () => {
@@ -39,14 +42,16 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject if no profileid is given', () => {
       return should(profileRepository.load())
         .be.rejectedWith(BadRequestError, {
-          message: 'Missing profileId'
+          errorName: 'api.assert.missing_argument',
+          message: 'Missing argument "profileId".'
         });
     });
 
     it('should reject if the profile id is not a string', () => {
       return should(profileRepository.load({}))
         .be.rejectedWith(BadRequestError, {
-          message: 'Invalid argument: Expected profile id to be a string, received "object"'
+          errorName: 'api.assert.invalid_type',
+          message: 'Wrong type for argument "profileId" (expected: string)'
         });
     });
 
@@ -65,7 +70,7 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.indexStorage.get.rejects(new NotFoundError('Not found'));
 
       return should(profileRepository.load('idontexist'))
-        .rejectedWith(NotFoundError, {message: 'Unable to find profiles with id \'idontexist\''});
+        .rejectedWith(NotFoundError, { errorName: 'security.profile.not_found' });
     });
 
     it('should load a profile from the db', () => {
@@ -98,14 +103,16 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject if no profileIds are given', () => {
       return should(profileRepository.loadProfiles())
         .be.rejectedWith(BadRequestError, {
-          message: 'Missing profileIds'
+          errorName: 'api.assert.missing_argument',
+          message: 'Missing argument "profileIds".'
         });
     });
 
     it('should reject if profileIds is not an array of strings', () => {
       return should(profileRepository.loadProfiles(['a string', {foo: 'bar'}]))
         .be.rejectedWith(BadRequestError, {
-          message: 'An array of strings must be provided as profileIds'
+          errorName: 'api.assert.invalid_type',
+          message: 'Wrong type for argument "profileIds" (expected: string[])'
         });
     });
 
@@ -197,7 +204,7 @@ describe('Test: repositories/profileRepository', () => {
           {roleId: 'notExistingRole'}
         ]
       }))
-        .be.rejectedWith(NotFoundError);
+        .be.rejectedWith(InternalError, { errorName: 'security.profile.cannot_hydrate' });
     });
 
     it('should set role default when none is given', () => {
@@ -244,7 +251,9 @@ describe('Test: repositories/profileRepository', () => {
           done(new Error('The promise is not rejected'));
         })
         .catch(e => {
-          should(e).be.an.instanceOf(ForbiddenError);
+          should(e).be.an.instanceOf(PreconditionError, {
+            errorName: 'security.profile.in_use'
+          });
           should(kuzzle.emit).not.be.called();
           done();
         })
@@ -400,7 +409,10 @@ describe('Test: repositories/profileRepository', () => {
           done(new Error('The promise is not rejected'));
         })
         .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError).and.match({message: 'Missing profileId'});
+          should(e).be.an.instanceOf(BadRequestError).and.match({
+            errorName: 'api.assert.missing_argument',
+            message: 'Missing argument "profileId".'
+          });
           should(kuzzle.emit).not.be.called();
           done();
         })
@@ -415,9 +427,10 @@ describe('Test: repositories/profileRepository', () => {
       invalidProfile.policies = [{roleId: 'notSoAwesomeRole'}];
 
       kuzzle.repositories.role.loadRoles = sinon.stub().rejects();
-      return should(profileRepository.validateAndSaveProfile(invalidProfile)).be.rejectedWith(
-        NotFoundError, {
-          message: 'Unable to hydrate the profile awesomeProfile: missing role(s) in the database'
+
+      return should(profileRepository.validateAndSaveProfile(invalidProfile))
+        .be.rejectedWith(InternalError, {
+          errorName: 'security.profile.cannot_hydrate'
         });
     });
 
@@ -446,7 +459,9 @@ describe('Test: repositories/profileRepository', () => {
       ];
 
       return should(profileRepository.validateAndSaveProfile(profile))
-        .be.rejectedWith(BadRequestError, {message: 'Anonymous profile must include the anonymous role'});
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'security.profile.missing_anonymous_role'
+        });
     });
 
     it('should accept to update the anonymous profile if the anonymous role is still in', () => {

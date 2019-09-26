@@ -551,7 +551,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
       const Rewired = rewire(entryPointDir);
 
       const
-        message = new RegExp(`\\[${path.join(protocolDir, 'protocol')}\\] Unable to load the file 'manifest.json'`),
         requireStub = sinon.stub().returns(function () {
           this.init = sinon.spy();
         });
@@ -559,7 +558,9 @@ describe('lib/core/api/core/entrypoints/index', () => {
       return should(Rewired.__with__({ require: requireStub })(() => {
         const ep = new Rewired(kuzzle);
         return ep.loadMoreProtocols();
-      })).rejectedWith(PluginImplementationError, {message});
+      })).rejectedWith(PluginImplementationError, {
+        errorName: 'plugin.manifest.cannot_load'
+      });
     });
 
     it('should log and reject if an error occured', () => {

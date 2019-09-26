@@ -108,7 +108,7 @@ Each created document is an object with the following properties:
 - `_source`: document content
 - `_version`: version number of the document
 
-If one or more document creations fail, the response status is set to `206`, and the `error` object contains a [partial error](/core/2/api/essentials/errors#partialerror) error.
+If one or more document creations fail, the response status is set to `206`, and the `error` object contains a [partial error](/core/2/api/essentials/errors/handling#partialerror) error.
 
 ### Example
 

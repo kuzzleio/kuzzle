@@ -68,10 +68,12 @@ describe('funnelController.processRequest', () => {
       }));
 
     const res = funnel.handleProcessRequestError(
-      request, request, originalError);
+      request,
+      request,
+      originalError);
 
     return should(res).rejectedWith(
-      PluginImplementationError, { message: /^custom error*/ });
+      PluginImplementationError,
+      { errorName: 'plugin.runtime.unexpected_error' });
   });
-
 });

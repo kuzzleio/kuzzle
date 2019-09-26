@@ -52,7 +52,7 @@ describe('Service', () => {
       const promise = service.init();
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.common.service_initialization_timeout'
+        errorName: 'core.fatal.service_timeout'
       });
     });
   });
