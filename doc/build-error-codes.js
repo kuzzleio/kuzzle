@@ -51,11 +51,19 @@ function buildErrorCodes(domains) {
   for (const domainName of domainKeys) {
     const domain = domains[domainName];
 
+    if (domain.deprecated) {
+      continue;
+    }
+
     buffer.writeUInt8(domain.code, 3);
     doc += `\n## 0x${buffer.toString('hex', 3)}: ${domainName}\n\n`;
 
     for (const subdomainName of Object.keys(domain.subdomains)) {
       const subdomain = domain.subdomains[subdomainName];
+
+      if (subdomain.deprecated) {
+        continue;
+      }
 
       buffer.writeUInt16BE(domain.code << 8 | subdomain.code, 2);
 
@@ -85,7 +93,7 @@ function buildErrorCodes(domains) {
 
 const output = process.argv[2] === '-o' || process.argv[2] === '--output'
   ? process.argv[3]
-  : `${__dirname}/1/api/essentials/errors/codes/index.md`;
+  : `${__dirname}/2/api/essentials/errors/codes/index.md`;
 
 const doc = buildErrorCodes(codes.domains);
 

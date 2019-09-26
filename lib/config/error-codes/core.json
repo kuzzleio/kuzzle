@@ -121,6 +121,7 @@
     },
     "sandbox": {
       "code": 4,
+      "deprecated": true,
       "errors": {
         "process_already_running": {
           "description": "A process is already running for this sandbox",

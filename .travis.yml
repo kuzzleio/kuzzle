@@ -112,7 +112,7 @@ jobs:
         - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
         - echo "Checking error codes..."
         - npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR/codes-doc-test.md
-        - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/1/api/essentials/errors/codes/index.md
+        - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/2/api/essentials/errors/codes/index.md
 
     # ---------------------------------------
     # Integration tests
