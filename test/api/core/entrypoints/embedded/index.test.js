@@ -175,7 +175,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
 
     it('should throw if the event is unknown', () => {
       return should(() => entrypoint.dispatch('foo', {}))
-        .throw(KuzzleInternalError);
+        .throw(KuzzleInternalError, { errorName: 'network.entrypoint.unexpected_event' });
     });
   });
 
@@ -269,7 +269,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
     it('should throw if the provided port is not an integer', () => {
       kuzzle.config.server.port = 'foobar';
       should(() => entrypoint.init())
-        .throw(KuzzleInternalError, {message: 'Invalid network port number: foobar.'});
+        .throw(KuzzleInternalError, { errorName: 'network.entrypoint.invalid_port' } );
     });
 
     it('should log and reject if an error occured', () => {
@@ -582,7 +582,6 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       const Rewired = rewire('../../../../../lib/api/core/entrypoints/embedded');
 
       const
-        message = new RegExp(`\\[${path.join(protocolDirectory, 'protocol')}\\] Unable to load the file 'manifest.json'`),
         requireStub = sinon.stub().returns(function () {
           this.init = sinon.spy();
         });
@@ -590,7 +589,7 @@ describe('lib/core/api/core/entrypoints/embedded/index', () => {
       return should(Rewired.__with__({ require: requireStub })(() => {
         const ep = new Rewired(kuzzle);
         return ep.loadMoreProtocols();
-      })).rejectedWith(PluginImplementationError, {message});
+      })).rejectedWith(PluginImplementationError, { errorName: 'plugin.manifest.cannot_load'});
     });
 
     it('should log and reject if an error occured', () => {

@@ -11,7 +11,7 @@ const
   {
     Request,
     errors: {
-      BadRequestError,
+      NotFoundError,
       PluginImplementationError,
       InternalError: KuzzleInternalError
     }
@@ -52,7 +52,7 @@ describe('funnelController.processRequest', () => {
     const request = new Request({action: 'create'});
 
     should(() => funnel.processRequest(request))
-      .throw(BadRequestError, {message: 'Unknown controller null.'});
+      .throw(NotFoundError, {errorName: 'api.process.controller_not_found'});
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -64,9 +64,7 @@ describe('funnelController.processRequest', () => {
     const request = new Request({controller: 'fakeController'});
 
     should(() => funnel.processRequest(request))
-      .throw(BadRequestError, {
-        message: 'No corresponding action null in controller fakeController.'
-      });
+      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -81,9 +79,7 @@ describe('funnelController.processRequest', () => {
     });
 
     should(() => funnel.processRequest(request))
-      .throw(BadRequestError, {
-        message: 'No corresponding action create in controller fakeController.'
-      });
+      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -99,9 +95,7 @@ describe('funnelController.processRequest', () => {
       request = new Request({controller, action: 'create'});
 
     should(() => funnel.processRequest(request))
-      .throw(BadRequestError, {
-        message: `No corresponding action create in controller ${controller}.`
-      });
+      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -123,8 +117,7 @@ describe('funnelController.processRequest', () => {
       .catch(e => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
-          should(e.message).startWith(
-            `Unexpected return value from action "${controller}:succeed": expected a Promise`);
+          should(e.errorName).eql('plugin.controller.invalid_action_response');
           should(kuzzle.pipe)
             .not.calledWith('request:onSuccess', request);
           should(kuzzle.pipe)
@@ -153,7 +146,7 @@ describe('funnelController.processRequest', () => {
       .then(() => { throw new Error('Expected test to fail'); })
       .catch(e => {
         should(e).be.an.instanceOf(PluginImplementationError);
-        should(e.message).startWith('Unable to serialize response. Are you trying to return the request?');
+        should(e.errorName).eql('plugin.controller.unserializable_response');
       });
   });
 
@@ -227,7 +220,8 @@ describe('funnelController.processRequest', () => {
       .catch(e => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
-          should(e.message).startWith('foobar');
+          should(e.message).startWith('Caught an unexpected plugin error: foobar');
+          should(e.errorName).eql('plugin.runtime.unexpected_error');
           should(kuzzle.pipe)
             .calledWith(`${controller}:beforeFail`);
           should(kuzzle.pipe)
@@ -258,14 +252,14 @@ describe('funnelController.processRequest', () => {
         pipes: {
           'generic:document:beforeWrite': function hello(documents) {
             should(documents[0]._id).equal(null);
-      
+
             documents[0]._id = 'foobar';
-      
+
             return Promise.resolve(documents);
           },
           'document:beforeCreate': (request) => {
             should(request.input.resource._id).equal('foobar');
-  
+
             done();
             return Promise.resolve(request);
           },

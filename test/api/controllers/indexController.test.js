@@ -178,7 +178,7 @@ describe('Test: index controller', () => {
     it('should return a rejected promise if the request does not contain a body', () => {
       return should(() => {
         indexController.setAutoRefresh(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
     });
 
     it('should return a rejected promise if the request does not contain the autoRefresh field', () => {
@@ -186,7 +186,7 @@ describe('Test: index controller', () => {
 
       return should(() => {
         indexController.setAutoRefresh(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
     });
 
     it('should reject the promise if the autoRefresh value is not a boolean', () => {
@@ -194,7 +194,7 @@ describe('Test: index controller', () => {
 
       return should(() => {
         indexController.setAutoRefresh(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
     });
   });
 

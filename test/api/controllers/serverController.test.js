@@ -4,7 +4,7 @@ const
   ServerController = require('../../../lib/api/controllers/serverController'),
   {
     Request,
-    errors: { ServiceUnavailableError }
+    errors: { ExternalServiceError }
   } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -143,8 +143,8 @@ describe('Test: server controller', () => {
 
       return serverController.healthCheck(request)
         .then(response => {
-          should(request.response.error).be.instanceOf(ServiceUnavailableError);
-          should(request.response.status).be.exactly(503);
+          should(request.response.error).be.instanceOf(ExternalServiceError);
+          should(request.response.status).be.exactly(500);
           should(response.status).be.exactly('red');
           should(response.services.internalCache).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('green');
@@ -157,8 +157,8 @@ describe('Test: server controller', () => {
 
       return serverController.healthCheck(request)
         .then(response => {
-          should(request.response.error).be.instanceOf(ServiceUnavailableError);
-          should(request.response.status).be.exactly(503);
+          should(request.response.error).be.instanceOf(ExternalServiceError);
+          should(request.response.status).be.exactly(500);
           should(response.status).be.exactly('red');
           should(response.services.internalCache).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('green');
@@ -171,8 +171,8 @@ describe('Test: server controller', () => {
 
       return serverController.healthCheck(request)
         .then(response => {
-          should(request.response.error).be.instanceOf(ServiceUnavailableError);
-          should(request.response.status).be.exactly(503);
+          should(request.response.error).be.instanceOf(ExternalServiceError);
+          should(request.response.status).be.exactly(500);
           should(response.status).be.exactly('red');
           should(response.services.internalCache).be.exactly('green');
           should(response.services.memoryStorage).be.exactly('red');
@@ -185,8 +185,8 @@ describe('Test: server controller', () => {
 
       return serverController.healthCheck(request)
         .then(response => {
-          should(request.response.error).be.instanceOf(ServiceUnavailableError);
-          should(request.response.status).be.exactly(503);
+          should(request.response.error).be.instanceOf(ExternalServiceError);
+          should(request.response.status).be.exactly(500);
           should(response.status).be.exactly('red');
           should(response.services.internalCache).be.exactly('red');
           should(response.services.memoryStorage).be.exactly('green');

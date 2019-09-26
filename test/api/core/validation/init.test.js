@@ -7,6 +7,7 @@ const
   mockRequire = require('mock-require'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   {
+    BadRequestError,
     PluginImplementationError,
     PreconditionError
   } = require('kuzzle-common-objects').errors;
@@ -217,7 +218,7 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.message).be.eql('The type aType is already defined.\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.');
+        should(error.errorName).eql('validation.types.already_exists');
       }
     });
 
@@ -234,7 +235,7 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.message).be.eql('The typeName property must be defined in the validation type object.\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.');
+        should(error.errorName).be.eql('validation.types.missing_type_name');
       }
     });
 
@@ -250,7 +251,8 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.message).be.eql('The type aType must implement the function \'validate\'.\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.');
+        should(error.message).startWith('The type "aType" must implement a function "validate".');
+        should(error.errorName).be.eql('validation.types.missing_function');
       }
     });
 
@@ -266,7 +268,8 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.message).be.eql('The type aType must implement the function \'validateFieldSpecification\'.\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.');
+        should(error.message).startWith('The type "aType" must implement a function "validateFieldSpecification".');
+        should(error.errorName).be.eql('validation.types.missing_function');
       }
     });
 
@@ -283,7 +286,8 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.message).be.eql('The allowing children type aType must implement the function \'getStrictness\'.\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.');
+        should(error.message).startWith('The type "aType" must implement a function "getStrictness".');
+        should(error.errorName).be.eql('validation.types.missing_function');
       }
     });
   });
@@ -324,7 +328,9 @@ describe('Test: validation initialization', () => {
       checkAllowedPropertiesStub.returns(false);
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
-        .be.rejectedWith('anIndex.aCollection: the collection specification has invalid properties.');
+        .be.rejectedWith(PreconditionError, {
+          errorName: 'validation.assert.unexpected_properties'
+        });
     });
 
     it('should reject an error if the collection specification provides a not allowed property in verbose mode', () => {
@@ -343,7 +349,7 @@ describe('Test: validation initialization', () => {
         .then(response => {
           should(response.isValid).be.false();
           should(response.errors.length).be.eql(1);
-          should(response.errors[0]).be.eql(`${indexName}.${collectionName}: the collection specification has invalid properties.`);
+          should(response.errors[0]).be.eql(`The object "${indexName}.${collectionName}" contains unexpected properties (allowed: strict,fields,validators).`);
         });
     });
 
@@ -438,7 +444,9 @@ describe('Test: validation initialization', () => {
       sinon.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
-        .be.rejectedWith('an error');
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'validation.assert.invalid_specifications'
+        });
     });
 
     it('should reject an error if the field specification returns an error in verbose mode', () => {
@@ -512,7 +520,9 @@ describe('Test: validation initialization', () => {
       validation.curateValidatorFilter = curateValidatorFilterStub;
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
-        .be.rejectedWith('Validator specification of the collection anIndex.aCollection triggered an error');
+        .be.rejectedWith(BadRequestError, {
+          errorName: 'validation.assert.invalid_filters'
+        });
     });
   });
 
@@ -565,9 +575,8 @@ describe('Test: validation initialization', () => {
 
       validation.curateFieldSpecification = curateFieldSpecificationStub;
 
-      should(() => {
-        validation.structureCollectionValidation(collectionSpec);
-      }).throw('Specification for the field undefined.undefined.aField triggered an error');
+      should(() => validation.structureCollectionValidation(collectionSpec))
+        .throw('an error');
 
       should(curateFieldSpecificationStub.callCount).be.eql(1);
       should(kuzzle.log.error).calledOnce();
@@ -681,10 +690,15 @@ describe('Test: validation initialization', () => {
 
       validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
 
-      const response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
+      const response = validation.curateFieldSpecification(
+        fieldSpec,
+        'anIndex',
+        'aCollection',
+        'aField',
+        true);
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(1);
-      should(response.errors[0]).eql('Field anIndex.aCollection.aField of type string is not specified properly');
+      should(response.errors[0]).startWith('The object "anIndex.aCollection.aField" contains unexpected properties');
     });
 
     it('should validate typeOptions from the field type', () => {
@@ -735,7 +749,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).throw('Field undefined.undefined.undefined of type string is not specified properly');
+      }).throw({message: /^The object "undefined.undefined.undefined" contains unexpected properties/ });
     });
 
     it('should throw a PluginImplementationError if a type throws a non-KuzzleError error', () => {
@@ -755,7 +769,9 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).throw(PluginImplementationError, {message: 'foobar\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
+      }).throw(PluginImplementationError, {
+        errorName: 'plugin.runtime.unexpected_error'
+      });
     });
 
     it('should return an error if a field specification format is invalid in verbose mode', () => {
@@ -786,7 +802,9 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('The field undefined.undefined.undefined specification has invalid properties.');
+      }).throw(PreconditionError, {
+        errorName: 'validation.assert.unexpected_properties'
+      });
     });
 
     it('should return an error if the field specification is wrong in verbose mode', () => {
@@ -809,8 +827,8 @@ describe('Test: validation initialization', () => {
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(2);
       should(response.errors).be.eql([
-        'The field anIndex.aCollection.aField specification has invalid properties.',
-        'In anIndex.aCollection.aField: aType is not a recognized type.'
+        'The object "anIndex.aCollection.aField" contains unexpected properties (allowed: mandatory,type,defaultValue,description,multivalued,typeOptions).',
+        'In "anIndex.aCollection.aField": unknown type "aType".'
       ]);
     });
 
@@ -822,7 +840,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, \'type\' is a mandatory field specification property.');
+      }).throw('Missing property "type" in field "undefined.undefined.undefined".');
     });
 
     it('should throw an error if the field specification contains a not recognized type', () => {
@@ -834,7 +852,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined: not_recognized is not a recognized type.');
+      }).throw('In "undefined.undefined.undefined": unknown type "not_recognized".');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -852,7 +870,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, the multivalued field specification has invalid properties.');
+      }).throw('The object "undefined.undefined.undefined.multivalued" contains unexpected properties (allowed: value,minCount,maxCount).');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -868,7 +886,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, "value" is a mandatory property for multivalued field specification.');
+      }).throw('Missing property "value" in field "undefined.undefined.undefined.multivalued".');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -887,7 +905,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, "minCount" is not valid when multivalued field is disabled.');
+      }).throw('Field "undefined.undefined.undefined": cannot set a property "minCount" if the field is not multivalued.');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -906,7 +924,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, "maxCount" is not valid when multivalued field is disabled.');
+      }).throw('Field "undefined.undefined.undefined": cannot set a property "maxCount" if the field is not multivalued.');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {
@@ -926,7 +944,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('In undefined.undefined.undefined, "minCount" can not be greater than "maxCount".');
+      }).throw('Property "undefined.undefined.undefined": invalid range (minCount > maxCount).');
     });
 
     it('should throw if the multivalued value field is not a boolean', () => {
@@ -944,7 +962,7 @@ describe('Test: validation initialization', () => {
       };
 
       should(() => validation.curateFieldSpecificationFormat(fieldSpec))
-        .throw('In undefined.undefined.undefined, "multivalued.value" must be a boolean');
+        .throw('Wrong type for parameter "undefined.undefined.undefined.multivalued.value" (expected: boolean).');
     });
 
     it('should return true if specification is well formed', () => {
