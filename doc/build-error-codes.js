@@ -80,7 +80,7 @@ function buildErrorCodes(domains) {
           buffer.writeUInt32BE(
             domain.code << 24 | subdomain.code << 16 | error.code,
             0);
-          doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> | [${error.class}](/core/1/api/essentials/errors/handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.description} |\n`;
+          doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> | [${error.class}](/core/2/api/essentials/errors/handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.description} |\n`;
         }
       }
       doc += '\n---\n';

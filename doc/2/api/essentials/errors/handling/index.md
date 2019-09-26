@@ -29,7 +29,7 @@ The `errorName` property is a concatenation of 3 levels of precisions, indicatin
 
 For instance, the error `api.auth.database_not_found` was raised in the API, by the Auth controller.
 
-You can see the full definition about Kuzzle errors [here](/core/1/api/essentials/errors/codes/)
+You can see the full definition about Kuzzle errors [here](/core/2/api/essentials/errors/codes/)
 
 ---
 
@@ -42,7 +42,7 @@ The `code` property is a concatenation of 3 codes:
 
 So a `code` `0x02040001` has `02` as domain code on 1 byte, `04` as subdomain code on 1 byte and `0001` as error code on 2 bytes.
 
-The full list of Kuzzle API errors is available [here](/core/1/api/essentials/errors/codes).
+The full list of Kuzzle API errors is available [here](/core/2/api/essentials/errors/codes).
 
 
 ## Common errors
@@ -108,7 +108,7 @@ An `InternalError` error is thrown if Kuzzle encountered an unexpected error.
 
 **status**: 500
 
-A `PluginImplementationError` error is a generic error thrown by Kuzzle on a [plugin](/core/1/plugins) failure.
+A `PluginImplementationError` error is a generic error thrown by Kuzzle on a [plugin](/core/2/plugins) failure.
 
 ---
 
@@ -176,7 +176,7 @@ For instance, this error can be generated when trying to create a document on a 
 
 **status**: 413
 
-A `SizeLimitError` error is thrown by Kuzzle if the request size exceeds the limits defined in the [configuration](/core/1/guides/essentials/configuration).
+A `SizeLimitError` error is thrown by Kuzzle if the request size exceeds the limits defined in the [configuration](/core/2/guides/essentials/configuration).
 
 ---
 
