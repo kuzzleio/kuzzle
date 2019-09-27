@@ -109,12 +109,6 @@ It accepts the same arguments as the `kuzzle start` command from the CLI.
 
 ### Internal storage changes
 
-**Index are virtual containers:**
-
-Indexes does not have a physical existence anymore.  
-The route `index:create` just check if an index with the same name already exists and resolves.  
-An index can be listed when there is at least one collection inside it.  
-
 **New index and collection naming policy:**
 
  - internal indexes: `%<index name>.<collection name>`

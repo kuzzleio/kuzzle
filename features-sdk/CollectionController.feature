@@ -37,6 +37,14 @@ Feature: Collection Controller
     Then I should receive an error matching:
     | status | 400 |
 
+  Scenario: Try to create a collection with the same name as the kuzzle hidden one
+    When I call the route "collection":"create" with args:
+    | index | "nyc-open-data" |
+    | collection | "_kuzzle_keep" |
+    Then I should receive an error matching:
+    | status | 400 |
+
+
   # collection:list ============================================================
 
   Scenario: List collections

@@ -5,7 +5,7 @@ set -e
 elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
 
 if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
-    npm install --unsafe-perm
+    npm ci --unsafe-perm
     chmod -R 777 node_modules/
     npm rebuild all --unsafe-perm
     docker-compose/scripts/install-plugins.sh
