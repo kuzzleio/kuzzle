@@ -1366,19 +1366,19 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#import', () => {
     let
-      expectedEsRequest,
+      getExpectedEsRequest,
       bulkReturnError,
       documents,
       bulkReturn;
 
     beforeEach(() => {
-      expectedEsRequest = {
+      getExpectedEsRequest = ({ userId=null, refresh, timeout } = {}) => ({
         body: [
           { index: { _id: 1, _index: esIndexName } },
           {
             firstName: 'foo',
             _kuzzle_info: {
-              author: null,
+              author: userId,
               createdAt: timestamp,
               updater: null,
               updatedAt: null
@@ -1389,16 +1389,29 @@ describe('Test: ElasticSearch service', () => {
           {
             firstName: 'bar',
             _kuzzle_info: {
-              author: null,
+              author: userId,
               createdAt: timestamp,
               updater: null,
               updatedAt: null
             }
           },
+
+          { update: { _id: 3, _index: esIndexName } },
+          {
+            doc: {
+              firstName: 'foobar',
+              _kuzzle_info: {
+                updater: userId,
+                updatedAt: timestamp
+              }
+            }
+          },
+
+          { delete: { _id: 4, _index: esIndexName } }
         ],
-        refresh: undefined,
-        timeout: undefined
-      };
+        refresh,
+        timeout
+      });
 
       bulkReturn = {
         body: {
@@ -1430,6 +1443,11 @@ describe('Test: ElasticSearch service', () => {
 
         { index: { _id: 2, _type: 'delete-me' } },
         { firstName: 'bar' },
+
+        { update: { _id: 3 } },
+        { doc: { firstName: 'foobar' } },
+
+        { delete: { _id: 4 } }
       ];
 
       elasticsearch._client.bulk.resolves(bulkReturn);
@@ -1453,46 +1471,8 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          expectedEsRequest = {
-            body: [
-              { index: { _id: 1, _index: esIndexName } },
-              {
-                firstName: 'foo',
-                _kuzzle_info: {
-                  author: null,
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-
-              { index: { _id: 2, _index: esIndexName } },
-              {
-                firstName: 'bar',
-                _kuzzle_info: {
-                  author: null,
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-
-              { update: { _id: 3, _index: esIndexName } },
-              { doc: {
-                firstName: 'foobar',
-                _kuzzle_info: {
-                  updater: null,
-                  updatedAt: timestamp
-                }
-              }
-              },
-
-              { delete: { _id: 4, _index: esIndexName } }
-            ],
-            refresh: undefined,
-            timeout: undefined
-          };
-          should(elasticsearch._client.bulk).be.calledWithMatch(expectedEsRequest);
+          should(elasticsearch._client.bulk).be.calledWithMatch(
+            getExpectedEsRequest());
 
           should(result).match({
             items: [
@@ -1506,16 +1486,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should inject index name', () => {
-      const promise = elasticsearch.import(index, collection, documents);
-
-      return promise
-        .then(() => {
-          should(elasticsearch._client.bulk).be.calledWithMatch(expectedEsRequest);
-        });
-    });
-
-    it('should inject addition options to esRequest', () => {
+    it('should inject additional options to esRequest', () => {
       const promise = elasticsearch.import(
         index,
         collection,
@@ -1524,33 +1495,8 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(() => {
-          should(elasticsearch._client.bulk).be.calledWithMatch({
-            body: [
-              { index: { _id: 1, _index: esIndexName } },
-              {
-                firstName: 'foo',
-                _kuzzle_info: {
-                  author: 'aschen',
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-
-              { index: { _id: 2, _index: esIndexName } },
-              {
-                firstName: 'bar',
-                _kuzzle_info: {
-                  author: 'aschen',
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-            ],
-            refresh: 'wait_for',
-            timeout: '10m'
-          });
+          should(elasticsearch._client.bulk).be.calledWithMatch(
+            getExpectedEsRequest({ refresh: 'wait_for', timeout: '10m', userId: 'aschen' }));
         });
     });
 
