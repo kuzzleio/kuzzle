@@ -60,13 +60,13 @@ API Changes:
 **Bulk Controller**
 
 `bulk:import`: 
-  - index and collection cannot be specified on each actions but must be passed as request arguments
-  - does not returns a partial error if some actions fail
-  - returns two arrays: `successes` and `errors` that contains successful and failed actions
+  - index and collection cannot be specified on each action anymore, but must be passed as global request arguments
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` and `errors` containing, respectively, successful and failed actions
 
 `bulk:mWrite`:
-  - does not returns a partial error if some actions fail
-  - returns two arrays: `successes` and `errors` that contains successful and failed document writes
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` and `errors` containing, respectively, successful and failed document writes
 
 **Collection Controller**
 
@@ -82,16 +82,16 @@ API Changes:
 **Document Controller**
 
 `document:mCreate`, `document:mCreateOrReplace`, `document:mReplace`, `document:mUpdate`: 
-  - does not returns a partial error if some action fail
-  - returns two arrays: `successes` and `errors` that contains successful and failed document writes
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` and `errors` containing, respectively, successful and failed document writes
 
 `document:mDelete`:
-  - does not returns a partial error if some action fail
-  - returns two arrays: `successes` that contains the deleted document IDs and `errors` that contains error objects
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` containing the deleted document IDs, and `errors` containing error objects
 
 `document:mGet`:
-  - does not returns a partial error if some action fail
-  - returns two arrays: `successes` that contains document content and `errors` that contains not found document IDs
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` containing documents content, and `errors` containing non-existing document IDs
 
 ### Remove the CLI
 
