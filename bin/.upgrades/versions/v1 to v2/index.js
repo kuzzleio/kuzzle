@@ -18,3 +18,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+const
+  checkConfiguration = require('./checkConfiguration');
+
+module.exports = function upgrade (context) {
+  checkConfiguration(context);
+};

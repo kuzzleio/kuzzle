@@ -34,7 +34,7 @@ class ColorOutput {
       : new ColoredFormatter();
 
     this.fileFormatter = new FileFormatter();
-    this.fileReport = opts.R ? null : fs.openSync(opts.output, 'rw', 0o600);
+    this.fileReport = opts.R ? null : fs.openSync(opts.output, 'w', 0o600);
   }
 
   /* eslint-disable no-console */

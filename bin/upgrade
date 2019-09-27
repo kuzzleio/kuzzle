@@ -57,15 +57,11 @@ const
 
   await context.init();
 
-  let previousVersion = context.version.from;
-
   for (const dir of context.version.list) {
-    const migrationProcess = require(`${__dirname}/.upgrades/${dir}`);
+    const migrationProcess = require(`${__dirname}/.upgrades/versions/${dir}`);
 
-    context.log.notice(`Starting to migrate from ${previousVersion} to ${dir}...`);
+    context.log.notice(`Starting to migrate from ${dir}...`);
 
-    await migrationProcess();
-
-    previousVersion = dir;
+    await migrationProcess(context);
   }
 })();

@@ -67,23 +67,23 @@ class PrefixedFormatter {
 
 class FileFormatter extends PrefixedFormatter {
   error (msg) {
-    return Buffer.from(`[${(new Date()).toISOString()}]${super.error(msg)}`);
+    return Buffer.from(`[${(new Date()).toISOString()}]${super.error(msg)}\n`);
   }
 
   warn (msg) {
-    return Buffer.from(`[${(new Date()).toISOString()}]${super.warn(msg)}`);
+    return Buffer.from(`[${(new Date()).toISOString()}]${super.warn(msg)}\n`);
   }
 
   notice (msg) {
-    return Buffer.from(`[${(new Date()).toISOString()}]${super.notice(msg)}`);
+    return Buffer.from(`[${(new Date()).toISOString()}]${super.notice(msg)}\n`);
   }
 
   ok (msg) {
-    return Buffer.from(`[${(new Date()).toISOString()}]${super.ok(msg)}`);
+    return Buffer.from(`[${(new Date()).toISOString()}]${super.ok(msg)}\n`);
   }
 
   question (msg) {
-    return Buffer.from(`[${(new Date()).toISOString()}]${super.question(msg)}`);
+    return Buffer.from(`[${(new Date()).toISOString()}]${super.question(msg)}\n`);
   }
 }
 

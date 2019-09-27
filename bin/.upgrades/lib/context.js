@@ -21,7 +21,8 @@
 
 const
   fs = require('fs'),
-  { currentVersion } = require('../../../package.json'),
+  path = require('path'),
+  { version: currentVersion } = require('../../../package.json'),
   config = require('../../../lib/config'),
   inquirer = require('./inquirerExtended'),
   Logger = require('./logger');
@@ -55,14 +56,14 @@ class UpgradeContext {
     this.log.notice(`Current Kuzzle version: ${currentVersion}`);
 
     version.list = fs
-      .readdirSync(`${__dirname}/.upgrades/`, { withFileTypes: true })
-      .filter(entry => entry.isDirectory() && entry.name.match(/^v[0-9]+$/))
+      .readdirSync(path.resolve(`${__dirname}/../versions`), { withFileTypes: true })
+      .filter(entry => entry.isDirectory() && entry.name.match(/^v[0-9]+ to v[0-9]+$/))
       .map(entry => entry.name)
-      .sort((a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));
+      .sort((a, b) => parseInt(a[0].substring(1)) - parseInt(b[0].substring(1)));
 
     if (version.list.length === 1) {
       version.from = version.list[0];
-      context.log.notice(`Migrate from Kuzzle ${version.from}`);
+      this.log.notice(`Migrate from Kuzzle ${version.from}`);
     }
     else {
       version.from = await inquirer.direct({
@@ -72,7 +73,7 @@ class UpgradeContext {
         default: version.list[version.list.length - 1]
       });
 
-      version.list.splice(version.list.indexOf(version.from));
+      version.list.splice(version.list.indexOf(version.from) + 1);
     }
 
     return version;
