@@ -40,9 +40,6 @@ Then(/I should( not)? see the collection "(.*?)":"(.*?)"/, async function (not, 
   }
 });
 
-Then('I delete the collection {string}:{string}', async function (index, collection) {
-});
-
 Then('I get mappings of collection {string}:{string}', async function (index, collection) {
   this.props.result = await this.sdk.collection.getMapping(index, collection);
 });

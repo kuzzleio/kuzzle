@@ -21,3 +21,14 @@ Given('I create the following document:', async function (dataTable) {
 
   this.props.documentId = this.props.result._id;
 });
+
+Then('The document {string} content match:', async function (documentId, dataTable) {
+  const expectedContent = this.parseDataTable(dataTable);
+
+  const document = await this.sdk.document.get(
+    this.props.index,
+    this.props.collection,
+    documentId);
+
+  should(document._source).match(expectedContent);
+});
