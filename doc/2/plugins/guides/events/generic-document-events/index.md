@@ -7,19 +7,21 @@ order: 150
 
 # Generic Document Events
 
+<SinceBadge version="1.9.0" />
+
 Some actions in the document controller trigger generic events. Generic events are used to apply modifications on the documents in the request or result of these actions.
 
 Generic "before" events (`generic:document:before*`) are triggered **before** the regular `document:before*` event.  
 Generic "after" events (`generic:document:after*`) are triggered **after** the regular `document:after*` event.
 
-All the pipes triggered by generic events have the same signature and should return the array of the updated documents from parameters.
+All the pipes triggered by generic events have the same signature and should resolves the array of the updated documents from parameters.
 
 ```javascript
 class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:<event>': (documents, request) => {
+      'generic:document:<event>': async (documents, request) => {
         // some random change on documents
 
         return documents;
@@ -48,7 +50,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeWrite': documents => {
+      'generic:document:beforeWrite': async documents => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -84,7 +86,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterWrite': documents => {
+      'generic:document:afterWrite': async documents => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -121,7 +123,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeUpdate': documents => {
+      'generic:document:beforeUpdate': async documents => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -154,7 +156,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterUpdate': documents => {
+      'generic:document:afterUpdate': async documents => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -187,7 +189,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeDelete': documents => {
+      'generic:document:beforeDelete': async documents => {
         // some random change
         documents[0]._id += 'foo';
 
@@ -220,7 +222,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterDelete': documents => {
+      'generic:document:afterDelete': async documents => {
         // some random change
         documents[0]._id += 'foo';
 
@@ -254,7 +256,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeGet': documents => {
+      'generic:document:beforeGet': async documents => {
         // some random change
         documents[0]._id += 'foo';
 
@@ -287,7 +289,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeGet': documents => {
+      'generic:document:beforeGet': async documents => {
         // some random change
         documents[0]._id += 'foo';
 

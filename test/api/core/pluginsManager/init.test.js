@@ -25,7 +25,7 @@ describe('PluginsManager', () => {
         R_OK: true
       }
     };
-    Manifest = rewire('../../../../lib/api/core/plugins/manifest');
+    Manifest = rewire('../../../../lib/api/core/plugins/pluginManifest');
     Manifest.__set__({
       fs: manifestFsStub
     });
@@ -47,7 +47,7 @@ describe('PluginsManager', () => {
     manifestFsStub.accessSync.returns();
 
     mockrequire('fs', fsStub);
-    mockrequire('../../../../lib/api/core/plugins/manifest', Manifest);
+    mockrequire('../../../../lib/api/core/plugins/pluginManifest', Manifest);
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -79,7 +79,80 @@ describe('PluginsManager', () => {
       should(pluginsManager.plugins).be.empty();
     });
 
-    it('should throw if a plugin does not contain a manifest.json file nor a package.json one', () => {
+    it('should properly load customs errors from manifest.json', () => {
+      const errors = rewire('../../../../lib/config/error-codes/index');
+
+      const instanceName = 'kuzzle-plugin-test',
+        newPluginErrors = {
+          'some_error': {
+            'code': 1,
+            'message': 'Some error occured %s',
+            'class': 'BadRequestError'
+          },
+          'some_other_error': {
+            'code': 2,
+            'message': 'Some other error occured %s',
+            'class': 'ForbiddenError'
+          }
+        };
+
+      let pluginErrors = errors.__get__('plugins').subdomains;
+
+      should(pluginErrors).not.have.ownProperty(instanceName);
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
+      mockrequire(
+        '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
+        {
+          name: instanceName,
+          kuzzleVersion: '^2.x',
+          errors: newPluginErrors
+        });
+
+      pluginsManager.init();
+
+      should(kuzzle.log.info)
+        .calledOnce()
+        .calledWith('[kuzzle-plugin-test] Custom errors successfully loaded.');
+
+      pluginErrors = errors.__get__('plugins').subdomains;
+
+      should(pluginErrors).have.ownProperty(instanceName);
+      should(pluginErrors[instanceName]).have.ownProperty('errors');
+      should(pluginErrors[instanceName].errors).be.deepEqual(newPluginErrors);
+    });
+
+    it('should throw PluginImplementationError if customs errors from manifest.json are badly formatted', () => {
+      fsStub.readdirSync.returns(['kuzzle-plugin-test']);
+      fsStub.statSync.returns({
+        isDirectory: () => true
+      });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
+      mockrequire(
+        '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
+        {
+          name: 'kuzzle-plugin-test',
+          kuzzleVersion: '^1.x',
+          errors: {
+            'some_error': {
+              'message': 'Some error occured %s',
+              'class': 'BadRequestError'
+            },
+            'some_other_error': {
+              'code': 2,
+              'message': 'Some other error occured %s',
+              'class': 'ForbiddenError'
+            }
+          }
+        });
+      should(() => pluginsManager.init()).throw(PluginImplementationError);
+    });
+
+    it('should throw if a plugin does not contain a manifest.json file', () => {
       pluginsManager = new PluginsManager(kuzzle);
       manifestFsStub.accessSync.throws(new Error('foobar'));
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
@@ -90,7 +163,7 @@ describe('PluginsManager', () => {
       });
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        {message:  /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\] No package\.json file found\./});
+        {message:  /\[\/kuzzle\/plugins\/enabled\/kuzzle-plugin-test\] Unable to load the file 'manifest.json'\./});
       should(pluginsManager.plugins).be.empty();
     });
 

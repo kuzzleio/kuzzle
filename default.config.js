@@ -223,14 +223,14 @@ module.exports = {
     internalIndex: {
       bootstrapLockTimeout: 5000
     },
-    db: {
+    storageEngine: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
       client: {
         node: 'http://localhost:9200'
       },
       commonMapping: {
-        dynamic: 'true',
+        dynamic: 'false',
         properties: {
           _kuzzle_info: {
             properties: {
@@ -261,7 +261,12 @@ module.exports = {
           },
           roles: {
             dynamic: 'false',
-            properties: {}
+            properties: {
+              controllers: {
+                dynamic: false,
+                properties: {}
+              }
+            }
           },
           validations: {
             properties: {
@@ -283,10 +288,6 @@ module.exports = {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
       }
-    },
-    garbageCollector: {
-      cleanInterval: 86400000,
-      maxDelete: 1000
     }
   },
 

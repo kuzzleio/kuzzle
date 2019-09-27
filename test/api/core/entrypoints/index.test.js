@@ -541,44 +541,11 @@ describe('lib/core/api/core/entrypoints/index', () => {
         .then(() => should(requireStub).be.calledTwice());
     });
 
-    it('should set the protocol name as the "protocol" property, if there is no manifest.json file', () => {
-      mockrequire('fs', {
-        readdirSync: sinon.stub().returns(['one', 'two']),
-        statSync: sinon.stub().returns({isDirectory: () => true})
-      });
-
-      mockrequire.reRequire(entryPointDir);
-      const Rewired = rewire(entryPointDir);
-
-      const requireStub = sinon.stub();
-
-      requireStub.onFirstCall().returns(function () {
-        this.init = sinon.spy();
-        this.protocol = 'foo';
-      });
-
-      requireStub.onSecondCall().returns(function () {
-        this.init = sinon.spy();
-        this.protocol = 'bar';
-      });
-
-      return Rewired.__with__({ require: requireStub })(() => {
-        const ep = new Rewired(kuzzle);
-
-        return ep.loadMoreProtocols()
-          .then(() => {
-            should(requireStub).be.calledTwice();
-            should(ep.protocols).properties(['foo', 'bar']);
-          });
-      });
-    });
-
-    it('should throw if there is no manifest.json and no protocol property either', () => {
+    it('should throw if there is no manifest.json file', () => {
       mockrequire('fs', {
         readdirSync: sinon.stub().returns(['protocol']),
         statSync: sinon.stub().returns({isDirectory: () => true})
       });
-
 
       mockrequire.reRequire(entryPointDir);
       const Rewired = rewire(entryPointDir);
@@ -646,11 +613,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should dispatch connection:new event', () => {
       entrypoint.newConnection(connection);
 
-      should(kuzzle.emit).be.calledWithMatch('connection:new', {
-        id: 'connectionId',
-        protocol: 'protocol',
-        headers: 'headers'
-      });
+      should(kuzzle.emit).be.calledWithMatch('connection:new', connection);
     });
   });
 

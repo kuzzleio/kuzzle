@@ -2,19 +2,16 @@ const
   should = require('should'),
   sinon = require('sinon'),
   IndexController = require('../../../lib/api/controllers/indexController'),
-  {
-    Request,
-    errors: { BadRequestError }
-  } = require('kuzzle-common-objects'),
+  { Request } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/baseController'),
+  mockAssertions = require('../../mocks/mockAssertions'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-xdescribe('Test: index controller', () => {
+describe('IndexController', () => {
   let
     indexController,
     kuzzle,
-    foo = {foo: 'bar'},
-    index = '%text',
+    index = 'text',
     collection = 'unit-test-indexController',
     request;
 
@@ -24,9 +21,10 @@ xdescribe('Test: index controller', () => {
       index,
       collection
     };
+
     kuzzle = new KuzzleMock();
 
-    indexController = new IndexController(kuzzle);
+    indexController = mockAssertions(new IndexController(kuzzle));
     request = new Request(data);
   });
 
@@ -40,187 +38,84 @@ xdescribe('Test: index controller', () => {
     let isActionAllowedStub;
 
     beforeEach(() => {
-      isActionAllowedStub = sinon.stub();
-      isActionAllowedStub.onCall(0).resolves(true);
-      isActionAllowedStub.onCall(1).resolves(false);
-      isActionAllowedStub.onCall(2).resolves(true);
-      isActionAllowedStub.onCall(3).resolves(false);
-      isActionAllowedStub.resolves(true);
+      isActionAllowedStub = sinon.stub()
+        .onCall(0).resolves(true)
+        .onCall(1).resolves(false)
+        .onCall(2).resolves(true)
+        .onCall(3).resolves(false)
+        .onCall(4).resolves(true);
 
       indexController = new IndexController(kuzzle);
+
+      indexController.publicStorage.listIndexes.resolves([
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'
+      ]);
+      indexController.publicStorage.deleteIndexes.resolves(['a', 'e', 'i']);
     });
 
-    it('should trigger the proper methods and return a valid response', () => {
+    it('should list indexes from storage engine, filter authorized ones and respond', async () => {
       request.input.body = {
         indexes: ['a', 'c', 'e', 'g', 'i']
       };
-      request.context.token = {userId: '42'};
-      request.context.user = {
-        isActionAllowed: isActionAllowedStub
-      };
+      request.context.token = { userId: '42' };
+      request.context.user = { isActionAllowed: isActionAllowedStub };
 
-      return indexController.mDelete(request)
-        .then(response => {
-          const engine = kuzzle.services.publicStorage;
+      const response = await indexController.mDelete(request);
 
-          should(isActionAllowedStub).have.callCount(5);
+      should(isActionAllowedStub).have.callCount(5);
 
-          should(engine.deleteIndexes).be.calledOnce();
-          should(engine.deleteIndexes.firstCall.args[0]).be.an.instanceOf(Request);
-          should(engine.deleteIndexes.firstCall.args[0].serialize()).match({
-            data: {
-              body: {
-                indexes: ['a', 'e', 'i']
-              }
-            }
-          });
+      should(indexController.publicStorage.deleteIndexes)
+        .be.calledWith(['a', 'e', 'i']);
 
-          should(kuzzle.indexCache.remove).be.calledThrice();
-          should(kuzzle.indexCache.remove.getCall(0)).be.calledWith('a');
-          should(kuzzle.indexCache.remove.getCall(1)).be.calledWith('e');
-          should(kuzzle.indexCache.remove.getCall(2)).be.calledWith('i');
-
-          should(response).be.instanceof(Object);
-          should(response).match({deleted: ['a', 'e', 'i']});
-        });
+      should(response).match({ deleted: ['a', 'e', 'i'] });
     });
   });
 
   describe('#create', () => {
-    it('should trigger the proper methods and return a valid response', () => {
-      return indexController.create(request)
-        .then(response => {
-          const createIndex = kuzzle.services.publicStorage.createIndex;
+    it('should trigger the proper methods and return a valid response', async () => {
+      const response = await indexController.create(request);
 
-          should(createIndex).be.calledOnce();
-          should(createIndex).be.calledWith(request);
+      should(indexController.publicStorage.createIndex).be.calledWith(index);
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(response).be.undefined();
     });
   });
 
   describe('#delete', () => {
-    it('should trigger the proper methods and return a valid response', () => {
-      return indexController.delete(request)
-        .then(response => {
-          const deleteIndex = kuzzle.services.publicStorage.deleteIndex;
+    it('should trigger the proper methods and return a valid response', async () => {
+      const response = await indexController.delete(request);
 
-          should(deleteIndex).be.calledOnce();
-          should(deleteIndex).be.calledWith(request);
+      should(indexController.publicStorage.deleteIndex).be.calledWith(index);
 
-          should(kuzzle.indexCache.remove).be.calledOnce();
-          should(kuzzle.indexCache.remove).be.calledWith(request.input.resource.index);
-
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
-    });
-  });
-
-  describe('#refresh', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return indexController.refresh(request)
-        .then(response => {
-          const engine = kuzzle.services.publicStorage;
-          should(engine.refreshIndex).be.calledOnce();
-          should(engine.refreshIndex).be.calledWith(request);
-
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
-    });
-  });
-
-  describe('#refreshInternal', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return indexController.refreshInternal(request)
-        .then(response => {
-          should(kuzzle.internalIndex.refresh).be.calledOnce();
-          should(response).be.instanceof(Object);
-          should(response).match({ acknowledged: true });
-        });
-    });
-  });
-
-  describe('#getAutoRefresh', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      return indexController.getAutoRefresh(request)
-        .then(response => {
-          const engine = kuzzle.services.publicStorage;
-
-          should(engine.getAutoRefresh).be.calledOnce();
-          should(engine.getAutoRefresh).be.calledWith(request);
-
-          should(response).be.instanceof(Object);
-          should(response).match(false);
-        });
-    });
-  });
-
-  describe('#setAutoRefresh', () => {
-    it('should trigger the proper methods and resolve to a valid response', () => {
-      request.input.body = {autoRefresh: true};
-
-      return indexController.setAutoRefresh(request)
-        .then(response => {
-          const engine = kuzzle.services.publicStorage;
-
-          should(engine.setAutoRefresh).be.calledOnce();
-          should(engine.setAutoRefresh).be.calledWith(request);
-
-          should(response).be.instanceof(Object);
-          should(response).match({response: true});
-        });
-    });
-
-    it('should return a rejected promise if the request does not contain a body', () => {
-      return should(() => {
-        indexController.setAutoRefresh(request);
-      }).throw(BadRequestError);
-    });
-
-    it('should return a rejected promise if the request does not contain the autoRefresh field', () => {
-      request.input.body = {foo};
-
-      return should(() => {
-        indexController.setAutoRefresh(request);
-      }).throw(BadRequestError);
-    });
-
-    it('should reject the promise if the autoRefresh value is not a boolean', () => {
-      request.input.body = {autoRefresh: -42};
-
-      return should(() => {
-        indexController.setAutoRefresh(request);
-      }).throw(BadRequestError);
+      should(response).match({
+        acknowledged: true
+      });
     });
   });
 
   describe('#list', () => {
-    it('should fulfill with a response object', () => {
-      return indexController.list(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).be.match({indexes: [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i' ]});
-        });
-    });
+    it('should trigger the proper methods and return a valid response', async () => {
+      indexController.publicStorage.listIndexes.resolves(['a', 'b', 'c']);
 
-    it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.listIndexes.rejects(new Error('foobar'));
-      return should(indexController.list(request)).be.rejected();
+      const response = await indexController.list(request);
+
+      should(indexController.publicStorage.listIndexes).be.called();
+
+      should(response).match({
+        indexes: ['a', 'b', 'c']
+      });
     });
   });
 
   describe('#exists', () => {
-    it('should call the storagEngine', () => {
-      kuzzle.services.publicStorage.indexExists.resolves(foo);
-      return indexController.exists(request)
-        .then(response => {
-          should(response).match(foo);
-          should(kuzzle.services.publicStorage.indexExists).be.calledOnce();
-        });
+    it('should trigger the proper methods and return a valid response', async () => {
+      indexController.publicStorage.indexExists.resolves(true);
+
+      const response = await indexController.exists(request);
+
+      should(indexController.publicStorage.indexExists).be.calledWith(index);
+
+      should(response).be.eql(true);
     });
   });
 });

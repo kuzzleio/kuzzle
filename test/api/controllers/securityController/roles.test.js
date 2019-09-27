@@ -15,7 +15,7 @@ const
   } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
-xdescribe('Test: security controller - roles', () => {
+describe('Test: security controller - roles', () => {
   let
     kuzzle,
     request,
@@ -41,6 +41,8 @@ xdescribe('Test: security controller - roles', () => {
 
     it('should update the role mapping', () => {
       request.input.body = foo;
+      kuzzle.internalIndex.updateMapping.resolves(foo);
+
       return securityController.updateRoleMapping(request)
         .then(response => {
           should(kuzzle.internalIndex.updateMapping).be.calledOnce();
@@ -55,14 +57,16 @@ xdescribe('Test: security controller - roles', () => {
 
   describe('#getRoleMapping', () => {
     it('should fulfill with a response object', () => {
+      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+
       return securityController.getRoleMapping(request)
         .then(response => {
           should(kuzzle.internalIndex.getMapping)
             .be.calledOnce()
-            .be.calledWith(kuzzle.internalIndex.index, 'roles');
+            .be.calledWith('roles');
 
           should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });
@@ -143,18 +147,16 @@ xdescribe('Test: security controller - roles', () => {
       return should(securityController.mGetRoles(new Request({body: {ids: ['test']}}))).be.rejected();
     });
 
-    it('should resolve to an object', done => {
-      kuzzle.repositories.role.loadMultiFromDatabase.resolves([{_id: 'test', _source: null, _meta: {}}]);
-      securityController.mGetRoles(new Request({body: {ids: ['test']}}))
+    it('should resolve to an object', () => {
+      kuzzle.repositories.role.loadMultiFromDatabase.resolves([
+        { _id: 'test', _source: null }
+      ]);
+
+      return securityController.mGetRoles(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits).not.be.empty();
-
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
   });

@@ -71,7 +71,7 @@ describe('funnelController.processRequest', () => {
       request, request, originalError);
 
     return should(res).rejectedWith(
-      PluginImplementationError, { message: /^custom error.*/ });
+      PluginImplementationError, { message: /^custom error*/ });
   });
 
 });

@@ -162,9 +162,7 @@ curl -X POST -H "Content-Type: application/json" -d '{ "driver": "liia", "arrive
         "author": "-1",
         "createdAt": 1561443009768,
         "updatedAt": null,
-        "updater": null,
-        "active": true,
-        "deletedAt": null
+        "updater": null
       }
     }
   }
@@ -240,9 +238,7 @@ curl http://localhost:7512/nyc-open-data/yellow-taxi/document-uniq-id?pretty
         "author": "-1",
         "createdAt": 1561443222474,
         "updatedAt": 1561443279526,
-        "updater": "-1",
-        "active": true,
-        "deletedAt": null
+        "updater": "-1"
       },
       "car": "rickshaw"
     }
@@ -261,7 +257,7 @@ Requests must be made through Kuzzle using the [document:search](/core/2/api/con
 ::: warning
 When a document is created or modified, its latest version is not immediately available in the results of a search.  
 First, you have to wait until Elasticsearch has finished updating its index.  
-It is possible to makes Elasticsearch wait for the indexation before sending the answer by setting `refresh=wait_for`. It's also possible to wait indexation after every requests before sending the answer with [index:setAutoRefresh](/core/2/api/controllers/index/set-auto-refresh).
+It is possible to make Elasticsearch wait for the indexation before sending the answer by setting `refresh=wait_for`.
 ::: 
 
 For example, to retrieve documents between the ages of 25 and 28:
@@ -309,9 +305,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837342,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       },
@@ -327,9 +321,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837239,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       },
@@ -345,9 +337,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837391,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       },
@@ -363,9 +353,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
             "author": "-1",
             "createdAt": 1561444837290,
             "updatedAt": null,
-            "updater": null,
-            "active": true,
-            "deletedAt": null
+            "updater": null
           }
         }
       }

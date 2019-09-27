@@ -313,12 +313,12 @@ describe('Test: repositories/tokenRepository', () => {
 
   describe('#deleteByUserId', () => {
     // @todo ask seb or benoit for these tests
-    xit('should delete the tokens associated to a user identifier', () => {
+    it('should delete the tokens associated to a user identifier', () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.resolves([
-        'repos/internalIndex/token/foo#foo',
-        'repos/internalIndex/token/foo#bar',
-        'repos/internalIndex/token/foo#baz']);
+        'repos/kuzzle/token/foo#foo',
+        'repos/kuzzle/token/foo#bar',
+        'repos/kuzzle/token/foo#baz']);
 
       tokenRepository.cacheEngine.get.onFirstCall().resolves(
         JSON.stringify({ userId: 'foo', _id: 'foo', expiresAt: 1 }));
@@ -332,13 +332,13 @@ describe('Test: repositories/tokenRepository', () => {
       return tokenRepository.deleteByUserId('foo')
         .then(() => {
           should(tokenRepository.cacheEngine.expire)
-            .calledWith('repos/internalIndex/token/foo', -1);
+            .calledWith('repos/kuzzle/token/foo', -1);
 
           should(tokenRepository.cacheEngine.expire)
-            .calledWith('repos/internalIndex/token/bar', -1);
+            .calledWith('repos/kuzzle/token/bar', -1);
 
           should(tokenRepository.cacheEngine.expire)
-            .calledWith('repos/internalIndex/token/baz', -1);
+            .calledWith('repos/kuzzle/token/baz', -1);
 
           should(kuzzle.tokenManager.expire)
             .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});
@@ -351,12 +351,12 @@ describe('Test: repositories/tokenRepository', () => {
         });
     });
 
-    xit('should not delete tokens if the internal cache return a false positive', () => {
+    it('should not delete tokens if the internal cache return a false positive', () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.returns(Promise.resolve([
-        'repos/internalIndex/token/foo#foo',
-        'repos/internalIndex/token/foo#bar#bar',
-        'repos/internalIndex/token/foo#baz'
+        'repos/kuzzle/token/foo#foo',
+        'repos/kuzzle/token/foo#bar#bar',
+        'repos/kuzzle/token/foo#baz'
       ]));
 
       tokenRepository.cacheEngine.get.onFirstCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1})));
@@ -366,8 +366,8 @@ describe('Test: repositories/tokenRepository', () => {
         .then(() => {
           should(tokenRepository.cacheEngine.get.callCount).be.eql(2);
           should(tokenRepository.cacheEngine.expire.callCount).be.eql(2);
-          should(tokenRepository.cacheEngine.expire).calledWith('repos/internalIndex/token/foo', -1);
-          should(tokenRepository.cacheEngine.expire).calledWith('repos/internalIndex/token/baz', -1);
+          should(tokenRepository.cacheEngine.expire).calledWith('repos/kuzzle/token/foo', -1);
+          should(tokenRepository.cacheEngine.expire).calledWith('repos/kuzzle/token/baz', -1);
 
           should(kuzzle.tokenManager.expire.callCount).be.eql(2);
           should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});

@@ -83,4 +83,3 @@ Then(/^The notification should have volatile/, function (callback) {
   }
 
 });
-

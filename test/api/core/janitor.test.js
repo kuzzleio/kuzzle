@@ -19,7 +19,7 @@ const
  the shutdown is initiated using the CLI, to allow it
  to finish and exit while Kuzzle is shutting down.
  */
-xdescribe('Test: core/janitor', () => {
+describe('Test: core/janitor', () => {
   let
     Janitor,
     janitor,
@@ -137,18 +137,17 @@ xdescribe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.publicStorage;
-      storageEngine.import.onCall(0).resolves(false);
-      storageEngine.import.onCall(1).resolves(true);
-      storageEngine.import.onCall(2).resolves(false);
+      const storageEngine = kuzzle.storageEngine.public;
+      storageEngine.import.onCall(0).resolves({ errors: []});
+      storageEngine.import.onCall(1).resolves({ errors: []});
+      storageEngine.import.onCall(2).resolves({ errors: []});
 
       return janitor.loadFixtures(fixtures)
         .then(() => {
           should(storageEngine.import.callCount).be.eql(3);
-          should(storageEngine.import.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
-          should(storageEngine.import.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
-          should(storageEngine.import.getCall(0).args[0].input.body.bulkData[1]).be.eql({ name: 'alyx' });
-          should(storageEngine.refreshIndex.callCount).be.eql(3);
+          should(storageEngine.import.getCall(0).args[0]).be.eql('nyc-open-data');
+          should(storageEngine.import.getCall(0).args[1]).be.eql('yellow-taxi');
+          should(storageEngine.import.getCall(0).args[2][1]).be.eql({ name: 'alyx' });
         });
     });
 
@@ -169,7 +168,7 @@ xdescribe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.publicStorage;
+      const storageEngine = kuzzle.storageEngine.public;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);
@@ -178,15 +177,11 @@ xdescribe('Test: core/janitor', () => {
         .then(() => {
           should(storageEngine.indexExists.callCount).be.eql(3);
           should(storageEngine.createIndex.callCount).be.eql(2);
-          should(storageEngine.createIndex.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
+          should(storageEngine.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
 
           should(storageEngine.createCollection.callCount).be.eql(3);
-          should(storageEngine.createCollection.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
-          should(storageEngine.createCollection.getCall(0).args[0].input.body.properties).be.eql({ name: { type: 'text' } });
-
-          should(storageEngine.refreshIndex.callCount).be.eql(3);
-
-          should(kuzzle.indexCache.add.callCount).be.eql(3);
+          should(storageEngine.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
+          should(storageEngine.createCollection.getCall(0).args[2].properties).be.eql({ name: { type: 'text' } });
         });
     });
 

@@ -4,33 +4,6 @@ Feature: Kuzzle functional tests
     When I get the public API
     Then I have the definition of kuzzle and plugins controllers
 
-  Scenario: CLI: dump and restore index
-    And I create an index named "tolkien"
-    When I create a collection "tolkien":"noldor" with "5" documents
-    And I create a collection "tolkien":"angband" with "3" documents
-    And I refresh the index "tolkien"
-    And I use the CLI command 'indexDump tolkien ./index-dump'
-    Then A file "index-dump/tolkien--noldor--data.jsonl" exists
-    And A file "index-dump/tolkien--angband--data.jsonl" exists
-    And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
-    And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
-    When I'm able to delete the index named "tolkien"
-    And I create an index named "tolkien"
-    When I create a collection "tolkien":"noldor"
-    And I create a collection "tolkien":"angband"
-    And I use the CLI command 'indexRestore ./index-dump'
-    And I refresh the index "tolkien"
-    Then I count 5 documents in index "tolkien":"noldor"
-    Then I count 3 documents in index "tolkien":"angband"
-    Then I'm able to delete the index named "tolkien"
-
-  Scenario: CLI: encrypt and decrypt secrets
-    When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-    And I use the CLI command 'encryptSecrets config/testsecrets.json --noint --vault-key azerty --outputFile config/testsecrets.enc.json'
-    Then A file "config/testsecrets.enc.json" exists
-    When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
-    Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-
   Scenario: Bulk mWrite
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
     When I use bulk:mWrite action with
@@ -171,7 +144,7 @@ Feature: Kuzzle functional tests
 
   Scenario: Search a document
     When I write the document "documentGrace"
-    And I refresh the index
+    And I refresh the collection
     Then I find a document with "grace" in field "firstName"
     And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
 
@@ -182,13 +155,9 @@ Feature: Kuzzle functional tests
   Scenario: Can't do a bulk import on internal index
     When I can't do a bulk import from index "%kuzzle"
 
-  Scenario: Global Bulk import
-    When I do a global bulk import
-    Then I can retrieve actions from bulk import
-
   Scenario: Truncate collection
     When I write the document
-    Then I refresh the index
+    Then I refresh the collection
     Then I truncate the collection
     Then I'm not able to get the document
 
@@ -274,7 +243,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     When I write the document "documentGrace"
-    And I refresh the index
+    And I refresh the collection
     Then I find a document with "Grace" in field "firstName" with scroll "5m"
     And I am able to scroll previous search
 
@@ -283,7 +252,7 @@ Feature: Kuzzle functional tests
     Then I don't find a document with "Grace" in field "firstName"
     Then I change the mapping
     When I write the document "documentGrace"
-    And I refresh the index
+    And I refresh the collection
     Then I find a document with "Grace" in field "newFirstName"
 
   @realtime
@@ -370,7 +339,7 @@ Feature: Kuzzle functional tests
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I write the document "documentAda"
-    And I refresh the index
+    And I refresh the collection
     Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a document notification with field action equal to "delete"
     And The notification should not have a "_source" member
@@ -412,13 +381,27 @@ Feature: Kuzzle functional tests
     And I list "stored" data collections
     Then I can find a stored collection kuzzle-collection-test
 
+  Scenario: Restricted index and collection creation
+    When I try to create the index "%kuzzle"
+    Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
+    When I try to create the index "&kuzzle"
+    Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
+    When I try to create the index "kuz.zle"
+    Then The result should raise an error with message 'Forbidden character "." in index or collection name'
+    When I try to create the collection "%users"
+    Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
+    When I try to create the collection "&users"
+    Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
+    When I try to create the collection "use.rs"
+    Then The result should raise an error with message 'Forbidden character "." in index or collection name'
+
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should match the json false
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
-    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should match the json false
     When I write the document "documentGrace"
     When I check if index "kuzzle-test-index" exists
     Then The result should match the json true
@@ -449,10 +432,11 @@ Feature: Kuzzle functional tests
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
 
-  Scenario: create additional index
+  Scenario: Indexes are virtual and does not exists without a collection
     When I create an index named "kuzzle-test-index-new"
+    Then I'm not able to find the index named "kuzzle-test-index-new" in index list
+    When I create a collection named "collection" in index "kuzzle-test-index-new"
     Then I'm able to find the index named "kuzzle-test-index-new" in index list
-    Then I'm not able to find the index named "my-undefined-index" in index list
     Then I'm able to delete the index named "kuzzle-test-index-new"
 
   @security
@@ -621,11 +605,11 @@ Feature: Kuzzle functional tests
     And I can't create a user "user2" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profileIds":["#prefix#profile2"]}}
-    Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id", "#prefix#user2-id"]}} and find 2 users
+    Then I search for {"ids":{"values":["#prefix#useradmin-id", "#prefix#user2-id"]}} and find 2 users
     Given A scrolled search on users
     Then I am able to perform a scrollUsers request
     Then I delete the user "user2-id"
-    Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    Then I search for {"ids":{"values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
     When I log in as useradmin:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]},"strategies":["local"]}
     Then I log out
@@ -1845,23 +1829,6 @@ Feature: Kuzzle functional tests
     Then The ms result should match the json ["Agrigento", "Palermo"]
 
 
-  Scenario: autorefresh
-    When I check the autoRefresh status
-    Then The result should match the json false
-    When I write the document "documentGrace"
-    Then I don't find a document with "grace" in field "firstName"
-    Given I refresh the index
-    And I enable the autoRefresh
-    And I truncate the collection
-    When I write the document "documentGrace"
-    Then I find a document with "grace" in field "firstName"
-    When I check the autoRefresh status
-    Then The result should match the json true
-    Given I truncate the collection
-    And I write the document "documentGrace"
-    When I update the document with value "Josepha" in field "firstName"
-    Then I find a document with "josepha" in field "firstName"
-
   @validation
   Scenario: Validation - getSpecification & updateSpecification
     When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
@@ -1871,10 +1838,6 @@ Feature: Kuzzle functional tests
     Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    Then I put a not valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    And There is an error message
-    Then I put a valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    And There is no error message
 
 
   @validation
@@ -1882,10 +1845,6 @@ Feature: Kuzzle functional tests
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
-    Then There is an error message in the response body
-    When I post a valid deprecated specification
-    Then There is no error message
-    When I post an invalid deprecated specification
     Then There is an error message in the response body
 
   @validation

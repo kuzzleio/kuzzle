@@ -75,7 +75,6 @@ describe('Test: hotelClerk.addSubscription', () => {
 
         const channel = Object.keys(hotelClerk.rooms[roomId].channels)[0];
         should(hotelClerk.rooms[roomId].channels[channel].scope).be.exactly('all');
-        should(hotelClerk.rooms[roomId].channels[channel].state).be.exactly('done');
         should(hotelClerk.rooms[roomId].channels[channel].users).be.exactly('none');
 
         return hotelClerk.addSubscription(request);
@@ -171,12 +170,6 @@ describe('Test: hotelClerk.addSubscription', () => {
     }, context);
 
     return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError);
-  });
-
-  it('should reject the subscription if the given state argument is incorrect', () => {
-    request.input.args.state = 'foo';
-
-    return should(hotelClerk.addSubscription(request)).be.rejectedWith(BadRequestError);
   });
 
   it('should reject the subscription if the given scope argument is incorrect', () => {

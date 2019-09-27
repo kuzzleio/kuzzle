@@ -511,7 +511,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
             cb = kuzzle.router.http.route.firstCall.args[1],
             result = new Request({});
 
-          result.setError(errorsManager.getError('network', 'http', 'http_request_error', 'foobar'));
+          result.setError(errorsManager.get('network', 'http', 'http_request_error', 'foobar'));
 
           cb(result);
 
@@ -740,7 +740,10 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
 
         should(protocol._replyWithError)
           .be.calledOnce()
-          .be.calledWithMatch(payload, response, error);
+          .be.calledWithMatch(
+            {id: 'connectionId'},
+            response,
+            {errorName: 'network.http.http_request_error'});
 
         should(response.setHeader).calledWith('Content-Encoding', 'gzip');
         should(zlibstub.deflate).not.called();
@@ -787,11 +790,11 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
         process.env.NODE_ENV = env;
 
         const
-          kerr = errorsManager.getError(
+          kerr = errorsManager.get(
             'network',
             'http',
             'http_request_error',
-            'Error: foobar'),
+            'foobar'),
           matcher = errorMatcher.fromError(kerr),
           expected = (new Request(payload, {connectionId, error: kerr})).serialize();
 

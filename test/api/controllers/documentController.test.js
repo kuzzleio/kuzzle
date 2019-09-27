@@ -2,38 +2,37 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   DocumentController = require('../../../lib/api/controllers/documentController'),
   {
     Request,
     errors: {
-      InternalError: KuzzleInternalError,
-      NotFoundError,
-      PartialError,
       BadRequestError,
       SizeLimitError
     }
   } = require('kuzzle-common-objects'),
   BaseController = require('../../../lib/api/controllers/baseController');
 
-xdescribe('Test: document controller', () => {
-  const foo = {foo: 'bar'};
+describe('DocumentController', () => {
   let
     documentController,
     kuzzle,
     request,
-    engine;
+    index,
+    collection;
 
   beforeEach(() => {
+    index = 'festivals';
+
+    collection = 'huma';
+
     kuzzle = new KuzzleMock();
-    engine = kuzzle.services.publicStorage;
     documentController = new DocumentController(kuzzle);
+
     request = new Request({
       controller: 'document',
-      index: '%test',
-      collection: 'unit-test-documentController'
+      index,
+      collection
     });
   });
 
@@ -44,12 +43,33 @@ xdescribe('Test: document controller', () => {
   });
 
   describe('#search', () => {
-    it('should fulfill with an object', () => {
-      return documentController.search(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).be.match(foo);
-        });
+    it('should call publicStorage search method', async () => {
+      documentController.publicStorage.search.resolves({
+        scrollId: 'scrollId',
+        hits: 'hits',
+        aggregations: 'aggregations',
+        total: 'total',
+        other: 'other'
+      });
+      request.input.body = { query: { bar: 'bar '} };
+      request.input.args.from = 1;
+      request.input.args.size = 3;
+      request.input.args.scroll = '10s';
+
+      const response = await documentController.search(request);
+
+      should(documentController.publicStorage.search).be.calledWith(
+        index,
+        collection,
+        { query: { bar: 'bar '} },
+        { from: 1, size: 3, scroll: '10s' });
+
+      should(response).match({
+        scrollId: 'scrollId',
+        hits: 'hits',
+        aggregations: 'aggregations',
+        total: 'total'
+      });
     });
 
     it('should throw an error if index contains a comma', () => {
@@ -77,598 +97,629 @@ xdescribe('Test: document controller', () => {
 
       should(() => documentController.search(request)).throw(
         SizeLimitError,
-        { message: 'Number of gets to perform exceeds the server configured value ( 1 ).' });
+        { errorName: 'api.base.search_page_size' });
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.search.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.search.rejects(new Error('foobar'));
 
       return should(documentController.search(request)).be.rejectedWith('foobar');
     });
   });
 
   describe('#scroll', () => {
-    it('should fulfill with an object', () => {
+    it('should call publicStorage scroll method', async () => {
+      documentController.publicStorage.scroll.resolves({
+        scrollId: 'scrollId',
+        hits: 'hits',
+        total: 'total',
+        other: 'other'
+      });
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
-      return documentController.scroll(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).be.match(foo);
-        });
+      const response = await documentController.scroll(request);
+
+      should(documentController.publicStorage.scroll).be.calledWith(
+        'SomeScrollIdentifier',
+        { scrollTTL: '1m' });
+
+      should(response).match({
+        scrollId: 'scrollId',
+        hits: 'hits',
+        total: 'total'
+      });
     });
 
     it('should reject an error in case of error', () => {
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
-      kuzzle.services.publicStorage.scroll.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.scroll.rejects(new Error('foobar'));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');
     });
   });
 
   describe('#exists', () => {
-    beforeEach(() => {
-      request.input.resource._id = 'foo';
-    });
-
-    it('should fullfill with a boolean', () => {
+    it('should call publicStorage exists method', async () => {
+      documentController.publicStorage.exists.resolves(true);
       request.input.resource._id = 'foo';
 
-      return documentController.exists(request)
-        .then(response => {
-          should(response).be.a.Boolean();
-          should(response).be.true();
-        });
-    });
+      const response = await documentController.exists(request);
 
-    it('should return false if the document doesn\'t exist', () => {
-      request.input.resource._id = 'ghost';
+      should(documentController.publicStorage.exists).be.calledWith(
+        index,
+        collection,
+        'foo');
 
-      engine.get.rejects(new NotFoundError('foobar'));
-
-      return documentController.exists(request)
-        .then(response => {
-          should(response).be.a.Boolean();
-          should(response).be.false();
-        });
-    });
-
-    it('should reject with an error in case of error', () => {
-      engine.get.rejects(new Error('foobar'));
-
-      return should(documentController.exists(request)).be.rejected();
+      should(response).be.True();
     });
   });
 
   describe('#get', () => {
-    beforeEach(() => {
-      request.input.resource._id = 'an id';
-    });
+    it('should call publicStorage get method', async () => {
+      documentController.publicStorage.get.resolves(({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source',
+        some: 'other'
+      }));
+      request.input.resource._id = 'foo';
 
-    it('should fulfill with an object', () => {
-      return documentController.get(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).be.match({_source: {foo}});
-        });
-    });
+      const response = await documentController.get(request);
 
-    it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.get.rejects(new Error('foobar'));
-      return should(documentController.get(request)).be.rejected();
+      should(documentController.publicStorage.get).be.calledWith(
+        index,
+        collection,
+        'foo');
+
+      should(response).be.eql({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source'
+      });
     });
   });
 
   describe('#mGet', () => {
-    it('should fulfill with an array of documents', () => {
-      request.input.body = {ids: ['anId', 'anotherId']};
-      kuzzle.services.publicStorage.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
+    beforeEach(() => {
+      request.input.body = {
+        ids: ['foo', 'bar']
+      };
 
-
-      return documentController.mGet(request)
-        .then(response => {
-          should(response).be.match({hits: request.input.body.ids, total: request.input.body.ids.length});
-        });
+      documentController.publicStorage.mGet.resolves(({
+        items: [
+          { _id: 'id', _source: 'source', _version: 1, found: true, some: 'some' },
+          { _id: 'id2', _source: 'source', _version: 1, found: true, some: 'some' }
+        ],
+        errors: []
+      }));
     });
 
-    it('should throw an error if ids is not an array', () => {
-      request.input.body = {ids: 'not an array'};
-      request.input.controller = 'document';
-      request.input.action = 'mGet';
+    it('should call publicStorage mGet method', async () => {
+      const response = await documentController.mGet(request);
 
+      should(documentController.publicStorage.mGet).be.calledWith(
+        index,
+        collection,
+        ['foo', 'bar']);
 
-      return should(() => {
-        documentController.mGet(request);
-      }).throw('The request must specify the body attribute "ids" of type "array".');
+      should(response).match({
+        total: 2,
+        hits: [
+          { _id: 'id', _source: 'source', _version: 1, found: true },
+          { _id: 'id2', _source: 'source', _version: 1, found: true }
+        ]
+      });
     });
 
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
-      request.input.body = {ids: ['anId', 'anotherId']};
-      kuzzle.services.publicStorage.mget.returns(Bluebird.resolve({hits: request.input.body.ids}));
-      request.input.action = 'mGet';
 
       should(() => documentController.mGet(request)).throw(
         SizeLimitError,
-        { message: 'Number of gets to perform exceeds the server configured value ( 1 ).' });
+        { errorName: 'api.base.search_page_size' });
+    });
+
+    it('should set a partial error if some documents are missing', async () => {
+      documentController.publicStorage.mGet.resolves(({
+        items: [
+          { _id: 'id', _source: 'source', _version: 1, found: true, some: 'some' }
+        ],
+        errors: [
+          { _id: 'id2', found: true }
+        ]
+      }));
+
+      const response = await documentController.mGet(request);
+
+      should(response).match({
+        total: 2,
+        hits: [
+          { _id: 'id', _source: 'source', _version: 1, found: true },
+          { _id: 'id2', found: true }
+        ]
+      });
+      should(request.error).not.be.undefined();
+      should(request.error.errorName).be.eql('api.document.some_document_missing');
     });
   });
 
   describe('#count', () => {
-    beforeEach(() => {
-      request.input.body = {some: 'body'};
-    });
+    it('should call publicStorage count method', async () => {
+      documentController.publicStorage.count.resolves(42);
+      request.input.body = { query: {} };
 
-    it('should fulfill with an object', () => {
-      return documentController.count(request)
-        .then(response => {
-          should(response).be.Number();
-          should(response).be.eql(42);
-        });
-    });
+      const response = await documentController.count(request);
 
-    it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.count.rejects(new Error('foobar'));
-      return should(documentController.count(request)).be.rejected();
+      should(documentController.publicStorage.count).be.calledWith(
+        index,
+        collection,
+        { query: {} });
+
+      should(response).be.eql({ count: 42 });
     });
   });
-
 
   describe('#create', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.body = {};
+    let content;
 
-      return documentController.create(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
+    beforeEach(() => {
+      content = { foo: 'bar' };
 
-            should(kuzzle.notifier.publish).be.calledOnce();
-            should(kuzzle.notifier.publish).be.calledWith(request);
+      request.input.body = content;
 
-            should(engine.create).be.calledOnce();
-            should(engine.create).be.calledWith(request);
+      kuzzle.validation.validate.resolvesArg(0);
 
-            should(kuzzle.notifier.notifyDocumentCreate).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(request);
+      documentController.publicStorage.create.resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source'
+      });
+    });
 
-            sinon.assert.callOrder(
-              engine.create,
-              kuzzle.notifier.notifyDocumentCreate
-            );
+    it('should call publicStorage create method and notify', async () => {
+      request.input.resource._id = 'foobar';
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
 
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
+      const response = await documentController.create(request);
 
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+      should(documentController.publicStorage.create).be.calledWith(
+        index,
+        collection,
+        content,
+        { id: 'foobar', userId: 'aschen', refresh: 'wait_for' });
+
+      should(kuzzle.validation.validate).be.calledWith(request, false);
+
+      should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(
+        request,
+        {
+          _id: '_id',
+          _version: '_version',
+          _source: '_source'
         });
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source'
+      });
+    });
+
+    it('should have default value for refresh, userId and id', async () => {
+      await documentController.create(request);
+
+      should(documentController.publicStorage.create).be.calledWith(
+        index,
+        collection,
+        content,
+        { id: null, userId: undefined, refresh: 'false' });
     });
   });
 
-  describe('#doMultipleActions', () => {
-    it('mCreate should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mcreate.resolves({
-        result: ['created', 'created'],
-        error: []
-      });
+  describe('#_mChanges', () => {
+    let
+      documents,
+      items;
 
-      request.input.body = {
-        documents: [
-          {_id: 'documentId', body: {some: 'body'}},
-          {_id: 'anotherDocumentId', body: {some: 'body'}}
-        ]
-      };
+    beforeEach(() => {
+      documents = [
+        { _id: '_id1', body: '_source' },
+        { _id: '_id2', body: '_source' },
+        { _id: '_id3', body: '_source' }
+      ];
 
-      return documentController.mCreate(request)
-        .then(result => {
-          should(result).match({hits: ['created', 'created'], total: 2});
-        });
+      request.input.body = { documents };
+
+      items = [
+        { _id: '_id1', _source: '_source', _version: '_version', created: true, result: 'created' },
+        { _id: '_id2', _source: '_source', _version: '_version', created: true, result: 'created' },
+        { _id: '_id3', _source: '_source', _version: '_version', created: true, result: 'created' }
+      ];
+
+      documentController.publicStorage.mCreate.resolves(({
+        items,
+        errors: []
+      }));
     });
 
-    it('mCreate should set a partial error if one of the action fails', () => {
-      kuzzle.services.publicStorage.mcreate.resolves({
-        result: ['created'],
-        error: [new KuzzleInternalError('some error')]
-      });
+    it('should call the right publicStorage method and notify the changes', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
 
-      request.input.body = {
-        documents: [
-          {_id: 'documentId', body: {some: 'body'}},
-          {_id: 'anotherDocumentId', body: {some: 'body'}}
-        ]
-      };
-      return documentController.mCreate(request)
-        .then(result => {
-          should(result).match({hits: ['created'], total: 1});
-          should(request.error).be.instanceOf(PartialError);
-          should(request.status).be.eql(206);
-        });
+      const response = await documentController._mChanges(request, 'mCreate', true);
+
+      should(documentController.publicStorage.mCreate).be.calledWith(
+        index,
+        collection,
+        documents,
+        { userId: 'aschen', refresh: 'wait_for' });
+
+      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+        request,
+        items,
+        true);
+
+      should(response).match({
+        hits: items,
+        errors: []
+      });
     });
 
-    it('mCreate should throw an error if documents field is not an array', () => {
-      request.input.body = {documents: 'not an array'};
-      request.input.controller = 'document';
-      request.input.action = 'mCreate';
+    it('should have default values for userId and refresh params', async () => {
+      await documentController._mChanges(request, 'mCreate', true);
 
-      return should(() => {
-        documentController.mCreate(request);
-      }).throw('The request must specify the body attribute "documents" of type "array".');
+      should(documentController.publicStorage.mCreate).be.calledWith(
+        index,
+        collection,
+        documents,
+        { userId: undefined, refresh: 'false' });
     });
 
-    it('mCreateOrReplace should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mcreateOrReplace.resolves({
-        result: ['created', 'replaced'],
-        error: []
-      });
-
-      request.input.body = {
-        documents: [
-          {_id: 'documentId', body: {some: 'body'}},
-          {_id: 'anotherDocumentId', body: {some: 'body'}}
+    it('should set a partial error if some actions failed', async () => {
+      documentController.publicStorage.mCreate.resolves(({
+        items,
+        errors: [
+          {
+            document: { _id: '_id42', _source: '_source' },
+            status: 206,
+            reason: 'reason'
+          }
         ]
-      };
+      }));
 
-      return documentController.mCreateOrReplace(request)
-        .then(result => {
-          should(result).match({hits: ['created', 'replaced'], total: 2});
-        });
-    });
+      await documentController._mChanges(request, 'mCreate', true);
 
-    it('mUpdate should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mupdate.resolves({
-        result: ['updated', 'updated'],
-        error: []
-      });
-
-      request.input.body = {
-        documents: [
-          {_id: 'documentId', body: {some: 'body'}},
-          {_id: 'anotherDocumentId', body: {some: 'body'}}
-        ]
-      };
-
-      return documentController.mUpdate(request)
-        .then(result => {
-          should(result).match({hits: ['updated', 'updated'], total: 2});
-        });
-    });
-
-    it('mReplace should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mreplace.resolves({
-        result: ['replaced', 'replaced'],
-        error: []
-      });
-
-      request.input.body = {
-        documents: [
-          {_id: 'documentId', body: {some: 'body'}},
-          {_id: 'anotherDocumentId', body: {some: 'body'}}
-        ]
-      };
-
-      return documentController.mReplace(request)
-        .then(result => {
-          should(result).match({hits: ['replaced', 'replaced'], total: 2});
-        });
+      should(request.error.status).be.eql(206);
+      should(request.error.errorName).be.eql('api.document.creation_failed');
+      should(request.error.errors).match([
+        {
+          document: { _id: '_id42', _source: '_source' },
+          status: 206,
+          reason: 'reason'
+        }
+      ]);
     });
   });
 
   describe('#createOrReplace', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.resource._id = 'test-document';
-      request.input.body = {};
+    let content;
 
-      return documentController.createOrReplace(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
+    beforeEach(() => {
+      content = { foo: 'bar' };
 
-            should(kuzzle.notifier.publish).be.calledOnce();
-            should(kuzzle.notifier.publish).be.calledWith(request);
+      request.input.body = content;
 
-            should(engine.createOrReplace).be.calledOnce();
-            should(engine.createOrReplace).be.calledWith(request);
+      kuzzle.validation.validate.resolvesArg(0);
 
-            should(kuzzle.notifier.notifyDocumentReplace).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(request);
+      documentController.publicStorage.createOrReplace.resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source',
+        created: true
+      });
 
-            sinon.assert.callOrder(
-              engine.createOrReplace,
-              kuzzle.notifier.notifyDocumentReplace
-            );
-
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
+      request.input.resource._id = 'foobar';
     });
 
-    it('should trigger a "create" notification if the document did not exist', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.resource._id = 'test-document';
-      request.input.body = {};
+    it('should call publicStorage createOrReplace method and notify', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
 
-      engine.createOrReplace.returns(Bluebird.resolve(Object.assign({}, foo, {created: true})));
+      const response = await documentController.createOrReplace(request);
 
-      return documentController.createOrReplace(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
+      should(documentController.publicStorage.createOrReplace).be.calledWith(
+        index,
+        collection,
+        'foobar',
+        content,
+        { userId: 'aschen', refresh: 'wait_for' });
 
-            should(kuzzle.notifier.publish).be.calledOnce();
-            should(kuzzle.notifier.publish).be.calledWith(request);
+      should(kuzzle.validation.validate).be.calledWith(request, false);
 
-            should(engine.createOrReplace).be.calledOnce();
-
-            should(kuzzle.notifier.notifyDocumentCreate).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(request);
-            should(kuzzle.notifier.notifyDocumentReplace).have.callCount(0);
-
-            should(response).be.instanceof(Object);
-            should(response).match({foo: foo.foo, created: true});
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+      should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(
+        request,
+        {
+          _id: '_id',
+          _version: '_version',
+          _source: '_source',
+          created: true
         });
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source',
+        created: true
+      });
+    });
+
+    it('should notify replace if document was replaced', async () => {
+      documentController.publicStorage.createOrReplace.resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source',
+        created: false
+      });
+
+      await documentController.createOrReplace(request);
+
+      should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(
+        request);
+    });
+
+    it('should have default value for refresh and userId', async () => {
+      await documentController.createOrReplace(request);
+
+      should(documentController.publicStorage.createOrReplace).be.calledWith(
+        index,
+        collection,
+        'foobar',
+        content,
+        { userId: undefined, refresh: 'false' });
     });
   });
 
   describe('#update', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.resource._id = 'document-id';
-      request.input.body = {};
+    let content;
 
-      return documentController.update(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
+    beforeEach(() => {
+      content = { foo: 'bar' };
 
-            should(engine.update).be.calledOnce();
-            should(engine.update).be.calledWith(request);
+      request.input.body = content;
 
-            should(kuzzle.notifier.notifyDocumentUpdate).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentUpdate).be.calledWith(request);
+      kuzzle.validation.validate.resolvesArg(0);
 
-            sinon.assert.callOrder(
-              engine.update,
-              kuzzle.notifier.notifyDocumentUpdate
-            );
+      documentController.publicStorage.update.resolves({
+        _id: '_id',
+        _version: '_version'
+      });
 
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
+      request.input.resource._id = 'foobar';
+    });
 
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
+    it('should call publicStorage update method and notify', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.retryOnConflict = 42;
+
+      const response = await documentController.update(request);
+
+      should(documentController.publicStorage.update).be.calledWith(
+        index,
+        collection,
+        'foobar',
+        content,
+        { userId: 'aschen', refresh: 'wait_for', retryOnConflict: 42 });
+
+      should(kuzzle.validation.validate).be.calledWith(request, false);
+
+      should(kuzzle.notifier.notifyDocumentUpdate).be.calledWith(
+        request);
+      should(response).match({
+        _id: '_id',
+        _version: '_version'
+      });
+    });
+
+    it('should have default value for refresh, userId and retryOnConflict', async () => {
+      await documentController.update(request);
+
+      should(documentController.publicStorage.update).be.calledWith(
+        index,
+        collection,
+        'foobar',
+        content,
+        { userId: undefined, refresh: 'false', retryOnConflict: undefined });
     });
   });
 
   describe('#replace', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.resource._id = 'document-id';
-      request.input.body = {};
+    let content;
 
-      return documentController.replace(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
+    beforeEach(() => {
+      content = { foo: 'bar' };
 
-            should(kuzzle.notifier.publish).be.calledOnce();
-            should(kuzzle.notifier.publish).be.calledWith(request);
+      request.input.body = content;
 
-            should(engine.replace).be.calledOnce();
-            should(engine.replace).be.calledWith(request);
+      kuzzle.validation.validate.resolvesArg(0);
 
-            should(kuzzle.notifier.notifyDocumentReplace).be.calledOnce();
-            should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(request);
+      documentController.publicStorage.replace.resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source'
+      });
 
-            sinon.assert.callOrder(
-              engine.replace,
-              kuzzle.notifier.notifyDocumentReplace
-            );
+      request.input.resource._id = 'foobar';
+    });
 
-            should(response).be.instanceof(Object);
-            should(response).match(foo);
+    it('should call publicStorage replace method and notify', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
 
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+      const response = await documentController.replace(request);
 
-        });
+      should(documentController.publicStorage.replace).be.calledWith(
+        index,
+        collection,
+        'foobar',
+        content,
+        { userId: 'aschen', refresh: 'wait_for' });
+
+      should(kuzzle.validation.validate).be.calledWith(request, false);
+
+      should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(
+        request);
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        _source: '_source'
+      });
+    });
+
+    it('should have default value for refresh and userId', async () => {
+      await documentController.replace(request);
+
+      should(documentController.publicStorage.replace).be.calledWith(
+        index,
+        collection,
+        'foobar',
+        content,
+        { userId: undefined, refresh: 'false' });
     });
   });
 
   describe('#delete', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.resource._id = 'document-id';
+    it('should call publicStorage delete method and notify', async () => {
+      documentController.publicStorage.get.resolves({
+        _id: 'foobar',
+        _source: '_source'
+      });
+      request.input.resource._id = 'foobar';
 
-      return documentController.delete(request)
-        .then(response => {
-          should(kuzzle.notifier.publish).be.calledOnce();
-          should(kuzzle.notifier.publish).be.calledWith(request);
+      const response = await documentController.delete(request);
 
-          should(engine.delete).be.calledOnce();
-          should(engine.delete).be.calledWith(request);
+      should(documentController.publicStorage.delete).be.calledWith(
+        index,
+        collection,
+        'foobar');
 
-          should(kuzzle.notifier.notifyDocumentMDelete).be.calledOnce();
-          should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(request);
+      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+        request,
+        [{ _id: 'foobar', _source: '_source' }]);
 
-          sinon.assert.callOrder(
-            engine.delete,
-            kuzzle.notifier.notifyDocumentMDelete
-          );
-
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(response).match({
+        _id: 'foobar'
+      });
     });
   });
 
   describe('#mDelete', () => {
-    it('should fulfill with an object', () => {
-      kuzzle.services.publicStorage.mdelete.resolves({
-        result: ['documentId', 'anotherDocumentId'],
-        error: []
-      });
+    let
+      ids,
+      documents;
 
-      request.input.body = {ids: ['documentId', 'anotherDocumentId']};
+    beforeEach(() => {
+      ids = ['id1', 'id2', 'id3'];
 
-      return documentController.mDelete(request)
-        .then(result => {
-          should(result).match(['documentId', 'anotherDocumentId']);
-        });
+      request.input.body = { ids };
+
+      documents = [
+        { _id: 'id1', _source: '_source1' },
+        { _id: 'id2', _source: '_source2' },
+        { _id: 'id3', _source: '_source3' }
+      ];
+
+      documentController.publicStorage.mDelete.resolves(({
+        documents,
+        errors: []
+      }));
     });
 
-    it('should set a partial error if one of the action fails', () => {
-      kuzzle.services.publicStorage.mdelete.resolves({
-        result: ['documentId'],
-        error: ['anotherDocumentId']
-      });
+    it('should call publicStorage mDelete method and notify the changes', async () => {
+      request.input.args.refresh = 'wait_for';
 
-      request.input.body = {ids: ['documentId', 'anotherDocumentId']};
+      const response = await documentController.mDelete(request);
 
-      return documentController.mDelete(request)
-        .then(result => {
-          should(result).match(['documentId']);
-          should(request.error).be.instanceOf(PartialError);
-          should(request.status).be.eql(206);
-        });
+      should(documentController.publicStorage.mDelete).be.calledWith(
+        index,
+        collection,
+        ids,
+        { refresh: 'wait_for' });
+
+      should(kuzzle.notifier.notifyDocumentMDelete)
+        .be.calledWith(request, documents);
+
+      should(response).match(['id1', 'id2', 'id3']);
     });
 
-    it('should throw an error if documents field is not an array', () => {
-      request.input.body = {ids: 'not an array'};
-      request.input.controller = 'document';
-      request.input.action = 'mDelete';
+    it('should set a partial error if some actions failed', async () => {
+      documentController.publicStorage.mDelete.resolves(({
+        documents,
+        errors: [
+          { id: 'id1', reason: 'reason' }
+        ]
+      }));
 
-      return should(() => {
-        documentController.mDelete(request);
-      }).throw('The request must specify the body attribute "ids" of type "array".');
+      await documentController.mDelete(request);
+
+      should(request.error.status).be.eql(206);
+      should(request.error.errorName).be.eql('api.document.deletion_failed');
+      should(request.error.errors).match([
+        { id: 'id1', reason: 'reason' }
+      ]);
     });
   });
 
   describe('#deleteByQuery', () => {
-    it('should resolve to a valid response', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.body = {query: {some: 'query'}};
+    beforeEach(() => {
+      documentController.publicStorage.deleteByQuery.resolves(({
+        documents: [
+          { _id: 'id1', _source: '_source1' },
+          { _id: 'id2', _source: '_source2' }
+        ],
+        total: 2,
+        deleted: 2,
+        failures: []
+      }));
+    });
 
-      return documentController.deleteByQuery(request)
-        .then(response => {
-          should(engine.deleteByQuery).be.calledOnce();
-          should(engine.deleteByQuery).be.calledWith(request);
+    it('should call publicStorage deleteByQuery method and notify the changes', async () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.refresh = 'wait_for';
 
-          should(kuzzle.notifier.notifyDocumentMDelete).be.calledOnce();
-          should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(request, 'responseIds');
+      const response = await documentController.deleteByQuery(request);
 
-          sinon.assert.callOrder(
-            engine.deleteByQuery,
-            kuzzle.notifier.notifyDocumentMDelete
-          );
+      should(documentController.publicStorage.deleteByQuery).be.calledWith(
+        index,
+        collection,
+        { foo: 'bar' },
+        { refresh: 'wait_for' });
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+        request,
+        [
+          { _id: 'id1', _source: '_source1' },
+          { _id: 'id2', _source: '_source2' }
+        ]);
+
+      should(response).be.eql({ ids: ['id1', 'id2'] });
     });
   });
 
   describe('#validate', () => {
-    it('should send the right response when the given document satisfy the specifications', () => {
-      var expected = {
-        errorMessages: {},
-        validation: true
-      };
+    it('should call validation.validate method', async () => {
+      request.input.body = { foo: 'bar' };
+      kuzzle.validation.validate.resolves({ ok: 'ok' });
 
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.resource._id = 'document-id';
-      request.input.body = {};
+      const response = await documentController.validate(request);
 
-      kuzzle.validation = {
-        validate: sinon.stub().returns(Bluebird.resolve(expected))
-      };
+      should(kuzzle.validation.validate).be.calledWith(
+        request,
+        true);
 
-      return documentController.validate(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
-            should(response).be.instanceof(Object);
-            should(response).match(expected);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
-    });
-
-    it('should send the right response when the given document do not satisfy the specifications', () => {
-      var expected = {
-        errorMessages: {
-          fieldScope: {
-            children: {
-              myField: {
-                messages: [
-                  'The field must be an integer.'
-                ]
-              }
-            }
-          }
-        },
-        valid: false
-      };
-
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
-      request.input.resource._id = 'document-id';
-      request.input.body = {};
-
-      kuzzle.validation.validate = sinon.stub().returns(Bluebird.resolve(expected));
-
-      return documentController.validate(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
-            should(response).be.instanceof(Object);
-            should(response).match(expected);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
-        });
+      should(response).match({ ok: 'ok' });
     });
   });
 });

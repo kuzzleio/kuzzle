@@ -9,7 +9,7 @@ const
   BaseController = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-xdescribe('Test: server controller', () => {
+describe('ServerController', () => {
   let
     serverController,
     kuzzle,
@@ -75,12 +75,12 @@ xdescribe('Test: server controller', () => {
     it('should call search with right query', () => {
       return serverController.adminExists()
         .then(() => {
-          should(kuzzle.internalIndex.adminExists).be.calledOnce();
+          should(kuzzle.adminExists).be.calledOnce();
         });
     });
 
     it('should return false if there is no result', () => {
-      kuzzle.internalIndex.adminExists.resolves(false);
+      kuzzle.adminExists.resolves(false);
 
       return serverController.adminExists()
         .then(response => {
@@ -89,7 +89,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return true if there is result', () => {
-      kuzzle.internalIndex.adminExists.resolves(true);
+      kuzzle.adminExists.resolves(true);
 
       return serverController.adminExists()
         .then((response) => {
@@ -111,7 +111,7 @@ xdescribe('Test: server controller', () => {
 
   describe('#healthCheck', () => {
     beforeEach(() => {
-      kuzzle.services.publicStorage.info.resolves({status: 'green'});
+      kuzzle.storageEngine.public.info.resolves({status: 'green'});
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
@@ -126,7 +126,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 200 response with status "green" if storageEngine status is "yellow" and Redis is OK', () => {
-      kuzzle.services.publicStorage.info.resolves({status: 'yellow'});
+      kuzzle.storageEngine.public.info.resolves({status: 'yellow'});
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -139,7 +139,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
-      kuzzle.services.publicStorage.info.resolves({status: 'red'});
+      kuzzle.storageEngine.public.info.resolves({status: 'red'});
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -153,7 +153,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine is KO', () => {
-      kuzzle.services.publicStorage.info.rejects(new Error());
+      kuzzle.storageEngine.public.info.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -167,7 +167,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if memoryStorage is KO', () => {
-      kuzzle.services.publicCache.info.rejects(new Error());
+      kuzzle.cacheEngine.public.info.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -181,7 +181,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should return a 503 response with status "red" if internalCache is KO', () => {
-      kuzzle.services.internalCache.info.rejects(new Error());
+      kuzzle.cacheEngine.internal.info.rejects(new Error());
 
       return serverController.healthCheck(request)
         .then(response => {
@@ -264,7 +264,7 @@ xdescribe('Test: server controller', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.services.publicStorage.info.rejects(new Error('foobar'));
+      kuzzle.storageEngine.public.info.rejects(new Error('foobar'));
       return should(serverController.info()).be.rejected();
     });
   });
