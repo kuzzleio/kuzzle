@@ -905,7 +905,7 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should resolves and creates hidden collection if index does not exists', async () => {
+    it('should resolve and create a hidden collection if the index does not exist', async () => {
       await elasticsearch.createIndex('lfiduras');
 
       should(elasticsearch._client.indices.create).be.calledWithMatch({
