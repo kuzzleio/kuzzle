@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing",
     "unit-testing": "nyc --reporter=text-summary --reporter=lcov mocha",
-    "functional-testing": "bash features/run.sh",
+    "functional-testing": "bash features-sdk/run.sh && bash features/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
     "lint": "eslint --max-warnings=0 ./lib ./test ./features",
@@ -52,7 +52,7 @@
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^1.2.2",
     "kuzzle-common-objects": "^4.0.0",
-    "kuzzle-sdk": "^6.2.0",
+    "kuzzle-sdk": "git://github.com/kuzzleio/sdk-javascript.git#7-dev",
     "lodash": "4.17.14",
     "moment": "^2.24.0",
     "mosca": "^2.8.3",

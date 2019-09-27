@@ -70,9 +70,15 @@ API Changes:
 
 **Collection Controller**
 
-  - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
-  - `collection:validateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+`collection:updateSpecifications`:
+  - remove deprecated route usage on multiple collections (deprecated since 1.8.0)
 
+`collection:validateSpecifications`: 
+  - remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+
+`collection:getMapping`:
+  - returns directly the collection mappings
+ 
 **Document Controller**
 
 `document:mCreate`, `document:mCreateOrReplace`, `document:mReplace`, `document:mUpdate`: 
