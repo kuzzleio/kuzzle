@@ -66,7 +66,7 @@ describe('core/httpRouter', () => {
     it('should raise an internal error when trying to add a duplicate', () => {
       router.post('/foo/bar', handler);
       should(function () { router.post('/foo/bar', handler); })
-        .throw(InternalError, { errorName: 'network.http.duplicate_url' });
+        .throw(InternalError, { id: 'network.http.duplicate_url' });
     });
   });
 
@@ -336,7 +336,7 @@ describe('core/httpRouter', () => {
               content: {
                 error: {
                   status: 400,
-                  errorName: 'network.http.unsupported_verb'
+                  id: 'network.http.unsupported_verb'
                 },
                 requestId: 'requestId',
                 result: null
@@ -370,7 +370,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                errorName: 'network.http.body_parse_failed'
+                id: 'network.http.body_parse_failed'
               },
               requestId: 'requestId',
               result: null
@@ -405,7 +405,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                errorName: 'network.http.volatile_parse_failed'
+                id: 'network.http.volatile_parse_failed'
               },
               requestId: 'requestId',
               result: null
@@ -440,7 +440,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                errorName: 'network.http.unsupported_content'
+                id: 'network.http.unsupported_content'
               },
               requestId: 'requestId',
               result: null
@@ -475,7 +475,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                errorName: 'network.http.unsupported_charset'
+                id: 'network.http.unsupported_charset'
               },
               requestId: 'requestId',
               result: null
@@ -510,7 +510,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 404,
-                errorName: 'network.http.url_not_found'
+                id: 'network.http.url_not_found'
               },
               requestId: 'requestId',
               result: null

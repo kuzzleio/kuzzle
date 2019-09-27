@@ -37,7 +37,7 @@ describe('Test: validation/types/object', () => {
   describe('#validateFieldSpecification', () => {
     it('should throw if the strict option is not a boolean', () => {
       should(() => objectType.validateFieldSpecification({strict: 'not a boolean'}))
-        .throw(PreconditionError, { errorName: 'validation.assert.invalid_type' });
+        .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
     });
 
     it('should return the typeOptions object if it is valid', () => {

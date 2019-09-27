@@ -42,7 +42,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject if no profileid is given', () => {
       return should(profileRepository.load())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "profileId".'
         });
     });
@@ -50,7 +50,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject if the profile id is not a string', () => {
       return should(profileRepository.load({}))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type',
+          id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "profileId" (expected: string)'
         });
     });
@@ -70,7 +70,7 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.indexStorage.get.rejects(new NotFoundError('Not found'));
 
       return should(profileRepository.load('idontexist'))
-        .rejectedWith(NotFoundError, { errorName: 'security.profile.not_found' });
+        .rejectedWith(NotFoundError, { id: 'security.profile.not_found' });
     });
 
     it('should load a profile from the db', () => {
@@ -103,7 +103,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject if no profileIds are given', () => {
       return should(profileRepository.loadProfiles())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "profileIds".'
         });
     });
@@ -111,7 +111,7 @@ describe('Test: repositories/profileRepository', () => {
     it('should reject if profileIds is not an array of strings', () => {
       return should(profileRepository.loadProfiles(['a string', {foo: 'bar'}]))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type',
+          id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "profileIds" (expected: string[])'
         });
     });
@@ -204,7 +204,7 @@ describe('Test: repositories/profileRepository', () => {
           {roleId: 'notExistingRole'}
         ]
       }))
-        .be.rejectedWith(InternalError, { errorName: 'security.profile.cannot_hydrate' });
+        .be.rejectedWith(InternalError, { id: 'security.profile.cannot_hydrate' });
     });
 
     it('should set role default when none is given', () => {
@@ -252,7 +252,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(PreconditionError, {
-            errorName: 'security.profile.in_use'
+            id: 'security.profile.in_use'
           });
           should(kuzzle.emit).not.be.called();
           done();
@@ -410,7 +410,7 @@ describe('Test: repositories/profileRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError).and.match({
-            errorName: 'api.assert.missing_argument',
+            id: 'api.assert.missing_argument',
             message: 'Missing argument "profileId".'
           });
           should(kuzzle.emit).not.be.called();
@@ -430,7 +430,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return should(profileRepository.validateAndSaveProfile(invalidProfile))
         .be.rejectedWith(InternalError, {
-          errorName: 'security.profile.cannot_hydrate'
+          id: 'security.profile.cannot_hydrate'
         });
     });
 
@@ -460,7 +460,7 @@ describe('Test: repositories/profileRepository', () => {
 
       return should(profileRepository.validateAndSaveProfile(profile))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'security.profile.missing_anonymous_role'
+          id: 'security.profile.missing_anonymous_role'
         });
     });
 

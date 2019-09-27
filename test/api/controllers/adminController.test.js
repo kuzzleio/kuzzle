@@ -56,7 +56,7 @@ describe('AdminController', () => {
 
       should(() => adminController.resetCache(request)).throw(
         NotFoundError,
-        { errorName: 'services.cache.database_not_found' });
+        { id: 'services.cache.database_not_found' });
     });
   });
 

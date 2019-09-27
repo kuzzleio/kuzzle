@@ -36,7 +36,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
         securityController.updateProfileMapping(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should update the profile mapping', () => {
@@ -125,32 +125,32 @@ describe('Test: security controller - profiles', () => {
     it('should throw if an invalid profile format is provided', () => {
       request = new Request({});
       should(() => securityController.createOrReplaceProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+        .throw(BadRequestError, { id: 'api.assert.body_required' });
 
       request = new Request({body: {}});
       should(() => securityController.createOrReplaceProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "body.policies".'
         });
 
       request = new Request({body: {policies: 'foobar'}});
       should(() => securityController.createOrReplaceProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.invalid_type',
+          id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "body.policies" (expected: array)'
         });
 
       request = new Request({body: {policies: []}});
       should(() => securityController.createOrReplaceProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
         });
 
       request = new Request({_id: '_foobar', body: {policies: []}});
       should(() => securityController.createOrReplaceProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_id' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_id' });
     });
   });
 
@@ -180,7 +180,7 @@ describe('Test: security controller - profiles', () => {
           _id: 'badTest',
           body: { roleId: 'test', policies: 'not-an-array-roleIds' }
         }));
-      }).throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+      }).throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should forward refresh option', () => {
@@ -209,32 +209,32 @@ describe('Test: security controller - profiles', () => {
     it('should throw if an invalid profile format is provided', () => {
       request = new Request({});
       should(() => securityController.createProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+        .throw(BadRequestError, { id: 'api.assert.body_required' });
 
       request = new Request({body: {}});
       should(() => securityController.createProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "body.policies".'
         });
 
       request = new Request({body: {policies: 'foobar'}});
       should(() => securityController.createProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.invalid_type',
+          id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "body.policies" (expected: array)'
         });
 
       request = new Request({body: {policies: []}});
       should(() => securityController.createProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
         });
 
       request = new Request({_id: '_foobar', body: {policies: []}});
       should(() => securityController.createProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_id' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_id' });
     });
   });
 
@@ -255,7 +255,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error on a getProfile call without id', () => {
       return should(() => {
         securityController.getProfile(new Request({_id: ''}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
@@ -269,7 +269,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error on a mGetProfiles call without ids', () => {
       return should(() => {
         securityController.mGetProfiles(new Request({body: {}}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject with an object in case of error', () => {
@@ -361,7 +361,7 @@ describe('Test: security controller - profiles', () => {
       request.input.args.size = 10;
 
       return should(() => securityController.searchProfiles(request))
-        .throw(SizeLimitError, { errorName: 'services.storage.get_limit_exceeded' });
+        .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -376,7 +376,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw if no scrollId is provided', () => {
       should(() => securityController.scrollProfiles(new Request({controller: 'security', action: 'scrollProfiles'})))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "scrollId".'
         });
     });
@@ -445,7 +445,7 @@ describe('Test: security controller - profiles', () => {
       return should(() => {
         securityController.updateProfile(new Request({body: {}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });
     });
@@ -453,7 +453,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error if no body is given', () => {
       return should(() => {
         securityController.updateProfile(new Request({_id: 'foobar'}));
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should forward refresh option', () => {
@@ -485,7 +485,7 @@ describe('Test: security controller - profiles', () => {
       body: {},
       action: 'updateProfile'
     })))
-      .be.rejectedWith(NotFoundError, { errorName: 'security.profile.not_found' });
+      .be.rejectedWith(NotFoundError, { id: 'security.profile.not_found' });
   });
 
   describe('#deleteProfile', () => {
@@ -553,7 +553,7 @@ describe('Test: security controller - profiles', () => {
       return should(() => {
         securityController.getProfileRights(new Request({_id: ''}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });
     });
@@ -562,7 +562,7 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.load.resolves(null);
 
       return should(securityController.getProfileRights(new Request({_id: 'test'})))
-        .rejectedWith(NotFoundError, { errorName: 'security.profile.not_found' });
+        .rejectedWith(NotFoundError, { id: 'security.profile.not_found' });
     });
   });
 

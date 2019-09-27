@@ -217,7 +217,7 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.errorName).eql('validation.types.already_exists');
+        should(error.id).eql('validation.types.already_exists');
       }
     });
 
@@ -234,7 +234,7 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.errorName).be.eql('validation.types.missing_type_name');
+        should(error.id).be.eql('validation.types.missing_type_name');
       }
     });
 
@@ -251,7 +251,7 @@ describe('Test: validation initialization', () => {
       }
       catch (error) {
         should(error.message).startWith('The type "aType" must implement a function "validate".');
-        should(error.errorName).be.eql('validation.types.missing_function');
+        should(error.id).be.eql('validation.types.missing_function');
       }
     });
 
@@ -268,7 +268,7 @@ describe('Test: validation initialization', () => {
       }
       catch (error) {
         should(error.message).startWith('The type "aType" must implement a function "validateFieldSpecification".');
-        should(error.errorName).be.eql('validation.types.missing_function');
+        should(error.id).be.eql('validation.types.missing_function');
       }
     });
 
@@ -286,7 +286,7 @@ describe('Test: validation initialization', () => {
       }
       catch (error) {
         should(error.message).startWith('The type "aType" must implement a function "getStrictness".');
-        should(error.errorName).be.eql('validation.types.missing_function');
+        should(error.id).be.eql('validation.types.missing_function');
       }
     });
   });
@@ -328,7 +328,7 @@ describe('Test: validation initialization', () => {
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(PreconditionError, {
-          errorName: 'validation.assert.unexpected_properties'
+          id: 'validation.assert.unexpected_properties'
         });
     });
 
@@ -444,7 +444,7 @@ describe('Test: validation initialization', () => {
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'validation.assert.invalid_specifications'
+          id: 'validation.assert.invalid_specifications'
         });
     });
 
@@ -520,7 +520,7 @@ describe('Test: validation initialization', () => {
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'validation.assert.invalid_filters'
+          id: 'validation.assert.invalid_filters'
         });
     });
   });
@@ -769,7 +769,7 @@ describe('Test: validation initialization', () => {
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
       }).throw(PluginImplementationError, {
-        errorName: 'plugin.runtime.unexpected_error'
+        id: 'plugin.runtime.unexpected_error'
       });
     });
 
@@ -802,7 +802,7 @@ describe('Test: validation initialization', () => {
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
       }).throw(PreconditionError, {
-        errorName: 'validation.assert.unexpected_properties'
+        id: 'validation.assert.unexpected_properties'
       });
     });
 

@@ -44,7 +44,7 @@ describe('Plugins manifest class', () => {
       manifest.name = name;
       should(() => manifest.load())
         .throw(PluginImplementationError, {
-          errorName: 'plugin.manifest.invalid_name'
+          id: 'plugin.manifest.invalid_name'
         });
     }
   });
@@ -55,7 +55,7 @@ describe('Plugins manifest class', () => {
 
     manifest.raw = {privileged: 123};
     should(() => manifest.load()).throw(PluginImplementationError, {
-      errorName: 'plugin.manifest.invalid_privileged'
+      id: 'plugin.manifest.invalid_privileged'
     });
   });
 

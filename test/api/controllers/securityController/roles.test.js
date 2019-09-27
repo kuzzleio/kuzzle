@@ -36,7 +36,7 @@ describe('Test: security controller - roles', () => {
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
         securityController.updateRoleMapping(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should update the role mapping', () => {
@@ -138,7 +138,7 @@ describe('Test: security controller - roles', () => {
     it('should throw an error if no ids is provided', () => {
       return should(() => {
         securityController.mGetRoles(new Request({body: {}}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject an error if loading roles fails', () => {
@@ -187,7 +187,7 @@ describe('Test: security controller - roles', () => {
       request.input.args.size = 10;
 
       return should(() => securityController.searchRoles(request))
-        .throw(SizeLimitError, { errorName: 'services.storage.get_limit_exceeded' });
+        .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -219,7 +219,7 @@ describe('Test: security controller - roles', () => {
     it('should throw an error if no id is given', () => {
       return should(() => {
         securityController.updateRole(new Request({body: {}}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject the promise if the role cannot be found in the database', () => {

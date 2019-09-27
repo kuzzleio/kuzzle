@@ -51,7 +51,7 @@ describe('funnelController.processRequest', () => {
     const request = new Request({action: 'create'});
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, {errorName: 'api.process.controller_not_found'});
+      .throw(NotFoundError, {id: 'api.process.controller_not_found'});
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -63,7 +63,7 @@ describe('funnelController.processRequest', () => {
     const request = new Request({controller: 'fakeController'});
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
+      .throw(NotFoundError, { id: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -78,7 +78,7 @@ describe('funnelController.processRequest', () => {
     });
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
+      .throw(NotFoundError, { id: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -94,7 +94,7 @@ describe('funnelController.processRequest', () => {
       request = new Request({controller, action: 'create'});
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
+      .throw(NotFoundError, { id: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -116,7 +116,7 @@ describe('funnelController.processRequest', () => {
       .catch(e => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
-          should(e.errorName).eql('plugin.controller.invalid_action_response');
+          should(e.id).eql('plugin.controller.invalid_action_response');
           should(kuzzle.pipe)
             .not.calledWith('request:onSuccess', request);
           should(kuzzle.pipe)
@@ -145,7 +145,7 @@ describe('funnelController.processRequest', () => {
       .then(() => { throw new Error('Expected test to fail'); })
       .catch(e => {
         should(e).be.an.instanceOf(PluginImplementationError);
-        should(e.errorName).eql('plugin.controller.unserializable_response');
+        should(e.id).eql('plugin.controller.unserializable_response');
       });
   });
 
@@ -220,7 +220,7 @@ describe('funnelController.processRequest', () => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
           should(e.message).startWith('Caught an unexpected plugin error: foobar');
-          should(e.errorName).eql('plugin.runtime.unexpected_error');
+          should(e.id).eql('plugin.runtime.unexpected_error');
           should(kuzzle.pipe)
             .calledWith(`${controller}:beforeFail`);
           should(kuzzle.pipe)

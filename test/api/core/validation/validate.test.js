@@ -577,7 +577,7 @@ describe('Test: validation.validate', () => {
       typeValidateStub.returns(false);
 
       should(() => validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false))
-        .throw(BadRequestError, { errorName: 'validation.check.failed_field' });
+        .throw(BadRequestError, { id: 'validation.check.failed_field' });
     });
 
     it('should returns false in verbose mode', () => {
@@ -804,7 +804,7 @@ describe('Test: validation.validate', () => {
 
       should(() => {
         validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false);
-      }).throw(BadRequestError, { errorName: 'validation.check.failed_field' });
+      }).throw(BadRequestError, { id: 'validation.check.failed_field' });
     });
 
     it('should return false if one of the subfields throws an error in verbose mode', () => {

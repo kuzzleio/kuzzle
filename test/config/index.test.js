@@ -70,10 +70,10 @@ describe('lib/config/index.js', () => {
 
     it('should throw if an invalid limits configuration is submitted', () => {
       should(() => checkLimits({limits: true}))
-        .throw(KuzzleInternalError, { errorName: 'core.configuration.invalid_type' });
+        .throw(KuzzleInternalError, { id: 'core.configuration.invalid_type' });
 
       should(() => checkLimits({limits: ['foo', 'bar']}))
-        .throw(KuzzleInternalError, { errorName: 'core.configuration.invalid_type' });
+        .throw(KuzzleInternalError, { id: 'core.configuration.invalid_type' });
     });
 
     it('should throw on negative limit values', () => {
@@ -85,7 +85,7 @@ describe('lib/config/index.js', () => {
         });
 
         should(() => checkLimits(config))
-          .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
+          .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
       }
     });
 
@@ -109,7 +109,7 @@ describe('lib/config/index.js', () => {
         }
         else {
           should(() => checkLimits(config))
-            .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
+            .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
         }
       }
     });
@@ -123,11 +123,11 @@ describe('lib/config/index.js', () => {
       });
 
       should(() => checkLimits(config))
-        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
+        .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
 
       config.limits.concurrentRequests = config.limits.requestsBufferSize;
       should(() => checkLimits(config))
-        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
+        .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
     });
 
     it('should throw on an invalid buffer limit threshold warning configuration', () => {
@@ -140,11 +140,11 @@ describe('lib/config/index.js', () => {
       });
 
       should(() => checkLimits(config))
-        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
+        .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
 
       config.limits.requestsBufferWarningThreshold = 101;
       should(() => checkLimits(config))
-        .throw(KuzzleInternalError, { errorName: 'core.configuration.out_of_range' });
+        .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
     });
   });
 });

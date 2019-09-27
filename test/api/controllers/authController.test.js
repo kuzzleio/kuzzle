@@ -126,7 +126,7 @@ describe('Test the auth controller', () => {
 
       return should(() => {authController.login(request);})
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "strategy".'
         });
     });
@@ -212,7 +212,7 @@ describe('Test the auth controller', () => {
 
       should(() => authController.logout(request)).throw(
         UnauthorizedError,
-        {errorName: 'security.rights.unauthorized'});
+        {id: 'security.rights.unauthorized'});
     });
   });
 
@@ -248,7 +248,7 @@ describe('Test the auth controller', () => {
       return should(() => {
         authController.checkToken(new Request({body: {}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "body.token".'
       });
     });
@@ -295,7 +295,7 @@ describe('Test the auth controller', () => {
       )))
         .throw(
           UnauthorizedError,
-          {errorName: 'security.rights.unauthorized'});
+          {id: 'security.rights.unauthorized'});
     });
 
     it('should throw if the token has already been refreshed', () => {
@@ -306,7 +306,7 @@ describe('Test the auth controller', () => {
           user: {_id: 'bar'}
         }
       )))
-        .throw(UnauthorizedError, {errorName: 'security.token.invalid' });
+        .throw(UnauthorizedError, {id: 'security.token.invalid' });
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {
@@ -386,7 +386,7 @@ describe('Test the auth controller', () => {
           {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.forbidden_argument',
+        id: 'api.assert.forbidden_argument',
         message: 'The argument "body.profileIds" is not allowed by this API action.'});
     });
 
@@ -397,7 +397,7 @@ describe('Test the auth controller', () => {
           {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.forbidden_argument',
+        id: 'api.assert.forbidden_argument',
         message: 'The argument "body._id" is not allowed by this API action.'
       });
     });
@@ -409,7 +409,7 @@ describe('Test the auth controller', () => {
 
       should(() => authController.updateSelf(r)).throw(
         UnauthorizedError,
-        {errorName: 'security.rights.unauthorized'});
+        {id: 'security.rights.unauthorized'});
     });
   });
 

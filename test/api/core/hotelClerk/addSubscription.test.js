@@ -170,7 +170,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     }, context);
 
     return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError, {
-      errorName: 'core.realtime.room_not_found'
+      id: 'core.realtime.room_not_found'
     });
   });
 
@@ -205,7 +205,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       .catch(error => {
         should(error)
           .be.an.instanceof(SizeLimitError);
-        should(error.errorName).eql('core.realtime.too_many_terms');
+        should(error.id).eql('core.realtime.too_many_terms');
       });
   });
 
@@ -213,7 +213,7 @@ describe('Test: hotelClerk.addSubscription', () => {
     hotelClerk.roomsCount = kuzzle.config.limits.subscriptionRooms;
 
     return should(hotelClerk.addSubscription(request))
-      .be.rejectedWith(SizeLimitError, { errorName: 'core.realtime.too_many_rooms' });
+      .be.rejectedWith(SizeLimitError, { id: 'core.realtime.too_many_rooms' });
   });
 
   it('should impose no limit to the number of rooms if the limit is set to 0', () => {

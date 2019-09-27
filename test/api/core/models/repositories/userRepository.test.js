@@ -99,7 +99,7 @@ describe('Test: repositories/userRepository', () => {
 
       return should(userRepository.fromDTO(userInvalidProfile))
         .be.rejectedWith(KuzzleInternalError, {
-          errorName: 'security.user.cannot_hydrate'
+          id: 'security.user.cannot_hydrate'
         });
     });
 
@@ -186,7 +186,7 @@ describe('Test: repositories/userRepository', () => {
           return userRepository.persist(user);
         }))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'security.user.anonymous_profile_required'
+          id: 'security.user.anonymous_profile_required'
         });
     });
   });

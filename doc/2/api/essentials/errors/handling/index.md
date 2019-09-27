@@ -17,17 +17,17 @@ A `KuzzleError` object has the following properties:
 | `status`     | <pre>number</pre>            | HTTP status code                                       |
 | `message`    | <pre>string</pre>               | Short description of the error                         |
 | `stack`      | <pre>string</pre>               | (Available in development mode only) Error stack trace |
-| `errorName`  | <pre>string</pre>  | Error full name |
+| `id`  | <pre>string</pre>  | Error unique identifier |
 | `code`       | <pre>number</pre> | Error unique code |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
 
 
-### errorName
+### id
 
-The `errorName` property is a concatenation of 3 levels of precisions, indicating the origin of the error: the domain, the subdomain, and the error name.
+The `id` property is a concatenation of 3 levels of precisions, telling what kind of error it is.
 
-For instance, the error `api.auth.database_not_found` was raised in the API, by the Auth controller.
+For instance, the error `api.assert.missing_argument` is triggered because an API assertion, indicating that a received request is malformed.
 
 You can see the full definition about Kuzzle errors [here](/core/2/api/essentials/errors/codes/)
 

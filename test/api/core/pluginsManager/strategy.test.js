@@ -117,7 +117,7 @@ describe('PluginsManager: strategy management', () => {
       [[], 'foobar', 123, true].forEach(authenticators => {
         plugin.object.authenticators = authenticators;
         should(() => pluginsManager._initAuthenticators(plugin))
-          .throw(PluginImplementationError, { errorName: 'plugin.authenticators.not_an_object'});
+          .throw(PluginImplementationError, { id: 'plugin.authenticators.not_an_object'});
       });
     });
 
@@ -125,7 +125,7 @@ describe('PluginsManager: strategy management', () => {
       [() => {}, 'foobar', true, 123].forEach(ctor => {
         plugin.object.authenticators.foo = ctor;
         should(() => pluginsManager._initAuthenticators(plugin))
-          .throw(PluginImplementationError, { errorName: 'plugin.authenticators.invalid_authenticator' });
+          .throw(PluginImplementationError, { id: 'plugin.authenticators.invalid_authenticator' });
       });
     });
   });
@@ -218,7 +218,7 @@ describe('PluginsManager: strategy management', () => {
         plugin.object.strategies.someStrategy = strategy;
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.invalid_description'
+            id: 'plugin.strategy.invalid_description'
           });
       });
     });
@@ -227,7 +227,7 @@ describe('PluginsManager: strategy management', () => {
       [[], null, undefined, 'foobar', 123, true].forEach(methods => {
         plugin.object.strategies.someStrategy.methods = methods;
         should(() => pluginsManager._initStrategies(plugin))
-          .throw(PluginImplementationError, { errorName: 'plugin.strategy.invalid_methods' });
+          .throw(PluginImplementationError, { id: 'plugin.strategy.invalid_methods' });
       });
     });
 
@@ -245,7 +245,7 @@ describe('PluginsManager: strategy management', () => {
         plugin.object.strategies.someStrategy.methods.exists = fn;
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.invalid_method_type'
+            id: 'plugin.strategy.invalid_method_type'
           });
       });
     });
@@ -259,7 +259,7 @@ describe('PluginsManager: strategy management', () => {
 
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.missing_method_function'
+            id: 'plugin.strategy.missing_method_function'
           });
 
         plugin.object[fnName] = sinon.stub();
@@ -274,7 +274,7 @@ describe('PluginsManager: strategy management', () => {
           clone.object.strategies.someStrategy.methods[methodName] = name;
           should(() => pluginsManager._initStrategies(clone))
             .throw(PluginImplementationError, {
-              errorName: 'plugin.strategy.invalid_method_type'
+              id: 'plugin.strategy.invalid_method_type'
             });
         });
       });
@@ -288,7 +288,7 @@ describe('PluginsManager: strategy management', () => {
 
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.missing_method_function'
+            id: 'plugin.strategy.missing_method_function'
           });
 
         plugin.object[fnName] = sinon.stub();
@@ -301,7 +301,7 @@ describe('PluginsManager: strategy management', () => {
 
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.invalid_authenticator'
+            id: 'plugin.strategy.invalid_authenticator'
           });
       });
     });
@@ -310,7 +310,7 @@ describe('PluginsManager: strategy management', () => {
       plugin.object.strategies.someStrategy.config.authenticator = 'foobar';
       should(() => pluginsManager._initStrategies(plugin))
         .throw(PluginImplementationError, {
-          errorName: 'plugin.strategy.unknown_authenticator'
+          id: 'plugin.strategy.unknown_authenticator'
         });
     });
 
@@ -318,7 +318,7 @@ describe('PluginsManager: strategy management', () => {
       plugin.object.strategies.someStrategy.config.constructor = function () {};
       should(() => pluginsManager._initStrategies(plugin))
         .throw(PluginImplementationError, {
-          errorName: 'plugin.strategy.unexpected_constructor'
+          id: 'plugin.strategy.unexpected_constructor'
         });
     });
 
@@ -327,7 +327,7 @@ describe('PluginsManager: strategy management', () => {
       delete plugin.object.strategies.someStrategy.config.authenticator;
       should(() => pluginsManager._initStrategies(plugin))
         .throw(PluginImplementationError, {
-          errorName: 'plugin.strategy.invalid_constructor'
+          id: 'plugin.strategy.invalid_constructor'
         });
     });
 
@@ -337,7 +337,7 @@ describe('PluginsManager: strategy management', () => {
 
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.invalid_option'
+            id: 'plugin.strategy.invalid_option'
           });
       });
     });
@@ -348,7 +348,7 @@ describe('PluginsManager: strategy management', () => {
 
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.invalid_option'
+            id: 'plugin.strategy.invalid_option'
           });
       });
     });
@@ -359,7 +359,7 @@ describe('PluginsManager: strategy management', () => {
 
         should(() => pluginsManager._initStrategies(plugin))
           .throw(PluginImplementationError, {
-            errorName: 'plugin.strategy.invalid_fields'
+            id: 'plugin.strategy.invalid_fields'
           });
       });
     });
@@ -398,7 +398,7 @@ describe('PluginsManager: strategy management', () => {
           should(msg).be.undefined();
           should(err)
             .instanceOf(PluginImplementationError)
-            .match({ errorName: 'plugin.strategy.invalid_verify_return' });
+            .match({ id: 'plugin.strategy.invalid_verify_return' });
           done();
         }
         catch (e) {
@@ -515,12 +515,12 @@ describe('PluginsManager: strategy management', () => {
 
     it('should throw if the strategy does not exist', () => {
       should(() => pluginsManager.unregisterStrategy(plugin.manifest.name, 'foobar'))
-        .throw(NotFoundError, { errorName: 'plugin.strategy.strategy_not_found' });
+        .throw(NotFoundError, { id: 'plugin.strategy.strategy_not_found' });
     });
 
     it('should throw if not the owner of the strategy', () => {
       should(() => pluginsManager.unregisterStrategy('Frank William Abagnale Jr.', 'someStrategy'))
-        .throw(PluginImplementationError, { errorName: 'plugin.strategy.unauthorized_removal' });
+        .throw(PluginImplementationError, { id: 'plugin.strategy.unauthorized_removal' });
     });
   });
 });

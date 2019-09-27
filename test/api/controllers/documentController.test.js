@@ -78,7 +78,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { errorName: 'services.storage.no_multi_indexes' });
+        { id: 'services.storage.no_multi_indexes' });
     });
 
     it('should throw an error if collection contains a comma', () => {
@@ -87,7 +87,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { errorName: 'services.storage.no_multi_collections' });
+        { id: 'services.storage.no_multi_collections' });
     });
 
     it('should throw an error if the size argument exceeds server configuration', () => {
@@ -97,7 +97,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         SizeLimitError,
-        { errorName: 'services.storage.get_limit_exceeded' });
+        { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -219,7 +219,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.mGet(request)).throw(
         SizeLimitError,
-        { errorName: 'services.storage.get_limit_exceeded' });
+        { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should set a partial error if some documents are missing', async () => {
@@ -242,7 +242,7 @@ describe('DocumentController', () => {
         ]
       });
       should(request.error).not.be.undefined();
-      should(request.error.errorName).be.eql('services.storage.incomplete_fetch');
+      should(request.error.id).be.eql('services.storage.incomplete_fetch');
     });
   });
 
@@ -393,7 +393,7 @@ describe('DocumentController', () => {
       await documentController._mChanges(request, 'mCreate', true);
 
       should(request.error.status).be.eql(206);
-      should(request.error.errorName).be.eql('services.storage.incomplete_create');
+      should(request.error.id).be.eql('services.storage.incomplete_create');
       should(request.error.errors).match([
         {
           document: { _id: '_id42', _source: '_source' },
@@ -665,7 +665,7 @@ describe('DocumentController', () => {
       await documentController.mDelete(request);
 
       should(request.error.status).be.eql(206);
-      should(request.error.errorName).be.eql('services.storage.incomplete_delete');
+      should(request.error.id).be.eql('services.storage.incomplete_delete');
       should(request.error.errors).match([
         { id: 'id1', reason: 'reason' }
       ]);

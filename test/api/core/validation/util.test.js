@@ -183,7 +183,7 @@ describe('Test: validation utilities', () => {
 
       should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).throw(BadRequestError, { errorName: 'validation.check.failed_field' });
+      }).throw(BadRequestError, { id: 'validation.check.failed_field' });
     });
 
     it('should add a message at the begining of the errorHolder when verbose is false and context is document', () => {
@@ -195,7 +195,7 @@ describe('Test: validation utilities', () => {
 
       should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).throw(BadRequestError, { errorName: 'validation.check.failed_document' });
+      }).throw(BadRequestError, { id: 'validation.check.failed_document' });
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {

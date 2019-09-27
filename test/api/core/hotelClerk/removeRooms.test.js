@@ -182,7 +182,7 @@ describe('Test: hotelClerk.removeRooms', () => {
     return kuzzle.hotelClerk.addSubscription(subscribeCollection1)
       .then(() => {
         return should(() => kuzzle.hotelClerk.removeRooms(removeRequest))
-          .throw(BadRequestError, { errorName: 'core.realtime.invalid_rooms' });
+          .throw(BadRequestError, { id: 'core.realtime.invalid_rooms' });
       });
   });
 

@@ -87,7 +87,7 @@ describe('Test: core/janitor', () => {
     it('should reject if the securities object is null', () => {
       return should(janitor.loadSecurities(null))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "null". Expected: object'
         });
     });
@@ -99,7 +99,7 @@ describe('Test: core/janitor', () => {
         users: securities.users
       }))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -111,7 +111,7 @@ describe('Test: core/janitor', () => {
         users: securities.users
       }))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -123,7 +123,7 @@ describe('Test: core/janitor', () => {
         users: { foo: 123},
       }))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -154,7 +154,7 @@ describe('Test: core/janitor', () => {
     it('should reject if fixtures contain non-object properties', () => {
       return should(janitor.loadFixtures({foo: 123}))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -188,7 +188,7 @@ describe('Test: core/janitor', () => {
     it('should reject if a mapping contains non-object properties', () => {
       return should(janitor.loadMappings({foo: 123}))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -270,7 +270,7 @@ describe('Test: core/janitor', () => {
         .catch(error => {
           try {
             should(error).be.instanceOf(PreconditionError, {
-              errorName: 'api.assert.action_locked'
+              id: 'api.assert.action_locked'
             });
             done();
           }

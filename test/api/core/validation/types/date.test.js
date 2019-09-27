@@ -43,22 +43,22 @@ describe('Test: validation/types/date', () => {
 
     it('should throw if an invalid "formats" options is provided', () => {
       should(() => dateType.validateFieldSpecification({formats: []}))
-        .throw(PreconditionError, { errorName: 'validation.assert.invalid_type' });
+        .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
 
       should(() => dateType.validateFieldSpecification({formats: null}))
-        .throw(PreconditionError, { errorName: 'validation.assert.invalid_type' });
+        .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
     });
 
     it('should throw if the "formats" option contains an unknown format', () => {
       should(() => dateType.validateFieldSpecification({formats: ['foobar']}))
         .throw(PreconditionError, {
-          errorName: 'validation.types.invalid_date_format',
+          id: 'validation.types.invalid_date_format',
           message: 'The following date types are invalid: foobar.'
         });
 
       should(() => dateType.validateFieldSpecification({formats: ['foo', 'epoch_millis', 'bar']}))
         .throw(PreconditionError, {
-          errorName: 'validation.types.invalid_date_format',
+          id: 'validation.types.invalid_date_format',
           message: 'The following date types are invalid: foo,bar.'
         });
     });
@@ -66,20 +66,20 @@ describe('Test: validation/types/date', () => {
     it('should throw if the "range" option is invalid', () => {
       should(() => dateType.validateFieldSpecification({range: null}))
         .throw(PreconditionError, {
-          errorName: 'validation.assert.unexpected_properties',
+          id: 'validation.assert.unexpected_properties',
           message: 'The object "range" contains unexpected properties (allowed: min, max).'
         });
 
       should(() => dateType.validateFieldSpecification({range: []}))
         .throw(PreconditionError, {
-          errorName: 'validation.assert.unexpected_properties',
+          id: 'validation.assert.unexpected_properties',
           message: 'The object "range" contains unexpected properties (allowed: min, max).'
         });
 
 
       should(() => dateType.validateFieldSpecification({range: {unknown: null}}))
         .throw(PreconditionError, {
-          errorName: 'validation.assert.unexpected_properties',
+          id: 'validation.assert.unexpected_properties',
           message: 'The object "range" contains unexpected properties (allowed: min, max).'
         });
     });
@@ -98,18 +98,18 @@ describe('Test: validation/types/date', () => {
 
     it('should throw if "min" is not a valid date', () => {
       should(() => dateType.validateFieldSpecification({range: {min: 'foobar'}}))
-        .throw(PreconditionError, { errorName: 'validation.types.invalid_date' });
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
 
       should(() => dateType.validateFieldSpecification({range: {min: null}}))
-        .throw(PreconditionError, { errorName: 'validation.types.invalid_date' });
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
     });
 
     it('should throw if "max" is not a valid date', () => {
       should(() => dateType.validateFieldSpecification({range: {max: 'foobar'}}))
-        .throw(PreconditionError, { errorName: 'validation.types.invalid_date' });
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
 
       should(() => dateType.validateFieldSpecification({range: {max: null}}))
-        .throw(PreconditionError, { errorName: 'validation.types.invalid_date' });
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
     });
 
     it('should throw if max < min', () => {
@@ -120,7 +120,7 @@ describe('Test: validation/types/date', () => {
         };
 
       should(() => dateType.validateFieldSpecification(typeOptions))
-        .throw(PreconditionError, { errorName: 'validation.assert.invalid_range' });
+        .throw(PreconditionError, { id: 'validation.assert.invalid_range' });
     });
 
     it('should convert min and max to moment objects if they are valid', () => {

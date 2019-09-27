@@ -80,7 +80,7 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', undefined);
 
       should(() => pluginsManager.init())
-        .throw(PluginImplementationError, { errorName: 'plugin.assert.cannot_load' });
+        .throw(PluginImplementationError, { id: 'plugin.assert.cannot_load' });
       should(pluginsManager.plugins).be.empty();
     });
 
@@ -155,7 +155,7 @@ describe('PluginsManager', () => {
           }
         });
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.manifest.invalid_errors'
+        id: 'plugin.manifest.invalid_errors'
       });
     });
 
@@ -170,7 +170,7 @@ describe('PluginsManager', () => {
       });
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        { errorName: 'plugin.manifest.cannot_load' });
+        { id: 'plugin.manifest.cannot_load' });
       should(pluginsManager.plugins).be.empty();
     });
 
@@ -194,7 +194,7 @@ describe('PluginsManager', () => {
 
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        { errorName: 'plugin.assert.name_already_exists' });
+        { id: 'plugin.assert.name_already_exists' });
     });
 
     it('should throw if a plugin does not expose a "init" method', () => {
@@ -212,7 +212,7 @@ describe('PluginsManager', () => {
 
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        { errorName: 'plugin.assert.init_not_found' });
+        { id: 'plugin.assert.init_not_found' });
     });
 
     it('should return a well-formed plugin instance if a valid requirable plugin is enabled', () => {
@@ -287,7 +287,7 @@ describe('PluginsManager', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init())
-        .throw(PluginImplementationError, { errorName: 'plugin.manifest.version_mismatch' });
+        .throw(PluginImplementationError, { id: 'plugin.manifest.version_mismatch' });
     });
 
     it('should load custom plugin configuration if exists', () => {
@@ -343,7 +343,7 @@ describe('PluginsManager', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.assert.privileged_not_supported'
+        id: 'plugin.assert.privileged_not_supported'
       });
     });
 
@@ -371,7 +371,7 @@ describe('PluginsManager', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.assert.privileged_not_set'
+        id: 'plugin.assert.privileged_not_set'
       });
     });
 
@@ -379,7 +379,7 @@ describe('PluginsManager', () => {
       fsStub.readdirSync.throws();
 
       should(() => pluginsManager.init()).throw(InternalError, {
-        errorName: 'plugin.assert.invalid_plugins_dir'
+        id: 'plugin.assert.invalid_plugins_dir'
       });
       should(pluginsManager.plugins).be.empty();
     });
@@ -397,7 +397,7 @@ describe('PluginsManager', () => {
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.runtime.unexpected_error'
+        id: 'plugin.runtime.unexpected_error'
       });
       should(pluginsManager.plugins).be.empty();
     });
@@ -413,7 +413,7 @@ describe('PluginsManager', () => {
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.assert.not_a_constructor'
+        id: 'plugin.assert.not_a_constructor'
       });
       should(pluginsManager.plugins).be.empty();
     });

@@ -40,21 +40,21 @@ describe('RealtimeController', () => {
       request.input.resource.index = null;
 
       should(() => realtimeController.subscribe(request))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should throw an error if collection is not provided',() => {
       request.input.resource.collection = null;
 
       should(() => realtimeController.subscribe(request))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
       should(() => realtimeController.subscribe(request))
-        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+        .throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -72,12 +72,12 @@ describe('RealtimeController', () => {
       request.input.body = null;
 
       return should(() => realtimeController.join(request))
-        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+        .throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
       return should(() => realtimeController.join(request))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -98,13 +98,13 @@ describe('RealtimeController', () => {
 
       should(() => {
         realtimeController.unsubscribe(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
         realtimeController.unsubscribe(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -125,13 +125,13 @@ describe('RealtimeController', () => {
 
       should(() => {
         realtimeController.count(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
         realtimeController.count(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {

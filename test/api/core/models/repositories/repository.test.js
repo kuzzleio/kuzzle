@@ -38,7 +38,7 @@ describe('Test: repositories/repository', () => {
       repository.indexStorage.get.rejects(new NotFoundError('Not found'));
 
       return should(repository.loadOneFromDatabase(-9999))
-        .rejectedWith(NotFoundError, { errorName: 'services.storage.not_found' });
+        .rejectedWith(NotFoundError, { id: 'services.storage.not_found' });
     });
 
     it('should reject the promise in case of error', () => {
@@ -119,7 +119,7 @@ describe('Test: repositories/repository', () => {
 
       return should(repository.loadFromCache('error')).
         rejectedWith(KuzzleInternalError, {
-          errorName: 'services.cache.read_failed'
+          id: 'services.cache.read_failed'
         });
     });
 
@@ -128,7 +128,7 @@ describe('Test: repositories/repository', () => {
 
       return should(repository.loadFromCache('string'))
         .rejectedWith(KuzzleInternalError, {
-          errorName: 'services.cache.read_failed'
+          id: 'services.cache.read_failed'
         });
     });
 
@@ -154,7 +154,7 @@ describe('Test: repositories/repository', () => {
 
       return should(repository.load(-9999))
         .rejectedWith(NotFoundError, {
-          errorName: 'services.storage.not_found'
+          id: 'services.storage.not_found'
         });
     });
 
@@ -170,7 +170,7 @@ describe('Test: repositories/repository', () => {
 
       return should(repository.load('string'))
         .rejectedWith(KuzzleInternalError, {
-          errorName: 'services.cache.read_failed'
+          id: 'services.cache.read_failed'
         });
     });
 

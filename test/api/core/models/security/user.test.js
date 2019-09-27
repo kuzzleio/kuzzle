@@ -152,6 +152,6 @@ describe('Test: security/userTest', () => {
 
     return should(user.isActionAllowed(new Request({}))).be.rejectedWith(
       InternalError,
-      { errorName: 'security.user.uninitialized' });
+      { id: 'security.user.uninitialized' });
   });
 });

@@ -70,8 +70,8 @@ ${comparedStr}
   };
 }
 
-function fromMessage (domain, subdomain, errorName, message) {
-  const error = errorsManager.get(domain, subdomain, errorName, message);
+function fromMessage (domain, subdomain, id, message) {
+  const error = errorsManager.get(domain, subdomain, id, message);
 
   return fromError(error);
 }

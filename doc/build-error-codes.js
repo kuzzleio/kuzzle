@@ -70,9 +70,8 @@ function buildErrorCodes(domains) {
       doc += `\n\n### Subdomain: 0x${buffer.toString('hex', 2)}: ${subdomainName}\n\n`;
       doc += '| Id | Error Type (Status Code)             | Message           |\n| ------ | -----------------| ------------------ | ------------------ |\n';
 
-      for (const errorName of Object.keys(subdomain.errors)) {
+      for (const [errorName, error] of Object.entries(subdomain.errors)) {
         const
-          error = subdomain.errors[errorName],
           fullName = `${domainName}.${subdomainName}.${errorName}`,
           status = (new errors[error.class]()).status;
 

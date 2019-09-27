@@ -559,7 +559,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
         const ep = new Rewired(kuzzle);
         return ep.loadMoreProtocols();
       })).rejectedWith(PluginImplementationError, {
-        errorName: 'plugin.manifest.cannot_load'
+        id: 'plugin.manifest.cannot_load'
       });
     });
 

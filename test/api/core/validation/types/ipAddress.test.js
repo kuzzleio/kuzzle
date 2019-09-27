@@ -76,7 +76,7 @@ describe('Test: validation/types/ipAddress', () => {
 
     it('should throw if "notEmpty" is not set properly', () => {
       should(() => ipAddressType.validateFieldSpecification({notEmpty: null}))
-        .throw(PreconditionError, { errorName: 'validation.assert.invalid_type' });
+        .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
     });
   });
 });

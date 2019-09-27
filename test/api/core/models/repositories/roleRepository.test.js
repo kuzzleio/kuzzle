@@ -228,7 +228,7 @@ describe('Test: repositories/roleRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
-          should(e.errorName).eql('security.role.cannot_delete');
+          should(e.id).eql('security.role.cannot_delete');
           should(kuzzle.emit).not.be.called();
           done();
         })
@@ -251,7 +251,7 @@ describe('Test: repositories/roleRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(PreconditionError);
-          should(e.errorName).eql('security.role.in_use');
+          should(e.id).eql('security.role.in_use');
           should(kuzzle.emit).not.be.called();
           done();
         })

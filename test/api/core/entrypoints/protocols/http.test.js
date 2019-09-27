@@ -139,10 +139,10 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
           should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
           should(protocol.decoders.identity).be.a.Function();
           should(() => protocol.decoders.gzip()).throw(BadRequestError, {
-            errorName: 'network.http.compression_disabled'
+            id: 'network.http.compression_disabled'
           });
           should(() => protocol.decoders.deflate()).throw(BadRequestError, {
-            errorName: 'network.http.compression_disabled'
+            id: 'network.http.compression_disabled'
           });
           should(protocol.decoders.identity('foobar')).eql(null);
         });
@@ -421,7 +421,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
             { url: request.url, method: request.method },
             response,
             {
-              errorName: 'network.http.unexpected_error',
+              id: 'network.http.unexpected_error',
               message: 'Caught an unexpected HTTP error: Unsupported content type: foo/bar'
             });
       });
@@ -445,7 +445,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
           .calledOnce()
           .calledWith('error', sinon.match.instanceOf(SizeLimitError));
 
-        should(request.emit.firstCall.args[1].errorName).be.eql('network.http.file_too_large');
+        should(request.emit.firstCall.args[1].id).be.eql('network.http.file_too_large');
       });
     });
 
@@ -749,7 +749,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
           .be.calledWithMatch(
             {id: 'connectionId'},
             response,
-            {errorName: 'network.http.unexpected_error'});
+            {id: 'network.http.unexpected_error'});
 
         should(response.setHeader).calledWith('Content-Encoding', 'gzip');
         should(zlibstub.deflate).not.called();
@@ -859,7 +859,7 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
         protocol._createWritableStream(request, {});
       } catch (e) {
         should(e).be.instanceOf(BadRequestError);
-        should(e.errorName).be.equals('network.http.unexpected_error');
+        should(e.id).be.equals('network.http.unexpected_error');
       }
     });
   });

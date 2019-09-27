@@ -222,7 +222,7 @@ describe('Test: security/roleTest', () => {
       role.controllers = true;
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, {errorName: 'api.assert.invalid_type' });
+        .be.rejectedWith(BadRequestError, {id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the controllers definition is empty', () => {
@@ -230,7 +230,7 @@ describe('Test: security/roleTest', () => {
       role.controllers = {};
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.empty_argument' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject the promise if the controller element is not an object', () => {
@@ -240,7 +240,7 @@ describe('Test: security/roleTest', () => {
       };
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the controller element is empty', () => {
@@ -250,7 +250,7 @@ describe('Test: security/roleTest', () => {
       };
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.empty_argument' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject the promise if the actions attribute is missing', () => {
@@ -262,7 +262,7 @@ describe('Test: security/roleTest', () => {
       };
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject the promise is the actions attribute is not an object', () => {
@@ -274,7 +274,7 @@ describe('Test: security/roleTest', () => {
       };
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the actions attribute is empty', () => {
@@ -286,7 +286,7 @@ describe('Test: security/roleTest', () => {
       };
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.empty_argument' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject the promise if the action right is neither a boolean or an object', () => {
@@ -300,7 +300,7 @@ describe('Test: security/roleTest', () => {
       };
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should validate if only boolean rights are given', () => {

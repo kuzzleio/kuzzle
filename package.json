@@ -51,7 +51,7 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^1.2.2",
-    "kuzzle-common-objects": "^4.0.0",
+    "kuzzle-common-objects": "github:kuzzleio/kuzzle-common-objects#error-codes-4",
     "kuzzle-sdk": "^6.2.0",
     "lodash": "4.17.14",
     "moment": "^2.24.0",

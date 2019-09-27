@@ -297,7 +297,7 @@ describe('PluginsManager.run', () => {
         .then(() => pluginMock.verify()))
         .be.rejectedWith(
           PluginImplementationError,
-          { errorName: 'plugin.runtime.unexpected_error' });
+          { id: 'plugin.runtime.unexpected_error' });
     });
 
     it('should log a warning in case a pipe plugin exceeds the warning delay', () => {

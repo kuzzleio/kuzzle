@@ -29,7 +29,7 @@ describe('AbstractManifest class', () => {
     const manifest = new Manifest(kuzzle, pluginPath);
 
     should(() => manifest.load()).throw(PluginImplementationError, {
-      errorName: 'plugin.manifest.cannot_load'
+      id: 'plugin.manifest.cannot_load'
     });
   });
 
@@ -38,7 +38,7 @@ describe('AbstractManifest class', () => {
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion: 123 })(() => {
       should(() => manifest.load())
-        .throw(PluginImplementationError, { errorName: 'plugin.manifest.version_mismatch' });
+        .throw(PluginImplementationError, { id: 'plugin.manifest.version_mismatch' });
     });
   });
 
@@ -48,7 +48,7 @@ describe('AbstractManifest class', () => {
 
     mockRequireManifest({ name: 'foobar' })(() => {
       should(() => manifest.load())
-        .throw(PluginImplementationError, { errorName: 'plugin.manifest.missing_version' });
+        .throw(PluginImplementationError, { id: 'plugin.manifest.missing_version' });
     });
   });
 
@@ -69,7 +69,7 @@ describe('AbstractManifest class', () => {
     [123, false, ''].forEach(name => {
       mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
         should(() => manifest.load()).throw(PluginImplementationError, {
-          errorName: 'plugin.manifest.invalid_name_type'
+          id: 'plugin.manifest.invalid_name_type'
         });
       });
     });
@@ -81,7 +81,7 @@ describe('AbstractManifest class', () => {
     [undefined, null].forEach(name => {
       mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
         should(() => manifest.load()).throw(PluginImplementationError, {
-          errorName: 'plugin.manifest.missing_name'
+          id: 'plugin.manifest.missing_name'
         });
       });
     });
@@ -94,7 +94,7 @@ describe('AbstractManifest class', () => {
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion })(() => {
       should(() => manifest.load()).throw(PluginImplementationError, {
-        errorName: 'plugin.manifest.version_mismatch'
+        id: 'plugin.manifest.version_mismatch'
       });
     });
   });

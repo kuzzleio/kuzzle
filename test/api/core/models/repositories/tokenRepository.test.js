@@ -78,7 +78,7 @@ describe('Test: repositories/tokenRepository', () => {
     it('should reject the promise if the jwt is invalid', () => {
       return should(tokenRepository.verifyToken('invalidToken'))
         .be.rejectedWith(UnauthorizedError, {
-          errorName: 'security.token.invalid'
+          id: 'security.token.invalid'
         });
     });
 
@@ -87,7 +87,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
-          errorName: 'security.token.invalid'
+          id: 'security.token.invalid'
         });
     });
 
@@ -96,7 +96,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
-          errorName: 'security.token.expired'
+          id: 'security.token.expired'
         });
     });
 
@@ -111,7 +111,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(KuzzleInternalError, {
-          errorName: 'security.token.verification_error'
+          id: 'security.token.verification_error'
         });
     });
 
@@ -125,7 +125,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
-          errorName: 'security.token.invalid'
+          id: 'security.token.invalid'
         });
     });
 
@@ -153,7 +153,7 @@ describe('Test: repositories/tokenRepository', () => {
     it('should reject the promise if the username is null', () => {
       return should(tokenRepository.generateToken(null))
         .be.rejectedWith(KuzzleInternalError, {
-          errorName: 'security.token.unknown_user'
+          id: 'security.token.unknown_user'
         });
     });
 
@@ -164,7 +164,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.generateToken(user, new Request({})))
         .be.rejectedWith(KuzzleInternalError, {
-          errorName: 'security.token.unknown_connection'
+          id: 'security.token.unknown_connection'
         });
     });
 
@@ -177,7 +177,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.generateToken(user, request, {expiresIn: 'foo'}))
         .be.rejectedWith(KuzzleInternalError, {
-          errorName: 'security.token.generation_failed'
+          id: 'security.token.generation_failed'
         });
     });
 
@@ -218,7 +218,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       return should(tokenRepository.generateToken(user, request))
         .be.rejectedWith(KuzzleInternalError, {
-          errorName: 'services.cache.write_failed'
+          id: 'services.cache.write_failed'
         });
     });
 

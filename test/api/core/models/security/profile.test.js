@@ -211,7 +211,7 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject if invalid policies are provided', () => {
@@ -220,7 +220,7 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject if an empty policies array is provided', () => {
@@ -228,7 +228,7 @@ describe('Test: security/profileTest', () => {
       profile._id = 'test';
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, { errorName: 'api.assert.empty_argument' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject if no roleId is given', () => {
@@ -238,7 +238,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "policies[0].roleId".'
         });
     });
@@ -250,7 +250,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.unexpected_argument',
+          id: 'api.assert.unexpected_argument',
         });
     });
 
@@ -261,7 +261,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type'
+          id: 'api.assert.invalid_type'
         });
     });
 
@@ -272,7 +272,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type'
+          id: 'api.assert.invalid_type'
         });
     });
 
@@ -283,7 +283,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.missing_argument'
+          id: 'api.assert.missing_argument'
         });
     });
 
@@ -297,7 +297,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.unexpected_argument'
+          id: 'api.assert.unexpected_argument'
         });
     });
 
@@ -311,7 +311,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type'
+          id: 'api.assert.invalid_type'
         });
     });
 
@@ -325,7 +325,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type'
+          id: 'api.assert.invalid_type'
         });
     });
 
@@ -339,7 +339,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type'
+          id: 'api.assert.invalid_type'
         });
     });
 
@@ -353,7 +353,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type'
+          id: 'api.assert.invalid_type'
         });
     });
 
@@ -367,7 +367,7 @@ describe('Test: security/profileTest', () => {
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_type'
+          id: 'api.assert.invalid_type'
         });
     });
   });

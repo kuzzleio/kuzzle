@@ -70,7 +70,7 @@ describe('#base controller', () => {
 
       should(() => baseController.getBoolean(request, 'doha')).throw(
         BadRequestError,
-        { errorName: 'api.assert.invalid_type'});
+        { id: 'api.assert.invalid_type'});
     });
 
     it('returns "false" if the flag is not set (not HTTP)', () => {
@@ -117,7 +117,7 @@ describe('#base controller', () => {
 
       should(() => baseController.getBodyBoolean(request, 'doha')).throw(
         BadRequestError,
-        { errorName: 'api.assert.invalid_type'});
+        { id: 'api.assert.invalid_type'});
     });
 
     it('returns "false" if the flag is not set (not HTTP)', () => {
@@ -149,7 +149,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getBodyArray(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -161,14 +161,14 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not an array', () => {
         should(() => baseController.getBodyArray(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
 
       it('should throw if the request does not have a body', () => {
         request.input.body = null;
 
         should(() => baseController.getBodyArray(request, 'names'))
-          .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+          .throw(BadRequestError, { id: 'api.assert.body_required' });
       });
 
       it('should return the default value if one is provided, and if the request has no body', () => {
@@ -189,7 +189,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getBodyString(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -201,14 +201,14 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not a string', () => {
         should(() => baseController.getBodyString(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
 
       it('should throw if the request does not have a body', () => {
         request.input.body = null;
 
         should(() => baseController.getBodyString(request, 'fullname'))
-          .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+          .throw(BadRequestError, { id: 'api.assert.body_required' });
       });
 
       it('should return the default value if one is provided, and if the request has no body', () => {
@@ -229,7 +229,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getBodyObject(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -241,14 +241,14 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not an object', () => {
         should(() => baseController.getBodyObject(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
 
       it('should throw if the request does not have a body', () => {
         request.input.body = null;
 
         should(() => baseController.getBodyObject(request, 'relatives'))
-          .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+          .throw(BadRequestError, { id: 'api.assert.body_required' });
       });
 
       it('should return the default value if one is provided, and if the request has no body', () => {
@@ -272,7 +272,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getBodyNumber(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -284,14 +284,14 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not a number', () => {
         should(() => baseController.getBodyNumber(request, 'fullname'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
 
       it('should throw if the request does not have a body', () => {
         request.input.body = null;
 
         should(() => baseController.getBodyNumber(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+          .throw(BadRequestError, { id: 'api.assert.body_required' });
       });
 
       it('should return the default value if one is provided, and if the request has no body', () => {
@@ -315,7 +315,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getBodyInteger(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -327,17 +327,17 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not an integer', () => {
         should(() => baseController.getBodyInteger(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
         should(() => baseController.getBodyInteger(request, 'fullname'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
 
       it('should throw if the request does not have a body', () => {
         request.input.body = null;
 
         should(() => baseController.getBodyInteger(request, 'year'))
-          .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+          .throw(BadRequestError, { id: 'api.assert.body_required' });
       });
 
       it('should return the default value if one is provided, and if the request has no body', () => {
@@ -374,7 +374,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getArray(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -386,7 +386,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not an array', () => {
         should(() => baseController.getArray(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
     });
 
@@ -398,7 +398,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getString(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -410,7 +410,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not a string', () => {
         should(() => baseController.getString(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
     });
 
@@ -422,7 +422,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getObject(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -434,7 +434,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not an object', () => {
         should(() => baseController.getObject(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
     });
 
@@ -449,7 +449,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getNumber(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -461,7 +461,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not a number', () => {
         should(() => baseController.getNumber(request, 'fullname'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
     });
 
@@ -476,7 +476,7 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is missing', () => {
         should(() => baseController.getInteger(request, 'childhood'))
-          .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+          .throw(BadRequestError, { id: 'api.assert.missing_argument' });
       });
 
       it('should return the default value if provided, when the parameter is missing', () => {
@@ -488,10 +488,10 @@ describe('#base controller', () => {
 
       it('should throw if the parameter is not an integer', () => {
         should(() => baseController.getInteger(request, 'age'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
         should(() => baseController.getInteger(request, 'fullname'))
-          .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+          .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       });
     });
   });
@@ -514,7 +514,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getIndex(request);
-      }).throw({ errorName: 'api.assert.missing_argument' });
+      }).throw({ id: 'api.assert.missing_argument' });
     });
   });
 
@@ -541,7 +541,7 @@ describe('#base controller', () => {
       should(() => {
         baseController.getIndexAndCollection(request);
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "index".'
       });
     });
@@ -554,7 +554,7 @@ describe('#base controller', () => {
       should(() => {
         baseController.getIndexAndCollection(request);
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "collection".'
       });
     });
@@ -578,7 +578,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getId(request);
-      }).throw({ errorName: 'api.assert.missing_argument' });
+      }).throw({ id: 'api.assert.missing_argument' });
     });
 
     it('should throw if the id is wrong type', () => {
@@ -588,7 +588,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getId(request);
-      }).throw({ errorName: 'api.assert.invalid_type' });
+      }).throw({ id: 'api.assert.invalid_type' });
     });
   });
 
@@ -665,7 +665,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.getScrollTTLParam(request);
-      }).throw({ errorName: 'api.assert.invalid_type' });
+      }).throw({ id: 'api.assert.invalid_type' });
     });
   });
 
@@ -674,7 +674,7 @@ describe('#base controller', () => {
       request.input.body = null;
 
       should(() => baseController.getBody(request)).throw(BadRequestError, {
-        errorName: 'api.assert.body_required'
+        id: 'api.assert.body_required'
       });
     });
 
@@ -703,7 +703,7 @@ describe('#base controller', () => {
     it('should throw', () => {
       should(() => {
         baseController.assertBodyHasNotAttributes(request, ['invalid']);
-      }).throw({ errorName: 'api.assert.forbidden_argument' });
+      }).throw({ id: 'api.assert.forbidden_argument' });
     });
   });
 
@@ -713,7 +713,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.assertIsStrategyRegistered('glob');
-      }).throw({ errorName: 'security.credentials.unknown_strategy' });
+      }).throw({ id: 'security.credentials.unknown_strategy' });
     });
   });
 
@@ -723,7 +723,7 @@ describe('#base controller', () => {
 
       should(() => {
         baseController.assertNotExceedMaxFetch(3);
-      }).throw({ errorName: 'services.storage.get_limit_exceeded' });
+      }).throw({ id: 'services.storage.get_limit_exceeded' });
     });
   });
 
