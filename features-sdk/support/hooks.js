@@ -58,20 +58,6 @@ Before(({ timeout: 10 * 1000 }), async function () {
     action: 'resetDatabase',
     refresh: 'wait_for'
   });
-
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'loadMappings',
-    body: testMappings,
-    refresh: 'wait_for'
-  });
-
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'loadFixtures',
-    body: testFixtures,
-    refresh: 'wait_for'
-  });
 });
 
 After(async function () {
@@ -102,4 +88,29 @@ Before({ tags: '@security', timeout: 10 * 1000 }, async function () {
   await this.sdk.auth.login(
     'local',
     { username: 'test-admin', password: 'password' });
+});
+
+Before({ tags: '@mappings' }, async function () {
+  await this.sdk.query({
+    controller: 'admin',
+    action: 'loadMappings',
+    body: testMappings,
+    refresh: 'wait_for'
+  });
+});
+
+Before({ tags: '@fixtures' }, async function () {
+  await this.sdk.query({
+    controller: 'admin',
+    action: 'loadMappings',
+    body: testMappings,
+    refresh: 'wait_for'
+  });
+
+  await this.sdk.query({
+    controller: 'admin',
+    action: 'loadFixtures',
+    body: testFixtures,
+    refresh: 'wait_for'
+  });
 });

@@ -3,6 +3,7 @@ Feature: Collection Controller
   # collection:create ==========================================================
 
   Scenario: Create a new collection with mappings
+    Given an index "nyc-open-data"
     When I call the route "collection":"create" with args:
     | index | "nyc-open-data" |
     | collection | "green-taxi" |
@@ -16,6 +17,7 @@ Feature: Collection Controller
     | properties | { "name": { "type": "keyword" } } |
 
   Scenario: Re-create an existing collection with mappings
+    Given an index "nyc-open-data"
     When I successfully call the route "collection":"create" with args:
     | index | "nyc-open-data" |
     | collection | "green-taxi" |
@@ -30,6 +32,7 @@ Feature: Collection Controller
     | properties | { "name": { "type": "keyword" }, "age": { "type": "integer"} } |
 
   Scenario: Create a new collection with incorrect mappings
+    Given an index "nyc-open-data"
     When I call the route "collection":"create" with args:
     | index | "nyc-open-data" |
     | collection | "green-taxi" |
@@ -38,6 +41,7 @@ Feature: Collection Controller
     | status | 400 |
 
   Scenario: Try to create a collection with the same name as the kuzzle hidden one
+    Given an index "nyc-open-data"
     When I call the route "collection":"create" with args:
     | index | "nyc-open-data" |
     | collection | "_kuzzle_keep" |
@@ -48,10 +52,9 @@ Feature: Collection Controller
   # collection:list ============================================================
 
   Scenario: List collections
-    Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I successfully call the route "collection":"create" with args:
-    | index | "nyc-open-data" |
-    | collection | "green-taxi" |
+    Given an index "nyc-open-data"
+    And a collection "nyc-open-data":"yellow-taxi"
+    And a collection "nyc-open-data":"green-taxi"
     And I list collections in index "nyc-open-data"
     Then I should receive a result matching:
     | collections | [{ "name": "green-taxi", "type": "stored" }, { "name": "yellow-taxi", "type": "stored" }] |

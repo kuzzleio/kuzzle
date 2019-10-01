@@ -16,6 +16,7 @@ Given('an existing collection {string}:{string}', async function (index, collect
   if (!await this.sdk.index.exists(index)) {
     throw new Error(`Index ${index} does not exists`);
   }
+
   if (!await this.sdk.collection.exists(index, collection)) {
     throw new Error(`Collection ${index}:${collection} does not exists`);
   }

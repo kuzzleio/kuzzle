@@ -2,6 +2,7 @@ Feature: Bulk Controller
 
   # bulk:import ================================================================
 
+  @mappings
   Scenario: Bulk import of documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I perform a bulk import with the following:
@@ -22,6 +23,7 @@ Feature: Bulk Controller
     | document | "createId" |
     | newField | 42 |
 
+  @mappings
   Scenario: Bulk import with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I perform a bulk import with the following:

@@ -48,7 +48,6 @@ Method: GET
 Returns a mapping object with the following structure:
 
 ```
-<index>
 |- dynamic
 |- _meta
   |- metadata 1
@@ -95,4 +94,3 @@ Returns a mapping object with the following structure:
 
 - [Common errors](/core/2/api/essentials/errors/handling#common-errors)
 - [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror)
-

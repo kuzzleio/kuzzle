@@ -12,7 +12,23 @@ When(/I (successfully )?call the route "(.*?)":"(.*?)" with args:/, async functi
     const response = await this.sdk.query({ controller, action, ...args });
 
     this.props.result = response.result;
-  } catch (error) {
+  }
+  catch (error) {
+    if (expectSuccess) {
+      throw error;
+    }
+
+    this.props.error = error;
+  }
+});
+
+When(/I (successfully )?call the route "(.*?)":"(.*?)"$/, async function (expectSuccess, controller, action) {
+  try {
+    const response = await this.sdk.query({ controller, action });
+
+    this.props.result = response.result;
+  }
+  catch (error) {
     if (expectSuccess) {
       throw error;
     }
@@ -30,7 +46,7 @@ Then('I should receive a result matching:', function (dataTable) {
 });
 
 Then('I should receive an empty result', function () {
-  should(this.props.result).be.null();
+  should(this.props.result).be.undefined();
 });
 
 Then('I should receive an error matching:', function (dataTable) {

@@ -211,7 +211,7 @@
         "index_already_exists": {
           "description": "Attempted to create an already existing index",
           "code": 38,
-          "message": "A %s named \"%s\" already exists",
+          "message": "A %s index named \"%s\" already exists",
           "class": "PreconditionError"
         },
         "forbidden_character": {
