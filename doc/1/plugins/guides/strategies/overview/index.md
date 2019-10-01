@@ -45,7 +45,7 @@ Whether strategies are added statically or dynamically, the registered strategy 
 ### statically register strategies
 
 Plugins can declare a `strategies` object which contain authentication strategies to register.  
-Each key of this object is the name of the strategy to register dans the value is the strategy object containing `config` and `methods` properties.  
+Each key of this object is the name of the strategy to register and the value is the strategy object containing `config` and `methods` properties.  
 
 For example, to register a strategy named `local` with the `Local` authenticator:
 ```js
@@ -58,6 +58,7 @@ this.strategies = {
     config: {
       authenticator: 'Local'
     },
+    // theses methods must exists in the plugin object
     methods: {
       create: 'create',
       delete: 'delete',
