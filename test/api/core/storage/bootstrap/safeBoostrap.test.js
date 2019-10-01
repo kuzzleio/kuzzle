@@ -162,12 +162,12 @@ describe('SafeBootstrap', () => {
 
     it('should reject if the engine.get call is rejected with an unknown error', async () => {
       const error = new Error('not found');
-      error.errorName = 'ender.game.xenocide';
+      error.id = 'ender.game.xenocide';
       bootstrap._indexStorage.get.rejects(error);
 
       const promise = bootstrap._isLocked();
 
-      return should(promise).be.rejectedWith({ errorName: 'ender.game.xenocide' });
+      return should(promise).be.rejectedWith({ id: 'ender.game.xenocide' });
     });
   });
 

@@ -122,7 +122,7 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            errorName: 'external.elasticsearch.unknown_scroll_identifier'
+            id: 'services.storage.unknown_scroll_id'
           });
           should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
           should(elasticsearch._client.scroll).not.be.called();
@@ -260,7 +260,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch.get(index, collection, '_search');
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.wrong_get_action'
+        id: 'services.storage.search_as_an_id'
       });
     });
 
@@ -707,7 +707,7 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            errorName: 'external.elasticsearch.document_not_found'
+            id: 'services.storage.not_found'
           });
           should(elasticsearch._client.index).not.be.called();
         });
@@ -887,7 +887,7 @@ describe('Test: ElasticSearch service', () => {
         'not an object');
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.empty_query'
+        id: 'services.storage.missing_argument'
       });
     });
   });
@@ -913,7 +913,7 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            errorName: 'external.elasticsearch.index_already_exists'
+            id: 'services.storage.index_already_exists'
           });
         });
     });
@@ -1030,7 +1030,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejectedWith({
         message: /Did you mean "dynamic"/,
-        errorName: 'external.elasticsearch.incorrect_mapping_property'
+        id: 'services.storage.invalid_mapping'
       });
     });
 
@@ -1254,14 +1254,10 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      const promise = elasticsearch.updateMapping(index, collection, newMapping);
-
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?',
-            errorName: 'external.elasticsearch.incorrect_mapping_property'
-          });
+      return should(elasticsearch.updateMapping(index, collection, newMapping))
+        .be.rejectedWith({
+          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          id: 'services.storage.invalid_mapping'
         });
     });
 
@@ -1592,7 +1588,7 @@ describe('Test: ElasticSearch service', () => {
 
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.limit_documents_reached'
+        id: 'services.storage.write_limit_exceeded'
       });
     });
   });
@@ -2818,7 +2814,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch.mDelete(index, collection, documentIds);
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.limit_documents_reached'
+        id: 'services.storage.write_limit_exceeded'
       });
     });
   });
@@ -2941,7 +2937,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch._mExecute(esRequest, documents, partialErrors);
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.limit_documents_reached'
+        id: 'services.storage.write_limit_exceeded'
       });
     });
 
@@ -3004,10 +3000,16 @@ describe('Test: ElasticSearch service', () => {
 
 
       should(() => elasticsearch._checkMappings(mapping))
-        .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
+        .throw({
+          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          id: 'services.storage.invalid_mapping'
+        });
 
       should(() => elasticsearch._checkMappings(mapping2))
-        .throw({ message: 'Incorrect mapping property "mapping.type".' });
+        .throw({
+          message: 'Invalid mapping property "mapping.type".',
+          id: 'services.storage.invalid_mapping'
+        });
     });
 
     it('should throw when a nested property is incorrect', () => {
@@ -3025,7 +3027,10 @@ describe('Test: ElasticSearch service', () => {
       };
 
       should(() => elasticsearch._checkMappings(mapping))
-        .throw({ message: 'Incorrect mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
+        .throw({
+          message: 'Invalid mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?',
+          id: 'services.storage.invalid_mapping'
+        });
     });
 
     it('should return null if no properties are incorrect', () => {

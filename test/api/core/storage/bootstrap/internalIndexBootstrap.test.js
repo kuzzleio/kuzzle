@@ -142,21 +142,6 @@ describe('InternalIndexBootstrap', () => {
       should(jwt).be.eql('i-am-another-secret');
       should(internalIndexStorage.get).be.calledWith('config', internalIndexBootstrap._JWT_SECRET_ID);
     });
-
-    it('should reject if the JWT does not exists', () => {
-      const error = new Error('not found');
-      error.status = 404;
-      internalIndexStorage.get.rejects(error);
-
-      const promise = internalIndexBootstrap._getJWTSecret();
-
-      return should(promise).be.rejectedWith({
-        errorName: 'external.internal_engine.no_jwt_secret_available'
-      })
-        .then(() => {
-          should(internalIndexStorage.get).be.calledWith('config', internalIndexBootstrap._JWT_SECRET_ID);
-        });
-    });
   });
 
   describe('#_persistJWTSecret', () => {

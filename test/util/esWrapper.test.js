@@ -26,7 +26,7 @@ describe.skip('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.errorName).be.eql('external.elasticsearch.unexpected_error');
+      should(formatted.id).be.eql('external.elasticsearch.unexpected_error');
     });
 
     it('should handle version conflict errors', () => {
@@ -38,7 +38,7 @@ describe.skip('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.errorName).be.eql('external.elasticsearch.too_many_changes');
+      should(formatted.id).be.eql('external.elasticsearch.too_many_changes');
     });
 
     it('should handle already existing document', () => {
@@ -48,7 +48,7 @@ describe.skip('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.match({
-        errorName: 'external.elasticsearch.document_already_exists'
+        id: 'external.elasticsearch.document_already_exists'
       });
     });
 
@@ -67,7 +67,7 @@ describe.skip('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.match({
-        errorName: 'external.elasticsearch.document_not_found'
+        id: 'external.elasticsearch.document_not_found'
       });
     });
   });
@@ -156,7 +156,7 @@ describe.skip('Test: ElasticSearch Wrapper', () => {
 
       return should(esWrapper.getMapping(mappingRequest))
         .be.rejectedWith(ExternalServiceError, {
-          errorName: 'external.elasticsearch.unexpected_error' });
+          id: 'external.elasticsearch.unexpected_error' });
     });
 
     it('should include attribute `_kuzzle_info` when includeKuzzleMeta is true', () => {

@@ -16,7 +16,7 @@ describe('Test: hotelClerk.countSubscription', () => {
     const request = new Request({body: {roomId: 'foobar'}});
 
     return should(() => kuzzle.hotelClerk.countSubscription(request))
-      .throw(NotFoundError, {message: 'The room Id "foobar" does not exist.'});
+      .throw(NotFoundError, { id: 'core.realtime.room_not_found' });
   });
 
   it('should return the right subscriptions count when handling a correct request', () => {
