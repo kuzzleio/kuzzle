@@ -44,7 +44,8 @@ Whether strategies are added statically or dynamically, the registered strategy 
 
 ### statically register strategies
 
-Plugins can declare a `strategies` object which contain authentication strategies to register.  
+Plugins can declare a `strategies` object which contains the authentication strategies to register.  
+This object will be interpreted by Kuzzle only once, immediately after this plugin's init function has resolved.  
 Each key of this object is the name of the strategy to register and the value is the strategy object containing `config` and `methods` properties.  
 
 For example, to register a strategy named `local` with the `Local` authenticator:
@@ -58,7 +59,7 @@ this.strategies = {
     config: {
       authenticator: 'Local'
     },
-    // theses methods must exists in the plugin object
+    // these methods must be exposed by the plugin 
     methods: {
       create: 'create',
       delete: 'delete',
@@ -78,7 +79,7 @@ this.strategies = {
 Strategies can be register at runtime with the [strategies.add](/core/1/plugins/plugin-context/accessors/strategies/#add) method.  
 
 ::: info
-Strategies added dynamically in the plugin [init method](/core/1/plugins/guides/manual-setup/init-function/) are added to the static `strategies` object and loaded by Kuzzle after plugin initialization.
+Strategies added dynamically in the plugin's [init method](/core/1/plugins/guides/manual-setup/init-function/) are added to the static `strategies` object and loaded by Kuzzle after the plugin initialization.
 :::
 
 ### config
