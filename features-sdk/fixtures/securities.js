@@ -1,4 +1,4 @@
-// See https://docs.kuzzle.io/api/1/controller-admin/load-securities/
+// See https://docs.kuzzle.io/core/2/api/controllers/admin/load-securities/
 
 module.exports = {
   users: {
