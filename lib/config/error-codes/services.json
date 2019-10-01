@@ -46,6 +46,12 @@
           "message": "Cannot be run on multiple collections.",
           "class": "BadRequestError"
         },
+        "incomplete_delete": {
+          "description": "Couldn't delete all the requested documents",
+          "code": 9,
+          "message": "Couldn't delete all the requested documents: %s",
+          "class": "PartialError"
+        },
         "not_found": {
           "description": "Document not found",
           "code": 11,
