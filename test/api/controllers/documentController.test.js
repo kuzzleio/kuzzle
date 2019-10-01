@@ -78,7 +78,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { message: 'Search on multiple indexes is not available.' });
+        { id: 'services.storage.no_multi_indexes' });
     });
 
     it('should throw an error if collection contains a comma', () => {
@@ -87,7 +87,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { message: 'Search on multiple collections is not available.' });
+        { id: 'services.storage.no_multi_collections' });
     });
 
     it('should throw an error if the size argument exceeds server configuration', () => {
@@ -97,7 +97,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         SizeLimitError,
-        { errorName: 'api.base.search_page_size' });
+        { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -219,7 +219,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.mGet(request)).throw(
         SizeLimitError,
-        { errorName: 'api.base.search_page_size' });
+        { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should handle errors if some documents are missing', async () => {
@@ -310,7 +310,7 @@ describe('DocumentController', () => {
         index,
         collection,
         content,
-        { id: null, userId: undefined, refresh: 'false' });
+        { id: null, userId: null, refresh: 'false' });
     });
   });
 
@@ -370,7 +370,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: undefined, refresh: 'false' });
+        { userId: null, refresh: 'false' });
     });
 
     it('should handle errors if some actions failed', async () => {
@@ -473,7 +473,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: undefined, refresh: 'false' });
+        { userId: null, refresh: 'false' });
     });
   });
 
@@ -527,7 +527,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: undefined, refresh: 'false', retryOnConflict: undefined });
+        { userId: null, refresh: 'false', retryOnConflict: undefined });
     });
   });
 
@@ -582,7 +582,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: undefined, refresh: 'false' });
+        { userId: null, refresh: 'false' });
     });
   });
 

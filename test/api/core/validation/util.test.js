@@ -2,7 +2,12 @@ const
   should = require('should'),
   rewire = require('rewire'),
   Validation = rewire('../../../../lib/api/core/validation'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock');
+  KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  {
+    errors: {
+      BadRequestError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('Test: validation utilities', () => {
   const
@@ -178,7 +183,7 @@ describe('Test: validation utilities', () => {
 
       should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).throw('Field aField.aSubField: a message');
+      }).throw(BadRequestError, { id: 'validation.check.failed_field' });
     });
 
     it('should add a message at the begining of the errorHolder when verbose is false and context is document', () => {
@@ -190,7 +195,7 @@ describe('Test: validation utilities', () => {
 
       should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).throw('Document: a message.');
+      }).throw(BadRequestError, { id: 'validation.check.failed_document' });
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {

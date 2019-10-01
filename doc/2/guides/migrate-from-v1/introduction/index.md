@@ -18,7 +18,7 @@ Dropped support for:
 API Changes:
   - Remove permission closures (deprecated since Kuzzle 1.4.0)
   - Remove the documents trashcan (deprecated since Kuzzle 1.2.0)
-  - Remove the `_meta` tag from documents and notifications (it was deprecated since Kuzzle 1.3.0)
+  - Remove the `_meta` tag from documents and notifications (deprecated since Kuzzle 1.3.0)
   - Fields linked to the documents trashcan have been removed from the documents and notifications metadata : `deletedAt`, `active`
   - Remove the real-time notifications about events that were about to happen (deprecated since Kuzzle 1.5.0)
 
@@ -26,13 +26,12 @@ API Changes:
 
 | Code | Unique name |
 |------|-------------|
-| `0x00020004` | `internal.hotelclerk.incorrect_state_value` |
-| `0x01090032` | `api.security.invalid_rights_given` |
-| `0x0109003b` | `api.security.missing_test_element_for_controller_action` |
-| `0x0109003e` | `api.security.parsing_closure_rights_for_role` |
-| `0x0109003f` | `api.security.rights_action_closure_execution` |
-| `0x03060008` | `network.http_router.unable_to_convert_http_body_to_json` |
-| `0x0008...` | (the entire `sandbox` error subdomain has been removed) |
+| `0x00010003` | `core.realtime.invalid_state` |
+| `0x00040001` | `core.sandbox.process_already_running` |
+| `0x00040002` | `core.sandbox.timeout` |
+| `0x07050006` | `security.role.invalid_rights` |
+| `0x07050007` | `security.role.closure_exec_failed` |
+| `0x07050008` | `security.role.closure_missing_test` |
 
 ### Removed events
 

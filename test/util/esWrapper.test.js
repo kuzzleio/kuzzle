@@ -25,7 +25,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.errorName).be.eql('external.elasticsearch.unexpected_error');
+      should(formatted.id).be.eql('external.elasticsearch.unexpected_error');
     });
 
     it('should handle version conflict errors', () => {
@@ -37,7 +37,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.instanceOf(ExternalServiceError);
-      should(formatted.errorName).be.eql('external.elasticsearch.too_many_changes');
+      should(formatted.id).be.eql('external.elasticsearch.too_many_changes');
     });
 
     it('should handle already existing document', () => {
@@ -47,7 +47,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.match({
-        errorName: 'external.elasticsearch.document_already_exists'
+        id: 'external.elasticsearch.document_already_exists'
       });
     });
 
@@ -66,7 +66,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.match({
-        errorName: 'external.elasticsearch.document_not_found'
+        id: 'external.elasticsearch.document_not_found'
       });
     });
   });

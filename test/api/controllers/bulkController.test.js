@@ -56,7 +56,7 @@ describe('Test the bulk controller', () => {
       const response = await controller.import(request);
 
       should(controller.publicStorage.import)
-        .be.calledWith(index, collection, bulkData, { refresh: 'false', userId: undefined });
+        .be.calledWith(index, collection, bulkData, { refresh: 'false', userId: null });
 
       should(response).match({
         successes: ['fake', 'data'],

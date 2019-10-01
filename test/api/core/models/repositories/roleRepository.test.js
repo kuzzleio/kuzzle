@@ -3,8 +3,12 @@
 const
   sinon = require('sinon'),
   should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Request = require('kuzzle-common-objects').Request,
+  { Request,
+    errors: {
+      BadRequestError,
+      PreconditionError
+    }
+  } = require('kuzzle-common-objects'),
   Role = require('../../../../../lib/api/core/models/security/role'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   RoleRepository = require('../../../../../lib/api/core/models/repositories/roleRepository');
@@ -224,7 +228,7 @@ describe('Test: repositories/roleRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
-          should(e.message).be.exactly('admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.');
+          should(e.id).eql('security.role.cannot_delete');
           should(kuzzle.emit).not.be.called();
           done();
         })
@@ -246,8 +250,8 @@ describe('Test: repositories/roleRepository', () => {
           done(new Error('The promise is not rejected'));
         })
         .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError);
-          should(e.message).be.exactly('The role "test" cannot be deleted since it is used by some profile.');
+          should(e).be.an.instanceOf(PreconditionError);
+          should(e.id).eql('security.role.in_use');
           should(kuzzle.emit).not.be.called();
           done();
         })

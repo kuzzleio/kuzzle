@@ -21,7 +21,7 @@
     "doc-cloudfront": "cd doc && bash doc.sh cloudfront",
     "doc-deploy": "npm run doc-upload && npm run doc-cloudfront",
     "doc-netlify": "npm run doc-prepare && cd doc && bash doc.sh build-netlify",
-    "doc-generate-subcodes": "cd doc && node generate-subcodes-doc"
+    "doc-error-codes": "node doc/build-error-codes"
   },
   "directories": {
     "lib": "lib"
@@ -51,8 +51,8 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^1.2.2",
-    "kuzzle-common-objects": "^4.0.0",
-    "kuzzle-sdk": "git://github.com/kuzzleio/sdk-javascript.git#7-dev",
+    "kuzzle-common-objects": "^4.0.1",
+    "kuzzle-sdk": "7.0.0-beta.1",
     "lodash": "4.17.14",
     "moment": "^2.24.0",
     "mosca": "^2.8.3",

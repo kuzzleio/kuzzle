@@ -92,6 +92,7 @@ Each errored action is an object of the `errors` array:
 Each item is an object containing the action name as key and the corresponding object contain the following properties:
   - `_id`: document unique identifier
   - `status`: HTTP status code for that query
+  - `_source`: document body
   - `error`: 
     - `type`: elasticsearch client error type
     - `reason`: human readable error message

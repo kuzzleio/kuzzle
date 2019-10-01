@@ -295,7 +295,7 @@ describe('/lib/api/core/entrypoints/protocols/websocket', () => {
         const matcher = errorMatcher.fromMessage(
           'network',
           'websocket',
-          'websocket_request_error',
+          'unexpected_error',
           'Unexpected token o in JSON at position 0');
 
         should(entrypoint.execute).not.be.called();

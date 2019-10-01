@@ -78,7 +78,7 @@ describe('Test: validation/types/email', () => {
 
     it('should throw if the provided "notEmpty" option is invalid', () => {
       should(() => emailType.validateFieldSpecification({notEmpty: 'foobar'}))
-        .throw(PreconditionError, { message: 'Option "notEmpty" must be of type "boolean".'});
+        .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
     });
   });
 });

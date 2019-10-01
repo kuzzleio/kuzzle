@@ -5,9 +5,7 @@ const
   Kuzzle = require('../../../../mocks/kuzzle.mock'),
   {
     Request,
-    errors: {
-      BadRequestError
-    }
+    errors: { BadRequestError }
   } = require('kuzzle-common-objects'),
   Role = require('../../../../../lib/api/core/models/security/role');
 
@@ -223,14 +221,16 @@ describe('Test: security/roleTest', () => {
       const role = new Role();
       role.controllers = true;
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The "controllers" definition must be an object'});
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, {id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the controllers definition is empty', () => {
       const role = new Role();
       role.controllers = {};
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'The "controllers" definition cannot be empty'});
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject the promise if the controller element is not an object', () => {
@@ -239,7 +239,8 @@ describe('Test: security/roleTest', () => {
         '*': true
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]: must be an object'});
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the controller element is empty', () => {
@@ -248,7 +249,8 @@ describe('Test: security/roleTest', () => {
         '*': {}
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [*]: cannot be empty'});
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject the promise if the actions attribute is missing', () => {
@@ -259,7 +261,8 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller]: "actions" attribute missing'});
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject the promise is the actions attribute is not an object', () => {
@@ -270,7 +273,8 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller]: "actions" attribute must be an object'});
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the actions attribute is empty', () => {
@@ -281,7 +285,8 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(BadRequestError, {message: 'Invalid definition for [controller]: "actions" attribute cannot be empty'});
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject the promise if the action right is neither a boolean or an object', () => {
@@ -294,9 +299,8 @@ describe('Test: security/roleTest', () => {
         }
       };
 
-      return should(role.validateDefinition(context)).be.rejectedWith(
-        BadRequestError,
-        { message: 'Invalid definition for [controller, action]: must be a boolean' });
+      return should(role.validateDefinition(context))
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should validate if only boolean rights are given', () => {

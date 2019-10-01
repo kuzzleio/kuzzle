@@ -6,7 +6,7 @@ const
   {
     Request,
     errors: {
-      InternalError
+      PluginImplementationError
     }
   } = require('kuzzle-common-objects'),
   User = require('../../../../lib/api/core/models/security/user'),
@@ -35,7 +35,7 @@ describe('Test: sdk/funnelProtocol', () => {
     it('should throw an InternalError if the funnel is instantiated without a valid User object', () => {
       should(() => {
         new FunnelProtocol(funnel, { _id: 'gordon' });
-      }).throw(InternalError);
+      }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
     });
   });
 
@@ -86,14 +86,18 @@ describe('Test: sdk/funnelProtocol', () => {
             controller: 'realtime',
             action: 'subscribe'
           }))
-            .be.rejectedWith(/"realtime:subscribe" method is not available in plugins\. You should use plugin hooks instead/);
+            .be.rejectedWith(PluginImplementationError, {
+              id: 'plugin.context.unavailable_realtime'
+            });
         })
         .then(() => {
           return should(funnelProtocol.query({
             controller: 'realtime',
             action: 'unsubscribe'
           }))
-            .be.rejectedWith(/"realtime:unsubscribe" method is not available in plugins\. You should use plugin hooks instead/);
+            .be.rejectedWith(PluginImplementationError, {
+              id: 'plugin.context.unavailable_realtime'
+            });
         });
     });
   });
