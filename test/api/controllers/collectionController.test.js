@@ -82,13 +82,7 @@ describe('Test: collection controller', () => {
       should(collectionController.publicStorage.getMapping)
         .be.calledWith(index, collection, { includeKuzzleMeta: false });
 
-      should(response).match({
-        [index]: {
-          mappings: {
-            [collection]: mappings
-          }
-        }
-      });
+      should(response).match(mappings);
     });
 
     it('should include kuzzleMeta if specified', async () => {
