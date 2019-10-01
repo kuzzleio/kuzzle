@@ -28,7 +28,7 @@ Clients can detect the error type based on the `status` and process the error ac
 The `errorName` property is a concatenation of 3 levels of precision from where your error come from.
 For an `errorName` `api.auth.database_not_found`, you have `api` as domain, `auth` as subdomain and `database_not_found` as error.
 
-You can see the full definition about Kuzzle errors [here](/core/1/api/essentials/errors/subcodes/)
+You can see the full definition about Kuzzle errors [here](/core/1/api/essentials/errors/codes/)
 
 
 ---
@@ -42,7 +42,7 @@ The `code` property is a concatenation of 3 codes:
 
 So a `code` `0x02040001` has `02` as domain code on 1 byte, `04` as subdomain code on 1 byte and `0001` as error code on 2 bytes.
 
-You can see the full definition of Kuzzle API errors [here](/core/1/api/essentials/errors/subcodes/)
+You can see the full definition of Kuzzle API errors [here](/core/1/api/essentials/errors/codes/)
 
 
 
