@@ -145,19 +145,17 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
   describe('#onClientDisconnection', () => {
     it('should delete the connection', () => {
-      entrypoint.clients.connectionId = {};
+      entrypoint._clients.set('connectionId', {});
+      sinon.stub(entrypoint, 'removeConnection');
 
       return protocol.init(entrypoint)
         .then(() => {
-          protocol.sockets = {
-            connectionId: {}
-          };
+          protocol.sockets.set('connectionId', {});
 
           protocol.onClientDisconnection('connectionId');
-          should(protocol.sockets)
-            .be.empty();
-          should(entrypoint.clients)
-            .be.empty();
+          should(protocol.sockets).be.empty();
+          should(entrypoint.removeConnection).calledOnce().calledWith('connectionId');
+          should(entrypoint._clients).have.keys('connectionId');
         });
     });
   });
@@ -179,9 +177,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
       return protocol.init(entrypoint)
         .then(() => {
-          protocol.sockets = {
-            connectionId: {}
-          };
+          protocol.sockets.set('connectionId', {});
         });
     });
 
@@ -253,11 +249,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
   describe('#notify', () => {
     it('should emit to the connection channel(s)', () => {
-      protocol.sockets = {
-        connectionId: {
-          emit: socketEmitStub
-        }
-      };
+      protocol.sockets.set('connectionId', { emit: socketEmitStub });
 
       protocol.notify({
         connectionId: 'connectionId',
@@ -274,44 +266,31 @@ describe('/lib/api/core/entrypoints/embedded/protocols/socketio', () => {
 
   describe('#joinChannel', () => {
     it('should call socket io join', () => {
-      protocol.sockets = {
-        connectionId: {
-          join: sinon.spy()
-        }
-      };
+      protocol.sockets.set('connectionId', { join: sinon.spy() });
 
       protocol.joinChannel('channel', 'connectionId');
-      should(protocol.sockets.connectionId.join)
+      should(protocol.sockets.get('connectionId').join)
         .be.calledWith('channel');
     });
   });
 
   describe('#leaveChannel', () => {
     it('should call socket io leave', () => {
-      protocol.sockets = {
-        connectionId: {
-          leave: sinon.spy()
-        }
-      };
+      protocol.sockets.set('connectionId', { leave: sinon.spy() });
 
       protocol.leaveChannel('channel', 'connectionId');
-      should(protocol.sockets.connectionId.leave)
+      should(protocol.sockets.get('connectionId').leave)
         .be.calledWith('channel');
     });
   });
 
   describe('#disconnect', () => {
     it('should call socket io disconnect', () => {
-      protocol.sockets = {
-        connectionId: {
-          disconnect: sinon.spy()
-        }
-      };
+      protocol.sockets.set('connectionId', { disconnect: sinon.spy() });
+
       protocol.disconnect('connectionId');
-      should(protocol.sockets.connectionId.disconnect)
+      should(protocol.sockets.get('connectionId').disconnect)
         .be.calledOnce();
     });
   });
-
-
 });
