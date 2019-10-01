@@ -14,11 +14,11 @@ Given('a collection {string}:{string}', async function (index, collection) {
 
 Given('an existing collection {string}:{string}', async function (index, collection) {
   if (!await this.sdk.index.exists(index)) {
-    throw new Error(`Index ${index} does not exists`);
+    throw new Error(`Index ${index} does not exist`);
   }
 
   if (!await this.sdk.collection.exists(index, collection)) {
-    throw new Error(`Collection ${index}:${collection} does not exists`);
+    throw new Error(`Collection ${index}:${collection} does not exist`);
   }
 
   this.props.index = index;

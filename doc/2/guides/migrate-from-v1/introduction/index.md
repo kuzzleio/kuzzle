@@ -39,7 +39,7 @@ API Changes:
 
 ### New API methods
 
-  - `collection:refresh`: refresh a collection
+  - `collection:refresh`: refreshes a collection
 
 ### Removed API methods
 

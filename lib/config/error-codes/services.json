@@ -119,7 +119,7 @@
           "class": "BadRequestError"
         },
         "collection_reserved": {
-          "description": "Collection can not be called \"_kuzzle_keep\" because it is reserved for internal use.",
+          "description": "Collections cannot be named \"_kuzzle_keep\" because it is reserved for internal use.",
           "code": 22,
           "message": "Invalid collection name. \"%s\" is reserved for internal usage.",
           "class": "BadRequestError"
