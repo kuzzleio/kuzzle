@@ -450,7 +450,8 @@ describe('Test: ElasticSearch service', () => {
         .catch(err => {
           try {
             should(err).be.an.instanceOf(NotFoundError);
-            should(err.message).be.exactly(`Document with id '${request.input.resource._id}' not found.`);
+            should(err.errorName).eql('services.storage.not_found');
+            should(err.message).be.exactly(`Document "${request.input.resource._id}" not found.`);
             should(elasticsearch.client.index).not.be.called();
 
             done();
@@ -459,7 +460,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should reject if index or collection don\'t exist', () => {
+    it('should reject if the index or the collection doesn\'t exist', () => {
       elasticsearch.client.exists.resolves(false);
       elasticsearch.kuzzle.indexCache.exists.resolves(false);
 
@@ -750,8 +751,8 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.update(request)
         .catch(error => {
           try {
-            should(error).be.instanceOf(NotFoundError);
-            should(error.message).be.equal('Index or collection "banana" does not exist, please create it first.');
+            should(error).be.instanceOf(PreconditionError);
+            should(error.errorName).eql('services.storage.unknown_index');
             should(error.stack.replace(/^.*?\n/, ''))
               .eql(esError.stack.replace(/^.*?\n/, ''));
             should(elasticsearch.client.update.firstCall.args[0].id).be.null();
@@ -1007,7 +1008,8 @@ describe('Test: ElasticSearch service', () => {
 
       return elasticsearch.import(request)
         .then(() => {
-          should(elasticsearch.client.bulk.firstCall.args[0].body).be.exactly(request.input.body.bulkData);
+          should(elasticsearch.client.bulk.firstCall.args[0].body)
+            .be.exactly(request.input.body.bulkData);
           should(refreshIndexSpy.calledOnce).be.true();
         });
     });
@@ -1307,7 +1309,7 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.import(request)).be.rejectedWith(BadRequestError);
     });
 
-    it('should rejected if index and/or collection don\'t exist', () => {
+    it('should reject if index and/or collection don\'t exist', () => {
       elasticsearch.client.indices.getMapping.resolves({});
       elasticsearch.client.cat.aliases.resolves([]);
       request.input.resource.index = null;
@@ -1324,7 +1326,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.client.bulk.resolves({});
 
       return should(elasticsearch.import(request))
-        .be.rejectedWith(PreconditionError, {message: 'Index \'test\' and/or collection \'unit-tests-elasticsearch\' don\'t exist.'});
+        .be.rejectedWith(PreconditionError, { errorName: 'services.storage.unknown_index_collection' });
     });
   });
 
@@ -2187,7 +2189,8 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mcreate(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
+      return should(elasticsearch.mcreate(request))
+        .rejectedWith(SizeLimitError, { errorName: 'services.storage.write_limit_exceeded' });
     });
 
     it('should get documents from ES only if there are IDs provided', () => {
@@ -2366,7 +2369,8 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{body: {foo: 'bar'}}, {body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mcreateOrReplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
+      return should(elasticsearch.mcreateOrReplace(request))
+        .rejectedWith(SizeLimitError, { errorName: 'services.storage.write_limit_exceeded' });
     });
 
     it('should bulk import documents to be created or replaced', () => {
@@ -2497,7 +2501,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.mupdate(request)).rejectedWith(
         SizeLimitError,
-        {message: 'Number of documents exceeds the server configured value (1).'});
+        { errorName: 'services.storage.write_limit_exceeded' });
     });
 
     it('should bulk import documents to be updated', () => {
@@ -2642,7 +2646,8 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {documents: [{_id: 'foo', body: {foo: 'bar'}}, {_id: 'bar', body: {bar: 'foo'}}]};
 
-      return should(elasticsearch.mreplace(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
+      return should(elasticsearch.mreplace(request))
+        .rejectedWith(SizeLimitError, { errorName: 'services.storage.write_limit_exceeded' });
     });
 
     it('should reject documents that are not found', () => {
@@ -2777,7 +2782,8 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
       request.input.body = {ids: ['foo', 'bar']};
 
-      return should(elasticsearch.mdelete(request)).rejectedWith(SizeLimitError, {message: 'Number of documents exceeds the server configured value (1).'});
+      return should(elasticsearch.mdelete(request))
+        .rejectedWith(SizeLimitError, { errorName: 'services.storage.write_limit_exceeded' });
     });
 
     it('should correctly separate bulk successes from errors', () => {
@@ -2839,10 +2845,16 @@ describe('Test: ElasticSearch service', () => {
 
 
       should(() => elasticsearch._checkMapping(mapping))
-        .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
+        .throw(BadRequestError, {
+          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          errorName: 'services.storage.invalid_mapping'
+        });
 
       should(() => elasticsearch._checkMapping(mapping2))
-        .throw({ message: 'Incorrect mapping property "mapping.type".' });
+        .throw(BadRequestError, {
+          message: 'Invalid mapping property "mapping.type".',
+          errorName: 'services.storage.invalid_mapping'
+        });
     });
 
     it('should throw when a nested property is incorrect', () => {
@@ -2860,7 +2872,10 @@ describe('Test: ElasticSearch service', () => {
       };
 
       should(() => elasticsearch._checkMapping(mapping))
-        .throw({ message: 'Incorrect mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
+        .throw(BadRequestError, {
+          message: 'Invalid mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?',
+          errorName: 'services.storage.invalid_mapping'
+        });
     });
 
     it('should return null if no properties are incorrect', () => {

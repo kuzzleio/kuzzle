@@ -62,4 +62,4 @@ Returns a boolean telling whether the provided collection exists:
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [Common errors](/core/1/api/essentials/errors/handling#common-errors)

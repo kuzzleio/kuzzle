@@ -93,7 +93,7 @@ jobs:
         - bash .ci/sonar.sh
 
     - stage: Unit Tests & Linters
-      name: Documentation dead links
+      name: Documentation dead links & error codes check
       cache:
         directories:
           - $HOME/.gem/specs
@@ -101,12 +101,16 @@ jobs:
         - REPOSITORIES=kuzzle-how-to,sdk-javascript-5,sdk-javascript-6,plugin-s3-1,sdk-php-3,plugin-cloudinary-1,sdk-cpp-1,sdk-csharp-1,sdk-go-1,sdk-go-2,sdk-java-1,sdk-java-2,sdk-java-3,kuzzle-1,sdk-android-3,plugin-multi-tenancy-1
       install:
         - gem install typhoeus
+        - npm ci --silent
       before_script:
         - npm run doc-prepare
         - npm run --prefix doc/framework clone-repos
       script:
         - echo "Checking dead links..."
         - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
+        - echo "Checking error codes..."
+        - npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR/codes-doc-test.md
+        - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/1/api/essentials/errors/codes/index.md
 
     # ---------------------------------------
     # Integration tests

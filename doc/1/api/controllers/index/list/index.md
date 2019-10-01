@@ -58,4 +58,4 @@ Returns a `indexes` array listing all existing index names.
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors#common-errors)
+- [Common errors](/core/1/api/essentials/errors/handling#common-errors)
