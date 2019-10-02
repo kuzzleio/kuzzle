@@ -345,7 +345,7 @@
         }
       },
       "socketio": {
-        "enabled": true,
+        "enabled": false,
         // value of Access-Control-Allow-Origin header to answer the upgrade
         // request
         "origins": "*:*"
