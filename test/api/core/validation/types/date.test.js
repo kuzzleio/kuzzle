@@ -43,29 +43,45 @@ describe('Test: validation/types/date', () => {
 
     it('should throw if an invalid "formats" options is provided', () => {
       should(() => dateType.validateFieldSpecification({formats: []}))
-        .throw(PreconditionError, {message: 'Invalid "formats" option: must be a non-empty array.'});
+        .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
 
       should(() => dateType.validateFieldSpecification({formats: null}))
-        .throw(PreconditionError, {message: 'Invalid "formats" option: must be a non-empty array.'});
+        .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
     });
 
     it('should throw if the "formats" option contains an unknown format', () => {
       should(() => dateType.validateFieldSpecification({formats: ['foobar']}))
-        .throw(PreconditionError, {message: 'Unrecognized format name: foobar.'});
+        .throw(PreconditionError, {
+          id: 'validation.types.invalid_date_format',
+          message: 'The following date types are invalid: foobar.'
+        });
 
       should(() => dateType.validateFieldSpecification({formats: ['foo', 'epoch_millis', 'bar']}))
-        .throw(PreconditionError, { message: 'Unrecognized format names: foo,bar.'});
+        .throw(PreconditionError, {
+          id: 'validation.types.invalid_date_format',
+          message: 'The following date types are invalid: foo,bar.'
+        });
     });
 
     it('should throw if the "range" option is invalid', () => {
       should(() => dateType.validateFieldSpecification({range: null}))
-        .throw(PreconditionError, { message: 'Invalid "range" option definition.'});
+        .throw(PreconditionError, {
+          id: 'validation.assert.unexpected_properties',
+          message: 'The object "range" contains unexpected properties (allowed: min, max).'
+        });
 
       should(() => dateType.validateFieldSpecification({range: []}))
-        .throw(PreconditionError, { message: 'Invalid "range" option definition.'});
+        .throw(PreconditionError, {
+          id: 'validation.assert.unexpected_properties',
+          message: 'The object "range" contains unexpected properties (allowed: min, max).'
+        });
+
 
       should(() => dateType.validateFieldSpecification({range: {unknown: null}}))
-        .throw(PreconditionError, { message: 'Invalid "range" option definition.'});
+        .throw(PreconditionError, {
+          id: 'validation.assert.unexpected_properties',
+          message: 'The object "range" contains unexpected properties (allowed: min, max).'
+        });
     });
 
     it('should leave the "min" option intact if it contains the special value "NOW"', () => {
@@ -82,18 +98,18 @@ describe('Test: validation/types/date', () => {
 
     it('should throw if "min" is not a valid date', () => {
       should(() => dateType.validateFieldSpecification({range: {min: 'foobar'}}))
-        .throw(PreconditionError, { message: 'Unable to parse the range value "foobar".'});
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
 
       should(() => dateType.validateFieldSpecification({range: {min: null}}))
-        .throw(PreconditionError, { message: 'Option "range.min": invalid format.'});
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
     });
 
     it('should throw if "max" is not a valid date', () => {
       should(() => dateType.validateFieldSpecification({range: {max: 'foobar'}}))
-        .throw(PreconditionError, { message: 'Unable to parse the range value "foobar".'});
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
 
       should(() => dateType.validateFieldSpecification({range: {max: null}}))
-        .throw(PreconditionError, { message: 'Option "range.max": invalid format.'});
+        .throw(PreconditionError, { id: 'validation.types.invalid_date' });
     });
 
     it('should throw if max < min', () => {
@@ -104,7 +120,7 @@ describe('Test: validation/types/date', () => {
         };
 
       should(() => dateType.validateFieldSpecification(typeOptions))
-        .throw(PreconditionError, {message: 'Invalid range: min > max.'});
+        .throw(PreconditionError, { id: 'validation.assert.invalid_range' });
     });
 
     it('should convert min and max to moment objects if they are valid', () => {

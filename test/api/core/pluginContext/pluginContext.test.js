@@ -107,7 +107,8 @@ describe('Plugin Context', () => {
 
     describe('#Request', () => {
       it('should throw when trying to instantiate a Request object without providing any data', () => {
-        should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
+        should(function () { new context.constructors.Request(); })
+          .throw(PluginImplementationError, { id: 'plugin.context.missing_request_data' });
       });
 
       it('should replicate the right request information', () => {
@@ -294,11 +295,11 @@ describe('Plugin Context', () => {
 
       should(() => {
         sdk.realtime.subscribe();
-      }).throw(PluginImplementationError);
+      }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
 
       should(() => {
         sdk.realtime.unsubscribe();
-      }).throw(PluginImplementationError);
+      }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
 
       should.doesNotThrow(() => {
         sdk.realtime.count('foo');
@@ -333,7 +334,7 @@ describe('Plugin Context', () => {
 
         should(() => {
           sdk.realtime.subscribe();
-        }).throw(PluginImplementationError);
+        }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
 
         should(sdk.auth._kuzzle.protocol.user).be.eql(user);
       });
@@ -341,7 +342,7 @@ describe('Plugin Context', () => {
       it('should throw a PluginImplementationError if the user is not a User object', () => {
         should(() => {
           context.accessors.sdk.as({ _id: 'gordon' });
-        }).throw(PluginImplementationError);
+        }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
       });
     });
 
@@ -488,14 +489,18 @@ describe('Plugin Context', () => {
               controller: 'realtime',
               action: 'subscribe'
             })))
-              .be.rejectedWith(/"realtime:subscribe" method is not available in plugins\. You should use plugin hooks instead/);
+              .be.rejectedWith(PluginImplementationError, {
+                id: 'plugin.context.unavailable_realtime'
+              });
           })
           .then(() => {
             return should(context.accessors.execute(new Request({
               controller: 'realtime',
               action: 'unsubscribe'
             })))
-              .be.rejectedWith(/"realtime:unsubscribe" method is not available in plugins\. You should use plugin hooks instead/);
+              .be.rejectedWith(PluginImplementationError, {
+                id: 'plugin.context.unavailable_realtime'
+              });
           });
       });
     });

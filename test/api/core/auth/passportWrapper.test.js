@@ -102,7 +102,7 @@ describe('Test the passport Wrapper', () => {
       .catch(err => {
         try {
           should(err).be.instanceOf(PluginImplementationError);
-          should(err.message).startWith('foobar\n');
+          should(err.id).eql('plugin.runtime.unexpected_error');
           done();
         }
         catch (e) {
@@ -150,6 +150,6 @@ describe('Test the passport Wrapper', () => {
     passportMock.authenticate.throws(new Error('foobar'));
 
     return should(passportWrapper.authenticate('foo', 'bar'))
-      .be.rejectedWith(PluginImplementationError, {message: /^foobar.*/});
+      .be.rejectedWith(PluginImplementationError, { id: 'plugin.runtime.unexpected_error'});
   });
 });

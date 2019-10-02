@@ -125,7 +125,10 @@ describe('Test the auth controller', () => {
       delete request.input.args.strategy;
 
       return should(() => {authController.login(request);})
-        .throw();
+        .throw(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "strategy".'
+        });
     });
 
     it('should be able to set authentication expiration', () => {
@@ -201,7 +204,7 @@ describe('Test the auth controller', () => {
       const error = new Error('Mocked error');
       kuzzle.repositories.token.expire.rejects(error);
 
-      return should(authController.logout(request)).be.rejectedWith(KuzzleInternalError);
+      return should(authController.logout(request)).be.rejectedWith(error);
     });
 
     it('should throw if invoked by an anonymous user', () => {
@@ -209,7 +212,7 @@ describe('Test the auth controller', () => {
 
       should(() => authController.logout(request)).throw(
         UnauthorizedError,
-        {message: 'You must be authenticated to execute that action'});
+        {id: 'security.rights.unauthorized'});
     });
   });
 
@@ -244,7 +247,10 @@ describe('Test the auth controller', () => {
     it('should throw an error if no token is provided', () => {
       return should(() => {
         authController.checkToken(new Request({body: {}}));
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, {
+        id: 'api.assert.missing_argument',
+        message: 'Missing argument "body.token".'
+      });
     });
 
     it('should return a valid response if the token is valid', () => {
@@ -289,7 +295,7 @@ describe('Test the auth controller', () => {
       )))
         .throw(
           UnauthorizedError,
-          {message: 'You must be authenticated to execute that action'});
+          {id: 'security.rights.unauthorized'});
     });
 
     it('should throw if the token has already been refreshed', () => {
@@ -300,7 +306,7 @@ describe('Test the auth controller', () => {
           user: {_id: 'bar'}
         }
       )))
-        .throw(UnauthorizedError, {message: 'Invalid token.'});
+        .throw(UnauthorizedError, {id: 'security.token.invalid' });
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {
@@ -379,7 +385,9 @@ describe('Test the auth controller', () => {
           {body: {foo: 'bar', profileIds: ['test']}},
           {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, {
+        id: 'api.assert.forbidden_argument',
+        message: 'The argument "body.profileIds" is not allowed by this API action.'});
     });
 
     it('should throw an error if _id is specified in the body', () => {
@@ -388,7 +396,10 @@ describe('Test the auth controller', () => {
           {body: {foo: 'bar', _id: 'test'}},
           {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, {
+        id: 'api.assert.forbidden_argument',
+        message: 'The argument "body._id" is not allowed by this API action.'
+      });
     });
 
     it('should throw an error if current user is anonymous', () => {
@@ -398,7 +409,7 @@ describe('Test the auth controller', () => {
 
       should(() => authController.updateSelf(r)).throw(
         UnauthorizedError,
-        {message: 'You must be authenticated to execute that action'});
+        {id: 'security.rights.unauthorized'});
     });
   });
 

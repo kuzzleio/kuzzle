@@ -15,10 +15,11 @@ const
       BadRequestError,
       ServiceUnavailableError,
       InternalError: KuzzleInternalError,
-      PartialError
+      PartialError,
+      SizeLimitError
     }
   } = require('kuzzle-common-objects'),
-  errorsManager = require('../../../../lib/config/error-codes/throw');
+  errorsManager = require('../../../../lib/util/errors');
 
 describe('/api/controllers/security', () => {
   let
@@ -56,7 +57,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, {message: 'The request must specify a body attribute "ids".'});
+        .throw(BadRequestError, { id: 'api.assert.missing_argument'});
 
     });
 
@@ -68,7 +69,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, {message: 'The request must specify the body attribute "ids" of type "array".'});
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should fail if kuzzle is overloaded', () => {
@@ -117,9 +118,8 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
-      return should(() => {
-        mDelete(kuzzle, 'type', request);
-      }).throw('The number of deletes to perform exceeds the server configured value 1.');
+      return should(() => mDelete(kuzzle, 'type', request))
+        .throw(SizeLimitError, { id: 'services.storage.write_limit_exceeded' });
     });
 
     it('should return the input ids if everything went fine', () => {

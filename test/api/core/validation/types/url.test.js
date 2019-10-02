@@ -70,7 +70,7 @@ describe('Test: validation/types/url', () => {
     it('should throw if notEmpty is not set properly', () => {
       [[], {}, 'foo', 123, undefined, null].forEach(v => {
         should(() => urlType.validateFieldSpecification({notEmpty: v}))
-          .throw(PreconditionError, {message: 'Option "notEmpty" must be of type "boolean".'});
+          .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
       });
     });
   });

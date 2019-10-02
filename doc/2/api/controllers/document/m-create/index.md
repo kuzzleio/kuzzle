@@ -106,7 +106,7 @@ Each created document is an object with the following properties:
 - `_version`: version of the created document (should be `1`)
 - `created`: a boolean telling whether a document is created (should be `true`)
 
-If one or more document changes fail, the response status is set to `206`, and the `error` object contain a [partial error](/core/2/api/essentials/errors#partialerror) error.
+If one or more document changes fail, the response status is set to `206`, and the `error` object contain a [partial error](/core/2/api/essentials/errors/handling#partialerror) error.
 
 ### Example
 

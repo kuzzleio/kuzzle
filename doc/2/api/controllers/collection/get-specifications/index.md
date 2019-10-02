@@ -78,5 +78,6 @@ Returns a specifications object with the following properties:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors#common-errors)
-- [NotFoundError](/core/2/api/essentials/errors#notfounderror)
+- [Common errors](/core/2/api/essentials/errors/handling#common-errors)
+- [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror)
+
