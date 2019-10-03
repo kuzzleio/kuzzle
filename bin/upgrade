@@ -58,10 +58,8 @@ const
   await context.init();
 
   for (const dir of context.version.list) {
-    const migrationProcess = require(`${__dirname}/.upgrades/versions/${dir}`);
+    context.log.notice(`Starting to upgrade from Kuzzle ${dir}...`);
 
-    context.log.notice(`Starting to migrate from ${dir}...`);
-
-    await migrationProcess(context);
+    await require(`./.upgrades/versions/${dir}`)(context);
   }
 })();

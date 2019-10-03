@@ -22,8 +22,6 @@
 const
   assert = require('assert').strict,
   { Client } = require('@elastic/elasticsearch'),
-  inquirer = require('../../.utils/inquirerExtended'),
-  ColorOutput = require('../../.utils/colorOutput'),
   validator = require('validator'),
   _ = require('lodash');
 
@@ -32,18 +30,16 @@ let
   target = null,
   promise = null;
 
-const cout = new ColorOutput();
-
-async function getEsClient(config) {
-  const currentConfiguration = _.get(config, 'services.db.client');
+async function getEsClient(context) {
+  const currentConfiguration = _.get(context.config, 'services.db.client');
 
   assert(currentConfiguration, 'Missing Kuzzle configuration for Elasticsearch.');
 
-  cout.notice('Current Elasticsearch configuration:');
+  context.log.notice('Current Elasticsearch configuration:');
   /* eslint-disable-next-line no-console */
   console.dir(currentConfiguration, {colors: true, depth: null});
 
-  const answers = await inquirer.prompt([
+  const answers = await context.inquire.prompt([
     {
       type: 'list',
       message: 'For this migration, use this current instance as the data',
@@ -77,9 +73,9 @@ async function getEsClient(config) {
   return { source, target };
 }
 
-module.exports = async config => {
+module.exports = async context => {
   if (promise === null) {
-    promise = getEsClient(config);
+    promise = getEsClient(context);
   }
 
   return promise;

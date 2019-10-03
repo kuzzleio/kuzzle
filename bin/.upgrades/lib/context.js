@@ -23,7 +23,7 @@ const
   fs = require('fs'),
   path = require('path'),
   { version: currentVersion } = require('../../../package.json'),
-  config = require('../../../lib/config'),
+  rc = require('rc'),
   inquirer = require('./inquirerExtended'),
   Logger = require('./logger');
 
@@ -34,16 +34,31 @@ class Version {
   }
 }
 
+function loadConfiguration () {
+  return rc('kuzzle', '../../../default.config.js');
+}
+
 class UpgradeContext {
   constructor(args) {
-    this.config = config;
+    this.config = null;
     this.log = new Logger(args);
     this.inquire = inquirer;
     this.version = null;
   }
 
-  async init() {
+  async init () {
+    this.config = loadConfiguration();
+
+    if (this.config.configs) {
+      this.log.notice('Configuration files loaded:');
+      this.config.configs.forEach(f => this.log.print(`\t- ${f}`));
+    }
+
     this.version = await this.getVersions();
+  }
+
+  reloadConfiguration () {
+    this.config = loadConfiguration();
   }
 
   /**
@@ -56,14 +71,15 @@ class UpgradeContext {
     this.log.notice(`Current Kuzzle version: ${currentVersion}`);
 
     version.list = fs
-      .readdirSync(path.resolve(`${__dirname}/../versions`), { withFileTypes: true })
-      .filter(entry => entry.isDirectory() && entry.name.match(/^v[0-9]+ to v[0-9]+$/))
+      .readdirSync(
+        path.resolve(`${__dirname}/../versions`),
+        { withFileTypes: true })
+      .filter(entry => entry.isDirectory() && entry.name.match(/^v\d+$/))
       .map(entry => entry.name)
-      .sort((a, b) => parseInt(a[0].substring(1)) - parseInt(b[0].substring(1)));
+      .sort((a, b) => parseInt(a[0].substring(1))-parseInt(b[0].substring(1)));
 
     if (version.list.length === 1) {
       version.from = version.list[0];
-      this.log.notice(`Migrate from Kuzzle ${version.from}`);
     }
     else {
       version.from = await inquirer.direct({
@@ -73,7 +89,7 @@ class UpgradeContext {
         default: version.list[version.list.length - 1]
       });
 
-      version.list.splice(version.list.indexOf(version.from) + 1);
+      version.list = version.list.slice(version.list.indexOf(version.from));
     }
 
     return version;

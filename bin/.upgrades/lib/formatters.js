@@ -21,7 +21,13 @@
 
 const clc = require('cli-color');
 
-class ColoredFormatter {
+class RawFormatter {
+  raw (msg) {
+    return msg;
+  }
+}
+
+class ColoredFormatter extends RawFormatter {
   error (msg) {
     return clc.red(msg);
   }
@@ -43,7 +49,7 @@ class ColoredFormatter {
   }
 }
 
-class PrefixedFormatter {
+class PrefixedFormatter extends RawFormatter {
   error (msg) {
     return `[ERROR] ${msg}`;
   }
@@ -84,6 +90,11 @@ class FileFormatter extends PrefixedFormatter {
 
   question (msg) {
     return Buffer.from(`[${(new Date()).toISOString()}]${super.question(msg)}\n`);
+  }
+
+  // @override
+  raw (msg) {
+    return Buffer.from(`${msg}\n`);
   }
 }
 

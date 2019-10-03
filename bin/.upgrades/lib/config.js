@@ -20,10 +20,28 @@
  */
 
 const
-  config = require('../../../../lib/config');
+  _ = require('lodash'),
+  rc = require('rc');
 
-module.exports = function check (context) {
-  if (config.services.internalEngine) {
+
+class ConfigurationFiles {
+  constructor() {
+    this._config = rc('kuzzle');
+    this._exists = typeof this._config.configs !== 'undefined';
+  }
+
+  get (path) {
+    return _.get(config, path);
+  }
+
+  /**
+   * Gets the
+   * @param  {string} path
+   * @return {Array.<string>}
+   */
+  function getSources (path) {
 
   }
-};
+}
+
+module.exports = ConfigurationFiles;

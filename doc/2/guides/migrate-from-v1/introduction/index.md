@@ -70,10 +70,31 @@ It accepts the same arguments as the `kuzzle start` command from the CLI.
 
 ### Configuration changes
 
+#### Renamed keys
+
   - key `services.internalEngine` is renamed to `services.internalIndex`
   - key `services.db` has been renamed in `services.storageEngine`
-  - key `services.db.dynamic` has been moved to `services.storageEngine.commonMapping.dynamic` and is now `false` by default, meaning that Elasticsearch will not infer mapping of new introduced fields
-  - key `services.memoryStorage` has been renamed in `services.memoryStorage`
+
+#### Moved keys
+
+  - `services.storageEngine.dynamic` => `services.storageEngine.commonMapping.dynamic`
+  - `services.storageEngine.commonMapping._kuzzle_info` => `services.storageEngine.commonMapping.properties._kuzzle_info`
+
+#### Changed default values
+
+  - `server.protocols.socketio.enable` is now `false`, deactivating the Socket.io protocol by default
+  - `services.storage.commonMapping.dynamic` is now `false` by default, meaning that Elasticsearch will not infer mapping of new introduced fields
+
+#### Obsolete configurations
+
+The following configuration keys are now obsolete and ignored:
+
+  - `server.entryPoints`
+  - `server.proxy`
+  - `services.garbageCollector`
+  - `services.storageEngine.client.apiVersion`
+  - `services.storageEngine.commonMapping.properties._kuzzle_info.deletedAt`
+  - `services.storageEngine.commonMapping.properties._kuzzle_info.active`
 
 ### Internal storage changes
 

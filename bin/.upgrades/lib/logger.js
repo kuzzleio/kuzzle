@@ -70,13 +70,19 @@ class ColorOutput {
     }
   }
 
-  ok (str, { toConsole=true } = {}) {
-    if (toConsole) {
-      console.log(this.terminalFormatter.ok(str));
-    }
+  ok (str) {
+    console.log(this.terminalFormatter.ok(str));
 
     if (this.fileReport) {
       fs.writeSync(this.fileReport, this.fileFormatter.ok(str));
+    }
+  }
+
+  print (str) {
+    console.log(this.terminalFormatter.raw(str));
+
+    if (this.fileReport) {
+      fs.writeSync(this.fileReport, this.fileFormatter.raw(str));
     }
   }
   /* eslint-enable no-console */
