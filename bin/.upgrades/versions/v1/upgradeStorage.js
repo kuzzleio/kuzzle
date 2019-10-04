@@ -52,7 +52,7 @@ async function moveData (source, target, index, collection, newIndex) {
 
       if (doc._source._kuzzle_info) {
         delete doc._source._kuzzle_info.active;
-        delete doc._source._kuzzle_info.deleteAt;
+        delete doc._source._kuzzle_info.deletedAt;
       }
 
       bulk.push({ index: { _index: newIndex, _id: doc._id } });
@@ -70,6 +70,8 @@ async function moveData (source, target, index, collection, newIndex) {
       });
     }
   }
+
+  return total;
 }
 
 async function createNewIndex (source, target, index, collection, newIndex) {
@@ -82,8 +84,8 @@ async function createNewIndex (source, target, index, collection, newIndex) {
 
   // remove obsolete mapping properties
   if (mappings.properties && mappings.properties._kuzzle_info) {
-    delete mappings.properties._kuzzle_info.active;
-    delete mappings.properties._kuzzle_info.deleteAt;
+    delete mappings.properties._kuzzle_info.properties.active;
+    delete mappings.properties._kuzzle_info.properties.deletedAt;
   }
 
   const exists = await target.indices.exists({ index: newIndex });
@@ -106,17 +108,17 @@ async function createNewIndex (source, target, index, collection, newIndex) {
 
 async function upgrade (source, target, index, collection, newIndex) {
   await createNewIndex(source, target, index, collection, newIndex);
-  await moveData(source, target, index, collection, newIndex);
+  return await moveData(source, target, index, collection, newIndex);
 }
 
-async function upgradeInternalCollections (context, source, target) {
+async function upgradeInternalStorage (context, source, target) {
   const collections = [ 'validations', 'config', 'roles', 'users', 'profiles' ];
 
   for (const collection of collections) {
     const newIndex = getNewIndexName('%kuzzle', collection);
 
-    await upgrade(source, target, '%kuzzle', collection, newIndex);
-    context.log.ok(`... migrated internal data: ${collection}`);
+    const total = await upgrade(source, target, '%kuzzle', collection, newIndex);
+    context.log.ok(`... migrated internal data: ${collection} (${total} documents)`);
   }
 }
 
@@ -134,23 +136,186 @@ async function upgradePluginsStorage (context, source, target) {
 
     for (const collection of collections) {
       const newIndex = newIndexBase + collection;
-      await upgrade(source, target, index, collection, newIndex);
+      const total = await upgrade(source, target, index, collection, newIndex);
 
-      context.log.ok(`... migrated plugin ${plugin}: ${collection}`);
+      context.log.ok(`... migrated storage for plugin ${plugin}: ${collection} (${total} documents)`);
+    }
+  }
+}
+
+async function upgradeAliases (context, source, target, upgraded) {
+  const response = await source.indices.getAlias({
+    index: Object.keys(upgraded)
+  });
+
+  const aliases = {};
+  for (const [index, obj] of Object.entries(response.body)) {
+    if (Object.keys(obj.aliases).length > 0) {
+      for (const newIndex of upgraded[index].targets) {
+        aliases[newIndex] = obj.aliases;
+      }
+    }
+  }
+
+  if (Object.keys(aliases).length === 0) {
+    return;
+  }
+
+  context.log.notice(`
+Index aliases detected. This script can import them to the new structure, but
+due to the removal of native collections in Elasticsearch, future aliases will
+be duplicated across all of an index upgraded collections.`);
+
+  const choice = await context.inquire.direct({
+    type: 'confirm',
+    message: 'Upgrade aliases?',
+    default: false
+  });
+
+  if (!choice) {
+    return;
+  }
+
+  for (const [index, obj] of Object.entries(aliases)) {
+    for (const [name, body] of Object.entries(obj)) {
+      await target.indices.putAlias({ index, name, body });
+      context.log.ok(`...... alias ${name} on index ${index} upgraded`);
     }
   }
 }
 
 async function upgradeDataStorage (context, source, target) {
+  const
+    { body } = await source.cat.indices({ format: 'json' }),
+    upgraded = {};
+  let indexes = body
+    .map(b => b.index)
+    .filter(n => !n.startsWith(INTERNAL_PREFIX));
 
+  context.log.notice(`There are ${indexes.length} data indexes that can be upgraded`);
+  const choices = {
+    all: 'upgrade all indexes',
+    askIndex: 'choose which indexes can be upgraded',
+    askCollection: 'choose which collections can be upgraded',
+    skip: 'skip all data index upgrades'
+  };
+
+  const action = await context.inquire.direct({
+    type: 'list',
+    message: 'You want to',
+    choices: Object.values(choices),
+    default: choices.all
+  });
+
+  if (action === choices.skip) {
+    return;
+  }
+
+  if (action === choices.askIndex) {
+    indexes = await context.inquire.direct({
+      type: 'checkbox',
+      message: 'Select the indexes to upgrade:',
+      choices: indexes.map(i => ({ name: i, checked: true }))
+    });
+  }
+
+  for (const index of indexes) {
+    const
+      mappings = await source.indices.getMapping({ index }),
+      allCollections = Object.keys(mappings.body[index].mappings);
+    let collections = allCollections;
+
+    if (action === choices.askCollection) {
+      context.log.notice(`Starting to upgrade the index ${index}`);
+      collections = await context.inquire.direct({
+        type: 'checkbox',
+        message: 'Select the collections to upgrade:',
+        choices: collections.map(c => ({ name: c, checked: true }))
+      });
+    }
+
+    upgraded[index] = {
+      canBeRemoved: collections.length === allCollections.length,
+      targets: []
+    };
+
+    for (const collection of collections) {
+      const
+        newIndex = getNewIndexName(index, collection),
+        total = await upgrade(source, target, index, collection, newIndex);
+
+      upgraded[index].targets.push(newIndex);
+      context.log.ok(`... migrated data index ${index}: ${collection} (${total} documents)`);
+    }
+  }
+
+  await upgradeAliases(context, source, target, upgraded);
+
+  return upgraded;
+}
+
+async function destroyPreviousStructure (context, source, target, upgraded) {
+  // there is no point in destroying the previous structure if not performing
+  // an in-place migration
+  if (source !== target) {
+    return;
+  }
+
+  const
+    { body } = await source.cat.indices({ format: 'json' }),
+    plugins = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
+
+  let indexes = [
+    '%kuzzle',
+    ...plugins,
+    ...Object.keys(upgraded).filter(i => upgraded[i].canBeRemoved)
+  ];
+
+
+  context.log.notice('Since this is an in-place migration, the previous structure can be removed.');
+  context.log.notice('(only data indexes with ALL their collections upgraded can be deleted)');
+
+  const
+    choices = {
+      no: 'No - keep everything as is',
+      internal: 'Remove only Kuzzle internal data',
+      kuzzleAndPlugins: 'Remove Kuzzle internal data and plugins storages',
+      everything: 'Yes - remove all upgraded structures'
+    };
+
+  const action = await context.inquire.direct({
+    type: 'list',
+    message: 'Destroy? (THIS CANNOT BE REVERTED)',
+    default: choices[0],
+    choices: Object.values(choices)
+  });
+
+  if (action === choices.no) {
+    context.log.ok('Previous structure left intact.');
+    return;
+  }
+
+  if (action === choices.kuzzleAndPlugins) {
+    indexes = [ '%kuzzle', ...plugins ];
+  }
+  else if (action === choices.internal) {
+    indexes = [ '%kuzzle' ];
+  }
+
+  await source.indices.delete({ index: indexes });
+  context.log.ok('Previous structure destroyed.');
 }
 
 module.exports = async function upgradeStorage (context) {
   const { source, target } = await getESConnector(context);
 
-  context.log.notice('This script will now start *COPYING* the existing data to the target storage space.');
-  context.log.notice('If the upgrade is interrupted, this script can be replayed any number of times.');
-  context.log.notice('Existing data from the older version of Kuzzle will be unaffected, but if Kuzzle indexes already exist in the target storage space, they will be overwritten without notice.');
+  context.log.notice(`
+This script will now start *COPYING* the existing data to the target storage
+space.
+If the upgrade is interrupted, this script can be replayed any number of times.
+Existing data from the older version of Kuzzle will be unaffected, but if
+Kuzzle indexes already exist in the target storage space, they will be
+overwritten without notice.`);
 
   const confirm = await context.inquire.direct({
     type: 'confirm',
@@ -164,9 +329,12 @@ module.exports = async function upgradeStorage (context) {
   }
 
   try {
-    await upgradeInternalCollections(context, source, target);
+    await upgradeInternalStorage(context, source, target);
     await upgradePluginsStorage(context, source, target);
-    await upgradeDataStorage(context, source, target);
+    const upgraded = await upgradeDataStorage(context, source, target);
+
+    context.log.ok('Storage migration complete.');
+    await destroyPreviousStructure(context, source, target, upgraded);
   }
   catch (e) {
     context.log.error(`Storage upgrade failure: ${e.message}`);
@@ -174,4 +342,5 @@ module.exports = async function upgradeStorage (context) {
     context.log.error('Aborted.');
     process.exit(1);
   }
+
 };
