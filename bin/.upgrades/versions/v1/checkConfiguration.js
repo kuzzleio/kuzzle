@@ -24,7 +24,7 @@ const _ = require('lodash');
 module.exports = async function check (context) {
   let action = false;
   const
-    warn = msg => context.log.warn(`[CONFIGURATION] ${msg}`),
+    warn = msg => context.log.warn(`[CONFIG. FILES] ${msg}`),
     renamed = {
       'services.internalEngine': 'services.internalIndex',
       'services.db': 'services.storageEngine',
@@ -58,7 +58,7 @@ module.exports = async function check (context) {
   if (action) {
     const
       choices = [
-        'Recheck - files are now fixed',
+        'Check again',
         'Abort',
         'Ignore (not recommended)'
       ],
@@ -70,7 +70,7 @@ module.exports = async function check (context) {
       });
 
     if (proceed === choices[0]) {
-      context.reloadConfiguration();
+      await context.loadConfiguration();
       return check(context);
     }
 
@@ -78,4 +78,6 @@ module.exports = async function check (context) {
       process.exit(1);
     }
   }
+
+  context.log.ok('Configuration files checked: OK');
 };

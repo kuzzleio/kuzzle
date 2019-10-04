@@ -21,7 +21,7 @@
 
 // Returns an instance of "inquirer" extended with a "direct" function that
 // returns the answer directly, instead of a key-value map of answers.
-// Useful only because we often prompt questions on by one, with tasks in the
+// Useful only because we often prompt questions one by one, with tasks in the
 // middle, and this "direct" function helps reducing the clutter.
 
 const

@@ -106,7 +106,7 @@ The following configuration keys are now obsolete and ignored:
 **Internal datamodel changes:**
 
   - `kuzzle` index and its collections now follow our new naming policy
-  - plugins indexes change from `plugin:<plugin name>` to `plugin-<plugin name>`
+  - plugins indexes change from `plugin:<plugin name>` to `plugin-<plugin name>`. This is for plugins interating with their storage using the PluginContext object.
 
 ### Plugins
 

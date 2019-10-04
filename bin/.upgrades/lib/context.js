@@ -22,20 +22,17 @@
 const
   fs = require('fs'),
   path = require('path'),
-  { version: currentVersion } = require('../../../package.json'),
   rc = require('rc'),
   inquirer = require('./inquirerExtended'),
-  Logger = require('./logger');
+  Logger = require('./logger'),
+  { version: currentVersion } = require('../../../package.json'),
+  defaultConfiguration = require('../../../default.config.js');
 
 class Version {
   constructor() {
     this.from = null;
     this.list = [];
   }
-}
-
-function loadConfiguration () {
-  return rc('kuzzle', '../../../default.config.js');
 }
 
 class UpgradeContext {
@@ -47,18 +44,49 @@ class UpgradeContext {
   }
 
   async init () {
-    this.config = loadConfiguration();
+    await this.loadConfiguration();
 
     if (this.config.configs) {
-      this.log.notice('Configuration files loaded:');
+      this.log.ok('Configuration files loaded:');
       this.config.configs.forEach(f => this.log.print(`\t- ${f}`));
     }
 
     this.version = await this.getVersions();
   }
 
-  reloadConfiguration () {
-    this.config = loadConfiguration();
+  async loadConfiguration () {
+    let cfg;
+
+    try {
+      cfg = rc('kuzzle', JSON.parse(JSON.stringify(defaultConfiguration)));
+      this.config = cfg;
+      return;
+    }
+    catch (e) {
+      this.log.error(`Cannot load configuration files: ${e.message}`);
+      if (this.config === null) {
+        this.log.error('Check your configuration files, and restart the upgrade script.');
+        process.exit(1);
+      }
+    }
+
+    // If we are here, this means that an error was thrown, due to a change made
+    // to configuration files *during* the upgrade (probably because a version
+    // upgrade asked the user to modify their configuration files manually)
+    // To prevent aborting unnecessarily during the upgrade process, we ask the
+    // user to fix the situation
+    const retry = await this.inquire.direct({
+      type: 'confirm',
+      message: 'Retry?',
+      default: true
+    });
+
+    if (!retry) {
+      this.log.error('Aborted by user action.');
+      process.exit(1);
+    }
+
+    await this.loadConfiguration();
   }
 
   /**
@@ -68,7 +96,7 @@ class UpgradeContext {
   async getVersions () {
     const version = new Version();
 
-    this.log.notice(`Current Kuzzle version: ${currentVersion}`);
+    this.log.print(`Current Kuzzle version: ${currentVersion}`);
 
     version.list = fs
       .readdirSync(

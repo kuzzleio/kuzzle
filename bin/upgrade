@@ -52,13 +52,25 @@ const
     .strict(true)
     .parse();
 
-(async () => {
-  const context = new Context(args);
+const context = new Context(args);
 
+process.removeAllListeners('unhandledRejection');
+process.on('unhandledRejection', reason => {
+  if (reason !== undefined) {
+    context.log.error(reason.message);
+    context.log.error(reason.stack);
+  } else {
+    context.log.error('FATAL: unexpected unhandled promise rejection');
+  }
+
+  process.exit(1);
+});
+
+(async () => {
   await context.init();
 
   for (const dir of context.version.list) {
-    context.log.notice(`Starting to upgrade from Kuzzle ${dir}...`);
+    context.log.print(`Upgrading from Kuzzle ${dir}...`);
 
     await require(`./.upgrades/versions/${dir}`)(context);
   }

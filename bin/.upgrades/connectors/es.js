@@ -20,7 +20,7 @@
  */
 
 const
-  assert = require('assert').strict,
+  { formatWithOptions } = require('util'),
   { Client } = require('@elastic/elasticsearch'),
   validator = require('validator'),
   _ = require('lodash');
@@ -31,13 +31,18 @@ let
   promise = null;
 
 async function getEsClient(context) {
-  const currentConfiguration = _.get(context.config, 'services.db.client');
+  const currentConfiguration = _.get(context.config, 'services.storageEngine.client');
 
-  assert(currentConfiguration, 'Missing Kuzzle configuration for Elasticsearch.');
+  if (!currentConfiguration) {
+    context.log.error('Missing Kuzzle configuration for Elasticsearch.');
+    context.log.error('Missing configuration value: services.storageEngine.client');
+    context.log.error('Aborted.');
+    process.exit(1);
+  }
 
   context.log.notice('Current Elasticsearch configuration:');
-  /* eslint-disable-next-line no-console */
-  console.dir(currentConfiguration, {colors: true, depth: null});
+  context.log.print(
+    formatWithOptions({ colors: false, depth: null }, currentConfiguration));
 
   const answers = await context.inquire.prompt([
     {
@@ -45,7 +50,7 @@ async function getEsClient(context) {
       message: 'For this migration, use this current instance as the data',
       name: 'current',
       choices: ['source', 'target', 'source and target'],
-      default: 'source',
+      default: 'target',
     },
     {
       type: 'input',
@@ -59,7 +64,7 @@ async function getEsClient(context) {
 
   const
     current = new Client(currentConfiguration),
-    next = answers.url ? new Client(answers.url) : current;
+    next = answers.url ? new Client({ node: answers.url }) : current;
 
   if (answers.current === 'source') {
     source = current;

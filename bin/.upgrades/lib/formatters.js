@@ -37,11 +37,11 @@ class ColoredFormatter extends RawFormatter {
   }
 
   notice (msg) {
-    return clc.cyanBright(msg);
+    return clc.cyan(msg);
   }
 
   ok (msg) {
-    return clc.green.bold(msg);
+    return clc.green(msg);
   }
 
   question (msg) {
