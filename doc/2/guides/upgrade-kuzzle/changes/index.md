@@ -1,13 +1,13 @@
 ---
 code: false
 type: branch
-title: Migration Guide
+title: Breaking changes
 order: 100
 ---
 
-# Migrate from Kuzzle v1 to Kuzzle v2
+# Breaking changes
 
-## Breaking changes
+## External dependencies
 
 Dropped support for:
   - Node.js versions 6 and 8
@@ -15,7 +15,8 @@ Dropped support for:
   - Elasticsearch v5 
   - Kuzzle Proxy 
 
-API Changes:
+## API
+
   - Remove permission closures (deprecated since Kuzzle 1.4.0)
   - Remove the documents trashcan (deprecated since Kuzzle 1.2.0)
   - Remove the `_meta` tag from documents and notifications (deprecated since Kuzzle 1.3.0)
