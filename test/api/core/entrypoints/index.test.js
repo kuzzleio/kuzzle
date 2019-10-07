@@ -444,9 +444,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     });
 
     it('should call the connection protocol joinChannel method', () => {
-      entrypoint.clients.connectionId = {
-        protocol: 'protocol'
-      };
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         joinChannel: sinon.spy()
       };
@@ -460,7 +458,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should log errors and continue', () => {
       const error = new Error('test');
 
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         joinChannel: sinon.stub().throws(error)
       };
@@ -485,7 +483,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     });
 
     it('should call the connection protocol leaveChannel method', () => {
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         leaveChannel: sinon.spy()
       };
@@ -499,7 +497,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should log errors and continue', () => {
       const error = new Error('test');
 
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         leaveChannel: sinon.stub().throws(error)
       };
@@ -603,8 +601,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should add the connection to the store and call kuzzle router', () => {
       entrypoint.newConnection(connection);
 
-      should(entrypoint.clients.connectionId)
-        .eql(connection);
+      should(entrypoint._clients).have.value('connectionId', connection);
 
       should(kuzzle.router.newConnection)
         .be.calledOnce()
@@ -628,7 +625,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
         headers: 'headers'
       };
 
-      entrypoint.clients[connection.id] = connection;
+      entrypoint._clients.set(connection.id, connection);
     });
 
     it('should remove the connection from the store and call kuzzle router', () => {
@@ -637,7 +634,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       should(kuzzle.router.removeConnection)
         .be.calledOnce()
         .be.calledWithMatch(new RequestContext({ connection }));
-      should(entrypoint.clients[connection.id]).be.undefined();
+      should(entrypoint._clients).not.have.keys(connection.id);
     });
 
     it('should dispatch connection:remove event', () => {
@@ -686,7 +683,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       error.status = 444;
       request.setError(error);
 
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
       entrypoint.config.logs.accessLogFormat = 'logstash';
 
       entrypoint.logAccess(request);
@@ -726,7 +723,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
       request.status = 444;
 
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
       entrypoint.config.logs.accessLogFormat = 'combined';
       entrypoint.config.logs.accessLogIpOffset = 1;
 
@@ -759,7 +756,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       request.setResult({foo: 'bar'}, result);
 
       entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
 
       entrypoint.logAccess(request, extra);
 
@@ -811,7 +808,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       request.setResult({foo: 'bar'}, result);
 
       entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
 
       entrypoint.logAccess(request, extra);
 
@@ -848,7 +845,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       request.setResult({foo: 'bar'}, result);
 
       entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
 
       entrypoint.logAccess(request);
 
@@ -914,7 +911,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
   describe('#_notify', () => {
     it('should call underlying protocols and log errors', () => {
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       const error = new KuzzleInternalError('test');
 
       entrypoint.protocols = {
