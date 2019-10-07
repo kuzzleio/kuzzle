@@ -139,7 +139,15 @@ Each errored document is an object of the `errors` array with the following prop
         "created": true
       }
     ],
-    "errors": []
+    "errors": [
+      {
+        "document": {
+          // document content
+        },
+        "status": 400,
+        "reason": "Document already exists"
+      }
+    ]
   }
 }
 ```

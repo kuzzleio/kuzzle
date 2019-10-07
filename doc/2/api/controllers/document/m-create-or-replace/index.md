@@ -134,7 +134,16 @@ Each errored document is an object of the `errors` array with the following prop
         "created": false
       }
     ],
-    "errors": []
+    "errors": [
+      {
+        "document": {
+          // document content
+        },
+        "status": 400,
+        "reason": "Missing document body"
+      }
+    ]
+
   }
 }
 ```

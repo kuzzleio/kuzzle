@@ -129,7 +129,16 @@ Each errored document is an object of the `errors` array with the following prop
         "_version": 4
       }
     ],
-    "errors": []
+    "errors": [
+      {
+        "document": {
+          // new document content
+        },
+        "status": 404,
+        "reason": "Document 'foobar' not found"
+      }
+    ]
+
   }
 }
 ```

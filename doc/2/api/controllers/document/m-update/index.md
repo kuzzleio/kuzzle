@@ -132,7 +132,15 @@ Each errored document is an object of the `errors` array with the following prop
         }
       }
     ],
-    "errors": 2
+    "errors": [
+      {
+        "document": {
+          // updated document content
+        },
+        "status": 404,
+        "reason": "Document 'foobar' not found"
+      }
+    ]
   }
 }
 ```

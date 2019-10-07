@@ -81,7 +81,10 @@ Each deletion error is an object of the `errors` array with the following proper
   "result": {
     "successes": ["<documentId>"],
     "errors": [
-      { "id": "anotherDocumentId", "reason": "cannot find document" }
+      { 
+        "id": "anotherDocumentId", 
+        "reason": "cannot find document" 
+      }
     ]
   }
 }
