@@ -109,6 +109,18 @@ The following configuration keys are now obsolete and ignored:
   - `kuzzle` index and its collections now follow our new naming policy
   - plugins indexes change from `plugin:<plugin name>` to `plugin-<plugin name>`. This is for plugins interating with their storage using the PluginContext object.
 
+### Cache changes
+
+**Authentication tokens:**
+
+Due to how Kuzzle indexes are now handled, the prefix used for authentication tokens stored in the cache has changed, from:
+
+`repos/%kuzzle/token/<kuid>#<token>`
+
+To:
+
+`repos/kuzzle/token/<kuid>#<token>`
+
 ### Plugins
 
   - Plugins manifest files are now required

@@ -45,7 +45,11 @@ The script is idempotent: it can be restarted any number of times, without any d
 
 ### Limitations
 
-The script helps upgrading configuration files, security configurations, plugins private storages, and the public storage.
+The script upgrades the following:
+- configuration files
+- internal storage: security configuration, users, token seed, ...
+- public and plugin-dedicated storages
+- cache: users can continue using their active tokens after a successful upgrade
 
 Other breaking changes, especially those involving the API, must be dealt with manually.
 
