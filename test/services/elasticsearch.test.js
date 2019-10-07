@@ -2071,7 +2071,8 @@ describe('Test: ElasticSearch service', () => {
                 _id: 'liia',
                 _source: { city: 'Ho Chi Minh City' }
               },
-              reason: 'document already exists'
+              reason: 'document already exists',
+              status: 400
             }
           ];
 
@@ -2417,7 +2418,8 @@ describe('Test: ElasticSearch service', () => {
           const rejected = [
             {
               document: { _source: { city: 'Ho Chi Minh City' } },
-              reason: 'document "_id" is required'
+              reason: 'document "_id" is required',
+              status: 400
             }
           ];
           should(elasticsearch._mExecute).be.calledWithMatch(
@@ -2534,7 +2536,8 @@ describe('Test: ElasticSearch service', () => {
           const rejected = [
             {
               document: { _id: 'liia', _source: { city: 'Ho Chi Minh City' } },
-              reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'
+              reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)',
+              status: 404
             }
           ];
           should(elasticsearch._mExecute).be.calledWithMatch(
@@ -2582,7 +2585,8 @@ describe('Test: ElasticSearch service', () => {
           const rejected = [
             {
               document: { _source: { city: 'Ho Chi Minh City' } },
-              reason: 'the document ID must be a string'
+              reason: 'the document ID must be a string',
+              status: 400
             }
           ];
           should(elasticsearch._mExecute).be.calledWithMatch(
@@ -2711,7 +2715,7 @@ describe('Test: ElasticSearch service', () => {
               { _id: 'mehry', _source: { city: 'Kathmandu' } }
             ],
             errors: [
-              { id: 'liia', reason: 'cannot find document' }
+              { id: 'liia', reason: 'cannot find document', status: 404 }
             ]
           });
         });
@@ -2742,7 +2746,7 @@ describe('Test: ElasticSearch service', () => {
               { _id: 'mehry', _source: { city: 'Kathmandu' } }
             ],
             errors: [
-              { id: 42, reason: 'the document ID must be a string' }
+              { id: 42, reason: 'the document ID must be a string', status: 400 }
             ]
           });
         });
