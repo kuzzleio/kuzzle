@@ -74,4 +74,6 @@ process.on('unhandledRejection', reason => {
 
     await require(`./.upgrades/versions/${dir}`)(context);
   }
+
+  process.exit(0);
 })();

@@ -21,9 +21,11 @@
 
 const
   checkConfiguration = require('./checkConfiguration'),
-  upgradeStorage = require('./upgradeStorage');
+  upgradeStorage = require('./upgradeStorage'),
+  upgradeCache = require('./upgradeCache');
 
 module.exports = async function upgrade (context) {
   await checkConfiguration(context);
   await upgradeStorage(context);
+  await upgradeCache(context);
 };

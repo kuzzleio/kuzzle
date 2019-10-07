@@ -100,7 +100,7 @@ async function upgradeMappings (source, target, index, collection, newIndex) {
   });
 }
 
-async function createNewIndex (source, target, index, collection, newIndex) {
+async function createNewIndex (target, newIndex) {
   const exists = await target.indices.exists({ index: newIndex });
 
   if (exists.body) {
@@ -111,7 +111,7 @@ async function createNewIndex (source, target, index, collection, newIndex) {
 }
 
 async function upgrade (source, target, index, collection, newIndex) {
-  await createNewIndex(source, target, index, collection, newIndex);
+  await createNewIndex(target, newIndex);
   await upgradeMappings(source, target, index, collection, newIndex);
   return await moveData(source, target, index, collection, newIndex);
 }
@@ -134,7 +134,7 @@ async function upgradeInternalStorage (context, source, target) {
     let total;
 
     if (mappings) {
-      await createNewIndex(source, target, index, collection, newIndex);
+      await createNewIndex(target, newIndex);
       await target.indices.putMapping({ index: newIndex, body: mappings });
       total = await moveData(source, target, index, collection, newIndex);
     }
