@@ -13,7 +13,7 @@ Searches documents.
 There is a limit to how many documents can be returned by a single search query.
 That limit is by default set at 10000 documents, and you can't get over it even with the `from` and `size` pagination options.
 
-To handle larger result sets, you have to either create a cursor by providing a value to the `scroll` option or, if you sort the results, by using the Elasticsearch [search_after](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/search-request-search-after.html) command.
+To handle larger result sets, you have to either create a cursor by providing a value to the `scroll` option or, if you sort the results, by using the Elasticsearch [search_after](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/search-request-body.html#request-body-search-search-after) command.
 
 ---
 
