@@ -19,7 +19,9 @@
  * limitations under the License.
  */
 
-const getESConnector = require('../../connectors/es');
+const
+  _ = require('lodash'),
+  getESConnector = require('../../connectors/es');
 
 const
   INTERNAL_PREFIX = '%',
@@ -74,7 +76,7 @@ async function moveData (source, target, index, collection, newIndex) {
   return total;
 }
 
-async function createNewIndex (source, target, index, collection, newIndex) {
+async function upgradeMappings (source, target, index, collection, newIndex) {
   const
     mappingsResponse = await source.indices.getMapping({
       index,
@@ -88,38 +90,73 @@ async function createNewIndex (source, target, index, collection, newIndex) {
     delete mappings.properties._kuzzle_info.properties.deletedAt;
   }
 
+  await target.indices.putMapping({
+    index: newIndex,
+    body: {
+      properties: mappings.properties,
+      dynamic: mappings.dynamic || false,
+      _meta: mappings._meta
+    }
+  });
+}
+
+async function createNewIndex (source, target, index, collection, newIndex) {
   const exists = await target.indices.exists({ index: newIndex });
 
   if (exists.body) {
     await target.indices.delete({ index:newIndex });
   }
 
-  await target.indices.create({
-    index: newIndex,
-    body: {
-      mappings: {
-        properties: mappings.properties,
-        dynamic: mappings.dynamic || false,
-        _meta: mappings._meta
-      }
-    }
-  });
+  await target.indices.create({ index: newIndex });
 }
 
 async function upgrade (source, target, index, collection, newIndex) {
   await createNewIndex(source, target, index, collection, newIndex);
+  await upgradeMappings(source, target, index, collection, newIndex);
   return await moveData(source, target, index, collection, newIndex);
 }
 
 async function upgradeInternalStorage (context, source, target) {
-  const collections = [ 'validations', 'config', 'roles', 'users', 'profiles' ];
+  const
+    config = context.config.services.storageEngine.internalIndex,
+    index = `${INTERNAL_PREFIX}${config.name}`,
+    mapconfig = config.collections,
+    collections = {
+      validations: mapconfig.validations,
+      config: mapconfig.config,
+      roles: mapconfig.roles,
+      users: null,
+      profiles: mapconfig.profiles
+    };
 
-  for (const collection of collections) {
-    const newIndex = getNewIndexName('%kuzzle', collection);
+  for (const [collection, mappings] of Object.entries(collections)) {
+    const newIndex = getNewIndexName(index, collection);
+    let total;
 
-    const total = await upgrade(source, target, '%kuzzle', collection, newIndex);
+    if (mappings) {
+      await createNewIndex(source, target, index, collection, newIndex);
+      await target.indices.putMapping({ index: newIndex, body: mappings });
+      total = await moveData(source, target, index, collection, newIndex);
+    }
+    else {
+      total = await upgrade(source, target, index, collection, newIndex);
+    }
+
     context.log.ok(`... migrated internal data: ${collection} (${total} documents)`);
   }
+
+  // bootstrap document
+  await target.create({
+    index: `${index}.config`,
+    id: 'internalIndex.dataModelVersion',
+    body: { version: '2.0.0' }
+  });
+
+  await target.create({
+    index: `${index}.config`,
+    id: `${config.name}.done`,
+    body: { timestamp: Date.now() }
+  });
 }
 
 async function upgradePluginsStorage (context, source, target) {
@@ -338,6 +375,12 @@ overwritten without notice.`);
   }
   catch (e) {
     context.log.error(`Storage upgrade failure: ${e.message}`);
+
+    const reason = _.get(e, 'meta.body.error.reason');
+    if (reason) {
+      context.log.error(`Reason: ${reason}`);
+    }
+
     context.log.print(e.stack);
     context.log.error('Aborted.');
     process.exit(1);
