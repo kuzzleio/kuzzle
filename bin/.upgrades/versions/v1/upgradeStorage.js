@@ -104,7 +104,7 @@ async function createNewIndex (source, target, index, collection, newIndex) {
   const exists = await target.indices.exists({ index: newIndex });
 
   if (exists.body) {
-    await target.indices.delete({ index:newIndex });
+    await target.indices.delete({ index: newIndex });
   }
 
   await target.indices.create({ index: newIndex });
