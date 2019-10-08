@@ -19,16 +19,18 @@
  * limitations under the License.
  */
 
-const
-  checkConfiguration = require('./checkConfiguration'),
-  upgradeStorage = require('./upgradeStorage'),
-  upgradeCache = require('./upgradeCache');
+const UpgradeContext = require('./context');
 
-module.exports = async function upgrade (context) {
-  context.log.notice('\n\n=== CONFIGURATION FILES ===');
-  await checkConfiguration(context);
-  context.log.notice('\n\n=== STORAGE ===');
-  await upgradeStorage(context);
-  context.log.notice('\n\n=== CACHE ===');
-  await upgradeCache(context);
-};
+class ConnectorContext extends UpgradeContext {
+  constructor(context, source, target) {
+    super(context);
+    this.source = source;
+    this.target = target;
+  }
+
+  get inPlace () {
+    return this.source === this.target;
+  }
+}
+
+module.exports = ConnectorContext;

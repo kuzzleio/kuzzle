@@ -22,13 +22,11 @@
 const
   { formatWithOptions } = require('util'),
   { Client } = require('@elastic/elasticsearch'),
+  ConnectorContext = require('../lib/connectorContext'),
   validator = require('validator'),
   _ = require('lodash');
 
-let
-  source = null,
-  target = null,
-  promise = null;
+let promise = null;
 
 async function getEsClient(context) {
   const currentConfiguration = _.get(context.config, 'services.storageEngine.client');
@@ -66,16 +64,9 @@ async function getEsClient(context) {
     current = new Client(currentConfiguration),
     next = answers.url ? new Client({ node: answers.url }) : current;
 
-  if (answers.current === 'source') {
-    source = current;
-    target = next;
-  }
-  else {
-    source = next;
-    target = current;
-  }
-
-  return { source, target };
+  return answers.current === 'source'
+    ? new ConnectorContext(context, current, next)
+    : new ConnectorContext(context, next, current);
 }
 
 module.exports = async context => {

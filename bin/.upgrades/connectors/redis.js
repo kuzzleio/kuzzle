@@ -22,12 +22,10 @@
 const
   { formatWithOptions } = require('util'),
   IORedis = require('ioredis'),
+  ConnectorContext = require('../lib/connectorContext'),
   _ = require('lodash');
 
-let
-  source = null,
-  target = null,
-  promise = null;
+let promise = null;
 
 async function getRedisClient(context) {
   const currentConfiguration = _.get(context.config, 'services.internalCache');
@@ -98,16 +96,9 @@ async function getRedisClient(context) {
     next = client;
   }
 
-  if (current === 'source') {
-    source = client;
-    target = next;
-  }
-  else {
-    source = next;
-    target = client;
-  }
-
-  return { source, target };
+  return current === 'source'
+    ? new ConnectorContext(context, client, next)
+    : new ConnectorContext(context, next, client);
 }
 
 module.exports = async context => {

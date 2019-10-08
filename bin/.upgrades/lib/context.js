@@ -37,10 +37,19 @@ class Version {
 
 class UpgradeContext {
   constructor(args) {
-    this.config = null;
-    this.log = new Logger(args);
-    this.inquire = inquirer;
-    this.version = null;
+    // copy constructor
+    if (args instanceof UpgradeContext) {
+      this.config = args.config;
+      this.log = args.log;
+      this.inquire = args.inquire;
+      this.version = args.version;
+    }
+    else {
+      this.config = null;
+      this.log = new Logger(args);
+      this.inquire = inquirer;
+      this.version = null;
+    }
   }
 
   async init () {

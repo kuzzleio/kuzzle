@@ -34,8 +34,8 @@ function getNewIndexName (index, collection) {
   return `${prefix}${index}${NAME_SEPARATOR}${collection}`;
 }
 
-async function moveData (source, target, index, collection, newIndex) {
-  let page = await source.search({
+async function moveData (context, index, collection, newIndex) {
+  let page = await context.source.search({
     index,
     type: collection,
     body: { sort: [ '_doc' ] },
@@ -61,12 +61,12 @@ async function moveData (source, target, index, collection, newIndex) {
       bulk.push(doc._source);
     }
 
-    await target.bulk({ body: bulk, _source: false });
+    await context.target.bulk({ body: bulk, _source: false });
 
     moved += page.body.hits.hits.length;
 
     if (moved < total) {
-      page = await source.scroll({
+      page = await context.source.scroll({
         scroll_id: page.body._scroll_id,
         scroll: '1m'
       });
@@ -76,21 +76,21 @@ async function moveData (source, target, index, collection, newIndex) {
   return total;
 }
 
-async function upgradeMappings (source, target, index, collection, newIndex) {
+async function upgradeMappings (context, index, collection, newIndex) {
   const
-    mappingsResponse = await source.indices.getMapping({
+    mappingsResponse = await context.source.indices.getMapping({
       index,
       type: collection
     }),
     mappings = mappingsResponse.body[index].mappings[collection];
 
-  // remove obsolete mapping properties
+  // replace obsolete mapping properties
   if (mappings.properties && mappings.properties._kuzzle_info) {
-    delete mappings.properties._kuzzle_info.properties.active;
-    delete mappings.properties._kuzzle_info.properties.deletedAt;
+    mappings.properties._kuzzle_info =
+      context.config.services.storageEngine.commonMapping.properties._kuzzle_info;
   }
 
-  await target.indices.putMapping({
+  await context.target.indices.putMapping({
     index: newIndex,
     body: {
       properties: mappings.properties,
@@ -100,23 +100,23 @@ async function upgradeMappings (source, target, index, collection, newIndex) {
   });
 }
 
-async function createNewIndex (target, newIndex) {
-  const exists = await target.indices.exists({ index: newIndex });
+async function createNewIndex (context, newIndex) {
+  const exists = await context.target.indices.exists({ index: newIndex });
 
   if (exists.body) {
-    await target.indices.delete({ index: newIndex });
+    await context.target.indices.delete({ index: newIndex });
   }
 
-  await target.indices.create({ index: newIndex });
+  await context.target.indices.create({ index: newIndex });
 }
 
-async function upgrade (source, target, index, collection, newIndex) {
-  await createNewIndex(target, newIndex);
-  await upgradeMappings(source, target, index, collection, newIndex);
-  return await moveData(source, target, index, collection, newIndex);
+async function upgrade (context, index, collection, newIndex) {
+  await createNewIndex(context, newIndex);
+  await upgradeMappings(context, index, collection, newIndex);
+  return await moveData(context, index, collection, newIndex);
 }
 
-async function upgradeInternalStorage (context, source, target) {
+async function upgradeInternalStorage (context) {
   const
     config = context.config.services.storageEngine.internalIndex,
     index = `${INTERNAL_PREFIX}${config.name}`,
@@ -134,54 +134,57 @@ async function upgradeInternalStorage (context, source, target) {
     let total;
 
     if (mappings) {
-      await createNewIndex(target, newIndex);
-      await target.indices.putMapping({ index: newIndex, body: mappings });
-      total = await moveData(source, target, index, collection, newIndex);
+      await createNewIndex(context, newIndex);
+      await context.target.indices.putMapping({
+        index: newIndex,
+        body: mappings
+      });
+      total = await moveData(context, index, collection, newIndex);
     }
     else {
-      total = await upgrade(source, target, index, collection, newIndex);
+      total = await upgrade(context, index, collection, newIndex);
     }
 
     context.log.ok(`... migrated internal data: ${collection} (${total} documents)`);
   }
 
   // bootstrap document
-  await target.create({
+  await context.target.create({
     index: `${index}.config`,
     id: 'internalIndex.dataModelVersion',
     body: { version: '2.0.0' }
   });
 
-  await target.create({
+  await context.target.create({
     index: `${index}.config`,
     id: `${config.name}.done`,
     body: { timestamp: Date.now() }
   });
 }
 
-async function upgradePluginsStorage (context, source, target) {
+async function upgradePluginsStorage (context) {
   const
-    { body } = await source.cat.indices({ format: 'json' }),
+    { body } = await context.source.cat.indices({ format: 'json' }),
     indexes = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
 
   for (const index of indexes) {
     const
       plugin = index.split(':')[1],
       newIndexBase = `%plugin-${plugin}${NAME_SEPARATOR}`,
-      mappings = await source.indices.getMapping({ index }),
+      mappings = await context.source.indices.getMapping({ index }),
       collections = Object.keys(mappings.body[index].mappings);
 
     for (const collection of collections) {
       const newIndex = newIndexBase + collection;
-      const total = await upgrade(source, target, index, collection, newIndex);
+      const total = await upgrade(context, index, collection, newIndex);
 
       context.log.ok(`... migrated storage for plugin ${plugin}: ${collection} (${total} documents)`);
     }
   }
 }
 
-async function upgradeAliases (context, source, target, upgraded) {
-  const response = await source.indices.getAlias({
+async function upgradeAliases (context, upgraded) {
+  const response = await context.source.indices.getAlias({
     index: Object.keys(upgraded)
   });
 
@@ -215,15 +218,15 @@ be duplicated across all of an index upgraded collections.`);
 
   for (const [index, obj] of Object.entries(aliases)) {
     for (const [name, body] of Object.entries(obj)) {
-      await target.indices.putAlias({ index, name, body });
+      await context.target.indices.putAlias({ index, name, body });
       context.log.ok(`...... alias ${name} on index ${index} upgraded`);
     }
   }
 }
 
-async function upgradeDataStorage (context, source, target) {
+async function upgradeDataStorage (context) {
   const
-    { body } = await source.cat.indices({ format: 'json' }),
+    { body } = await context.source.cat.indices({ format: 'json' }),
     upgraded = {};
   let indexes = body
     .map(b => b.index)
@@ -258,7 +261,7 @@ async function upgradeDataStorage (context, source, target) {
 
   for (const index of indexes) {
     const
-      mappings = await source.indices.getMapping({ index }),
+      mappings = await context.source.indices.getMapping({ index }),
       allCollections = Object.keys(mappings.body[index].mappings);
     let collections = allCollections;
 
@@ -279,27 +282,27 @@ async function upgradeDataStorage (context, source, target) {
     for (const collection of collections) {
       const
         newIndex = getNewIndexName(index, collection),
-        total = await upgrade(source, target, index, collection, newIndex);
+        total = await upgrade(context, index, collection, newIndex);
 
       upgraded[index].targets.push(newIndex);
       context.log.ok(`... migrated data index ${index}: ${collection} (${total} documents)`);
     }
   }
 
-  await upgradeAliases(context, source, target, upgraded);
+  await upgradeAliases(context, upgraded);
 
   return upgraded;
 }
 
-async function destroyPreviousStructure (context, source, target, upgraded) {
+async function destroyPreviousStructure (context, upgraded) {
   // there is no point in destroying the previous structure if not performing
   // an in-place migration
-  if (source !== target) {
+  if (!context.inPlace) {
     return;
   }
 
   const
-    { body } = await source.cat.indices({ format: 'json' }),
+    { body } = await context.source.cat.indices({ format: 'json' }),
     plugins = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
 
   let indexes = [
@@ -339,12 +342,12 @@ async function destroyPreviousStructure (context, source, target, upgraded) {
     indexes = [ '%kuzzle' ];
   }
 
-  await source.indices.delete({ index: indexes });
+  await context.source.indices.delete({ index: indexes });
   context.log.ok('Previous structure destroyed.');
 }
 
 module.exports = async function upgradeStorage (context) {
-  const { source, target } = await getESConnector(context);
+  const storageContext = await getESConnector(context);
 
   context.log.notice(`
 This script will now start *COPYING* the existing data to the target storage
@@ -366,23 +369,23 @@ overwritten without notice.`);
   }
 
   try {
-    await upgradeInternalStorage(context, source, target);
-    await upgradePluginsStorage(context, source, target);
-    const upgraded = await upgradeDataStorage(context, source, target);
+    await upgradeInternalStorage(storageContext);
+    await upgradePluginsStorage(storageContext);
+    const upgraded = await upgradeDataStorage(storageContext);
 
-    context.log.ok('Storage migration complete.');
-    await destroyPreviousStructure(context, source, target, upgraded);
+    storageContext.log.ok('Storage migration complete.');
+    await destroyPreviousStructure(storageContext, upgraded);
   }
   catch (e) {
-    context.log.error(`Storage upgrade failure: ${e.message}`);
+    storageContext.log.error(`Storage upgrade failure: ${e.message}`);
 
     const reason = _.get(e, 'meta.body.error.reason');
     if (reason) {
-      context.log.error(`Reason: ${reason}`);
+      storageContext.log.error(`Reason: ${reason}`);
     }
 
-    context.log.print(e.stack);
-    context.log.error('Aborted.');
+    storageContext.log.print(e.stack);
+    storageContext.log.error('Aborted.');
     process.exit(1);
   }
 
