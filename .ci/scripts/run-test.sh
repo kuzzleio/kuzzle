@@ -41,7 +41,7 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     exit 1
 fi
 
-node bin/kuzzle start &
+node bin/start-kuzzle-server start
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 while ! curl -f -s -o /dev/null http://localhost:7512
 do

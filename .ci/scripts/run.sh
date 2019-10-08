@@ -27,4 +27,4 @@ fi
 
 log "Starting Kuzzle..."
 
-exec ./bin/kuzzle "$@"
+exec ./bin/start-kuzzle-server "$@"
