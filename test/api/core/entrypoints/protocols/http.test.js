@@ -64,8 +64,9 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
     kuzzle = new KuzzleMock();
 
     entrypoint = new EntryPoint(kuzzle);
-    entrypoint.execute = sinon.spy();
-    entrypoint.newConnection = sinon.spy();
+    sinon.stub(entrypoint, 'execute');
+    sinon.stub(entrypoint, 'newConnection');
+    sinon.stub(entrypoint, 'removeConnection');
     entrypoint.httpServer = {
       listen: sinon.spy(),
       on: sinon.spy()
@@ -73,7 +74,6 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
     entrypoint.logger = {
       info: sinon.stub()
     };
-
     protocol = new HttpProtocol();
   });
 
@@ -837,14 +837,12 @@ describe('/lib/api/core/entrypoints/protocols/http', () => {
       const error = new Error('test');
       error.status = 'status';
 
-      entrypoint.clients.connectionId = {};
-
       protocol._replyWithError(
         new HttpMessage({id: 'connectionId'}, {}),
         response,
         error);
 
-      should(entrypoint.clients).be.empty();
+      should(entrypoint.removeConnection).calledOnce().calledWith('connectionId');
     });
   });
 

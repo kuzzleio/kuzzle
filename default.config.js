@@ -189,7 +189,7 @@ module.exports = {
         }
       },
       socketio: {
-        enabled: true,
+        enabled: false,
         origins: '*:*'
       },
       websocket: {
