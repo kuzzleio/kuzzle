@@ -15,6 +15,11 @@ Dropped support for:
   - Elasticsearch v5 
   - Kuzzle Proxy 
 
+New external dependencies supported versions:
+  - Node.js 10
+  - Redis 5
+  - Elasticsearch 7
+
 ## API
 
   - Remove permission closures (deprecated since Kuzzle 1.4.0)
@@ -22,6 +27,24 @@ Dropped support for:
   - Remove the `_meta` tag from documents and notifications (deprecated since Kuzzle 1.3.0)
   - Fields linked to the documents trashcan have been removed from the documents and notifications metadata : `deletedAt`, `active`
   - Remove the real-time notifications about events that were about to happen (deprecated since Kuzzle 1.5.0)
+
+### Internal storage changes
+
+**New index and collection naming policy:**
+
+ - private indexes (not directly accessible through Kuzzle's API): `%<index name>.<collection name>`
+ - public indexes: `&<index name>.<collection name>`
+
+::: warning
+Indexes not following this naming policy cannot be accessed by Kuzzle's API.
+:::
+
+**Internal datamodel changes:**
+
+  - The internal Kuzzle index and its collections now follow our new naming policy
+  - Dedicated indexes for plugins have their names changed from `plugin:<plugin name>` to `plugin-<plugin name>` (transparent for plugins)
+
+
 
 ### Removed errors
 
@@ -96,18 +119,6 @@ The following configuration keys are now obsolete and ignored:
   - `services.storageEngine.client.apiVersion`
   - `services.storageEngine.commonMapping.properties._kuzzle_info.deletedAt`
   - `services.storageEngine.commonMapping.properties._kuzzle_info.active`
-
-### Internal storage changes
-
-**New index and collection naming policy:**
-
- - internal indexes: `%<index name>.<collection name>`
- - public indexes: `&<index name>.<collection name>`
-
-**Internal datamodel changes:**
-
-  - `kuzzle` index and its collections now follow our new naming policy
-  - plugins indexes change from `plugin:<plugin name>` to `plugin-<plugin name>`. This is for plugins interating with their storage using the PluginContext object.
 
 ### Cache changes
 
