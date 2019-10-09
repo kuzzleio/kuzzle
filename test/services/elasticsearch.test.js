@@ -2069,7 +2069,7 @@ describe('Test: ElasticSearch service', () => {
             {
               document: {
                 _id: 'liia',
-                _source: { city: 'Ho Chi Minh City' }
+                body: { city: 'Ho Chi Minh City' }
               },
               reason: 'document already exists',
               status: 400
@@ -2417,11 +2417,12 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _source: { city: 'Ho Chi Minh City' } },
-              reason: 'document "_id" is required',
+              document: { _id: undefined, body: { city: 'Ho Chi Minh City' } },
+              reason: 'document _id must be a string',
               status: 400
             }
           ];
+
           should(elasticsearch._mExecute).be.calledWithMatch(
             esRequest,
             toImport,
@@ -2535,8 +2536,8 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: 'liia', _source: { city: 'Ho Chi Minh City' } },
-              reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)',
+              document: { _id: 'liia', body: { city: 'Ho Chi Minh City' } },
+              reason: 'document not found',
               status: 404
             }
           ];
@@ -2584,8 +2585,8 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _source: { city: 'Ho Chi Minh City' } },
-              reason: 'the document ID must be a string',
+              document: { body: { city: 'Ho Chi Minh City' } },
+              reason: 'document _id must be a string',
               status: 400
             }
           ];
@@ -2715,7 +2716,7 @@ describe('Test: ElasticSearch service', () => {
               { _id: 'mehry', _source: { city: 'Kathmandu' } }
             ],
             errors: [
-              { id: 'liia', reason: 'cannot find document', status: 404 }
+              { _id: 'liia', reason: 'document not found', status: 404 }
             ]
           });
         });
@@ -2746,7 +2747,7 @@ describe('Test: ElasticSearch service', () => {
               { _id: 'mehry', _source: { city: 'Kathmandu' } }
             ],
             errors: [
-              { id: 42, reason: 'the document ID must be a string', status: 400 }
+              { _id: 42, reason: 'document _id must be a string', status: 400 }
             ]
           });
         });
@@ -2938,7 +2939,7 @@ describe('Test: ElasticSearch service', () => {
 
       should(rejected).match([{
         document: { _id: 'no-body' },
-        reason: 'document body is not an object'
+        reason: 'document body must be an object'
       }]);
 
       should(extractedDocuments).match([{

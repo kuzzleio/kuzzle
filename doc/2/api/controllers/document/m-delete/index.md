@@ -66,7 +66,7 @@ Returns an object containing 2 arrays: `successes` and `errors`
 The `successes` array contain the successfuly deleted document IDs.
 
 Each deletion error is an object of the `errors` array with the following properties:
-- `id`: document ID
+- `_id`: document ID
 - `reason`: human readable reason
 
 ```js
@@ -82,7 +82,7 @@ Each deletion error is an object of the `errors` array with the following proper
     "successes": ["<documentId>"],
     "errors": [
       { 
-        "id": "anotherDocumentId", 
+        "_id": "anotherDocumentId", 
         "reason": "cannot find document" 
       }
     ]

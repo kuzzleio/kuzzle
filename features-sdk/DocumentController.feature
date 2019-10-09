@@ -173,7 +173,7 @@ Feature: Document Controller
     | reason | status | document |
     | "document _id must be a string" | 400 | { "body": { "name": "replaced1" } } |
     | "document body must be an object" | 400 | { "_id": "document-1", "body": "not a body" } |
-    | "cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)" | 404 | { "_id": "document-42", "body": { "name": "replaced1" } } |
+    | "document not found" | 404 | { "_id": "document-42", "body": { "name": "replaced1" } } |
     And The document "document-1" content match:
     | name | "document1" |
     | age | 42 |
