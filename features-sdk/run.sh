@@ -6,6 +6,5 @@ set -e
 
 for protocol in websocket http; do
   # profiles are defined in the cucumber.js file at the root of this project
-  echo "Start tests with $protocol protocol"
   KUZZLE_PROTOCOL=$protocol ./node_modules/.bin/cucumber-js features-sdk/ --format progress-bar
 done

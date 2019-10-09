@@ -92,6 +92,20 @@ API Changes:
   - does not return a partial error if some actions fail
   - returns two arrays: `successes` containing documents content, and `errors` containing non-existing document IDs
 
+### Removed HTTP routes
+
+  - `GET /:index/_list/:type` for `collection:list`
+    - use `GET /:index/_list` instead
+
+  - `POST /_validateSpecifications` for `collection:validateSpecifications`
+    - use `POST /:index/:collection/_validateSpecifications` instead
+
+  - `POST /_getStats` for `server:getStats`
+    - use `GET /_getStats` instead
+
+  - `POST /:_id/_createFirstAdmin` for `security:createFirstAdmin`
+    - use `POST /_createFirstAdmin/:id` instead
+
 ### Remove the CLI
 
 The CLI is now independant from Kuzzle: https://github.com/kuzzleio/kuzzle-cli/

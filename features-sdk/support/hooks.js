@@ -3,7 +3,7 @@
 const
   _ = require('lodash'),
   { After, Before, BeforeAll } = require('cucumber'),
-  { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
+  { Kuzzle, WebSocket, Http } = require('../../../sdk-javascript'),
   testMappings = require('../fixtures/mappings'),
   testFixtures = require('../fixtures/fixtures'),
   testSecurities = require('../fixtures/securities'),
@@ -28,6 +28,8 @@ function getProtocol (world) {
 
 BeforeAll(({ timeout: 10 * 1000 }), async function () {
   const world = new World({});
+
+  console.log(`Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`);
 
   world.sdk = new Kuzzle(getProtocol(world));
 
