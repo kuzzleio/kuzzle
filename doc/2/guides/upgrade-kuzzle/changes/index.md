@@ -30,20 +30,23 @@ New external dependencies supported versions:
 
 ### Internal storage changes
 
-**New index and collection naming policy:**
 
- - private indexes (not directly accessible through Kuzzle's API): `%<index name>.<collection name>`
- - public indexes: `&<index name>.<collection name>`
+**Public and plugins storages:**
+
+ - collections cannot contain uppercase letters anymore
+
+
+**Index and collection physical storage:**
+
+The following is about how indexes and collections are physically stored in Elasticsearch. These changes aren't made visible to Kuzzle's API users:
+
+ - private indexes and collections (not directly accessible through Kuzzle's API) are now named: `%<index name>.<collection name>`
+ - public indexes and collections are now named: `&<index name>.<collection name>`
+ - indexes dedicated to plugins have their names changed from `plugin:<plugin name>` to `plugin-<plugin name>` (transparent for plugins)
 
 ::: warning
 Indexes not following this naming policy cannot be accessed by Kuzzle's API.
 :::
-
-**Internal datamodel changes:**
-
-  - The internal Kuzzle index and its collections now follow our new naming policy
-  - Dedicated indexes for plugins have their names changed from `plugin:<plugin name>` to `plugin-<plugin name>` (transparent for plugins)
-
 
 
 ### Removed errors

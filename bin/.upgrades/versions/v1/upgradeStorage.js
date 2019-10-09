@@ -29,13 +29,38 @@ const
   PUBLIC_PREFIX = '&',
   NAME_SEPARATOR = '.';
 
+function transformProfile (profile) {
+  if (!Array.isArray(profile.policies)) {
+    return profile;
+  }
+
+  for (const policy of profile.policies.filter(p => p.restrictedTo)) {
+    for (const restriction of policy.restrictedTo.filter(r => r.collections)) {
+      restriction.collections =
+        restriction.collections.map(c => c.toLowerCase());
+    }
+  }
+  return profile;
+}
+
 function getNewIndexName (index, collection) {
   const prefix = index[0] === '%' ? '' : PUBLIC_PREFIX;
 
   return `${prefix}${index}${NAME_SEPARATOR}${collection}`;
 }
 
-async function moveData (context, index, collection, newIndex) {
+function fixIndexName (context, index, collection, newIndex) {
+  const lowercased = newIndex.toLowerCase();
+
+  if (lowercased !== newIndex) {
+    // uppercase letters were already forbidden in index names
+    context.log.warn(`Index "${index}": collection "${collection}" has been renamed to "${collection.toLowerCase()}"`);
+  }
+
+  return lowercased;
+}
+
+async function moveData (context, index, collection, newIndex, transform) {
   let page = await context.source.search({
     index,
     type: collection,
@@ -61,6 +86,10 @@ async function moveData (context, index, collection, newIndex) {
       if (doc._source._kuzzle_info) {
         delete doc._source._kuzzle_info.active;
         delete doc._source._kuzzle_info.deletedAt;
+      }
+
+      if (transform) {
+        doc._source = transform(doc._source);
       }
 
       bulk.push({ create: { _index: newIndex, _id: doc._id } });
@@ -120,9 +149,11 @@ async function createNewIndex (context, newIndex) {
 }
 
 async function upgrade (context, index, collection, newIndex) {
-  await createNewIndex(context, newIndex);
-  await upgradeMappings(context, index, collection, newIndex);
-  return await moveData(context, index, collection, newIndex);
+  const fixedIndexName = fixIndexName(context, index, collection, newIndex);
+
+  await createNewIndex(context, fixedIndexName);
+  await upgradeMappings(context, index, collection, fixedIndexName);
+  return await moveData(context, index, collection, fixedIndexName);
 }
 
 async function upgradeInternalStorage (context) {
@@ -148,7 +179,13 @@ async function upgradeInternalStorage (context) {
         index: newIndex,
         body: mappings
       });
-      total = await moveData(context, index, collection, newIndex);
+
+      total = await moveData(
+        context,
+        index,
+        collection,
+        newIndex,
+        collection === 'profiles' && transformProfile);
     }
     else {
       total = await upgrade(context, index, collection, newIndex);

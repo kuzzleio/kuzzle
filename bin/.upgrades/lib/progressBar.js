@@ -24,7 +24,6 @@ const moment = require('moment');
 // Simple progress bar making the wait for long tasks more bearable
 class ProgressBar {
   constructor (context, text, total, barSize = 20) {
-    this.context = context;
     this.text = text;
     this.total = total;
     this.barSize = barSize;
@@ -40,13 +39,21 @@ class ProgressBar {
 
   update (count) {
     const
-      elapsed = Date.now() - this.start,
-      remainingMs = count ? Math.round(this.total * elapsed / count) : 0,
-      remaining = moment(remainingMs).format('mm:ss'),
+      remaining = this._getRemainingTime(count),
       str = `${this.text}
 ${this._getBar(count)}(remaining: ${remaining}) ${count} / ${this.total}`;
 
     this.bar.updateBottomBar(str);
+  }
+
+  _getRemainingTime (count) {
+    const
+      elapsed = Date.now() - this.start,
+      remaining = count > 0
+        ? Math.round(this.total * elapsed / count) - elapsed
+        : 0;
+
+    return moment(remaining).format('mm:ss');
   }
 
   _getBar (count) {
