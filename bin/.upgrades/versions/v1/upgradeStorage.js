@@ -21,7 +21,8 @@
 
 const
   _ = require('lodash'),
-  getESConnector = require('../../connectors/es');
+  getESConnector = require('../../connectors/es'),
+  ProgressBar = require('../../lib/progressBar');
 
 const
   INTERNAL_PREFIX = '%',
@@ -43,7 +44,12 @@ async function moveData (context, index, collection, newIndex) {
     size: 1000
   });
 
-  const total = page.body.hits.total;
+  const
+    total = page.body.hits.total,
+    progressBar = new ProgressBar(
+      context,
+      `Importing: ${index}/${collection}`,
+      total);
   let moved = 0;
 
   while (moved < total) {
@@ -57,7 +63,7 @@ async function moveData (context, index, collection, newIndex) {
         delete doc._source._kuzzle_info.deletedAt;
       }
 
-      bulk.push({ index: { _index: newIndex, _id: doc._id } });
+      bulk.push({ create: { _index: newIndex, _id: doc._id } });
       bulk.push(doc._source);
     }
 
@@ -65,12 +71,18 @@ async function moveData (context, index, collection, newIndex) {
 
     moved += page.body.hits.hits.length;
 
+    progressBar.update(moved);
+
     if (moved < total) {
       page = await context.source.scroll({
         scroll_id: page.body._scroll_id,
         scroll: '1m'
       });
     }
+  }
+
+  if (progressBar) {
+    progressBar.destroy();
   }
 
   return total;
