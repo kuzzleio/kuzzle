@@ -81,10 +81,7 @@ async function moveData (context, index, collection, newIndex) {
     }
   }
 
-  if (progressBar) {
-    progressBar.destroy();
-  }
-
+  progressBar.destroy();
   return total;
 }
 
