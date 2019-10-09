@@ -13,7 +13,7 @@ class KuzzleWorld {
     this.props = {};
   }
 
-  parseDataTable (dataTable) {
+  parseObject (dataTable) {
     const content = dataTable.rowsHash();
 
     for (const key of Object.keys(content)) {
@@ -21,6 +21,28 @@ class KuzzleWorld {
     }
 
     return content;
+  }
+
+  parseObjectArray (dataTable) {
+    const
+      objectArray = [],
+      keys = dataTable.rawTable[0];
+
+    for (let i = 1; i < dataTable.rawTable.length; i++) {
+      const
+        object = {},
+        rawObject = dataTable.rawTable[i];
+
+      for (let j = 0; j < keys.length; j++) {
+        if (rawObject[j] !== '-') {
+          object[keys[j]] = JSON.parse(rawObject[j]);
+        }
+      }
+
+      objectArray.push(object);
+    }
+
+    return objectArray;
   }
 }
 

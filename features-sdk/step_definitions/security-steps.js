@@ -4,7 +4,7 @@ const
   } = require('cucumber');
 
 Given('I create a profile {string} with the following policies:', function (profileId, dataTable) {
-  let policies = this.parseDataTable(dataTable);
+  let policies = this.parseObject(dataTable);
 
   policies = Array.isArray(policies) ? policies : [policies];
 
@@ -16,7 +16,7 @@ Given('I delete the role {string}', function (roleId) {
 });
 
 Given('I create a user {string} with content:', function (userId, dataTable) {
-  const content = this.parseDataTable(dataTable);
+  const content = this.parseObject(dataTable);
 
   const user = {
     content,

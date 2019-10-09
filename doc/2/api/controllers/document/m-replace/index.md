@@ -103,6 +103,10 @@ Each errored document is an object of the `errors` array with the following prop
 - `status`: HTTP error status code
 - `reason`: human readable reason
 
+::: warning
+Errored documents are not guaranteed to be in the same orded as in the initial request.
+:::
+
 ```js
 {
   "status": 200,
