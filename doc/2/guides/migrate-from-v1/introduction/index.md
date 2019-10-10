@@ -95,7 +95,7 @@ API Changes:
 ### Removed HTTP routes
 
   - `GET /:index/_list/:type` for `collection:list`
-    - use `GET /:index/_list` instead
+    - use `GET /:index/_list?type=:type` instead
 
   - `POST /_validateSpecifications` for `collection:validateSpecifications`
     - use `POST /:index/:collection/_validateSpecifications` instead

@@ -172,7 +172,7 @@ When(/^I delete the specifications (again )?for index "([^"]*)" and collection "
     .catch(error => {
       this.statusCode = error.statusCode;
       callback();
-
+      throw error
       return null;
     });
 });

@@ -13,8 +13,7 @@ const
   Http = require('./api/http'),
   World = require('./world');
 
-// before first
-BeforeAll(function () {
+function bootstrapDatabase () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
     promises = [],
@@ -36,10 +35,9 @@ BeforeAll(function () {
   promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection, mappings));
 
   return Bluebird.each(promises, promise => promise());
-});
+}
 
-// after last
-AfterAll(function () {
+function cleanDatabase () {
   const
     promises = [],
     world = new World({parameters: parseWorldParameters()}),
@@ -56,11 +54,30 @@ AfterAll(function () {
   }
 
   return Bluebird.all(promises);
+}
+
+// before first
+BeforeAll(function () {
+  return bootstrapDatabase();
+});
+
+// after last
+AfterAll(function () {
+  return cleanDatabase();
 });
 
 Before(function () {
-  return this.api.truncateCollection()
-    .then(() => this.api.truncateCollection(this.fakeAltIndex));
+  const world = new World({parameters: parseWorldParameters()});
+
+  return this.api.truncateCollection(world.fakeIndex, world.fakeCollection)
+    .catch(() => {})
+    .then(() => this.api.truncateCollection(world.fakeAltIndex, world.fakeAltCollection))
+    .catch(() => {});
+});
+
+Before({ tags: '@resetDatabase' }, async function () {
+  await cleanDatabase();
+  await bootstrapDatabase();
 });
 
 After(function () {
@@ -126,15 +143,20 @@ function cleanSecurity () {
       const regex = new RegExp('^' + this.idPrefix);
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
-      return results.length > 0 ? this.api.deleteProfiles(results, true) : Bluebird.resolve();
+      return results.length > 0
+        ? this.api.deleteProfiles(results, true)
+        : Bluebird.resolve();
     })
     .then(() => this.api.searchRoles({match_all: {}}, {from: 0, size: 999}))
     .then(results => {
       const regex = new RegExp('^' + this.idPrefix);
       results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
 
-      return results.length > 0 ? this.api.deleteRoles(results, true) : Bluebird.resolve();
-    });
+      return results.length > 0
+        ? this.api.deleteRoles(results, true)
+        : Bluebird.resolve();
+    })
+    .catch(() => {});
 }
 
 function grantDefaultRoles () {

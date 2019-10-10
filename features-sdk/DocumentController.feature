@@ -14,7 +14,7 @@ Feature: Document Controller
     | "document-1" | { "name": "document1" } | 201 | "created" |
     |       -      | { "name": "document2" } | 201 | "created" |
     And I should receive a empty "errors" array
-    And The collection contain 2 documents
+    And I count 2 documents
     And The document "document-1" content match:
     | name | "document1" |
 
@@ -58,7 +58,7 @@ Feature: Document Controller
     | "document-1" | { "name": "replaced1" } | 200 | "updated" |
     |      -       | { "name": "document2" } | 201 | "created" |
     And I should receive a empty "errors" array
-    And The collection contain 2 documents
+    And I count 2 documents
     And The document "document-1" content match:
     | name | "replaced1" |
 
@@ -75,7 +75,7 @@ Feature: Document Controller
     And I should receive a "errors" array of objects matching:
     | reason | status | document |
     | "document body must be an object" | 400 | { "body": "not a body" } |
-    And The collection contain 1 documents
+    And I count 1 documents
 
   # document:mUpdate ===========================================================
 
@@ -198,7 +198,7 @@ Feature: Document Controller
     | "document-1" |
     | "document-2" |
     And I should receive a empty "errors" array
-    And The collection contain 1 documents
+    And I count 1 documents
     And The document "document-3" exists
 
   @mappings
@@ -219,7 +219,7 @@ Feature: Document Controller
     | reason | status | _id |
     | "document _id must be a string" | 400 | 214284 |
     | "document not found" | 404 | "document-42" |
-    And The collection contain 2 documents
+    And I count 2 documents
     And The document "document-2" exists
     And The document "document-3" exists
 
@@ -260,3 +260,17 @@ Feature: Document Controller
     And I should receive a "errors" array matching:
     | "214284" |
     | "document-42" |
+
+  # document:count =============================================================
+  @mappings
+  Scenario: Count documents
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+    | _id | body  |
+    | - | { "job": "developer" } |
+    | - | { "job": "developer" } |
+    | - | { "job": "cto" } |
+    And I refresh the collection
+    Then I count 3 documents
+    And I count 2 documents matching:
+    | job | "developer" |

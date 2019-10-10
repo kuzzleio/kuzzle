@@ -74,10 +74,27 @@ Then('I should receive a empty {string} array', function (name) {
   should(this.props.result[name]).be.Array().be.empty();
 });
 
-Then('The collection contain {int} documents', async function (expectedCount) {
+Then('I count {int} documents', async function (expectedCount) {
   const count = await this.sdk.document.count(
     this.props.index,
     this.props.collection);
+
+  should(count).be.eql(expectedCount);
+});
+
+Then('I count {int} documents matching:', async function (expectedCount, dataTable) {
+  const properties = this.parseObject(dataTable);
+
+  const query = {
+    match: {
+      ...properties
+    }
+  };
+
+  const count = await this.sdk.document.count(
+    this.props.index,
+    this.props.collection,
+    { query });
 
   should(count).be.eql(expectedCount);
 });

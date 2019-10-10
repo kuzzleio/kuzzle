@@ -215,9 +215,9 @@
           "class": "PreconditionError"
         },
         "forbidden_character": {
-          "description": "An index name contains a forbidden character",
+          "description": "An index or a collection name contains a forbidden character",
           "code": 39,
-          "message": "An index name cannot contain the character \"%s\"",
+          "message": "An index or a collection name cannot contain the character \"%s\"",
           "class": "BadRequestError"
         },
         "invalid_search_query": {

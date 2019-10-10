@@ -44,7 +44,7 @@ Then(/^The (sorted )?result should match the (regex|json) (.*?)$/, function (sor
 Then('The result should raise an error with message {string}', function (message, callback) {
   const
     val = _.get(this.result, 'error.error') || this.result.error;
-
+  console.log(this.result)
   try {
     should(val.message).be.eql(message);
     callback();

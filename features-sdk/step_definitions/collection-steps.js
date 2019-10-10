@@ -44,3 +44,7 @@ Then(/I should( not)? see the collection "(.*?)":"(.*?)"/, async function (not, 
 Then('I get mappings of collection {string}:{string}', async function (index, collection) {
   this.props.result = await this.sdk.collection.getMapping(index, collection);
 });
+
+Then('I refresh the collection', function () {
+  return this.sdk.collection.refresh(this.props.index, this.props.collection);
+});

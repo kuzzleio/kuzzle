@@ -40,11 +40,28 @@ Feature: Collection Controller
     Then I should receive an error matching:
     | status | 400 |
 
-  Scenario: Try to create a collection with the same name as the kuzzle hidden one
+  Scenario: Create a collection with the same name as the kuzzle hidden one
     Given an index "nyc-open-data"
     When I call the route "collection":"create" with args:
     | index | "nyc-open-data" |
     | collection | "_kuzzle_keep" |
+    Then I should receive an error matching:
+    | status | 400 |
+
+  Scenario: Create a collection with illegal character
+    When I call the route "collection":"create" with args:
+    | index | "nyc-open-data" |
+    | collection | "%users" |
+    Then I should receive an error matching:
+    | status | 400 |
+    When I call the route "collection":"create" with args:
+    | index | "nyc-open-data" |
+    | collection | "&users" |
+    Then I should receive an error matching:
+    | status | 400 |
+    When I call the route "collection":"create" with args:
+    | index | "nyc-open-data" |
+    | collection | "us.ers" |
     Then I should receive an error matching:
     | status | 400 |
 

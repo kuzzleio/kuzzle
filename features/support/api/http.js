@@ -783,7 +783,7 @@ class HttpApi {
     return this.callApi(this._getRequest(index, null, 'index', 'exists'));
   }
 
-  refreshCollection (index, collection) {
+  refreshCollection (index = this.world.fakeIndex, collection = this.world.fakeCollection) {
     const options = {
       url: this.apiPath(`${index}/${collection}/_refresh`),
       method: 'POST'
@@ -799,7 +799,7 @@ class HttpApi {
     };
 
     if (type) {
-      options.url += '/' + type;
+      options.url += '?type=' + type;
     }
 
     return this.callApi(options);
@@ -1221,7 +1221,7 @@ class HttpApi {
 
   updateSpecifications (index, collection, specifications) {
     const options = {
-      url: this.apiPath(index ? `${index}/${collection}/_specifications` : '_specifications'),
+      url: this.apiPath(`${index}/${collection}/_specifications`),
       method: 'PUT',
       body: specifications
     };

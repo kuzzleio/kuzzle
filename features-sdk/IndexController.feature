@@ -1,4 +1,6 @@
-Feature: index:create
+Feature: Index Controller
+
+  # index:create ===============================================================
 
   Scenario: Create a new index
     When I successfully call the route "index":"create" with args:
@@ -15,3 +17,17 @@ Feature: index:create
     | index | "nyc-open-data" |
     Then I should receive an error matching:
     | status | 412 |
+
+  Scenario: Create a index with illegal character
+    When I call the route "index":"create" with args:
+    | index | "%kuzzle" |
+    Then I should receive an error matching:
+    | status | 400 |
+    When I call the route "index":"create" with args:
+    | index | "&kuzzle" |
+    Then I should receive an error matching:
+    | status | 400 |
+    When I call the route "index":"create" with args:
+    | index | "kuz.zle" |
+    Then I should receive an error matching:
+    | status | 400 |

@@ -175,7 +175,8 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'create',
-        body
+        body,
+        refresh: 'wait_for'
       };
 
     if (id) {
