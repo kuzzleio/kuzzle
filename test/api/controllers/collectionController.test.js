@@ -82,13 +82,7 @@ describe('Test: collection controller', () => {
       should(collectionController.publicStorage.getMapping)
         .be.calledWith(index, collection, { includeKuzzleMeta: false });
 
-      should(response).match({
-        [index]: {
-          mappings: {
-            [collection]: mappings
-          }
-        }
-      });
+      should(response).match(mappings);
     });
 
     it('should include kuzzleMeta if specified', async () => {
@@ -271,7 +265,11 @@ describe('Test: collection controller', () => {
       should(kuzzle.internalIndex.createOrReplace).be.calledWithMatch(
         'validations',
         `${index}#${collection}`,
-        request.input.body);
+        {
+          index,
+          collection,
+          validation: request.input.body
+        });
 
       should(response).match(request.input.body);
     });

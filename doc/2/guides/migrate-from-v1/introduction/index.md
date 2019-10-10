@@ -37,6 +37,10 @@ API Changes:
 
   - `security:formatUserForSerialization` (deprecated since v1.0.0)
 
+### New API methods
+
+  - `collection:refresh`: refreshes a collection
+
 ### Removed API methods
 
 **Index Controller**
@@ -54,13 +58,57 @@ API Changes:
 
 **Bulk Controller**
 
-  - `bulk:import`: it's no longer allowed to specify different indexes and collections in the same bulk data array
+`bulk:import`: 
+  - index and collection cannot be specified on each action anymore, but must be passed as global request arguments
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` and `errors` containing, respectively, successful and failed actions
+
+`bulk:mWrite`:
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` and `errors` containing, respectively, successful and failed document writes
 
 **Collection Controller**
 
-  - `collection:updateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
-  - `collection:validateSpecifications`: remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+`collection:updateSpecifications`:
+  - remove deprecated route usage on multiple collections (deprecated since 1.8.0)
 
+`collection:validateSpecifications`: 
+  - remove deprecated route usage on multiple collections (deprecated since 1.8.0)
+
+`collection:getMapping`:
+  - returns directly the collection mappings
+ 
+**Document Controller**
+
+`document:mCreate`, `document:mCreateOrReplace`, `document:mReplace`, `document:mUpdate`: 
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` and `errors` containing, respectively, successful and failed document writes
+
+`document:mDelete`:
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` containing the deleted document IDs, and `errors` containing error objects
+
+`document:mGet`:
+  - does not return a partial error if some actions fail
+  - returns two arrays: `successes` containing documents content, and `errors` containing non-existing document IDs
+
+### Removed HTTP routes
+
+  - `GET /:index/_list/:type` for `collection:list`
+    - use `GET /:index/_list?type=:type` instead
+
+  - `POST /_validateSpecifications` for `collection:validateSpecifications`
+    - use `POST /:index/:collection/_validateSpecifications` instead
+
+  - `POST /_getStats` for `server:getStats`
+    - use `GET /_getStats` instead
+
+  - `POST /:_id/_createFirstAdmin` for `security:createFirstAdmin`
+    - use `POST /_createFirstAdmin/:id` instead
+
+  - `POST /_bulk` and `POST /:index/_bulk` for `bulk:import`
+    - use `POST /:index/:collection/_bulk` instead
+    
 ### Remove the CLI
 
 The CLI is now independant from Kuzzle: https://github.com/kuzzleio/kuzzle-cli/

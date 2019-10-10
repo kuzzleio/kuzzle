@@ -92,15 +92,19 @@ Body:
 
 ## Response
 
-Returns a `hits` array containing the list of updated documents.
+Returns an object containing 2 arrays: `successes` and `errors`
 
-Each document has the following properties:
+Each updated document is an object of the `successes` array with the following properties:
 
 - `_id`: document unique identifier
-- `_source`: updated document content
-- `_version`: version number of the document
+- `_source`: document content
+- `_version`: version of the document (should be `1`)
 
-If one or more document cannot be updated, the response status is set to `206`, and the `error` object contain a [partial error](/core/2/api/essentials/errors/handling#partialerror) error.
+Each errored document is an object of the `errors` array with the following properties:
+
+- `document`: original document that caused the error
+- `status`: HTTP error status code
+- `reason`: human readable reason
 
 ```js
 {
@@ -112,7 +116,7 @@ If one or more document cannot be updated, the response status is set to `206`, 
   "controller": "document",
   "requestId": "<unique request identifier>",
   "result": {
-    "hits": [
+    "successes": [
       {
         "_id": "<documentId>",
         "_version": 2,
@@ -128,7 +132,15 @@ If one or more document cannot be updated, the response status is set to `206`, 
         }
       }
     ],
-    "total": 2
+    "errors": [
+      {
+        "document": {
+          // updated document content
+        },
+        "status": 404,
+        "reason": "Document 'foobar' not found"
+      }
+    ]
   }
 }
 ```

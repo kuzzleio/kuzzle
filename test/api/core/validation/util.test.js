@@ -370,6 +370,7 @@ describe('Test: validation utilities', () => {
         internalEngineResponse = {
           hits: [
             {
+              _id: 'anIndex#aCollection',
               _source: {
                 index: 'anIndex',
                 collection: 'aCollection',
@@ -377,6 +378,7 @@ describe('Test: validation utilities', () => {
               }
             },
             {
+              _id: 'anIndex#anotherCollection',
               _source: {
                 index: 'anIndex',
                 collection: 'anotherCollection',
@@ -384,6 +386,7 @@ describe('Test: validation utilities', () => {
               }
             },
             {
+              _id: 'anotherIndex#aCollection',
               _source: {
                 index: 'anotherIndex',
                 collection: 'aCollection',
@@ -391,6 +394,7 @@ describe('Test: validation utilities', () => {
               }
             },
             {
+              _id: 'anotherIndex#anotherCollection',
               _source: {
                 index: 'anotherIndex',
                 collection: 'anotherCollection',

@@ -80,9 +80,7 @@ order: 500
 | services.storage.import_failed<br/><pre>0x01010005</pre> | [PartialError](/core/2/api/essentials/errors/handling#partialerror) <pre>(206)</pre> | Failed to import some or all documents |
 | services.storage.no_multi_indexes<br/><pre>0x01010006</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Cannot be run on multiple indexes |
 | services.storage.no_multi_collections<br/><pre>0x01010007</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Cannot be run on multiple collections |
-| services.storage.incomplete_fetch<br/><pre>0x01010008</pre> | [PartialError](/core/2/api/essentials/errors/handling#partialerror) <pre>(206)</pre> | Couldn't retrieve all the requested documents |
 | services.storage.incomplete_delete<br/><pre>0x01010009</pre> | [PartialError](/core/2/api/essentials/errors/handling#partialerror) <pre>(206)</pre> | Couldn't delete all the requested documents |
-| services.storage.incomplete_create<br/><pre>0x0101000a</pre> | [PartialError](/core/2/api/essentials/errors/handling#partialerror) <pre>(206)</pre> | Couldn't create all the requested documents |
 | services.storage.not_found<br/><pre>0x0101000b</pre> | [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | Document not found |
 | services.storage.bootstrap_timeout<br/><pre>0x0101000c</pre> | [InternalError](/core/2/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Bootstrap of a storage instance failed because it has been locked for too much time |
 | services.storage.version_mismatch<br/><pre>0x0101000d</pre> | [InternalError](/core/2/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | The version of the target Elasticsearch is not compatible with this version of Kuzzle |
@@ -94,7 +92,7 @@ order: 500
 | services.storage.invalid_argument<br/><pre>0x01010013</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Invalid argument provided |
 | services.storage.index_protected<br/><pre>0x01010014</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The content of a protected index cannot be modified with generic API routes |
 | services.storage.invalid_mapping<br/><pre>0x01010015</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The provided mapping is invalid |
-| services.storage.index_reserved<br/><pre>0x01010016</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Index names starting with a "%" are reserved and cannot be used |
+| services.storage.collection_reserved<br/><pre>0x01010016</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Collections cannot be named "_kuzzle_keep" because it is reserved for internal use. |
 | services.storage.no_routing<br/><pre>0x01010017</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The "_routing" keyword is forbidden |
 | services.storage.not_connected<br/><pre>0x01010018</pre> | [ExternalServiceError](/core/2/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | Unable to connect to the storage instance |
 | services.storage.too_many_operations<br/><pre>0x01010019</pre> | [ExternalServiceError](/core/2/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | Too many operations received |
@@ -110,7 +108,8 @@ order: 500
 | services.storage.unexpected_error<br/><pre>0x01010023</pre> | [ExternalServiceError](/core/2/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | Embeds an unexpected error from Elasticsearch |
 | services.storage.no_mapping_found<br/><pre>0x01010025</pre> | [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | Attempted to read a non-existent mapping |
 | services.storage.index_already_exists<br/><pre>0x01010026</pre> | [PreconditionError](/core/2/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | Attempted to create an already existing index |
-| services.storage.forbidden_character<br/><pre>0x01010027</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | An index name contains a forbidden character |
+| services.storage.forbidden_character<br/><pre>0x01010027</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | An index or a collection name contains a forbidden character |
+| services.storage.invalid_search_query<br/><pre>0x01010028</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A forbidden argument has been provided in the search query |
 
 ---
 
@@ -363,6 +362,7 @@ order: 500
 | validation.assert.invalid_specifications<br/><pre>0x0501000b</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The provided specifications are invalid |
 | validation.assert.not_found<br/><pre>0x0501000c</pre> | [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | Attempted to access to a non-existent collection specifications |
 | validation.assert.invalid_filters<br/><pre>0x0501000d</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The Koncorde filters provided as a validator are invalid |
+| validation.assert.incorrect_validation_format<br/><pre>0x0501000e</pre> | [InternalError](/core/2/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | The Koncorde filters provided as a validator are invalid |
 
 ---
 

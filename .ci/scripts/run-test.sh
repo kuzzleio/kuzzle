@@ -2,14 +2,12 @@
 
 set -e
 
-elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
+elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
-if [ "$NODE_LTS" = "6" ]; then
-  NODE_VERSION=$NODE_6_VERSION
-elif [ "$NODE_LTS" = "8" ]; then
-  NODE_VERSION=$NODE_8_VERSION
-elif [ "$NODE_LTS" = "10" ]; then
+if [ "$NODE_LTS" = "10" ]; then
   NODE_VERSION=$NODE_10_VERSION
+elif [ "$NODE_LTS" = "12" ]; then
+  NODE_VERSION=$NODE_12_VERSION
 else
   echo "Unsupported Node LTS: $NODE_LTS"
   exit 1
@@ -20,8 +18,7 @@ n $NODE_VERSION
 
 npm install --silent --unsafe-perm
 npm install --silent --unsafe-perm --only=dev
-find -L node_modules/.bin -type f -exec chmod 776 {} \;
-find node_modules/ -type d -exec chmod 755 {} \;
+chmod -R 777 node_modules/
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
@@ -41,7 +38,7 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     exit 1
 fi
 
-node bin/kuzzle start &
+node bin/start-kuzzle-server &
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 while ! curl -f -s -o /dev/null http://localhost:7512
 do
