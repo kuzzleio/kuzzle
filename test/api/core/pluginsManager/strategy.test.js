@@ -136,6 +136,7 @@ describe('PluginsManager: strategy management', () => {
       pluginsManager.authenticators[plugin.manifest.name] = {
         SomeStrategy: plugin.object.authenticators.SomeStrategy
       };
+      pluginsManager.plugins[plugin.manifest.name].initCalled = true;
     });
 
     it('should add the strategy in strategies if it is well-formed', done => {
@@ -143,10 +144,13 @@ describe('PluginsManager: strategy management', () => {
       plugin.object.verifyFunction = sinon.stub().resolves({kuid: 'foo'});
 
       pluginsManager._initStrategies(plugin);
-      should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(plugin.object.strategies.someStrategy);
+
+      should(pluginsManager.strategies.someStrategy.strategy)
+        .be.deepEqual(plugin.object.strategies.someStrategy);
       should(pluginsManager.strategies.someStrategy.methods.afterRegister).be.Function();
       should(plugin.object.afterRegisterFunction).be.calledOnce();
-      should(plugin.object.afterRegisterFunction.firstCall.args[0]).be.instanceOf(plugin.object.authenticators.SomeStrategy);
+      should(plugin.object.afterRegisterFunction.firstCall.args[0])
+        .be.instanceOf(plugin.object.authenticators.SomeStrategy);
       should(pluginsManager.strategies.someStrategy.methods.exists).be.Function();
       should(pluginsManager.strategies.someStrategy.methods.create).be.Function();
       should(pluginsManager.strategies.someStrategy.methods.update).be.Function();
@@ -386,6 +390,7 @@ describe('PluginsManager: strategy management', () => {
       pluginsManager.authenticators[plugin.manifest.name] = {
         SomeStrategy: plugin.object.authenticators.SomeStrategy
       };
+      pluginsManager.plugins[plugin.manifest.name].initCalled = true;
       pluginsManager._initStrategies(plugin);
       verifyAdapter = plugin.object.authenticators.SomeStrategy.firstCall.args[1];
     });
@@ -521,6 +526,30 @@ describe('PluginsManager: strategy management', () => {
     it('should throw if not the owner of the strategy', () => {
       should(() => pluginsManager.unregisterStrategy('Frank William Abagnale Jr.', 'someStrategy'))
         .throw(PluginImplementationError, { errorName: 'plugin.strategy.unauthorized_removal' });
+    });
+  });
+
+  describe('#registerStrategy', () => {
+    it('should add the strategy to strategies object if init method has not been called', () => {
+      const strategy = {
+        config: {
+          authenticator: 'SomeStrategy'
+        },
+        methods: {
+          create: sinon.stub(),
+          delete: sinon.stub(),
+          exists: sinon.stub(),
+          getById: sinon.stub(),
+          getInfo: sinon.stub(),
+          update: sinon.stub(),
+          validate: sinon.stub(),
+          verify: sinon.stub()
+        }
+      };
+
+      pluginsManager.registerStrategy(plugin.manifest.name, 'foobar', strategy);
+
+      should(plugin.object.strategies.foobar).be.eql(strategy);
     });
   });
 });
