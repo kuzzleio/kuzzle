@@ -92,7 +92,13 @@ async function moveData (context, index, collection, newIndex, transform) {
         doc._source = transform(doc._source);
       }
 
-      bulk.push({ create: { _index: newIndex, _id: doc._id } });
+      bulk.push({
+        create: {
+          _index: newIndex,
+          _id: doc._id,
+          _type: context._type
+        }
+      });
       bulk.push(doc._source);
     }
 
@@ -127,9 +133,9 @@ async function upgradeMappings (context, index, collection, newIndex) {
     mappings.properties._kuzzle_info =
       context.config.services.storageEngine.commonMapping.properties._kuzzle_info;
   }
-
   await context.target.indices.putMapping({
     index: newIndex,
+    type: context._type,
     body: {
       properties: mappings.properties,
       dynamic: mappings.dynamic || false,
@@ -177,6 +183,7 @@ async function upgradeInternalStorage (context) {
       await createNewIndex(context, newIndex);
       await context.target.indices.putMapping({
         index: newIndex,
+        type: context._type,
         body: mappings
       });
 
@@ -197,12 +204,14 @@ async function upgradeInternalStorage (context) {
   // bootstrap document
   await context.target.create({
     index: `${index}.config`,
+    type: context._type,
     id: 'internalIndex.dataModelVersion',
     body: { version: '2.0.0' }
   });
 
   await context.target.create({
     index: `${index}.config`,
+    type: context._type,
     id: `${config.name}.done`,
     body: { timestamp: Date.now() }
   });
@@ -264,7 +273,12 @@ be duplicated across all of an index upgraded collections.`);
 
   for (const [index, obj] of Object.entries(aliases)) {
     for (const [name, body] of Object.entries(obj)) {
-      await context.target.indices.putAlias({ index, name, body });
+      await context.target.indices.putAlias({
+        index,
+        name,
+        body,
+        _type: context._type
+      });
       context.log.ok(`...... alias ${name} on index ${index} upgraded`);
     }
   }
@@ -393,7 +407,14 @@ async function destroyPreviousStructure (context, upgraded) {
 }
 
 module.exports = async function upgradeStorage (context) {
-  const storageContext = await getESConnector(context);
+  const
+    storageContext = await getESConnector(context),
+    targetInfo = await storageContext.target.info(),
+    targetMajor = targetInfo.body.version.number.split('.')[0];
+
+  storageContext._type = storageContext.inPlace && targetMajor === '5'
+    ? 'default'
+    : undefined;
 
   context.log.notice(`
 This script will now start *COPYING* the existing data to the target storage

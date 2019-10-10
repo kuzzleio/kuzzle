@@ -23,7 +23,7 @@ The choice will be proposed to import data from a different Elasticsearch instan
 
 First, shut down the Kuzzle v1 instance, but keep the Elasticsearch server running.
 
-Upgrade the Kuzzle source files (either in place, or by installing them in another directory).
+Upgrade Kuzzle source files (either in place, or by installing them in another directory).
 
 Run the upgrade script (see below): a choice will be proposed to migrate using the same Elasticsearch instance as the target.
 
