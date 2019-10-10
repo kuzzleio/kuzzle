@@ -108,7 +108,7 @@ order: 500
 | services.storage.unexpected_error<br/><pre>0x01010023</pre> | [ExternalServiceError](/core/2/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | Embeds an unexpected error from Elasticsearch |
 | services.storage.no_mapping_found<br/><pre>0x01010025</pre> | [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | Attempted to read a non-existent mapping |
 | services.storage.index_already_exists<br/><pre>0x01010026</pre> | [PreconditionError](/core/2/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | Attempted to create an already existing index |
-| services.storage.forbidden_character<br/><pre>0x01010027</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | An index name contains a forbidden character |
+| services.storage.forbidden_character<br/><pre>0x01010027</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | An index or a collection name contains a forbidden character |
 | services.storage.invalid_search_query<br/><pre>0x01010028</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A forbidden argument has been provided in the search query |
 
 ---
