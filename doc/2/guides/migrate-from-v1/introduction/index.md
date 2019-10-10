@@ -106,6 +106,9 @@ API Changes:
   - `POST /:_id/_createFirstAdmin` for `security:createFirstAdmin`
     - use `POST /_createFirstAdmin/:id` instead
 
+  - `POST /_bulk` and `POST /:index/_bulk` for `bulk:import`
+    - use `POST /:index/:collection/_bulk` instead
+    
 ### Remove the CLI
 
 The CLI is now independant from Kuzzle: https://github.com/kuzzleio/kuzzle-cli/

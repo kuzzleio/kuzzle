@@ -2,12 +2,12 @@
 
 set -e
 
-elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
+elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
-if [ "$NODE_LTS" = "6" ]; then
-  NODE_VERSION=$NODE_6_VERSION
-elif [ "$NODE_LTS" = "8" ]; then
-  NODE_VERSION=$NODE_8_VERSION
+if [ "$NODE_LTS" = "10" ]; then
+  NODE_VERSION=$NODE_10_VERSION
+elif [ "$NODE_LTS" = "12" ]; then
+  NODE_VERSION=$NODE_12_VERSION
 else
   echo "Unsupported Node LTS: $NODE_LTS"
   exit 1

@@ -3,7 +3,7 @@
 const
   _ = require('lodash'),
   { After, Before, BeforeAll } = require('cucumber'),
-  { Kuzzle, WebSocket, Http } = require('../../../sdk-javascript'),
+  { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   testMappings = require('../fixtures/mappings'),
   testFixtures = require('../fixtures/fixtures'),
   testSecurities = require('../fixtures/securities'),

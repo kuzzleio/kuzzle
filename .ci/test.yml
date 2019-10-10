@@ -10,6 +10,8 @@ services:
       - "./config/pm2.json:/config/pm2.json"
     cap_add:
       - SYS_PTRACE
+    ports:
+      - "7512:7512"
     depends_on:
       - redis
       - elasticsearch

@@ -6,7 +6,7 @@ log () {
   echo "[$(date --rfc-3339 seconds)] - $1"
 }
 
-elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
+elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
 log "Waiting for elasticsearch"
 while ! curl -f -s -o /dev/null "$elastic_host"

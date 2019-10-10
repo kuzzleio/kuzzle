@@ -2,7 +2,7 @@
 
 set -e
 
-elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
+elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
 if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
     npm ci --unsafe-perm
