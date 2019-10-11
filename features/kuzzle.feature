@@ -1,5 +1,12 @@
 Feature: Kuzzle functional tests
 
+  Scenario: Admin reset database
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I create a collection "kuzzle-test-index-alt":"kuzzle-collection-test-alt"
+    And I reset public database
+    Then I'm not able to find the index named "kuzzle-test-index" in index list
+    Then I'm not able to find the index named "kuzzle-test-index-alt" in index list
+
   Scenario: API method server:publicApi
     When I get the public API
     Then I have the definition of kuzzle and plugins controllers
@@ -161,82 +168,11 @@ Feature: Kuzzle functional tests
     Then I truncate the collection
     Then I'm not able to get the document
 
-  Scenario: Count document
-    When I write the document "documentGrace"
-    When I write the document "documentAda"
-    When I write the document "documentGrace"
-    When I write the document "documentAda"
-    Then I count 4 documents
-    And I count 0 documents in index "kuzzle-test-index-alt"
-    And I count 2 documents with "NYC" in field "info.city"
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: delete multiple documents with no error
-    When I write the document "documentGrace" with id "Grace"
-    When I write the document "documentAda" with id "Ada"
-    Then I count 2 documents
-    Then I remove the documents '["Grace", "Ada"]'
-    And I count 0 documents
-
-  Scenario: delete multiple documents with partial errors
-    When I write the document "documentGrace" with id "Grace"
-    When I write the document "documentAda" with id "Ada"
-    Then I count 2 documents
-    Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
-    And I count 0 documents
-
-  Scenario: create multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: replace multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: replace multiple documents with partial errors
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: update multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: create and replace multiple documents
-    Then I count 0 documents
-    When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
   Scenario: Checking that documents exist or not
     When I write the document with id "documentGrace"
     Then I check that the document "documentGrace" exists
     Then I remove the document
     Then I check that the document "documentGrace" doesn't exists
-
-  Scenario: get multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I get 2 documents '["Ada", "Grace"]'
-    Then I truncate the collection
-    And I count 0 documents
 
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
@@ -381,20 +317,6 @@ Feature: Kuzzle functional tests
     And I list "stored" data collections
     Then I can find a stored collection kuzzle-collection-test
 
-  Scenario: Restricted index and collection creation
-    When I try to create the index "%kuzzle"
-    Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
-    When I try to create the index "&kuzzle"
-    Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
-    When I try to create the index "kuz.zle"
-    Then The result should raise an error with message 'Forbidden character "." in index or collection name'
-    When I try to create the collection "%users"
-    Then The result should raise an error with message 'Forbidden character "%" in index or collection name'
-    When I try to create the collection "&users"
-    Then The result should raise an error with message 'Forbidden character "&" in index or collection name'
-    When I try to create the collection "use.rs"
-    Then The result should raise an error with message 'Forbidden character "." in index or collection name'
-
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
     Then The result should match the json false
@@ -431,13 +353,6 @@ Feature: Kuzzle functional tests
     Given A room subscription listening to "firstName" having value "Grace"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
-
-  Scenario: Indexes are virtual and does not exists without a collection
-    When I create an index named "kuzzle-test-index-new"
-    Then I'm not able to find the index named "kuzzle-test-index-new" in index list
-    When I create a collection named "collection" in index "kuzzle-test-index-new"
-    Then I'm able to find the index named "kuzzle-test-index-new" in index list
-    Then I'm able to delete the index named "kuzzle-test-index-new"
 
   @security
   Scenario: login user
@@ -659,6 +574,7 @@ Feature: Kuzzle functional tests
     Then I write the document "documentGrace"
     And I should receive a document notification with field action equal to "create"
 
+  @resetDatabase
   @security
   Scenario: user permissions
     Given I create a new role "role1" with id "role1"

@@ -96,9 +96,9 @@ describe('Test: validation initialization', () => {
     beforeEach(() => {
       kuzzle.internalIndex.search.returns(Bluebird.resolve({
         hits: [
-          {_source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
-          {_source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
-          {_source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
+          {_id: 'anIndex#aCollection', _source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
+          {_id: 'anIndex#anotherCollection', _source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
+          {_id: 'anIndex#anotherCollection', _source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
         ],
         length: 3
       }));

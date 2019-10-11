@@ -2,7 +2,7 @@
 
 const
   should = require('should'),
-  Request = require('kuzzle-common-objects').Request,
+  { Request } = require('kuzzle-common-objects'),
   DocumentExtractor = require('../../lib/util/DocumentExtractor');
 
 describe('DocumentExtractor', () => {
@@ -44,6 +44,7 @@ describe('DocumentExtractor', () => {
     });
 
     const documents = new DocumentExtractor(req).extract();
+
     should(documents.length).equal(2);
     should(documents[0]._id).equal('abc');
     should(documents[0]._source.foo).equal('bar');
@@ -124,6 +125,7 @@ describe('DocumentExtractor', () => {
     ];
 
     const newReq = new DocumentExtractor(req).insert(documents);
+
     should(newReq.input.body.documents[0]._id).equal('foo');
     should(newReq.input.body.documents[0].body.foo).equal('qux');
     should(newReq.input.body.documents[1]._id).equal('foo2');
@@ -209,7 +211,7 @@ describe('DocumentExtractor', () => {
     });
 
     req.setResult({
-      hits: [
+      successes: [
         {
           _id: 'fooabc',
           _source: {
@@ -223,10 +225,11 @@ describe('DocumentExtractor', () => {
           }
         }
       ],
-      total: 2
+      errors: []
     });
 
     const documents = new DocumentExtractor(req).extract();
+
     should(documents.length).equal(2);
     should(documents[0]._id).equal('fooabc');
     should(documents[0]._source.a).equal('b');
@@ -257,12 +260,13 @@ describe('DocumentExtractor', () => {
       }
     });
 
-    req.setResult([
-      'foobar',
-      'foobaz'
-    ]);
+    req.setResult({
+      successes: ['foobar', 'foobaz'],
+      errors: []
+    });
 
     const documents = new DocumentExtractor(req).extract();
+
     should(documents.length).equal(2);
     should(documents[0]._id).equal('foobar');
     should(documents[1]._id).equal('foobaz');
@@ -320,12 +324,12 @@ describe('DocumentExtractor', () => {
     ];
 
     const newReq = new DocumentExtractor(req).insert(documents);
-    should(newReq.result.hits[0]._id).equal('foo');
-    should(newReq.result.hits[0]._source.foo).equal('qux');
-    should(newReq.result.hits[1]._id).equal('foo2');
-    should(newReq.result.hits[1]._source.foo).equal('bar');
-    should(newReq.result.hits[2]._id).equal('foo3');
-    should(newReq.result.hits[2]._source.foo).equal('baz');
+    should(newReq.result.successes[0]._id).equal('foo');
+    should(newReq.result.successes[0]._source.foo).equal('qux');
+    should(newReq.result.successes[1]._id).equal('foo2');
+    should(newReq.result.successes[1]._source.foo).equal('bar');
+    should(newReq.result.successes[2]._id).equal('foo3');
+    should(newReq.result.successes[2]._source.foo).equal('baz');
   });
 
   it('insert documents from result with delete action', () => {
@@ -359,9 +363,9 @@ describe('DocumentExtractor', () => {
     ];
 
     const newReq = new DocumentExtractor(req).insert(documents);
-    should(newReq.result.length).equal(3);
-    should(newReq.result[0]).equal('foo');
-    should(newReq.result[1]).equal('bar');
-    should(newReq.result[2]).equal('baz');
+    should(newReq.result.successes.length).equal(3);
+    should(newReq.result.successes[0]).equal('foo');
+    should(newReq.result.successes[1]).equal('bar');
+    should(newReq.result.successes[2]).equal('baz');
   });
 });

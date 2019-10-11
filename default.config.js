@@ -246,11 +246,13 @@ module.exports = {
         name: 'kuzzle',
         collections: {
           users: {
+            dynamic: 'false',
             properties: {
               profileIds: { type: 'keyword' }
             }
           },
           profiles: {
+            dynamic: 'false',
             properties: {
               policies: {
                 properties:  {
