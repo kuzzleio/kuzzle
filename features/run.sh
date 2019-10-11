@@ -7,7 +7,7 @@ set -e
 host="${CUCUMBER_EMBEDDED_HOST:-localhost}"
 port="${CUCUMBER_EMBEDDED_PORT:-7512}"
 
-for protocol in websocket http socketio; do
+for protocol in websocket http; do
   # profiles are defined in the cucumber.js file at the root of this project
   ./node_modules/.bin/cucumber-js \
     --format progress-bar \

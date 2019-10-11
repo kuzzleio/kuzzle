@@ -19,7 +19,7 @@ The protocol can be configured via the [kuzzlerc configuration file](/core/2/gui
 ### Configure listening port
 
 :::warning
-HTTP, WebSocket and Socket.IO protocols share the same underlying server instance. Modifying the listening port will impact all these three protocols.
+HTTP and WebSocket protocols share the same underlying server instance. Modifying the listening port will impact all these three protocols.
 :::
 
 By default, Kuzzle listens to the `7512` port.
