@@ -37,7 +37,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
   it('should notify subscribers when an updated document entered their scope', () => {
     const {_id, index, collection} = request.input.resource;
 
-    kuzzle.realtime.test.returns(['foo']);
+    kuzzle.koncorde.test.returns(['foo']);
     kuzzle.storageEngine.public.get.resolves({
       _id,
       _source: {foo: 'bar'}
@@ -51,7 +51,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
         should(kuzzle.storageEngine.public.get)
           .be.calledWith(index, collection, _id);
 
-        should(kuzzle.realtime.test)
+        should(kuzzle.koncorde.test)
           .calledOnce()
           .calledWith('foo', 'bar', {foo: 'bar'}, _id);
 
@@ -91,7 +91,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
       kuzzle.config.limits.subscriptionDocumentTTL = 0;
 
-      kuzzle.realtime.test.returns(['foo']);
+      kuzzle.koncorde.test.returns(['foo']);
       kuzzle.storageEngine.public.get.resolves({
         _id,
         _source: {foo: 'bar'}

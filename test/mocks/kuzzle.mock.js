@@ -36,7 +36,7 @@ class KuzzleMock extends Kuzzle {
       verbose: sinon.stub()
     };
 
-    this.realtime = {
+    this.koncorde = {
       test: sinon.stub().returns([]),
       register: sinon.stub().resolves(),
       remove: sinon.stub().resolves(),

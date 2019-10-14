@@ -65,7 +65,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
   it('should clean up customers, rooms object', () => {
     return hotelClerk.removeCustomerFromAllRooms(context)
       .then(() => {
-        should(kuzzle.realtime.remove).be.calledOnce();
+        should(kuzzle.koncorde.remove).be.calledOnce();
 
         should(hotelClerk.rooms)
           .match({
@@ -114,7 +114,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
 
   it('should log an error if a problem occurs while unsubscribing', () => {
     const error = new Error('Mocked error');
-    kuzzle.realtime.remove = sinon.stub().throws(error);
+    kuzzle.koncorde.remove = sinon.stub().throws(error);
 
     return hotelClerk.removeCustomerFromAllRooms(context)
       .then(() => {
