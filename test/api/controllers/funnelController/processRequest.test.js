@@ -350,7 +350,14 @@ describe('funnelController.processRequest', () => {
       request.input.volatile.sdkName = 'js@7.4.2';
 
       should(() => funnel._checkSdkVersion(request))
-        .throw(BadRequestError, { errorName: 'api.process.incompatible_sdk_version' });
+        .throw(BadRequestError, { id: 'api.process.incompatible_sdk_version' });
+    });
+
+    it('should throw an error if a sdkVersion property from v1 SDKs is present', () => {
+      request.input.volatile.sdkVersion = '7.4.2';
+
+      should(() => funnel._checkSdkVersion(request))
+        .throw(BadRequestError, { id: 'api.process.incompatible_sdk_version' });
     });
   });
 });
