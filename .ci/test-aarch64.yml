@@ -23,7 +23,6 @@ services:
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=production
       - DEBUG=
-      - CUCUMBER_EMBEDDED_HOST=localhost
       - NODE_LTS=${NODE_LTS:-10}
       # Travis env var must be propagated into the container
       - TRAVIS
