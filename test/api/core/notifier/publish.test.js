@@ -32,7 +32,7 @@ describe('Test: notifier.publish', () => {
   });
 
   it('should publish messages', () => {
-    kuzzle.realtime.test.returns(rooms);
+    kuzzle.koncorde.test.returns(rooms);
 
     const request = new Request(rawRequest);
 
