@@ -178,7 +178,7 @@ To enable development mode, you will need to **both** set `NODE_ENV` environment
 NODE_ENV=development \
 kuzzle_server__protocols__mqtt__enabled=true \
 kuzzle_server__protocols__mqtt__developmentMode=true \
-./bin/kuzzle start
+./bin/start-kuzzle-server
 
 # client 1
 $ mosquitto_sub -t Kuzzle/response

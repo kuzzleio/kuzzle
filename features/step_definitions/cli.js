@@ -14,10 +14,6 @@ When('I have a file {string} containing {string}', function (filePath, rawConten
   fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
 });
 
-When('I use the CLI command {string}', function (cliCommand) {
-  execSync(`./bin/kuzzle ${cliCommand}`);
-});
-
 /* eslint-disable no-useless-escape */
 Then(/A file "([\w\./-]+)" exists( and contain '(.*)')?/, function (filePath, rawContent) {
   should(fs.existsSync(filePath)).be.eql(true);

@@ -227,8 +227,7 @@ Then create the pm2 configuration file:
 ```bash
 echo "apps:
    - name: kuzzlebackend
-     script: ${KUZZLE_BACKEND_INSTALL_DIR}/bin/kuzzle
-     args: start
+     script: ${KUZZLE_BACKEND_INSTALL_DIR}/bin/start-kuzzle-server
      env:
        NODE_ENV: production
   " > ~/kuzzle/pm2.conf.yml
@@ -275,10 +274,7 @@ Below is a list of useful commands to help you manage your Kuzzle installation r
 pm2 logs
 
 # Start, restart or stop Kuzzle:
-pm2 "<start|stop|restart>" kuzzlebackend
-
-# Access the Kuzzle CLI
-~/kuzzle/bin/kuzzle -h
+pm2 "<start|stop|restart>" KuzzleServer
 ```
 
 ::: success
@@ -362,7 +358,7 @@ If you see the following message make sure that you have installed Redis and tha
 If you see the following message when running `pm2 logs`, then make sure that your `pm2.conf.yml` file was created correctly.
 To recreate that file:
 
-- delete the current version from pm2: `pm2 delete kuzzlebackend`
+- delete the current version from pm2: `pm2 delete KuzzleServer`
 - follow the instructions above to recreate it
 
 ```
