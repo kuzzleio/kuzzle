@@ -482,7 +482,7 @@ describe('Test: repositories/roleRepository', () => {
       return should(roleRepository.checkRoleControllersAndActions(role))
         .be.rejectedWith(BadRequestError);
     });
-    it('should resolve when a role contains invalid action.', () => {
+    it('should resolve when a role contains valid controller and action.', () => {
       const
         controllers = {
           document: {
