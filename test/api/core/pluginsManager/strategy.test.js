@@ -314,23 +314,6 @@ describe('PluginsManager: strategy management', () => {
         });
     });
 
-    it('should throw if both an authenticator and a constructor are provided', () => {
-      plugin.object.strategies.someStrategy.config.constructor = function () {};
-      should(() => pluginsManager._initStrategies(plugin))
-        .throw(PluginImplementationError, {
-          id: 'plugin.strategy.unexpected_constructor'
-        });
-    });
-
-    it('should throw if the provided constructor is not a constructor', () => {
-      plugin.object.strategies.someStrategy.config.constructor = () => {};
-      delete plugin.object.strategies.someStrategy.config.authenticator;
-      should(() => pluginsManager._initStrategies(plugin))
-        .throw(PluginImplementationError, {
-          id: 'plugin.strategy.invalid_constructor'
-        });
-    });
-
     it('should throw if the "strategyOptions" config is invalid', () => {
       [[], 'foobar', 123, false].forEach(opts => {
         plugin.object.strategies.someStrategy.config.strategyOptions = opts;

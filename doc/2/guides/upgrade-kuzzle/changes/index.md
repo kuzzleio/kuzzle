@@ -13,6 +13,7 @@ Dropped support for:
   - Node.js versions 6 and 8
   - Redis versions 3 and 4
   - Elasticsearch v5 
+  - Socket.io
   - Kuzzle Proxy 
 
 New external dependencies supported versions:
@@ -165,6 +166,7 @@ It accepts the same arguments as the `kuzzle start` command from the CLI.
 The following configuration keys are now obsolete and ignored:
 
   - `server.entryPoints`
+  - `server.protocols.socketio`
   - `server.proxy`
   - `services.garbageCollector`
   - `services.storageEngine.client.apiVersion`

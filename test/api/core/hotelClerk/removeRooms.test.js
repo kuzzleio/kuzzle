@@ -29,7 +29,7 @@ describe('Test: hotelClerk.removeRooms', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.hotelClerk = new HotelClerk(kuzzle);
-    kuzzle.realtime = new Koncorde();
+    kuzzle.koncorde = new Koncorde();
     context = {connectionId, token: {userId: ''}, user: {_id: ''}};
 
   });

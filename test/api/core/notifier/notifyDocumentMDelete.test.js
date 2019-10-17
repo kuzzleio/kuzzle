@@ -49,7 +49,7 @@ describe('Test: notifier.notifyDocumentMDelete', () => {
         'For the people who are': 'still alive'
       };
 
-    kuzzle.realtime.test.returns(['foo', 'bar']);
+    kuzzle.koncorde.test.returns(['foo', 'bar']);
     kuzzle.storageEngine.public.mGet.resolves({
       items: [
         {_id: 'foobar', _source: stillAlive }

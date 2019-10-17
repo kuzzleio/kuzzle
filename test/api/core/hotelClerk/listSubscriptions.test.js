@@ -18,7 +18,7 @@ describe('Test: hotelClerk.listSubscription', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.realtime.storage = {
+    kuzzle.koncorde.storage = {
       filtersIndex: {}
     };
     hotelClerk = new HotelClerk(kuzzle);
@@ -44,7 +44,7 @@ describe('Test: hotelClerk.listSubscription', () => {
       isActionAllowed: sinon.stub().resolves(true)
     };
 
-    kuzzle.realtime.storage.filtersIndex = {
+    kuzzle.koncorde.storage.filtersIndex = {
       index: {
         collection: [
           'foo',
@@ -93,7 +93,7 @@ describe('Test: hotelClerk.listSubscription', () => {
   });
 
   it('should return a correct list according to subscribe on filter and user right', () => {
-    kuzzle.realtime.storage.filtersIndex = {
+    kuzzle.koncorde.storage.filtersIndex = {
       index: {
         collection: ['foo', 'bar'],
         forbidden: ['foo']
@@ -152,7 +152,7 @@ describe('Test: hotelClerk.listSubscription', () => {
   });
 
   it('should skip non-existing rooms from Koncorde', () => {
-    kuzzle.realtime.storage.filtersIndex = {
+    kuzzle.koncorde.storage.filtersIndex = {
       index: {
         collection: ['foo', 'bar'],
         forbidden: ['foo']
@@ -177,10 +177,10 @@ describe('Test: hotelClerk.listSubscription', () => {
         .then(() => {
           i++;
           if (i === 1) {
-            delete kuzzle.realtime.storage.filtersIndex.index.collection;
+            delete kuzzle.koncorde.storage.filtersIndex.index.collection;
           }
           if (i === 2) {
-            delete kuzzle.realtime.storage.filtersIndex.anotherIndex;
+            delete kuzzle.koncorde.storage.filtersIndex.anotherIndex;
           }
           return true;
         })

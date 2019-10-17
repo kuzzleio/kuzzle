@@ -33,6 +33,7 @@ module.exports = async function check (context) {
     },
     deprecated = [
       'server.entryPoints',
+      'server.protocols.socketio',
       'server.proxy',
       'services.garbageCollector',
       'services.storageEngine.client.apiVersion',
