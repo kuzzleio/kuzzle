@@ -58,12 +58,8 @@ function cleanDatabase () {
 
 // before first
 BeforeAll(function () {
-  return bootstrapDatabase();
-});
-
-// after last
-AfterAll(function () {
-  return cleanDatabase();
+  return cleanDatabase()
+    .then(() => bootstrapDatabase());
 });
 
 Before(function () {
