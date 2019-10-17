@@ -19,13 +19,16 @@
  * limitations under the License.
  */
 
-'use strict';
+const
+  checkConfiguration = require('./checkConfiguration'),
+  upgradeStorage = require('./upgradeStorage'),
+  upgradeCache = require('./upgradeCache');
 
-/**
- * Cucumber profiles
- */
-module.exports = {
-  http: '--fail-fast --tags "not @realtime" --world-parameters \'{"protocol": "http", "port": 7512}\'',
-  mqtt: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "mqtt", "port": 1883}\'',
-  websocket: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7512}\''
+module.exports = async function upgrade (context) {
+  context.log.notice('\n\n=== CONFIGURATION FILES ===');
+  await checkConfiguration(context);
+  context.log.notice('\n\n=== STORAGE ===');
+  await upgradeStorage(context);
+  context.log.notice('\n\n=== CACHE ===');
+  await upgradeCache(context);
 };

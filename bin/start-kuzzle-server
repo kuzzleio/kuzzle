@@ -24,7 +24,7 @@
 const
   fs = require('fs'),
   Kuzzle = require('../lib/api/kuzzle'),
-  ColorOutput = require('./colorOutput'),
+  ColorOutput = require('./.lib/colorOutput'),
   yargs = require('yargs');
 
 function loadJson (filePath) {

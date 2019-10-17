@@ -29,12 +29,11 @@ class FakeProtocol {
 class FakeHttpProtocol extends FakeProtocol {
   constructor () { super('http'); }
 }
+
 class FakeWebSocketProtocol extends FakeProtocol {
   constructor () { super('websocket'); }
 }
-class FakeSocketIOProtocol extends FakeProtocol {
-  constructor () { super('socketio'); }
-}
+
 class FakeMqttProtocol extends FakeProtocol {
   constructor () { super('mqtt'); }
 }
@@ -44,7 +43,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
     kuzzle,
     HttpMock,
     WebSocketMock,
-    SocketIOMock,
     MqttMock,
     httpMock,
     EntryPoint,
@@ -70,7 +68,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
     HttpMock = FakeHttpProtocol;
     WebSocketMock = FakeWebSocketProtocol;
-    SocketIOMock = FakeSocketIOProtocol;
     MqttMock = FakeMqttProtocol;
 
     httpMock = {
@@ -86,7 +83,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
     const entryPointPath = `${root}/lib/api/core/entrypoints`;
     mockrequire(`${entryPointPath}/protocols/http`, { HttpProtocol: HttpMock});
     mockrequire(`${entryPointPath}/protocols/websocket`, WebSocketMock);
-    mockrequire(`${entryPointPath}/protocols/socketio`, SocketIOMock);
     mockrequire(`${entryPointPath}/protocols/mqtt`, MqttMock);
 
     mockrequire('http', httpMock);
@@ -133,7 +129,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       }
     });
 
-    for (const Class of [HttpMock, WebSocketMock, SocketIOMock, MqttMock]) {
+    for (const Class of [HttpMock, WebSocketMock, MqttMock]) {
       Class.prototype.init = sinon.stub().resolves(true);
     }
 
@@ -246,10 +242,9 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
           should(entrypoint.protocols.http.init).be.calledOnce();
           should(entrypoint.protocols.websocket.init).be.calledOnce();
-          should(entrypoint.protocols.socketio.init).be.calledOnce();
           should(entrypoint.protocols.mqtt.init).be.calledOnce();
           should(entrypoint.loadMoreProtocols).be.calledOnce();
-          should(Object.keys(entrypoint.protocols)).be.length(4);
+          should(Object.keys(entrypoint.protocols)).be.length(3);
         });
     });
 
@@ -260,8 +255,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
         .then(() => {
           should(entrypoint.protocols.http.init).be.calledOnce();
           should(entrypoint.protocols.websocket.init).be.calledOnce();
-          should(entrypoint.protocols.socketio.init).be.calledOnce();
-          should(Object.keys(entrypoint.protocols)).be.length(3);
+          should(Object.keys(entrypoint.protocols)).be.length(2);
           should(entrypoint.protocols.mqtt).be.undefined();
         });
     });

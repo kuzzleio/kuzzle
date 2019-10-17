@@ -188,10 +188,6 @@ module.exports = {
           port: 1883
         }
       },
-      socketio: {
-        enabled: false,
-        origins: '*:*'
-      },
       websocket: {
         enabled: true,
         idleTimeout: 0,

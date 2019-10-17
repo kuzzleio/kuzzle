@@ -19,13 +19,18 @@
  * limitations under the License.
  */
 
-'use strict';
+const UpgradeContext = require('./context');
 
-/**
- * Cucumber profiles
- */
-module.exports = {
-  http: '--fail-fast --tags "not @realtime" --world-parameters \'{"protocol": "http", "port": 7512}\'',
-  mqtt: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "mqtt", "port": 1883}\'',
-  websocket: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7512}\''
-};
+class ConnectorContext extends UpgradeContext {
+  constructor(context, source, target) {
+    super(context);
+    this.source = source;
+    this.target = target;
+  }
+
+  get inPlace () {
+    return this.source === this.target;
+  }
+}
+
+module.exports = ConnectorContext;
