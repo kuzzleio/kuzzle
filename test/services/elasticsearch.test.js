@@ -141,7 +141,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.search.resolves({
         body: {
           hits: {
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, other: 'thing' } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight', other: 'thing' } ],
             total: { value: 1 },
           },
           body: filter,
@@ -167,7 +167,7 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match({
             scrollId: 'i-am-scroll-id',
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight' } ],
             total: 1,
             aggregations: { some: 'aggregs' }
           });
