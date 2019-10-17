@@ -143,16 +143,24 @@ describe('Test: admin controller', () => {
 
     it('remove all indexes handled by Kuzzle', done => {
       const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
-      kuzzle.indexCache.indexes = { halflife3: [], borealis: [], confirmed: [], '%kuzzle': [] };
+      kuzzle.indexCache.indexes = new Map([
+        [ 'halflife3', [] ],
+        [ 'borealis', [] ],
+        [ 'confirmed', [] ],
+        [ '%kuzzle', [] ]
+      ]);
       request.input.args.refresh = 'wait_for';
 
       adminController.resetDatabase(request)
         .then(() => {
           should(deleteIndex.callCount).be.eql(3);
-          should(deleteIndex.getCall(0).args[0].input.resource.index).be.eql('halflife3');
-          should(deleteIndex.getCall(1).args[0].input.resource.index).be.eql('borealis');
-          should(deleteIndex.getCall(2).args[0].input.resource.index).be.eql('confirmed');
-          should(kuzzle.indexCache.indexes).match({ '%kuzzle': [] });
+          should(deleteIndex.getCall(0).args[0].input.resource.index)
+            .be.eql('halflife3');
+          should(deleteIndex.getCall(1).args[0].input.resource.index)
+            .be.eql('borealis');
+          should(deleteIndex.getCall(2).args[0].input.resource.index)
+            .be.eql('confirmed');
+          should(kuzzle.indexCache.indexes).have.value('%kuzzle', []);
 
           // Check if unlocked
           return adminController.resetDatabase(request);

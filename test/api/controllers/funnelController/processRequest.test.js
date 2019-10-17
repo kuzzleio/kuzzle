@@ -38,10 +38,11 @@ describe('funnelController.processRequest', () => {
     kuzzle.pluginsManager = pluginsManager;
 
     // inject fake controllers for unit tests
-    funnel.controllers.fakeController = new ControllerMock(kuzzle);
-    funnel.controllers.document = new DocumentController(kuzzle);
-    funnel.pluginsControllers['fakePlugin/controller'] =
-      new ControllerMock(kuzzle);
+    funnel.controllers.set('fakeController', new ControllerMock(kuzzle));
+    funnel.controllers.set('document', new DocumentController(kuzzle));
+    funnel.pluginsControllers.set(
+      'fakePlugin/controller',
+      new ControllerMock(kuzzle));
   });
 
   afterEach(() => {
@@ -110,7 +111,7 @@ describe('funnelController.processRequest', () => {
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'succeed'});
 
-    funnel.pluginsControllers[controller].succeed.returns('foobar');
+    funnel.pluginsControllers.get(controller).succeed.returns('foobar');
 
     funnel.processRequest(request)
       .then(() => done(new Error('Expected test to fail')))
@@ -140,7 +141,7 @@ describe('funnelController.processRequest', () => {
       unserializable = {};
     unserializable.self = unserializable;
 
-    funnel.pluginsControllers[controller].succeed.resolves(unserializable);
+    funnel.pluginsControllers.get(controller).succeed.resolves(unserializable);
 
     return funnel.processRequest(request)
       .then(() => { throw new Error('Expected test to fail'); })
@@ -213,7 +214,7 @@ describe('funnelController.processRequest', () => {
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'fail'});
 
-    funnel.pluginsControllers[controller].fail.rejects(new Error('foobar'));
+    funnel.pluginsControllers.get(controller).fail.rejects(new Error('foobar'));
 
     funnel.processRequest(request)
       .then(() => done(new Error('Expected test to fail')))

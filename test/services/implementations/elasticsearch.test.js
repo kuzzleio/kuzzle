@@ -1538,9 +1538,9 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reuse a previously defined common mapping', () => {
-      kuzzle.indexCache.defaultMappings[index] = {
+      kuzzle.indexCache.defaultMappings.set(index, {
         gordon: { type: 'text' }
-      };
+      });
 
       return elasticsearch.updateMapping(new Request({
         index,
@@ -1706,7 +1706,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should inject default mapping for index', () => {
       elasticsearch.config.dynamic = 'strict';
-      elasticsearch.kuzzle.indexCache.defaultMappings[index] = {
+      elasticsearch.kuzzle.indexCache.defaultMappings.set(index, {
         foo: { type: 'boolean' },
         _kuzzle_info: {
           properties: {
@@ -1718,7 +1718,7 @@ describe('Test: ElasticSearch service', () => {
             deletedAt: { type: 'date' }
           }
         }
-      };
+      });
 
       return elasticsearch.createCollection(request)
         .then(() => {
@@ -1839,9 +1839,9 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reuse a previously created common mapping', () => {
-      kuzzle.indexCache.defaultMappings[index] = {
+      kuzzle.indexCache.defaultMappings.set(index, {
         gordon: { type: 'text' }
-      };
+      });
 
       const collectionMapping = {
         properties: {
