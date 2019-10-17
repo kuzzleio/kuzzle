@@ -180,7 +180,7 @@ jobs:
 
     - <<: *doc-deploy
       name: Documentation to next-docs.kuzzle.io
-      if: branch = 1-dev
+      if: branch = /^[0-9]+-dev$/
       env:
         - *doc-deploy-env
         - S3_BUCKET=docs-next.kuzzle.io
