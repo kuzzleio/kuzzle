@@ -5,7 +5,6 @@ const
   minimist = require('minimist'),
   {
     After,
-    AfterAll,
     Before,
     BeforeAll
   } = require('cucumber'),
