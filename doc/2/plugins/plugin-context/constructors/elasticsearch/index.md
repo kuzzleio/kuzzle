@@ -6,11 +6,11 @@ title: Elasticsearch
 
 # Elasticsearch
 
-Instantiates an [Elasticsearch client](https://github.com/elastic/elasticsearch-js) with the same configuration as the one provided in the `.kuzzlerc` file.  
+Instantiates an embedded [Elasticsearch client](https://github.com/elastic/elasticsearch-js) with the same configuration as the one provided in the `.kuzzlerc` file.  
 
 This client can be used to send raw Elasticsearch request.  
 
-See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/7.3/api-reference.html) for more informations.
+See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html) for more informations.
 
 ---
 

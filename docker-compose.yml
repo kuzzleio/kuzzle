@@ -1,53 +1,53 @@
 version: '3'
 
 services:
-  # nginx:
-  #   image: nginx:1.15-alpine
-  #   depends_on:
-  #     - kuzzle
-  #   ports:
-  #     - "7443:7443"
-  #   volumes:
-  #     - ./docker-compose/nginx:/etc/nginx/conf.d
+  nginx:
+    image: nginx:1.15-alpine
+    depends_on:
+      - kuzzle
+    ports:
+      - "7443:7443"
+    volumes:
+      - ./docker-compose/nginx:/etc/nginx/conf.d
 
-  # kuzzle:
-  #   image: kuzzleio/core-dev:2.x
-  #   command: sh -c 'chmod 755 /run.sh && /run.sh'
-  #   volumes:
-  #     - ".:/var/app"
-  #     - "./docker-compose/scripts/run-dev.sh:/run.sh"
-  #     - "./docker-compose/config/pm2-dev.json:/config/pm2.json"
-  #     - "./docker-compose/fixtures:/fixtures"
-  #   cap_add:
-  #     - SYS_PTRACE
-  #   ulimits:
-  #     nofile: 65536
-  #   sysctls:
-  #     - net.core.somaxconn=8192
-  #   depends_on:
-  #     - redis
-  #     - elasticsearch
-  #   ports:
-  #     - "7512:7512"
-  #     - "1883:1883"
-  #     - "9229:9229"
-  #   environment:
-  #     - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
-  #     - kuzzle_services__storageEngine__commonMapping__dynamic=true
-  #     - kuzzle_services__internalCache__node__host=redis
-  #     - kuzzle_services__memoryStorage__node__host=redis
-  #     - kuzzle_server__protocols__mqtt__enabled=true
-  #     - kuzzle_server__protocols__mqtt__developmentMode=false
-  #     - NODE_ENV=${NODE_ENV:-development}
-  #     # - DEBUG=kuzzle:*,-kuzzle:entry-point:protocols:websocket
-  #     - DEBUG=${DEBUG:-none}
-  #     - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
-  #     - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
-  #     - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
-  #     - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
-  #     - DEBUG_COLORS=${DEBUG_COLORS:-on}
-  #     - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
-  #     - NODE_10_VERSION=10.16.0
+  kuzzle:
+    image: kuzzleio/core-dev:2.x
+    command: sh -c 'chmod 755 /run.sh && /run.sh'
+    volumes:
+      - ".:/var/app"
+      - "./docker-compose/scripts/run-dev.sh:/run.sh"
+      - "./docker-compose/config/pm2-dev.json:/config/pm2.json"
+      - "./docker-compose/fixtures:/fixtures"
+    cap_add:
+      - SYS_PTRACE
+    ulimits:
+      nofile: 65536
+    sysctls:
+      - net.core.somaxconn=8192
+    depends_on:
+      - redis
+      - elasticsearch
+    ports:
+      - "7512:7512"
+      - "1883:1883"
+      - "9229:9229"
+    environment:
+      - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+      - kuzzle_services__storageEngine__commonMapping__dynamic=true
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_server__protocols__mqtt__enabled=true
+      - kuzzle_server__protocols__mqtt__developmentMode=false
+      - NODE_ENV=${NODE_ENV:-development}
+      # - DEBUG=kuzzle:*,-kuzzle:entry-point:protocols:websocket
+      - DEBUG=${DEBUG:-none}
+      - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
+      - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
+      - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
+      - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
+      - DEBUG_COLORS=${DEBUG_COLORS:-on}
+      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
+      - NODE_10_VERSION=10.16.0
 
   redis:
     image: redis:${REDIS_VERSION:-5}
