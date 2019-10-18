@@ -23,7 +23,6 @@ This class constructor takes no argument.
 ### Example
 
 ```js
-
 const esClient = new context.constructors.ESClient();
 
 await esClient.info();
