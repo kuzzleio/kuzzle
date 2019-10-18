@@ -65,13 +65,6 @@ describe('Test the passport Wrapper', () => {
       });
   });
 
-  it('should reject in case of unknown strategy', () => {
-    passportMock._strategy.returns(false);
-
-    return should(passportWrapper.authenticate('foo', 'bar'))
-      .be.rejectedWith('Unknown authentication strategy "bar"');
-  });
-
   it('should resolve to the user if credentials are verified', () => {
     const user = {username: 'jdoe'};
 

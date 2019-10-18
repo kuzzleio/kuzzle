@@ -31,7 +31,7 @@ describe('Test the auth controller', () => {
 
     user = new User();
     kuzzle.passport.authenticate.returns(Bluebird.resolve(user));
-
+    kuzzle.pluginsManager.strategies.mockup = {};
     request = new Request({
       controller: 'auth',
       action: 'login',
@@ -116,9 +116,15 @@ describe('Test the auth controller', () => {
     });
 
     it('should call passport.authenticate with input body and query string', () => {
-      authController.login(request);
-      should(kuzzle.passport.authenticate).be.calledOnce();
-      should(kuzzle.passport.authenticate).be.calledWithMatch({body: {username: 'jdoe'}, query: {foo: 'bar'}});
+      return authController.login(request)
+        .then(() => {
+          should(kuzzle.passport.authenticate)
+            .be.calledOnce()
+            .be.calledWithMatch({
+              body: { username: 'jdoe' },
+              query: { foo: 'bar' }
+            });
+        });
     });
 
     it('should throw if no strategy is specified', () => {
@@ -160,6 +166,14 @@ describe('Test the auth controller', () => {
       kuzzle.passport.authenticate.rejects(new Error('error'));
 
       return should(authController.login(request)).be.rejected();
+    });
+
+    it('should reject in case of unknown strategy', () => {
+      request.input.args.strategy = 'foobar';
+
+      should(() => authController.login(request)).throw(BadRequestError, {
+        id: 'security.credentials.unknown_strategy'
+      });
     });
   });
 

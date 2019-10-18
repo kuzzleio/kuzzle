@@ -280,21 +280,17 @@ describe('ServerController', () => {
         baz() {}
       }
 
-      kuzzle.funnel.controllers = {
-        foo: new Foo()
-      };
+      kuzzle.funnel.controllers.set('foo', new Foo());
 
       kuzzle.config.http.routes = [
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l' },
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/:foobar' }
       ];
 
-      kuzzle.funnel.pluginsControllers = {
-        foobar: {
-          publicMethod: function () {},
-          anotherMethod: function () {},
-        }
-      };
+      kuzzle.funnel.pluginsControllers.set('foobar', {
+        publicMethod: function () {},
+        anotherMethod: function () {},
+      });
 
       kuzzle.pluginsManager.routes = [{
         verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
@@ -329,21 +325,19 @@ describe('ServerController', () => {
         baz() {}
       }
 
-      const controllers = {
-        foo: new Foo()
-      };
+      const controllers = new Map([[ 'foo', new Foo() ]]);
 
       const routes = [
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l' },
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/:foobar' }
       ];
 
-      const pluginsControllers = {
-        foobar: {
-          publicMethod: function () {},
-          anotherMethod: function () {},
-        }
-      };
+      const pluginsControllers = new Map([
+        [
+          'foobar',
+          { publicMethod: function () {}, anotherMethod: function () {} }
+        ]
+      ]);
 
       const pluginsRoutes = [{
         verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'

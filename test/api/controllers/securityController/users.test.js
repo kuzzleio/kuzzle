@@ -579,10 +579,7 @@ describe('Test: security controller - users', () => {
     it('should throw an error if a profile is given', () => {
       return should(() => {
         securityController.createRestrictedUser(new Request({body: {content: {profileIds: ['foo']}}}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.forbidden_argument',
-        message: 'The argument "body.content.profileIds" is not allowed by this API action.'
-      });
+      }).throw(BadRequestError);
     });
 
     it('should forward refresh option', () => {
@@ -622,10 +619,7 @@ describe('Test: security controller - users', () => {
     it('should throw an error if no id is given', () => {
       return should(() => {
         securityController.updateUser(new Request({body: {}}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.missing_argument',
-        message: 'Missing argument "_id".'
-      });
+      }).throw(BadRequestError);
     });
 
     it('should update the profile correctly', () => {
@@ -653,11 +647,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject the promise if the user cannot be found in the database', () => {
       kuzzle.repositories.user.load.resolves(null);
-      return should(securityController.updateUser(new Request({
-        _id: 'badId',
-        body: {},
-        action: 'updateProfile'
-      }))).be.rejectedWith(NotFoundError, { id: 'security.profile.not_found'});
+      return should(securityController.updateUser(new Request({_id: 'badId', body: {}, context: {action: 'updateProfile'}}))).be.rejected();
     });
 
     it('should return an error if an unknown profile is provided', () => {
@@ -665,7 +655,7 @@ describe('Test: security controller - users', () => {
         securityController.updateUser(new Request({
           _id: 'test',
           body: {profileIds: ['foobar']}
-        })).throw(NotFoundError, { id: 'security.profile.not_found' });
+        })).throw(NotFoundError);
       });
     });
 
@@ -697,7 +687,7 @@ describe('Test: security controller - users', () => {
     it('should return an error if the request is invalid', () => {
       return should(() => {
         securityController.replaceUser(new Request({_id: 'test'}));
-      }).throw(BadRequestError, { id: 'api.assert.body_required' });
+      }).throw(BadRequestError);
     });
 
     it('should replace the user correctly', () => {
@@ -730,10 +720,7 @@ describe('Test: security controller - users', () => {
     it('should return an error if the user is not found', () => {
       kuzzle.repositories.user.load.resolves(null);
 
-      return should(securityController.replaceUser(new Request({
-        _id: 'i.dont.exist',
-        body: { profileIds: ['anonymous'] }
-      }))).be.rejectedWith(NotFoundError, { id: 'security.user.not_found'});
+      return should(securityController.replaceUser(new Request({_id: 'i.dont.exist', body: {profileIds: ['anonymous']}}))).be.rejectedWith(NotFoundError);
     });
 
     it('should forward refresh option', () => {
@@ -815,10 +802,7 @@ describe('Test: security controller - users', () => {
     it('should throw an error on a getUserRights call without id', () => {
       return should(() => {
         securityController.getUserRights(new Request({_id: ''}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.missing_argument',
-        message: 'Missing argument "_id".'
-      });
+      }).throw();
     });
 
     it('should reject NotFoundError on a getUserRights call with a bad id', () => {
@@ -858,9 +842,7 @@ describe('Test: security controller - users', () => {
 
     it('should reject an error if the user doesn\'t exists.', () => {
       kuzzle.repositories.user.load.resolves(null);
-      return should(securityController.revokeTokens(new Request({
-        _id: 'test'
-      }))).be.rejectedWith(NotFoundError, { id: 'security.user.not_found' });
+      return should(securityController.revokeTokens(new Request({ _id: 'test' }))).be.rejectedWith(NotFoundError);
     });
   });
 });
