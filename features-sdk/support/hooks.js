@@ -71,6 +71,16 @@ After(async function () {
   }
 });
 
+Before({ tags: '@firstAdmin' }, async function () {
+  await this.sdk.query({
+    controller: 'admin',
+    action: 'resetSecurity',
+    refresh: 'wait_for'
+  });
+
+  this.sdk.jwt = null;
+});
+
 Before({ tags: '@security', timeout: 10 * 1000 }, async function () {
   await this.sdk.query({
     controller: 'admin',
