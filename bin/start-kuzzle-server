@@ -70,7 +70,7 @@ function startKuzzle (options = {}) {
       if (! adminExists) {
         cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');
         cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.');
-        cout.notice('    For more information: https://docs.kuzzle.io/core/1/guides/essentials/security/');
+        cout.notice('    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/');
       }
     })
     .catch(err => {

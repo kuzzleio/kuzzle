@@ -7,7 +7,7 @@ Feature: Plugin context
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I successfully call the route "functional-test-plugin/constructors":"ESClient" with args:
     | _id | "es-document" |
-    | body | {} |
-    | index | &nyc-open-data.yellow-taxi |
+    | body | { "from": "embedded-es-client" } |
+    | index | "&nyc-open-data.yellow-taxi" |
     Then The document "es-document" content match:
     | from | "embedded-es-client" |

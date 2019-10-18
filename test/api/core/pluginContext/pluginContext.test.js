@@ -7,6 +7,7 @@ const
   should = require('should'),
   sinon = require('sinon'),
   User = require(`${root}/lib/api/core/models/security/user`),
+  { Client: ESClient } = require('@elastic/elasticsearch'),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
     Request,
@@ -103,6 +104,21 @@ describe('Plugin Context', () => {
           },
           kuzzleApi: 'the spoon does not exist'
         });
+    });
+
+    describe('#ESClient', () => {
+      it('should expose the ESClient constructor', () => {
+        const esClient = new context.constructors.ESClient();
+
+        should(esClient).be.instanceOf(ESClient);
+      });
+
+      it('should allow to instantiate an ESClient connected to the ES cluster', () => {
+        const esClient = new context.constructors.ESClient();
+
+        should(esClient.connectionPool.connections[0].url.origin)
+          .be.eql(kuzzle.storageEngine.config.client.node);
+      });
     });
 
     describe('#Request', () => {
