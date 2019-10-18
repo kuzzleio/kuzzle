@@ -47,12 +47,7 @@ _doc-deploy: &doc-deploy
   script:
     - npm run doc-prepare
     - npm run doc-build
-  deploy:
-    provider: script
-    script:
-      - npm run doc-upload
-    skip_cleanup: true
-  after_deploy:
+    - npm run doc-upload
     - npm run doc-cloudfront
 
 # ------------------------
