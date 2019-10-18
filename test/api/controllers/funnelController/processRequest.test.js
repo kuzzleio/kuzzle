@@ -330,7 +330,7 @@ describe('funnelController.processRequest', () => {
     });
 
     it('should not throw if the SDK version is unknown', () => {
-      funnel.sdkCompatibility = { js: '<7' };
+      funnel.sdkCompatibility = { js: { max: 6 } };
 
       request.input.volatile.sdkName = 'csharp@8.4.2';
 
@@ -338,7 +338,7 @@ describe('funnelController.processRequest', () => {
     });
 
     it('should not throw if the SDK version is compatible', () => {
-      funnel.sdkCompatibility = { js: '<7' };
+      funnel.sdkCompatibility = { js: { max: 6 } };
 
       request.input.volatile.sdkName = 'js@6.4.2';
 
@@ -346,7 +346,7 @@ describe('funnelController.processRequest', () => {
     });
 
     it('should throw an error if the SDK version is not compatible', () => {
-      funnel.sdkCompatibility = { js: '<7' };
+      funnel.sdkCompatibility = { js: { max: 6 } };
 
       request.input.volatile.sdkName = 'js@7.4.2';
 

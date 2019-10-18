@@ -1,9 +1,9 @@
 {
-  "js": "<7",
-  "csharp": "<2",
-  "cpp": "<2",
-  "java": "<3",
-  "android": "<5",
-  "go": "<3",
-  "php": "<4"
+  "js": { "max": 6 },
+  "csharp": { "max": 1 },
+  "cpp": { "max": 1 },
+  "java": { "max": 2 },
+  "android": { "max": 4 },
+  "go": { "max": 2 },
+  "php": { "max": 3 }
 }
