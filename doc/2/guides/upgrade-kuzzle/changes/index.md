@@ -191,3 +191,14 @@ To:
 
   - Plugins manifest files are now required
   - `Dsl` constructor from the plugin context is now removed, use `Koncorde` instead (deprecated in 1.4.0)
+
+## Docker
+
+Kuzzle images are now built for the two major version of Kuzzle.  
+This includes `kuzzleio/kuzzle` production image but also the `kuzzleio/plugin-dev` image for plugin developers.  
+
+The `latest` tag will now refer to the latest version of Kuzzle v2.  
+
+We also deploy 2 additional tags that refer respectively to the latest version of Kuzzle v1 and Kuzzle v2:
+ - `kuzzleio/<image>:1`: latest Kuzzle v1 version
+ - `kuzzleio/<image>:2`: latest Kuzzle v2 version
