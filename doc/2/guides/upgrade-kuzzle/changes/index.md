@@ -190,3 +190,4 @@ To:
 ### Plugins
 
   - Plugins manifest files are now required
+  - `Dsl` constructor from the plugin context is now removed, use `Koncorde` instead (deprecated in 1.4.0)
