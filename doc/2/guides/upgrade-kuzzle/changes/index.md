@@ -160,6 +160,8 @@ It accepts the same arguments as the `kuzzle start` command from the CLI.
 
   - `server.protocols.socketio.enable` is now `false`, deactivating the Socket.io protocol by default
   - `services.storage.commonMapping.dynamic` is now `false` by default, meaning that Elasticsearch will not infer mapping of new introduced fields
+  - `security.standard.roles.default.controllers.server.actions` is now `{ publicApi: true }` instead of `{ info: true }`
+  - `security.standard.roles.anonymous.controllers.server.actions` is now `{ publicApi: true }` instead of `{ info: true }`
 
 #### Obsolete configurations
 

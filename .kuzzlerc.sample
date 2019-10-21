@@ -210,7 +210,7 @@
             },
             "server": {
               "actions": {
-                "info": true
+                "publicApi": true
               }
             }
           }
@@ -227,7 +227,7 @@
             },
             "server": {
               "actions": {
-                "info": true
+                "publicApi": true
               }
             }
           }
