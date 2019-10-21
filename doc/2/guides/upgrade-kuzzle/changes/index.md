@@ -5,7 +5,25 @@ title: Breaking changes
 order: 100
 ---
 
+
 # Breaking changes
+
+**Table of Contents**
+- [External dependencies](#external-dependencies)
+- [API](#api)
+  - General
+  - Internal storage changes
+  - Removed errors
+  - Removed events
+  - Removed API methods
+  - New API methods
+  - Modified API Methods
+  - Removed HTTP routes
+  - Remove the CLI
+  - Configuration changes
+  - Cache changes
+  - Plugins
+- [Docker images](#docker-images)
 
 ## External dependencies
 
@@ -22,6 +40,8 @@ New external dependencies supported versions:
   - Elasticsearch 7
 
 ## API
+
+### General
 
   - Remove permission closures (deprecated since Kuzzle 1.4.0)
   - Remove the documents trashcan (deprecated since Kuzzle 1.2.0)
@@ -192,9 +212,10 @@ To:
   - Plugins manifest files are now required
   - `Dsl` constructor from the plugin context is now removed, use `Koncorde` instead (deprecated in 1.4.0)
 
-## Docker
+## Docker images
 
 Kuzzle images are now built for the two major version of Kuzzle.  
+
 This includes `kuzzleio/kuzzle` production image but also the `kuzzleio/plugin-dev` image for plugin developers.  
 
 The `latest` tag will now refer to the latest version of Kuzzle v2.  
