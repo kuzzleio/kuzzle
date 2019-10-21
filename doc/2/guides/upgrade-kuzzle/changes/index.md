@@ -218,7 +218,7 @@ To:
 
 ## Kuzzle
 
-Kuzzle images are now built for the two major version of Kuzzle.  
+Kuzzle images are now built for the two major versions of Kuzzle.  
 
 This includes `kuzzleio/kuzzle` production image but also the `kuzzleio/plugin-dev` image for plugin developers.  
 
