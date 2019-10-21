@@ -5,7 +5,6 @@ const
   { After, Before, BeforeAll } = require('cucumber'),
   { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   testMappings = require('../fixtures/mappings'),
-  testFixtures = require('../fixtures/fixtures'),
   testSecurities = require('../fixtures/securities'),
   World = require('./world');
 
@@ -25,6 +24,29 @@ function getProtocol (world) {
 
   return protocol;
 }
+
+async function resetSecurityDefault (sdk) {
+  await sdk.query({
+    controller: 'admin',
+    action: 'resetSecurity',
+    refresh: 'wait_for'
+  });
+
+  sdk.jwt = null;
+
+  await sdk.query({
+    controller: 'admin',
+    action: 'loadSecurities',
+    body: testSecurities,
+    refresh: 'wait_for'
+  });
+
+  await sdk.auth.login(
+    'local',
+    { username: 'test-admin', password: 'password' });
+}
+
+// Common hooks ================================================================
 
 BeforeAll(({ timeout: 10 * 1000 }), async function () {
   const world = new World({});
@@ -71,6 +93,8 @@ After(async function () {
   }
 });
 
+// firstAdmin hooks ============================================================
+
 Before({ tags: '@firstAdmin' }, async function () {
   await this.sdk.query({
     controller: 'admin',
@@ -81,48 +105,23 @@ Before({ tags: '@firstAdmin' }, async function () {
   this.sdk.jwt = null;
 });
 
-Before({ tags: '@security', timeout: 10 * 1000 }, async function () {
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'resetSecurity',
-    refresh: 'wait_for'
-  });
-
-  this.sdk.jwt = null;
-
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'loadSecurities',
-    body: testSecurities,
-    refresh: 'wait_for'
-  });
-
-  await this.sdk.auth.login(
-    'local',
-    { username: 'test-admin', password: 'password' });
+After({ tags: '@firstAdmin' }, async function () {
+  await resetSecurityDefault(this.sdk);
 });
+
+// security hooks ==============================================================
+
+Before({ tags: '@security', timeout: 10 * 1000 }, async function () {
+  await resetSecurityDefault(this.sdk);
+});
+
+// mappings hooks ==============================================================
 
 Before({ tags: '@mappings' }, async function () {
   await this.sdk.query({
     controller: 'admin',
     action: 'loadMappings',
     body: testMappings,
-    refresh: 'wait_for'
-  });
-});
-
-Before({ tags: '@fixtures' }, async function () {
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'loadMappings',
-    body: testMappings,
-    refresh: 'wait_for'
-  });
-
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'loadFixtures',
-    body: testFixtures,
     refresh: 'wait_for'
   });
 });
