@@ -180,7 +180,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     And I refresh the collection
-    Then I find a document with "Grace" in field "firstName" with scroll "5m"
+    Then I find a document with "Grace" in field "firstName" with scroll "10s"
     And I am able to scroll previous search
 
   Scenario: Change mapping
