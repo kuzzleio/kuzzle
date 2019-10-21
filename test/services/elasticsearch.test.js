@@ -1844,6 +1844,21 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#deleteCollection', () => {
+    it('should allow to deletes a collection', () => {
+      const promise = elasticsearch.deleteCollection('nepali', 'liia');
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.indices.delete).be.calledWithMatch({
+            index: '&nepali.liia'
+          });
+
+          should(result).be.undefined();
+        });
+    });
+  });
+
   describe('#refreshCollection', () => {
     it('should send a valid request to es client', () => {
       elasticsearch._client.indices.refresh.resolves({
