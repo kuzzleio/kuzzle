@@ -94,7 +94,7 @@ Before({tags: '@firstAdmin'}, function () {
 });
 
 After({tags: '@firstAdmin'}, function () {
-  return grantDefaultRoles.call(this).then(() => );
+  return grantDefaultRoles.call(this).then(() => cleanSecurity.call(this));
 });
 
 Before({tags: '@redis'}, function () {
