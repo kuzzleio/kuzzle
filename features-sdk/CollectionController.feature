@@ -1,10 +1,20 @@
 Feature: Collection Controller
 
+  # collection:delete ==========================================================
+
+  Scenario: Delete a collection
+    Given an index "nyc-open-data"
+    And a collection "nyc-open-data":"green-taxi"
+    When I successfully call the route "collection":"delete" with args:
+    | index | "nyc-open-data" |
+    | collection | "green-taxi" |
+    Then I should not see the collection "nyc-open-data":"green-taxi"
+
   # collection:create ==========================================================
 
   Scenario: Create a new collection with mappings
     Given an index "nyc-open-data"
-    When I call the route "collection":"create" with args:
+    When I successfully call the route "collection":"create" with args:
     | index | "nyc-open-data" |
     | collection | "green-taxi" |
     | body | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
