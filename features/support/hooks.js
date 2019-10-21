@@ -94,7 +94,7 @@ Before({tags: '@firstAdmin'}, function () {
 });
 
 After({tags: '@firstAdmin'}, function () {
-  return grantDefaultRoles.call(this).then(() => cleanSecurity.call(this));
+  return grantDefaultRoles.call(this).then(() => );
 });
 
 Before({tags: '@redis'}, function () {
@@ -124,36 +124,6 @@ function cleanSecurity () {
   }
 
   return this.api.resetSecurity();
-  // return this.api.searchUsers({match_all: {}}, {from: 0, size: 999})
-  //   .then(results => {
-  //     const regex = new RegExp('^' + this.idPrefix);
-  //     results = results.result.hits
-  //       .filter(r => r._id.match(regex))
-  //       .map(r => r._id);
-
-  //     return results.length > 0
-  //       ? this.api.deleteUsers(results, true)
-  //       : Bluebird.resolve();
-  //   })
-  //   .then(() => this.api.searchProfiles({match_all: {}}, {from: 0, size: 999}))
-  //   .then(results => {
-  //     const regex = new RegExp('^' + this.idPrefix);
-  //     results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-
-  //     return results.length > 0
-  //       ? this.api.deleteProfiles(results, true)
-  //       : Bluebird.resolve();
-  //   })
-  //   .then(() => this.api.searchRoles({match_all: {}}, {from: 0, size: 999}))
-  //   .then(results => {
-  //     const regex = new RegExp('^' + this.idPrefix);
-  //     results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-
-  //     return results.length > 0
-  //       ? this.api.deleteRoles(results, true)
-  //       : Bluebird.resolve();
-  //   })
-  //   .catch(() => {});
 }
 
 function grantDefaultRoles () {
