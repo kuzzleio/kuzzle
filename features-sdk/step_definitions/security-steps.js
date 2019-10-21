@@ -52,3 +52,13 @@ Given('The role {string} should match the default one', async function (roleId) 
     should(actions).match(defaultRoles[roleId].controllers[controller]);
   }
 });
+
+Given('The role {string} should match:', async function (roleId, dataTable) {
+  const
+    controllers = this.parseObject(dataTable),
+    role = await this.sdk.security.getRole(roleId);
+
+  for (const [controller, actions] of Object.entries(controllers)) {
+    should(actions).match(role.controllers[controller].actions);
+  }
+});

@@ -478,8 +478,6 @@ Feature: Kuzzle functional tests
     Then I'm able to find "2" profiles containing the role with id "role1"
     Given A scrolled search on profiles
     Then I am able to perform a scrollProfiles request
-    Then I delete the profile "my-profile-1"
-    Then I delete the profile "my-profile-2"
 
   @security
   Scenario: get profile rights
