@@ -752,7 +752,7 @@ describe('Test: ElasticSearch service', () => {
             refresh: undefined
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -771,7 +771,7 @@ describe('Test: ElasticSearch service', () => {
             refresh: 'wait_for'
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -977,7 +977,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1003,7 +1003,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1344,7 +1344,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1839,7 +1839,7 @@ describe('Test: ElasticSearch service', () => {
         .then(result => {
           should(elasticsearch.deleteIndexes).be.calledWith(['nepali']);
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
   });
@@ -1854,7 +1854,7 @@ describe('Test: ElasticSearch service', () => {
             index: '&nepali.liia'
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
   });
