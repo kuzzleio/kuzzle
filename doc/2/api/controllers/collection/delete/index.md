@@ -39,8 +39,6 @@ Method: DELETE
 
 ---
 
----
-
 ## Response
 
 Returns a confirmation that the collection is deleted:
