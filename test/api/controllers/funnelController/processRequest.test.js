@@ -135,7 +135,7 @@ describe('funnelController.processRequest', () => {
       });
   });
 
-  it('should rejects if _checkSdkVersion fail', () => {
+  it('should reject if _checkSdkVersion fails', () => {
     const request = new Request({
       controller: 'fakeController',
       action: 'succeed'
