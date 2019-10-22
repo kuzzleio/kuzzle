@@ -27,13 +27,20 @@ describe('/lib/api/kuzzle.js', () => {
     'log'
   ];
 
-  beforeEach(() => {
-    const mock = new KuzzleMock();
-    kuzzle = new Kuzzle();
+  function _mockKuzzle (KuzzleConstructor) {
+    const
+      mock = new KuzzleMock(),
+      k = new KuzzleConstructor();
 
-    mockedProperties.forEach(k => {
-      kuzzle[k] = mock[k];
+    mockedProperties.forEach(p => {
+      k[p] = mock[p];
     });
+
+    return k;
+  }
+
+  beforeEach(() => {
+    kuzzle = _mockKuzzle(Kuzzle);
   });
 
   it('should build a kuzzle server object with emit and listen event', done => {
@@ -106,15 +113,7 @@ describe('/lib/api/kuzzle.js', () => {
           removeAllListeners: processRemoveAllListenersSpy
         }
       })(() => {
-        mock = new KuzzleMock();
-        kuzzle = new Kuzzle();
-
-        mockedProperties.forEach(k => {
-          kuzzle[k] = mock[k];
-        });
-
-        kuzzle.config.dump.enabled = true;
-
+        kuzzle = _mockKuzzle(Kuzzle);
         return kuzzle.start();
       })
         .then(() => {
@@ -160,6 +159,30 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.entryPoints.init).not.be.called();
           should(kuzzle.repositories.init).not.be.called();
           should(kuzzle.log.error).be.called();
+        });
+    });
+
+    // @deprecated
+    it('should instantiate Koncorde with PCRE support if asked to', () => {
+      const Koncorde = sinon.stub();
+      let
+        kuzzleDefault,
+        kuzzleWithPCRE;
+
+      return Kuzzle
+        .__with__({ Koncorde })(() => {
+          kuzzleDefault = _mockKuzzle(Kuzzle);
+          kuzzleWithPCRE = _mockKuzzle(Kuzzle);
+
+          kuzzleWithPCRE.config =
+            JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
+          kuzzleWithPCRE.config.realtime.pcreSupport = true;
+
+          return kuzzleDefault.start().then(() => kuzzleWithPCRE.start());
+        })
+        .then(() => {
+          should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2'});
+          should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js'});
         });
     });
   });
