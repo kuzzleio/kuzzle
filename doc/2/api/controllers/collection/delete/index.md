@@ -51,7 +51,8 @@ Returns a confirmation that the collection is deleted:
   "collection": "<collection>",
   "controller": "collection",
   "action": "delete",
-  "requestId": "<unique request identifier>"
+  "requestId": "<unique request identifier>",
+  "result": null
 }
 ```
 
