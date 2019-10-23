@@ -116,3 +116,12 @@ Before({ tags: '@fixtures' }, async function () {
     refresh: 'wait_for'
   });
 });
+
+// events hooks ================================================================
+
+After({ tags: '@events' }, async function () {
+  await this.sdk.query({
+    controller: 'functional-test-plugin/pipes',
+    action: 'deactivateAll'
+  });
+});

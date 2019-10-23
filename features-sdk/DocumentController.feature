@@ -5,6 +5,7 @@ Feature: Document Controller
   @mappings
   Scenario: Create multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I need to wait for refresh
     When I "create" the following documents:
     | _id          | body  |
     | "document-1" | { "name": "document1" } |
@@ -46,6 +47,7 @@ Feature: Document Controller
   @mappings
   Scenario: CreateOrReplace multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I need to wait for refresh
     And I "create" the following documents:
     | _id | body |
     | "document-1" | { "name": "document1", "age": 42 } |
@@ -67,15 +69,16 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I "createOrReplace" the following documents:
     | _id          | body  |
-    | "document-1" | { "name": "replaced1" } |
+    | "document-1" | { "name": "document1" } |
     |      -       | "not a body" |
     Then I should receive a "successes" array of objects matching:
     | _id | _source | status | result |
-    | "document-1" | { "name": "replaced1" } | 201 | "created" |
+    | "document-1" | { "name": "document1" } | 201 | "created" |
     And I should receive a "errors" array of objects matching:
     | reason | status | document |
     | "document body must be an object" | 400 | { "body": "not a body" } |
-    And I count 1 documents
+    And The document "document-1" content match:
+    | name | "document1" |
 
   # document:mUpdate ===========================================================
 
@@ -198,8 +201,8 @@ Feature: Document Controller
     | "document-1" |
     | "document-2" |
     And I should receive a empty "errors" array
-    And I count 1 documents
-    And The document "document-3" exists
+    And The document "document-1" does not exists
+    And The document "document-2" does not exists
 
   @mappings
   Scenario: Delete multiple documents with errors
@@ -219,7 +222,7 @@ Feature: Document Controller
     | reason | status | _id |
     | "document _id must be a string" | 400 | 214284 |
     | "document not found" | 404 | "document-42" |
-    And I count 2 documents
+    And The document "document-1" does not exists
     And The document "document-2" exists
     And The document "document-3" exists
 
@@ -262,9 +265,11 @@ Feature: Document Controller
     | "document-42" |
 
   # document:count =============================================================
+
   @mappings
   Scenario: Count documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I need to wait for refresh
     And I "create" the following documents:
     | _id | body  |
     | - | { "job": "developer" } |

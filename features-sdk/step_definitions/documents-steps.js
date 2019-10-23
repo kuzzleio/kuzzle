@@ -6,6 +6,10 @@ const
     Then
   } = require('cucumber');
 
+Given('I need to wait for refresh', function () {
+  this.waitForRefresh = 'wait_for';
+});
+
 Given('I create the following document:', async function (dataTable) {
   const document = this.parseObject(dataTable);
 
@@ -18,7 +22,7 @@ Given('I create the following document:', async function (dataTable) {
     collection,
     document.body,
     document._id,
-    { refresh: 'wait_for' });
+    { refresh: this.waitForRefresh });
 
   this.props.documentId = this.props.result._id;
 });
@@ -45,7 +49,28 @@ Then('I {string} the following documents:', async function (action, dataTable) {
     this.props.index,
     this.props.collection,
     documents,
-    { refresh: 'wait_for' });
+    { refresh: this.waitForRefresh });
+});
+
+Then('I {string} the document {string} with content:', async function (action, _id, dataTable) {
+  const body = this.parseObject(dataTable);
+
+  if (action === 'create') {
+    this.props.result = await this.sdk.document[action](
+      this.props.index,
+      this.props.collection,
+      body,
+      _id,
+      { refresh: this.waitForRefresh });
+  }
+  else {
+    this.props.result = await this.sdk.document[action](
+      this.props.index,
+      this.props.collection,
+      _id,
+      body,
+      { refresh: this.waitForRefresh });
+  }
 });
 
 Then('I should receive a {string} array of objects matching:', function (name, dataTable) {
@@ -99,11 +124,23 @@ Then('I count {int} documents matching:', async function (expectedCount, dataTab
   should(count).be.eql(expectedCount);
 });
 
-Then('The document {string} exists', async function (id) {
-  await this.sdk.document.get(
-    this.props.index,
-    this.props.collection,
-    id);
+Then(/The document "(.*?)" (does not )?exists/, async function (id, not) {
+  try {
+    // @todo use document.exists
+    await this.sdk.document.get(
+      this.props.index,
+      this.props.collection,
+      id);
+
+    if (not) {
+      return Promise.reject(`Document ${id} should not exist`);
+    }
+  }
+  catch (error) {
+    if (! not) {
+      return Promise.reject(`Document ${id} should exist`);
+    }
+  }
 });
 
 Then('I {string} the following document ids:', async function (action, dataTable) {
@@ -115,5 +152,5 @@ Then('I {string} the following document ids:', async function (action, dataTable
     this.props.index,
     this.props.collection,
     ids,
-    { refresh: 'wait_for' });
+    { refresh: this.waitForRefresh });
 });
