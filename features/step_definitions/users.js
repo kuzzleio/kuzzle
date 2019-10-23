@@ -233,7 +233,7 @@ Then(/^I'm able to find my rights$/, function () {
 Given(/^A scrolled search on users$/, function () {
   this.scrollId = null;
 
-  return this.api.searchUsers({}, {scroll: '1m'})
+  return this.api.searchUsers({}, {scroll: '2s'})
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);

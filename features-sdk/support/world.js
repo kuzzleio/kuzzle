@@ -1,4 +1,6 @@
-const { setWorldConstructor } = require('cucumber');
+const
+  config = require('../../lib/config'),
+  { setWorldConstructor } = require('cucumber');
 
 class KuzzleWorld {
   constructor (attach, parameters) {
@@ -8,6 +10,8 @@ class KuzzleWorld {
     this.host = process.env.KUZZLE_HOST || 'localhost';
     this.port = process.env.KUZZLE_PORT || '7512';
     this.protocol = process.env.KUZZLE_PROTOCOL || 'websocket';
+
+    this.kuzzleConfig = config;
 
     // Intermediate steps should store values inside this object
     this.props = {};

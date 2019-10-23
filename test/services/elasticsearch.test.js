@@ -823,7 +823,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { filter: 'term' } },
-            scroll: '5m',
+            scroll: '5s',
             from: undefined,
             size: undefined,
             refresh: undefined
@@ -2678,7 +2678,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry', 'liia'] } } },
-            scroll: '5m'
+            scroll: '5s'
           });
 
           should(result).match({
@@ -2708,7 +2708,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry'] } } },
-            scroll: '5m'
+            scroll: '5s'
           });
 
           should(result).match({
@@ -2739,7 +2739,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry'] } } },
-            scroll: '5m'
+            scroll: '5s'
           });
 
           should(result).match({
@@ -2765,7 +2765,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry', 'liia'] } } },
-            scroll: '5m',
+            scroll: '5s',
             refresh: true
           });
         });
