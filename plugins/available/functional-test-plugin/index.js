@@ -18,8 +18,8 @@ class FunctionalTestPlugin {
     ];
 
     this.pipes = {
-      'generic:document:beforeWrite': 'genericDocumentBeforeWrite',
-      'generic:document:afterWrite': 'genericDocumentAfterWrite'
+      'generic:document:beforeWrite': (...args) => this.genericDocumentWrite('before', ...args),
+      'generic:document:afterWrite': (...args) => this.genericDocumentWrite('after', ...args)
     };
 
     this.activatedPipes = {};
@@ -68,24 +68,8 @@ class FunctionalTestPlugin {
     return null;
   }
 
-  async genericDocumentBeforeWrite (documents, request) {
-    const pipe = this.activatedPipes['generic:document:beforeWrite'];
-
-    if (!pipe || pipe.state === 'off') {
-      return documents;
-    }
-
-    for (const document of documents) {
-      for (const [field, value] of Object.entries(pipe.payload)) {
-        _.set(document, field, eval(value));
-      }
-    }
-
-    return documents;
-  }
-
-  async genericDocumentAfterWrite (documents, request) {
-    const pipe = this.activatedPipes['generic:document:afterWrite'];
+  async genericDocumentWrite (eventType, documents, request) {
+    const pipe = this.activatedPipes[`generic:document:${eventType}Write`];
 
     if (!pipe || pipe.state === 'off') {
       return documents;
