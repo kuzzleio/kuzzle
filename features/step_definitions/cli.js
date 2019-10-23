@@ -3,7 +3,6 @@ const
     When,
     Then
   } = require('cucumber'),
-  { execSync } = require('child_process'),
   fs = require('fs'),
   ndjson = require('ndjson'),
   should = require('should');
