@@ -82,13 +82,17 @@ describe('InternalIndexBootstrap', () => {
 
   describe('#createInitialSecurities', () => {
     it('should create initial roles and profiles', async () => {
-      await internalIndexBootstrap.createInitialSecurities();
+      const ret = await internalIndexBootstrap.createInitialSecurities();
 
       should(internalIndexStorage.createOrReplace.callCount).be.eql(6);
       should(internalIndexStorage.createOrReplace.getCall(0).args[0])
         .be.eql('roles');
       should(internalIndexStorage.createOrReplace.getCall(3).args[0])
         .be.eql('profiles');
+      should(ret).be.eql({
+        profileIds: ['admin', 'default', 'anonymous'],
+        roleIds: ['admin', 'default', 'anonymous']
+      });
     });
   });
 

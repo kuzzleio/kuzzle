@@ -129,7 +129,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -146,7 +146,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
