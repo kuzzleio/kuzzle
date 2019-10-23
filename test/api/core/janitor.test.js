@@ -455,9 +455,7 @@ describe('Test: core/janitor', () => {
   });
 
   describe('#shutdown', () => {
-    let
-      pm2Mock,
-      processMock;
+    let pm2Mock;
 
     beforeEach(() => {
       kuzzle.funnel.remainingRequests = 0;
@@ -468,22 +466,18 @@ describe('Test: core/janitor', () => {
         delete: sinon.stub()
       };
 
-      processMock = {
-        exit: sinon.stub(),
-        pid: process.pid
-      };
-
       mockrequire('pm2', pm2Mock);
       mockrequire.reRequire('../../../lib/api/core/janitor');
       Janitor = rewire('../../../lib/api/core/janitor');
 
       Janitor.__set__({
-        process: processMock,
         // prevent waiting seconds for unit tests
         setTimeout: sinon.spy(function (...args) { setImmediate(args[0]); })
       });
 
       janitor = new Janitor(kuzzle);
+
+      sinon.stub(janitor, '_halt');
     });
 
     afterEach(() => {
@@ -500,7 +494,7 @@ describe('Test: core/janitor', () => {
               .calledOnce()
               .calledWith('shutdown');
 
-            should(processMock.exit).calledOnce().calledWith(0);
+            should(janitor._halt).calledOnce();
             should(pm2Mock.delete).not.be.called();
             should(pm2Mock.restart).not.be.called();
             done();
@@ -518,7 +512,7 @@ describe('Test: core/janitor', () => {
               .calledOnce()
               .calledWith('shutdown');
 
-            should(processMock.exit).calledOnce().calledWith(0);
+            should(janitor._halt).calledOnce();
             should(pm2Mock.delete).not.be.called();
             should(pm2Mock.restart).not.be.called();
             done();
@@ -542,7 +536,7 @@ describe('Test: core/janitor', () => {
               .calledOnce()
               .calledWith('shutdown');
 
-            should(processMock.exit).not.be.called();
+            should(janitor._halt).not.called();
             should(pm2Mock.delete).not.be.called();
             should(pm2Mock.restart).be.calledOnce().calledWith('foobar');
             done();
@@ -565,7 +559,7 @@ describe('Test: core/janitor', () => {
               .calledOnce()
               .calledWith('shutdown');
 
-            should(processMock.exit).not.be.called();
+            should(janitor._halt).not.be.called();
             should(pm2Mock.delete).be.calledOnce().calledWith('foobar');
             should(pm2Mock.restart).not.be.called();
 
@@ -576,7 +570,7 @@ describe('Test: core/janitor', () => {
                 .calledOnce()
                 .calledWith('shutdown');
 
-              should(processMock.exit).be.calledOnce().calledWith(0);
+              should(janitor._halt).be.calledOnce();
               should(pm2Mock.delete).be.calledOnce().calledWith('foobar');
               should(pm2Mock.restart).not.be.called();
               done();
@@ -601,7 +595,7 @@ describe('Test: core/janitor', () => {
               .calledOnce()
               .calledWith('shutdown');
 
-            should(processMock.exit).calledOnce().calledWith(0);
+            should(janitor._halt).calledOnce();
             should(pm2Mock.delete).not.be.called();
             should(pm2Mock.restart).not.be.called();
             done();
@@ -615,7 +609,7 @@ describe('Test: core/janitor', () => {
 
         should(pm2Mock.delete).not.be.called();
         should(pm2Mock.restart).not.be.called();
-        should(processMock.exit).not.be.called();
+        should(janitor._halt).not.be.called();
 
         kuzzle.funnel.remainingRequests = 0;
         remainingChanged = true;

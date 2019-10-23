@@ -22,10 +22,7 @@ describe('funnelController.init', () => {
       kuzzle = new KuzzleMock(),
       funnel = new FunnelController(kuzzle);
 
-    kuzzle.pluginsManager.getPluginControllers = sinon.stub().returns({foo: 'bar'});
-
     funnel.init();
-    funnel.loadPluginControllers();
 
     should(funnel.controllers.size).be.eql(11);
     should(funnel.controllers.get('auth')).be.instanceOf(AuthController);
@@ -39,6 +36,5 @@ describe('funnelController.init', () => {
     should(funnel.controllers.get('security')).be.instanceOf(SecurityController);
     should(funnel.controllers.get('server')).be.instanceOf(ServerController);
     should(funnel.controllers.get('admin')).be.instanceOf(AdminController);
-    should(funnel.pluginsControllers).have.value('foo', 'bar');
   });
 });

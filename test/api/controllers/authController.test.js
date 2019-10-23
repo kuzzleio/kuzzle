@@ -16,7 +16,7 @@ const
       PluginImplementationError
     }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test the auth controller', () => {
   let
@@ -49,13 +49,13 @@ describe('Test the auth controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(authController).instanceOf(BaseController);
+      should(authController).instanceOf(NativeController);
     });
   });
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(authController).instanceOf(BaseController);
+      should(authController).instanceOf(NativeController);
     });
   });
 

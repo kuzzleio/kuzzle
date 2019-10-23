@@ -7,7 +7,7 @@ const
   Bluebird = require('bluebird'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  BaseController = require('../../../../lib/api/controllers/baseController'),
+  { NativeController } = require('../../../../lib/api/controllers/baseController'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController'),
   {
     Request,
@@ -39,7 +39,7 @@ describe('/api/controllers/security', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(new SecurityController(kuzzle)).instanceOf(BaseController);
+      should(new SecurityController(kuzzle)).instanceOf(NativeController);
     });
   });
 

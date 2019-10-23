@@ -74,9 +74,7 @@ class KuzzleMock extends Kuzzle {
 
     this.funnel = {
       controllers: new Map(),
-      pluginsControllers: new Map(),
       init: this.sandbox.spy(),
-      loadPluginControllers: this.sandbox.spy(),
       getRequestSlot: this.sandbox.stub().returns(true),
       handleErrorDump: this.sandbox.spy(),
       execute: this.sandbox.stub(),
@@ -191,6 +189,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.pluginsManager = {
+      controllers: new Map(),
       init: this.sandbox.stub().resolves(),
       plugins: {},
       run: this.sandbox.stub().resolves(),

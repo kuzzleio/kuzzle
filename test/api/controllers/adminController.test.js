@@ -8,7 +8,7 @@ const
   { PreconditionError, NotFoundError } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test: admin controller', () => {
   let
@@ -26,7 +26,7 @@ describe('Test: admin controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(adminController).instanceOf(BaseController);
+      should(adminController).instanceOf(NativeController);
     });
   });
 

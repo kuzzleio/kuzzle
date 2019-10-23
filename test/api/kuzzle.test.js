@@ -75,7 +75,6 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.log.info, // services init
             kuzzle.log.info, // load securities
             kuzzle.janitor.loadSecurities,
-            kuzzle.funnel.loadPluginControllers,
             kuzzle.router.init,
             kuzzle.statistics.init,
             kuzzle.validation.curateSpecification,
