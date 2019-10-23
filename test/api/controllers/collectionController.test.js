@@ -516,7 +516,7 @@ describe('Test: collection controller', () => {
       should(collectionController.publicStorage.deleteCollection)
         .be.calledWith(index, collection);
 
-      should(response).be.undefined();
+      should(response).be.null();
     });
   });
 });
