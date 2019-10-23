@@ -7,7 +7,7 @@ const
     Request,
     errors: { BadRequestError }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('RealtimeController', () => {
   let
@@ -31,7 +31,7 @@ describe('RealtimeController', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(realtimeController).instanceOf(BaseController);
+      should(realtimeController).instanceOf(NativeController);
     });
   });
 

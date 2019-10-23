@@ -6,7 +6,10 @@ const
   DocumentController = require('../../../../lib/api/controllers/documentController'),
   mockrequire = require('mock-require'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  ControllerMock = require('../../../mocks/controller.mock'),
+  {
+    MockBaseController,
+    MockNativeController
+  } = require('../../../mocks/controller.mock'),
   ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
   {
     Request,
@@ -37,11 +40,11 @@ describe('funnelController.processRequest', () => {
     kuzzle.pluginsManager = pluginsManager;
 
     // inject fake controllers for unit tests
-    funnel.controllers.set('fakeController', new ControllerMock(kuzzle));
+    funnel.controllers.set('fakeController', new MockNativeController(kuzzle));
     funnel.controllers.set('document', new DocumentController(kuzzle));
-    funnel.pluginsControllers.set(
+    pluginsManager.controllers.set(
       'fakePlugin/controller',
-      new ControllerMock(kuzzle));
+      new MockBaseController(kuzzle));
   });
 
   afterEach(() => {
@@ -110,7 +113,7 @@ describe('funnelController.processRequest', () => {
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'succeed'});
 
-    funnel.pluginsControllers.get(controller).succeed.returns('foobar');
+    pluginsManager.controllers.get(controller).succeed.returns('foobar');
 
     funnel.processRequest(request)
       .then(() => done(new Error('Expected test to fail')))
@@ -140,7 +143,7 @@ describe('funnelController.processRequest', () => {
       unserializable = {};
     unserializable.self = unserializable;
 
-    funnel.pluginsControllers.get(controller).succeed.resolves(unserializable);
+    pluginsManager.controllers.get(controller).succeed.resolves(unserializable);
 
     return funnel.processRequest(request)
       .then(() => { throw new Error('Expected test to fail'); })
@@ -213,7 +216,7 @@ describe('funnelController.processRequest', () => {
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'fail'});
 
-    funnel.pluginsControllers.get(controller).fail.rejects(new Error('foobar'));
+    pluginsManager.controllers.get(controller).fail.rejects(new Error('foobar'));
 
     funnel.processRequest(request)
       .then(() => done(new Error('Expected test to fail')))

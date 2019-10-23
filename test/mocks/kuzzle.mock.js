@@ -73,7 +73,6 @@ class KuzzleMock extends Kuzzle {
 
     this.funnel = {
       controllers: new Map(),
-      pluginsControllers: new Map(),
       init: sinon.spy(),
       loadPluginControllers: sinon.spy(),
       getRequestSlot: sinon.stub().returns(true),
@@ -185,6 +184,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.pluginsManager = {
+      controllers: new Map(),
       init: sinon.stub().resolves(),
       plugins: {},
       run: sinon.stub().resolves(),

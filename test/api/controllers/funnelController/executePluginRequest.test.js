@@ -4,7 +4,7 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  ControllerMock = require('../../../mocks/controller.mock'),
+  { MockNativeController } = require('../../../mocks/controller.mock'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   {
     Request,
@@ -20,7 +20,7 @@ describe('funnelController.executePluginRequest', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
-    funnel.controllers.set('testme', new ControllerMock(kuzzle));
+    funnel.controllers.set('testme', new MockNativeController(kuzzle));
     originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
   });

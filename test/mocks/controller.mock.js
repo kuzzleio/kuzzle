@@ -1,5 +1,5 @@
 const
-  BaseController = require('../../lib/api/controllers/baseController'),
+  { BaseController, NativeController } = require('../../lib/api/controllers/baseController'),
   {
     errors: {
       InternalError: KuzzleInternalError
@@ -7,24 +7,40 @@ const
   } = require('kuzzle-common-objects'),
   sinon = require('sinon');
 
-class MockController extends BaseController {
-  constructor(kuzzle) {
+function injectStubs (controller) {
+  controller.failResult = new KuzzleInternalError('rejected action');
+  controller.fail = sinon.stub().rejects(controller.failResult);
+
+  // we need to use "callsFake" instead of "resolvesArg" because, for some
+  // reason, .resolves and .resolvesArg behaviors are not overwritten
+  // when we do "controller.succeed.returns('another value')": in that case,
+  // "another value" is resolved as a promise result, which is not the
+  // desired result
+  controller.succeed = sinon.stub().callsFake(foo => Promise.resolve(foo));
+}
+
+class MockNativeController extends NativeController {
+  constructor (kuzzle) {
     super(kuzzle);
 
-    this.failResult = new KuzzleInternalError('rejected action');
-    this.fail = sinon.stub().rejects(this.failResult);
-
-    // we need to use "callsFake" instead of "resolvesArg" because, for some
-    // reason, .resolves and .resolvesArg behaviors are not overwritten
-    // when we do "this.succeed.returns('another value')": in that case,
-    // "another value" is resolved as a promise result, which is not the
-    // desired result
-    this.succeed = sinon.stub().callsFake(foo => Promise.resolve(foo));
+    injectStubs(this);
   }
 
-  isAction(name) {
+  _isAction(name) {
     return name === 'succeed' || name === 'fail';
   }
 }
 
-module.exports = MockController;
+class MockBaseController extends BaseController {
+  constructor () {
+    super();
+
+    injectStubs(this);
+  }
+
+  _isAction(name) {
+    return name === 'succeed' || name === 'fail';
+  }
+}
+
+module.exports = { MockBaseController, MockNativeController };

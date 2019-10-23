@@ -72,7 +72,6 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.log.info, // load default rights
             kuzzle.janitor.loadSecurities,
             kuzzle.log.info, // default rights loaded
-            kuzzle.funnel.loadPluginControllers,
             kuzzle.router.init,
             kuzzle.statistics.init,
             kuzzle.validation.curateSpecification,
