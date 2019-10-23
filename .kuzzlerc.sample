@@ -210,7 +210,7 @@
             },
             "server": {
               "actions": {
-                "info": true
+                "publicApi": true
               }
             }
           }
@@ -227,7 +227,7 @@
             },
             "server": {
               "actions": {
-                "info": true
+                "publicApi": true
               }
             }
           }
@@ -343,12 +343,6 @@
         "server": {
           "port": 1883
         }
-      },
-      "socketio": {
-        "enabled": false,
-        // value of Access-Control-Allow-Origin header to answer the upgrade
-        // request
-        "origins": "*:*"
       },
       "websocket": {
         // * enabled:

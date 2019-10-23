@@ -29,7 +29,6 @@ Additionally, Kuzzle supports a variety of communication protocols:
 
 - HTTP
 - Websocket
-- Socket.io
 - MQTT
 
 You can interact directly with Kuzzle through its API, read the [Kuzzle API reference](/core/2/api) for more information.

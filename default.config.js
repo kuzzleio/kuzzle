@@ -129,7 +129,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -146,7 +146,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -187,10 +187,6 @@ module.exports = {
         server: {
           port: 1883
         }
-      },
-      socketio: {
-        enabled: false,
-        origins: '*:*'
       },
       websocket: {
         enabled: true,

@@ -8,7 +8,7 @@ order: 100
 
 # Connecting to Kuzzle
 
-A connection to Kuzzle can be made using different protocols. Currently Kuzzle natively supports HTTP, WebSocket and Socket.io, but other protocols can be added by implementing the [Protocol](/core/2/protocols) interface.
+A connection to Kuzzle can be made using different protocols. Currently Kuzzle natively supports HTTP, WebSocket and MQTT, but other protocols can be added by implementing the [Protocol](/core/2/protocols) interface.
 
 ---
 
@@ -40,25 +40,9 @@ By default, Kuzzle has websockets enabled, accepting requests via the http serve
 
 ---
 
-## Socket.io
+## MQTT
 
-To ensure compatibility with older web browsers, our official Kuzzle docker images embed the socketio protocol, accepting socket requests via the http server on port 7512.
-
-### Example
-
-```html
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
-<script>
-  var socket = io('http://localhost:7512');
-</script>
-```
-
----
-
-## MQTT protocols
-
-Kuzzle provides a plugin that supports the [MQTT protocol](https://github.com/kuzzleio/kuzzle-plugin-mqtt).
-Using the plugin you can perform two-way communication between your application and Kuzzle.
+By default, Kuzzle has its MQTT protocol disabled. To enable it, set the following key to `true` in [Kuzzle's configuration files](/core/2/guides/essentials/configuration): `server.protocols.mqtt.enabled`
 
 ### Example
 
@@ -98,10 +82,10 @@ Kuzzle {
 }
 ```
 
-By default, the MQTT plugin protocol listens on port 1883.
+By default, Kuzzle listens to MQTT messages on port 1883.
 
 :::info
-The examples given in this documentation use the CLI client from the mqtt node.js
+The examples given in this documentation use the CLI client from the mqtt Node.js
 library that is shipped in the Kuzzle Docker image.  
 To test them out yourself you will need to enter into the container shell once your docker compose stack is up and running:  
 `docker exec -ti kuzzle_kuzzle_1 bash`

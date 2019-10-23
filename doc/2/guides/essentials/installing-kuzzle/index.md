@@ -263,7 +263,7 @@ You should see the following message (it may take a few seconds):
 # kuzzle_1         | [✔] Kuzzle server ready
 ```
 
-Kuzzle can now be reached at the following URL, using either HTTP, WebSocket or Socket.io: `http://localhost:7512/`
+Kuzzle can now be reached at the following URL, using either HTTP or WebSocket: `http://localhost:7512/`
 
 #### PM2 cheatsheet
 

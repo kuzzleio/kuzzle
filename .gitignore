@@ -68,3 +68,6 @@ doc/framework
 
 #vscode
 .vscode
+
+# version upgrades
+upgrade-*.report
