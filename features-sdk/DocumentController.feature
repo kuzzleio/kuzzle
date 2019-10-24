@@ -1,5 +1,19 @@
 Feature: Document Controller
 
+  # document:exists ============================================================
+
+  @mappings
+  Scenario: Check document existence
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    Then The document "document-1" should not exist
+    When I "create" the following documents:
+    | _id | body |
+    | "document-1" | { "name": "document1", "age": 42 } |
+    Then The document "document-1" should exist
+    When I "delete" the following document ids:
+    | "document-1" |
+    Then The document "document-1" should not exist
+
   # document:mCreate ===========================================================
 
   @mappings
@@ -199,7 +213,7 @@ Feature: Document Controller
     | "document-2" |
     And I should receive a empty "errors" array
     And I count 1 documents
-    And The document "document-3" exists
+    And The document "document-3" should exist
 
   @mappings
   Scenario: Delete multiple documents with errors
@@ -220,8 +234,8 @@ Feature: Document Controller
     | "document _id must be a string" | 400 | 214284 |
     | "document not found" | 404 | "document-42" |
     And I count 2 documents
-    And The document "document-2" exists
-    And The document "document-3" exists
+    And The document "document-2" should exist
+    And The document "document-3" should exist
 
   # document:mGet ==============================================================
 

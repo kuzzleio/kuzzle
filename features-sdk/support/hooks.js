@@ -1,7 +1,6 @@
 'use strict';
 
 const
-  _ = require('lodash'),
   { After, Before, BeforeAll } = require('cucumber'),
   { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   testMappings = require('../fixtures/mappings'),
