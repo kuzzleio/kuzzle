@@ -99,7 +99,6 @@ describe('/lib/api/kuzzle.js', () => {
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
       let
-        mock,
         processExitSpy = sinon.spy(),
         processOnSpy = sinon.spy(),
         processRemoveAllListenersSpy = sinon.spy();

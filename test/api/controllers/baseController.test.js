@@ -1,7 +1,7 @@
 const
   { BadRequestError } = require('kuzzle-common-objects').errors,
   should = require('should'),
-  { BaseController, NativeController } = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('#native controller', () => {
   it('should expose a kuzzle property', () => {

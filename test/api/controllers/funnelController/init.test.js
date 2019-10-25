@@ -2,7 +2,6 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   AuthController = require('../../../../lib/api/controllers/authController'),
