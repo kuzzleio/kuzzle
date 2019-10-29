@@ -1,24 +1,47 @@
 const
   {
-    Given
+    Given,
+    Then
   } = require('cucumber');
 
-Given('I create a profile {string} with the following policies:', function (profileId, dataTable) {
+Given('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
   let policies = this.parseObject(dataTable);
-
-  policies = Array.isArray(policies) ? policies : [policies];
-
-  return this.sdk.security.createProfile(profileId, { policies });
+  return await this.sdk.security.createProfile(profileId, policies);
 });
 
-Given('I delete the role {string}', function (roleId) {
-  return this.sdk.security.deleteRole(roleId);
+Given('I create a role {string} with the following policies:', async function (roleId, dataTable) {
+  let controllers = this.parseObject(dataTable);
+  return await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
 });
 
-Given('I create a user {string} with content:', function (userId, dataTable) {
+Given('I delete the role {string}', async function (roleId) {
+  // const timer = ms => new Promise(res => setTimeout(res, ms));
+  // await timer(1000);
+  return await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
+});
+
+Then('I can not delete the role {string}', async function (roleId) {
+  const timer = ms => new Promise(res => setTimeout(res, ms));
+  await timer(1000);
+  return should(this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' })).be.rejected();
+});
+
+Given('I delete the profile {string}', async function (profileId) {
+  return await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for'});
+});
+
+Then('I can not delete the profile {string}', function (profileId) {
+  return should(this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' })).be.rejected();
+});
+
+Given('I delete the user {string}', async function (userId) {
+  return await this.sdk.security.deleteUser(userId, { refresh: 'wait_for' });
+});
+
+Given('I create a user {string} with content:', async function (userId, dataTable) {
   const content = this.parseObject(dataTable);
 
-  const user = {
+  const body = {
     content,
     credentials: {
       local: {
@@ -28,7 +51,7 @@ Given('I create a user {string} with content:', function (userId, dataTable) {
     }
   };
 
-  return this.sdk.security.createUser(userId, user);
+  return await this.sdk.security.createUser(userId, body);
 });
 
 Given('I update the role {string} with:', async function (roleId, dataTable) {
