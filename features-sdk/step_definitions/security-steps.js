@@ -1,4 +1,5 @@
 const
+  should = require('should'),
   {
     Given,
     Then
@@ -14,24 +15,23 @@ Given('I create a role {string} with the following policies:', async function (r
   return await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
 });
 
-Given('I delete the role {string}', async function (roleId) {
-  // const timer = ms => new Promise(res => setTimeout(res, ms));
-  // await timer(1000);
+Then(/I can( not)? delete the role "(.*?)"/, async function (not, roleId) {
+  
+  if (not) {
+    return this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' })
+      .catch(() => null);
+  } 
   return await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
+  
 });
 
-Then('I can not delete the role {string}', async function (roleId) {
-  const timer = ms => new Promise(res => setTimeout(res, ms));
-  await timer(1000);
-  return should(this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' })).be.rejected();
-});
-
-Given('I delete the profile {string}', async function (profileId) {
-  return await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for'});
-});
-
-Then('I can not delete the profile {string}', function (profileId) {
-  return should(this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' })).be.rejected();
+Then(/I can( not)? delete the profile "(.*?)"/, async function (not, profileId) {
+  if (not) {
+    return this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' })
+      .catch(() => null);
+  } 
+  return await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' });
+  
 });
 
 Given('I delete the user {string}', async function (userId) {

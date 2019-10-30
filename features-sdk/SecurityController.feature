@@ -57,5 +57,5 @@ Feature: Security Controller
     Then I can not delete the profile "test-profile"
     And I can not delete the role "test-role"
     Then I delete the user "test-user"
-    And I delete the profile "test-profile"
-    Then I delete the role "test-role"
+    And I can delete the profile "test-profile"
+    And I can delete the role "test-role"
