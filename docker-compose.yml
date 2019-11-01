@@ -55,13 +55,8 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.3.0
+    image: kuzzleio/elasticsearch:7.4.0
     ports:
       - "9200:9200"
     ulimits:
       nofile: 65536
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - node.name=alyx
-      - cluster.name=kuzzle
-      - discovery.type=single-node
