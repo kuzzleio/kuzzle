@@ -302,8 +302,13 @@ describe('Test: core/janitor', () => {
             should(fsStub.mkdirsSync).be.calledOnce();
             should(fsStub.mkdirsSync.getCall(0).args[0]).be.exactly(baseDumpPath);
 
-            should(fsStub.writeFileSync.getCall(0).args[0]).be.exactly(baseDumpPath.concat('/config.json'));
-            should(fsStub.writeFileSync.getCall(0).args[1]).be.exactly(JSON.stringify(kuzzle.config, null, ' ').concat('\n'));
+            should(fsStub.writeFileSync.getCall(0).args[0])
+              .be.exactly(baseDumpPath.concat('/kuzzle.json'));
+            should(fsStub.writeFileSync.getCall(0).args[1])
+              .be.exactly(JSON.stringify({
+                version: require('../../../package.json').version,
+                config: kuzzle.config
+              }, null, ' ').concat('\n'));
 
             should(fsStub.writeFileSync.getCall(1).args[0]).be.exactly(baseDumpPath.concat('/plugins.json'));
             should(fsStub.writeFileSync.getCall(1).args[1]).be.exactly(JSON.stringify(kuzzle.pluginsManager.plugins, null, ' ').concat('\n'));
