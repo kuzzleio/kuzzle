@@ -169,6 +169,7 @@ order: 500
 | api.process.connection_dropped<br/><pre>0x02020003</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The request has been discarded because its linked client connection has dropped |
 | api.process.controller_not_found<br/><pre>0x02020004</pre> | [NotFoundError](/core/1/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | API controller not found |
 | api.process.action_not_found<br/><pre>0x02020005</pre> | [NotFoundError](/core/1/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | API controller action not found |
+| api.process.incompatible_sdk_version<br/><pre>0x02020006</pre> | [BadRequestError](/core/1/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | SDK is incompatible with the current Kuzzle version |
 
 ---
 

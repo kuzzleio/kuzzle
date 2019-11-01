@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  sinon = require('sinon'),
   should = require('should'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   DocumentController = require('../../../../lib/api/controllers/documentController'),
@@ -13,7 +14,8 @@ const
     errors: {
       NotFoundError,
       PluginImplementationError,
-      InternalError: KuzzleInternalError
+      InternalError: KuzzleInternalError,
+      BadRequestError
     }
   } = require('kuzzle-common-objects');
 
@@ -131,6 +133,17 @@ describe('funnelController.processRequest', () => {
           done(err);
         }
       });
+  });
+
+  it('should reject if _checkSdkVersion fails', () => {
+    const request = new Request({
+      controller: 'fakeController',
+      action: 'succeed'
+    });
+    funnel._checkSdkVersion = sinon.stub().rejects(new Error('incompatible sdk'));
+
+    return should(funnel.processRequest(request))
+      .be.rejectedWith(Error, { message: 'incompatible sdk' });
   });
 
   it('should throw if a plugin action returns a non-serializable response', () => {
@@ -288,4 +301,57 @@ describe('funnelController.processRequest', () => {
       });
   });
 
+  describe('_checkSdkVersion', () => {
+    let request;
+
+    beforeEach(() => {
+      request = {
+        input: {
+          volatile: {}
+        }
+      };
+    });
+
+    it('should not throw if sdkName is in incorrect format', () => {
+      request.input.volatile.sdkName = {};
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = '';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = 'js#7.4.3';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = 'js@';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = '@7.4.3';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+    });
+
+    it('should not throw if the SDK version is unknown', () => {
+      funnel.sdkCompatibility = { js: { max: 6 } };
+
+      request.input.volatile.sdkName = 'csharp@8.4.2';
+
+      should(funnel._checkSdkVersion(request)).not.throw();
+    });
+
+    it('should not throw if the SDK version is compatible', () => {
+      funnel.sdkCompatibility = { js: { max: 6 } };
+
+      request.input.volatile.sdkName = 'js@6.4.2';
+
+      should(funnel._checkSdkVersion(request)).not.throw();
+    });
+
+    it('should throw an error if the SDK version is not compatible', () => {
+      funnel.sdkCompatibility = { js: { max: 6 } };
+
+      request.input.volatile.sdkName = 'js@7.4.2';
+
+      should(() => funnel._checkSdkVersion(request))
+        .throw(BadRequestError, { errorName: 'api.process.incompatible_sdk_version' });
+    });
+  });
 });

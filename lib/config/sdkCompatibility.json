@@ -1,0 +1,9 @@
+{
+  "js": { "max": 6 },
+  "csharp": { "max": 1 },
+  "cpp": { "max": 1 },
+  "java": { "max": 2 },
+  "android": { "max": 4 },
+  "go": { "max": 2 },
+  "php": { "max": 3 }
+}
