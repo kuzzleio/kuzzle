@@ -3003,6 +3003,7 @@ describe('Test: ElasticSearch service', () => {
           name: { type: 'keyword' },
           car: {
             dynamic: 'false',
+            dynamic_templates: {},
             type: 'nested',
             properties: {
               brand: { type: 'keyword' }
