@@ -1845,7 +1845,7 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#deleteCollection', () => {
-    it('should allow to deletes a collection', () => {
+    it('should allow to delete a collection', () => {
       const promise = elasticsearch.deleteCollection('nepali', 'liia');
 
       return promise
