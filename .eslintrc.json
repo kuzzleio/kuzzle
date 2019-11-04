@@ -45,6 +45,7 @@
     "no-useless-call": 2,
     "no-with": 2,
     "quotes": [2, "single"],
+    "require-atomic-updates": 0,
     "semi": [2, "always"],
     "space-before-blocks": 2,
     "vars-on-top": 2,
