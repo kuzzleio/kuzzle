@@ -2,33 +2,39 @@ const _ = require('lodash');
 
 class FunctionalTestPlugin {
   constructor () {
-    this.controllers = {
-      constructors: {
-        ESClient: 'testConstructorsESClient'
-      },
-      pipes: {
-        manage: 'pipesManage',
-        deactivateAll: 'pipesDeactivateAll'
-      },
+    this.controllers = {};
+    this.routes = [];
+    this.pipes = {};
 
+    // plugin context related declarations =====================================
+
+    this.controllers.constructors = {
+      ESClient: 'testConstructorsESClient'
     };
 
-    this.routes = [
-      { verb: 'post', url: '/constructors/esclient', controller: 'constructors', action: 'ESClient' }
-    ];
+    this.routes.push({ verb: 'post', url: '/constructors/esclient/:index', controller: 'constructors', action: 'ESClient' });
 
-    this.pipes = {
-      'generic:document:beforeWrite': (...args) => this.genericDocumentWrite('before', ...args),
-      'generic:document:afterWrite': (...args) => this.genericDocumentWrite('after', ...args)
-    };
+    // pipes related declarations ==============================================
 
     this.activatedPipes = {};
+
+    this.controllers.pipes = {
+      manage: 'pipesManage',
+      deactivateAll: 'pipesDeactivateAll'
+    };
+
+    this.routes.push({ verb: 'post', url: '/pipes/:event/:state', controller: 'pipes', action: 'manage' });
+
+    this.pipes['generic:document:beforeWrite'] = (...args) => this.genericDocumentWrite('before', ...args);
+    this.pipes['generic:document:afterWrite'] = (...args) => this.genericDocumentWrite('after', ...args);
   }
 
   init (config, context) {
     this.config = config;
     this.context = context;
   }
+
+  // plugin context related methods ============================================
 
   async testConstructorsESClient (request) {
     const
@@ -44,7 +50,7 @@ class FunctionalTestPlugin {
     return body;
   }
 
-  // pipes managements =========================================================
+  // pipes related methods =====================================================
 
   async pipesManage (request) {
     const

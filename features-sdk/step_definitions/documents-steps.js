@@ -154,3 +154,22 @@ Then('I {string} the following document ids:', async function (action, dataTable
     ids,
     { refresh: this.waitForRefresh });
 });
+
+Then('I search documents with the following query:', function (queryRaw) {
+  const query = JSON.parse(queryRaw);
+
+  this.props.searchBody = { query };
+});
+
+Then('with the following highlights:', function (highlightsRaw) {
+  const highlights = JSON.parse(highlightsRaw);
+
+  this.props.searchBody.highlight = highlights;
+});
+
+Then('I execute the search query', async function () {
+  this.props.result = await this.sdk.document.search(
+    this.props.index,
+    this.props.collection,
+    this.props.searchBody);
+});

@@ -508,4 +508,15 @@ describe('Test: collection controller', () => {
       });
     });
   });
+
+  describe('#delete', () => {
+    it('should call deleteCollection', async () => {
+      const response = await collectionController.delete(request);
+
+      should(collectionController.publicStorage.deleteCollection)
+        .be.calledWith(index, collection);
+
+      should(response).be.null();
+    });
+  });
 });

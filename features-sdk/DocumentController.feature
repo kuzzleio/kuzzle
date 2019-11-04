@@ -1,5 +1,31 @@
 Feature: Document Controller
 
+  # document:search ============================================================
+
+  @mappings
+  Scenario: Search with highlight
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+    | _id          | body  |
+    | "document-1" | { "name": "document", "age": 42 } |
+    | -            | { "name": "document2", "age": 21 } |
+    When I search documents with the following query:
+    """
+    {
+      "match": { "name": "document" }
+    }
+    """
+    And with the following highlights:
+    """
+    {
+      "fields": { "name": {} }
+    }
+    """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching:
+    | _id | highlight |
+    | "document-1" | { "name": [ "<em>document</em>" ] } |
+
   # document:mCreate ===========================================================
 
   @mappings
