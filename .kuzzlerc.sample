@@ -513,12 +513,14 @@
       "internalIndex": {
         "name": "kuzzle",
         "collections": {
+          "dynamic": "false",
           "users": {
             "properties": {
               "profileIds": { "type": "keyword" }
             }
           },
           "profiles": {
+            "dynamic": "false",
             "properties": {
               "policies": {
                 "properties":  {
@@ -528,6 +530,7 @@
             }
           },
           "roles": {
+            "dynamic": "false",
             "properties": {
               "controllers": {
                 "dynamic": "false",
@@ -546,10 +549,8 @@
             }
           },
           "config": {
-            "properties": {
-              "dynamic": "false",
-              "properties": {}
-            }
+            "dynamic": "false",
+            "properties": {}
           }
         }
       },
@@ -559,8 +560,7 @@
         "onUpdateConflictRetries": 0,
         // Time to live of a paginated search
         "scrollTTL": "15s"
-      },
-      "dynamic": "true"
+      }
     }
   },
 
