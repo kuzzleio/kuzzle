@@ -7,7 +7,7 @@ class FunctionalTestPlugin {
     };
 
     this.routes = [
-      { verb: 'post', url: '/constructors/esclient', controller: 'constructors', action: 'ESClient' }
+      { verb: 'post', url: '/constructors/esclient/:index', controller: 'constructors', action: 'ESClient' }
     ];
   }
 
