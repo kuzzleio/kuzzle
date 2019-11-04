@@ -95,7 +95,7 @@ After(async function () {
 
 // firstAdmin hooks ============================================================
 
-Before({ tags: '@firstAdmin' }, async function () {
+Before({ tags: '@firstAdmin', timeout: 10 * 1000 }, async function () {
   await this.sdk.query({
     controller: 'admin',
     action: 'resetSecurity',
