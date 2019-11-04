@@ -9,5 +9,5 @@ Feature: Plugin context
     | _id | "es-document" |
     | body | { "from": "embedded-es-client" } |
     | index | "&nyc-open-data.yellow-taxi" |
-    Then The document "es-document" content matches:
+    Then The document "es-document" content match:
     | from | "embedded-es-client" |
