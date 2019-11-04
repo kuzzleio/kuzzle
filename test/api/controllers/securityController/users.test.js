@@ -462,10 +462,18 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
 
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'validate').returns(validateStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'exists').returns(existsStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'create').returns(createStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'delete').returns(deleteStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'validate')
+        .returns(validateStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'exists')
+        .returns(existsStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'create')
+        .returns(createStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'delete')
+        .returns(deleteStub);
 
       securityController.createUser(request)
         .then(() => done('Expected promise to fail'))
@@ -475,7 +483,7 @@ describe('Test: security controller - users', () => {
             should(error.id).eql('plugin.runtime.unexpected_error');
             should(kuzzle.repositories.user.delete)
               .calledOnce()
-              .calledWith('test');
+              .calledWithMatch({_id: 'test'});
 
             done();
           }
@@ -495,10 +503,18 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.load.resolves(null);
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
 
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'validate').returns(validateStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'exists').returns(existsStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'create').returns(createStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'delete').returns(deleteStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'validate')
+        .returns(validateStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'exists')
+        .returns(existsStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'create')
+        .returns(createStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'delete')
+        .returns(deleteStub);
 
       securityController.createUser(request)
         .then(() => done('Expected promise to fail'))
@@ -508,7 +524,7 @@ describe('Test: security controller - users', () => {
             should(error.id).eql('plugin.runtime.unexpected_error');
             should(kuzzle.repositories.user.delete)
               .calledOnce()
-              .calledWith('test');
+              .calledWithMatch({ _id: 'test' });
 
             done();
           }
@@ -529,9 +545,15 @@ describe('Test: security controller - users', () => {
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
       kuzzle.repositories.user.persist.rejects(error);
 
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'validate').returns(validateStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'exists').returns(existsStub);
-      kuzzle.pluginsManager.getStrategyMethod.withArgs('someStrategy', 'create').returns(createStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'validate')
+        .returns(validateStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'exists')
+        .returns(existsStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'create')
+        .returns(createStub);
 
       securityController.createUser(request)
         .then(() => done('Expected promise to fail'))
