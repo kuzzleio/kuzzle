@@ -3093,6 +3093,17 @@ describe('Test: ElasticSearch service', () => {
         should(publicIndexes).be.eql(['india', 'vietnam']);
         should(internalIndexes).be.eql(['nepali']);
       });
+
+      it('does not extract malformated indexes', () => {
+        const esIndexes = ['nepali', '&india', '&vietnam.'];
+
+        const
+          publicIndexes = publicES._extractIndexes(esIndexes),
+          internalIndexes = internalES._extractIndexes(esIndexes);
+
+        should(publicIndexes).be.empty();
+        should(internalIndexes).be.empty();
+      });
     });
 
     describe('#_extractCollections', () => {
