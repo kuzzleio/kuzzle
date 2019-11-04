@@ -89,7 +89,7 @@ Body:
 ### Optional:
 
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
-- `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollUsers](/core/2/api/controllers/security/scroll-users) API action
+- `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollUsers](/core/2/api/controllers/security/scroll-users) API action
 - `size`: the maximum number of users returned in one response page
 
 ---
@@ -98,7 +98,7 @@ Body:
 
 ### Optional:
 
-The search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl.html) syntax.
+The search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
 
 If the body is left empty, the result will return all available users.
 

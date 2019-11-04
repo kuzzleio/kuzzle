@@ -261,7 +261,7 @@ module.exports = {
             dynamic: 'false',
             properties: {
               controllers: {
-                dynamic: false,
+                dynamic: 'false',
                 properties: {}
               }
             }
