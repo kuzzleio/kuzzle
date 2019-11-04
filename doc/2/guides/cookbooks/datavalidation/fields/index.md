@@ -39,7 +39,7 @@ The property name defines the path of the field in the document. For root fields
 
 **Purpose**: Defines the type of the provided fields. Checks are performed depending on the provided type.
 
-**Documentation**: You can find more information about Elasticsearch types in the [Elasticearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/mapping-types.html)
+**Documentation**: You can find more information about Elasticsearch types in the [Elasticearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-types.html)
 
 ---
 

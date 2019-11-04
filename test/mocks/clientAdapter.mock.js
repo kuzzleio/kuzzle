@@ -41,6 +41,7 @@ class ClientAdapterMock extends ClientAdapter {
     this.mUpdate = sinon.stub().resolves();
     this.mReplace = sinon.stub().resolves();
     this.mDelete = sinon.stub().resolves();
+    this.deleteCollection = sinon.stub().resolves();
   }
 }
 
