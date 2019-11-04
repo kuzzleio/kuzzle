@@ -6,6 +6,8 @@ title: exists
 
 # exists
 
+<SinceBadge version="2.0.0"/>
+
 Checks if a document exists.
 
 ---
