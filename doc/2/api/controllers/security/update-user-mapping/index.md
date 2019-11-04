@@ -49,7 +49,7 @@ Body:
 
 ## Body properties
 
-- `properties`: mapping definition using [Elasticsearch mapping format](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/mapping.html)
+- `properties`: mapping definition using [Elasticsearch mapping format](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html)
 
 ---
 

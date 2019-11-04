@@ -2,6 +2,10 @@
 
 set -e
 
+if [ ! -z "$WITHOUT_KUZZLE" ]; then
+  exit 0
+fi
+
 elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
 if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then

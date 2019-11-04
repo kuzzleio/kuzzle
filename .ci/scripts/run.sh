@@ -27,4 +27,4 @@ fi
 
 log "Starting Kuzzle..."
 
-exec ./bin/start-kuzzle-server "$@"
+exec ./bin/start-kuzzle-server "$@" --enable-plugins functional-test-plugin

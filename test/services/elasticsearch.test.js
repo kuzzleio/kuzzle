@@ -30,7 +30,7 @@ describe('Test: ElasticSearch service', () => {
     esClientError = new Error('es client fail');
 
     elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
-    elasticsearch._buildClient = () => new ESClientMock();
+    ES.buildClient = () => new ESClientMock();
 
     await elasticsearch.init();
 
@@ -141,7 +141,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.search.resolves({
         body: {
           hits: {
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, other: 'thing' } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight', other: 'thing' } ],
             total: { value: 1 },
           },
           body: filter,
@@ -167,7 +167,7 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match({
             scrollId: 'i-am-scroll-id',
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight' } ],
             total: 1,
             aggregations: { some: 'aggregs' }
           });
@@ -752,7 +752,7 @@ describe('Test: ElasticSearch service', () => {
             refresh: undefined
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -771,7 +771,7 @@ describe('Test: ElasticSearch service', () => {
             refresh: 'wait_for'
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -977,7 +977,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1003,7 +1003,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1344,7 +1344,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1839,7 +1839,22 @@ describe('Test: ElasticSearch service', () => {
         .then(result => {
           should(elasticsearch.deleteIndexes).be.calledWith(['nepali']);
 
-          should(result).be.undefined();
+          should(result).be.null();
+        });
+    });
+  });
+
+  describe('#deleteCollection', () => {
+    it('should allow to delete a collection', () => {
+      const promise = elasticsearch.deleteCollection('nepali', 'liia');
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.indices.delete).be.calledWithMatch({
+            index: '&nepali.liia'
+          });
+
+          should(result).be.null();
         });
     });
   });
@@ -3003,6 +3018,7 @@ describe('Test: ElasticSearch service', () => {
           name: { type: 'keyword' },
           car: {
             dynamic: 'false',
+            dynamic_templates: {},
             type: 'nested',
             properties: {
               brand: { type: 'keyword' }
@@ -3077,6 +3093,17 @@ describe('Test: ElasticSearch service', () => {
 
         should(publicIndexes).be.eql(['india', 'vietnam']);
         should(internalIndexes).be.eql(['nepali']);
+      });
+
+      it('does not extract malformated indexes', () => {
+        const esIndexes = ['nepali', '&india', '&vietnam.'];
+
+        const
+          publicIndexes = publicES._extractIndexes(esIndexes),
+          internalIndexes = internalES._extractIndexes(esIndexes);
+
+        should(publicIndexes).be.empty();
+        should(internalIndexes).be.empty();
       });
     });
 

@@ -90,6 +90,7 @@ Indexes not following this naming policy cannot be accessed by Kuzzle's API.
 ### New API methods
 
   - `collection:refresh`: refreshes a collection
+  - `collection:delete`: deletes a collection
 
 ### Removed API methods
 
