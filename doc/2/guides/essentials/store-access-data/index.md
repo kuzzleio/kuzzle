@@ -249,8 +249,8 @@ curl http://localhost:7512/nyc-open-data/yellow-taxi/document-uniq-id?pretty
 
 ### Searching documents
 
-Searching documents is performed using the [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/query-dsl.html).  
-As Elasticsearch is an indexing engine designed for document search, it offers a wide range of advanced search options like [geo queries](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/geo-queries.html), [full text queries](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/full-text-queries.html), [aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/search-aggregations.html), and more.  
+Searching documents is performed using the [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html).  
+As Elasticsearch is an indexing engine designed for document search, it offers a wide range of advanced search options like [geo queries](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/geo-queries.html), [full text queries](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/full-text-queries.html), [aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-aggregations.html), and more.  
 
 Requests must be made through Kuzzle using the [document:search](/core/2/api/controllers/document/search) method.
 

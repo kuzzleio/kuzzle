@@ -88,7 +88,7 @@ In this guide, you'll learn where to find our AWS Marketplace AMI and how to use
 Our AMI is stored on AWS Marketplace. It's set up with:
 
 - Ubuntu (**16.04**)
-- Kuzzle (**latest**) with MQTT protocol support.
+- Kuzzle (**v1**) with MQTT protocol support.
 - Elasticsearch (**v5.4.1**).
 - Redis (**v3.2.12**).
 
@@ -146,10 +146,10 @@ The following operating systems are actively supported (64-bit versions only):
 
 ### Prerequisites
 
-- [Elasticsearch](https://www.elastic.co/products/elasticsearch) version 5.x
-- [Redis](http://redis.io) version 3.x or higher
-- [Node.js](https://nodejs.org/en/download/package-manager) version 6.x or higher
-- [NPM](https://www.npmjs.com) version 3 or higher
+- [Elasticsearch](https://www.elastic.co/products/elasticsearch) version 7.4.x or higher
+- [Redis](http://redis.io) version 5.x or higher
+- [Node.js](https://nodejs.org/en/download/package-manager) version 10.x or higher
+- [NPM](https://www.npmjs.com) version 6 or higher
 - [Python](https://www.python.org) version 2.7 preferred
 - [GDB](https://www.gnu.org/software/gdb) version 7.7 or higher
 - a C++11 compatible compiler
@@ -226,9 +226,8 @@ Then create the pm2 configuration file:
 
 ```bash
 echo "apps:
-   - name: kuzzlebackend
-     script: ${KUZZLE_BACKEND_INSTALL_DIR}/bin/kuzzle
-     args: start
+   - name: KuzzleServer
+     script: ${KUZZLE_BACKEND_INSTALL_DIR}/bin/start-kuzzle-server
      env:
        NODE_ENV: production
   " > ~/kuzzle/pm2.conf.yml
@@ -243,12 +242,12 @@ pm2 start ~/kuzzle/pm2.conf.yml
 You should then see the following display on your terminal:
 
 ```
-[PM2][WARN] Applications kuzzlebackend not running, starting...
-[PM2] App [kuzzlebackend] launched (1 instances)
+[PM2][WARN] Applications KuzzleServer not running, starting...
+[PM2] App [KuzzleServer] launched (1 instances)
 ┌───────────────┬────┬──────┬───────┬────────┬─────────┬────────┬─────┬───────────┬──────┬──────────┐
 │ App name      │ id │ mode │ pid   │ status │ restart │ uptime │ cpu │ mem       │ user │ watching │
 ├───────────────┼────┼──────┼───────┼────────┼─────────┼────────┼─────┼───────────┼──────┼──────────┤
-│ kuzzlebackend │ 0  │ fork │ 27825 │ online │ 0       │ 0s     │ 49% │ 19.0 MB   │ root │ disabled │
+│ KuzzleServer │ 0  │ fork │ 27825 │ online │ 0       │ 0s     │ 49% │ 19.0 MB   │ root │ disabled │
 └───────────────┴────┴──────┴───────┴────────┴─────────┴────────┴─────┴───────────┴──────┴──────────┘
 ```
 
@@ -275,7 +274,7 @@ Below is a list of useful commands to help you manage your Kuzzle installation r
 pm2 logs
 
 # Start, restart or stop Kuzzle:
-pm2 "<start|stop|restart>" kuzzlebackend
+pm2 "<start|stop|restart>" KuzzleServer
 
 # Access the Kuzzle CLI
 ~/kuzzle/bin/kuzzle -h
@@ -362,15 +361,15 @@ If you see the following message make sure that you have installed Redis and tha
 If you see the following message when running `pm2 logs`, then make sure that your `pm2.conf.yml` file was created correctly.
 To recreate that file:
 
-- delete the current version from pm2: `pm2 delete kuzzlebackend`
+- delete the current version from pm2: `pm2 delete KuzzleServer`
 - follow the instructions above to recreate it
 
 ```
 PM2        |     at onErrorNT (internal/child_process.js:376:16)
 PM2        |     at _combinedTickCallback (internal/process/next_tick.js:80:11)
 PM2        |     at process._tickDomainCallback (internal/process/next_tick.js:128:9)
-PM2        | 2018-01-12 15:50:54: Starting execution sequence in -fork mode- for app name:kuzzlebackend id:0
-PM2        | 2018-01-12 15:50:54: App name:kuzzlebackend id:0 online
+PM2        | 2018-01-12 15:50:54: Starting execution sequence in -fork mode- for app name:KuzzleServer id:0
+PM2        | 2018-01-12 15:50:54: App name:KuzzleServer id:0 online
 PM2        | 2018-01-12 15:50:54: Error: spawn node ENOENT
 PM2        |     at exports._errnoException (util.js:1020:11)
 PM2        |     at Process.ChildProcess._handle.onexit (internal/child_process.js:197:32)

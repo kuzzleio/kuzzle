@@ -488,7 +488,7 @@
     //         - "false": Stores document and does not update the collection
     //           mapping (field are not indexed)
     //         - "strict": Rejects document
-    //       See https://www.elastic.co/guide/en/elasticsearch/reference/7.3/dynamic-mapping.html
+    //       See https://www.elastic.co/guide/en/elasticsearch/reference/7.4/dynamic-mapping.html
     "storageEngine": {
       "backend": "elasticsearch",
       "aliases": ["storageEngine"],
