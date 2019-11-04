@@ -24,16 +24,8 @@ const
   fs = require('fs'),
   path = require('path'),
   readlineSync = require('readline-sync'),
+  Vault = require('kuzzle-vault'),
   ColorOutput = require('./colorOutput');
-
-let Vault;
-
-if (semver.satisfies(process.version, '>= 8.0.0')) {
-  Vault = require('../../lib/api/core/vault');
-} else {
-  // node6 compatible commands are one level deeper
-  Vault = require('../../../lib/api/core/vault');
-}
 
 function commandDecryptSecrets (file, options) {
   const
