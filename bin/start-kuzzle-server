@@ -62,7 +62,7 @@ function startKuzzle (options = {}) {
 
   return kuzzle.start(kuzzleParams)
     .then(() => {
-      cout.ok('[✔] Kuzzle server ready');
+      cout.ok(`[✔] Kuzzle server ${require('../package.json').version} ready`);
 
       return kuzzle.adminExists();
     })
