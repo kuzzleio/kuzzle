@@ -15,9 +15,6 @@ class KuzzleWorld {
 
     // Intermediate steps should store values inside this object
     this.props = {};
-
-    // Do not wait for refresh by default
-    this.waitForRefresh = undefined;
   }
 
   parseObject (dataTable) {
