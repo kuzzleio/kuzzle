@@ -77,8 +77,8 @@ Then('I should receive a {string} array of objects matching:', function (name, d
   const expected = this.parseObjectArray(dataTable);
 
   should(this.props.result[name].length).be.eql(
-      expected.length,
-      `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
+    expected.length,
+    `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
 
   for (let i = 0; i < expected.length; i++) {
     should(this.props.result[name][i]).match(expected[i]);
@@ -89,8 +89,8 @@ Then('I should receive a {string} array matching:', function (name, dataTable) {
   const expected = _.flatten(dataTable.rawTable).map(JSON.parse);
 
   should(this.props.result[name].length).be.eql(
-      expected.length,
-      `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
+    expected.length,
+    `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
 
   should(this.props.result[name].sort()).match(expected.sort());
 });
@@ -124,22 +124,18 @@ Then('I count {int} documents matching:', async function (expectedCount, dataTab
   should(count).be.eql(expectedCount);
 });
 
-Then(/The document "(.*?)" (does not )?exists/, async function (id, not) {
-  try {
-    // @todo use document.exists
-    await this.sdk.document.get(
-      this.props.index,
-      this.props.collection,
-      id);
+Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
+  const exists = await this.sdk.document.exists(
+    this.props.index,
+    this.props.collection,
+    id);
 
-    if (not) {
-      return Promise.reject(`Document ${id} should not exist`);
-    }
+  if (not && exists) {
+    throw new Error(`Document ${id} exists, but it shouldn't`);
   }
-  catch (error) {
-    if (! not) {
-      return Promise.reject(`Document ${id} should exist`);
-    }
+
+  if (!not && !exists) {
+    throw new Error(`Expected document ${id} to exist`);
   }
 });
 

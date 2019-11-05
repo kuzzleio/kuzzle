@@ -25,6 +25,19 @@ Feature: Document Controller
     Then I should receive a "hits" array of objects matching:
     | _id | highlight |
     | "document-1" | { "name": [ "<em>document</em>" ] } |
+  # document:exists ============================================================
+
+  @mappings
+  Scenario: Check document existence
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    Then The document "document-1" should not exist
+    When I "create" the following documents:
+    | _id | body |
+    | "document-1" | { "name": "document1", "age": 42 } |
+    Then The document "document-1" should exist
+    When I "delete" the following document ids:
+    | "document-1" |
+    Then The document "document-1" should not exist
 
   # document:mCreate ===========================================================
 
@@ -227,8 +240,8 @@ Feature: Document Controller
     | "document-1" |
     | "document-2" |
     And I should receive a empty "errors" array
-    And The document "document-1" does not exists
-    And The document "document-2" does not exists
+    And The document "document-1" should not exist
+    And The document "document-2" should not exist
 
   @mappings
   Scenario: Delete multiple documents with errors
@@ -248,9 +261,9 @@ Feature: Document Controller
     | reason | status | _id |
     | "document _id must be a string" | 400 | 214284 |
     | "document not found" | 404 | "document-42" |
-    And The document "document-1" does not exists
-    And The document "document-2" exists
-    And The document "document-3" exists
+    And The document "document-1" should not exist
+    And The document "document-2" should exist
+    And The document "document-3" should exist
 
   # document:mGet ==============================================================
 
