@@ -54,8 +54,6 @@ describe('/lib/api/kuzzle.js', () => {
           sinon.assert.callOrder(
             kuzzle.internalEngine.init,
             kuzzle.internalEngine.bootstrap.all,
-            kuzzle.vault.prepareCrypto,
-            kuzzle.vault.init,
             kuzzle.services.init,
             kuzzle.validation.init,
             kuzzle.indexCache.init,
@@ -86,8 +84,8 @@ describe('/lib/api/kuzzle.js', () => {
 
       return kuzzle.start(params)
         .then(() => {
-          should(kuzzle.vault.prepareCrypto).be.calledWith('the spoon does not exists');
-          should(kuzzle.vault.init).be.calledWith('config/secrets.json');
+          should(kuzzle.vault._vaultKey).be.exactly('the spoon does not exists');
+          should(kuzzle.vault._encryptedSecretsFile).be.exactly('config/secrets.json');
         });
     });
 
@@ -100,6 +98,7 @@ describe('/lib/api/kuzzle.js', () => {
 
       return Kuzzle.__with__({
         process: {
+          env: {},
           exit: processExitSpy,
           on: processOnSpy,
           emit: sinon.stub(),

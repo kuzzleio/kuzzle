@@ -18,18 +18,20 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
-npm install --silent --unsafe-perm
-npm install --silent --unsafe-perm --only=dev
+npm i -g npm
+
+npm ci --unsafe-perm
+npm install --only=dev --unsafe-perm
 find -L node_modules/.bin -type f -exec chmod 776 {} \;
 find node_modules/ -type d -exec chmod 755 {} \;
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
-while ! curl -f -s -o /dev/null "$elastic_host"
-do
-    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host"
+timeout 30 bash -c "
+  until curl -f -s -o /dev/null $elastic_host; do
+    echo [$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host
     sleep 1
-done
+  done"
 # create a tmp index just to force the shards to init
 curl -XPUT -s -o /dev/null "$elastic_host/%25___tmp"
 echo "[$(date --rfc-3339 seconds)] - Elasticsearch is up. Waiting for shards to be active (can take a while)"
@@ -43,10 +45,10 @@ fi
 
 node bin/kuzzle start &
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
-while ! curl -f -s -o /dev/null http://localhost:7512
-do
-    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle"
+timeout 30 bash -c "
+  until curl -f -s -o /dev/null http://localhost:7512; do
+    echo [$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle
     sleep 1
-done
+  done"
 
 npm run functional-testing

@@ -39,25 +39,22 @@ describe('Test: subscribe controller', () => {
     it('should throw an error if index is not provided',() => {
       request.input.resource.index = null;
 
-      should(() => {
-        realtimeController.subscribe(request);
-      }).throw(BadRequestError);
+      should(() => realtimeController.subscribe(request))
+        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
     });
 
     it('should throw an error if collection is not provided',() => {
       request.input.resource.collection = null;
 
-      should(() => {
-        realtimeController.subscribe(request);
-      }).throw(BadRequestError);
+      should(() => realtimeController.subscribe(request))
+        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
     });
 
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
-      should(() => {
-        realtimeController.subscribe(request);
-      }).throw(BadRequestError);
+      should(() => realtimeController.subscribe(request))
+        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -75,12 +72,12 @@ describe('Test: subscribe controller', () => {
       request.input.body = null;
 
       return should(() => realtimeController.join(request))
-        .throw(BadRequestError);
+        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
       return should(() => realtimeController.join(request))
-        .throw(BadRequestError);
+        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -93,6 +90,16 @@ describe('Test: subscribe controller', () => {
           should(kuzzle.hotelClerk.join).be.calledWith(request);
         });
     });
+
+    it('should return nothing if the connection is dead', () => {
+      // the check is actually done in the hotelclerk and returns undefined if so
+      kuzzle.hotelClerk.addSubscription.resolves();
+
+      return realtimeController.subscribe(request)
+        .then(result => {
+          should(result).be.undefined();
+        });
+    });
   });
 
   describe('#unsubscribe', () => {
@@ -101,13 +108,13 @@ describe('Test: subscribe controller', () => {
 
       should(() => {
         realtimeController.unsubscribe(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
         realtimeController.unsubscribe(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -128,13 +135,13 @@ describe('Test: subscribe controller', () => {
 
       should(() => {
         realtimeController.count(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
       should(() => {
         realtimeController.count(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {

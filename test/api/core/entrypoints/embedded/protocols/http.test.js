@@ -17,7 +17,7 @@ const
   sinon = require('sinon'),
   { Writable } = require('stream'),
   errorMatcher = require(`${root}/test/util/errorMatcher`),
-  errorsManager = require(`${root}/lib/config/error-codes/throw`);
+  errorsManager = require(`${root}/lib/util/errors`).wrap('network', 'http');
 
 describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
   const
@@ -127,7 +127,6 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     });
 
     it('should set decoders with throwables if compression is disabled', () => {
-      const message = 'Compression support is disabled.';
       entrypoint.config.protocols.http.allowCompression = false;
 
       return protocol.init(entrypoint)
@@ -136,8 +135,12 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
           should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
           should(protocol.decoders.identity).be.a.Function();
-          should(() => protocol.decoders.gzip()).throw(BadRequestError, {message});
-          should(() => protocol.decoders.deflate()).throw(BadRequestError, {message});
+          should(() => protocol.decoders.gzip()).throw(BadRequestError, {
+            errorName: 'network.http.compression_disabled'
+          });
+          should(() => protocol.decoders.deflate()).throw(BadRequestError, {
+            errorName: 'network.http.compression_disabled'
+          });
           should(protocol.decoders.identity('foobar')).eql(null);
         });
     });
@@ -406,7 +409,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             sinon.match.instanceOf(ClientConnection),
             { url: request.url, method: request.method },
             response,
-            { message: 'Unsupported content type: foo/bar.' });
+            {
+              errorName: 'network.http.unexpected_error',
+              message: 'Caught an unexpected HTTP error: Unsupported content type: foo/bar'
+            });
       });
 
       it('should reply with error if the binary file size sent exceeds the maxFormFileSize', () => {
@@ -428,7 +434,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           .calledOnce()
           .calledWith('error', sinon.match.instanceOf(SizeLimitError));
 
-        should(request.emit.firstCall.args[1].message).be.eql('Maximum HTTP file size exceeded');
+        should(request.emit.firstCall.args[1].errorName).be.eql('network.http.file_too_large');
       });
     });
 
@@ -500,7 +506,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             cb = kuzzle.router.http.route.firstCall.args[1],
             result = new Request({});
 
-          result.setError(errorsManager.get('network', 'http', 'http_request_error', 'foobar'));
+          result.setError(errorsManager.get('unexpected_error', 'foobar'));
 
           cb(result);
 
@@ -514,7 +520,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
           const matcher = errorMatcher.fromMessage(
             'network',
             'http',
-            'http_request_error',
+            'unexpected_error',
             'foobar');
 
           should(response.end)
@@ -731,7 +737,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
             {id: 'connectionId'},
             payload,
             response,
-            {message: 'foobar.'});
+            {errorName: 'network.http.unexpected_error'});
 
         should(protocol._replyWithError.firstCall.args[3])
           .be.instanceOf(BadRequestError);
@@ -780,11 +786,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         process.env.NODE_ENV = env;
 
         const
-          kerr = errorsManager.get('network', 'http', 'http_request_error', 'test'),
+          kerr = errorsManager.get('unexpected_error', 'test'),
           matcher = errorMatcher.fromMessage(
             'network',
             'http',
-            'http_request_error',
+            'unexpected_error',
             'test'),
           expected = (new Request(payload, {connectionId, kerr})).serialize();
 
@@ -842,7 +848,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
         protocol._createWritableStream(request, {});
       } catch (e) {
         should(e).be.instanceOf(BadRequestError);
-        should(e.message).be.equals('Unsupported content type: application/toto.');
+        should(e.errorName).be.equals('network.http.unexpected_error');
       }
     });
   });

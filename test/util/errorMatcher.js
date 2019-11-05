@@ -1,5 +1,5 @@
 const
-  errorsManager = require('../../lib/config/error-codes/throw'),
+  errorsManager = require('../../lib/util/errors'),
   stableStringify = require('json-stable-stringify'),
   { Request } = require('kuzzle-common-objects');
 

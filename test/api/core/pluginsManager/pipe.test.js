@@ -189,6 +189,6 @@ describe('pluginsManager.pipe', () => {
 
     return should(kuzzle.pipe('foo:bar')).rejectedWith(
       PluginImplementationError,
-      {message: /^Plugin foo pipe for event 'foo:bar' threw a non-Kuzzle error: Error: foobar.*/});
+      { errorName: 'plugin.runtime.unexpected_error' });
   });
 });
