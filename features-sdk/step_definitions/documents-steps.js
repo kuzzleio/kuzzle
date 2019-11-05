@@ -6,10 +6,6 @@ const
     Then
   } = require('cucumber');
 
-Given('I need to wait for refresh', function () {
-  this.waitForRefresh = 'wait_for';
-});
-
 Given('I create the following document:', async function (dataTable) {
   const document = this.parseObject(dataTable);
 
@@ -21,8 +17,7 @@ Given('I create the following document:', async function (dataTable) {
     index,
     collection,
     document.body,
-    document._id,
-    { refresh: this.waitForRefresh });
+    document._id);
 
   this.props.documentId = this.props.result._id;
 });
@@ -48,8 +43,7 @@ Then('I {string} the following documents:', async function (action, dataTable) {
   this.props.result = await this.sdk.document[action](
     this.props.index,
     this.props.collection,
-    documents,
-    { refresh: this.waitForRefresh });
+    documents);
 });
 
 Then('I {string} the document {string} with content:', async function (action, _id, dataTable) {
@@ -60,16 +54,14 @@ Then('I {string} the document {string} with content:', async function (action, _
       this.props.index,
       this.props.collection,
       body,
-      _id,
-      { refresh: this.waitForRefresh });
+      _id);
   }
   else {
     this.props.result = await this.sdk.document[action](
       this.props.index,
       this.props.collection,
       _id,
-      body,
-      { refresh: this.waitForRefresh });
+      body);
   }
 });
 
@@ -147,8 +139,7 @@ Then('I {string} the following document ids:', async function (action, dataTable
   this.props.result = await this.sdk.document[action](
     this.props.index,
     this.props.collection,
-    ids,
-    { refresh: this.waitForRefresh });
+    ids);
 });
 
 Then('I search documents with the following query:', function (queryRaw) {

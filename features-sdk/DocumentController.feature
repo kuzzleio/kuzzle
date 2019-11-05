@@ -9,6 +9,7 @@ Feature: Document Controller
     | _id          | body  |
     | "document-1" | { "name": "document", "age": 42 } |
     | -            | { "name": "document2", "age": 21 } |
+    And I refresh the collection
     When I search documents with the following query:
     """
     {
@@ -44,7 +45,6 @@ Feature: Document Controller
   @mappings
   Scenario: Create multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I need to wait for refresh
     When I "create" the following documents:
     | _id          | body  |
     | "document-1" | { "name": "document1" } |
@@ -54,6 +54,7 @@ Feature: Document Controller
     | "document-1" | { "name": "document1" } | 201 | "created" |
     |       -      | { "name": "document2" } | 201 | "created" |
     And I should receive a empty "errors" array
+    And I refresh the collection
     And I count 2 documents
     And The document "document-1" content match:
     | name | "document1" |
@@ -86,7 +87,6 @@ Feature: Document Controller
   @mappings
   Scenario: CreateOrReplace multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I need to wait for refresh
     And I "create" the following documents:
     | _id | body |
     | "document-1" | { "name": "document1", "age": 42 } |
@@ -99,6 +99,7 @@ Feature: Document Controller
     | "document-1" | { "name": "replaced1" } | 200 | "updated" |
     |      -       | { "name": "document2" } | 201 | "created" |
     And I should receive a empty "errors" array
+    And I refresh the collection
     And I count 2 documents
     And The document "document-1" content match:
     | name | "replaced1" |
@@ -308,7 +309,6 @@ Feature: Document Controller
   @mappings
   Scenario: Count documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I need to wait for refresh
     And I "create" the following documents:
     | _id | body  |
     | - | { "job": "developer" } |

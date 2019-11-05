@@ -49,19 +49,6 @@ Feature: Plugin Events
     | destination | "Sa Pa" |
     | company | "So Viet" |
     | leaveAt | "11:30" |
-    # # mUpdate
-    # When I "update" the following documents:
-    # | _id     | body  |
-    # | "bus-3" | { "destination": "Hà Giang", "company": "Cau Me" } |
-    # | "bus-4" | { "destination": "Sa Pa", "company": "So Viet" } |
-    # Then The document "bus-3-vn" content match:
-    # | destination | "Hà Giang" |
-    # | company | "Cau Me" |
-    # | leaveAt | "11:30" |
-    # Then The document "bus-4-vn" content match:
-    # | destination | "Sa Pa" |
-    # | company | "So Viet" |
-    # | leaveAt | "11:30" |
     # create
     When I "create" the document "bus-5" with content:
     | destination | "Hà Giang" |
@@ -89,14 +76,6 @@ Feature: Plugin Events
     | destination | "Hà Giang" |
     | company | "Cau Me" |
     | leaveAt | "12:30" |
-    # update
-    # When I "update" the document "bus-6" with content:
-    # | destination | "Hà Giang" |
-    # | company | "Cau Me" |
-    # Then The document "bus-6-vn" content match:
-    # | destination | "Hà Giang" |
-    # | company | "Cau Me" |
-    # | leaveAt | "12:30" |
 
   @mappings @events
   Scenario: Modify documents with document:generic:afterWrite

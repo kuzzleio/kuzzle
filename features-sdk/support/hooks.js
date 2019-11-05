@@ -5,6 +5,7 @@ const
   { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   testMappings = require('../fixtures/mappings'),
   testSecurities = require('../fixtures/securities'),
+  testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
 function getProtocol (world) {
