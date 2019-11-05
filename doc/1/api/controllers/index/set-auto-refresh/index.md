@@ -81,5 +81,5 @@ Returns an object confirming the new value of the `autoRefresh` index property.
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors#common-errors)
-- [NotFoundError](/core/1/api/essentials/errors#notfounderror)
+- [Common errors](/core/1/api/essentials/errors/handling#common-errors)
+- [NotFoundError](/core/1/api/essentials/errors/handling#notfounderror)

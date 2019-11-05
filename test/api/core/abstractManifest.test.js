@@ -25,20 +25,19 @@ describe('AbstractManifest class', () => {
   });
 
   it('should throw if no manifest.json is found', () => {
-    const
-      message = new RegExp(`\\[${pluginPath}\\] Unable to load the file 'manifest.json`),
-      manifest = new Manifest(kuzzle, pluginPath);
+    const manifest = new Manifest(kuzzle, pluginPath);
 
-    should(() => manifest.load()).throw(PluginImplementationError, { message });
+    should(() => manifest.load()).throw(PluginImplementationError, {
+      errorName: 'plugin.manifest.cannot_load'
+    });
   });
 
   it('should throw if kuzzleVersion is not a string', () => {
-    const message = new RegExp(`\\[${pluginPath}/manifest.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the manifest requirements \\(123\\)`),
-      manifest = new Manifest(kuzzle, pluginPath);
+    const manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion: 123 })(() => {
       should(() => manifest.load())
-        .throw(PluginImplementationError, { message });
+        .throw(PluginImplementationError, { errorName: 'plugin.manifest.version_mismatch' });
     });
   });
 
@@ -68,25 +67,25 @@ describe('AbstractManifest class', () => {
   });
 
   it('should throw if the provided name is not a non-empty string', () => {
-    const
-      message = new RegExp(`\\[${pluginPath}/manifest.json\\] Invalid "name" property: expected a non-empty string`),
-      manifest = new Manifest(kuzzle, pluginPath);
+    const manifest = new Manifest(kuzzle, pluginPath);
 
     [123, false, ''].forEach(name => {
       mockRequireManifest({ name })(() => {
-        should(() => manifest.load()).throw(PluginImplementationError, { message });
+        should(() => manifest.load()).throw(PluginImplementationError, {
+          errorName: 'plugin.manifest.invalid_name_type'
+        });
       });
     });
   });
 
   it('should throw if no name property is provided', () => {
-    const
-      message = new RegExp(`\\[${pluginPath}/manifest.json\\] A "name" property is required.`),
-      manifest = new Manifest(kuzzle, pluginPath);
+    const manifest = new Manifest(kuzzle, pluginPath);
 
     [undefined, null].forEach(name => {
       mockRequireManifest({ name })(() => {
-        should(() => manifest.load()).throw(PluginImplementationError, { message });
+        should(() => manifest.load()).throw(PluginImplementationError, {
+          errorName: 'plugin.manifest.missing_name'
+        });
       });
     });
   });
@@ -94,11 +93,12 @@ describe('AbstractManifest class', () => {
   it('should throw if kuzzleVersion does not match the current Kuzzle version', () => {
     const
       kuzzleVersion = '>0.4.2 <1.0.0',
-      message = new RegExp(`\\[${pluginPath}/manifest.json\\] Version mismatch: current Kuzzle version ${kuzzle.config.version} does not match the manifest requirements \\(${kuzzleVersion}\\)`),
       manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion })(() => {
-      should(() => manifest.load()).throw(PluginImplementationError, { message });
+      should(() => manifest.load()).throw(PluginImplementationError, {
+        errorName: 'plugin.manifest.version_mismatch'
+      });
     });
   });
 

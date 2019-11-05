@@ -47,7 +47,7 @@ describe('Test: collection controller', () => {
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
         collectionController.updateMapping(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
     });
 
     it('should activate a hook on a mapping update call and add the collection to the cache', () => {
@@ -117,7 +117,7 @@ describe('Test: collection controller', () => {
       return should(collectionController.getSpecifications(request))
         .be.rejectedWith(
           PreconditionError,
-          {message: `The index ${index} does not exist.`});
+          {errorName: 'services.storage.unknown_index'});
     });
 
     it('should return a dedicated error if the collection does not exist', () => {
@@ -125,7 +125,9 @@ describe('Test: collection controller', () => {
       kuzzle.indexCache.exists.onSecondCall().resolves(false);
 
       return should(collectionController.getSpecifications(request))
-        .be.rejectedWith(PreconditionError, {message: `The collection ${collection} does not exist.`});
+        .be.rejectedWith(
+          PreconditionError,
+          {errorName: 'services.storage.unknown_collection'});
     });
 
     it('should give a meaningful message if there is no specifications', () => {
@@ -135,7 +137,7 @@ describe('Test: collection controller', () => {
       return should(collectionController.getSpecifications(request))
         .be.rejectedWith(
           NotFoundError,
-          {message: `No specifications defined for index ${index} and collection ${collection}`});
+          {errorName: 'validation.assert.not_found'});
     });
   });
 
@@ -145,10 +147,10 @@ describe('Test: collection controller', () => {
       request.input.args.from = 0;
       request.input.args.size = 20;
       request.input.action = 'searchSpecifications';
-      
+
       should(() => collectionController.searchSpecifications(request)).throw(
         SizeLimitError,
-        { message: 'Search page size exceeds server configured documents limit ( 1 ).' });
+        { errorName: 'services.storage.get_limit_exceeded' });
     });
 
     it('should call internalEngine with the right data', () => {
@@ -185,7 +187,7 @@ describe('Test: collection controller', () => {
   describe('#scrollSpecifications', () => {
     it('should throw if no scrollId is provided', () => {
       should(() => collectionController.scrollSpecifications(new Request({controller: 'collection', action: 'scrollSpecifications'})))
-        .throw(BadRequestError, {message: 'The request must specify a scrollId.'});
+        .throw(BadRequestError, {errorName: 'api.assert.missing_argument'});
     });
 
     it('should call internalEngine with the right data', () => {
@@ -275,7 +277,7 @@ describe('Test: collection controller', () => {
 
       kuzzle.validation.isValidSpecification.resolves({
         isValid: false,
-        errors: ['bad bad is a bad type !']
+        errors: ['bad bad is a bad type!']
       });
 
       return collectionController.updateSpecifications(request)
@@ -285,8 +287,8 @@ describe('Test: collection controller', () => {
           should(kuzzle.internalEngine.createOrReplace).not.be.called();
 
           should(error).be.an.instanceOf(BadRequestError);
-          should(error.message).be.exactly('Some errors with provided specifications.');
-          should(error.details).match([ 'bad bad is a bad type !' ]);
+          should(error.errorName).eql('validation.assert.invalid_specifications');
+          should(error.message).match(/.*\nbad bad is a bad type!/);
         });
     });
 
@@ -346,7 +348,7 @@ describe('Test: collection controller', () => {
 
       kuzzle.validation.isValidSpecification.resolves({
         isValid: false,
-        errors: ['bad bad is a bad type !']
+        errors: ['bad bad is a bad type!']
       });
 
       return collectionController.updateSpecifications(request)
@@ -356,8 +358,8 @@ describe('Test: collection controller', () => {
           should(kuzzle.internalEngine.createOrReplace).not.be.called();
 
           should(error).be.an.instanceOf(BadRequestError);
-          should(error.message).be.exactly('Some errors with provided specifications.');
-          should(error.details).match([ 'bad bad is a bad type !' ]);
+          should(error.errorName).eql('validation.assert.invalid_specifications');
+          should(error.message).match(/.*\nbad bad is a bad type!/);
         });
     });
   });
@@ -591,7 +593,7 @@ describe('Test: collection controller', () => {
 
       should(() => collectionController.list(request)).throw(
         BadRequestError,
-        { message: 'Must specify a valid type argument; Expected: \'all\', \'stored\' or \'realtime\'; Received: foo.'});
+        { errorName: 'api.assert.invalid_argument' });
     });
 
     it('should only return stored collections with type = stored', () => {

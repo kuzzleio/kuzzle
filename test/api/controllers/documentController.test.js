@@ -58,7 +58,7 @@ describe('Test: document controller', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { message: 'Search on multiple indexes is not available.' });
+        { errorName: 'services.storage.no_multi_indexes' });
     });
 
     it('should throw an error if collection contains a comma', () => {
@@ -67,7 +67,7 @@ describe('Test: document controller', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { message: 'Search on multiple collections is not available.' });
+        { errorName: 'services.storage.no_multi_collections' });
     });
 
     it('should throw an error if the size argument exceeds server configuration', () => {
@@ -77,7 +77,7 @@ describe('Test: document controller', () => {
 
       should(() => documentController.search(request)).throw(
         SizeLimitError,
-        { message: 'Number of gets to perform exceeds the server configured value ( 1 ).' });
+        { errorName: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -180,9 +180,8 @@ describe('Test: document controller', () => {
       request.input.action = 'mGet';
 
 
-      return should(() => {
-        documentController.mGet(request);
-      }).throw('The request must specify the body attribute "ids" of type "array".');
+      return should(() => documentController.mGet(request))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
     });
 
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
@@ -193,7 +192,7 @@ describe('Test: document controller', () => {
 
       should(() => documentController.mGet(request)).throw(
         SizeLimitError,
-        { message: 'Number of gets to perform exceeds the server configured value ( 1 ).' });
+        { errorName: 'services.storage.get_limit_exceeded' });
     });
 
     it('should set a partial error if some documents are missing', () => {
@@ -314,9 +313,8 @@ describe('Test: document controller', () => {
       request.input.controller = 'document';
       request.input.action = 'mCreate';
 
-      return should(() => {
-        documentController.mCreate(request);
-      }).throw('The request must specify the body attribute "documents" of type "array".');
+      return should(() => documentController.mCreate(request))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
     });
 
     it('mCreateOrReplace should fulfill with an object', () => {
@@ -586,9 +584,8 @@ describe('Test: document controller', () => {
       request.input.controller = 'document';
       request.input.action = 'mDelete';
 
-      return should(() => {
-        documentController.mDelete(request);
-      }).throw('The request must specify the body attribute "ids" of type "array".');
+      return should(() => documentController.mDelete(request))
+        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
     });
   });
 

@@ -4,7 +4,8 @@ const
   sinon = require('sinon'),
   Bluebird = require('bluebird'),
   KuzzleMock = require('../mocks/kuzzle.mock'),
-  Services = rewire('../../lib/services');
+  Services = rewire('../../lib/services'),
+  { errors: { InternalError } } = require('kuzzle-common-objects');
 
 describe('Test: lib/services/', () => {
   let
@@ -215,22 +216,14 @@ describe('Test: lib/services/', () => {
       return registerService.call(context, 'serviceName', options, false)
         .then(() => {
           const req = Services.__get__('require');
+          should(req).be.calledThrice();
+          should(req).be.calledWith('./serviceName');
 
-          try {
-            should(req).be.calledThrice();
-            should(req).be.calledWith('./serviceName');
-
-            should(context.list).have.properties([
-              'someAlias',
-              'someOtherAlias',
-              'andYetAnotherOne'
-            ]);
-
-            return Bluebird.resolve();
-          }
-          catch(error) {
-            return Bluebird.reject(error);
-          }
+          should(context.list).have.properties([
+            'someAlias',
+            'someOtherAlias',
+            'andYetAnotherOne'
+          ]);
         });
     });
 
@@ -245,7 +238,9 @@ describe('Test: lib/services/', () => {
 
         clock.tick(1000);
 
-        return should(r).be.rejectedWith('[FATAL] Service "serviceName[serviceName]" failed to init within 1000ms');
+        return should(r).be.rejectedWith(InternalError, {
+          errorName: 'core.fatal.service_timeout'
+        });
       });
     });
 

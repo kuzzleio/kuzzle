@@ -2,10 +2,12 @@ const
   should = require('should'),
   sinon = require('sinon'),
   rewire = require('rewire'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   Validation = rewire('../../../../lib/api/core/validation'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request;
+  {
+    Request,
+    errors: { BadRequestError }
+  } = require('kuzzle-common-objects');
 
 describe('Test: validation.validate', () => {
   let
@@ -434,8 +436,14 @@ describe('Test: validation.validate', () => {
 
   describe('#recurseFieldValidation', () => {
     it('should throw an error if validation is strict and a property is not allowed', () => {
-      should(() => validation.recurseFieldValidation({anotherField: 'some value'}, {aField: {some: 'specification'}}, true, [], false))
-        .throw(BadRequestError, {message: 'strictness'});
+      should(
+        () => validation.recurseFieldValidation(
+          { anotherField: 'some value' },
+          { aField: { some: 'specification' } },
+          true,
+          [],
+          false))
+        .throw('strictness');
     });
 
     it('should throw an exception if isValidField throws an exception', () => {
@@ -482,13 +490,17 @@ describe('Test: validation.validate', () => {
     it('should return false if a field is not valid in verbose mode', () => {
       sinon.stub(validation, 'isValidField').returns(false);
 
-      should(validation.recurseFieldValidation({
-        anotherField: 'some value',
-        aField: 'some value'
-      }, {
-        aField: {some: 'specification'},
-        anotherField: {some: 'other specification'},
-      }, false, [], true)).be.false();
+      should(
+        validation.recurseFieldValidation(
+          { anotherField: 'some value', aField: 'some value' },
+          {
+            aField: {some: 'specification'},
+            anotherField: {some: 'other specification'},
+          },
+          false,
+          [],
+          true))
+        .be.false();
 
       should(validation.isValidField.callCount).be.eql(2);
     });
@@ -566,7 +578,7 @@ describe('Test: validation.validate', () => {
       typeValidateStub.returns(false);
 
       should(() => validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false))
-        .throw('Field aField: An error has occurred during validation.');
+        .throw(BadRequestError, { errorName: 'validation.check.failed_field' });
     });
 
     it('should returns false in verbose mode', () => {
@@ -793,7 +805,7 @@ describe('Test: validation.validate', () => {
 
       should(() => {
         validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false);
-      }).throw('Field aField.aSubField: An error has occurred during validation.');
+      }).throw(BadRequestError, { errorName: 'validation.check.failed_field' });
     });
 
     it('should return false if one of the subfields throws an error in verbose mode', () => {

@@ -5,8 +5,10 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
+  {
+    Request,
+    errors: { NotFoundError }
+  } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - credentials', () => {
@@ -69,7 +71,7 @@ describe('Test: security controller - credentials', () => {
       kuzzle.repositories.user.load.resolves(null);
 
       return should(securityController.createCredentials(request))
-        .rejectedWith(BadRequestError, {message: 'Cannot create credentials: unknown kuid someUserId.'});
+        .rejectedWith(NotFoundError, { errorName: 'security.user.not_found' });
     });
   });
 
@@ -120,7 +122,7 @@ describe('Test: security controller - credentials', () => {
 
       kuzzle.repositories.user.load.resolves(null);
       return should(securityController.updateCredentials(request))
-        .rejectedWith(BadRequestError, {message: 'Cannot update credentials: unknown kuid someUserId.'});
+        .rejectedWith(NotFoundError, { errorName: 'security.user.not_found' });
     });
   });
 

@@ -297,7 +297,7 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
         const matcher = errorMatcher.fromMessage(
           'network',
           'websocket',
-          'websocket_request_error',
+          'unexpected_error',
           'Unexpected token o in JSON at position 0');
 
         should(entrypoint.execute).not.be.called();
@@ -399,6 +399,23 @@ describe('/lib/api/core/entrypoints/embedded/protocols/websocket', () => {
       frame = Buffer.from(JSON.stringify(data.payload));
 
       for (const connId of ['cx2', 'cx3', 'cx4']) {
+        should(protocol.connectionPool.get(connId).socket._sender.sendFrame)
+          .calledWith(frame);
+      }
+    });
+
+    it('should handle unicode payload', () => {
+      const data = {
+        channels: ['c1'],
+        payload: { text: 'žluťoučký kůň' }
+      };
+
+      protocol.broadcast(data);
+
+      data.payload.room = 'c1';
+      const frame = Buffer.from(JSON.stringify(data.payload));
+
+      for (const connId of ['cx1', 'cx2', 'cx3']) {
         should(protocol.connectionPool.get(connId).socket._sender.sendFrame)
           .calledWith(frame);
       }

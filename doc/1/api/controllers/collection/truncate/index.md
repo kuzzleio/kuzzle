@@ -64,5 +64,5 @@ Returns a confirmation that the collection is being emptied:
 
 ## Possible errors
 
-- [Common errors](/core/1/api/essentials/errors#common-errors)
-- [NotFoundError](/core/1/api/essentials/errors#notfounderror)
+- [Common errors](/core/1/api/essentials/errors/handling#common-errors)
+- [NotFoundError](/core/1/api/essentials/errors/handling#notfounderror)
