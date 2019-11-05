@@ -1,5 +1,4 @@
 const
-  should = require('should'),
   {
     Given
   } = require('cucumber');
