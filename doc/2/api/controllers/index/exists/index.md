@@ -59,4 +59,5 @@ Returns a boolean telling whether the requested index exists.
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors#common-errors)
+- [Common errors](/core/2/api/essentials/errors/handling#common-errors)
+

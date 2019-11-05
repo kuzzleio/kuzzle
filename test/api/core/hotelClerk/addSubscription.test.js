@@ -47,18 +47,18 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should register a new room and customer', () => {
-    kuzzle.realtime.normalize
+    kuzzle.koncorde.normalize
       .onFirstCall().returns(Bluebird.resolve({id: 'foobar'}))
       .onSecondCall().returns(Bluebird.resolve({id: 'barfoo'}));
 
-    kuzzle.realtime.store
+    kuzzle.koncorde.store
       .onFirstCall().returns({id: 'foobar'})
       .onSecondCall().returns({id: 'barfoo'});
 
     return hotelClerk.addSubscription(request)
       .then(response => {
-        should(kuzzle.realtime.normalize).calledOnce();
-        should(kuzzle.realtime.store).calledOnce();
+        should(kuzzle.koncorde.normalize).calledOnce();
+        should(kuzzle.koncorde.store).calledOnce();
         should(response.roomId).be.eql('foobar');
         should(response).have.property('channel');
 
@@ -80,8 +80,8 @@ describe('Test: hotelClerk.addSubscription', () => {
         return hotelClerk.addSubscription(request);
       })
       .then(response => {
-        should(kuzzle.realtime.normalize.callCount).be.eql(2);
-        should(kuzzle.realtime.store.callCount).be.eql(2);
+        should(kuzzle.koncorde.normalize.callCount).be.eql(2);
+        should(kuzzle.koncorde.store.callCount).be.eql(2);
         should(response.roomId).be.eql('barfoo');
         should(hotelClerk.roomsCount).be.eql(2);
       });
@@ -103,7 +103,7 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('should reject when Koncorde throws an error', () => {
-    kuzzle.realtime.normalize.rejects(new Error('test'));
+    kuzzle.koncorde.normalize.rejects(new Error('test'));
 
     return should(hotelClerk.addSubscription(request)).be.rejected();
   });
@@ -169,7 +169,9 @@ describe('Test: hotelClerk.addSubscription', () => {
       body: {roomId: 'no way I can exist'}
     }, context);
 
-    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError);
+    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError, {
+      id: 'core.realtime.room_not_found'
+    });
   });
 
   it('should reject the subscription if the given scope argument is incorrect', () => {
@@ -192,7 +194,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       normalized.push([]);
     }
 
-    kuzzle.realtime.normalize.returns(Bluebird.resolve({
+    kuzzle.koncorde.normalize.returns(Bluebird.resolve({
       normalized,
       index: 'index',
       collection: 'collection',
@@ -203,15 +205,15 @@ describe('Test: hotelClerk.addSubscription', () => {
       .catch(error => {
         should(error)
           .be.an.instanceof(SizeLimitError);
-        should(error.message)
-          .eql('Unable to subscribe: maximum number of minterms exceeded (max 8, received 9).');
+        should(error.id).eql('core.realtime.too_many_terms');
       });
   });
 
   it('should refuse a subscription if the rooms limit has been reached', () => {
     hotelClerk.roomsCount = kuzzle.config.limits.subscriptionRooms;
 
-    return should(hotelClerk.addSubscription(request)).be.rejectedWith(SizeLimitError);
+    return should(hotelClerk.addSubscription(request))
+      .be.rejectedWith(SizeLimitError, { id: 'core.realtime.too_many_rooms' });
   });
 
   it('should impose no limit to the number of rooms if the limit is set to 0', () => {

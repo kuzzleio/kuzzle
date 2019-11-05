@@ -417,7 +417,7 @@ describe('/lib/api/core/entrypoints/protocols/mqtt', () => {
         const matcher = errorMatcher.fromMessage(
           'network',
           'mqtt',
-          'mqtt_request_error',
+          'unexpected_error',
           'Unexpected token i in JSON at position 0');
 
         should(protocol._respond)

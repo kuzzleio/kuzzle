@@ -1,0 +1,158 @@
+{
+  "code": 5,
+  "subdomains": {
+    "assert": {
+      "code": 1,
+      "errors": {
+        "missing_nested_spec": {
+          "description": "All levels of an object have to be defined in the specification",
+          "code": 1,
+          "message": "All levels of an object have to be defined in the specification.",
+          "class": "PreconditionError"
+        },
+        "unexpected_children": {
+          "description": "The field configuration does not allow children fields",
+          "code": 2,
+          "message": "The field type \"%s\" is not allowed to have children fields.",
+          "class": "PreconditionError"
+        },
+        "missing_parent": {
+          "description": "Missing parent field",
+          "code": 3,
+          "message": "The parent field of the field \"%s\" is not defined.",
+          "class": "PreconditionError"
+        },
+        "unexpected_properties": {
+          "description": "Unexpected properties found",
+          "code": 4,
+          "message": "The object \"%s\" contains unexpected properties (allowed: %s).",
+          "class": "PreconditionError"
+        },
+        "missing_type": {
+          "description": "The property \"type\" is required",
+          "code": 5,
+          "message": "Missing property \"type\" in field \"%s\".",
+          "class": "PreconditionError"
+        },
+        "unknown_type": {
+          "description": "Unknown \"type\" defined",
+          "code": 6,
+          "message": "In \"%s\": unknown type \"%s\".",
+          "class": "PreconditionError"
+        },
+        "missing_value": {
+          "description": "The \"value\" field is required",
+          "code": 7,
+          "message": "Missing property \"value\" in field \"%s\".",
+          "class": "PreconditionError"
+        },
+        "invalid_type": {
+          "description": "Wrong parameter type",
+          "code": 8,
+          "message": "Wrong type for parameter \"%s\" (expected: %s).",
+          "class": "PreconditionError"
+        },
+        "not_multivalued": {
+          "description": "Expected the field to be multivalued",
+          "code": 9,
+          "message": "Field \"%s\": cannot set a property \"%s\" if the field is not multivalued.",
+          "class": "PreconditionError"
+        },
+        "invalid_range": {
+          "description": "A range has been defined with its lower bound greater than its upper one",
+          "code": 10,
+          "message": "Property \"%s\": invalid range (%s > %s).",
+          "class": "PreconditionError"
+        },
+        "invalid_specifications": {
+          "description": "The provided specifications are invalid",
+          "code": 11,
+          "message": "Errors occured with the provided specifications:\n%s",
+          "class": "BadRequestError"
+        },
+        "not_found": {
+          "description": "Attempted to access to a non-existent collection specifications",
+          "code": 12,
+          "message": "No specifications defined for index %s and collection %s",
+          "class": "NotFoundError"
+        },
+        "invalid_filters": {
+          "description": "The Koncorde filters provided as a validator are invalid",
+          "code": 13,
+          "message": "Invalid filters validator: %s",
+          "class": "BadRequestError"
+        },
+        "incorrect_validation_format": {
+          "description": "The Koncorde filters provided as a validator are invalid",
+          "code": 14,
+          "message": "Incorrect validation format stored for collection \"%s\": missing \"%s\" property.",
+          "class": "InternalError"
+        }
+      }
+    },
+    "types": {
+      "code": 2,
+      "errors": {
+        "invalid_date_format": {
+          "description": "One or multiple date format types are invalid",
+          "code": 1,
+          "message": "The following date types are invalid: %s.",
+          "class": "PreconditionError"
+        },
+        "invalid_date": {
+          "description": "The date value is invalid and cannot be parsed",
+          "code": 2,
+          "message": "Cannot parse the date value: \"%s\".",
+          "class": "PreconditionError"
+        },
+        "missing_enum_values": {
+          "description": "The \"enum\" type requires a \"values\" property holding the list of the enum values",
+          "code": 3,
+          "message": "The \"enum\" type requires a \"values\" property holding the list of the enum values.",
+          "class": "PreconditionError"
+        },
+        "invalid_geoshape": {
+          "description": "One or multiple geoshape types are invalid",
+          "code": 4,
+          "message": "The following shapes are invalid: %s.",
+          "class": "PreconditionError"
+        },
+        "missing_type_name": {
+          "description": "Type definitions must have a \"typeName\" defined",
+          "code": 5,
+          "message": "Missing property \"typeName\"",
+          "class": "PluginImplementationError"
+        },
+        "missing_function": {
+          "description": "A required function is missing from the new validation data type",
+          "code": 6,
+          "message": "The type \"%s\" must implement a function \"%s\".",
+          "class": "PluginImplementationError"
+        },
+        "already_exists": {
+          "description": "Duplicate data type definition",
+          "code": 7,
+          "message": "The type \"%s\" already exists.",
+          "class": "PluginImplementationError"
+        }
+      }
+    },
+    "check": {
+      "code": 3,
+      "errors": {
+        "failed_document": {
+          "description": "Document rejected because it does not validate the collection specifications",
+          "code": 1,
+          "message": "Failed to validate document: %s",
+          "class": "BadRequestError"
+        },
+        "failed_field": {
+          "description": "Document rejected because one of its field does not validate the collection specifications",
+          "code": 2,
+          "message": "Validation failed. Field \"%s\": %s",
+          "class": "BadRequestError"
+        }
+      }
+    }
+  }
+}

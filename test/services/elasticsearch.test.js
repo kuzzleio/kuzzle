@@ -30,7 +30,7 @@ describe('Test: ElasticSearch service', () => {
     esClientError = new Error('es client fail');
 
     elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
-    elasticsearch._buildClient = () => new ESClientMock();
+    ES.buildClient = () => new ESClientMock();
 
     await elasticsearch.init();
 
@@ -122,7 +122,7 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            errorName: 'external.elasticsearch.unknown_scroll_identifier'
+            id: 'services.storage.unknown_scroll_id'
           });
           should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
           should(elasticsearch._client.scroll).not.be.called();
@@ -141,7 +141,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.search.resolves({
         body: {
           hits: {
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, other: 'thing' } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight', other: 'thing' } ],
             total: { value: 1 },
           },
           body: filter,
@@ -167,7 +167,7 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match({
             scrollId: 'i-am-scroll-id',
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' } } ],
+            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight' } ],
             total: 1,
             aggregations: { some: 'aggregs' }
           });
@@ -260,7 +260,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch.get(index, collection, '_search');
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.wrong_get_action'
+        id: 'services.storage.search_as_an_id'
       });
     });
 
@@ -301,8 +301,8 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).match({
-            items: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1, found: true } ],
-            errors: [ { _id: 'mhery', found: false } ]
+            items: [ { _id: 'liia', _source: { city: 'Kathmandu' }, _version: 1 } ],
+            errors: [ 'mhery' ]
           });
         });
     });
@@ -707,7 +707,7 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            errorName: 'external.elasticsearch.document_not_found'
+            id: 'services.storage.not_found'
           });
           should(elasticsearch._client.index).not.be.called();
         });
@@ -752,7 +752,7 @@ describe('Test: ElasticSearch service', () => {
             refresh: undefined
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -771,7 +771,7 @@ describe('Test: ElasticSearch service', () => {
             refresh: 'wait_for'
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -797,6 +797,10 @@ describe('Test: ElasticSearch service', () => {
         { _id: '_id2', _source: '_source2' },
       ]);
 
+      elasticsearch._client.indices.refresh.resolves({
+        body: { _shards: 1 }
+      });
+
       elasticsearch._client.deleteByQuery.resolves({
         body: {
           total: 2,
@@ -819,7 +823,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { filter: 'term' } },
-            scroll: '5m',
+            scroll: '5s',
             from: undefined,
             size: undefined,
             refresh: undefined
@@ -887,7 +891,7 @@ describe('Test: ElasticSearch service', () => {
         'not an object');
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.empty_query'
+        id: 'services.storage.missing_argument'
       });
     });
   });
@@ -901,10 +905,13 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should resolves if index does not exists', () => {
-      const promise = elasticsearch.createIndex('lfiduras');
+    it('should resolve and create a hidden collection if the index does not exist', async () => {
+      await elasticsearch.createIndex('lfiduras');
 
-      return should(promise).be.resolved();
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: '&lfiduras._kuzzle_keep',
+        body: {}
+      });
     });
 
     it('should rejects if the index already exists', () => {
@@ -913,7 +920,7 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            errorName: 'external.elasticsearch.index_already_exists'
+            id: 'services.storage.index_already_exists'
           });
         });
     });
@@ -970,7 +977,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -996,7 +1003,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1030,7 +1037,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejectedWith({
         message: /Did you mean "dynamic"/,
-        errorName: 'external.elasticsearch.incorrect_mapping_property'
+        id: 'services.storage.invalid_mapping'
       });
     });
 
@@ -1254,14 +1261,10 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      const promise = elasticsearch.updateMapping(index, collection, newMapping);
-
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?',
-            errorName: 'external.elasticsearch.incorrect_mapping_property'
-          });
+      return should(elasticsearch.updateMapping(index, collection, newMapping))
+        .be.rejectedWith({
+          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          id: 'services.storage.invalid_mapping'
         });
     });
 
@@ -1341,7 +1344,7 @@ describe('Test: ElasticSearch service', () => {
             }
           });
 
-          should(result).be.undefined();
+          should(result).be.null();
         });
     });
 
@@ -1359,19 +1362,19 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#import', () => {
     let
-      expectedEsRequest,
+      getExpectedEsRequest,
       bulkReturnError,
       documents,
       bulkReturn;
 
     beforeEach(() => {
-      expectedEsRequest = {
+      getExpectedEsRequest = ({ userId=null, refresh, timeout } = {}) => ({
         body: [
           { index: { _id: 1, _index: esIndexName } },
           {
             firstName: 'foo',
             _kuzzle_info: {
-              author: null,
+              author: userId,
               createdAt: timestamp,
               updater: null,
               updatedAt: null
@@ -1382,16 +1385,29 @@ describe('Test: ElasticSearch service', () => {
           {
             firstName: 'bar',
             _kuzzle_info: {
-              author: null,
+              author: userId,
               createdAt: timestamp,
               updater: null,
               updatedAt: null
             }
           },
+
+          { update: { _id: 3, _index: esIndexName } },
+          {
+            doc: {
+              firstName: 'foobar',
+              _kuzzle_info: {
+                updater: userId,
+                updatedAt: timestamp
+              }
+            }
+          },
+
+          { delete: { _id: 4, _index: esIndexName } }
         ],
-        refresh: undefined,
-        timeout: undefined
-      };
+        refresh,
+        timeout
+      });
 
       bulkReturn = {
         body: {
@@ -1423,6 +1439,11 @@ describe('Test: ElasticSearch service', () => {
 
         { index: { _id: 2, _type: 'delete-me' } },
         { firstName: 'bar' },
+
+        { update: { _id: 3 } },
+        { doc: { firstName: 'foobar' } },
+
+        { delete: { _id: 4 } }
       ];
 
       elasticsearch._client.bulk.resolves(bulkReturn);
@@ -1446,46 +1467,8 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          expectedEsRequest = {
-            body: [
-              { index: { _id: 1, _index: esIndexName } },
-              {
-                firstName: 'foo',
-                _kuzzle_info: {
-                  author: null,
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-
-              { index: { _id: 2, _index: esIndexName } },
-              {
-                firstName: 'bar',
-                _kuzzle_info: {
-                  author: null,
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-
-              { update: { _id: 3, _index: esIndexName } },
-              { doc: {
-                firstName: 'foobar',
-                _kuzzle_info: {
-                  updater: null,
-                  updatedAt: timestamp
-                }
-              }
-              },
-
-              { delete: { _id: 4, _index: esIndexName } }
-            ],
-            refresh: undefined,
-            timeout: undefined
-          };
-          should(elasticsearch._client.bulk).be.calledWithMatch(expectedEsRequest);
+          should(elasticsearch._client.bulk).be.calledWithMatch(
+            getExpectedEsRequest());
 
           should(result).match({
             items: [
@@ -1499,16 +1482,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should inject index name', () => {
-      const promise = elasticsearch.import(index, collection, documents);
-
-      return promise
-        .then(() => {
-          should(elasticsearch._client.bulk).be.calledWithMatch(expectedEsRequest);
-        });
-    });
-
-    it('should inject addition options to esRequest', () => {
+    it('should inject additional options to esRequest', () => {
       const promise = elasticsearch.import(
         index,
         collection,
@@ -1517,33 +1491,8 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(() => {
-          should(elasticsearch._client.bulk).be.calledWithMatch({
-            body: [
-              { index: { _id: 1, _index: esIndexName } },
-              {
-                firstName: 'foo',
-                _kuzzle_info: {
-                  author: 'aschen',
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-
-              { index: { _id: 2, _index: esIndexName } },
-              {
-                firstName: 'bar',
-                _kuzzle_info: {
-                  author: 'aschen',
-                  createdAt: timestamp,
-                  updater: null,
-                  updatedAt: null
-                }
-              },
-            ],
-            refresh: 'wait_for',
-            timeout: '10m'
-          });
+          should(elasticsearch._client.bulk).be.calledWithMatch(
+            getExpectedEsRequest({ refresh: 'wait_for', timeout: '10m', userId: 'aschen' }));
         });
     });
 
@@ -1592,7 +1541,7 @@ describe('Test: ElasticSearch service', () => {
 
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.limit_documents_reached'
+        id: 'services.storage.write_limit_exceeded'
       });
     });
   });
@@ -1603,7 +1552,8 @@ describe('Test: ElasticSearch service', () => {
         body: [
           { index: '&nepali.mehry' },
           { index: '&nepali.liia' },
-          { index: '&nyc-open-data.taxi' }
+          { index: '&nyc-open-data.taxi' },
+          { index: '&nepali._kuzzle_keep' }
         ]
       });
     });
@@ -1889,7 +1839,22 @@ describe('Test: ElasticSearch service', () => {
         .then(result => {
           should(elasticsearch.deleteIndexes).be.calledWith(['nepali']);
 
-          should(result).be.undefined();
+          should(result).be.null();
+        });
+    });
+  });
+
+  describe('#deleteCollection', () => {
+    it('should allow to delete a collection', () => {
+      const promise = elasticsearch.deleteCollection('nepali', 'liia');
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.indices.delete).be.calledWithMatch({
+            index: '&nepali.liia'
+          });
+
+          should(result).be.null();
         });
     });
   });
@@ -2119,9 +2084,10 @@ describe('Test: ElasticSearch service', () => {
             {
               document: {
                 _id: 'liia',
-                _source: { city: 'Ho Chi Minh City', ...kuzzleMeta }
+                body: { city: 'Ho Chi Minh City' }
               },
-              reason: 'document already exists'
+              reason: 'document already exists',
+              status: 400
             }
           ];
 
@@ -2466,10 +2432,12 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
-              reason: 'document ID is required'
+              document: { _id: undefined, body: { city: 'Ho Chi Minh City' } },
+              reason: 'document _id must be a string',
+              status: 400
             }
           ];
+
           should(elasticsearch._mExecute).be.calledWithMatch(
             esRequest,
             toImport,
@@ -2583,8 +2551,9 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
-              reason: 'cannot replace a non-existing document (use mCreateOrReplace if you need to create non-existing documents)'
+              document: { _id: 'liia', body: { city: 'Ho Chi Minh City' } },
+              reason: 'document not found',
+              status: 404
             }
           ];
           should(elasticsearch._mExecute).be.calledWithMatch(
@@ -2631,8 +2600,9 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } },
-              reason: 'the document ID must be a string'
+              document: { body: { city: 'Ho Chi Minh City' } },
+              reason: 'document _id must be a string',
+              status: 400
             }
           ];
           should(elasticsearch._mExecute).be.calledWithMatch(
@@ -2698,6 +2668,10 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
+      elasticsearch._client.indices.refresh.resolves({
+        body: { _shards: 1 }
+      });
+
       elasticsearch.mGet = sinon.stub().resolves({
         items: [
           { _id: 'mehry', _source: { city: 'Kathmandu' } },
@@ -2719,7 +2693,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry', 'liia'] } } },
-            scroll: '5m'
+            scroll: '5s'
           });
 
           should(result).match({
@@ -2749,7 +2723,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry'] } } },
-            scroll: '5m'
+            scroll: '5s'
           });
 
           should(result).match({
@@ -2757,7 +2731,7 @@ describe('Test: ElasticSearch service', () => {
               { _id: 'mehry', _source: { city: 'Kathmandu' } }
             ],
             errors: [
-              { id: 'liia', reason: 'cannot find document' }
+              { _id: 'liia', reason: 'document not found', status: 404 }
             ]
           });
         });
@@ -2780,7 +2754,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry'] } } },
-            scroll: '5m'
+            scroll: '5s'
           });
 
           should(result).match({
@@ -2788,7 +2762,7 @@ describe('Test: ElasticSearch service', () => {
               { _id: 'mehry', _source: { city: 'Kathmandu' } }
             ],
             errors: [
-              { id: 42, reason: 'the document ID must be a string' }
+              { _id: 42, reason: 'document _id must be a string', status: 400 }
             ]
           });
         });
@@ -2806,7 +2780,7 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { ids: { values: ['mehry', 'liia'] } } },
-            scroll: '5m',
+            scroll: '5s',
             refresh: true
           });
         });
@@ -2818,7 +2792,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch.mDelete(index, collection, documentIds);
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.limit_documents_reached'
+        id: 'services.storage.write_limit_exceeded'
       });
     });
   });
@@ -2941,7 +2915,7 @@ describe('Test: ElasticSearch service', () => {
       const promise = elasticsearch._mExecute(esRequest, documents, partialErrors);
 
       return should(promise).be.rejectedWith({
-        errorName: 'external.elasticsearch.limit_documents_reached'
+        id: 'services.storage.write_limit_exceeded'
       });
     });
 
@@ -2980,7 +2954,7 @@ describe('Test: ElasticSearch service', () => {
 
       should(rejected).match([{
         document: { _id: 'no-body' },
-        reason: 'document body is not an object'
+        reason: 'document body must be an object'
       }]);
 
       should(extractedDocuments).match([{
@@ -3004,10 +2978,16 @@ describe('Test: ElasticSearch service', () => {
 
 
       should(() => elasticsearch._checkMappings(mapping))
-        .throw({ message: 'Incorrect mapping property "mapping.dinamic". Did you mean "dynamic" ?' });
+        .throw({
+          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          id: 'services.storage.invalid_mapping'
+        });
 
       should(() => elasticsearch._checkMappings(mapping2))
-        .throw({ message: 'Incorrect mapping property "mapping.type".' });
+        .throw({
+          message: 'Invalid mapping property "mapping.type".',
+          id: 'services.storage.invalid_mapping'
+        });
     });
 
     it('should throw when a nested property is incorrect', () => {
@@ -3025,7 +3005,10 @@ describe('Test: ElasticSearch service', () => {
       };
 
       should(() => elasticsearch._checkMappings(mapping))
-        .throw({ message: 'Incorrect mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?' });
+        .throw({
+          message: 'Invalid mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?',
+          id: 'services.storage.invalid_mapping'
+        });
     });
 
     it('should return null if no properties are incorrect', () => {
@@ -3035,6 +3018,7 @@ describe('Test: ElasticSearch service', () => {
           name: { type: 'keyword' },
           car: {
             dynamic: 'false',
+            dynamic_templates: {},
             type: 'nested',
             properties: {
               brand: { type: 'keyword' }
@@ -3109,6 +3093,17 @@ describe('Test: ElasticSearch service', () => {
 
         should(publicIndexes).be.eql(['india', 'vietnam']);
         should(internalIndexes).be.eql(['nepali']);
+      });
+
+      it('does not extract malformated indexes', () => {
+        const esIndexes = ['nepali', '&india', '&vietnam.'];
+
+        const
+          publicIndexes = publicES._extractIndexes(esIndexes),
+          internalIndexes = internalES._extractIndexes(esIndexes);
+
+        should(publicIndexes).be.empty();
+        should(internalIndexes).be.empty();
       });
     });
 

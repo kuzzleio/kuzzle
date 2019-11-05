@@ -43,7 +43,7 @@ describe('Test: collection controller', () => {
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
         collectionController.updateMapping(request);
-      }).throw(BadRequestError);
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should call updateMapping on publicStorage', async () => {
@@ -82,13 +82,7 @@ describe('Test: collection controller', () => {
       should(collectionController.publicStorage.getMapping)
         .be.calledWith(index, collection, { includeKuzzleMeta: false });
 
-      should(response).match({
-        [index]: {
-          mappings: {
-            [collection]: mappings
-          }
-        }
-      });
+      should(response).match(mappings);
     });
 
     it('should include kuzzleMeta if specified', async () => {
@@ -141,7 +135,7 @@ describe('Test: collection controller', () => {
       return should(collectionController.getSpecifications(request))
         .be.rejectedWith(
           NotFoundError,
-          { message: `No specifications defined for index ${index} and collection ${collection}`});
+          {id: 'validation.assert.not_found'});
     });
   });
 
@@ -153,7 +147,7 @@ describe('Test: collection controller', () => {
 
       should(() => collectionController.searchSpecifications(request)).throw(
         SizeLimitError,
-        { message: 'Search page size exceeds server configured documents limit ( 1 ).' });
+        { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should call internalIndex with the right data', () => {
@@ -202,7 +196,7 @@ describe('Test: collection controller', () => {
       });
 
       should(() => collectionController.scrollSpecifications(request))
-        .throw(BadRequestError, { errorName: 'api.base.missing_param' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call internalIndex with the right data', async () => {
@@ -271,7 +265,11 @@ describe('Test: collection controller', () => {
       should(kuzzle.internalIndex.createOrReplace).be.calledWithMatch(
         'validations',
         `${index}#${collection}`,
-        request.input.body);
+        {
+          index,
+          collection,
+          validation: request.input.body
+        });
 
       should(response).match(request.input.body);
     });
@@ -295,7 +293,7 @@ describe('Test: collection controller', () => {
       const promise = collectionController.updateSpecifications(request);
 
 
-      return should(promise).be.rejectedWith(BadRequestError, { errorName: 'api.collection.update_specifications' })
+      return should(promise).be.rejectedWith(BadRequestError, { id: 'validation.assert.invalid_specifications' })
         .then(() => {
           should(kuzzle.validation.curateSpecification).not.be.called();
           should(kuzzle.internalIndex.createOrReplace).not.be.called();
@@ -390,7 +388,7 @@ describe('Test: collection controller', () => {
 
       should(() => collectionController.list(request)).throw(
         BadRequestError,
-        { message: 'Must specify a valid type argument; Expected: \'all\', \'stored\' or \'realtime\'; Received: foo.'});
+        { id: 'api.assert.invalid_argument' });
     });
 
     it('should only return stored collections with type = stored', () => {
@@ -508,6 +506,17 @@ describe('Test: collection controller', () => {
       should(response).match({
         acknowledged: true
       });
+    });
+  });
+
+  describe('#delete', () => {
+    it('should call deleteCollection', async () => {
+      const response = await collectionController.delete(request);
+
+      should(collectionController.publicStorage.deleteCollection)
+        .be.calledWith(index, collection);
+
+      should(response).be.null();
     });
   });
 });

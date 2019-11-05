@@ -12,8 +12,7 @@ for target in ${plugins_dir}/* ${protocols_dir}/* ; do
     echo 'Installing dependencies for ' $(basename "$target")
     cd "$target"
     npm install --silent --unsafe-perm
-    find -L node_modules/.bin -type f -exec chmod 776 {} \;
-    find node_modules/ -type d -exec chmod 755 {} \;
+    chmod -R 777 node_modules/
     cd "$working_dir"
   fi
 done

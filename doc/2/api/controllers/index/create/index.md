@@ -7,8 +7,7 @@ title: create
 # create
 
 
-
-Creates a new [index](/core/2/guides/essentials/store-access-data) in Kuzzle.
+Creates a new [index](/core/2/guides/essentials/store-access-data) in Kuzzle.  
 
 ---
 
@@ -59,4 +58,5 @@ Returns a confirmation that the index is being created:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors#common-errors)
+- [Common errors](/core/2/api/essentials/errors/handling#common-errors)
+

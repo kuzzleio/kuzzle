@@ -14,7 +14,9 @@
       "watch": [
         "lib/**/*.js",
         "default.config.js",
-        "plugins/enabled/**/*.js"
+        "plugins/enabled/**/*.js",
+        "plugins/available/functional-test-plugin/*.js",
+        "lib/**/*.json"
       ],
       "node_args": "--inspect=0.0.0.0:9229",
       "kill_timeout": 15000

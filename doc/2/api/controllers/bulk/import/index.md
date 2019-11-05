@@ -10,8 +10,6 @@ Creates, updates or deletes large amounts of documents as fast as possible.
 
 This route is faster than the `document:m*` routes family (e.g. [document:mCreate](/core/2/api/controllers/document/m-create)), but no real-time notifications will be generated, even if some of the documents in the import match subscription filters.
 
-If some documents actions fail, the client will receive a [PartialError](/core/2/api/essentials/errors#partialerror) error.
-
 ---
 
 ## Query Syntax
@@ -77,21 +75,25 @@ Body:
 
 ## Body properties
 
-The body must contain a `bulkData` array, detailing the bulk operations to perform, following [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-bulk.html).
+The body must contain a `bulkData` array, detailing the bulk operations to perform, following [ElasticSearch Bulk API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-bulk.html).
 
 ---
 
 ## Response
 
-Returns an object containing 2 properties:
-  - `items`: array containing the list of executed queries result, in the same order than in the query
-  - `errors`: boolean indicating if some error occured during the import
+Returns an object containing 2 arrays: `successes` and `errors`
 
-Each query result contains the following properties:
-
+Each created, replaced or updated document is an object of the `successes` array.  
+Each item is an object containing the action name as key and the corresponding object contain the following properties:
   - `_id`: document unique identifier
   - `status`: HTTP status code for that query
-  - `error`: (only if status >= `400`)
+
+Each errored action is an object of the `errors` array:
+Each item is an object containing the action name as key and the corresponding object contain the following properties:
+  - `_id`: document unique identifier
+  - `status`: HTTP status code for that query
+  - `_source`: document body
+  - `error`: 
     - `type`: elasticsearch client error type
     - `reason`: human readable error message
 
@@ -105,7 +107,7 @@ Each query result contains the following properties:
   "action": "import",
   "requestId": "<unique request identifier>",
   "result": {
-    "items": [
+    "successes": [
       {
         "index": {
           "_id": "hQ10_GwBB2Y5786Pu_NO",
@@ -130,7 +132,8 @@ Each query result contains the following properties:
           "status": 201
         }
       }
-    ]
+    ],
+    "errors": []
   }
 }
 ```

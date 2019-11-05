@@ -65,7 +65,8 @@ describe('core/httpRouter', () => {
 
     it('should raise an internal error when trying to add a duplicate', () => {
       router.post('/foo/bar', handler);
-      should(function () { router.post('/foo/bar', handler); }).throw(InternalError);
+      should(function () { router.post('/foo/bar', handler); })
+        .throw(InternalError, { id: 'network.http.duplicate_url' });
     });
   });
 
@@ -335,7 +336,7 @@ describe('core/httpRouter', () => {
               content: {
                 error: {
                   status: 400,
-                  message: 'Unrecognized HTTP method FOOBAR.'
+                  id: 'network.http.unsupported_verb'
                 },
                 requestId: 'requestId',
                 result: null
@@ -369,7 +370,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Unable to convert HTTP body to JSON.'
+                id: 'network.http.body_parse_failed'
               },
               requestId: 'requestId',
               result: null
@@ -404,7 +405,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Unable to convert HTTP x-kuzzle-volatile header to JSON.'
+                id: 'network.http.volatile_parse_failed'
               },
               requestId: 'requestId',
               result: null
@@ -439,7 +440,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Invalid request content-type. Expected "application/json", got: "application/foobar".'
+                id: 'network.http.unsupported_content'
               },
               requestId: 'requestId',
               result: null
@@ -474,7 +475,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 400,
-                message: 'Invalid request charset. Expected "utf-8", got: "iso8859-1".'
+                id: 'network.http.unsupported_charset'
               },
               requestId: 'requestId',
               result: null
@@ -509,7 +510,7 @@ describe('core/httpRouter', () => {
             content: {
               error: {
                 status: 404,
-                message: 'API URL not found: /foo/bar.'
+                id: 'network.http.url_not_found'
               },
               requestId: 'requestId',
               result: null

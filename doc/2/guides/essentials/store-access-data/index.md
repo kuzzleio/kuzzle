@@ -5,23 +5,23 @@ title: Store and access your data
 order: 350
 ---
 
-# Store and access your data
+# Store and access data
 
 Kuzzle uses [Elasticsearch](https://www.elastic.co/products/elasticsearch) as a document-oriented storage.  
 
-All documents, whether internal documents such as `User`, `Profile` or `Role` or user documents, are stored in Elasticsearch indexes.  
+All documents, including internal Kuzzle ones (such as security information), are stored in Elasticsearch indexes.  
 
-Kuzzle's storage capacities are therefore directly linked to Elasticsearch's capacities and limits.  
+Kuzzle's storage capabilities are therefore directly linked to Elasticsearch's capabilities and limits.  
 
 ## Data storage organization
 
-There are 4 hierarchical levels in data storage: 
+Kuzzle organizes the data storage in 4 levels: 
   - indexes
   - collections
   - documents
   - fields
 
-An index brings together several collections, which in turn contains several documents, each of which is composed of several fields.  
+An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.  
 ![data storage organization](./data-storage-organization.png)
 
 ### Comparison with a relational database
@@ -36,6 +36,8 @@ If you're more familiar with the way relational databases store data, here is ho
 | collection | table |
 | document | line |
 | field | column |
+
+*Note:* collections are specific to Kuzzle, this notion does not exist in Elasticsearch 
 
 Comparing document-oriented storages with relational databases would require a more thorough analysis, but for the purposes of this guide, we shall reduce the list of differences to the following 3 items:
   - Documents are identified with a unique identifier, which is stored separately from the content of documents (compared to primary/foreign keys, stored alongside the data they identify),
@@ -67,8 +69,6 @@ curl -X POST localhost:7512/nyc-open-data/_create?pretty
   "volatile": null,
   "result": {
     "acknowledged": true,
-    "shards_acknowledged": true,
-    "index": "nyc-open-data"
   }
 }
 </pre>
@@ -108,9 +108,9 @@ It is also possible to define in advance a set of indexes and collections, then 
 
 ## Writing documents
 
-The Kuzzle API offers several methods to create, modify or delete documents in its storage space.  
+Kuzzle's API offers several methods to create, modify or delete documents in its storage space.  
 
-Each of these methods has its own specificities, we can distinguish two main families of methods: those acting on a document and those acting on multiple documents.
+There are two families of methods: those acting on a document and those acting on multiple documents.
 
 Methods acting on a single document:
   - [document:create](/core/2/api/controllers/document/create): creates a new document
@@ -128,7 +128,7 @@ Methods acting on multiple documents
   - [document:mUpdate](/core/2/api/controllers/document/m-update): updates fields of multiple documents
 
 ::: info 
-The [bulk controller](/core/2/api/controllers/bulk) features low-level methods for injecting documents in collections.
+The [bulk controller](/core/2/api/controllers/bulk) features low-level methods for mass  documents injection in collections.
 :::
 
 For example, to create a new document in our index:
@@ -249,8 +249,8 @@ curl http://localhost:7512/nyc-open-data/yellow-taxi/document-uniq-id?pretty
 
 ### Searching documents
 
-Searching documents is performed using the [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/query-dsl.html).  
-As Elasticsearch is an indexing engine designed for document search, it offers a wide range of advanced search options like [geo queries](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/geo-queries.html), [full text queries](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/full-text-queries.html), [aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations.html), and more.  
+Searching documents is performed using the [Elasticsearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html).  
+As Elasticsearch is an indexing engine designed for document search, it offers a wide range of advanced search options like [geo queries](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/geo-queries.html), [full text queries](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/full-text-queries.html), [aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-aggregations.html), and more.  
 
 Requests must be made through Kuzzle using the [document:search](/core/2/api/controllers/document/search) method.
 
@@ -364,6 +364,18 @@ curl -X POST -H "Content-Type: application/json" -d '{
 }
 </pre>
 </details>
+
+## Kuzzle indexes in Elasticseach
+
+Elasticsearch indexes created and managed by Kuzzle follow this naming convention:
+
+ - private indexes: `%<index name>.<collection name>` (Kuzzle internal data, plugins dedicated storage)
+ - public indexes: `&<index name>.<collection name>`
+
+::: warning
+Indexes not following this naming policy cannot be accessed by Kuzzle's API.  
+Create an Elasticsearch alias to share a regular index with Kuzzle (and vice-versa).
+:::
 
 ## What Now?
 

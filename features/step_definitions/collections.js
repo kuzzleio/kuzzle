@@ -92,7 +92,10 @@ Then(/^I truncate the collection(?: "(.*?)")?(?: in index "([^"]*)")?$/, functio
 });
 
 Then(/I refresh the collection( "(.*?)")?/, function (indexCollection) {
-  indexCollection = indexCollection ? indexCollection : '';
+  indexCollection = indexCollection
+    ? indexCollection
+    : this.fakeIndex + ':' + this.fakeCollection;
+
   const [index, collection] = indexCollection.split(':');
 
   return this.api.refreshCollection(index, collection);
@@ -128,7 +131,7 @@ Then('The mapping dynamic field of {string}:{string} is {string}', function (ind
         ? 'true'
         : dynamicValue;
 
-      should(result[index].mappings[collection].dynamic)
+      should(result.dynamic)
         .not.be.undefined()
         .be.eql(expectedValue);
     });
@@ -149,7 +152,7 @@ Then('The mapping properties field of {string}:{string} is {string}', function (
         ? this.kuzzleConfig.services.storageEngine.commonMapping.properties
         : JSON.parse(rawMapping);
 
-      should(result[index].mappings[collection].properties)
+      should(result.properties)
         .be.eql(expectedValue);
     });
 });
@@ -160,7 +163,7 @@ Then('The mapping _meta field of {string}:{string} is {string}', function (index
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
 
-      should(result[index].mappings[collection]._meta)
+      should(result._meta)
         .not.be.undefined()
         .be.eql(mapping._meta);
     });
