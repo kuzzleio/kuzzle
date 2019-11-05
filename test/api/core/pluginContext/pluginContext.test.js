@@ -7,13 +7,10 @@ const
   should = require('should'),
   sinon = require('sinon'),
   User = require(`${root}/lib/api/core/models/security/user`),
+  { Client: ESClient } = require('@elastic/elasticsearch'),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
     Request,
-    models: {
-      RequestContext,
-      RequestInput
-    },
     errors: {
       PluginImplementationError
     }
@@ -25,15 +22,9 @@ describe('Plugin Context', () => {
   let
     kuzzle,
     context,
-    PluginContext,
-    deprecateStub;
+    PluginContext;
 
   beforeEach(() => {
-    deprecateStub = sinon.stub().returnsArg(1);
-    mockrequire(`${root}/lib/util/deprecate`, {
-      deprecateProperties: deprecateStub
-    });
-
     PluginContext = mockrequire.reRequire(`${root}/lib/api/core/plugins/pluginContext`);
 
     kuzzle = new KuzzleMock();
@@ -51,12 +42,9 @@ describe('Plugin Context', () => {
 
     it('should expose the right constructors', () => {
       let repository;
-      const
-        Koncorde = require('koncorde'),
-        BaseValidationType = require(`${root}/lib/api/core/validation/baseType`);
+      const Koncorde = require('koncorde');
 
       should(context.constructors).be.an.Object().and.not.be.empty();
-      should(context.constructors.Dsl).be.a.Function();
       should(context.constructors.Koncorde).be.a.Function();
       should(context.constructors.Request).be.a.Function();
       should(context.constructors.RequestContext).be.a.Function();
@@ -64,21 +52,6 @@ describe('Plugin Context', () => {
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
 
-      should(deprecateStub)
-        .calledOnce()
-        .calledWithMatch(
-          kuzzle.log,
-          {
-            RequestContext,
-            RequestInput,
-            Koncorde,
-            BaseValidationType,
-            Dsl: Koncorde,
-            Request: sinon.match.func
-          },
-          { Dsl: 'Koncorde' });
-
-      should(new context.constructors.Dsl).be.instanceOf(Koncorde);
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
       should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
 
@@ -105,9 +78,25 @@ describe('Plugin Context', () => {
         });
     });
 
+    describe('#ESClient', () => {
+      it('should expose the ESClient constructor', () => {
+        const esClient = new context.constructors.ESClient();
+
+        should(esClient).be.instanceOf(ESClient);
+      });
+
+      it('should allow to instantiate an ESClient connected to the ES cluster', () => {
+        const esClient = new context.constructors.ESClient();
+
+        should(esClient.connectionPool.connections[0].url.origin)
+          .be.eql(kuzzle.storageEngine.config.client.node);
+      });
+    });
+
     describe('#Request', () => {
       it('should throw when trying to instantiate a Request object without providing any data', () => {
-        should(function () { new context.constructors.Request(); }).throw(PluginImplementationError);
+        should(function () { new context.constructors.Request(); })
+          .throw(PluginImplementationError, { id: 'plugin.context.missing_request_data' });
       });
 
       it('should replicate the right request information', () => {
@@ -294,11 +283,11 @@ describe('Plugin Context', () => {
 
       should(() => {
         sdk.realtime.subscribe();
-      }).throw(PluginImplementationError);
+      }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
 
       should(() => {
         sdk.realtime.unsubscribe();
-      }).throw(PluginImplementationError);
+      }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
 
       should.doesNotThrow(() => {
         sdk.realtime.count('foo');
@@ -333,7 +322,7 @@ describe('Plugin Context', () => {
 
         should(() => {
           sdk.realtime.subscribe();
-        }).throw(PluginImplementationError);
+        }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
 
         should(sdk.auth._kuzzle.protocol.user).be.eql(user);
       });
@@ -341,7 +330,7 @@ describe('Plugin Context', () => {
       it('should throw a PluginImplementationError if the user is not a User object', () => {
         should(() => {
           context.accessors.sdk.as({ _id: 'gordon' });
-        }).throw(PluginImplementationError);
+        }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
       });
     });
 
@@ -488,14 +477,18 @@ describe('Plugin Context', () => {
               controller: 'realtime',
               action: 'subscribe'
             })))
-              .be.rejectedWith(/"realtime:subscribe" method is not available in plugins\. You should use plugin hooks instead/);
+              .be.rejectedWith(PluginImplementationError, {
+                id: 'plugin.context.unavailable_realtime'
+              });
           })
           .then(() => {
             return should(context.accessors.execute(new Request({
               controller: 'realtime',
               action: 'unsubscribe'
             })))
-              .be.rejectedWith(/"realtime:unsubscribe" method is not available in plugins\. You should use plugin hooks instead/);
+              .be.rejectedWith(PluginImplementationError, {
+                id: 'plugin.context.unavailable_realtime'
+              });
           });
       });
     });

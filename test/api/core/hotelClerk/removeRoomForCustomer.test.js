@@ -7,8 +7,8 @@ const
     Request,
     models: { RequestContext },
     errors: {
-      NotFoundError,
-      InternalError: KuzzleInternalError
+      PreconditionError,
+      NotFoundError
     }
   } = require('kuzzle-common-objects');
 
@@ -48,9 +48,9 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
 
   it('should reject if the customer cannot be found', () => {
     return hotelClerk._removeRoomForCustomer(requestContext, 'idontexist')
-      .should.be.rejectedWith(
-        NotFoundError,
-        {message: 'Unsubscribe error: no subscription found for that user.'});
+      .should.be.rejectedWith(PreconditionError, {
+        id: 'core.realtime.not_subscribed'
+      });
   });
 
   it('should reject if the customer did not subscribe to the room', done => {
@@ -60,8 +60,8 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
       .then(() => done(new Error('expected a promise rejection')))
       .catch(err => {
         try {
-          should(err).be.instanceOf(NotFoundError);
-          should(err.message).eql('Unsubscribe error: not subscribed to roomId.');
+          should(err).be.instanceOf(PreconditionError);
+          should(err.id).eql('core.realtime.not_subscribed');
           should(hotelClerk.rooms.roomId).not.be.undefined();
           should(hotelClerk.roomsCount).be.eql(1);
           should(kuzzle.notifier.notifyUser).not.be.called();
@@ -76,9 +76,9 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     hotelClerk.customers.connectionId = {nowhere: null};
 
     return hotelClerk._removeRoomForCustomer(requestContext, 'nowhere', false)
-      .should.be.rejectedWith(
-        KuzzleInternalError,
-        {message: 'Unsubscribe error: room nowhere not found.'});
+      .should.be.rejectedWith(NotFoundError, {
+        id: 'core.realtime.room_not_found'
+      });
   });
 
   it('should remove the room from the customer list and remove the connection entry if empty', () => {

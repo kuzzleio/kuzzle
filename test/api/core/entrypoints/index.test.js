@@ -29,12 +29,11 @@ class FakeProtocol {
 class FakeHttpProtocol extends FakeProtocol {
   constructor () { super('http'); }
 }
+
 class FakeWebSocketProtocol extends FakeProtocol {
   constructor () { super('websocket'); }
 }
-class FakeSocketIOProtocol extends FakeProtocol {
-  constructor () { super('socketio'); }
-}
+
 class FakeMqttProtocol extends FakeProtocol {
   constructor () { super('mqtt'); }
 }
@@ -44,7 +43,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
     kuzzle,
     HttpMock,
     WebSocketMock,
-    SocketIOMock,
     MqttMock,
     httpMock,
     EntryPoint,
@@ -70,7 +68,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
     HttpMock = FakeHttpProtocol;
     WebSocketMock = FakeWebSocketProtocol;
-    SocketIOMock = FakeSocketIOProtocol;
     MqttMock = FakeMqttProtocol;
 
     httpMock = {
@@ -86,7 +83,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
     const entryPointPath = `${root}/lib/api/core/entrypoints`;
     mockrequire(`${entryPointPath}/protocols/http`, { HttpProtocol: HttpMock});
     mockrequire(`${entryPointPath}/protocols/websocket`, WebSocketMock);
-    mockrequire(`${entryPointPath}/protocols/socketio`, SocketIOMock);
     mockrequire(`${entryPointPath}/protocols/mqtt`, MqttMock);
 
     mockrequire('http', httpMock);
@@ -133,7 +129,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       }
     });
 
-    for (const Class of [HttpMock, WebSocketMock, SocketIOMock, MqttMock]) {
+    for (const Class of [HttpMock, WebSocketMock, MqttMock]) {
       Class.prototype.init = sinon.stub().resolves(true);
     }
 
@@ -246,10 +242,9 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
           should(entrypoint.protocols.http.init).be.calledOnce();
           should(entrypoint.protocols.websocket.init).be.calledOnce();
-          should(entrypoint.protocols.socketio.init).be.calledOnce();
           should(entrypoint.protocols.mqtt.init).be.calledOnce();
           should(entrypoint.loadMoreProtocols).be.calledOnce();
-          should(Object.keys(entrypoint.protocols)).be.length(4);
+          should(Object.keys(entrypoint.protocols)).be.length(3);
         });
     });
 
@@ -260,8 +255,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
         .then(() => {
           should(entrypoint.protocols.http.init).be.calledOnce();
           should(entrypoint.protocols.websocket.init).be.calledOnce();
-          should(entrypoint.protocols.socketio.init).be.calledOnce();
-          should(Object.keys(entrypoint.protocols)).be.length(3);
+          should(Object.keys(entrypoint.protocols)).be.length(2);
           should(entrypoint.protocols.mqtt).be.undefined();
         });
     });
@@ -444,9 +438,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     });
 
     it('should call the connection protocol joinChannel method', () => {
-      entrypoint.clients.connectionId = {
-        protocol: 'protocol'
-      };
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         joinChannel: sinon.spy()
       };
@@ -460,7 +452,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should log errors and continue', () => {
       const error = new Error('test');
 
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         joinChannel: sinon.stub().throws(error)
       };
@@ -485,7 +477,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     });
 
     it('should call the connection protocol leaveChannel method', () => {
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         leaveChannel: sinon.spy()
       };
@@ -499,7 +491,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should log errors and continue', () => {
       const error = new Error('test');
 
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       entrypoint.protocols.protocol = {
         leaveChannel: sinon.stub().throws(error)
       };
@@ -551,7 +543,6 @@ describe('lib/core/api/core/entrypoints/index', () => {
       const Rewired = rewire(entryPointDir);
 
       const
-        message = new RegExp(`\\[${path.join(protocolDir, 'protocol')}\\] Unable to load the file 'manifest.json'`),
         requireStub = sinon.stub().returns(function () {
           this.init = sinon.spy();
         });
@@ -559,7 +550,9 @@ describe('lib/core/api/core/entrypoints/index', () => {
       return should(Rewired.__with__({ require: requireStub })(() => {
         const ep = new Rewired(kuzzle);
         return ep.loadMoreProtocols();
-      })).rejectedWith(PluginImplementationError, {message});
+      })).rejectedWith(PluginImplementationError, {
+        id: 'plugin.manifest.cannot_load'
+      });
     });
 
     it('should log and reject if an error occured', () => {
@@ -602,8 +595,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
     it('should add the connection to the store and call kuzzle router', () => {
       entrypoint.newConnection(connection);
 
-      should(entrypoint.clients.connectionId)
-        .eql(connection);
+      should(entrypoint._clients).have.value('connectionId', connection);
 
       should(kuzzle.router.newConnection)
         .be.calledOnce()
@@ -627,7 +619,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
         headers: 'headers'
       };
 
-      entrypoint.clients[connection.id] = connection;
+      entrypoint._clients.set(connection.id, connection);
     });
 
     it('should remove the connection from the store and call kuzzle router', () => {
@@ -636,7 +628,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       should(kuzzle.router.removeConnection)
         .be.calledOnce()
         .be.calledWithMatch(new RequestContext({ connection }));
-      should(entrypoint.clients[connection.id]).be.undefined();
+      should(entrypoint._clients).not.have.keys(connection.id);
     });
 
     it('should dispatch connection:remove event', () => {
@@ -685,7 +677,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       error.status = 444;
       request.setError(error);
 
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
       entrypoint.config.logs.accessLogFormat = 'logstash';
 
       entrypoint.logAccess(request);
@@ -725,7 +717,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
       request.status = 444;
 
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
       entrypoint.config.logs.accessLogFormat = 'combined';
       entrypoint.config.logs.accessLogIpOffset = 1;
 
@@ -758,7 +750,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       request.setResult({foo: 'bar'}, result);
 
       entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
 
       entrypoint.logAccess(request, extra);
 
@@ -810,7 +802,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       request.setResult({foo: 'bar'}, result);
 
       entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
 
       entrypoint.logAccess(request, extra);
 
@@ -847,7 +839,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
       request.setResult({foo: 'bar'}, result);
 
       entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint.clients.connectionId = connection;
+      entrypoint._clients.set('connectionId', connection);
 
       entrypoint.logAccess(request);
 
@@ -913,7 +905,7 @@ describe('lib/core/api/core/entrypoints/index', () => {
 
   describe('#_notify', () => {
     it('should call underlying protocols and log errors', () => {
-      entrypoint.clients.connectionId = {protocol: 'protocol'};
+      entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       const error = new KuzzleInternalError('test');
 
       entrypoint.protocols = {

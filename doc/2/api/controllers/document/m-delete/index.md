@@ -6,8 +6,6 @@ title: mDelete
 
 # mDelete
 
-
-
 Deletes multiple documents.
 
 ---
@@ -63,9 +61,13 @@ Body:
 
 ## Response
 
-Returns an array with the list of successfully deleted document identifiers.
+Returns an object containing 2 arrays: `successes` and `errors`
 
-If one or more document deletions fail, the response status is set to `206`, and the `error` object contain a [partial error](/core/2/api/essentials/errors#partialerror) error.
+The `successes` array contain the successfuly deleted document IDs.
+
+Each deletion error is an object of the `errors` array with the following properties:
+- `_id`: document ID
+- `reason`: human readable reason
 
 ```js
 {
@@ -76,9 +78,14 @@ If one or more document deletions fail, the response status is set to `206`, and
   "action": "mDelete",
   "controller": "document",
   "requestId": "<unique request identifier>",
-  "result": [
-    "<documentId>",
-    "<anotherDocumentId>"
-  ]
+  "result": {
+    "successes": ["<documentId>"],
+    "errors": [
+      { 
+        "_id": "anotherDocumentId", 
+        "reason": "cannot find document" 
+      }
+    ]
+  }
 }
 ```

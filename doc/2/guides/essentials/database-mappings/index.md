@@ -30,7 +30,7 @@ Especially when searching on fields with special types such as `date` or `geo_sh
 Once a type has been defined for a field, it is not possible to modify it later.
 :::
 
-Refer to the Elasticsearch documentation for an exhaustive list of available types: [Elasticsearch mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/mapping-types.html)
+Refer to the Elasticsearch documentation for an exhaustive list of available types: [Elasticsearch mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-types.html)
 
 ### Example
 
@@ -144,7 +144,7 @@ Unlike the properties types definition, new collection metadata are not merged w
 If you set the ```_meta``` field in your request, the old value will be overwritten.
 :::
 
-Refer to Elasticsearch documentation for more informations: [Elasticsearch mapping meta field](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/mapping-meta-field.html)
+Refer to Elasticsearch documentation for more informations: [Elasticsearch mapping meta field](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-meta-field.html)
 
 These metadata can be retrieved with the [collection:getMapping](/core/2/api/controllers/collection/get-mapping) API method.
 

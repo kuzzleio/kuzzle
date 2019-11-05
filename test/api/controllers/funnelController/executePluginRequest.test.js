@@ -8,7 +8,7 @@ const
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   {
     Request,
-    errors: { BadRequestError }
+    errors: { NotFoundError }
   } = require('kuzzle-common-objects');
 
 describe('funnelController.executePluginRequest', () => {
@@ -31,8 +31,8 @@ describe('funnelController.executePluginRequest', () => {
     return funnel.executePluginRequest(rq)
       .then(() => Promise.reject(new Error('Should not resolve')))
       .catch(err => {
-        should(err).be.instanceOf(BadRequestError);
-        should(err.message).be.eql('Unknown controller foo.');
+        should(err).be.instanceOf(NotFoundError);
+        should(err.id).be.eql('api.process.controller_not_found');
         should(kuzzle.emit).not.be.called();
       });
   });

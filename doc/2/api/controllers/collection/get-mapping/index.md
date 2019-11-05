@@ -48,18 +48,15 @@ Method: GET
 Returns a mapping object with the following structure:
 
 ```
-<index>
-  |- mappings
-    |- <collection>
-      |- dynamic
-      |- _meta
-        |- metadata 1
-        |- metadata 1
-      |- properties
-        |- mapping for field 1
-        |- mapping for field 2
-        |- ...
-        |- mapping for field n
+|- dynamic
+|- _meta
+  |- metadata 1
+  |- metadata 1
+|- properties
+  |- mapping for field 1
+  |- mapping for field 2
+  |- ...
+  |- mapping for field n
 ```
 
 ### Example:
@@ -74,22 +71,16 @@ Returns a mapping object with the following structure:
   "action": "getMapping",
   "requestId": "<unique request identifier>",
   "result": {
-    "<index>": {
-      "mappings": {
-        "<collection>": {
-          "dynamic": "true",
-          "_meta": {
-            "metadata1": "value1"
-          },
-          "properties": {
-            "field1": { "type": "integer" },
-            "field2": { "type": "keyword" },
-            "field3": {
-              "type":   "date",
-              "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
-            }
-          }
-        }
+    "dynamic": "true",
+    "_meta": {
+      "metadata1": "value1"
+    },
+    "properties": {
+      "field1": { "type": "integer" },
+      "field2": { "type": "keyword" },
+      "field3": {
+        "type":   "date",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
       }
     }
   }
@@ -101,5 +92,5 @@ Returns a mapping object with the following structure:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors#common-errors)
-- [NotFoundError](/core/2/api/essentials/errors#notfounderror)
+- [Common errors](/core/2/api/essentials/errors/handling#common-errors)
+- [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror)

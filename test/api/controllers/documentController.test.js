@@ -78,7 +78,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { message: 'Search on multiple indexes is not available.' });
+        { id: 'services.storage.no_multi_indexes' });
     });
 
     it('should throw an error if collection contains a comma', () => {
@@ -87,7 +87,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         BadRequestError,
-        { message: 'Search on multiple collections is not available.' });
+        { id: 'services.storage.no_multi_collections' });
     });
 
     it('should throw an error if the size argument exceeds server configuration', () => {
@@ -97,7 +97,7 @@ describe('DocumentController', () => {
 
       should(() => documentController.search(request)).throw(
         SizeLimitError,
-        { errorName: 'api.base.search_page_size' });
+        { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -190,8 +190,8 @@ describe('DocumentController', () => {
 
       documentController.publicStorage.mGet.resolves(({
         items: [
-          { _id: 'id', _source: 'source', _version: 1, found: true, some: 'some' },
-          { _id: 'id2', _source: 'source', _version: 1, found: true, some: 'some' }
+          { _id: 'id', _source: 'source', _version: 1, some: 'some' },
+          { _id: 'id2', _source: 'source', _version: 1, some: 'some' }
         ],
         errors: []
       }));
@@ -206,10 +206,10 @@ describe('DocumentController', () => {
         ['foo', 'bar']);
 
       should(response).match({
-        total: 2,
-        hits: [
-          { _id: 'id', _source: 'source', _version: 1, found: true },
-          { _id: 'id2', _source: 'source', _version: 1, found: true }
+        errors: [],
+        successes: [
+          { _id: 'id', _source: 'source', _version: 1 },
+          { _id: 'id2', _source: 'source', _version: 1 }
         ]
       });
     });
@@ -219,30 +219,25 @@ describe('DocumentController', () => {
 
       should(() => documentController.mGet(request)).throw(
         SizeLimitError,
-        { errorName: 'api.base.search_page_size' });
+        { id: 'services.storage.get_limit_exceeded' });
     });
 
-    it('should set a partial error if some documents are missing', async () => {
+    it('should handle errors if some documents are missing', async () => {
       documentController.publicStorage.mGet.resolves(({
         items: [
-          { _id: 'id', _source: 'source', _version: 1, found: true, some: 'some' }
+          { _id: 'id', _source: 'source', _version: 1, some: 'some' }
         ],
-        errors: [
-          { _id: 'id2', found: true }
-        ]
+        errors: ['id2']
       }));
 
       const response = await documentController.mGet(request);
 
       should(response).match({
-        total: 2,
-        hits: [
-          { _id: 'id', _source: 'source', _version: 1, found: true },
-          { _id: 'id2', found: true }
+        errors: ['id2'],
+        successes: [
+          { _id: 'id', _source: 'source', _version: 1 }
         ]
       });
-      should(request.error).not.be.undefined();
-      should(request.error.errorName).be.eql('api.document.some_document_missing');
     });
   });
 
@@ -315,7 +310,7 @@ describe('DocumentController', () => {
         index,
         collection,
         content,
-        { id: null, userId: undefined, refresh: 'false' });
+        { id: null, userId: null, refresh: 'false' });
     });
   });
 
@@ -363,7 +358,7 @@ describe('DocumentController', () => {
         true);
 
       should(response).match({
-        hits: items,
+        successes: items,
         errors: []
       });
     });
@@ -375,10 +370,10 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: undefined, refresh: 'false' });
+        { userId: null, refresh: 'false' });
     });
 
-    it('should set a partial error if some actions failed', async () => {
+    it('should handle errors if some actions failed', async () => {
       documentController.publicStorage.mCreate.resolves(({
         items,
         errors: [
@@ -390,17 +385,18 @@ describe('DocumentController', () => {
         ]
       }));
 
-      await documentController._mChanges(request, 'mCreate', true);
+      const response = await documentController._mChanges(request, 'mCreate', true);
 
-      should(request.error.status).be.eql(206);
-      should(request.error.errorName).be.eql('api.document.creation_failed');
-      should(request.error.errors).match([
-        {
-          document: { _id: '_id42', _source: '_source' },
-          status: 206,
-          reason: 'reason'
-        }
-      ]);
+      should(response).match({
+        successes: items,
+        errors: [
+          {
+            document: { _id: '_id42', _source: '_source' },
+            status: 206,
+            reason: 'reason'
+          }
+        ]
+      });
     });
   });
 
@@ -477,7 +473,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: undefined, refresh: 'false' });
+        { userId: null, refresh: 'false' });
     });
   });
 
@@ -531,7 +527,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: undefined, refresh: 'false', retryOnConflict: undefined });
+        { userId: null, refresh: 'false', retryOnConflict: undefined });
     });
   });
 
@@ -586,7 +582,7 @@ describe('DocumentController', () => {
         collection,
         'foobar',
         content,
-        { userId: undefined, refresh: 'false' });
+        { userId: null, refresh: 'false' });
     });
   });
 
@@ -651,10 +647,13 @@ describe('DocumentController', () => {
       should(kuzzle.notifier.notifyDocumentMDelete)
         .be.calledWith(request, documents);
 
-      should(response).match(['id1', 'id2', 'id3']);
+      should(response).match({
+        successes: ['id1', 'id2', 'id3'],
+        errors: []
+      });
     });
 
-    it('should set a partial error if some actions failed', async () => {
+    it('should handle errors if some actions failed', async () => {
       documentController.publicStorage.mDelete.resolves(({
         documents,
         errors: [
@@ -662,13 +661,14 @@ describe('DocumentController', () => {
         ]
       }));
 
-      await documentController.mDelete(request);
+      const response = await documentController.mDelete(request);
 
-      should(request.error.status).be.eql(206);
-      should(request.error.errorName).be.eql('api.document.deletion_failed');
-      should(request.error.errors).match([
-        { id: 'id1', reason: 'reason' }
-      ]);
+      should(response).match({
+        successes: ['id1', 'id2', 'id3'],
+        errors: [
+          { id: 'id1', reason: 'reason' }
+        ]
+      });
     });
   });
 

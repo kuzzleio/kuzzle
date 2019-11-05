@@ -28,6 +28,15 @@ class ApiBase {
     throw new Error('not implemented');
   }
 
+  adminResetDatabase () {
+    const msg = {
+      controller: 'admin',
+      action: 'resetDatabase'
+    };
+
+    return this.send(msg);
+  }
+
   serverPublicApi () {
     const msg = {
       controller: 'server',
@@ -166,7 +175,8 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'create',
-        body
+        body,
+        refresh: 'wait_for'
       };
 
     if (id) {

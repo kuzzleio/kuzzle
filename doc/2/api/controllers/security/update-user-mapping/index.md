@@ -49,13 +49,13 @@ Body:
 
 ## Body properties
 
-- `properties`: mapping definition using [Elasticsearch mapping format](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/mapping.html)
+- `properties`: mapping definition using [Elasticsearch mapping format](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html)
 
 ---
 
 ## Response
 
-Returns an acknowledgement.
+Returns the updated mappings.
 
 ```js
 {
@@ -65,7 +65,7 @@ Returns an acknowledgement.
   "controller": "security",
   "requestId": "<unique request identifier>",
   "result": {
-    "acknowledged": true
+    // mappings
   },
 }
 ```

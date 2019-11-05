@@ -24,7 +24,7 @@
 const
   fs = require('fs'),
   Kuzzle = require('../lib/api/kuzzle'),
-  ColorOutput = require('./colorOutput'),
+  ColorOutput = require('./.lib/colorOutput'),
   yargs = require('yargs');
 
 function loadJson (filePath) {
@@ -62,7 +62,7 @@ function startKuzzle (options = {}) {
 
   return kuzzle.start(kuzzleParams)
     .then(() => {
-      cout.ok('[✔] Kuzzle server ready');
+      cout.ok(`[✔] Kuzzle server ${require('../package.json').version} ready`);
 
       return kuzzle.adminExists();
     })
@@ -70,7 +70,7 @@ function startKuzzle (options = {}) {
       if (! adminExists) {
         cout.warn('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');
         cout.notice('[ℹ] You can use the CLI or the admin console to create the first administrator user.');
-        cout.notice('    For more information: https://docs.kuzzle.io/core/1/guides/essentials/security/');
+        cout.notice('    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/');
       }
     })
     .catch(err => {

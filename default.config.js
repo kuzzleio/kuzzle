@@ -129,7 +129,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -146,7 +146,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -187,10 +187,6 @@ module.exports = {
         server: {
           port: 1883
         }
-      },
-      socketio: {
-        enabled: true,
-        origins: '*:*'
       },
       websocket: {
         enabled: true,
@@ -246,11 +242,13 @@ module.exports = {
         name: 'kuzzle',
         collections: {
           users: {
+            dynamic: 'false',
             properties: {
               profileIds: { type: 'keyword' }
             }
           },
           profiles: {
+            dynamic: 'false',
             properties: {
               policies: {
                 properties:  {
@@ -263,7 +261,7 @@ module.exports = {
             dynamic: 'false',
             properties: {
               controllers: {
-                dynamic: false,
+                dynamic: 'false',
                 properties: {}
               }
             }

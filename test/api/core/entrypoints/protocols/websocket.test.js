@@ -22,6 +22,9 @@ describe('/lib/api/core/entrypoints/protocols/websocket', () => {
     kuzzle = new KuzzleMock();
     entrypoint = new EntryPoint(kuzzle);
 
+    sinon.stub(entrypoint, 'newConnection');
+    sinon.stub(entrypoint, 'removeConnection');
+
     WebSocketServer = sinon.spy(function () {
       this.on = sinon.spy();
     });
@@ -244,10 +247,8 @@ describe('/lib/api/core/entrypoints/protocols/websocket', () => {
     });
 
     it('should remove the client from its subscriptions', () => {
-      entrypoint.clients.connectionId = {};
       protocol.onClientDisconnection('connectionId');
-
-      should(entrypoint.clients).be.empty();
+      should(entrypoint.removeConnection).calledOnce().calledWith('connectionId');
 
       should(protocol.channels).deepEqual(new Map([
         ['c1', new Set(['foo', 'bar'])]
@@ -295,7 +296,7 @@ describe('/lib/api/core/entrypoints/protocols/websocket', () => {
         const matcher = errorMatcher.fromMessage(
           'network',
           'websocket',
-          'websocket_request_error',
+          'unexpected_error',
           'Unexpected token o in JSON at position 0');
 
         should(entrypoint.execute).not.be.called();

@@ -67,22 +67,22 @@ describe('Test: validation/types/string', () => {
     it('should throw if "length" is not an object', () => {
       [[], undefined, null, 'foobar', 123].forEach(length => {
         should(() => stringType.validateFieldSpecification({length}))
-          .throw(PreconditionError, {message: 'Invalid "length" option definition.'});
+          .throw(PreconditionError, { id: 'validation.assert.unexpected_properties' });
       });
     });
 
     it('should throw if an unrecognized property is passed to the length options', () => {
       should(() => stringType.validateFieldSpecification({length: {foo: 123}}))
-        .throw(PreconditionError, {message: 'Invalid "length" option definition.'});
+        .throw(PreconditionError, { id: 'validation.assert.unexpected_properties' });
     });
 
     it('should throw if a non-numeric value is passed to the min or max properties', () => {
       [[], {}, undefined, null, 'foo'].forEach(v => {
         should(() => stringType.validateFieldSpecification({length: {min: v}}))
-          .throw(PreconditionError, {message: 'Invalid "length.min" option: must be of type "number".'});
+          .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
 
         should(() => stringType.validateFieldSpecification({length: {max: v}}))
-          .throw(PreconditionError, {message: 'Invalid "length.max" option: must be of type "number".'});
+          .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
       });
     });
 
@@ -92,7 +92,7 @@ describe('Test: validation/types/string', () => {
           min: 42,
           max: 41
         }
-      })).throw(PreconditionError, {message: 'Invalid length range: min > max.'});
+      })).throw(PreconditionError, { id: 'validation.assert.invalid_range' });
     });
   });
 });

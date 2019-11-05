@@ -1,10 +1,7 @@
 const
   should = require('should'),
   BulkController = require('../../../lib/api/controllers/bulkController'),
-  {
-    Request,
-    errors: { PartialError }
-  } = require('kuzzle-common-objects'),
+  { Request } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   mockAssertions = require('../../mocks/mockAssertions'),
   BaseController = require('../../../lib/api/controllers/baseController');
@@ -59,15 +56,15 @@ describe('Test the bulk controller', () => {
       const response = await controller.import(request);
 
       should(controller.publicStorage.import)
-        .be.calledWith(index, collection, bulkData, { refresh: 'false', userId: undefined });
+        .be.calledWith(index, collection, bulkData, { refresh: 'false', userId: null });
 
       should(response).match({
-        items: ['fake', 'data'],
-        errors: false
+        successes: ['fake', 'data'],
+        errors: []
       });
     });
 
-    it('should handle partial errors', async () => {
+    it('should handle errors', async () => {
       controller.publicStorage.import.resolves({
         items: [],
         errors: ['fake', 'data']
@@ -76,11 +73,9 @@ describe('Test the bulk controller', () => {
       const response = await controller.import(request);
 
       should(response).match({
-        items: ['fake', 'data'],
-        errors: true
+        successes: [],
+        errors: ['fake', 'data']
       });
-      should(request.status).be.eql(206);
-      should(request.error).be.instanceOf(PartialError);
     });
   });
 
@@ -174,11 +169,11 @@ describe('Test the bulk controller', () => {
         { refresh: 'false', injectKuzzleMeta: false });
 
       should(response).match({
-        hits: [
+        successes: [
           { _id: 'maed', _source: { name: 'Maedhros' }, _version: 1 },
           { _id: 'magl', _source: { name: 'Maglor' }, _version: 1 }
         ],
-        total: 2
+        errors: []
       });
     });
 

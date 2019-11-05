@@ -33,11 +33,11 @@ services:
       - "9229:9229"
     environment:
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+      - kuzzle_services__storageEngine__commonMapping__dynamic=true
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
-      - kuzzle_services__storageEngine__commonMapping__dynamic=true
       - NODE_ENV=${NODE_ENV:-development}
       # - DEBUG=kuzzle:*,-kuzzle:entry-point:protocols:websocket
       - DEBUG=${DEBUG:-none}
@@ -48,6 +48,7 @@ services:
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
       - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
       - NODE_10_VERSION=10.16.0
+      - WITHOUT_KUZZLE=${WITHOUT_KUZZLE}
 
   redis:
     image: redis:${REDIS_VERSION:-5}
@@ -55,13 +56,8 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.3.0
+    image: kuzzleio/elasticsearch:7.4.0
     ports:
       - "9200:9200"
     ulimits:
       nofile: 65536
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - node.name=alyx
-      - cluster.name=kuzzle
-      - discovery.type=single-node
