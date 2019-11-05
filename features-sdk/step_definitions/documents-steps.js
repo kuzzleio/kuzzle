@@ -52,8 +52,8 @@ Then('I should receive a {string} array of objects matching:', function (name, d
   const expected = this.parseObjectArray(dataTable);
 
   should(this.props.result[name].length).be.eql(
-      expected.length,
-      `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
+    expected.length,
+    `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
 
   for (let i = 0; i < expected.length; i++) {
     should(this.props.result[name][i]).match(expected[i]);
@@ -64,8 +64,8 @@ Then('I should receive a {string} array matching:', function (name, dataTable) {
   const expected = _.flatten(dataTable.rawTable).map(JSON.parse);
 
   should(this.props.result[name].length).be.eql(
-      expected.length,
-      `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
+    expected.length,
+    `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
 
   should(this.props.result[name].sort()).match(expected.sort());
 });
@@ -99,11 +99,19 @@ Then('I count {int} documents matching:', async function (expectedCount, dataTab
   should(count).be.eql(expectedCount);
 });
 
-Then('The document {string} exists', async function (id) {
-  await this.sdk.document.get(
+Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
+  const exists = await this.sdk.document.exists(
     this.props.index,
     this.props.collection,
     id);
+
+  if (not && exists) {
+    throw new Error(`Document ${id} exists, but it shouldn't`);
+  }
+
+  if (!not && !exists) {
+    throw new Error(`Expected document ${id} to exist`);
+  }
 });
 
 Then('I {string} the following document ids:', async function (action, dataTable) {
@@ -116,4 +124,23 @@ Then('I {string} the following document ids:', async function (action, dataTable
     this.props.collection,
     ids,
     { refresh: 'wait_for' });
+});
+
+Then('I search documents with the following query:', function (queryRaw) {
+  const query = JSON.parse(queryRaw);
+
+  this.props.searchBody = { query };
+});
+
+Then('with the following highlights:', function (highlightsRaw) {
+  const highlights = JSON.parse(highlightsRaw);
+
+  this.props.searchBody.highlight = highlights;
+});
+
+Then('I execute the search query', async function () {
+  this.props.result = await this.sdk.document.search(
+    this.props.index,
+    this.props.collection,
+    this.props.searchBody);
 });

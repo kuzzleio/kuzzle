@@ -45,6 +45,7 @@ kuzzle-swagger.*
 plugins/available/*
 !plugins/available/kuzzle-plugin-auth-passport-local
 !plugins/available/kuzzle-plugin-logger
+!plugins/available/functional-test-plugin
 
 plugins/enabled/*
 !plugins/enabled/kuzzle-plugin-auth-passport-local
