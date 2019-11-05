@@ -13,7 +13,7 @@
     "functional-testing": "bash features/run.sh && bash features-sdk/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./test ./features ./bin",
+    "lint": "eslint --max-warnings=0 ./lib ./test ./features ./bin ./features-sdk",
     "doc-prepare": "cd doc && bash doc.sh prepare",
     "doc-dev": "cd doc && bash doc.sh dev",
     "doc-build": "cd doc && bash doc.sh build",

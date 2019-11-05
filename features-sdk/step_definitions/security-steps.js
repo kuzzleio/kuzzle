@@ -1,7 +1,6 @@
 const
-  {
-    Given
-  } = require('cucumber');
+  { Given } = require('cucumber'),
+  should = require('should');
 
 Given('I create a profile {string} with the following policies:', function (profileId, dataTable) {
   let policies = this.parseObject(dataTable);
