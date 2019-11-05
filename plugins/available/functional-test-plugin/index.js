@@ -1,3 +1,5 @@
+const should = require('should');
+
 class FunctionalTestPlugin {
   constructor () {
     this.controllers = {
@@ -9,6 +11,12 @@ class FunctionalTestPlugin {
     this.routes = [
       { verb: 'post', url: '/constructors/esclient/:index', controller: 'constructors', action: 'ESClient' }
     ];
+
+    this.controllers.secrets = {
+      test: 'testSecrets'
+    };
+
+    this.routes.push({ verb: 'post', url: '/secrets', controller: 'secrets', action: 'test' })
   }
 
   init (config, context) {
@@ -28,6 +36,16 @@ class FunctionalTestPlugin {
     const { body } = await client.index(esRequest);
 
     return body;
+  }
+
+  async testSecrets (request) {
+    const expectedSecrets = request.input.body;
+
+    should(this.context.secrets).match(expectedSecrets);
+
+    return {
+      result: true
+    };
   }
 }
 

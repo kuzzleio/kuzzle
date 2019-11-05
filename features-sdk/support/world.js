@@ -1,5 +1,6 @@
 const
   config = require('../../lib/config'),
+  { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   { setWorldConstructor } = require('cucumber');
 
 class KuzzleWorld {
@@ -16,6 +17,7 @@ class KuzzleWorld {
     // Intermediate steps should store values inside this object
     this.props = {};
 
+    this.sdk = new Kuzzle(this._getProtocol());
   }
 
   parseObject (dataTable) {
@@ -48,6 +50,23 @@ class KuzzleWorld {
     }
 
     return objectArray;
+  }
+
+  _getProtocol () {
+    let protocol;
+
+    switch (this.protocol) {
+      case 'http':
+        protocol = new Http(this.host, { port: this.port });
+        break;
+      case 'websocket':
+        protocol = new WebSocket(this.host, { port: this.port });
+        break;
+      default:
+        throw new Error(`Unknown protocol "${this.protocol}".`);
+    }
+
+    return protocol;
   }
 }
 
