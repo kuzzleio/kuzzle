@@ -27,11 +27,6 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.6.4",
-    "@babel/plugin-transform-runtime": "^7.5.5",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/runtime": "^7.6.3",
     "@elastic/elasticsearch": "^7.3.0",
     "async": "^2.6.3",
     "bluebird": "^3.7.1",
