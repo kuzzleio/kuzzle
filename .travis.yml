@@ -187,7 +187,7 @@ jobs:
 
     - <<: *doc-deploy
       name: Deploy docs.kuzzle.io
-      if: branch =~ /^master|[0-9]+-stable$/
+      if: branch =~ /^master|[0-9]+-(stable|beta)$/
       env:
         - *doc-deploy-env
         - S3_BUCKET=docs.kuzzle.io
@@ -204,7 +204,7 @@ stages:
   - name: Cross-platform tests
     if: type = cron
   - name: Deployments
-    if: type = push AND branch =~ /^master|[0-9]+-stable|1-dev$/
+    if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)|1-dev|$/
 
 # ---------------------------------------
 # Notifications
