@@ -1,7 +1,6 @@
 'use strict';
 
 const
-  _ = require('lodash'),
   { After, Before, BeforeAll } = require('cucumber'),
   { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   testMappings = require('../fixtures/mappings'),
@@ -105,13 +104,13 @@ Before({ tags: '@firstAdmin' }, async function () {
   this.sdk.jwt = null;
 });
 
-After({ tags: '@firstAdmin' }, async function () {
+After({ tags: '@firstAdmin', timeout: 60 * 1000 }, async function () {
   await resetSecurityDefault(this.sdk);
 });
 
 // security hooks ==============================================================
 
-Before({ tags: '@security', timeout: 10 * 1000 }, async function () {
+Before({ tags: '@security', timeout: 60 * 1000 }, async function () {
   await resetSecurityDefault(this.sdk);
 });
 
