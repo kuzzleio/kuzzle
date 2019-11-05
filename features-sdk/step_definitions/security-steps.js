@@ -16,22 +16,22 @@ Given('I create a role {string} with the following policies:', async function (r
 });
 
 Then(/I can( not)? delete the role "(.*?)"/, async function (not, roleId) {
-  
+
   if (not) {
     return this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' })
       .catch(() => null);
-  } 
+  }
   return await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
-  
+
 });
 
 Then(/I can( not)? delete the profile "(.*?)"/, async function (not, profileId) {
   if (not) {
     return this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' })
       .catch(() => null);
-  } 
+  }
   return await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' });
-  
+
 });
 
 Given('I delete the user {string}', async function (userId) {
