@@ -329,5 +329,6 @@ Feature: Document Controller
     | "document-1" | { "name": "document1" } |
     | "document-2" | { "name": "document2" } |
     When I delete the document "document-1"
+    Then I should receive a "string" result equals to "document-1"
     Then The document "document-1" should not exist
     Then The document "document-2" should exist
