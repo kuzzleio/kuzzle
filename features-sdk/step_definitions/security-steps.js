@@ -6,8 +6,12 @@ const
   } = require('cucumber');
 
 Given('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
-  const policies = this.parseObject(dataTable);
-  this.props.result = await this.sdk.security.createProfile(profileId, policies);
+  const data = this.parseObject(dataTable);
+  const policies = [];
+  for (const [roleId, restrictedTo] of Object.entries(data)) {
+    policies.push({ roleId, restrictedTo });
+  }
+  this.props.result = await this.sdk.security.createProfile(profileId, {policies});
 });
 
 Given('I create a role {string} with the following API rights:', async function (roleId, dataTable) {

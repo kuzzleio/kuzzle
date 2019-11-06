@@ -42,7 +42,7 @@ Feature: Security Controller
     Given I create a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     And I create a profile "test-profile" with the following policies:
-    | policies | [ { "roleId": "test-role", "restrictedTo": [ { "index": "example", "collections": ["one", "two"] } ] } ] |
+    | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
     Then I delete the profile "test-profile"
     And I delete the role "test-role"
 
@@ -51,7 +51,7 @@ Feature: Security Controller
     Given I create a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     And I create a profile "test-profile" with the following policies:
-    | policies | [ { "roleId": "test-role", "restrictedTo": [ { "index": "example", "collections": ["one", "two"] } ] } ] |
+    | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
     And I create a user "test-user" with content:
     | profileIds | ["test-profile"] |
     Then I can not delete the profile "test-profile"
