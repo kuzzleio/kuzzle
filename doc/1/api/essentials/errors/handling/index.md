@@ -14,22 +14,13 @@ A `KuzzleError` object has the following properties:
 
 | Property     | Type               | Description                                            |
 | ------------ | ------------------ | ------------------------------------------------------ |
-| `status`     | <pre>number</pre>            | HTTP status code                                       |
+| `code`       | <pre>number</pre> | Error unique code |
+| `id`  | <pre>string</pre>  | Error full name |
 | `message`    | <pre>string</pre>               | Short description of the error                         |
 | `stack`      | <pre>string</pre>               | (Available in development mode only) Error stack trace |
-| `errorName`  | <pre>string</pre>  | Error full name |
-| `code`       | <pre>number</pre> | Error unique code |
+| `status`     | <pre>number</pre>            | HTTP status code                                       |
 
 Clients can detect the error type based on the `status` and process the error accordingly.
-
-
-### errorName
-
-The `errorName` property is a concatenation of 3 levels of precisions, indicating the origin of the error: the domain, the subdomain, and the error name.
-
-For instance, the error `api.auth.database_not_found` was raised in the API, by the Auth controller.
-
-You can see the full definition about Kuzzle errors [here](/core/1/api/essentials/errors/codes/)
 
 ---
 
@@ -44,6 +35,16 @@ So a `code` `0x02040001` has `02` as domain code on 1 byte, `04` as subdomain co
 
 The full list of Kuzzle API errors is available [here](/core/1/api/essentials/errors/codes).
 
+
+### id
+
+The `id` property is a concatenation of 3 levels of precisions, indicating the origin of the error: the domain, the subdomain, and the error name.
+
+For instance, the error `api.auth.database_not_found` was raised in the API, by the Auth controller.
+
+You can see the full definition about Kuzzle errors [here](/core/1/api/essentials/errors/codes/)
+
+---
 
 ## Common errors
 
