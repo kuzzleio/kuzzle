@@ -25,7 +25,7 @@ Our teams will be able to meet your needs in terms of expertise and multi-techno
 
 ## Public Roadmap
 
-You can consult the public roadmap on Trello. Come and vote for the features you need!
+You can consult the public roadmap on Trello. Come and vote for the features you need!  
 [Kuzzle Public Roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap)
 
 ## Kuzzle in production
