@@ -5,7 +5,7 @@ const
   IndexCache = require('../../../lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  var
+  let
     listAliasesStub,
     listIndexesStub,
     listCollectionsStub,
@@ -180,18 +180,18 @@ describe('Test: core/indexCache', () => {
         .catch(error => done(error));
     });
 
-    it('should resolve with true and update the cache and apply mapping if the collection exists in ES but not in Kuzzle', done => {
+    it('should resolve with true and update the cache and apply mapping if the collection exists in ES but not in Kuzzle', () => {
       kuzzle.services.list.storageEngine.collectionExists.resolves(true);
       indexCache.add('index1');
 
-      indexCache.exists('index1', 'collection1')
+      return indexCache.exists('index1', 'collection1')
         .then(result => {
           should(result).be.true();
           should(indexCache.indexes.index1).be.eql(['collection1']);
-          should(kuzzle.internalEngine.applyDefaultMapping).be.calledOnce();
-          done();
-        })
-        .catch(error => done(error));
+          should(kuzzle.internalEngine.applyDefaultMapping)
+            .be.calledOnce()
+            .be.calledWith('index1', 'collection1', kuzzle.config.services.db.commonMapping);
+        });
     });
 
     it('should resolve with false if the index does not exists in ES', done => {
