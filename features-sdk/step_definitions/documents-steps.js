@@ -160,3 +160,10 @@ Then('I execute the search query', async function () {
     this.props.collection,
     this.props.searchBody);
 });
+
+Then('I delete the document {string}', async function (id) {
+  this.props.result = await this.sdk.document.delete(
+    this.props.index,
+    this.props.collection,
+    id);
+});

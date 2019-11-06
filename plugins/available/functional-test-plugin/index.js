@@ -26,8 +26,14 @@ class FunctionalTestPlugin {
     this.routes.push({ verb: 'post', url: '/pipes/:event/:state', controller: 'pipes', action: 'manage' });
     this.routes.push({ verb: 'delete', url: '/pipes', controller: 'pipes', action: 'deactivateAll' });
 
-    this.pipes['generic:document:beforeWrite'] = (...args) => this.genericDocumentWrite('before', ...args);
-    this.pipes['generic:document:afterWrite'] = (...args) => this.genericDocumentWrite('after', ...args);
+    this.pipes['generic:document:beforeWrite'] = (...args) => this.genericDocumentEvent('beforeWrite', ...args);
+    this.pipes['generic:document:afterWrite'] = (...args) => this.genericDocumentEvent('afterWrite', ...args);
+    this.pipes['generic:document:beforeUpdate'] = (...args) => this.genericDocumentEvent('beforeUpdate', ...args);
+    this.pipes['generic:document:afterUpdate'] = (...args) => this.genericDocumentEvent('afterUpdate', ...args);
+    this.pipes['generic:document:beforeGet'] = (...args) => this.genericDocumentEvent('beforeGet', ...args);
+    this.pipes['generic:document:afterGet'] = (...args) => this.genericDocumentEvent('afterGet', ...args);
+    this.pipes['generic:document:beforeDelete'] = (...args) => this.genericDocumentEvent('beforeDelete', ...args);
+    this.pipes['generic:document:afterDelete'] = (...args) => this.genericDocumentEvent('afterDelete', ...args);
   }
 
   init (config, context) {
@@ -75,8 +81,8 @@ class FunctionalTestPlugin {
     return null;
   }
 
-  async genericDocumentWrite (eventType, documents, request) {
-    const pipe = this.activatedPipes[`generic:document:${eventType}Write`];
+  async genericDocumentEvent (event, documents, request) {
+    const pipe = this.activatedPipes[`generic:document:${event}`];
 
     if (!pipe || pipe.state === 'off') {
       return documents;

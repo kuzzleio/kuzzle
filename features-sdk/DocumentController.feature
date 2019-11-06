@@ -318,3 +318,16 @@ Feature: Document Controller
     Then I count 3 documents
     And I count 2 documents matching:
     | job | "developer" |
+
+  # document:delete ============================================================
+
+  @mappings
+  Scenario: Delete document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+    | _id          | body  |
+    | "document-1" | { "name": "document1" } |
+    | "document-2" | { "name": "document2" } |
+    When I delete the document "document-1"
+    Then The document "document-1" should not exist
+    Then The document "document-2" should exist
