@@ -24,6 +24,7 @@ class FunctionalTestPlugin {
     };
 
     this.routes.push({ verb: 'post', url: '/pipes/:event/:state', controller: 'pipes', action: 'manage' });
+    this.routes.push({ verb: 'delete', url: '/pipes', controller: 'pipes', action: 'deactivateAll' });
 
     this.pipes['generic:document:beforeWrite'] = (...args) => this.genericDocumentWrite('before', ...args);
     this.pipes['generic:document:afterWrite'] = (...args) => this.genericDocumentWrite('after', ...args);
