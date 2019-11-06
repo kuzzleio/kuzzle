@@ -6,36 +6,40 @@ const
   } = require('cucumber');
 
 Given('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
-  let policies = this.parseObject(dataTable);
-  return await this.sdk.security.createProfile(profileId, policies);
+  const policies = this.parseObject(dataTable);
+  this.props.result = await this.sdk.security.createProfile(profileId, policies);
 });
 
-Given('I create a role {string} with the following policies:', async function (roleId, dataTable) {
-  let controllers = this.parseObject(dataTable);
-  return await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
+Given('I create a role {string} with the following API rights:', async function (roleId, dataTable) {
+  const controllers = this.parseObject(dataTable);
+  this.props.result = await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
 });
 
 Then(/I can( not)? delete the role "(.*?)"/, async function (not, roleId) {
 
-  if (not) {
-    return this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' })
-      .catch(() => null);
+  try {
+    await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
+  } catch (e) {
+    if (not) {
+      return;
+    }
+    throw new Error(e);
   }
-  return await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
-
 });
 
 Then(/I can( not)? delete the profile "(.*?)"/, async function (not, profileId) {
-  if (not) {
-    return this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' })
-      .catch(() => null);
+  try {
+    await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' });
+  } catch (e) {
+    if (not) {
+      return;
+    }
+    throw new Error(e);
   }
-  return await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' });
-
 });
 
 Given('I delete the user {string}', async function (userId) {
-  return await this.sdk.security.deleteUser(userId, { refresh: 'wait_for' });
+  this.props.result = await this.sdk.security.deleteUser(userId, { refresh: 'wait_for' });
 });
 
 Given('I create a user {string} with content:', async function (userId, dataTable) {
@@ -51,7 +55,7 @@ Given('I create a user {string} with content:', async function (userId, dataTabl
     }
   };
 
-  return await this.sdk.security.createUser(userId, body);
+  this.props.result = await this.sdk.security.createUser(userId, body);
 });
 
 Given('I update the role {string} with:', async function (roleId, dataTable) {
