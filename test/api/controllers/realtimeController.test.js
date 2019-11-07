@@ -65,6 +65,16 @@ describe('Test: subscribe controller', () => {
           should(kuzzle.hotelClerk.addSubscription).be.calledWith(request);
         });
     });
+
+    it('should return nothing if the connection is dead', () => {
+      // the check is actually done in the hotelclerk and returns undefined if so
+      kuzzle.hotelClerk.addSubscription.resolves();
+
+      return realtimeController.subscribe(request)
+        .then(result => {
+          should(result).be.undefined();
+        });
+    });
   });
 
   describe('#join', () => {
