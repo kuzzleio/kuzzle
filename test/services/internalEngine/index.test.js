@@ -943,6 +943,13 @@ describe('InternalEngine', () => {
       kuzzle.internalEngine.getMapping = sinon.stub().resolves(getMappingResponse);
     });
 
+    it('should apply default mapping if none provided', () => {
+      return kuzzle.internalEngine.applyDefaultMapping(index, collection)
+        .then(mapping => {
+          should(mapping).match(kuzzle.config.services.db.commonMapping);
+        });
+    });
+
     it('should update collection mapping with default mapping', () => {
       return kuzzle.internalEngine.applyDefaultMapping(index, collection, commonMapping)
         .then(defaultMapping => {

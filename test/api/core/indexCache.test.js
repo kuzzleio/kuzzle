@@ -5,7 +5,7 @@ const
   IndexCache = require('../../../lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  var
+  let
     listAliasesStub,
     listIndexesStub,
     listCollectionsStub,
@@ -199,7 +199,9 @@ describe('Test: core/indexCache', () => {
           should(result).be.true();
           should(indexCache.indexes)
             .have.value('index1', new Set(['collection1']));
-          should(kuzzle.internalEngine.applyDefaultMapping).be.calledOnce();
+          should(kuzzle.internalEngine.applyDefaultMapping)
+            .be.calledOnce()
+            .be.calledWith('index1', 'collection1', kuzzle.config.services.db.commonMapping);
         });
     });
 
