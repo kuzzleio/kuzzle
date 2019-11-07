@@ -10,7 +10,7 @@ Instantiates an embedded [Elasticsearch client](https://github.com/elastic/elast
 
 This client can be used to send raw Elasticsearch request.  
 
-See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html) for more informations.
+See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html) for more information.
 
 ---
 
