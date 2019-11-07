@@ -1,5 +1,28 @@
 Feature: Security Controller
 
+  # security:createApiKey =======================================================
+
+  @security
+  Scenario: Create an API key for a user
+    Given I create a user "My" with content:
+    | profileIds | ["default"] |
+    When I successfully call the route "security":"createApiKey" with args:
+    | _id | "My" |
+    | expiresIn | -1 |
+    | refresh | "wait_for" |
+    | body | { "description": "Le Huong" } |
+    Then I should receive a result matching:
+    | expiresAt | -1 |
+    | ttl | -1 |
+    | description | "Le Huong" |
+    And The result should contain a property "hash" of type "string"
+    And The result should contain a property "apiKey" of type "string"
+    And The user "My" should have the following API keys:
+    | expiresAt | ttl | description |
+    | -1 | -1 | "Le Huong" |
+    # list token to check
+    # auth to check
+
   # security:createFirstAdmin ==================================================
 
   @firstAdmin

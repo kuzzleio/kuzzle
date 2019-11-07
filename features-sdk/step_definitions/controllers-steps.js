@@ -46,6 +46,13 @@ Then('I should receive a result matching:', function (dataTable) {
   should(this.props.result).match(expectedResult);
 });
 
+Then('The result should contain a property {string} of type {string}', function (path, type) {
+  const property = _.get(this.props.result, path);
+
+  should(property).not.be.undefined();
+  should(typeof property).be.eql(type);
+});
+
 Then('I should receive an empty result', function () {
   should(this.props.result).be.undefined();
 });

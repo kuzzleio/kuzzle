@@ -244,7 +244,15 @@ module.exports = {
           users: {
             dynamic: 'false',
             properties: {
-              profileIds: { type: 'keyword' }
+              profileIds: { type: 'keyword' },
+              apiKeys: {
+                properties: {
+                  hash: { type: 'keyword' },
+                  expiresAt: { type: 'integer' },
+                  ttl: { type: 'keyword' },
+                  description: { type: 'keyword' }
+                }
+              }
             }
           },
           profiles: {

@@ -61,3 +61,13 @@ Given('The role {string} should match:', async function (roleId, dataTable) {
     should(actions).match(role.controllers[controller].actions);
   }
 });
+
+Given('The user {string} should have the following API keys:', async function (userId, dataTable) {
+  const expectedApiKeys = this.parseObjectArray(dataTable);
+
+  const user = await this.sdk.security.getUser(userId);
+
+  for (let i = 0; i < user.content.apiKeys.length; i++) {
+    should(user.content.apiKeys[i]).match(expectedApiKeys[i]);
+  }
+});
