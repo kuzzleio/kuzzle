@@ -285,7 +285,7 @@ module.exports = {
             properties: {
               userId: { type: 'keyword' },
               hash: { type: 'keyword' },
-              description: { type: 'keyword' },
+              description: { type: 'text' },
               expiresAt: { type: 'integer' },
               ttl: { type: 'keyword' },
               token: { type: 'keyword' }

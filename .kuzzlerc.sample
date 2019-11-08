@@ -559,7 +559,7 @@
               "hash": { "type": "keyword" },
               "expiresAt": { "type": "integer" },
               "ttl": { "type": "keyword" },
-              "description": { "type": "keyword" },
+              "description": { "type": "text" },
               "token": { "type": "keyword" }
             }
           }

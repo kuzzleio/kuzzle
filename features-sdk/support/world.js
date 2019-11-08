@@ -1,5 +1,6 @@
 const
   config = require('../../lib/config'),
+  _ = require('lodash'),
   { setWorldConstructor } = require('cucumber');
 
 class KuzzleWorld {
@@ -49,6 +50,20 @@ class KuzzleWorld {
 
     return objectArray;
   }
+
+  matchObject (object, expected) {
+    for (const [keyPath, expectedValue] of Object.entries(expected)) {
+      const objectValue = _.get(object, keyPath);
+
+      if (expectedValue === '_any_') {
+        should(objectValue).not.be.undefined();
+      }
+      else {
+        should(objectValue).match(expectedValue, `${keyPath} does not match. Expected ${expectedValue} have ${objectValue}`);
+      }
+    }
+  }
+
 }
 
 setWorldConstructor(KuzzleWorld);

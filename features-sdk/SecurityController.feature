@@ -3,7 +3,7 @@ Feature: Security Controller
   # security:createApiKey =======================================================
 
   @security
-  Scenario: Create an API key for a user
+  Scenario: Create an API key
     Given I create a user "My" with content:
     | profileIds | ["default"] |
     When I successfully call the route "security":"createApiKey" with args:
@@ -19,7 +19,42 @@ Feature: Security Controller
     And The result should contain a property "_source.hash" of type "string"
     And The result should contain a property "_source.token" of type "string"
     And I can login with the previously created API key
-    # list token to check
+    And I successfully call the route "security":"searchApiKeys" with args:
+    | _id | "My" |
+    Then I should receive a "hits" array of objects matching:
+    | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
+    | "_any_" | "My" | -1 | -1 | "Le Huong" |
+
+  # security:searchApiKeys =====================================================
+
+  @security
+  Scenario: Search for API keys
+    Given I create a user "My" with content:
+    | profileIds | ["default"] |
+    And I successfully call the route "security":"createApiKey" with args:
+    | _id | "My" |
+    | expiresIn | -1 |
+    | body | { "description": "Le Huong" } |
+    And I successfully call the route "security":"createApiKey" with args:
+    | _id | "test-admin" |
+    | expiresIn | -1 |
+    | body | { "description": "Sigfox API key" } |
+    And I successfully call the route "security":"createApiKey" with args:
+    | _id | "test-admin" |
+    | expiresIn | -1 |
+    | body | { "description": "Lora API key" } |
+    And I successfully call the route "security":"createApiKey" with args:
+    | _id | "test-admin" |
+    | expiresIn | -1 |
+    | refresh | "wait_for" |
+    | body | { "description": "Lora API key 2" } |
+    When I successfully call the route "security":"searchApiKeys" with args:
+    | _id | "test-admin" |
+    | body | { "match": { "description": "Lora" } } |
+    Then I should receive a "hits" array of objects matching:
+    | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
+    | "_any_" | "test-admin" | -1 | -1 | "Lora API key" |
+    | "_any_" | "test-admin" | -1 | -1 | "Lora API key 2" |
 
   # security:createFirstAdmin ==================================================
 
