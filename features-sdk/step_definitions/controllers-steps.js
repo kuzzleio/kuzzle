@@ -53,7 +53,12 @@ Then('The property {string} of the result should match:', function (path, dataTa
 
   should(property).not.be.undefined();
 
-  should(property).match(expectedProperty);
+  if (_.isPlainObject(property)) {
+    this.matchObject(property, expectedProperty);
+  }
+  else {
+    should(property).match(expectedProperty);
+  }
 });
 
 Then('The result should contain a property {string} of type {string}', function (path, type) {
