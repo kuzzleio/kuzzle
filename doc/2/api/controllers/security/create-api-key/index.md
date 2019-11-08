@@ -91,6 +91,7 @@ The authentication token `token` is displayed only once.
   "result": {
     "_id": "",
     "_source": {
+      "userId": "mWakSm4BWtbu6xy6NY8K",
       "hash": "AD791031EEBBF517862F4D86B2D61F95535CF1F6A20AEF0E6141D1336AB4EA79",
       "expiresAt": -1,
       "ttl": -1,
