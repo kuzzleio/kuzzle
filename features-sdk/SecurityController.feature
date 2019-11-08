@@ -11,12 +11,13 @@ Feature: Security Controller
     | expiresIn | -1 |
     | refresh | "wait_for" |
     | body | { "description": "Le Huong" } |
-    Then I should receive a result matching:
+    Then The property "_source" of the result should match:
     | expiresAt | -1 |
     | ttl | -1 |
     | description | "Le Huong" |
-    And The result should contain a property "hash" of type "string"
-    And The result should contain a property "apiKey" of type "string"
+    And The result should contain a property "_id" of type "string"
+    And The result should contain a property "_source.hash" of type "string"
+    And The result should contain a property "_source.token" of type "string"
     And The user "My" should have the following API keys:
     | expiresAt | ttl | description |
     | -1 | -1 | "Le Huong" |

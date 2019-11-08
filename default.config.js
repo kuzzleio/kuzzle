@@ -244,15 +244,7 @@ module.exports = {
           users: {
             dynamic: 'false',
             properties: {
-              profileIds: { type: 'keyword' },
-              apiKeys: {
-                properties: {
-                  hash: { type: 'keyword' },
-                  expiresAt: { type: 'integer' },
-                  ttl: { type: 'keyword' },
-                  description: { type: 'keyword' }
-                }
-              }
+              profileIds: { type: 'keyword' }
             }
           },
           profiles: {
@@ -287,6 +279,17 @@ module.exports = {
           config: {
             dynamic: 'false',
             properties: {}
+          },
+          'api-keys': {
+            dynamic: 'false',
+            properties: {
+              userId: { type: 'keyword' },
+              hash: { type: 'keyword' },
+              description: { type: 'keyword' },
+              expiresAt: { type: 'integer' },
+              ttl: { type: 'keyword' },
+              token: { type: 'keyword' }
+            }
           }
         }
       },
