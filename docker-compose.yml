@@ -46,11 +46,10 @@ services:
       - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
       - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
-      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
+      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
+      - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features-sdk/fixtures/secrets.enc.json}
       - NODE_10_VERSION=10.16.0
-      - WITHOUT_KUZZLE=${WITHOUT_KUZZLE}
-      - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
-      - KUZZLE_VAULT_KEY=secret-password
+      - WITHOUT_KUZZLE
 
   redis:
     image: redis:${REDIS_VERSION:-5}
