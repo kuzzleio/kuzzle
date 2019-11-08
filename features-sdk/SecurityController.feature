@@ -18,11 +18,8 @@ Feature: Security Controller
     And The result should contain a property "_id" of type "string"
     And The result should contain a property "_source.hash" of type "string"
     And The result should contain a property "_source.token" of type "string"
-    And The user "My" should have the following API keys:
-    | expiresAt | ttl | description |
-    | -1 | -1 | "Le Huong" |
+    And I can login with the previously created API key
     # list token to check
-    # auth to check
 
   # security:createFirstAdmin ==================================================
 
