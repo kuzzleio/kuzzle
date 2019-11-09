@@ -7,7 +7,7 @@ Feature: Security Controller
     Given I create a user "My" with content:
     | profileIds | ["default"] |
     When I successfully call the route "security":"createApiKey" with args:
-    | _id | "My" |
+    | userId | "My" |
     | expiresIn | -1 |
     | refresh | "wait_for" |
     | body | { "description": "Le Huong" } |
@@ -20,7 +20,7 @@ Feature: Security Controller
     And The result should contain a property "_id" of type "string"
     And I can login with the previously created API key
     And I successfully call the route "security":"searchApiKeys" with args:
-    | _id | "My" |
+    | userId | "My" |
     Then I should receive a "hits" array of objects matching:
     | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
     | "_STRING_" | "My" | -1 | -1 | "Le Huong" |
@@ -32,29 +32,47 @@ Feature: Security Controller
     Given I create a user "My" with content:
     | profileIds | ["default"] |
     And I successfully call the route "security":"createApiKey" with args:
-    | _id | "My" |
+    | userId | "My" |
     | expiresIn | -1 |
     | body | { "description": "Le Huong" } |
     And I successfully call the route "security":"createApiKey" with args:
-    | _id | "test-admin" |
+    | userId | "test-admin" |
     | expiresIn | -1 |
     | body | { "description": "Sigfox API key" } |
     And I successfully call the route "security":"createApiKey" with args:
-    | _id | "test-admin" |
+    | userId | "test-admin" |
     | expiresIn | -1 |
     | body | { "description": "Lora API key" } |
     And I successfully call the route "security":"createApiKey" with args:
-    | _id | "test-admin" |
+    | userId | "test-admin" |
     | expiresIn | -1 |
     | refresh | "wait_for" |
     | body | { "description": "Lora API key 2" } |
     When I successfully call the route "security":"searchApiKeys" with args:
-    | _id | "test-admin" |
+    | userId | "test-admin" |
     | body | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
     | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
     | "_STRING_" | "test-admin" | -1 | -1 | "Lora API key" |
     | "_STRING_" | "test-admin" | -1 | -1 | "Lora API key 2" |
+
+  # security:deleteApiKey =======================================================
+
+  @security
+  Scenario: Delete an API key
+    Given I successfully call the route "security":"createApiKey" with args:
+    | userId | "test-admin" |
+    | _id | "SGN-HCM" |
+    | expiresIn | -1 |
+    | body | { "description": "My Le Huong" } |
+    When I successfully call the route "security":"deleteApiKey" with args:
+    | userId | "test-admin" |
+    | _id | "SGN-HCM" |
+    | refresh | "wait_for" |
+    When I successfully call the route "security":"searchApiKeys" with args:
+    | userId | "test-admin" |
+    Then I should receive a empty "hits" array
+
 
   # security:createFirstAdmin ==================================================
 
