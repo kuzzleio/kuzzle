@@ -3,7 +3,7 @@ Feature: Security Controller
   # security:createApiKey =======================================================
 
   @security
-  Scenario: Create an API key
+  Scenario: Create an API key for an user
     Given I create a user "My" with content:
     | profileIds | ["default"] |
     When I successfully call the route "security":"createApiKey" with args:
@@ -28,7 +28,7 @@ Feature: Security Controller
   # security:searchApiKeys =====================================================
 
   @security
-  Scenario: Search for API keys
+  Scenario: Search for an user API keys
     Given I create a user "My" with content:
     | profileIds | ["default"] |
     And I successfully call the route "security":"createApiKey" with args:
@@ -59,19 +59,21 @@ Feature: Security Controller
   # security:deleteApiKey =======================================================
 
   @security
-  Scenario: Delete an API key
+  Scenario: Delete an API key for an user
     Given I successfully call the route "security":"createApiKey" with args:
     | userId | "test-admin" |
     | _id | "SGN-HCM" |
     | expiresIn | -1 |
     | body | { "description": "My Le Huong" } |
+    And I save the created API key
     When I successfully call the route "security":"deleteApiKey" with args:
     | userId | "test-admin" |
     | _id | "SGN-HCM" |
     | refresh | "wait_for" |
-    When I successfully call the route "security":"searchApiKeys" with args:
+    And I successfully call the route "security":"searchApiKeys" with args:
     | userId | "test-admin" |
     Then I should receive a empty "hits" array
+    And I can not login with the previously created API key
 
 
   # security:createFirstAdmin ==================================================
