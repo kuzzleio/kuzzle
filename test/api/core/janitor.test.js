@@ -468,10 +468,9 @@ describe('Test: core/janitor', () => {
         delete: sinon.stub()
       };
 
-      processMock = {
-        exit: sinon.stub(),
-        pid: process.pid
-      };
+      processMock = Object.assign(process, {
+        exit: sinon.stub()
+      });
 
       mockrequire('pm2', pm2Mock);
       mockrequire.reRequire('../../../lib/api/core/janitor');

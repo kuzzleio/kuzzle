@@ -59,7 +59,7 @@ describe('Test: validation/types/date', () => {
       should(() => dateType.validateFieldSpecification({formats: ['foo', 'epoch_millis', 'bar']}))
         .throw(PreconditionError, {
           id: 'validation.types.invalid_date_format',
-          message: 'The following date types are invalid: foo,bar.'
+          message: 'The following date types are invalid: foo, bar.'
         });
     });
 
