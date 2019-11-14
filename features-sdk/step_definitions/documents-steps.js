@@ -73,7 +73,7 @@ Then('I should receive a {string} array of objects matching:', function (name, d
     `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
 
   for (let i = 0; i < expected.length; i++) {
-    this.matchObject(this.props.result[name][i], expected[i]);
+    should(this.props.result[name][i]).matchObject(expected[i]);
   }
 });
 

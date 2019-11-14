@@ -1,7 +1,8 @@
 const
   config = require('../../lib/config'),
-  _ = require('lodash'),
   { setWorldConstructor } = require('cucumber');
+
+require('./assertions');
 
 class KuzzleWorld {
   constructor (attach, parameters) {
@@ -49,26 +50,6 @@ class KuzzleWorld {
 
     return objectArray;
   }
-
-  matchObject (object, expected) {
-    for (const [keyPath, expectedValue] of Object.entries(expected)) {
-      const objectValue = _.get(object, keyPath);
-
-      if (expectedValue === '_ANY_') {
-        should(objectValue).not.be.undefined();
-      }
-      else if (expectedValue === '_STRING_') {
-        should(objectValue).be.String();
-      }
-      else if (expectedValue === '_NUMBER_') {
-        should(objectValue).be.Number();
-      }
-      else {
-        should(objectValue).match(expectedValue, `${keyPath} does not match. Expected ${expectedValue} have ${objectValue}`);
-      }
-    }
-  }
-
 }
 
 setWorldConstructor(KuzzleWorld);

@@ -1,4 +1,5 @@
 const
+  should = require('should'),
   _ = require('lodash'),
   {
     Given

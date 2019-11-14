@@ -54,7 +54,7 @@ Then('The property {string} of the result should match:', function (path, dataTa
   should(property).not.be.undefined();
 
   if (_.isPlainObject(property)) {
-    this.matchObject(property, expectedProperty);
+    should(property).matchObject(expectedProperty);
   }
   else {
     should(property).match(expectedProperty);
