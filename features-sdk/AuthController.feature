@@ -56,6 +56,7 @@ Feature: Auth Controller
     | _id | "SGN-HCM" |
     | expiresIn | -1 |
     | body | { "description": "Sigfox API key" } |
+    And I save the created API key
     When I successfully call the route "auth":"deleteApiKey" with args:
     | _id | "SGN-HCM" |
     | refresh | "wait_for" |

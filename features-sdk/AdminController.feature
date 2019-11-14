@@ -47,18 +47,3 @@ Feature: Admin Controller
     | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
     | "_STRING_" | "test-admin" | -1 | -1 | "Lora API key" |
     | "_STRING_" | "test-admin" | -1 | -1 | "Lora API key 2" |
-
-  # auth:deleteApiKey =======================================================
-
-  @security
-  Scenario: Delete an API key
-    Given I successfully call the route "auth":"createApiKey" with args:
-    | _id | "SGN-HCM" |
-    | expiresIn | -1 |
-    | body | { "description": "Sigfox API key" } |
-    When I successfully call the route "auth":"deleteApiKey" with args:
-    | _id | "SGN-HCM" |
-    | refresh | "wait_for" |
-    And I successfully call the route "auth":"searchApiKeys"
-    Then I should receive a empty "hits" array
-    And I can not login with the previously created API key

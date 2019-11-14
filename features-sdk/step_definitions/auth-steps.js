@@ -13,7 +13,7 @@ Given(/I can( not)? login with the previously created API key/, async function (
 
   should(token).not.be.undefined();
 
-  this.sdk.jwt = this.props.token;
+  this.sdk.jwt = token;
 
   const { valid } = await this.sdk.auth.checkToken();
 
