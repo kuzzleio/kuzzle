@@ -4,6 +4,7 @@ const
   { After, Before, BeforeAll } = require('cucumber'),
   testMappings = require('../fixtures/mappings'),
   testSecurities = require('../fixtures/securities'),
+  testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
 async function resetSecurityDefault (sdk) {
@@ -101,5 +102,21 @@ Before({ tags: '@mappings' }, async function () {
     action: 'loadMappings',
     body: testMappings,
     refresh: 'wait_for'
+  });
+
+  await this.sdk.query({
+    controller: 'admin',
+    action: 'loadFixtures',
+    body: testFixtures,
+    refresh: 'wait_for'
+  });
+});
+
+// events hooks ================================================================
+
+After({ tags: '@events' }, async function () {
+  await this.sdk.query({
+    controller: 'functional-test-plugin/pipes',
+    action: 'deactivateAll'
   });
 });

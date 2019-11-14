@@ -8,16 +8,32 @@ class KuzzleWorld {
     this.attach = attach.attach;
     this.parameters = parameters;
 
-    this.host = process.env.KUZZLE_HOST || 'localhost';
-    this.port = process.env.KUZZLE_PORT || '7512';
-    this.protocol = process.env.KUZZLE_PROTOCOL || 'websocket';
+    this._host = process.env.KUZZLE_HOST || 'localhost';
+    this._port = process.env.KUZZLE_PORT || '7512';
+    this._protocol = process.env.KUZZLE_PROTOCOL || 'websocket';
 
     this.kuzzleConfig = config;
 
     // Intermediate steps should store values inside this object
     this.props = {};
 
-    this.sdk = new Kuzzle(this._getProtocol());
+    this._sdk = this._getSdk();
+  }
+
+  get sdk () {
+    return this._sdk;
+  }
+
+  get host () {
+    return this._host;
+  }
+
+  get port () {
+    return this._port;
+  }
+
+  get protocol () {
+    return this._protocol;
   }
 
   parseObject (dataTable) {
@@ -52,7 +68,7 @@ class KuzzleWorld {
     return objectArray;
   }
 
-  _getProtocol () {
+  _getSdk () {
     let protocol;
 
     switch (this.protocol) {
@@ -66,7 +82,7 @@ class KuzzleWorld {
         throw new Error(`Unknown protocol "${this.protocol}".`);
     }
 
-    return protocol;
+    return new Kuzzle(protocol);
   }
 }
 
