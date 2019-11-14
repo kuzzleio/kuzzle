@@ -275,9 +275,6 @@ pm2 logs
 
 # Start, restart or stop Kuzzle:
 pm2 "<start|stop|restart>" KuzzleServer
-
-# Access the Kuzzle CLI
-~/kuzzle/bin/kuzzle -h
 ```
 
 ::: success
