@@ -573,7 +573,6 @@ Feature: Kuzzle functional tests
     Then I create a user "user1" with id "user1-id"
     Then I'm not able to delete profile with id "profile1"
     Then I'm able to find the profile with id "profile1"
-    Then I log out
 
   @security
   Scenario: search and update profiles
