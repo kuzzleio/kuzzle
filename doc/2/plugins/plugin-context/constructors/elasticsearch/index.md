@@ -8,7 +8,7 @@ title: Elasticsearch
 
 Instantiates an embedded [Elasticsearch client](https://github.com/elastic/elasticsearch-js) with the same configuration as the one provided in the `.kuzzlerc` file.  
 
-This client can be used to send raw Elasticsearch requests.  
+This client can be used to send raw Elasticsearch request.  
 
 See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html) for more information.
 
