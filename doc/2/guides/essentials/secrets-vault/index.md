@@ -55,7 +55,7 @@ Once encrypted, the file looks like the following:
 The encryption of a secret file is done using the CLI with the following command:
 
 ```bash
-./bin/kuzzle encryptSecrets config/secrets.json --vault-key strongpassword
+kuzzle encryptSecrets config/secrets.json --vault-key strongpassword
 [ℹ] Encrypting secrets...
 [✔] Secrets successfully encrypted: config/secrets.enc.json
 ```
@@ -65,7 +65,7 @@ The file `config/secrets.enc.json` can be added safely to the project repository
 To decrypt a previously encrypted file, use the following command:
 
 ```bash
-./bin/kuzzle decryptSecrets config/secrets.enc.json --vault-key strongpassword
+kuzzle decryptSecrets config/secrets.enc.json --vault-key strongpassword
 [ℹ] Decrypting secrets...
 [✔] Secrets successfully encrypted: config/secrets.json
 ```
@@ -77,12 +77,12 @@ You can also specify the vault key in the `KUZZLE_VAULT_KEY` environment variabl
 ## Load encrypted secrets at startup
 
 Kuzzle will try to decrypt the provided file using the following locations, in that order of priority:
-  - in the command line: `./bin/kuzzle start --secrets-file /var/secrets.enc.json`
+  - in the command line: `kuzzle start --secrets-file /var/secrets.enc.json`
   - in an environment variable `export KUZZLE_SECRETS_FILE=/var/secrets.enc.json`
   - the default one present at the location `<kuzzle dir>/config/secrets.enc.json`
 
 The decryption key must be provided in one of the following ways, in order of priority as well:
-  - in the command line: `./bin/kuzzle start --vault-key verystrongpassword`
+  - in the command line: `kuzzle start --vault-key verystrongpassword`
   - in an environment variable `export KUZZLE_VAULT_KEY=verystrongpassword`
 
 ::: warning

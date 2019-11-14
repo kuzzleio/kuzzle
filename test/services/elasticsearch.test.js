@@ -29,8 +29,8 @@ describe('Test: ElasticSearch service', () => {
 
     esClientError = new Error('es client fail');
 
-    elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
     ES.buildClient = () => new ESClientMock();
+    elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
 
     await elasticsearch.init();
 
