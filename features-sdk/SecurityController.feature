@@ -2,7 +2,7 @@ Feature: Security Controller
 
   # security:createApiKey =======================================================
 
-  @security
+  @security @login
   Scenario: Create an API key for an user
     Given I create a user "My" with content:
     | profileIds | ["default"] |

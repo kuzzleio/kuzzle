@@ -26,25 +26,6 @@ function getProtocol (world) {
 }
 
 async function resetSecurityDefault (sdk) {
-  let valid;
-
-  try {
-    const response = sdk.auth.checkToken();
-    valid = response.valid;
-  }
-  catch (error) {
-    console.log(error)
-    valid = false;
-  }
-
-  if (! valid) {
-    sdk.jwt = null;
-  }
-
-  await sdk.auth.login(
-    'local',
-    { username: 'test-admin', password: 'password' });
-
   await sdk.query({
     controller: 'admin',
     action: 'resetSecurity',
@@ -159,4 +140,12 @@ After({ tags: '@events' }, async function () {
     controller: 'functional-test-plugin/pipes',
     action: 'deactivateAll'
   });
+});
+
+// login hooks =================================================================
+
+After({ tags: '@login' }, async function () {
+  await this.sdk.auth.login(
+    'local',
+    { username: 'test-admin', password: 'password' });
 });

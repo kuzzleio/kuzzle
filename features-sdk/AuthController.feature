@@ -2,7 +2,7 @@ Feature: Auth Controller
 
   # auth:createApiKey =======================================================
 
-  @security
+  @security @login
   Scenario: Create an API key
     When I successfully call the route "auth":"createApiKey" with args:
     | expiresIn | -1 |
