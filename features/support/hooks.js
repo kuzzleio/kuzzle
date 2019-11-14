@@ -71,7 +71,7 @@ Before({ timeout: 10 * 1000 }, function () {
     .then(() => this.api.resetSecurity());
 });
 
-Before({ timeout: 10 * 1000 }, { tags: '@resetDatabase' }, async function () {
+Before({ timeout: 10 * 1000, tags: '@resetDatabase' }, async function () {
   await cleanDatabase();
   await bootstrapDatabase();
 });
