@@ -16,7 +16,6 @@ class KuzzleWorld {
 
     // Intermediate steps should store values inside this object
     this.props = {};
-
   }
 
   parseObject (dataTable) {

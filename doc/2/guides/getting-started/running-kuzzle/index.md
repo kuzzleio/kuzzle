@@ -45,7 +45,7 @@ Congratulations! You have completed the Kuzzle installation, it will now accept 
 
 - via **HTTP**
 - via **Websocket**
-  :::
+:::
 
 ::: info
 Having trouble?

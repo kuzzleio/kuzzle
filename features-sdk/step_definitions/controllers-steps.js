@@ -69,6 +69,24 @@ Then('The result should contain a property {string} of type {string}', function 
   should(typeof property).be.eql(type);
 });
 
+Then('I should receive a {string} result equals to {string}', function (type, rawResult) {
+  let expectedResult;
+
+  if (type === 'string') {
+    expectedResult = rawResult;
+  }
+  else if (type === 'int') {
+    expectedResult = parseInt(rawResult);
+  }
+  else {
+    throw new Error(`Unknown result type '${type}'`);
+  }
+
+  should(this.props.result).not.be.undefined();
+
+  should(this.props.result).eql(expectedResult);
+});
+
 Then('I should receive an empty result', function () {
   should(this.props.result).be.undefined();
 });
