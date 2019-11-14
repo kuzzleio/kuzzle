@@ -49,6 +49,7 @@
     "koncorde": "^1.2.2",
     "kuzzle-common-objects": "^4.0.1",
     "kuzzle-sdk": "7.0.0-beta.2",
+    "kuzzle-vault": "^1.0.1",
     "lodash": "4.17.14",
     "moment": "^2.24.0",
     "mosca": "^2.8.3",

@@ -1,4 +1,6 @@
-const _ = require('lodash');
+const
+  should = require('should'),
+   _ = require('lodash');
 
 class FunctionalTestPlugin {
   constructor () {
@@ -6,13 +8,17 @@ class FunctionalTestPlugin {
     this.routes = [];
     this.pipes = {};
 
-    // plugin context related declarations =====================================
+    // context.constructor.ESClient related declarations =======================
 
-    this.controllers.constructors = {
-      ESClient: 'testConstructorsESClient'
-    };
+    this.controllers.constructors = { ESClient: 'testConstructorsESClient' };
 
     this.routes.push({ verb: 'post', url: '/constructors/esclient/:index', controller: 'constructors', action: 'ESClient' });
+
+    // context.secrets related declarations ====================================
+
+    this.controllers.secrets = { test: 'testSecrets' };
+
+    this.routes.push({ verb: 'post', url: '/secrets', controller: 'secrets', action: 'test' })
 
     // pipes related declarations ==============================================
 
@@ -41,7 +47,7 @@ class FunctionalTestPlugin {
     this.context = context;
   }
 
-  // plugin context related methods ============================================
+  // context.constructor.ESClient related methods ============================
 
   async testConstructorsESClient (request) {
     const
@@ -55,6 +61,18 @@ class FunctionalTestPlugin {
     const { body } = await client.index(esRequest);
 
     return body;
+  }
+
+  // context.secrets related methods ===========================================
+
+  async testSecrets (request) {
+    const expectedSecrets = request.input.body;
+
+    should(this.context.secrets).match(expectedSecrets);
+
+    return {
+      result: true
+    };
   }
 
   // pipes related methods =====================================================
