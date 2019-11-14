@@ -168,6 +168,9 @@ Then(/^I'm not able to delete profile (?:with id )?"([^"]*)"$/, function (id, ca
   }
 
   this.api.deleteProfile(id)
+    .then(() => {
+      callback(new Error('Trying to delete a profile still used by a user. Expected to throw.'));
+    })
     .catch(() => callback());
 });
 
