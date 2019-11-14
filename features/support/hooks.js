@@ -61,8 +61,8 @@ BeforeAll(function () {
     .then(() => bootstrapDatabase());
 });
 
-Before(function () {
-  const world = new World({parameters: parseWorldParameters()});
+Before({ timeout: 10 * 1000 }, function () {
+  const world = new World({ parameters: parseWorldParameters() });
 
   return this.api.truncateCollection(world.fakeIndex, world.fakeCollection)
     .catch(() => {})
@@ -71,7 +71,7 @@ Before(function () {
     .then(() => this.api.resetSecurity());
 });
 
-Before({ tags: '@resetDatabase' }, async function () {
+Before({ timeout: 10 * 1000 }, { tags: '@resetDatabase' }, async function () {
   await cleanDatabase();
   await bootstrapDatabase();
 });
