@@ -5,7 +5,27 @@ title: Breaking changes
 order: 100
 ---
 
+
 # Breaking changes
+
+**Table of Contents**
+- [External dependencies](#external-dependencies)
+- [API](#api)
+  - General
+  - Internal storage changes
+  - Removed errors
+  - Removed events
+  - Removed API methods
+  - New API methods
+  - Modified API Methods
+  - Removed HTTP routes
+  - Remove the CLI
+  - Configuration changes
+  - Cache changes
+  - Plugins
+- [Docker images](#docker-images)
+  - Kuzzle
+  - Elasticsearch
 
 ## External dependencies
 
@@ -22,6 +42,8 @@ New external dependencies supported versions:
   - Elasticsearch 7
 
 ## API
+
+### General
 
   - Remove permission closures (deprecated since Kuzzle 1.4.0)
   - Remove the documents trashcan (deprecated since Kuzzle 1.2.0)
@@ -68,6 +90,7 @@ Indexes not following this naming policy cannot be accessed by Kuzzle's API.
 ### New API methods
 
   - `collection:refresh`: refreshes a collection
+  - `collection:delete`: deletes a collection
 
 ### Removed API methods
 
@@ -160,6 +183,8 @@ It accepts the same arguments as the `kuzzle start` command from the CLI.
 
   - `server.protocols.socketio.enable` is now `false`, deactivating the Socket.io protocol by default
   - `services.storage.commonMapping.dynamic` is now `false` by default, meaning that Elasticsearch will not infer mapping of new introduced fields
+  - `security.standard.roles.default.controllers.server.actions` is now `{ publicApi: true }` instead of `{ info: true }`
+  - `security.standard.roles.anonymous.controllers.server.actions` is now `{ publicApi: true }` instead of `{ info: true }`
 
 #### Obsolete configurations
 
@@ -188,3 +213,22 @@ To:
 ### Plugins
 
   - Plugins manifest files are now required
+  - `Dsl` constructor from the plugin context is now removed, use `Koncorde` instead (deprecated in 1.4.0)
+
+## Docker images
+
+## Kuzzle
+
+Kuzzle images are now built for the two major versions of Kuzzle.  
+
+This includes the `kuzzleio/kuzzle` production image but also the `kuzzleio/plugin-dev` image for plugin developers.  
+
+The `latest` tag will now refer to the latest version of Kuzzle v2.  
+
+We also deploy 2 additional tags that refer respectively to the latest version of Kuzzle v1 and Kuzzle v2:
+ - `kuzzleio/<image>:1`: latest Kuzzle v1 version
+ - `kuzzleio/<image>:2`: latest Kuzzle v2 version
+
+## Elasticsearch
+
+We also provide a new preconfigured image for Elasticsearch: `kuzzleio/elasticsearch:7.4.0`.  

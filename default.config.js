@@ -129,7 +129,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -146,7 +146,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -261,7 +261,7 @@ module.exports = {
             dynamic: 'false',
             properties: {
               controllers: {
-                dynamic: false,
+                dynamic: 'false',
                 properties: {}
               }
             }

@@ -144,11 +144,6 @@ Feature: Kuzzle functional tests
     Then I update the document with value "foo" in field "firstName"
     Then my document has the value "foo" in field "firstName"
 
-  Scenario: Delete a document
-    When I write the document
-    Then I remove the document
-    Then I'm not able to get the document
-
   Scenario: Search a document
     When I write the document "documentGrace"
     And I refresh the collection
@@ -168,19 +163,13 @@ Feature: Kuzzle functional tests
     Then I truncate the collection
     Then I'm not able to get the document
 
-  Scenario: Checking that documents exist or not
-    When I write the document with id "documentGrace"
-    Then I check that the document "documentGrace" exists
-    Then I remove the document
-    Then I check that the document "documentGrace" doesn't exists
-
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     And I refresh the collection
-    Then I find a document with "Grace" in field "firstName" with scroll "5m"
+    Then I find a document with "Grace" in field "firstName" with scroll "10s"
     And I am able to scroll previous search
 
   Scenario: Change mapping
@@ -478,8 +467,6 @@ Feature: Kuzzle functional tests
     Then I'm able to find "2" profiles containing the role with id "role1"
     Given A scrolled search on profiles
     Then I am able to perform a scrollProfiles request
-    Then I delete the profile "my-profile-1"
-    Then I delete the profile "my-profile-2"
 
   @security
   Scenario: get profile rights
@@ -1804,37 +1791,6 @@ Feature: Kuzzle functional tests
 
   Scenario: Get authentication strategies
     Then I get the registrated authentication strategies
-
-  @firstAdmin
-  Scenario: Create First Admin
-    Given I create a new role "foo" with id "foo"
-    And I update the default profile with id "admin" by adding the role "foo"
-    And I update the default profile with id "default" by adding the role "foo"
-    And I update the default profile with id "anonymous" by adding the role "foo"
-    And I'm able to find the default profile with id "admin" with profile "adminfoo"
-    Then I create the first admin with id "useradmin-id"
-    And I log in as useradmin:testpwd expiring in 1h
-    And I'm able to find the default profile with id "admin" with profile "adminfoo"
-    And I'm able to find the default profile with id "default" with profile "defaultfoo"
-    And I'm able to find the default profile with id "anonymous" with profile "anonymousfoo"
-    Then I'm able to find a default role with id "admin" equivalent to role "admin"
-    And I'm able to find a default role with id "default" equivalent to role "admin"
-    And I'm able to find a default role with id "anonymous" equivalent to role "admin"
-
-  @firstAdmin
-  Scenario: Create First Admin and reset profiles and roles
-    Given I create a new role "foo" with id "foo"
-    And I update the default profile with id "admin" by adding the role "foo"
-    And I update the default profile with id "default" by adding the role "foo"
-    And I update the default profile with id "anonymous" by adding the role "foo"
-    Then I create the first admin with id "useradmin-id" and reset profiles and roles
-    And I log in as useradmin:testpwd expiring in 1h
-    And I'm able to find the default profile with id "admin" with profile "admin"
-    And I'm able to find the default profile with id "default" with profile "default"
-    And I'm able to find the default profile with id "anonymous" with profile "anonymous"
-    Then I'm able to find a default role with id "admin" equivalent to role "admin"
-    And I'm able to find a default role with id "default" equivalent to role "default"
-    And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"
 
   Scenario: Load Mappings
     Given I load the mappings '{"kuzzle-test-index-new": {"kuzzle-collection-test": {}}}'

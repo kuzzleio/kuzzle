@@ -63,6 +63,10 @@ describe('AdminController', () => {
   describe('#resetSecurity', () => {
     beforeEach(() => {
       request.input.action = 'resetSecurity';
+      kuzzle.internalIndex.bootstrap.createInitialSecurities.resolves({
+        profileIds: ['anonymous', 'default', 'admin'],
+        roleIds: ['anonymous', 'default', 'admin']
+      });
     });
 
     it('should scroll and delete all registered users, profiles and roles', async () => {
@@ -73,12 +77,18 @@ describe('AdminController', () => {
       should(kuzzle.repositories.role.truncate).be.calledOnce();
       should(kuzzle.internalIndex.bootstrap.createInitialSecurities)
         .be.calledOnce();
+      should(kuzzle.repositories.profile.loadProfiles)
+        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
+      should(kuzzle.repositories.role.loadRoles)
+        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
 
       sinon.assert.callOrder(
         kuzzle.repositories.user.truncate,
         kuzzle.repositories.profile.truncate,
         kuzzle.repositories.role.truncate,
-        kuzzle.internalIndex.bootstrap.createInitialSecurities
+        kuzzle.internalIndex.bootstrap.createInitialSecurities,
+        kuzzle.repositories.profile.loadProfiles,
+        kuzzle.repositories.role.loadRoles,
       );
     });
 

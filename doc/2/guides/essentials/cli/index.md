@@ -7,25 +7,36 @@ order: 900
 
 # Command Line Interface (CLI)
 
-Kuzzle ships with a [Command line interface](https://en.wikipedia.org/wiki/Command-line_interface) which allows you to:
+A [Command line interface](https://en.wikipedia.org/wiki/Command-line_interface) is available for Kuzzle as a separate NPM package.  
 
-- Start Kuzzle
+This CLI connects to Kuzzle API and allows you to perform administration tasks like:
+
 - Gracefully shutdown Kuzzle
 - Create the first Administrator
 - Reset user created indexes _(use with caution!)_
 - Reset users, roles and profiles _(use with caution!)_
 
-* Load mappings, fixtures, roles, profiles and users
+- Load mappings, fixtures, roles, profiles and users
 
 - Clear Kuzzle cache
 - Diagnose the Kuzzle installation
 
-The CLI is located in the `bin` folder of your Kuzzle installation.
-If you have already created an admin, you will need to provide your login information to the CLI.
-To get a list of commands and options run the CLI:
+## Installation
+
+To install the CLI globally, you can use the following command: `npm install -g kuzzle-cli`
+
+## Usage
+
+The CLI sends requests to Kuzzle API.  If you already setup some access control rights, you must login using the `local` strategy.
 
 ```bash
-./bin/kuzzle
+kuzzle [command] -U <username> -P <password>
+```
+
+To get a list of commands and options run the CLI without arguments:
+
+```bash
+kuzzle
 
 #   Usage: kuzzle [options] [command]
 #
@@ -64,7 +75,7 @@ To get a list of commands and options run the CLI:
 ## createFirstAdmin
 
 ```bash
-./bin/kuzzle createFirstAdmin
+kuzzle createFirstAdmin
 ```
 
 When Kuzzle runs for the first time, no users are defined and the anonymous user is granted full access rights.
@@ -78,7 +89,7 @@ This call the action [security#createFirstAdmin](/core/2/api/controllers/securit
 ## clearCache
 
 ```bash
-./bin/kuzzle clearCache
+kuzzle clearCache
 ```
 
 Kuzzle uses Redis to store frequently accessed internal data. Use this command if you need to clear this data (cache).
@@ -90,7 +101,7 @@ This call the action [admin#resetCache](/core/2/api/controllers/admin/reset-cach
 ## dump
 
 ```bash
-./bin/kuzzle dump
+kuzzle dump
 
 # [ℹ] Creating dump file...
 # [✔] Done!
@@ -120,7 +131,7 @@ This call the action [admin#dump](/core/2/api/controllers/admin/reset-security)
 <SinceBadge version="1.4.0" />
 
 ```bash
-./bin/kuzzle resetSecurity --help
+kuzzle resetSecurity --help
 
 #    Usage: resetSecurity [options]
 #
@@ -143,7 +154,7 @@ This call the action [admin#resetSecurity](/core/2/api/controllers/admin/reset-s
 <SinceBadge version="1.4.0" />
 
 ```bash
-./bin/kuzzle resetDatabase --help
+kuzzle resetDatabase --help
 
 #    Usage: resetDatabase [options]
 #
@@ -166,7 +177,7 @@ Note: this command has no impact on any plugins stored data, or on any Kuzzle st
 ## shutdown
 
 ```bash
-./bin/kuzzle shutdown
+kuzzle shutdown
 
 # [ℹ] Shutting down...
 # [✔] Done!
@@ -181,7 +192,7 @@ This call the action [admin#shutdown](/core/2/api/controllers/admin/shutdown)
 ## start
 
 ```bash
-./bin/kuzzle start --help
+kuzzle start --help
 
 #    Usage: start [options]
 #
@@ -226,7 +237,7 @@ The input file must be a JSON file with the following structure:
 **Notes:**
 
 - The file can contain any number of index and collection configurations.
-- Field definitions follow the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/mapping.html) mapping format.
+- Field definitions follow the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html) mapping format.
 - If an index or collection does not exist, it will be created automatically.
 - Mappings are loaded sequentially, one index/collection pair at a time. If a failure occurs, Kuzzle immediately interrupts the sequence.
 - Mappings can be replayed across multiple Kuzzle start sequences, as long as they do not change in-between.
@@ -406,7 +417,7 @@ The roles, profiles and users definition follow the same structure as in the bod
 <SinceBadge version="1.9.3" />
 
 ```bash
-./bin/kuzzle start --enable-plugins kuzzle-custom-plugin-one,kuzzle-custom-plugin-two
+kuzzle start --enable-plugins kuzzle-custom-plugin-one,kuzzle-custom-plugin-two
 ```
 
 Enable given plugins. If several names are given, they need to be separated with commas.
@@ -420,7 +431,7 @@ Provided strings must match plugin directory names located in the `plugins/avail
 <SinceBadge version="1.6.6" />
 
 ```bash
-./bin/kuzzle loadMappings <file>
+kuzzle loadMappings <file>
 
 # [✔] Mappings have been successfully loaded
 ```
@@ -446,7 +457,7 @@ The `loadMappings` command applies mappings directly into the storage layer.
 **Notes:**
 
 - The mapping can contain any number of index and collection configurations.
-- Field definitions follow the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.3/mapping.html) mapping format.
+- Field definitions follow the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html) mapping format.
 - If an index or collection does not exist, it will be created automatically.
 - Mappings are loaded sequentially, one index/collection pair at a time. If a failure occurs, Kuzzle immediately interrupts the sequence.
 
@@ -457,7 +468,7 @@ The `loadMappings` command applies mappings directly into the storage layer.
 <SinceBadge version="1.6.6" />
 
 ```bash
-./bin/kuzzle loadFixtures <file>
+kuzzle loadFixtures <file>
 
 # [✔] Fixtures have been successfully loaded
 ```
@@ -491,7 +502,7 @@ The `loadFixtures` command loads fixtures directly into the storage layer.
 <SinceBadge version="1.6.6" />
 
 ```bash
-./bin/kuzzle loadSecurities <file>
+kuzzle loadSecurities <file>
 
 # [✔] Securities have been successfully loaded
 ```
@@ -537,7 +548,7 @@ The roles, profiles and users definition follow the same structure as in the bod
 <SinceBadge version="1.8.0" />
 
 ```bash
-./bin/kuzzle encryptSecrets [file] [options]
+kuzzle encryptSecrets [file] [options]
 
 # Options:
 #       --vault-key <vaultKey>     Vault key used to encrypt secrets
@@ -558,7 +569,7 @@ See also [Secrets Vault](/core/2/guides/essentials/secrets-vault)
 <SinceBadge version="1.8.0" />
 
 ```bash
-./bin/kuzzle decryptSecrets [file] [options]
+kuzzle decryptSecrets [file] [options]
 
 # Options:
 #       --vault-key <vaultKey>     Vault key used to encrypt secrets
@@ -579,7 +590,7 @@ See also [Secrets Vault](/core/2/guides/essentials/secrets-vault)
 <SinceBadge version="1.9.0" />
 
 ```bash
-./bin/kuzzle indexDump <index> <path> [options]
+kuzzle indexDump <index> <path> [options]
 
 # Options:
 #       --batch-size <batchSize>  Maximum batch size (see limits.documentsFetchCount config)
@@ -603,7 +614,7 @@ This dump is intended to be loaded with the `indexRestore` command.
 <SinceBadge version="1.9.0" />
 
 ```bash
-./bin/kuzzle indexRestore <path> [options]
+kuzzle indexRestore <path> [options]
 
 # Options:
 #       --batch-size <batchSize>  Maximum batch size (see limits.documentsWriteCount config)

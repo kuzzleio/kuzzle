@@ -46,8 +46,10 @@ services:
       - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
       - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
-      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY}
+      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
+      - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features-sdk/fixtures/secrets.enc.json}
       - NODE_10_VERSION=10.16.0
+      - WITHOUT_KUZZLE
 
   redis:
     image: redis:${REDIS_VERSION:-5}
@@ -55,13 +57,8 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.3.0
+    image: kuzzleio/elasticsearch:7.4.0
     ports:
       - "9200:9200"
     ulimits:
       nofile: 65536
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - node.name=alyx
-      - cluster.name=kuzzle
-      - discovery.type=single-node

@@ -7,13 +7,10 @@ const
   should = require('should'),
   sinon = require('sinon'),
   User = require(`${root}/lib/api/core/models/security/user`),
+  { Client: ESClient } = require('@elastic/elasticsearch'),
   KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
   {
     Request,
-    models: {
-      RequestContext,
-      RequestInput
-    },
     errors: {
       PluginImplementationError
     }
@@ -25,15 +22,9 @@ describe('Plugin Context', () => {
   let
     kuzzle,
     context,
-    PluginContext,
-    deprecateStub;
+    PluginContext;
 
   beforeEach(() => {
-    deprecateStub = sinon.stub().returnsArg(1);
-    mockrequire(`${root}/lib/util/deprecate`, {
-      deprecateProperties: deprecateStub
-    });
-
     PluginContext = mockrequire.reRequire(`${root}/lib/api/core/plugins/pluginContext`);
 
     kuzzle = new KuzzleMock();
@@ -51,12 +42,9 @@ describe('Plugin Context', () => {
 
     it('should expose the right constructors', () => {
       let repository;
-      const
-        Koncorde = require('koncorde'),
-        BaseValidationType = require(`${root}/lib/api/core/validation/baseType`);
+      const Koncorde = require('koncorde');
 
       should(context.constructors).be.an.Object().and.not.be.empty();
-      should(context.constructors.Dsl).be.a.Function();
       should(context.constructors.Koncorde).be.a.Function();
       should(context.constructors.Request).be.a.Function();
       should(context.constructors.RequestContext).be.a.Function();
@@ -64,21 +52,6 @@ describe('Plugin Context', () => {
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
 
-      should(deprecateStub)
-        .calledOnce()
-        .calledWithMatch(
-          kuzzle.log,
-          {
-            RequestContext,
-            RequestInput,
-            Koncorde,
-            BaseValidationType,
-            Dsl: Koncorde,
-            Request: sinon.match.func
-          },
-          { Dsl: 'Koncorde' });
-
-      should(new context.constructors.Dsl).be.instanceOf(Koncorde);
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
       should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
 
@@ -103,6 +76,21 @@ describe('Plugin Context', () => {
           },
           kuzzleApi: 'the spoon does not exist'
         });
+    });
+
+    describe('#ESClient', () => {
+      it('should expose the ESClient constructor', () => {
+        const esClient = new context.constructors.ESClient();
+
+        should(esClient).be.instanceOf(ESClient);
+      });
+
+      it('should allow to instantiate an ESClient connected to the ES cluster', () => {
+        const esClient = new context.constructors.ESClient();
+
+        should(esClient.connectionPool.connections[0].url.origin)
+          .be.eql(kuzzle.storageEngine.config.client.node);
+      });
     });
 
     describe('#Request', () => {

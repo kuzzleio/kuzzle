@@ -104,6 +104,12 @@
           "code": 5,
           "message": "Controller action \"%s\" not found.",
           "class": "NotFoundError"
+        },
+        "incompatible_sdk_version": {
+          "description": "SDK is incompatible with the current Kuzzle version",
+          "code": 6,
+          "message": "Incompatible SDK client. Your SDK version (%s) does not match Kuzzle requirement (%s).",
+          "class": "BadRequestError"
         }
       }
     }

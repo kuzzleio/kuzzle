@@ -1,37 +1,39 @@
 'use strict';
 
 const
-  _ = require('lodash'),
   { After, Before, BeforeAll } = require('cucumber'),
-  { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   testMappings = require('../fixtures/mappings'),
-  testFixtures = require('../fixtures/fixtures'),
   testSecurities = require('../fixtures/securities'),
+  testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
-function getProtocol (world) {
-  let protocol;
+async function resetSecurityDefault (sdk) {
+  await sdk.query({
+    controller: 'admin',
+    action: 'resetSecurity',
+    refresh: 'wait_for'
+  });
 
-  switch (world.protocol) {
-    case 'http':
-      protocol = new Http(world.host, { port: world.port });
-      break;
-    case 'websocket':
-      protocol = new WebSocket(world.host, { port: world.port });
-      break;
-    default:
-      throw new Error(`Unknown protocol "${world.protocol}".`);
-  }
+  sdk.jwt = null;
 
-  return protocol;
+  await sdk.query({
+    controller: 'admin',
+    action: 'loadSecurities',
+    body: testSecurities,
+    refresh: 'wait_for'
+  });
+
+  await sdk.auth.login(
+    'local',
+    { username: 'test-admin', password: 'password' });
 }
+
+// Common hooks ================================================================
 
 BeforeAll(({ timeout: 10 * 1000 }), async function () {
   const world = new World({});
 
   console.log(`Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`);
-
-  world.sdk = new Kuzzle(getProtocol(world));
 
   await world.sdk.connect();
 
@@ -48,9 +50,8 @@ BeforeAll(({ timeout: 10 * 1000 }), async function () {
 });
 
 Before(({ timeout: 10 * 1000 }), async function () {
-  this.sdk = new Kuzzle(getProtocol(this));
-
   await this.sdk.connect();
+
   await this.sdk.auth.login(
     'local',
     { username: 'test-admin', password: 'password' });
@@ -71,7 +72,9 @@ After(async function () {
   }
 });
 
-Before({ tags: '@security', timeout: 10 * 1000 }, async function () {
+// firstAdmin hooks ============================================================
+
+Before({ tags: '@firstAdmin' }, async function () {
   await this.sdk.query({
     controller: 'admin',
     action: 'resetSecurity',
@@ -79,29 +82,21 @@ Before({ tags: '@security', timeout: 10 * 1000 }, async function () {
   });
 
   this.sdk.jwt = null;
-
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'loadSecurities',
-    body: testSecurities,
-    refresh: 'wait_for'
-  });
-
-  await this.sdk.auth.login(
-    'local',
-    { username: 'test-admin', password: 'password' });
 });
+
+After({ tags: '@firstAdmin', timeout: 60 * 1000 }, async function () {
+  await resetSecurityDefault(this.sdk);
+});
+
+// security hooks ==============================================================
+
+Before({ tags: '@security', timeout: 60 * 1000 }, async function () {
+  await resetSecurityDefault(this.sdk);
+});
+
+// mappings hooks ==============================================================
 
 Before({ tags: '@mappings' }, async function () {
-  await this.sdk.query({
-    controller: 'admin',
-    action: 'loadMappings',
-    body: testMappings,
-    refresh: 'wait_for'
-  });
-});
-
-Before({ tags: '@fixtures' }, async function () {
   await this.sdk.query({
     controller: 'admin',
     action: 'loadMappings',
@@ -114,5 +109,14 @@ Before({ tags: '@fixtures' }, async function () {
     action: 'loadFixtures',
     body: testFixtures,
     refresh: 'wait_for'
+  });
+});
+
+// events hooks ================================================================
+
+After({ tags: '@events' }, async function () {
+  await this.sdk.query({
+    controller: 'functional-test-plugin/pipes',
+    action: 'deactivateAll'
   });
 });
