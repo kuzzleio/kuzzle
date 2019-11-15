@@ -40,6 +40,8 @@ describe('Test: hotelClerk.addSubscription', () => {
         bar: [ 'foo', 'bar', 'baz', 'qux']
       }
     }, {connectionId, token: null});
+
+    kuzzle.config.limits.subscriptionMinterms = 0;
   });
 
   it('should initialize base structures', () => {
