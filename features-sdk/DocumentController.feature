@@ -9,6 +9,7 @@ Feature: Document Controller
     | _id          | body  |
     | "document-1" | { "name": "document", "age": 42 } |
     | -            | { "name": "document2", "age": 21 } |
+    And I refresh the collection
     When I search documents with the following query:
     """
     {
@@ -53,6 +54,7 @@ Feature: Document Controller
     | "document-1" | { "name": "document1" } | 201 | "created" |
     |       -      | { "name": "document2" } | 201 | "created" |
     And I should receive a empty "errors" array
+    And I refresh the collection
     And I count 2 documents
     And The document "document-1" content match:
     | name | "document1" |
@@ -97,6 +99,7 @@ Feature: Document Controller
     | "document-1" | { "name": "replaced1" } | 200 | "updated" |
     |      -       | { "name": "document2" } | 201 | "created" |
     And I should receive a empty "errors" array
+    And I refresh the collection
     And I count 2 documents
     And The document "document-1" content match:
     | name | "replaced1" |
@@ -106,15 +109,16 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I "createOrReplace" the following documents:
     | _id          | body  |
-    | "document-1" | { "name": "replaced1" } |
+    | "document-1" | { "name": "document1" } |
     |      -       | "not a body" |
     Then I should receive a "successes" array of objects matching:
     | _id | _source | status | result |
-    | "document-1" | { "name": "replaced1" } | 201 | "created" |
+    | "document-1" | { "name": "document1" } | 201 | "created" |
     And I should receive a "errors" array of objects matching:
     | reason | status | document |
     | "document body must be an object" | 400 | { "body": "not a body" } |
-    And I count 1 documents
+    And The document "document-1" content match:
+    | name | "document1" |
 
   # document:mUpdate ===========================================================
 
@@ -237,8 +241,8 @@ Feature: Document Controller
     | "document-1" |
     | "document-2" |
     And I should receive a empty "errors" array
-    And I count 1 documents
-    And The document "document-3" should exist
+    And The document "document-1" should not exist
+    And The document "document-2" should not exist
 
   @mappings
   Scenario: Delete multiple documents with errors
@@ -258,7 +262,7 @@ Feature: Document Controller
     | reason | status | _id |
     | "document _id must be a string" | 400 | 214284 |
     | "document not found" | 404 | "document-42" |
-    And I count 2 documents
+    And The document "document-1" should not exist
     And The document "document-2" should exist
     And The document "document-3" should exist
 
@@ -301,6 +305,7 @@ Feature: Document Controller
     | "document-42" |
 
   # document:count =============================================================
+
   @mappings
   Scenario: Count documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
@@ -313,3 +318,17 @@ Feature: Document Controller
     Then I count 3 documents
     And I count 2 documents matching:
     | job | "developer" |
+
+  # document:delete ============================================================
+
+  @mappings
+  Scenario: Delete document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+    | _id          | body  |
+    | "document-1" | { "name": "document1" } |
+    | "document-2" | { "name": "document2" } |
+    When I delete the document "document-1"
+    Then I should receive a "string" result equals to "document-1"
+    Then The document "document-1" should not exist
+    Then The document "document-2" should exist
