@@ -102,7 +102,7 @@ describe('ApiKey', () => {
 
       const promise = ApiKey.load('aschen', 'api-key-id');
 
-      should(promise).be.rejectedWith({ id: 'services.storage.not_found' });
+      await should(promise).be.rejectedWith({ id: 'services.storage.not_found' });
 
       should(BaseModel.load).be.calledWith('api-key-id');
 
