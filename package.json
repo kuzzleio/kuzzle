@@ -76,8 +76,8 @@
     "uuid": "^3.3.3",
     "validator": "^11.1.0",
     "winston": "^3.2.1",
-    "winston-elasticsearch": "^0.7.12",
-    "winston-syslog": "^2.1.0",
+    "winston-elasticsearch": "0.7.12",
+    "winston-syslog": "2.1.0",
     "winston-transport": "^4.3.0",
     "ws": "^6.2.1"
   },
