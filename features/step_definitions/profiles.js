@@ -162,6 +162,18 @@ When(/^I delete the profile (?:with id )?"([^"]*)"$/, function (id) {
     });
 });
 
+Then(/^I'm not able to delete profile (?:with id )?"([^"]*)"$/, function (id, callback) {
+  if (id) {
+    id = this.idPrefix + id;
+  }
+
+  this.api.deleteProfile(id)
+    .then(() => {
+      callback(new Error('Trying to delete a profile still used by a user. Expected to throw.'));
+    })
+    .catch(() => callback());
+});
+
 Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
   const body = {roles: []};
 
