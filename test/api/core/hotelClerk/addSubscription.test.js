@@ -4,14 +4,16 @@ const
   should = require('should'),
   sinon = require('sinon'),
   Bluebird = require('bluebird'),
-  Request = require('kuzzle-common-objects').Request,
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   {
-    BadRequestError,
-    NotFoundError,
-    SizeLimitError
-  } = require('kuzzle-common-objects').errors;
+    Request,
+    errors: {
+      BadRequestError,
+      NotFoundError,
+      SizeLimitError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('Test: hotelClerk.addSubscription', () => {
   let
@@ -38,11 +40,13 @@ describe('Test: hotelClerk.addSubscription', () => {
         bar: [ 'foo', 'bar', 'baz', 'qux']
       }
     }, {connectionId, token: null});
+
+    kuzzle.config.limits.subscriptionMinterms = 0;
   });
 
   it('should initialize base structures', () => {
-    should(hotelClerk.rooms).be.an.Object().and.be.empty();
-    should(hotelClerk.customers).be.an.Object().and.be.empty();
+    should(hotelClerk.rooms).be.empty();
+    should(hotelClerk.customers).be.empty();
     should(hotelClerk.roomsCount).be.a.Number().and.be.eql(0);
   });
 
@@ -64,19 +68,19 @@ describe('Test: hotelClerk.addSubscription', () => {
 
         should(hotelClerk.roomsCount).be.eql(1);
 
-        const roomId = hotelClerk.rooms[response.roomId].id;
-        const customer = hotelClerk.customers[connectionId];
+        const roomId = hotelClerk.rooms.get(response.roomId).id;
+        const customer = hotelClerk.customers.get(connectionId);
 
-        should(customer).be.an.Object();
-        should(customer[roomId]).not.be.undefined().and.match(request.input.volatile);
+        should(customer).have.value(roomId, request.input.volatile);
 
-        should(hotelClerk.rooms[roomId].channels).be.an.Object().and.not.be.undefined();
-        should(Object.keys(hotelClerk.rooms[roomId].channels).length).be.exactly(1);
+        const room = hotelClerk.rooms.get(roomId);
+        should(room.channels).be.an.Object().and.not.be.undefined();
+        should(Object.keys(room.channels).length).be.exactly(1);
 
-        const channel = Object.keys(hotelClerk.rooms[roomId].channels)[0];
-        should(hotelClerk.rooms[roomId].channels[channel].scope).be.exactly('all');
-        should(hotelClerk.rooms[roomId].channels[channel].state).be.exactly('done');
-        should(hotelClerk.rooms[roomId].channels[channel].users).be.exactly('none');
+        const channel = Object.keys(room.channels)[0];
+        should(room.channels[channel].scope).be.exactly('all');
+        should(room.channels[channel].state).be.exactly('done');
+        should(room.channels[channel].users).be.exactly('none');
 
         return hotelClerk.addSubscription(request);
       })

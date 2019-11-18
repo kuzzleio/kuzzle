@@ -8,7 +8,7 @@ const
   { PreconditionError, NotFoundError } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test: admin controller', () => {
   let
@@ -26,7 +26,7 @@ describe('Test: admin controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(adminController).instanceOf(BaseController);
+      should(adminController).instanceOf(NativeController);
     });
   });
 
@@ -143,16 +143,24 @@ describe('Test: admin controller', () => {
 
     it('remove all indexes handled by Kuzzle', done => {
       const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
-      kuzzle.indexCache.indexes = { halflife3: [], borealis: [], confirmed: [], '%kuzzle': [] };
+      kuzzle.indexCache.indexes = new Map([
+        [ 'halflife3', [] ],
+        [ 'borealis', [] ],
+        [ 'confirmed', [] ],
+        [ '%kuzzle', [] ]
+      ]);
       request.input.args.refresh = 'wait_for';
 
       adminController.resetDatabase(request)
         .then(() => {
           should(deleteIndex.callCount).be.eql(3);
-          should(deleteIndex.getCall(0).args[0].input.resource.index).be.eql('halflife3');
-          should(deleteIndex.getCall(1).args[0].input.resource.index).be.eql('borealis');
-          should(deleteIndex.getCall(2).args[0].input.resource.index).be.eql('confirmed');
-          should(kuzzle.indexCache.indexes).match({ '%kuzzle': [] });
+          should(deleteIndex.getCall(0).args[0].input.resource.index)
+            .be.eql('halflife3');
+          should(deleteIndex.getCall(1).args[0].input.resource.index)
+            .be.eql('borealis');
+          should(deleteIndex.getCall(2).args[0].input.resource.index)
+            .be.eql('confirmed');
+          should(kuzzle.indexCache.indexes).have.value('%kuzzle', []);
 
           // Check if unlocked
           return adminController.resetDatabase(request);

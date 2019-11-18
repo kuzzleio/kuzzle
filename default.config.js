@@ -9,6 +9,11 @@
  * @class KuzzleConfiguration
  */
 module.exports = {
+  // @deprecated
+  realtime: {
+    pcreSupport: false
+  },
+
   dump: {
     enabled: false,
     history: {

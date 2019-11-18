@@ -1,4 +1,5 @@
 {
+
   // -------------------------------------------------------------------------
   // Kuzzle configuration sample file
   //
@@ -644,5 +645,24 @@
         "InternalError"
       ]
     }
+  },
+
+  // [realtime]
+  // Realtime engine options
+  //   * pcreSupport (DEPRECATED):
+  //       Backward-compatibility option. Since v1.11, Kuzzle's realtime engine
+  //       has been switched to RE2 as its regular expressions engine, instead
+  //       of regular PCREs. RE2 supports most of PCREs features, but not all.
+  //       You can switch back to PCREs if you absolutely cannot convert
+  //       existing regular expressions to make them compatible with RE2 in a
+  //       timely fashion, but note that this will make Kuzzle vulnerable to
+  //       ReDoS attacks (see https://en.wikipedia.org/wiki/ReDoS)
+  //
+  //       It is *VERY STRONGLY* advised to leave that option deactivated.
+  //       This option is deprecated and will be removed from Kuzzle v2.
+  //       More information about the RE2 engine: https://github.com/google/re2
+  //
+  "realtime": {
+    "pcreSupport": false
   }
 }

@@ -194,15 +194,13 @@ describe('Test: token manager core component', () => {
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
-      kuzzle.hotelClerk.customers = {
-        connectionId2: {
-          room1: true,
-          room2: true
-        },
-        connectionId1: {
-          room3: true
-        }
-      };
+      kuzzle.hotelClerk.customers.set('connectionId2', new Map([
+        [ 'room1', true ],
+        [ 'room2', true ]
+      ]));
+      kuzzle.hotelClerk.customers.set('connectionId1', new Map([
+        [ 'room3', true ]
+      ]));
 
       tokenManager.link(
         new Token({_id: 'bar', expiresAt: now + 1000000}),
@@ -236,7 +234,7 @@ describe('Test: token manager core component', () => {
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
-      kuzzle.hotelClerk.customers = {};
+      kuzzle.hotelClerk.customers.clear();
 
       tokenManager.link(new Token({_id: 'bar', expiresAt: now + 1000000}), 'connectionId1', 'roomId1');
       tokenManager.link(new Token({_id: 'foo', expiresAt: now - 1000}), 'connectionId2', 'roomId2');
@@ -257,7 +255,7 @@ describe('Test: token manager core component', () => {
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
-      kuzzle.hotelClerk.customers = {};
+      kuzzle.hotelClerk.customers.clear();
 
       tokenManager.link(new Token({_id: 'foo', expiresAt: now - 1000}), 'connectionId2', 'roomId2');
 

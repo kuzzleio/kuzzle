@@ -17,11 +17,7 @@ describe('Test: security controller - createFirstAdmin', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     adminController = new SecurityController(kuzzle);
-    kuzzle.funnel.controllers = {
-      server: {
-        adminExists: sinon.stub()
-      }
-    };
+    kuzzle.funnel.controllers.set('server', { adminExists: sinon.stub() });
   });
 
   describe('#createFirstAdmin', () => {
@@ -48,7 +44,7 @@ describe('Test: security controller - createFirstAdmin', () => {
     });
 
     it('should do nothing if admin already exists', () => {
-      kuzzle.funnel.controllers.server.adminExists.resolves({exists: true});
+      kuzzle.funnel.controllers.get('server').adminExists.resolves({exists: true});
 
       return should(adminController.createFirstAdmin(new Request({
         controller: 'security',
@@ -59,7 +55,7 @@ describe('Test: security controller - createFirstAdmin', () => {
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', () => {
-      kuzzle.funnel.controllers.server.adminExists.resolves({exists: false});
+      kuzzle.funnel.controllers.get('server').adminExists.resolves({exists: false});
       kuzzle.repositories.user.load.resolves(kuzzle.repositories.user.anonymous());
 
       return adminController.createFirstAdmin(new Request({
@@ -77,12 +73,12 @@ describe('Test: security controller - createFirstAdmin', () => {
     });
 
     it('should create the admin user and reset roles & profiles if asked to', () => {
-      kuzzle.funnel.controllers.server.adminExists.resolves({exists: false});
+      kuzzle.funnel.controllers.get('server').adminExists.resolves({exists: false});
       kuzzle.repositories.user.load.resolves(kuzzle.repositories.user.anonymous());
 
-      kuzzle.funnel.controllers.index = {
+      kuzzle.funnel.controllers.set('index', {
         refreshInternal: sinon.stub().resolves()
-      };
+      });
 
       return adminController.createFirstAdmin(new Request({
         controller: 'security',

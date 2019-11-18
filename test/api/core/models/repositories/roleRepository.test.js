@@ -29,13 +29,12 @@ describe('Test: repositories/roleRepository', () => {
     it('should return in memory roles', () => {
       const role = {foo: 'bar'};
 
-      roleRepository.roles.foo = role;
+      roleRepository.roles.set('foo', role);
       roleRepository.loadMultiFromDatabase = sinon.stub();
 
       return roleRepository.loadRoles(['foo'])
         .then(result => {
-          should(result)
-            .be.eql([role]);
+          should(result).be.eql([role]);
           should(roleRepository.loadMultiFromDatabase)
             .have.callCount(0);
         });
@@ -53,7 +52,7 @@ describe('Test: repositories/roleRepository', () => {
       role3._id = 'role3';
       role4._id = 'role4';
 
-      roleRepository.roles.role3 = role3;
+      roleRepository.roles.set('role3', role3);
 
       roleRepository.loadOneFromDatabase = sinon.stub();
       roleRepository.loadOneFromDatabase.withArgs('role1').resolves(role1);
@@ -83,7 +82,7 @@ describe('Test: repositories/roleRepository', () => {
     it('should load the role directly from memory if it\'s in memory', () => {
       const role = {foo: 'bar'};
 
-      roleRepository.roles.foo = role;
+      roleRepository.roles.set('foo', role);
 
       return roleRepository.load('foo')
         .then(result => {
@@ -99,11 +98,8 @@ describe('Test: repositories/roleRepository', () => {
 
       return roleRepository.load('foo')
         .then(result => {
-          should(result)
-            .be.exactly(role);
-
-          should(roleRepository.roles.foobar)
-            .be.exactly(role);
+          should(result).be.exactly(role);
+          should(roleRepository.roles).have.key('foobar', role);
         });
     });
   });
@@ -266,15 +262,14 @@ describe('Test: repositories/roleRepository', () => {
 
       kuzzle.repositories.profile.searchProfiles.resolves({total: 0});
       roleRepository.deleteFromDatabase = sinon.stub().resolves(null);
-      roleRepository.roles.foo = true;
+      roleRepository.roles.set('foo', true);
 
       return roleRepository.delete(role)
         .then(() => {
           should(roleRepository.deleteFromDatabase)
             .be.calledOnce()
             .be.calledWith('foo');
-          should(roleRepository.roles)
-            .not.have.property('foo');
+          should(roleRepository.roles).not.have.key('foo');
           should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('core:roleRepository:delete', {_id: 'foo'});
@@ -411,8 +406,7 @@ describe('Test: repositories/roleRepository', () => {
       roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
       return roleRepository.validateAndSaveRole(role)
         .then(response => {
-          should(response._id)
-            .be.eql('anonymous');
+          should(response._id).be.eql('anonymous');
         });
     });
 
