@@ -6,7 +6,7 @@ title: createApiKey
 
 # createApiKey
 
-Creates a new API key for an user. 
+Creates a new API key.
 
 ---
 
@@ -15,7 +15,7 @@ Creates a new API key for an user.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/users/<userId>/api-keys/_create[?refresh=wait_for][&expiresIn=-1][&_id=null]
+URL: http://kuzzle:7512/api-keys/_create[?refresh=wait_for][&expiresIn=-1][&_id=null]
 Method: POST
 Body:
 ```
@@ -30,9 +30,8 @@ Body:
 
 ```js
 {
-  "controller": "security",
+  "controller": "auth",
   "action": "createApiKey",
-  "userId": "mWakSm4BWtbu6xy6NY8K",
   "body": {
     "description": "Sigfox callback authentication api key"
   },
@@ -47,8 +46,6 @@ Body:
 ---
 
 ## Arguments
-
-- `userId`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
   
 ### Optional:
 
@@ -88,7 +85,7 @@ The authentication token `token` is displayed only once.
 {
   "status": 200,
   "error": null,
-  "controller": "security",
+  "controller": "auth",
   "action": "createApiKey",
   "requestId": "<unique request identifier>",
   "result": {
