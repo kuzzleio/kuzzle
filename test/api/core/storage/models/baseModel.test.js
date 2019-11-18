@@ -224,6 +224,7 @@ describe('BaseModel', () => {
         'mylehuong',
         { location: 'Saigon' },
         { userId: 'aschen', refresh: 'wait_for' });
+      should(model.__persisted).be.true();
     });
 
     it('should create the document and assign generated _id', async () => {
@@ -269,6 +270,7 @@ describe('BaseModel', () => {
         'mylehuong',
         { refresh: 'wait_for' });
       should(model._afterDelete).be.calledOnce();
+      should(model.__persisted).be.false();
     });
 
     it('should do nothing if the document is not persisted', async () => {
