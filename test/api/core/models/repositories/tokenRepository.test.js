@@ -149,7 +149,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
   });
 
-  describe('#generateToken', () => {
+  describe.only('#generateToken', () => {
     it('should reject the promise if the username is null', () => {
       return should(tokenRepository.generateToken(null))
         .be.rejectedWith(KuzzleInternalError, {
@@ -248,6 +248,33 @@ describe('Test: repositories/tokenRepository', () => {
       return should(tokenRepository.generateToken(user, 'connectionId', {expiresIn: '1m'}))
         .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
     });
+
+    it('should reject if the ttl is infinite and the maxTTL is finite', async () => {
+      const user = new User();
+      user._id = 'id';
+
+      kuzzle.config.security.jwt.maxTTL = 42000;
+
+      const promise = tokenRepository.generateToken(
+        user,
+        'connectionId',
+        { expiresIn: -1 });
+
+      await should(promise)
+        .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
+    });
+
+    it('should reject if the ttl not ms-compatible or not a number', async () => {
+      const user = new User();
+      user._id = 'id';
+
+      const promise = tokenRepository.generateToken(
+        user,
+        'connectionId',
+        { expiresIn: 'ehh' });
+
+      await should(promise).be.rejectedWith(KuzzleInternalError);
+    });
   });
 
   describe('#serializeToCache', () => {
@@ -284,7 +311,6 @@ describe('Test: repositories/tokenRepository', () => {
   });
 
   describe('#deleteByUserId', () => {
-    // @todo ask seb or benoit for these tests
     it('should delete the tokens associated to a user identifier', () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.resolves([
