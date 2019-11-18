@@ -192,16 +192,22 @@ describe('Test: repositories/userRepository', () => {
     });
   });
 
-  describe('#delete', () => {
-    let apiKeyDeleteByUser;
+  describe('#truncate', () => {
+    it('should truncate ApiKeys', async () => {
+      const apiKeyTruncateStub = sinon.stub(ApiKey, 'truncate');
+      userRepository.search = sinon.stub().resolves({ hits: [] });
 
-    beforeEach(() => {
-      apiKeyDeleteByUser = ApiKey.deleteByUser;
-      ApiKey.deleteByUser = sinon.stub().resolves();
+      await userRepository.truncate({ refresh: 'wait_for' });
+
+      should(apiKeyTruncateStub).be.calledWith({ refresh: 'wait_for' });
     });
+  });
 
-    afterEach(() => {
-      ApiKey.deleteByUser = apiKeyDeleteByUser;
+  describe('#delete', () => {
+    let apiKeyDeleteByUserStub;
+
+    before(() => {
+      apiKeyDeleteByUserStub = sinon.stub(ApiKey, 'deleteByUser');
     });
 
     it('should delete user from both cache and database', async () => {
@@ -217,7 +223,7 @@ describe('Test: repositories/userRepository', () => {
         .calledOnce()
         .calledWith(userRepository.collection, 'alyx', { refresh: 'wait_for' });
 
-      should(ApiKey.deleteByUser).be.calledWith(user, { refresh: 'wait_for' });
+      should(apiKeyDeleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
     });
 
     it('should delete user credentials', () => {
@@ -236,6 +242,14 @@ describe('Test: repositories/userRepository', () => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('kleiner');
         });
+    });
+
+    it('should delete associated ApiKey', async () => {
+      const user = { _id: 'alyx' };
+
+      await userRepository.delete(user, { refresh: 'wait_for' });
+
+      should(apiKeyDeleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
     });
 
     it('should forward refresh option', () => {

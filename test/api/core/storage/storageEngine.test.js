@@ -5,6 +5,7 @@ const
   should = require('should'),
   mockrequire = require('mock-require'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  BaseModel = require('../../../../lib/api/core/storage/models/baseModel'),
   ClientAdapterMock = require('../../../mocks/clientAdapter.mock');
 
 describe('StorageEngine', () => {
@@ -40,7 +41,7 @@ describe('StorageEngine', () => {
   });
 
   describe('#init', () => {
-    it('should initialize storage clients and populate cache', async () => {
+    it('should initialize storage clients, models and populate cache', async () => {
       storageEngine._populateIndexCache = sinon.stub().resolves();
 
       await storageEngine.init();
@@ -48,6 +49,8 @@ describe('StorageEngine', () => {
       should(storageEngine._publicClient.init).be.called();
       should(storageEngine._internalClient.init).be.called();
       should(storageEngine._populateIndexCache).be.called();
+      should(BaseModel.kuzzle).be.eql(kuzzle);
+      should(BaseModel.indexStorage).be.eql(kuzzle.internalIndex);
     });
   });
 
