@@ -2,28 +2,10 @@
 
 const
   { After, Before, BeforeAll } = require('cucumber'),
-  { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   testMappings = require('../fixtures/mappings'),
   testSecurities = require('../fixtures/securities'),
   testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
-
-function getProtocol (world) {
-  let protocol;
-
-  switch (world.protocol) {
-    case 'http':
-      protocol = new Http(world.host, { port: world.port });
-      break;
-    case 'websocket':
-      protocol = new WebSocket(world.host, { port: world.port });
-      break;
-    default:
-      throw new Error(`Unknown protocol "${world.protocol}".`);
-  }
-
-  return protocol;
-}
 
 async function resetSecurityDefault (sdk) {
   await sdk.query({
@@ -53,8 +35,6 @@ BeforeAll(({ timeout: 10 * 1000 }), async function () {
 
   console.log(`Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`);
 
-  world.sdk = new Kuzzle(getProtocol(world));
-
   await world.sdk.connect();
 
   console.log('Loading default securities..');
@@ -70,9 +50,8 @@ BeforeAll(({ timeout: 10 * 1000 }), async function () {
 });
 
 Before(({ timeout: 10 * 1000 }), async function () {
-  this.sdk = new Kuzzle(getProtocol(this));
-
   await this.sdk.connect();
+
   await this.sdk.auth.login(
     'local',
     { username: 'test-admin', password: 'password' });
