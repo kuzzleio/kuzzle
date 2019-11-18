@@ -7,7 +7,7 @@ const
     Request,
     errors: { BadRequestError }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test: subscribe controller', () => {
   let
@@ -31,7 +31,7 @@ describe('Test: subscribe controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(realtimeController).instanceOf(BaseController);
+      should(realtimeController).instanceOf(NativeController);
     });
   });
 
@@ -65,6 +65,16 @@ describe('Test: subscribe controller', () => {
           should(kuzzle.hotelClerk.addSubscription).be.calledWith(request);
         });
     });
+
+    it('should return nothing if the connection is dead', () => {
+      // the check is actually done in the hotelclerk and returns undefined if so
+      kuzzle.hotelClerk.addSubscription.resolves();
+
+      return realtimeController.subscribe(request)
+        .then(result => {
+          should(result).be.undefined();
+        });
+    });
   });
 
   describe('#join', () => {
@@ -88,6 +98,16 @@ describe('Test: subscribe controller', () => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.join).be.calledOnce();
           should(kuzzle.hotelClerk.join).be.calledWith(request);
+        });
+    });
+
+    it('should return nothing if the connection is dead', () => {
+      // the check is actually done in the hotelclerk and returns undefined if so
+      kuzzle.hotelClerk.addSubscription.resolves();
+
+      return realtimeController.subscribe(request)
+        .then(result => {
+          should(result).be.undefined();
         });
     });
   });

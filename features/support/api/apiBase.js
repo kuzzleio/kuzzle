@@ -296,7 +296,8 @@ class ApiBase {
     const msg = {
       controller: 'security',
       action: 'createUser',
-      body: body
+      refresh: 'wait_for',
+      body
     };
 
     if (id !== undefined) {

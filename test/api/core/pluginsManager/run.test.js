@@ -15,7 +15,8 @@ const
       GatewayTimeoutError,
       PluginImplementationError
     }
-  } = require('kuzzle-common-objects');
+  } = require('kuzzle-common-objects'),
+  { BaseController } = require(`${root}/lib/api/controllers/baseController`);
 
 describe('PluginsManager.run', () => {
   let
@@ -390,8 +391,9 @@ describe('PluginsManager.run', () => {
 
       return pluginsManager.run()
         .then(() => {
-          should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
-          should(pluginsManager.controllers['testPlugin/foo'].actionName)
+          should(pluginsManager.controllers.get('testPlugin/foo'))
+            .be.instanceof(BaseController);
+          should(pluginsManager.controllers.get('testPlugin/foo').actionName)
             .be.eql(plugin.object.functionName.bind(plugin.object));
         });
     });
@@ -409,8 +411,10 @@ describe('PluginsManager.run', () => {
 
       return pluginsManager.run()
         .then(() => {
-          should(pluginsManager.controllers['testPlugin/foo']).be.an.Object();
-          should(pluginsManager.controllers['testPlugin/foo'].actionName).be.eql(action);
+          should(pluginsManager.controllers.get('testPlugin/foo'))
+            .be.instanceof(BaseController);
+          should(pluginsManager.controllers.get('testPlugin/foo').actionName)
+            .be.eql(action);
         });
     });
 
@@ -497,7 +501,7 @@ describe('PluginsManager.run', () => {
       plugin.object.functionName = () => {};
       plugin.object.foo = () => {};
 
-      should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
+      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
     });
 
     it('should not add an invalid route to the API', () => {

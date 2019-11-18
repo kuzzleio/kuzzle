@@ -36,11 +36,10 @@ describe('funnelController.execute', () => {
     });
 
     funnel = new FunnelController(kuzzle);
-    funnel.controllers = {
-      foo: {
-        bar: sinon.spy()
-      }
-    };
+    funnel.controllers = new Map([
+      ['foo', { bar: sinon.spy() } ]
+    ]);
+
     funnel.checkRights = sinon.stub().returns(Bluebird.resolve(request));
     funnel.processRequest = sinon.stub().returnsArg(0);
     sinon.stub(funnel, '_playCachedRequests');

@@ -6,7 +6,7 @@ const
     Request,
     errors: { ExternalServiceError }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController'),
+  { BaseController, NativeController } = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: server controller', () => {
@@ -31,7 +31,7 @@ describe('Test: server controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(serverController).instanceOf(BaseController);
+      should(serverController).instanceOf(NativeController);
     });
   });
 
@@ -271,30 +271,22 @@ describe('Test: server controller', () => {
 
   describe('#publicApi', () => {
     it('should build the api definition', () => {
-      class Foo {
-        constructor() {
-          this.actions = new Set();
-          this.actions.add('publicMethod', 'baz');
-        }
-        publicMethod() {}
-        baz() {}
-      }
+      const nativeController = new NativeController();
+      nativeController._addAction('publicMethod', function () {});
+      nativeController._addAction('baz', function () {});
 
-      kuzzle.funnel.controllers = {
-        foo: new Foo()
-      };
+      kuzzle.funnel.controllers.set('foo', nativeController);
 
       kuzzle.config.http.routes = [
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l' },
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/:foobar' }
       ];
 
-      kuzzle.funnel.pluginsControllers = {
-        foobar: {
-          publicMethod: function () {},
-          anotherMethod: function () {},
-        }
-      };
+      const pluginController = new BaseController();
+      pluginController._addAction('publicMethod', function () {});
+      pluginController._addAction('anotherMethod', function () {});
+
+      kuzzle.pluginsManager.controllers.set('foobar', pluginController);
 
       kuzzle.pluginsManager.routes = [{
         verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
@@ -310,7 +302,7 @@ describe('Test: server controller', () => {
             kuzzle.config.http.routes
           ]);
           should(serverController._buildApiDefinition.getCall(1).args).be.eql([
-            kuzzle.funnel.pluginsControllers,
+            kuzzle.pluginsManager.controllers,
             kuzzle.pluginsManager.routes,
             '_plugin/'
           ]);
@@ -320,30 +312,22 @@ describe('Test: server controller', () => {
 
   describe('#_buildApiDefinition', () => {
     it('should return api definition for the provided controllers', () => {
-      class Foo {
-        constructor() {
-          this.actions = new Set();
-          this.actions.add('publicMethod', 'baz');
-        }
-        publicMethod() {}
-        baz() {}
-      }
+      const nativeController = new NativeController();
+      nativeController._addAction('publicMethod', function () {});
+      nativeController._addAction('baz', function () {});
 
-      const controllers = {
-        foo: new Foo()
-      };
+      const controllers = new Map([[ 'foo', nativeController ]]);
 
       const routes = [
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l' },
         { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/:foobar' }
       ];
 
-      const pluginsControllers = {
-        foobar: {
-          publicMethod: function () {},
-          anotherMethod: function () {},
-        }
-      };
+      const pluginController = new BaseController();
+      pluginController._addAction('publicMethod', function () {});
+      pluginController._addAction('anotherMethod', function () {});
+
+      const pluginsControllers = new Map([ [ 'foobar', pluginController ] ]);
 
       const pluginsRoutes = [{
         verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
@@ -352,14 +336,12 @@ describe('Test: server controller', () => {
 
       const apiDefinition = serverController._buildApiDefinition(
         controllers,
-        routes
-      );
+        routes);
 
       const pluginApiDefinition = serverController._buildApiDefinition(
         pluginsControllers,
         pluginsRoutes,
-        '_plugin/'
-      );
+        '_plugin/');
 
       should(apiDefinition).match({
         foo: {

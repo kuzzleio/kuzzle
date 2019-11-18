@@ -1,19 +1,24 @@
 'use strict';
 
 const
+  sinon = require('sinon'),
   should = require('should'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   DocumentController = require('../../../../lib/api/controllers/documentController'),
   mockrequire = require('mock-require'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  ControllerMock = require('../../../mocks/controller.mock'),
+  {
+    MockBaseController,
+    MockNativeController
+  } = require('../../../mocks/controller.mock'),
   ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
   {
     Request,
     errors: {
       NotFoundError,
       PluginImplementationError,
-      InternalError: KuzzleInternalError
+      InternalError: KuzzleInternalError,
+      BadRequestError
     }
   } = require('kuzzle-common-objects');
 
@@ -38,10 +43,11 @@ describe('funnelController.processRequest', () => {
     kuzzle.pluginsManager = pluginsManager;
 
     // inject fake controllers for unit tests
-    funnel.controllers.fakeController = new ControllerMock(kuzzle);
-    funnel.controllers.document = new DocumentController(kuzzle);
-    funnel.pluginsControllers['fakePlugin/controller'] =
-      new ControllerMock(kuzzle);
+    funnel.controllers.set('fakeController', new MockNativeController(kuzzle));
+    funnel.controllers.set('document', new DocumentController(kuzzle));
+    pluginsManager.controllers.set(
+      'fakePlugin/controller',
+      new MockBaseController(kuzzle));
   });
 
   afterEach(() => {
@@ -110,7 +116,7 @@ describe('funnelController.processRequest', () => {
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'succeed'});
 
-    funnel.pluginsControllers[controller].succeed.returns('foobar');
+    pluginsManager.controllers.get(controller).succeed.returns('foobar');
 
     funnel.processRequest(request)
       .then(() => done(new Error('Expected test to fail')))
@@ -133,6 +139,17 @@ describe('funnelController.processRequest', () => {
       });
   });
 
+  it('should reject if _checkSdkVersion fails', () => {
+    const request = new Request({
+      controller: 'fakeController',
+      action: 'succeed'
+    });
+    funnel._checkSdkVersion = sinon.stub().rejects(new Error('incompatible sdk'));
+
+    return should(funnel.processRequest(request))
+      .be.rejectedWith(Error, { message: 'incompatible sdk' });
+  });
+
   it('should throw if a plugin action returns a non-serializable response', () => {
     const
       controller = 'fakePlugin/controller',
@@ -140,7 +157,7 @@ describe('funnelController.processRequest', () => {
       unserializable = {};
     unserializable.self = unserializable;
 
-    funnel.pluginsControllers[controller].succeed.resolves(unserializable);
+    pluginsManager.controllers.get(controller).succeed.resolves(unserializable);
 
     return funnel.processRequest(request)
       .then(() => { throw new Error('Expected test to fail'); })
@@ -213,7 +230,7 @@ describe('funnelController.processRequest', () => {
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'fail'});
 
-    funnel.pluginsControllers[controller].fail.rejects(new Error('foobar'));
+    pluginsManager.controllers.get(controller).fail.rejects(new Error('foobar'));
 
     funnel.processRequest(request)
       .then(() => done(new Error('Expected test to fail')))
@@ -288,4 +305,57 @@ describe('funnelController.processRequest', () => {
       });
   });
 
+  describe('_checkSdkVersion', () => {
+    let request;
+
+    beforeEach(() => {
+      request = {
+        input: {
+          volatile: {}
+        }
+      };
+    });
+
+    it('should not throw if sdkName is in incorrect format', () => {
+      request.input.volatile.sdkName = {};
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = '';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = 'js#7.4.3';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = 'js@';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+
+      request.input.volatile.sdkName = '@7.4.3';
+      should(() => funnel._checkSdkVersion(request)).not.throw();
+    });
+
+    it('should not throw if the SDK version is unknown', () => {
+      funnel.sdkCompatibility = { js: { max: 6 } };
+
+      request.input.volatile.sdkName = 'csharp@8.4.2';
+
+      should(funnel._checkSdkVersion(request)).not.throw();
+    });
+
+    it('should not throw if the SDK version is compatible', () => {
+      funnel.sdkCompatibility = { js: { max: 6 } };
+
+      request.input.volatile.sdkName = 'js@6.4.2';
+
+      should(funnel._checkSdkVersion(request)).not.throw();
+    });
+
+    it('should throw an error if the SDK version is not compatible', () => {
+      funnel.sdkCompatibility = { js: { max: 6 } };
+
+      request.input.volatile.sdkName = 'js@7.4.2';
+
+      should(() => funnel._checkSdkVersion(request))
+        .throw(BadRequestError, { errorName: 'api.process.incompatible_sdk_version' });
+    });
+  });
 });

@@ -27,13 +27,20 @@ describe('/lib/api/kuzzle.js', () => {
     'log'
   ];
 
-  beforeEach(() => {
-    const mock = new KuzzleMock();
-    kuzzle = new Kuzzle();
+  function _mockKuzzle (KuzzleConstructor) {
+    const
+      mock = new KuzzleMock(),
+      k = new KuzzleConstructor();
 
-    mockedProperties.forEach(k => {
-      kuzzle[k] = mock[k];
+    mockedProperties.forEach(p => {
+      k[p] = mock[p];
     });
+
+    return k;
+  }
+
+  beforeEach(() => {
+    kuzzle = _mockKuzzle(Kuzzle);
   });
 
   it('should build a kuzzle server object with emit and listen event', done => {
@@ -54,8 +61,6 @@ describe('/lib/api/kuzzle.js', () => {
           sinon.assert.callOrder(
             kuzzle.internalEngine.init,
             kuzzle.internalEngine.bootstrap.all,
-            kuzzle.vault.prepareCrypto,
-            kuzzle.vault.init,
             kuzzle.services.init,
             kuzzle.validation.init,
             kuzzle.indexCache.init,
@@ -68,7 +73,6 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.log.info, // services init
             kuzzle.log.info, // load securities
             kuzzle.janitor.loadSecurities,
-            kuzzle.funnel.loadPluginControllers,
             kuzzle.router.init,
             kuzzle.statistics.init,
             kuzzle.validation.curateSpecification,
@@ -86,35 +90,27 @@ describe('/lib/api/kuzzle.js', () => {
 
       return kuzzle.start(params)
         .then(() => {
-          should(kuzzle.vault.prepareCrypto).be.calledWith('the spoon does not exists');
-          should(kuzzle.vault.init).be.calledWith('config/secrets.json');
+          should(kuzzle.vault._vaultKey).be.exactly('the spoon does not exists');
+          should(kuzzle.vault._encryptedSecretsFile).be.exactly('config/secrets.json');
         });
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
       let
-        mock,
         processExitSpy = sinon.spy(),
         processOnSpy = sinon.spy(),
         processRemoveAllListenersSpy = sinon.spy();
 
       return Kuzzle.__with__({
         process: {
+          env: {},
           exit: processExitSpy,
           on: processOnSpy,
           emit: sinon.stub(),
           removeAllListeners: processRemoveAllListenersSpy
         }
       })(() => {
-        mock = new KuzzleMock();
-        kuzzle = new Kuzzle();
-
-        mockedProperties.forEach(k => {
-          kuzzle[k] = mock[k];
-        });
-
-        kuzzle.config.dump.enabled = true;
-
+        kuzzle = _mockKuzzle(Kuzzle);
         return kuzzle.start();
       })
         .then(() => {
@@ -160,6 +156,30 @@ describe('/lib/api/kuzzle.js', () => {
           should(kuzzle.entryPoints.init).not.be.called();
           should(kuzzle.repositories.init).not.be.called();
           should(kuzzle.log.error).be.called();
+        });
+    });
+
+    // @deprecated
+    it('should instantiate Koncorde with PCRE support if asked to', () => {
+      const Koncorde = sinon.stub();
+      let
+        kuzzleDefault,
+        kuzzleWithPCRE;
+
+      return Kuzzle
+        .__with__({ Koncorde })(() => {
+          kuzzleDefault = _mockKuzzle(Kuzzle);
+          kuzzleWithPCRE = _mockKuzzle(Kuzzle);
+
+          kuzzleWithPCRE.config =
+            JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
+          kuzzleWithPCRE.config.realtime.pcreSupport = true;
+
+          return kuzzleDefault.start().then(() => kuzzleWithPCRE.start());
+        })
+        .then(() => {
+          should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2'});
+          should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js'});
         });
     });
   });

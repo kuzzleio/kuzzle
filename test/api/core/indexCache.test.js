@@ -5,7 +5,7 @@ const
   IndexCache = require('../../../lib/api/core/indexCache');
 
 describe('Test: core/indexCache', () => {
-  var
+  let
     listAliasesStub,
     listIndexesStub,
     listCollectionsStub,
@@ -43,10 +43,14 @@ describe('Test: core/indexCache', () => {
           should(listAliasesStub).be.calledOnce();
           should(listIndexesStub).be.calledOnce();
           should(listCollectionsStub).be.calledOnce();
-          should(indexCache.indexes).be.an.Object().and.have.keys('alias', 'alias2', 'foo');
-          should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
-          should(indexCache.indexes.alias).be.exactly(indexCache.indexes.foo);
-          should(indexCache.indexes.alias2).be.exactly(indexCache.indexes.foo);
+          should(indexCache.indexes).have.keys('alias', 'alias2', 'foo');
+          should(indexCache.indexes.get('foo'))
+            .be.instanceof(Set)
+            .and.have.keys('bar', 'baz', 'qux');
+          should(indexCache.indexes.get('alias'))
+            .be.exactly(indexCache.indexes.get('foo'));
+          should(indexCache.indexes.get('alias2'))
+            .be.exactly(indexCache.indexes.get('foo'));
         });
     });
 
@@ -56,7 +60,7 @@ describe('Test: core/indexCache', () => {
           should(kuzzle.internalEngine.applyDefaultMapping)
             .be.calledThrice();
 
-          should(indexCache.defaultMappings.foo._kuzzle_info)
+          should(indexCache.defaultMappings.get('foo')._kuzzle_info)
             .eql(indexCache.commonMapping._kuzzle_info);
         });
     });
@@ -67,8 +71,8 @@ describe('Test: core/indexCache', () => {
       return indexCache.initInternal(kuzzle.internalEngine)
         .then(() => {
           should(getMappingStub.calledOnce).be.true();
-          should(indexCache.indexes).be.an.Object().and.have.keys('foo');
-          should(indexCache.indexes.foo).be.an.Array().and.match(['bar', 'baz', 'qux']);
+          should(indexCache.indexes)
+            .have.value('foo', new Set(['bar', 'baz', 'qux']));
         });
     });
   });
@@ -77,13 +81,15 @@ describe('Test: core/indexCache', () => {
     it('should add a single index to the index cache', () => {
       indexCache.add('foobar');
       should(indexCache.indexes).have.keys('foobar');
-      should(indexCache.indexes.foobar).be.an.Array().and.be.empty();
+      should(indexCache.indexes.get('foobar')).be.instanceof(Set).and.be.empty();
     });
 
     it('should add a new collection to the index cache', () => {
       indexCache.add('index', 'collection');
       should(indexCache.indexes).have.keys('index');
-      should(indexCache.indexes.index).be.an.Array().and.match(['collection']);
+      should(indexCache.indexes.get('index'))
+        .be.instanceof(Set)
+        .and.have.key('collection');
     });
 
     it('should not add a collection if it is already in cache', () => {
@@ -91,7 +97,9 @@ describe('Test: core/indexCache', () => {
       indexCache.add('index', 'collection');
 
       should(indexCache.indexes).have.keys('index');
-      should(indexCache.indexes.index).be.an.Array().and.match(['collection']);
+      should(indexCache.indexes.get('index'))
+        .be.instanceof(Set)
+        .and.have.key('collection');
     });
 
     it('should do nothing if no index is provided', () => {
@@ -112,19 +120,21 @@ describe('Test: core/indexCache', () => {
       indexCache.add('index', 'collection2');
       indexCache.remove('index', 'collection1');
       should(indexCache.indexes).have.keys('index');
-      should(indexCache.indexes.index).be.an.Array().and.match(['collection2']);
+      should(indexCache.indexes.get('index'))
+        .be.instanceof(Set)
+        .and.have.key('collection2');
     });
 
     it('should do nothing if the index does not exist', () => {
       indexCache.add('index', 'collection');
       indexCache.remove('foo');
-      should(indexCache.indexes).match({index: ['collection']});
+      should(indexCache.indexes).have.value('index', new Set(['collection']));
     });
 
     it('should do nothing if the collection does not exist', () => {
       indexCache.add('index', 'collection');
       indexCache.remove('index', 'foo');
-      should(indexCache.indexes).match({index: ['collection']});
+      should(indexCache.indexes).have.value('index', new Set(['collection']));
     });
   });
 
@@ -133,15 +143,17 @@ describe('Test: core/indexCache', () => {
       indexCache.add('index1', 'collection');
       indexCache.add('index2', 'collection');
       indexCache.reset();
-      should(indexCache.indexes).be.an.Object().and.be.empty();
+      should(indexCache.indexes).be.empty();
     });
 
     it('should remove all collections of an index', () => {
       indexCache.add('index', 'collection1');
       indexCache.add('index', 'collection2');
       indexCache.reset('index');
-      should(indexCache.indexes).be.an.Object().and.have.keys('index');
-      should(indexCache.indexes.index).be.an.Array().and.be.empty();
+      should(indexCache.indexes).have.keys('index');
+      should(indexCache.indexes.get('index'))
+        .be.instanceof(Set)
+        .and.be.empty();
     });
   });
 
@@ -168,30 +180,29 @@ describe('Test: core/indexCache', () => {
         .catch(error => done(error));
     });
 
-    it('should resolve with true and update the cache if the index exists in ES but not in Kuzzle', done => {
+    it('should resolve with true and update the cache if the index exists in ES but not in Kuzzle', () => {
       kuzzle.services.list.storageEngine.indexExists.resolves(true);
 
-      indexCache.exists('index1')
+      return indexCache.exists('index1')
         .then(result => {
           should(result).be.true();
           should(indexCache.indexes).have.keys('index1');
-          done();
-        })
-        .catch(error => done(error));
+        });
     });
 
-    it('should resolve with true and update the cache and apply mapping if the collection exists in ES but not in Kuzzle', done => {
+    it('should resolve with true and update the cache and apply mapping if the collection exists in ES but not in Kuzzle', () => {
       kuzzle.services.list.storageEngine.collectionExists.resolves(true);
       indexCache.add('index1');
 
-      indexCache.exists('index1', 'collection1')
+      return indexCache.exists('index1', 'collection1')
         .then(result => {
           should(result).be.true();
-          should(indexCache.indexes.index1).be.eql(['collection1']);
-          should(kuzzle.internalEngine.applyDefaultMapping).be.calledOnce();
-          done();
-        })
-        .catch(error => done(error));
+          should(indexCache.indexes)
+            .have.value('index1', new Set(['collection1']));
+          should(kuzzle.internalEngine.applyDefaultMapping)
+            .be.calledOnce()
+            .be.calledWith('index1', 'collection1', kuzzle.config.services.db.commonMapping);
+        });
     });
 
     it('should resolve with false if the index does not exists in ES', done => {

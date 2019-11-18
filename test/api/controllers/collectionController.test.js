@@ -13,7 +13,7 @@ const
     }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test: collection controller', () => {
   let
@@ -39,7 +39,7 @@ describe('Test: collection controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(collectionController).instanceOf(BaseController);
+      should(collectionController).instanceOf(NativeController);
     });
   });
 

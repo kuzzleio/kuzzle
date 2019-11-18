@@ -42,7 +42,10 @@ class KuzzleMock extends Kuzzle {
       register: this.sandbox.stub().resolves(),
       remove: this.sandbox.stub().resolves(),
       normalize: this.sandbox.stub().resolves({id: 'foobar'}),
-      store: this.sandbox.stub().returns({id: 'foobar'})
+      store: this.sandbox.stub().returns({id: 'foobar'}),
+      getCollections: this.sandbox.stub().returns([]),
+      getIndexes: this.sandbox.stub().returns([]),
+      getFilterIds: this.sandbox.stub().returns([])
     };
 
 
@@ -70,10 +73,8 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.funnel = {
-      controllers: {},
-      pluginsControllers: {},
+      controllers: new Map(),
       init: this.sandbox.spy(),
-      loadPluginControllers: this.sandbox.spy(),
       getRequestSlot: this.sandbox.stub().returns(true),
       handleErrorDump: this.sandbox.spy(),
       execute: this.sandbox.stub(),
@@ -95,6 +96,8 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.hotelClerk = {
+      rooms: new Map(),
+      customers: new Map(),
       getRealtimeCollections: this.sandbox.stub(),
       removeCustomerFromAllRooms: this.sandbox.stub(),
       addSubscription: this.sandbox.stub().resolves(foo),
@@ -113,8 +116,8 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.indexCache = {
-      indexes: {},
-      defaultMappings: {},
+      indexes: new Map(),
+      defaultMappings: new Map(),
       add: this.sandbox.stub(),
       exists: this.sandbox.stub(),
       init: this.sandbox.stub().resolves(),
@@ -186,6 +189,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.pluginsManager = {
+      controllers: new Map(),
       init: this.sandbox.stub().resolves(),
       plugins: {},
       run: this.sandbox.stub().resolves(),

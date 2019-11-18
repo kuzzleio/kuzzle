@@ -24,13 +24,6 @@ Feature: Kuzzle functional tests
     Then I count 3 documents in index "tolkien":"angband"
     Then I'm able to delete the index named "tolkien"
 
-  Scenario: CLI: encrypt and decrypt secrets
-    When I have a file "config/testsecrets.json" containing '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-    And I use the CLI command 'encryptSecrets config/testsecrets.json --noint --vault-key azerty --outputFile config/testsecrets.enc.json'
-    Then A file "config/testsecrets.enc.json" exists
-    When I use the CLI command 'decryptSecrets config/testsecrets.enc.json --noint --vault-key azerty --outputFile config/testsecrets.json'
-    Then A file "config/testsecrets.json" exists and contain '{ "aws": { "key": "silmaril" }, "secret": "ring" }'
-
   Scenario: Bulk mWrite
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
     When I use bulk:mWrite action with
@@ -563,6 +556,14 @@ Feature: Kuzzle functional tests
     Then I'm able to find the profile with id "my-new-profile"
     Given I delete the profile with id "my-new-profile"
     Then I'm not able to find the profile with id "my-new-profile"
+
+  @security
+  Scenario: can't delete profile assigned to a user
+    Given I create a new role "role1" with id "role1"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a user "user1" with id "user1-id"
+    Then I'm not able to delete profile with id "profile1"
+    Then I'm able to find the profile with id "profile1"
 
   @security
   Scenario: search and update profiles
