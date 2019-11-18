@@ -559,11 +559,9 @@ Feature: Kuzzle functional tests
 
   @security
   Scenario: can't delete profile assigned to a user
-    When I create a user "useradmin" with id "useradmin-id"
-    Then I log in as useradmin:testpwd expiring in 1h
-    Then I create a new role "role1" with id "role1"
-    Then I create a new profile "profile1" with id "profile1"
-    Then I create a user "user1" with id "user1-id"
+    Given I create a new role "role1" with id "role1"
+    And I create a new profile "profile1" with id "profile1"
+    And I create a user "user1" with id "user1-id"
     Then I'm not able to delete profile with id "profile1"
     Then I'm able to find the profile with id "profile1"
 
