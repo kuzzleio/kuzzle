@@ -118,11 +118,11 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
     it('should configure the zlib decoders', () => {
       return protocol.init(entrypoint)
         .then(() => {
-          should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
-          should(protocol.decoders.gzip).eql(zlibstub.createGunzip);
-          should(protocol.decoders.deflate).eql(zlibstub.createInflate);
-          should(protocol.decoders.identity).be.a.Function();
-          should(protocol.decoders.identity('foobar')).eql(null);
+          should(protocol.decoders).have.keys('deflate', 'gzip', 'identity');
+          should(protocol.decoders.get('gzip')).eql(zlibstub.createGunzip);
+          should(protocol.decoders.get('deflate')).eql(zlibstub.createInflate);
+          should(protocol.decoders.get('identity')).be.a.Function();
+          should(protocol.decoders.get('identity')('foobar')).eql(null);
         });
     });
 
@@ -131,17 +131,17 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       return protocol.init(entrypoint)
         .then(() => {
-          should(Object.keys(protocol.decoders).sort()).eql(['deflate', 'gzip', 'identity']);
-          should(protocol.decoders.gzip).Function().and.not.eql(gunzipMock);
-          should(protocol.decoders.deflate).Function().and.not.eql(inflateMock);
-          should(protocol.decoders.identity).be.a.Function();
-          should(() => protocol.decoders.gzip()).throw(BadRequestError, {
+          should(protocol.decoders).have.keys('deflate', 'gzip', 'identity');
+          should(protocol.decoders.get('gzip')).Function().and.not.eql(gunzipMock);
+          should(protocol.decoders.get('deflate')).Function().and.not.eql(inflateMock);
+          should(protocol.decoders.get('identity')).be.a.Function();
+          should(() => protocol.decoders.get('gzip')()).throw(BadRequestError, {
             errorName: 'network.http.compression_disabled'
           });
-          should(() => protocol.decoders.deflate()).throw(BadRequestError, {
+          should(() => protocol.decoders.get('deflate')()).throw(BadRequestError, {
             errorName: 'network.http.compression_disabled'
           });
-          should(protocol.decoders.identity('foobar')).eql(null);
+          should(protocol.decoders.get('identity')('foobar')).eql(null);
         });
     });
 
@@ -241,10 +241,10 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
         should(request.pipe).calledOnce().calledWith(gunzipMock);
         should(gunzipMock.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
-        should(protocol.decoders.identity).not.called();
-        should(protocol.decoders.deflate).not.called();
+        should(protocol.decoders.get('identity')).not.called();
+        should(protocol.decoders.get('deflate')).not.called();
 
-        should(protocol.decoders.gzip).calledOnce();
+        should(protocol.decoders.get('gzip')).calledOnce();
         should(gunzipMock.on).calledOnce().calledWith('error');
       });
 
@@ -279,14 +279,14 @@ describe('/lib/api/core/entrypoints/embedded/protocols/http', () => {
 
       it('should handle chain pipes properly to match multi-layered compression', () => {
         protocol.maxEncodingLayers = 5;
-        protocol.decoders.identity = sinon.stub().returns(identityMock);
+        protocol.decoders.set('identity', sinon.stub().returns(identityMock));
         request.headers['content-encoding'] = 'gzip, deflate, iDeNtItY, DEFlate, GzIp';
 
         onRequest(request, response);
         should(request.pipe).calledOnce();
-        should(protocol.decoders.gzip).calledTwice();
-        should(protocol.decoders.deflate).calledTwice();
-        should(protocol.decoders.identity).calledOnce();
+        should(protocol.decoders.get('gzip')).calledTwice();
+        should(protocol.decoders.get('deflate')).calledTwice();
+        should(protocol.decoders.get('identity')).calledOnce();
 
         // testing the pipe chain
         should(request.pipe).calledWith(gunzipMock);

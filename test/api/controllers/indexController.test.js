@@ -6,7 +6,7 @@ const
     Request,
     errors: { BadRequestError }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController'),
+  { NativeController } = require('../../../lib/api/controllers/baseController'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: index controller', () => {
@@ -32,7 +32,7 @@ describe('Test: index controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(indexController).instanceOf(BaseController);
+      should(indexController).instanceOf(NativeController);
     });
   });
 

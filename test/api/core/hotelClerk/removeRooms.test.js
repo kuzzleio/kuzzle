@@ -57,7 +57,7 @@ describe('Test: hotelClerk.removeRooms', () => {
         should(response).have.property('acknowledged');
         should(response.acknowledged).be.true();
 
-        should(kuzzle.hotelClerk.rooms).be.empty().Object();
+        should(kuzzle.hotelClerk.rooms).be.empty();
         return null;
       });
   });
@@ -85,7 +85,7 @@ describe('Test: hotelClerk.removeRooms', () => {
         should(response).have.property('acknowledged');
         should(response.acknowledged).be.true();
 
-        should(kuzzle.hotelClerk.rooms).be.empty().Object();
+        should(kuzzle.hotelClerk.rooms).be.empty();
       });
   });
 
@@ -120,7 +120,7 @@ describe('Test: hotelClerk.removeRooms', () => {
         should(response).have.property('acknowledged');
         should(response.acknowledged).be.true();
 
-        should(kuzzle.hotelClerk.rooms).be.empty().Object();
+        should(kuzzle.hotelClerk.rooms).be.empty();
 
         return null;
       });
@@ -156,9 +156,7 @@ describe('Test: hotelClerk.removeRooms', () => {
       .then(response => {
         should(response).have.property('acknowledged');
         should(response.acknowledged).be.true();
-
-        should(kuzzle.hotelClerk.rooms).be.Object();
-        should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
+        should(kuzzle.hotelClerk.rooms.size).be.exactly(1);
       });
   });
 
@@ -219,8 +217,8 @@ describe('Test: hotelClerk.removeRooms', () => {
       })
       .then(() => kuzzle.hotelClerk.removeRooms(removeRequest))
       .then(() => {
-        should(Object.keys(kuzzle.hotelClerk.rooms).length).be.exactly(1);
-        should(kuzzle.hotelClerk.rooms[roomId]).be.undefined();
+        should(kuzzle.hotelClerk.rooms.size).be.exactly(1);
+        should(kuzzle.hotelClerk.rooms).not.have.key(roomId);
       });
   });
 

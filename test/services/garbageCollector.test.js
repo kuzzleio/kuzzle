@@ -73,11 +73,11 @@ describe('Test: GarbageCollector service', () => {
         .onSecondCall().resolves({ids: ['document2-1-1']})
         .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});
 
-      kuzzle.indexCache.indexes = {
-        foo: ['bar'],
-        bar: ['baz'],
-        baz: ['qux']
-      };
+      kuzzle.indexCache.indexes = new Map([
+        [ 'foo', ['bar'] ],
+        [ 'bar', ['baz'] ],
+        [ 'baz', ['qux'] ]
+      ]);
 
       return gc.run()
         .then(ids => {
@@ -102,11 +102,11 @@ describe('Test: GarbageCollector service', () => {
         })
         .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});
 
-      kuzzle.indexCache.indexes = {
-        foo: ['bar'],
-        bar: ['baz'],
-        baz: ['qux']
-      };
+      kuzzle.indexCache.indexes = new Map([
+        [ 'foo', ['bar'] ],
+        [ 'bar', ['baz'] ],
+        [ 'baz', ['qux'] ]
+      ]);
 
       return gc.run()
         .then(ids => {
@@ -127,11 +127,11 @@ describe('Test: GarbageCollector service', () => {
         .onSecondCall().resolves({ids: ['document2-1-1']})
         .onThirdCall().resolves({ids: ['document2-2-1','document2-2-2', 'document2-2-3']});
 
-      kuzzle.indexCache.indexes = {
-        foo: ['bar'],
-        bar: ['baz'],
-        baz: ['qux']
-      };
+      kuzzle.indexCache.indexes = new Map([
+        [ 'foo', ['bar'] ],
+        [ 'bar', ['baz'] ],
+        [ 'baz', ['qux'] ]
+      ]);
 
       return gc.run()
         .then(ids => {

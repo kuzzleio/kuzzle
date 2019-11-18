@@ -94,6 +94,17 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
         });
     });
 
+    it('should return a locked status if an existing lock was freed during the locking process', () => {
+      kuzzle.internalEngine.create.rejects();
+      kuzzle.internalEngine.get.rejects();
+
+      return bootstrap.lock()
+        .then(status => {
+          should(status).be.true();
+          should(kuzzle.internalEngine.createOrReplace()).not.called();
+        });
+    });
+
     it('should create a new lock if the previous one is in the future', () => {
       kuzzle.internalEngine.create.rejects();
       kuzzle.internalEngine.get.returns(Bluebird.resolve({_source: {timestamp: Number.MAX_SAFE_INTEGER}}));

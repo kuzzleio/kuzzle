@@ -23,30 +23,30 @@ describe('notify methods', () => {
       action: 'action'
     }, {protocol: 'protocol'});
 
-    kuzzle.hotelClerk.rooms = {
-      matchingSome: {
-        channels: {
-          matching_all: {state: 'all', scope: 'all', users: 'all'},
-          matching_in: {state: 'all', scope: 'in', users: 'none'},
-          matching_out: {state: 'all', scope: 'out', users: 'none'},
-          matching_pending: {state: 'pending', scope: 'all', users: 'none'},
-          matching_done: {state: 'done', scope: 'all', users: 'none'},
-          matching_none: {state: 'none', scope: 'none', users: 'none'},
-          matching_userIn: {state: 'none', scope: 'none', users: 'in'},
-          matching_userOut: {state: 'none', scope: 'none', users: 'out'}
-        }
-      },
-      nonMatching: {
-        channels: {
-          foobar: {}
-        }
-      },
-      alwaysMatching: {
-        channels: {
-          always: {state: 'all', scope: 'all'}
-        }
+    kuzzle.hotelClerk.rooms.set('matchingSome', {
+      channels: {
+        matching_all: {state: 'all', scope: 'all', users: 'all'},
+        matching_in: {state: 'all', scope: 'in', users: 'none'},
+        matching_out: {state: 'all', scope: 'out', users: 'none'},
+        matching_pending: {state: 'pending', scope: 'all', users: 'none'},
+        matching_done: {state: 'done', scope: 'all', users: 'none'},
+        matching_none: {state: 'none', scope: 'none', users: 'none'},
+        matching_userIn: {state: 'none', scope: 'none', users: 'in'},
+        matching_userOut: {state: 'none', scope: 'none', users: 'out'}
       }
-    };
+    });
+
+    kuzzle.hotelClerk.rooms.set('nonMatching', {
+      channels: {
+        foobar: {}
+      }
+    });
+
+    kuzzle.hotelClerk.rooms.set('alwaysMatching', {
+      channels: {
+        always: {state: 'all', scope: 'all'}
+      }
+    });
   });
 
   describe('#notifyDocument', () => {
