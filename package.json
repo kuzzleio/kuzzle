@@ -56,7 +56,7 @@
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^2.0.0",
     "kuzzle-common-objects": "^3.0.17",
-    "kuzzle-sdk": "^6.2.6",
+    "kuzzle-sdk": "^6.2.7",
     "kuzzle-vault": "^1.0.1",
     "lodash": "4.17.15",
     "moment": "^2.24.0",
