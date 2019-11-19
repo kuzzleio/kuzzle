@@ -54,7 +54,7 @@ Body:
   - if this value is a string, then its content is parsed by the [ms](https://www.npmjs.com/package/ms) library. Examples: `"6d"`, `"10h"`
   - if `-1` is provided, the token will never expire
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created API key is indexed
-- `_id`: set the API key unique ID to the provided value, instead of auto-generating a random ID
+- `_id`: sets the API key unique ID to the provided value, instead of auto-generating a random ID
 
 ---
 
