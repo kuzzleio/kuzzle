@@ -2,7 +2,7 @@ version: '3'
 
 services:
   kuzzle:
-    image: kuzzleio/core-dev:2.x
+    image: kuzzleio/core-dev:node12
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
