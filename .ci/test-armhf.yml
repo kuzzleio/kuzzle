@@ -25,6 +25,7 @@ services:
       - DEBUG=
       - NODE_LTS=${NODE_LTS:-10}
       # Travis env var must be propagated into the container
+      - NPM_RUN
       - TRAVIS
       - TRAVIS_COMMIT
       - TRAVIS_JOB_NUMBER
@@ -34,14 +35,9 @@ services:
       - TRAVIS_REPO_SLUG
 
   redis:
-    image: redis:${REDIS_VERSION:-5}
+    image: redis:5
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.3.0
+    image: kuzzleio/elasticsearch:7.4.0
     ulimits:
       nofile: 65536
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - node.name=alyx
-      - cluster.name=kuzzle
-      - discovery.type=single-node
