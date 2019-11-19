@@ -73,7 +73,7 @@ Returns an object with the following properties:
 
 - `hits`: array of object. Each object describes a found API key:
   - `_id`: API key ID
-  - `_source`: API key definition
+  - `_source`: API key definition without the `token` field
 - `total`: total number of API keys found. Depending on pagination options, this can be greater than the actual number of API keys in a single result page
 
 ```js

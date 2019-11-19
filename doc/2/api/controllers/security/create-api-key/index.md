@@ -74,14 +74,13 @@ Returns an object containing the newly created API key:
 - `_id`: API key ID
 - `_source`: API key content
   - `userId`: user kuid
-  - `hash`: fingerprint
   - `expiresAt`: expiration date in UNIX micro-timestamp format (`-1` if the token never expires)
   - `ttl`: original ttl
   - `description`: description
   - `token`: authentication token associated with this API key
 
 ::: warning
-The authentication token `token` is displayed only once.
+The authentication token `token` will never be returned by Kuzzle again. If you lose it, you'll have to delete the API key and recreate a new one.
 :::
 
 ```js
@@ -95,7 +94,6 @@ The authentication token `token` is displayed only once.
     "_id": "api-key-id",
     "_source": {
       "userId": "mWakSm4BWtbu6xy6NY8K",
-      "hash": "AD791031EEBBF517862F4D86B2D61F95535CF1F6A20AEF0E6141D1336AB4EA79",
       "expiresAt": -1,
       "ttl": -1,
       "description": "Sigfox callback authentication token",

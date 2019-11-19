@@ -16,10 +16,10 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
-# npm install --silent --unsafe-perm
-# npm install --silent --unsafe-perm --only=dev
-# chmod -R 777 node_modules/
-# docker-compose/scripts/install-plugins.sh
+npm install --silent --unsafe-perm
+npm install --silent --unsafe-perm --only=dev
+chmod -R 777 node_modules/
+docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "$elastic_host"

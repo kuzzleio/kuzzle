@@ -557,7 +557,7 @@
             "properties": {
               "userId": { "type": "keyword" },
               "hash": { "type": "keyword" },
-              "expiresAt": { "type": "integer" },
+              "expiresAt": { "type": "date" },
               "ttl": { "type": "keyword" },
               "description": { "type": "text" },
               "token": { "type": "keyword" }
