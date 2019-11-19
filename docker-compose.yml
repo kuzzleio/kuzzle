@@ -11,7 +11,7 @@ services:
       - ./docker-compose/nginx:/etc/nginx/conf.d
 
   kuzzle:
-    image: kuzzleio/core-dev:node12
+    image: kuzzleio/core-dev:2
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - ".:/var/app"
