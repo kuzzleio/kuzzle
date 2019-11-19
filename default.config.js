@@ -286,7 +286,7 @@ module.exports = {
               userId: { type: 'keyword' },
               hash: { type: 'keyword' },
               description: { type: 'text' },
-              expiresAt: { type: 'date' },
+              expiresAt: { type: 'long' },
               ttl: { type: 'keyword' },
               token: { type: 'keyword' }
             }

@@ -15,7 +15,6 @@ Feature: Security Controller
     | expiresAt | -1 |
     | ttl | -1 |
     | description | "Le Huong" |
-    | hash | "_STRING_" |
     | token | "_STRING_" |
     And The result should contain a property "_id" of type "string"
     And I can login with the previously created API key
