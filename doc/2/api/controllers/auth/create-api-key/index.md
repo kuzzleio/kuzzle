@@ -47,7 +47,7 @@ Body:
 
 ## Arguments
   
-### Optional:
+### Optional
 
 - `expiresIn`: set the expiration duration (`-1` by default)
   - if a raw number is provided (not enclosed between quotes), then the expiration delay is in milliseconds. Example: `86400000`
