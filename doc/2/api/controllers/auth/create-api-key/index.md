@@ -47,14 +47,14 @@ Body:
 
 ## Arguments
   
-### Optional:
+### Optional
 
 - `expiresIn`: set the expiration duration (`-1` by default)
   - if a raw number is provided (not enclosed between quotes), then the expiration delay is in milliseconds. Example: `86400000`
   - if this value is a string, then its content is parsed by the [ms](https://www.npmjs.com/package/ms) library. Examples: `"6d"`, `"10h"`
   - if `-1` is provided, the token will never expire
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created API key is indexed
-- `_id`: set the API key unique ID to the provided value, instead of auto-generating a random ID
+- `_id`: sets the API key unique ID to the provided value, instead of auto-generating a random ID
 
 ---
 
@@ -78,7 +78,7 @@ Returns an object containing the newly created API key:
   - `token`: authentication token associated with this API key
 
 ::: warning
-The authentication token `token` is displayed only once.
+The authentication token `token` will never be returned by Kuzzle again. If you lose it, you'll have to delete the API key and recreate a new one.
 :::
 
 ```js
