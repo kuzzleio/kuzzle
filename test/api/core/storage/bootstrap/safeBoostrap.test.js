@@ -130,28 +130,31 @@ describe('SafeBootstrap', () => {
   });
 
   describe('#_isLocked', () => {
-    it('should return true if the lock already exists', async () => {
+    it('should return true if the bootstrap is already locked', async () => {
+      bootstrap._indexStorage.create.rejects();
       bootstrap._indexStorage.get.resolves({ _source: { timestamp: Date.now() - 42 } });
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.true();
-      should(bootstrap._indexStorage.create).not.be.called();
+      should(bootstrap._indexStorage.create).be.calledOnce();
+      should(bootstrap._indexStorage.get).be.calledOnce();
       should(bootstrap._indexStorage.createOrReplace).not.be.called();
     });
 
-    it('should acquire the lock and return false if the lock does not exists', async () => {
-      const error = new Error('not found');
-      error.status = 404;
-      bootstrap._indexStorage.get.rejects(error);
+    it('should create the lock and return false if the bootstrap was not locked', async () => {
+      bootstrap._indexStorage.create.resolves();
 
       const isLocked = await bootstrap._isLocked();
 
       should(isLocked).be.false();
-      should(bootstrap._indexStorage.create).be.called();
+      should(bootstrap._indexStorage.create).be.calledOnce();
+      should(bootstrap._indexStorage.get).not.be.called();
+      should(bootstrap._indexStorage.createOrReplace).not.be.called();
     });
 
     it('should acquire lock and return false if an old lock is present', async () => {
+      bootstrap._indexStorage.create.rejects();
       bootstrap._indexStorage.get.resolves({ _source: { timestamp: 42 } });
 
       const isLocked = await bootstrap._isLocked();
@@ -161,6 +164,7 @@ describe('SafeBootstrap', () => {
     });
 
     it('should reject if the engine.get call is rejected with an unknown error', async () => {
+      bootstrap._indexStorage.create.rejects();
       const error = new Error('not found');
       error.id = 'ender.game.xenocide';
       bootstrap._indexStorage.get.rejects(error);

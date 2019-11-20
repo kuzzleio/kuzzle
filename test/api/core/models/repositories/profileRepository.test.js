@@ -57,12 +57,11 @@ describe('Test: repositories/profileRepository', () => {
 
     it('should return a profile from memory cache', () => {
       const p = {foo: 'bar'};
-      profileRepository.profiles.foo = p;
+      profileRepository.profiles.set('foo', p);
 
       return profileRepository.load('foo')
         .then(profile => {
-          should(profile)
-            .be.exactly(p);
+          should(profile).be.exactly(p);
         });
     });
 
@@ -87,10 +86,8 @@ describe('Test: repositories/profileRepository', () => {
 
       return profileRepository.load('foo')
         .then(profile => {
-          should(profile)
-            .be.exactly(p);
-          should(profileRepository.profiles.foo)
-            .be.exactly(p);
+          should(profile).be.exactly(p);
+          should(profileRepository.profiles).have.value('foo', p);
 
           // important! for a reason I don't explain, invalidating require cache is not good enough
           parent.load.restore();
@@ -141,7 +138,7 @@ describe('Test: repositories/profileRepository', () => {
 
       kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
 
-      profileRepository.profiles = {p2};
+      profileRepository.profiles.set('p2', p2);
 
       return profileRepository.loadProfiles(['p1', 'p2', 'p3'])
         .then(result => {
@@ -150,7 +147,9 @@ describe('Test: repositories/profileRepository', () => {
           should(profileRepository.loadOneFromDatabase).calledWith('p1');
           should(profileRepository.loadOneFromDatabase).neverCalledWith('p2');
           should(profileRepository.loadOneFromDatabase).calledWith('p3');
-          should(profileRepository.profiles).match({p1, p2, p3});
+          should(profileRepository.profiles).have.value('p1', p1);
+          should(profileRepository.profiles).have.value('p2', p2);
+          should(profileRepository.profiles).have.value('p3', p3);
         });
     });
 
@@ -165,14 +164,18 @@ describe('Test: repositories/profileRepository', () => {
       profileRepository.loadMultiFromDatabase = sinon.stub();
       kuzzle.repositories.role.loadRoles.resolves([{_id: 'default'}]);
 
-      profileRepository.profiles = {p1, p2, p3};
+      profileRepository.profiles.set('p1', p1);
+      profileRepository.profiles.set('p2', p2);
+      profileRepository.profiles.set('p3', p3);
 
       return profileRepository.loadProfiles(['p1', 'p2', 'p3'])
         .then(result => {
           should(result).eql([p1, p2, p3]);
           // should not load p2 from the database since it has been cached
           should(profileRepository.loadMultiFromDatabase).not.called();
-          should(profileRepository.profiles).match({p1, p2, p3});
+          should(profileRepository.profiles).have.value('p1', p1);
+          should(profileRepository.profiles).have.value('p2', p2);
+          should(profileRepository.profiles).have.value('p3', p3);
         });
     });
   });
@@ -340,15 +343,14 @@ describe('Test: repositories/profileRepository', () => {
       kuzzle.repositories.user.search.resolves({});
       profileRepository.deleteFromCache = sinon.stub().resolves();
       profileRepository.deleteFromDatabase = sinon.stub().resolves({acknowledge: true});
-      profileRepository.profiles.foo = true;
+      profileRepository.profiles.set('foo', true);
 
       return profileRepository.delete({_id: 'foo'})
         .then(() => {
           should(profileRepository.deleteFromDatabase)
             .be.calledOnce()
             .be.calledWith('foo');
-          should(profileRepository.profiles)
-            .not.have.property('foo');
+          should(profileRepository.profiles).not.have.key('foo');
           should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('core:profileRepository:delete', {_id: 'foo'});
@@ -442,8 +444,7 @@ describe('Test: repositories/profileRepository', () => {
         .then((result) => {
           should(result)
             .be.exactly(testProfile);
-          should(profileRepository.profiles.foo)
-            .be.exactly(testProfile);
+          should(profileRepository.profiles).have.value('foo', testProfile);
           should(kuzzle.emit)
             .be.calledOnce()
             .be.calledWith('core:profileRepository:save', {_id: testProfile._id, policies: testProfile.policies});

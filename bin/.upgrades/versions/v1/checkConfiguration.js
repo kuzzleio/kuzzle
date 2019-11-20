@@ -32,6 +32,7 @@ module.exports = async function check (context) {
       'services.storageEngine.commonMapping._kuzzle_info': 'services.storageEngine.commonMapping.properties._kuzzle_info'
     },
     deprecated = [
+      'realtime',
       'server.entryPoints',
       'server.protocols.socketio',
       'server.proxy',
@@ -52,7 +53,7 @@ module.exports = async function check (context) {
   for (const name of deprecated) {
     if (_.get(context.config, name)) {
       action = true;
-      warn(`The configuration key "${name}" is obsolete and should be removed"`);
+      warn(`The configuration key "${name}" is obsolete and should be removed`);
     }
   }
 

@@ -358,10 +358,6 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#create', () => {
-    beforeEach(() => {
-      elasticsearch.exists = sinon.stub().resolves(false);
-    });
-
     it('should allow creating document an ID is provided', () => {
       elasticsearch._client.index.resolves({
         body: {
@@ -379,7 +375,6 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(elasticsearch.exists).be.calledWith(index, collection, 'liia');
           should(elasticsearch._client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
@@ -390,7 +385,8 @@ describe('Test: ElasticSearch service', () => {
               }
             },
             id: 'liia',
-            refresh: 'wait_for'
+            refresh: 'wait_for',
+            op_type: 'create'
           });
 
           should(result).match({
@@ -417,7 +413,6 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(elasticsearch.exists).not.be.called();
           should(elasticsearch._client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
@@ -425,7 +420,8 @@ describe('Test: ElasticSearch service', () => {
               _kuzzle_info: {
                 author: null
               }
-            }
+            },
+            op_type: 'index'
           });
 
           should(result).match({
@@ -1018,6 +1014,22 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+
+    it('should not reject when a race condition occur between exists and create methods', () => {
+      elasticsearch._client.indices.create.rejects({
+        meta: { body: { error: { type: 'resource_already_exists_exception' } } }
+      });
+
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        { properties: { city: { type: 'keyword' } } });
+
+      return should(promise).be.fulfilled()
+        .then(() => {
+          should(elasticsearch._esWrapper.reject).not.be.called();
         });
     });
 

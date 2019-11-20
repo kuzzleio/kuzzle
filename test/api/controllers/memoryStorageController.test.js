@@ -5,7 +5,7 @@ const
   rewire = require('rewire'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   RedisClientMock = require('../../mocks/services/redisClient.mock'),
-  BaseController = require('../../../lib/api/controllers/baseController'),
+  { NativeController } = require('../../../lib/api/controllers/baseController'),
   {
     Request,
     errors: { BadRequestError }
@@ -122,13 +122,13 @@ describe('MemoryStorageController', () => {
     });
 
     it('should inherit the base constructor', () => {
-      should(msController).instanceOf(BaseController);
+      should(msController).instanceOf(NativeController);
     });
 
     it('should properly override the isAction method', () => {
       msController._foobar = () => {};
-      should(msController.isAction('flushdb')).be.true();
-      should(msController.isAction('_foobar')).be.false();
+      should(msController._isAction('flushdb')).be.true();
+      should(msController._isAction('_foobar')).be.false();
     });
   });
 

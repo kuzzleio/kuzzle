@@ -3,7 +3,7 @@ const
   sinon = require('sinon'),
   IndexController = require('../../../lib/api/controllers/indexController'),
   { Request } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController'),
+  { NativeController } = require('../../../lib/api/controllers/baseController'),
   mockAssertions = require('../../mocks/mockAssertions'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
@@ -30,7 +30,7 @@ describe('IndexController', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(indexController).instanceOf(BaseController);
+      should(indexController).instanceOf(NativeController);
     });
   });
 
