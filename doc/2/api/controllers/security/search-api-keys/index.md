@@ -6,7 +6,7 @@ title: searchApiKeys
 
 # searchApiKeys
 
-Searches for an user API keys.
+Searches for a user API keys.
 
 ---
 
