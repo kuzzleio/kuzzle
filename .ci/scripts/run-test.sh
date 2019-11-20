@@ -31,5 +31,13 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     exit 1
 fi
 
+node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
 
-node bin/start-kuzzle-server --enable-plugins functional-test-plugin
+echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
+while ! curl -f -s -o /dev/null http://localhost:7512
+do
+    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle"
+    sleep 1
+done
+
+npm run $NPM_RUN

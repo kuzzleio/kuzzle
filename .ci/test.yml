@@ -27,8 +27,9 @@ services:
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
-      - NODE_ENV=development
-      - DEBUG=
+      - NODE_ENV=production
+      - DEBUG
+      - NODE_LTS=${NODE_LTS:-12}
       - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
       - KUZZLE_VAULT_KEY=secret-password
       # Travis env var must be propagated into the container
