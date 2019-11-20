@@ -204,10 +204,14 @@ describe('Test: repositories/userRepository', () => {
   });
 
   describe('#delete', () => {
-    let apiKeyDeleteByUserStub;
+    let deleteByUserStub;
 
-    before(() => {
-      apiKeyDeleteByUserStub = sinon.stub(ApiKey, 'deleteByUser');
+    beforeEach(() => {
+      deleteByUserStub = sinon.stub(ApiKey, 'deleteByUser');
+    });
+
+    afterEach(() => {
+      deleteByUserStub.restore();
     });
 
     it('should delete user from both cache and database', async () => {
@@ -223,7 +227,7 @@ describe('Test: repositories/userRepository', () => {
         .calledOnce()
         .calledWith(userRepository.collection, 'alyx', { refresh: 'wait_for' });
 
-      should(apiKeyDeleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
+      should(deleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
     });
 
     it('should delete user credentials', () => {
@@ -249,7 +253,7 @@ describe('Test: repositories/userRepository', () => {
 
       await userRepository.delete(user, { refresh: 'wait_for' });
 
-      should(apiKeyDeleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
+      should(deleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
     });
 
     it('should forward refresh option', () => {

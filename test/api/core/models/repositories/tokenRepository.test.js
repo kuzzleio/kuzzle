@@ -301,7 +301,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
 
     it('should persist a token without TTL into Redis', async () => {
-      const token = await tokenRepository.persistForUser(
+      await tokenRepository.persistForUser(
         'encoded-token',
         'user-id',
         -1);

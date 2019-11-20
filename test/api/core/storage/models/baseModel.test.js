@@ -127,12 +127,10 @@ describe('BaseModel', () => {
   describe('BaseModel.deleteByQuery', () => {
     let
       documents,
-      modelDelete;
+      deleteStub;
 
     beforeEach(() => {
-      modelDelete = Model.prototype.delete;
-
-      Model.prototype.delete = sinon.stub().resolves();
+      deleteStub = sinon.stub(Model.prototype, 'delete').resolves();
 
       documents = [
         { _id: 'mylehuong', _source: {} },
@@ -143,10 +141,6 @@ describe('BaseModel', () => {
         sinon.stub().callsArgWith(2, documents);
     });
 
-    afterEach(() => {
-      Model.prototype.delete = modelDelete;
-    });
-
     it('should call batchExecute and delete each instantiated model', async () => {
       await Model.deleteByQuery({ match_all: {} });
 
@@ -154,7 +148,7 @@ describe('BaseModel', () => {
       const [ collection, query ] = BaseModel.indexStorage.batchExecute.getCall(0).args;
       should(collection).be.eql('models');
       should(query).be.eql({ match_all: {} });
-      should(Model.prototype.delete).be.calledTwice();
+      should(deleteStub).be.calledTwice();
     });
 
     it('should refresh the collection if the option.refresh is set', async () => {

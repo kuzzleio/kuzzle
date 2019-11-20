@@ -30,7 +30,7 @@ describe('ApiKey', () => {
 
   describe('ApiKey.create', () => {
     let
-      apiKeySave,
+      saveStub,
       user,
       token;
 
@@ -49,12 +49,7 @@ describe('ApiKey', () => {
       BaseModel.kuzzle.constructor.hash =
         sinon.stub().returns('hashed-jwt-token');
 
-      apiKeySave = ApiKey.prototype.save;
-      ApiKey.prototype.save = sinon.stub().resolves();
-    });
-
-    afterEach(() => {
-      ApiKey.prototype.save = apiKeySave;
+      saveStub = sinon.stub(ApiKey.prototype, 'save').resolves();
     });
 
     it('should create a new API key and generate a token', async () => {
@@ -70,7 +65,7 @@ describe('ApiKey', () => {
         'connectionId',
         { expiresIn: 'expiresIn', bypassMaxTTL: true });
 
-      should(ApiKey.prototype.save)
+      should(saveStub)
         .be.calledWith({ userId: 'aschen', refresh: 'wait_for' });
 
       should(apiKey._source).be.eql({
@@ -96,16 +91,13 @@ describe('ApiKey', () => {
 
   describe('ApiKey.load', () => {
     it('should throw if the key does not belong to the provided user', async () => {
-      const baseModelLoad = BaseModel.load;
-      BaseModel.load = sinon.stub().resolves({ userId: 'mylehuong' });
+      const loadStub = sinon.stub(BaseModel, 'load').resolves({ userId: 'mylehuong' });
 
       const promise = ApiKey.load('aschen', 'api-key-id');
 
       await should(promise).be.rejectedWith({ id: 'services.storage.not_found' });
 
-      should(BaseModel.load).be.calledWith('api-key-id');
-
-      BaseModel.load = baseModelLoad;
+      should(loadStub).be.calledWith('api-key-id');
     });
   });
 
@@ -113,16 +105,13 @@ describe('ApiKey', () => {
     it('should call BaseModel.deleteByQuery with the correct query', async () => {
       const
         user = { _id: 'mylehuong' },
-        baseModelDeleteByQuery = BaseModel.deleteByQuery;
-      BaseModel.deleteByQuery = sinon.stub().resolves('ret');
+        deleteByQueryStub = sinon.stub(ApiKey, 'deleteByQuery').resolves();
 
       await ApiKey.deleteByUser(user, { refresh: 'wait_for' });
 
-      should(BaseModel.deleteByQuery).be.calledWith(
+      should(deleteByQueryStub).be.calledWith(
         { term: { userId: 'mylehuong' } },
         { refresh: 'wait_for' });
-
-      BaseModel.deleteByQuery = baseModelDeleteByQuery;
     });
   });
 
@@ -130,20 +119,13 @@ describe('ApiKey', () => {
     it('should delete the corresponding token', async () => {
       const
         token = { _id: 'token-id' },
-        tokenVerifyToken = BaseModel.kuzzle.repositories.token.verifyToken,
-        tokenExpire = BaseModel.kuzzle.repositories.token.expire,
         apiKey = new ApiKey({ token: 'encrypted-token' });
-      BaseModel.kuzzle.repositories.token.verifyToken = sinon.stub().resolves(token);
-      BaseModel.kuzzle.repositories.token.expire = sinon.stub().resolves();
+      kuzzle.repositories.token.verifyToken.resolves(token);
 
       await apiKey._afterDelete();
 
-      should(BaseModel.kuzzle.repositories.token.verifyToken)
-        .be.calledWith('encrypted-token');
-      should(BaseModel.kuzzle.repositories.token.expire).be.calledWith(token);
-
-      BaseModel.kuzzle.repositories.token.verifyToken = tokenVerifyToken;
-      BaseModel.kuzzle.repositories.token.expire = tokenExpire;
+      should(kuzzle.repositories.token.verifyToken).be.calledWith('encrypted-token');
+      should(kuzzle.repositories.token.expire).be.calledWith(token);
     });
   });
 
