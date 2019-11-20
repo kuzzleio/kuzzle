@@ -46,6 +46,29 @@ Then('I should receive a result matching:', function (dataTable) {
   should(this.props.result).match(expectedResult);
 });
 
+Then('The property {string} of the result should match:', function (path, dataTable) {
+  const expectedProperty = this.parseObject(dataTable);
+
+  const property = _.get(this.props.result, path);
+
+  should(property).not.be.undefined();
+
+  if (_.isPlainObject(property)) {
+    should(property).matchObject(expectedProperty);
+  }
+  else {
+    should(property).match(expectedProperty);
+  }
+});
+
+Then('The result should contain a property {string} of type {string}', function (path, type) {
+  const property = _.get(this.props.result, path);
+
+  should(property).not.be.undefined();
+
+  should(typeof property).be.eql(type);
+});
+
 Then('I should receive a {string} result equals to {string}', function (type, rawResult) {
   let expectedResult;
 

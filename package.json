@@ -8,9 +8,10 @@
     "kuzzle": "./bin/start-kuzzle-server"
   },
   "scripts": {
-    "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing",
+    "test": "npm run --silent lint && npm run unit-testing && npm run functional-testing && npm run functional-testing2",
     "unit-testing": "nyc --reporter=text-summary --reporter=lcov mocha",
-    "functional-testing": "bash features/run.sh && bash features-sdk/run.sh",
+    "functional-testing": "bash features/run.sh",
+    "functional-testing2": "bash features-sdk/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
     "lint": "eslint --max-warnings=0 ./lib ./test ./features ./bin ./features-sdk",

@@ -1,5 +1,80 @@
 Feature: Security Controller
 
+  # security:createApiKey =======================================================
+
+  @security @login
+  Scenario: Create an API key for an user
+    Given I create a user "My" with content:
+    | profileIds | ["default"] |
+    When I successfully call the route "security":"createApiKey" with args:
+    | userId | "My" |
+    | expiresIn | -1 |
+    | refresh | "wait_for" |
+    | body | { "description": "Le Huong" } |
+    Then The property "_source" of the result should match:
+    | expiresAt | -1 |
+    | ttl | -1 |
+    | description | "Le Huong" |
+    | token | "_STRING_" |
+    And The result should contain a property "_id" of type "string"
+    And I can login with the previously created API key
+    And I successfully call the route "security":"searchApiKeys" with args:
+    | userId | "My" |
+    Then I should receive a "hits" array of objects matching:
+    | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
+    | "_STRING_" | "My" | -1 | -1 | "Le Huong" |
+
+  # security:searchApiKeys =====================================================
+
+  @security
+  Scenario: Search for an user API keys
+    Given I create a user "My" with content:
+    | profileIds | ["default"] |
+    And I successfully call the route "security":"createApiKey" with args:
+    | userId | "My" |
+    | expiresIn | -1 |
+    | body | { "description": "Le Huong" } |
+    And I successfully call the route "security":"createApiKey" with args:
+    | userId | "test-admin" |
+    | expiresIn | -1 |
+    | body | { "description": "Sigfox API key" } |
+    And I successfully call the route "security":"createApiKey" with args:
+    | userId | "test-admin" |
+    | expiresIn | -1 |
+    | body | { "description": "Lora API key" } |
+    And I successfully call the route "security":"createApiKey" with args:
+    | userId | "test-admin" |
+    | expiresIn | -1 |
+    | refresh | "wait_for" |
+    | body | { "description": "Lora API key 2" } |
+    When I successfully call the route "security":"searchApiKeys" with args:
+    | userId | "test-admin" |
+    | body | { "match": { "description": "Lora" } } |
+    Then I should receive a "hits" array of objects matching:
+    | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
+    | "_STRING_" | "test-admin" | -1 | -1 | "Lora API key" |
+    | "_STRING_" | "test-admin" | -1 | -1 | "Lora API key 2" |
+
+  # security:deleteApiKey =======================================================
+
+  @security
+  Scenario: Delete an API key for an user
+    Given I successfully call the route "security":"createApiKey" with args:
+    | userId | "test-admin" |
+    | _id | "SGN-HCM" |
+    | expiresIn | -1 |
+    | body | { "description": "My Le Huong" } |
+    And I save the created API key
+    When I successfully call the route "security":"deleteApiKey" with args:
+    | userId | "test-admin" |
+    | _id | "SGN-HCM" |
+    | refresh | "wait_for" |
+    And I successfully call the route "security":"searchApiKeys" with args:
+    | userId | "test-admin" |
+    Then I should receive a empty "hits" array
+    And I can not login with the previously created API key
+
+
   # security:createFirstAdmin ==================================================
 
   @firstAdmin

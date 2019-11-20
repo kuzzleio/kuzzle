@@ -279,6 +279,17 @@ module.exports = {
           config: {
             dynamic: 'false',
             properties: {}
+          },
+          'api-keys': {
+            dynamic: 'false',
+            properties: {
+              userId: { type: 'keyword' },
+              hash: { type: 'keyword' },
+              description: { type: 'text' },
+              expiresAt: { type: 'long' },
+              ttl: { type: 'keyword' },
+              token: { type: 'keyword' }
+            }
           }
         }
       },
