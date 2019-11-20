@@ -4,7 +4,7 @@ const
   { Request } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   mockAssertions = require('../../mocks/mockAssertions'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test the bulk controller', () => {
   let
@@ -32,7 +32,7 @@ describe('Test the bulk controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(controller).instanceOf(BaseController);
+      should(controller).instanceOf(NativeController);
     });
   });
 

@@ -1,6 +1,5 @@
 const
   should = require('should'),
-  Bluebird = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
   HotelClerk = require('../../../../lib/api/core/hotelClerk'),
@@ -18,9 +17,6 @@ describe('Test: hotelClerk.listSubscription', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.koncorde.storage = {
-      filtersIndex: {}
-    };
     hotelClerk = new HotelClerk(kuzzle);
     context = {
       connectionId,
@@ -44,34 +40,33 @@ describe('Test: hotelClerk.listSubscription', () => {
       isActionAllowed: sinon.stub().resolves(true)
     };
 
-    kuzzle.koncorde.storage.filtersIndex = {
-      index: {
-        collection: [
-          'foo',
-          'bar'
-        ]
-      },
-      anotherIndex: {
-        anotherCollection: ['baz']
-      }
-    };
-    hotelClerk.rooms = {
-      foo: {
-        index,
-        collection,
-        customers: new Set(['a', 'b', 'c'])
-      },
-      bar: {
-        index,
-        collection,
-        customers: new Set(['a', 'd'])
-      },
-      baz: {
-        index: 'anotherIndex',
-        collection: 'anotherCollection',
-        customers: new Set(['a', 'c'])
-      }
-    };
+    kuzzle.koncorde.getIndexes.returns(['index', 'anotherIndex']);
+    kuzzle.koncorde.getCollections.withArgs('index').returns(['collection']);
+    kuzzle.koncorde.getCollections
+      .withArgs('anotherIndex')
+      .returns(['anotherCollection']);
+    kuzzle.koncorde.getFilterIds
+      .withArgs('index', 'collection')
+      .returns(['foo', 'bar']);
+    kuzzle.koncorde.getFilterIds
+      .withArgs('anotherIndex', 'anotherCollection')
+      .returns(['baz']);
+
+    hotelClerk.rooms.set('foo', {
+      index,
+      collection,
+      customers: new Set(['a', 'b', 'c'])
+    });
+    hotelClerk.rooms.set('bar', {
+      index,
+      collection,
+      customers: new Set(['a', 'd'])
+    });
+    hotelClerk.rooms.set('baz', {
+      index: 'anotherIndex',
+      collection: 'anotherCollection',
+      customers: new Set(['a', 'c'])
+    });
 
     return hotelClerk.listSubscriptions(request)
       .then(response => {
@@ -93,32 +88,34 @@ describe('Test: hotelClerk.listSubscription', () => {
   });
 
   it('should return a correct list according to subscribe on filter and user right', () => {
-    kuzzle.koncorde.storage.filtersIndex = {
-      index: {
-        collection: ['foo', 'bar'],
-        forbidden: ['foo']
-      },
-      anotherIndex: {
-        anotherCollection: ['baz']
-      },
-      andAnotherOne: {
-        collection: ['foobar']
-      }
-    };
-    hotelClerk.rooms = {
-      foo: {
-        customers: new Set(['a', 'b', 'c'])
-      },
-      bar: {
-        customers: new Set(['b', 'd', 'e', 'f'])
-      },
-      baz: {
-        customers: new Set(['d', 'e'])
-      },
-      foobar: {
-        customers: new Set(['a', 'c'])
-      }
-    };
+    kuzzle.koncorde.getIndexes
+      .returns(['index', 'anotherIndex', 'andAnotherOne']);
+    kuzzle.koncorde.getCollections
+      .withArgs('index')
+      .returns(['collection', 'forbidden']);
+    kuzzle.koncorde.getCollections
+      .withArgs('anotherIndex')
+      .returns(['anotherCollection']);
+    kuzzle.koncorde.getCollections
+      .withArgs('andAnotherOne')
+      .returns(['collection']);
+    kuzzle.koncorde.getFilterIds
+      .withArgs('index', 'collection')
+      .returns(['foo', 'bar']);
+    kuzzle.koncorde.getFilterIds
+      .withArgs('index', 'forbidden')
+      .returns(['foo']);
+    kuzzle.koncorde.getFilterIds
+      .withArgs('anotherIndex', 'anotherCollection')
+      .returns(['baz']);
+    kuzzle.koncorde.getFilterIds
+      .withArgs('andAnotherOne', 'collection')
+      .returns(['foobar']);
+
+    hotelClerk.rooms.set('foo', { customers: new Set(['a', 'b', 'c']) });
+    hotelClerk.rooms.set('bar', { customers: new Set(['b', 'd', 'e', 'f']) });
+    hotelClerk.rooms.set('baz', { customers: new Set(['d', 'e']) });
+    hotelClerk.rooms.set('foobar', { customers: new Set(['a', 'c']) });
 
     request.context.user = {
       _id: 'user',
@@ -149,54 +146,6 @@ describe('Test: hotelClerk.listSubscription', () => {
           });
       });
 
-  });
-
-  it('should skip non-existing rooms from Koncorde', () => {
-    kuzzle.koncorde.storage.filtersIndex = {
-      index: {
-        collection: ['foo', 'bar'],
-        forbidden: ['foo']
-      },
-      anotherIndex: {
-        anotherCollection: ['baz']
-      },
-      andAnotherOne: {
-        collection: ['foobar']
-      }
-    };
-    hotelClerk.rooms = {
-      foobar: {
-        customers: new Set(['a', 'c'])
-      }
-    };
-
-    let i = 0;
-    request.context.user = {
-      _id: 'user',
-      isActionAllowed: () => Bluebird.delay(0) // <- do not delete the room within the same event loop
-        .then(() => {
-          i++;
-          if (i === 1) {
-            delete kuzzle.koncorde.storage.filtersIndex.index.collection;
-          }
-          if (i === 2) {
-            delete kuzzle.koncorde.storage.filtersIndex.anotherIndex;
-          }
-          return true;
-        })
-    };
-
-    return hotelClerk.listSubscriptions(request)
-      .then(response => {
-        should(response)
-          .eql({
-            andAnotherOne: {
-              collection: {
-                foobar: 2
-              }
-            }
-          });
-      });
   });
 
 });

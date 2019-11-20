@@ -50,9 +50,9 @@ New external dependencies supported versions:
   - Remove the `_meta` tag from documents and notifications (deprecated since Kuzzle 1.3.0)
   - Fields linked to the documents trashcan have been removed from the documents and notifications metadata : `deletedAt`, `active`
   - Remove the real-time notifications about events that were about to happen (deprecated since Kuzzle 1.5.0)
+  - Koncorde now only accepts regular expressions compatible with the RE2 engine
 
 ### Internal storage changes
-
 
 **Public and plugins storages:**
 

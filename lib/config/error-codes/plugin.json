@@ -238,13 +238,13 @@
         "undefined_controller": {
           "description": "A HTTP route points to an non-existent controller",
           "code": 5,
-          "message": "Undefined controller \"%s\". %s",
+          "message": "%s Undefined controller \"%s\". %s",
           "class": "PluginImplementationError"
         },
         "undefined_action": {
           "description": "A HTTP route points to an non-existent controller action",
           "code": 6,
-          "message": "Undefined action \"%s\". %s",
+          "message": "%s Undefined action \"%s\". %s",
           "class": "PluginImplementationError"
         },
         "unsupported_verb": {

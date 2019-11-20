@@ -20,33 +20,25 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
     kuzzle = new KuzzleMock();
     hotelClerk = new HotelClerk(kuzzle);
 
-    hotelClerk.customers = {
-      [connectionId]: {
-        foo: null,
-        bar: {volatile: 'data'}
-      },
-      a: {
-        foo: null
-      },
-      b: {
-        foo: null
-      }
-    };
+    hotelClerk.customers.set(connectionId, new Map([
+      [ 'foo', null ],
+      [ 'bar', { volatile: 'data' } ]
+    ]));
+    hotelClerk.customers.set('a', new Map([['foo', null]]));
+    hotelClerk.customers.set('b', new Map([['foo', null]]));
 
-    hotelClerk.rooms = {
-      'foo': {
-        customers: new Set([connectionId, 'a', 'b']),
-        index,
-        collection,
-        channels: ['foobar']
-      },
-      'bar': {
-        customers: new Set([connectionId]),
-        index,
-        collection,
-        channels: ['barfoo']
-      }
-    };
+    hotelClerk.rooms.set('foo', {
+      customers: new Set([connectionId, 'a', 'b']),
+      index,
+      collection,
+      channels: ['foobar']
+    });
+    hotelClerk.rooms.set('bar', {
+      customers: new Set([connectionId]),
+      index,
+      collection,
+      channels: ['barfoo']
+    });
 
     hotelClerk.roomsCount = 2;
   });
@@ -67,26 +59,16 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
       .then(() => {
         should(kuzzle.koncorde.remove).be.calledOnce();
 
-        should(hotelClerk.rooms)
-          .match({
-            foo: {
-              customers: new Set(['a', 'b']),
-              index,
-              collection
-            }
-          });
-        should(hotelClerk.rooms.bar).be.undefined();
+        should(hotelClerk.rooms).have.value('foo', {
+          customers: new Set(['a', 'b']),
+          index,
+          collection,
+          channels: ['foobar']
+        });
+        should(hotelClerk.rooms).not.have.key('bar');
 
-        should(hotelClerk.customers)
-          .match({
-            a: {
-              foo: null
-            },
-            b: {
-              foo: null
-            }
-          });
-
+        should(hotelClerk.customers.get('a')).have.value('foo', null);
+        should(hotelClerk.customers.get('b')).have.value('foo', null);
         should(hotelClerk.roomsCount).be.eql(1);
       });
   });
@@ -123,7 +105,7 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
         // the room should be removed from the hotel clerk even if
         // Koncorde fails
         should(hotelClerk.roomsCount).be.eql(1);
-        should(hotelClerk.rooms.bar).be.undefined();
+        should(hotelClerk.rooms).not.have.key('bar');
       });
   });
 });
