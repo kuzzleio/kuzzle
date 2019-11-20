@@ -152,13 +152,12 @@ describe('InternalIndexBootstrap', () => {
     it('should persist the secret from the memory if it\'s exists', async () => {
       kuzzle.config.security.jwt.secret = 'i-am-the-secret';
 
-      const jwt = await internalIndexBootstrap._persistJWTSecret();
+      await internalIndexBootstrap._persistJWTSecret();
 
       should(internalIndexStorage.create).be.calledWith(
         'config',
         internalIndexBootstrap._JWT_SECRET_ID,
         { seed: 'i-am-the-secret' });
-      should(jwt).be.eql('i-am-the-secret');
     });
 
     it('should generate and persist a random secret', async () => {
