@@ -120,3 +120,11 @@ After({ tags: '@events' }, async function () {
     action: 'deactivateAll'
   });
 });
+
+// login hooks =================================================================
+
+After({ tags: '@login' }, async function () {
+  await this.sdk.auth.login(
+    'local',
+    { username: 'test-admin', password: 'password' });
+});

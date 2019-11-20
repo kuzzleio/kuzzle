@@ -3,6 +3,8 @@ const
   { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
   { setWorldConstructor } = require('cucumber');
 
+require('./assertions');
+
 class KuzzleWorld {
   constructor (attach, parameters) {
     this.attach = attach.attach;

@@ -25,6 +25,25 @@ describe('#errorsManager', () => {
       );
   });
 
+  it('should allow to override original message', () => {
+    should(() => {
+      errorsManager.throw(
+        'core',
+        'fatal',
+        'service_unavailable',
+        'Lambda Core',
+        { message: 'Anomalous Materials' });
+    })
+      .throw(
+        ExternalServiceError,
+        {
+          id: 'core.fatal.service_unavailable',
+          code: parseInt('00000002', 16),
+          message: 'Anomalous Materials'
+        }
+      );
+  });
+
   it('should throw an InternalError with default name, msg and code', () => {
     should(() => errorsManager.throw('api', 'assert', 'fake_error', '{"status":"error"}'))
       .throw(

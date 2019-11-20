@@ -41,7 +41,7 @@ Method: DELETE
 
 ### Optional:
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the profile deletion is indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the profile deletion is indexed (default: `"wait_for"`)
 
 ---
 

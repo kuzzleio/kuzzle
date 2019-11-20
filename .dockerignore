@@ -6,3 +6,6 @@ Vagrantfile
 .idea
 .sonar
 sonar-project.properties
+
+plugins/enabled/functional-test-plugin
+plugins/enabled/dummy

@@ -128,7 +128,7 @@ Then('The mapping dynamic field of {string}:{string} is {string}', function (ind
   return this.api.getCollectionMapping(index, collection)
     .then(({ result }) => {
       const expectedValue = dynamicValue === 'the default value'
-        ? this.kuzzleConfig.services.storageEngine.commonMapping.dynamic
+        ? 'true' // we set the default value to true in the environment for tests
         : dynamicValue;
 
       should(result.dynamic)

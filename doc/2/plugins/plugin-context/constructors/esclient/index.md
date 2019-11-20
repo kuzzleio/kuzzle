@@ -1,10 +1,10 @@
 ---
 code: true
 type: page
-title: Elasticsearch
+title: ESClient
 ---
 
-# Elasticsearch
+# ESClient
 
 Instantiates an embedded [Elasticsearch client](https://github.com/elastic/elasticsearch-js) with the same configuration as the one provided in the `.kuzzlerc` file.  
 

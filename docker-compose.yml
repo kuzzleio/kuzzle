@@ -39,8 +39,8 @@ services:
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=${NODE_ENV:-development}
-      # - DEBUG=kuzzle:*,-kuzzle:entry-point:protocols:websocket
-      - DEBUG=${DEBUG:-none}
+      - DEBUG=kuzzle:*,-kuzzle:entry-point:protocols:websocket
+      # - DEBUG=${DEBUG:-none}
       - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
       - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
       - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
@@ -54,7 +54,7 @@ services:
       - REBUILD # Force a rebuild of npm modules
 
   redis:
-    image: redis:${REDIS_VERSION:-5}
+    image: redis:5
     ports:
       - "6379:6379"
 

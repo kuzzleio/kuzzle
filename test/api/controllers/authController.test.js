@@ -70,6 +70,7 @@ describe('Test the auth controller', () => {
       });
 
       kuzzle.repositories.token.generateToken.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.resolves(null);
 
       return authController.login(request)
         .then(response => {
@@ -80,8 +81,35 @@ describe('Test the auth controller', () => {
             expiresAt: 4567,
             ttl: 1234
           });
-          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {});
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(user, request.context.connection.id, {});
         });
+    });
+
+    it('should refresh the token if it already exists', async () => {
+      const
+        existingToken = new Token({
+          _id: 'foobar#foo',
+          jwt: 'foo',
+          userId: 'foobar',
+          expiresAt: 4567,
+          ttl: 1234
+        }),
+        token = new Token({
+          _id: 'foobar#bar',
+          jwt: 'bar',
+          userId: 'foobar',
+          expiresAt: 4567,
+          ttl: 1234
+        });
+
+      kuzzle.repositories.token.generateToken.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
+
+      await authController.login(request);
+
+      should(kuzzle.tokenManager.getConnectedUserToken).be.called();
+      should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
     });
 
     it('should modify the result according to auth:strategyAuthenticated pipe events', () => {
@@ -158,7 +186,8 @@ describe('Test the auth controller', () => {
             expiresAt: 4567,
             ttl: 1234
           });
-          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {expiresIn: '1s'});
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(user, request.context.connection.id, {expiresIn: '1s'});
         });
     });
 
@@ -368,7 +397,7 @@ describe('Test the auth controller', () => {
           should(kuzzle.repositories.token.generateToken)
             .be.calledWith(
               { _id: 'user' },
-              req,
+              req.context.connection.id,
               { expiresIn: '42h' }
             );
 

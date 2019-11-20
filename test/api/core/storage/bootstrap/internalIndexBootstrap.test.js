@@ -3,13 +3,18 @@
 const
   sinon = require('sinon'),
   should = require('should'),
+  mockrequire = require('mock-require'),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   IndexStorageMock = require('../../../../mocks/indexStorage.mock'),
+  ClientAdapterMock = require('../../../../mocks/clientAdapter.mock'),
+  ApiKey = require('../../../../../lib/api/core/storage/models/apiKey'),
   SafeBootstrap = require('../../../../../lib/api/core/storage/bootstrap/safeBootstrap'),
   InternalIndexBootstrap = require('../../../../../lib/api/core/storage/bootstrap/internalIndexBootstrap');
 
 describe('InternalIndexBootstrap', () => {
   let
+    storageEngine,
+    StorageEngine,
     internalIndexName,
     internalIndexStorage,
     internalIndexBootstrap,
@@ -27,6 +32,15 @@ describe('InternalIndexBootstrap', () => {
     internalIndexBootstrap = new InternalIndexBootstrap(
       kuzzle,
       internalIndexStorage);
+
+    mockrequire('../../../../../lib/api/core/storage/clientAdapter', ClientAdapterMock);
+
+    StorageEngine = mockrequire.reRequire('../../../../../lib/api/core/storage/storageEngine');
+    storageEngine = new StorageEngine(kuzzle);
+
+    storageEngine._populateIndexCache = sinon.stub().resolves();
+
+    return storageEngine.init();
   });
 
   describe('#startOrWait', () => {
@@ -164,6 +178,24 @@ describe('InternalIndexBootstrap', () => {
       await internalIndexBootstrap._persistJWTSecret();
 
       should(internalIndexStorage.create).be.called();
+    });
+  });
+
+  describe('#_loadApiKeys', () => {
+    it('should load API key tokens to Redis cache', async () => {
+      const batchExecuteStub = sinon
+        .stub(ApiKey, 'batchExecute')
+        .callsArgWith(1, [
+          { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
+          { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } }
+        ]);
+
+      await internalIndexBootstrap._loadApiKeys();
+
+      should(batchExecuteStub).be.calledWith({ match_all: {} });
+      should(kuzzle.repositories.token.persistForUser)
+        .be.calledWith('encoded-token-1', 'user-id-1', 42)
+        .be.calledWith('encoded-token-2', 'user-id-2', -1);
     });
   });
 });
