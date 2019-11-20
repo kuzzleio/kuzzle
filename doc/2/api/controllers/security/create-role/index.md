@@ -61,7 +61,7 @@ Body:
 
 ### Optional:
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the created role is indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the created role is indexed (default: `"wait_for"`)
 
 ---
 

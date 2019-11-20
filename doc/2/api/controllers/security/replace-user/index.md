@@ -53,7 +53,7 @@ Body:
 
 ### Optional:
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the user replacement is indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the user replacement is indexed (default: `"wait_for"`)
 
 ---
 

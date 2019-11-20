@@ -74,7 +74,6 @@ describe('ApiKey', () => {
         .be.calledWith({ userId: 'aschen', refresh: 'wait_for' });
 
       should(apiKey._source).be.eql({
-        hash: 'hashed-jwt-token',
         description: 'Sigfox API key',
         userId: 'mylehuong',
         expiresAt: 42,

@@ -247,7 +247,8 @@ class KuzzleMock extends Kuzzle {
         expire: sinon.stub().resolves(),
         deleteByUserId: sinon.stub().resolves(),
         truncate: sinon.stub().resolves(),
-        persistToCache: sinon.stub().resolves()
+        persistToCache: sinon.stub().resolves(),
+        persistForUser: sinon.stub().resolves()
       }
     };
 

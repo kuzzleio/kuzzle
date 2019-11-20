@@ -149,7 +149,7 @@ describe('Test: repositories/tokenRepository', () => {
     });
   });
 
-  describe.only('#generateToken', () => {
+  describe('#generateToken', () => {
     it('should reject the promise if the username is null', () => {
       return should(tokenRepository.generateToken(null))
         .be.rejectedWith(KuzzleInternalError, {
@@ -193,14 +193,18 @@ describe('Test: repositories/tokenRepository', () => {
             algorithm: kuzzle.config.security.jwt.algorithm,
             expiresIn: ms(kuzzle.config.security.jwt.expiresIn)
           });
-
       user._id = 'userInCache';
+      const persistForUserSpy = sinon.spy(tokenRepository, 'persistForUser');
 
       return tokenRepository.generateToken(user, 'connectionId')
         .then(token => {
           should(token).be.an.instanceOf(Token);
           should(token.jwt).be.exactly(checkToken);
           should(token._id).be.exactly(user._id + '#' + checkToken);
+          should(persistForUserSpy).be.calledWith(
+            checkToken,
+            user._id,
+            3600000);
         });
     });
 
@@ -274,6 +278,37 @@ describe('Test: repositories/tokenRepository', () => {
         { expiresIn: 'ehh' });
 
       await should(promise).be.rejectedWith(KuzzleInternalError);
+    });
+
+    it('should call #persistForUser', () => {
+
+    });
+  });
+
+  describe('#persistForUser', () => {
+    it('should persist a token with TTL into Redis', async () => {
+      const token = await tokenRepository.persistForUser(
+        'encoded-token',
+        'user-id',
+        42000);
+
+      should(tokenRepository.cacheEngine.setex)
+        .be.calledOnce()
+        .be.calledWith('repos/kuzzle/token/user-id#encoded-token', 42);
+      should(token._id).be.eql('user-id#encoded-token');
+      should(token.ttl).be.eql(42000);
+      should(token.expiresAt).be.approximately(Date.now() + 42000, 20);
+    });
+
+    it('should persist a token without TTL into Redis', async () => {
+      const token = await tokenRepository.persistForUser(
+        'encoded-token',
+        'user-id',
+        -1);
+
+      should(tokenRepository.cacheEngine.set)
+        .be.calledOnce()
+        .be.calledWith('repos/kuzzle/token/user-id#encoded-token');
     });
   });
 

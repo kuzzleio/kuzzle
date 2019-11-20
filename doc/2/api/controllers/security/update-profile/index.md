@@ -87,7 +87,7 @@ Body:
 
 ### Optional:
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the profile changes are indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the profile changes are indexed (default: `"wait_for"`)
 
 ---
 
