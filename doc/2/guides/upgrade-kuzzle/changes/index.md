@@ -37,7 +37,7 @@ Dropped support for:
   - Kuzzle Proxy 
 
 New external dependencies supported versions:
-  - Node.js 10
+  - Node.js 12
   - Redis 5
   - Elasticsearch 7
 
