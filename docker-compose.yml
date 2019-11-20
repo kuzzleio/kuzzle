@@ -54,7 +54,7 @@ services:
       - REBUILD # Force a rebuild of npm modules
 
   redis:
-    image: redis:${REDIS_VERSION:-5}
+    image: redis:5
     ports:
       - "6379:6379"
 

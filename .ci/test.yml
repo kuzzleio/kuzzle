@@ -10,6 +10,10 @@ services:
       - "./config/pm2.json:/config/pm2.json"
     cap_add:
       - SYS_PTRACE
+    ulimits:
+      nofile: 65536
+    sysctls:
+      - net.core.somaxconn=8192
     ports:
       - "7512:7512"
     depends_on:
@@ -18,14 +22,12 @@ services:
     environment:
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
       - kuzzle_services__storageEngine__commonMapping__dynamic=true
-      - kuzzle_services__storageEngine__internalIndex__collections__users__dynamic=true
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DEBUG=
-      - NODE_LTS=${NODE_LTS:-10}
       - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
       - KUZZLE_VAULT_KEY=secret-password
       # Travis env var must be propagated into the container
