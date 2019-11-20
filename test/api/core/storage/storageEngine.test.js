@@ -68,14 +68,14 @@ describe('StorageEngine', () => {
     it('should add internal and public indexes and collections to cache', async () => {
       await storageEngine.init();
 
-      should(storageEngine._indexes.foobar).match({
+      should(storageEngine._indexes.get('foobar')).match({
         scope: 'internal',
-        collections: ['foolection']
+        collections: new Set(['foolection'])
       });
 
-      should(storageEngine._indexes.barfoo).match({
+      should(storageEngine._indexes.get('barfoo')).match({
         scope: 'public',
-        collections: ['barlection']
+        collections: new Set(['barlection'])
       });
     });
 
@@ -86,9 +86,8 @@ describe('StorageEngine', () => {
 
       await storageEngine.init();
 
-      should(storageEngine._indexes.barfoo.collections).match([
-        'barlection', 'barlection-alias'
-      ]);
+      should(storageEngine._indexes.get('barfoo').collections)
+        .have.keys('barlection', 'barlection-alias');
     });
   });
 
@@ -110,9 +109,8 @@ describe('StorageEngine', () => {
       storageEngine.indexCache.add({ index: 'foobar'});
 
       should(storageEngine._indexes).have.keys('foobar');
-      should(storageEngine._indexes.foobar.collections)
-        .be.an.Array()
-        .and.match(['collection']);
+      should(storageEngine._indexes.get('foobar').collections)
+        .have.keys('collection');
       should(kuzzle.emit).be.calledOnce();
     });
 
@@ -120,9 +118,8 @@ describe('StorageEngine', () => {
       storageEngine.indexCache.add({ index: 'foobar', collection: 'collection' });
 
       should(storageEngine._indexes).have.keys('foobar');
-      should(storageEngine._indexes.foobar.collections)
-        .be.an.Array()
-        .and.match(['collection']);
+      should(storageEngine._indexes.get('foobar').collections)
+        .have.keys('collection');
       should(kuzzle.emit).be.calledWithMatch(
         'core:indexCache:add',
         {
@@ -135,9 +132,8 @@ describe('StorageEngine', () => {
       storageEngine.indexCache.add({ index: 'foobar', collection: 'collection' });
 
       should(storageEngine._indexes).have.keys('foobar');
-      should(storageEngine._indexes.foobar.collections)
-        .be.an.Array()
-        .and.match(['collection']);
+      should(storageEngine._indexes.get('foobar').collections)
+        .have.keys('collection');
       should(kuzzle.emit).be.calledOnce();
     });
 
@@ -165,9 +161,9 @@ describe('StorageEngine', () => {
 
       storageEngine.indexCache.remove({ index: 'foobar', collection: 'foolection' });
 
-      should(storageEngine._indexes.foobar).match({
+      should(storageEngine._indexes.get('foobar')).match({
         scope: 'public',
-        collections: ['foolection2']
+        collections: new Set(['foolection2'])
       });
       should(kuzzle.emit).be.calledWithMatch(
         'core:indexCache:remove',
@@ -179,11 +175,9 @@ describe('StorageEngine', () => {
     it('should do nothing if the index does not exist', () => {
       storageEngine.indexCache.remove({ index: 'barfoo' });
 
-      should(storageEngine._indexes).match({
-        foobar: {
-          scope: 'public',
-          collections: ['foolection']
-        }
+      should(storageEngine._indexes.get('foobar')).match({
+        scope: 'public',
+        collections: new Set(['foolection'])
       });
       should(kuzzle.emit).not.be.called();
     });
@@ -191,11 +185,9 @@ describe('StorageEngine', () => {
     it('should do nothing if the collection does not exist', () => {
       storageEngine.indexCache.remove({ index: 'foobar', collection: 'barlection' });
 
-      should(storageEngine._indexes).match({
-        foobar: {
-          scope: 'public',
-          collections: ['foolection']
-        }
+      should(storageEngine._indexes.get('foobar')).match({
+        scope: 'public',
+        collections: new Set(['foolection'])
       });
       should(kuzzle.emit).not.be.called();
     });
@@ -209,7 +201,7 @@ describe('StorageEngine', () => {
     it('should delete an index from cache', () => {
       storageEngine.indexCache.remove({ index: 'foobar' });
 
-      should(storageEngine._indexes.foobar).be.undefined();
+      should(storageEngine._indexes).not.have.keys('foobar');
     });
   });
 

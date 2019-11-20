@@ -41,7 +41,10 @@ class KuzzleMock extends Kuzzle {
       register: sinon.stub().resolves(),
       remove: sinon.stub().resolves(),
       normalize: sinon.stub().resolves({id: 'foobar'}),
-      store: sinon.stub().returns({id: 'foobar'})
+      store: sinon.stub().returns({id: 'foobar'}),
+      getCollections: sinon.stub().returns([]),
+      getIndexes: sinon.stub().returns([]),
+      getFilterIds: sinon.stub().returns([])
     };
 
 
@@ -69,8 +72,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.funnel = {
-      controllers: {},
-      pluginsControllers: {},
+      controllers: new Map(),
       init: sinon.spy(),
       loadPluginControllers: sinon.spy(),
       getRequestSlot: sinon.stub().returns(true),
@@ -94,6 +96,8 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.hotelClerk = {
+      rooms: new Map(),
+      customers: new Map(),
       getRealtimeCollections: sinon.stub(),
       removeCustomerFromAllRooms: sinon.stub(),
       addSubscription: sinon.stub().resolves(foo),
@@ -180,6 +184,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.pluginsManager = {
+      controllers: new Map(),
       init: sinon.stub().resolves(),
       plugins: {},
       run: sinon.stub().resolves(),

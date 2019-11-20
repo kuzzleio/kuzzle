@@ -11,7 +11,7 @@ const
       SizeLimitError
     }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('DocumentController', () => {
   let
@@ -38,7 +38,7 @@ describe('DocumentController', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(documentController).instanceOf(BaseController);
+      should(documentController).instanceOf(NativeController);
     });
   });
 

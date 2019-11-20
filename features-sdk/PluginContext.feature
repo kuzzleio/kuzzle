@@ -11,3 +11,12 @@ Feature: Plugin context
     | index | "&nyc-open-data.yellow-taxi" |
     Then The document "es-document" content match:
     | from | "embedded-es-client" |
+
+
+  # secrets ====================================================================
+
+  Scenario: Access provided secrets
+    When I successfully call the route "functional-test-plugin/secrets":"test" with args:
+    | body | {  "awsAccessKey": "I am the access key" } |
+    Then I should receive a result matching:
+    | result | true |
