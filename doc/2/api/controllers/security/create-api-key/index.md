@@ -6,7 +6,7 @@ title: createApiKey
 
 # createApiKey
 
-Creates a new API key for an user. 
+Creates a new API key for a user. 
 
 ---
 
