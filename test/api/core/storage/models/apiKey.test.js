@@ -119,12 +119,12 @@ describe('ApiKey', () => {
     it('should delete the corresponding token', async () => {
       const
         token = { _id: 'token-id' },
-        apiKey = new ApiKey({ token: 'encrypted-token' });
-      kuzzle.repositories.token.verifyToken.resolves(token);
+        apiKey = new ApiKey({ token: 'encrypted-token', userId: 'userId' });
+      kuzzle.repositories.token.loadForUser.resolves(token);
 
       await apiKey._afterDelete();
 
-      should(kuzzle.repositories.token.verifyToken).be.calledWith('encrypted-token');
+      should(kuzzle.repositories.token.loadForUser).be.calledWith('userId', 'encrypted-token');
       should(kuzzle.repositories.token.expire).be.calledWith(token);
     });
   });

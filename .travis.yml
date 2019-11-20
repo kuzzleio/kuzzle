@@ -14,7 +14,6 @@ _integration-tests: &integration-tests
       - plugins/available/kuzzle-plugin-auth-passport-local/node_modules
       - plugins/available/kuzzle-plugin-logger/node_modules
   env: &integration-tests-env
-    - NODE_LTS=12
     - DOCKER_COMPOSE_TEST=test
   install:
     - sudo sysctl -w vm.max_map_count=262144

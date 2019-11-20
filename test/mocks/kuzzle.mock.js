@@ -253,7 +253,8 @@ class KuzzleMock extends Kuzzle {
         deleteByUserId: sinon.stub().resolves(),
         truncate: sinon.stub().resolves(),
         persistToCache: sinon.stub().resolves(),
-        persistForUser: sinon.stub().resolves()
+        persistForUser: sinon.stub().resolves(),
+        loadForUser: sinon.stub().resolves()
       }
     };
 

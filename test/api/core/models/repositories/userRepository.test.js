@@ -192,17 +192,6 @@ describe('Test: repositories/userRepository', () => {
     });
   });
 
-  describe('#truncate', () => {
-    it('should truncate ApiKeys', async () => {
-      const apiKeyTruncateStub = sinon.stub(ApiKey, 'truncate');
-      userRepository.search = sinon.stub().resolves({ hits: [] });
-
-      await userRepository.truncate({ refresh: 'wait_for' });
-
-      should(apiKeyTruncateStub).be.calledWith({ refresh: 'wait_for' });
-    });
-  });
-
   describe('#delete', () => {
     let deleteByUserStub;
 
