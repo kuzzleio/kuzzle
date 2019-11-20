@@ -49,8 +49,3 @@ services:
     image: kuzzleio/elasticsearch:7.4.0
     ulimits:
       nofile: 65536
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - node.name=alyx
-      - cluster.name=kuzzle
-      - discovery.type=single-node
