@@ -6,7 +6,7 @@ title: deleteApiKey
 
 # deleteApiKey
 
-Deletes an user API key.
+Deletes a user API key.
 
 ---
 
