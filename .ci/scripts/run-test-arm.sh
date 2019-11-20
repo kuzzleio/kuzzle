@@ -39,4 +39,5 @@ do
     sleep 1
 done
 
-npm run $NPM_RUN
+npm run functional-testing
+npm run functional-testing2
