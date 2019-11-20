@@ -19,10 +19,7 @@ _integration-tests: &integration-tests
   install:
     - sudo sysctl -w vm.max_map_count=262144
   script:
-    - docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml up -d
-    - bash .ci/wait-kuzzle.sh
-    - npm run functional-testing
-    - npm run functional-testing2
+    - docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle
 
 # Documentation deployment
 _doc-deploy: &doc-deploy
