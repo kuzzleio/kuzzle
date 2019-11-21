@@ -276,7 +276,7 @@ Feature: Document Controller
     | "document-1" | { "name": "document1" } |
     | "document-2" | { "name": "document2" } |
     | "document-3" | { "name": "document3" } |
-    When I "get" the following document ids:
+    When I "get" the following document ids with verb "GET":
     | "document-1" |
     | "document-2" |
     Then I should receive a "successes" array of objects matching:
@@ -284,6 +284,15 @@ Feature: Document Controller
     | "document-1" | { "name": "document1" } |
     | "document-2" | { "name": "document2" } |
     And I should receive a empty "errors" array
+    When I "get" the following document ids with verb "POST":
+      | "document-1" |
+      | "document-2" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                 |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+    And I should receive a empty "errors" array
+
 
   @mappings
   Scenario: Get multiple documents with errors

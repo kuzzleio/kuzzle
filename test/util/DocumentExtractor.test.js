@@ -77,6 +77,33 @@ describe('DocumentExtractor', () => {
     should(documents[1]._id).equal('bazqux');
   });
 
+  it('extract documents from request with mGet action with a body', () => {
+    const req = new Request({
+      action: 'mGet',
+      body: {
+        ids: ['foobar', 'bazqux']
+      }
+    });
+
+    const documents = new DocumentExtractor(req).extract();
+    should(documents.length).equal(2);
+    should(documents[0]._id).equal('foobar');
+    should(documents[1]._id).equal('bazqux');
+  });
+
+  it('extract documents from request with mGet action with query string', () => {
+    const req = new Request({
+      action: 'mGet',
+      ids: 'foobar,bazqux',
+      body: {}
+    });
+
+    const documents = new DocumentExtractor(req).extract();
+    should(documents.length).equal(2);
+    should(documents[0]._id).equal('foobar');
+    should(documents[1]._id).equal('bazqux');
+  });
+
   it('insert documents from request with create action', () => {
     const req = new Request({
       action: 'create',
@@ -165,6 +192,49 @@ describe('DocumentExtractor', () => {
     should(newReq.input.body.ids[0]).equal('foo');
     should(newReq.input.body.ids[1]).equal('bar');
     should(newReq.input.body.ids[2]).equal('baz');
+  });
+
+  it('insert documents from request with mGet action with a body', () => {
+    const req = new Request({
+      action: 'mGet',
+      body: {
+        ids: ['foobar', 'bazqux']
+      }
+    });
+
+    const documents = [
+      { _id: 'foo' },
+      { _id: 'bar' },
+      { _id: 'baz' },
+    ];
+
+    const newReq = new DocumentExtractor(req).insert(documents);
+    should(newReq.input.body.ids.length).equal(3);
+    should(newReq.input.body.ids[0]).equal('foo');
+    should(newReq.input.body.ids[1]).equal('bar');
+    should(newReq.input.body.ids[2]).equal('baz');
+  });
+
+  it('insert documents from request with mGet action with a query string', () => {
+    const req = new Request({
+      action: 'mGet',
+      args: {
+        ids: 'foobar,bazqux'
+      },
+      body: {}
+    });
+
+    const documents = [
+      { _id: 'foo' },
+      { _id: 'bar' },
+      { _id: 'baz' },
+    ];
+
+    const newReq = new DocumentExtractor(req).insert(documents);
+    should(newReq.input.args.ids.length).equal(3);
+    should(newReq.input.args.ids[0]).equal('foo');
+    should(newReq.input.args.ids[1]).equal('bar');
+    should(newReq.input.args.ids[2]).equal('baz');
   });
 
   it('extract documents from result with create action', () => {

@@ -131,7 +131,7 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
   }
 });
 
-Then('I {string} the following document ids:', async function (action, dataTable) {
+Then('I {string} the following document ids with verb {string}:', async function (action, verb, dataTable) {
   action = `m${action[0].toUpperCase() + action.slice(1)}`;
 
   const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
@@ -139,7 +139,8 @@ Then('I {string} the following document ids:', async function (action, dataTable
   this.props.result = await this.sdk.document[action](
     this.props.index,
     this.props.collection,
-    ids);
+    ids,
+    {verb: verb});
 });
 
 Then('I search documents with the following query:', function (queryRaw) {
