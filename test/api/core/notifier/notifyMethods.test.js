@@ -28,8 +28,6 @@ describe('notify methods', () => {
         matching_all: {state: 'all', scope: 'all', users: 'all'},
         matching_in: {state: 'all', scope: 'in', users: 'none'},
         matching_out: {state: 'all', scope: 'out', users: 'none'},
-        matching_pending: {state: 'pending', scope: 'all', users: 'none'},
-        matching_done: {state: 'done', scope: 'all', users: 'none'},
         matching_none: {state: 'none', scope: 'none', users: 'none'},
         matching_userIn: {state: 'none', scope: 'none', users: 'in'},
         matching_userOut: {state: 'none', scope: 'none', users: 'out'}
@@ -52,8 +50,7 @@ describe('notify methods', () => {
   describe('#notifyDocument', () => {
     it('should do nothing if the provided rooms list is empty', () => {
       return notifier
-        .notifyDocument(
-          [], request, 'scope', 'state', 'action', { some: 'content'})
+        .notifyDocument([], request, 'scope', 'action', { some: 'content'})
         .then(() => {
           should(kuzzle.entryPoints.dispatch).not.be.called();
           should(kuzzle.emit).not.be.called();
@@ -68,7 +65,6 @@ describe('notify methods', () => {
           ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR'],
           request,
           'out',
-          'pending',
           'action',
           content)
         .then(() => {
@@ -78,7 +74,7 @@ describe('notify methods', () => {
           should(dispatch.firstCall.args[0]).be.eql('broadcast');
 
           should(dispatch.firstCall.args[1].channels).match(
-            ['matching_all', 'matching_out', 'matching_pending', 'always']);
+            ['matching_all', 'matching_out', 'always']);
 
           should(dispatch.firstCall.args[1].payload).be.instanceof(
             Notification.Document);
@@ -97,7 +93,6 @@ describe('notify methods', () => {
             action: 'action',
             protocol: request.context.protocol,
             scope: 'out',
-            state: 'pending',
             result: content
           });
 
@@ -112,7 +107,6 @@ describe('notify methods', () => {
                 'IAMERROR'
               ],
               scope: 'out',
-              state: 'pending',
               action: 'action',
               content,
               request: request.serialize()
@@ -128,14 +122,13 @@ describe('notify methods', () => {
         });
     });
 
-    it('should not notify if no channel match the provided scope/state arguments', () => {
+    it('should not notify if no channel match the provided scope argument', () => {
       const content = {some: 'content'};
 
       return notifier
         .notifyDocument(
           ['nonMatching', 'IAMERROR'],
           request,
-          'not a state',
           'not a scope',
           'action',
           content)

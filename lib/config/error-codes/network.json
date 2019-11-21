@@ -120,6 +120,12 @@
           "code": 2,
           "message": "Invalid network port number: %s.",
           "class": "InternalError"
+        },
+        "shutting_down": {
+          "description": "Request rejected because this instance is shutting down",
+          "code": 3,
+          "message": "Rejected: instance is shutting down",
+          "class": "ServiceUnavailableError"
         }
       }
     }

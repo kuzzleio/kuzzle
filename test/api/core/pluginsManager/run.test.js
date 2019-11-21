@@ -30,7 +30,6 @@ describe('PluginsManager.run', () => {
     kuzzle = new KuzzleMock();
 
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire(`${root}/lib/services/internalEngine`);
     mockrequire.reRequire(`${root}/lib/api/core/plugins/pluginContext`);
     mockrequire.reRequire(`${root}/lib/api/core/plugins/privilegedPluginContext`);
     PluginsManager = mockrequire.reRequire(`${root}/lib/api/core/plugins/pluginsManager`);
@@ -160,7 +159,8 @@ describe('PluginsManager.run', () => {
 
       plugin.object.foo = () => {};
 
-      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
+      return should(pluginsManager.run())
+        .be.rejectedWith({ message: /Did you mean "foo"/ });
     });
   });
 
@@ -298,7 +298,7 @@ describe('PluginsManager.run', () => {
         .then(() => pluginMock.verify()))
         .be.rejectedWith(
           PluginImplementationError,
-          { errorName: 'plugin.runtime.unexpected_error' });
+          { id: 'plugin.runtime.unexpected_error' });
     });
 
     it('should log a warning in case a pipe plugin exceeds the warning delay', () => {
@@ -477,7 +477,7 @@ describe('PluginsManager.run', () => {
         'foo': 'bar'
       };
 
-      should(pluginsManager.run()).be.rejected();
+      return should(pluginsManager.run()).be.rejected();
     });
 
     it('should abort the plugin initialization if one of the controller action is not correctly defined', () => {
@@ -487,7 +487,7 @@ describe('PluginsManager.run', () => {
         }
       };
 
-      should(pluginsManager.run()).be.rejected();
+      return should(pluginsManager.run()).be.rejected();
     });
 
     it('should abort the controller initialization if one of the controller action target does not exist', () => {
@@ -501,7 +501,8 @@ describe('PluginsManager.run', () => {
       plugin.object.functionName = () => {};
       plugin.object.foo = () => {};
 
-      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
+      return should(pluginsManager.run())
+        .be.rejectedWith({ message: /Did you mean "foo"/ });
     });
 
     it('should not add an invalid route to the API', () => {

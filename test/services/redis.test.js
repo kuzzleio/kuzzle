@@ -2,147 +2,155 @@ const
   should = require('should'),
   rewire = require('rewire'),
   Redis = rewire('../../lib/services/redis'),
-  IORedis = require('ioredis'),
-  redisCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands(),
   KuzzleMock = require('../mocks/kuzzle.mock'),
   sinon = require('sinon'),
   RedisClientMock = require('../mocks/services/redisClient.mock');
 
-describe('Test redis service', () => {
+describe('Redis', () => {
   let
     kuzzle,
-    redis;
-  const dbname = 'unit-tests';
+    redis,
+    config,
+    redisBuildClient,
+    redisBuildClusterClient;
 
-  before(() => {
+  beforeEach(() => {
     kuzzle = new KuzzleMock();
-    redis = new Redis(kuzzle, {service: dbname}, {});
-    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
-      return redis.init();
-    });
+
+    redisBuildClient = Redis.prototype._buildClient;
+    redisBuildClusterClient = Redis.prototype._buildClusterClient;
+
+    Redis.prototype._buildClient = sinon.spy(() => new RedisClientMock());
+    Redis.prototype._buildClusterClient = sinon.spy(() => new RedisClientMock());
+
+    config = {
+      node: {
+        host: 'redis',
+        port: 6379
+      }
+    };
+
+    redis = new Redis(kuzzle, config);
   });
 
   afterEach(() => {
-    sinon.restore();
+    Redis.prototype._buildClient = redisBuildClient;
+    Redis.prototype._buildClusterClient = redisBuildClusterClient;
   });
 
-  it('should init a redis client with default (0) database', () => {
-    const
-      myRedis = new Redis(kuzzle, {service: dbname}, {}),
-      myRedisClient = new RedisClientMock(),
-      spy = sinon.spy(myRedisClient, 'select');
+  it('should init a redis client with default (0) database', async () => {
+    await redis.init();
 
-    return Redis.__with__('buildClient', () => myRedisClient)(() => {
-      return myRedis.init()
-        .then(() => {
-          should(myRedis).have.property('_client');
-          should(myRedis._client).be.an.Object();
-          should(spy).not.be.called();
-        });
-    });
+    should(redis._client).be.an.Object();
+    should(redis._client.select).not.be.called();
   });
 
-  it('should select the good database at init if > 0', () => {
-    const
-      myRedis = new Redis(kuzzle, {service: dbname}, {database: 1}),
-      myRedisClient = new RedisClientMock(),
-      spy = sinon.spy(myRedisClient, 'select');
+  it('should select the good database at init if > 0', async () => {
+    config.database = 1;
 
-    return Redis.__with__('buildClient', () => myRedisClient)(() => {
-      return myRedis.init()
-        .then(() => {
-          should(myRedis).have.property('_client');
-          should(myRedis._client).be.an.Object();
-          should(spy).be.calledWith(1);
-        });
-    });
+    await redis.init();
+
+    should(redis._client).be.an.Object();
+    should(redis._client.select).be.calledWith(1);
   });
 
-  it('should not flush publicCache', () => {
-    const
-      myRedis = new Redis(kuzzle, {service: dbname}, {}),
-      myRedisClient = new RedisClientMock(),
-      spy = sinon.spy(myRedisClient, 'flushdb');
+  it('should not flush memoryStorage', async () => {
+    await redis.init();
 
-    return Redis.__with__('buildClient', () => myRedisClient)(() => {
-      return myRedis.init()
-        .then(() => {
-          should(myRedis).have.property('_client');
-          should(myRedis._client).be.an.Object();
-          should(spy).not.be.called();
-        });
-    });
+    should(redis._client).be.an.Object();
+    should(redis._client.flushdb).not.be.called();
   });
 
   it('should raise an error if unable to connect', () => {
-    const testredis = new Redis(kuzzle, {service: dbname}, {});
+    Redis.prototype._buildClient = () => new RedisClientMock(
+      new Error('connection error'));
+    const testredis = new Redis(kuzzle, config);
 
-    return Redis.__with__('buildClient', () => new RedisClientMock(new Error('connection error')))(() => {
-      return should(testredis.init()).be.rejected();
-    });
+    const promise = testredis.init();
+
+    return should(promise).be.rejected();
   });
 
   it('should raise an error if unable to select the database', () => {
-    const testredis = new Redis(kuzzle, {service: dbname}, {database: 17});
+    config.database = 17;
 
-    return Redis.__with__('buildClient', () => new RedisClientMock())(() => {
-      return should(testredis.init()).be.rejected();
+    const promise = redis.init();
+
+    return should(promise).be.rejected();
+  });
+
+  it('should allow getting a single key value', async () => {
+    await redis.init();
+
+    const req = await redis.get('foo');
+
+    should(req).match({
+      name: 'get',
+      args: ['foo']
     });
-
   });
 
-  it('should allow getting a single key value', () => {
-    return redis.get('foo')
-      .then(req => {
-        should(req.name).be.exactly('get');
-        should(req.args).be.eql(['foo']);
-      });
-  });
+  it('should retrieve values from multiple keys', async () => {
+    await redis.init();
 
-  it('should retrieve values from multiple keys', () => {
-    return redis.mget(['foo', 'baz'])
-      .then(req => {
-        should(req.name).be.exactly('mget');
-        should(req.args).be.eql([['foo', 'baz']]);
-      });
+    const req = await redis.mget(['foo', 'baz']);
+
+    should(req).match({
+      name: 'mget',
+      args: [['foo', 'baz']]
+    });
   });
 
   it('should do nothing when attempting to retrieve values from an empty list of keys', () => {
-    return should(redis.mget([])).be.fulfilledWith([]);
+    const promise = redis.mget([]);
+
+    return should(promise).be.fulfilledWith([]);
   });
 
-  it('should allow listing keys using pattern matching', () => {
-    return redis.searchKeys('s*')
-      .then(keys => {
-        should(keys).be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
-      });
+  it('should allow listing keys using pattern matching', async () => {
+    await redis.init();
+
+    const keys = await redis.searchKeys('s*');
+
+    should(keys)
+      .be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
   });
 
-  it('should retrieve all stored keys of a database', () => {
-    return redis.getAllKeys()
-      .then(keys => {
-        should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
-      });
+  it('should retrieve all stored keys of a database', async () => {
+    await redis.init();
+
+    const keys = await redis.getAllKeys();
+
+    should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
   });
 
-  it('#set should set a single value', () => {
-    return redis.set('foo', 'bar')
-      .then(req => {
-        should(req.name).be.exactly('set');
-        should(req.args).be.eql(['foo', 'bar']);
-      });
+  it('#set should set a single value', async () => {
+    await redis.init();
+
+    const req = await redis.set('foo', 'bar');
+
+    should(req).match({
+      name: 'set',
+      args: ['foo', 'bar']
+    });
   });
 
-  it('#expireAt should allow to set a ttl based on a timestamp', () => {
-    return redis.expireAt('foo', 999)
-      .then(req => {
-        should(req.name).be.exactly('expireat');
-        should(req.args).be.eql(['foo', 999]);
-      });
+  it('#expireAt should allow to set a ttl based on a timestamp', async () => {
+    await redis.init();
+
+    const req = await redis.expireAt('foo', 999);
+
+    should(req).match({
+      name: 'expireat',
+      args: ['foo', 999]
+    });
   });
 
-  it('#getInfos should return a properly formatted response', () => {
-    sinon.stub(redis._client, 'info').resolves(`redis_version:3.0.7
+  it('#info should return a properly formatted response', async () => {
+    await redis.init();
+
+    // eslint-disable-next-line require-atomic-updates
+    redis._client.info = sinon.stub().resolves(`redis_version:3.0.7
     redis_git_sha1:00000000
     redis_git_dirty:0
     redis_build_id:fcba39adccee99b1
@@ -161,10 +169,10 @@ describe('Test redis service', () => {
     config_file:
 
       # Clients
-    connected_clients:7
+    connectedclients:7
     client_longest_output_list:0
     client_biggest_input_buf:0
-    blocked_clients:0
+    blockedclients:0
 
 # Memory
     used_memory:941592
@@ -235,34 +243,34 @@ describe('Test redis service', () => {
     db1:keys=5,expires=5,avg_ttl=3584283
     db5:keys=1,expires=0,avg_ttl=0
     `);
-    return should(redis.getInfos()).be.fulfilled();
+
+    const promise = redis.info();
+
+    return should(promise).be.fulfilled();
   });
 
-  it('should implement all canonical methods', () => {
-    redisCommands.forEach(command => should(redis[command]).be.a.Function());
-  });
-
-  it('should build a client instance of Cluster if several nodes are defined', () => {
-    const config = {
+  it('should build a client instance of Cluster if several nodes are defined', async () => {
+    config = {
       nodes: [
-        {host: 'foobar', port: 6379, lazyConnect: true}
+        { host: 'foobar', port: 6379 }
       ]
     };
+    redis = new Redis(kuzzle, config);
 
-    sinon.stub(IORedis, 'Cluster').returns({});
+    await redis.init();
 
-    Redis.__get__('buildClient')(config);
-    should(IORedis.Cluster).be.called();
+    should(redis._buildClusterClient).be.called();
   });
 
-  it('should build a client instance of Redis if only one node is defined', () => {
-    const config = {
-      node: {host: 'foobar', port: 6379, lazyConnect: true},
+  it('should build a client instance of Redis if only one node is defined', async () => {
+    config = {
+      node: { host: 'foobar', port: 6379 },
     };
 
-    sinon.stub(IORedis, 'Cluster').returns({});
+    redis = new Redis(kuzzle, config);
 
-    Redis.__get__('buildClient')(config);
-    should(IORedis.Cluster).not.be.called();
+    await redis.init();
+
+    should(redis._buildClient).be.called();
   });
 });

@@ -57,7 +57,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument'});
+        .throw(BadRequestError, { id: 'api.assert.missing_argument'});
 
     });
 
@@ -69,7 +69,7 @@ describe('/api/controllers/security', () => {
       });
 
       should(() => mDelete(kuzzle, 'type', request))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should fail if kuzzle is overloaded', () => {
@@ -119,7 +119,7 @@ describe('/api/controllers/security', () => {
 
       kuzzle.config.limits.documentsWriteCount = 1;
       return should(() => mDelete(kuzzle, 'type', request))
-        .throw(SizeLimitError, { errorName: 'services.storage.write_limit_exceeded' });
+        .throw(SizeLimitError, { id: 'services.storage.write_limit_exceeded' });
     });
 
     it('should return the input ids if everything went fine', () => {

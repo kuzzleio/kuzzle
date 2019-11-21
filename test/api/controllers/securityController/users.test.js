@@ -6,14 +6,16 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   {
-    BadRequestError,
-    NotFoundError,
-    PluginImplementationError,
-    SizeLimitError,
-    PreconditionError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      BadRequestError,
+      NotFoundError,
+      PluginImplementationError,
+      SizeLimitError,
+      PreconditionError
+    }
+  } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - users', () => {
@@ -26,8 +28,8 @@ describe('Test: security controller - users', () => {
     kuzzle = new KuzzleMock();
     securityController = new SecurityController(kuzzle);
     request = new Request({controller: 'security'});
-    kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {users: {properties: {}}}}});
-    kuzzle.internalEngine.get.resolves({});
+    kuzzle.internalIndex.getMapping.resolves({internalIndex: {mappings: {users: {properties: {}}}}});
+    kuzzle.internalIndex.get.resolves({});
   });
 
   describe('#updateUserMapping', () => {
@@ -36,15 +38,18 @@ describe('Test: security controller - users', () => {
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
         securityController.updateUserMapping(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required'});
+      }).throw(BadRequestError, { id: 'api.assert.body_required'});
     });
 
     it('should update the user mapping', () => {
       request.input.body = foo;
+      kuzzle.internalIndex.updateMapping.resolves(foo);
+
       return securityController.updateUserMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('users', request.input.body);
+          should(kuzzle.internalIndex.updateMapping)
+            .be.calledOnce()
+            .be.calledWith('users', request.input.body);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -54,13 +59,16 @@ describe('Test: security controller - users', () => {
 
   describe('#getUserMapping', () => {
     it('should fulfill with a response object', () => {
+      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+
       return securityController.getUserMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'users'});
+          should(kuzzle.internalIndex.getMapping)
+            .be.calledOnce()
+            .be.calledWith('users');
 
           should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });
@@ -70,7 +78,7 @@ describe('Test: security controller - users', () => {
       return should(() => {
         securityController.getUser(new Request({}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'});
     });
 
@@ -78,7 +86,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.load.resolves(null);
 
       return should(securityController.getUser(new Request({_id: 'i.dont.exist'})))
-        .be.rejectedWith(NotFoundError, { errorName: 'security.user.not_found'});
+        .be.rejectedWith(NotFoundError, { id: 'security.user.not_found'});
     });
   });
 
@@ -92,7 +100,7 @@ describe('Test: security controller - users', () => {
       });
 
       kuzzle.repositories.user.search.resolves({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
+        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
         total: 2,
         scrollId: 'foobar'
       });
@@ -107,7 +115,7 @@ describe('Test: security controller - users', () => {
 
     it('should handle empty body requests', () => {
       kuzzle.repositories.user.search.resolves({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
+        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
         total: 2,
         scrollId: 'foobar'
       });
@@ -122,7 +130,7 @@ describe('Test: security controller - users', () => {
 
     it('should pass allowed `aggregations` and `highlight` arguments', () => {
       kuzzle.repositories.user.search.resolves({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
+        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
         total: 2,
         scrollId: 'foobar'
       });
@@ -136,7 +144,7 @@ describe('Test: security controller - users', () => {
       return securityController.searchUsers(request)
         .then(() => {
           should(kuzzle.repositories.user.search)
-            .be.calledWith({aggregations: 'aggregations'}, {});
+            .be.calledWithMatch({ aggregations: 'aggregations' });
 
           // highlight only
           return securityController.searchUsers(new Request({
@@ -147,24 +155,24 @@ describe('Test: security controller - users', () => {
         })
         .then(() => {
           should(kuzzle.repositories.user.search)
-            .be.calledWith({highlight: 'highlight'}, {});
+            .be.calledWithMatch({ highlight: 'highlight' });
 
           // all in one
           return securityController.searchUsers(new Request({
             body: {
-              query: 'query',
+              query: { match_all: {} },
               aggregations: 'aggregations',
               highlight: 'highlight'
             }
           }));
         })
         .then(() => {
-          should(kuzzle.repositories.user.search)
-            .be.calledWith({
+          should(kuzzle.repositories.user.search).be.calledWithMatch(
+            {
               aggregations: 'aggregations',
               highlight: 'highlight',
-              query: 'query'
-            }, {});
+              query: { match_all: {} },
+            });
         });
     });
 
@@ -178,7 +186,7 @@ describe('Test: security controller - users', () => {
       });
 
       return should(() => securityController.searchUsers(request))
-        .throw(SizeLimitError, { errorName: 'services.storage.get_limit_exceeded' });
+        .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -194,7 +202,7 @@ describe('Test: security controller - users', () => {
     it('should throw if no scrollId is provided', () => {
       should(() => securityController.scrollUsers(new Request({controller: 'security', action: 'scrollUsers'})))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "scrollId".'
         });
     });
@@ -203,7 +211,7 @@ describe('Test: security controller - users', () => {
       request = new Request({scrollId: 'foobar'});
 
       kuzzle.repositories.user.scroll.resolves({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
+        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
         total: 2,
         scrollId: 'foobar'
       });
@@ -220,7 +228,7 @@ describe('Test: security controller - users', () => {
       request = new Request({scrollId: 'foobar', scroll: 'qux'});
 
       kuzzle.repositories.user.scroll.resolves({
-        hits: [{_id: 'admin', _source: { profileIds: ['admin'] }, _meta: {}}],
+        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
         total: 2,
         scrollId: 'foobar'
       });
@@ -245,11 +253,11 @@ describe('Test: security controller - users', () => {
         });
     });
 
-    it('should throw an error when no id is given', () => {
-      return should(() => {
-        securityController.deleteUser(new Request({}));
-      }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+    it('should throw an error when no id is given', async () => {
+      const promise = securityController.deleteUser(new Request({}));
+
+      await should(promise).be.rejectedWith(BadRequestError, {
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });
     });
@@ -310,7 +318,7 @@ describe('Test: security controller - users', () => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
+          should(response).be.match({ _id: 'test', _source: {} });
         });
     });
 
@@ -334,7 +342,7 @@ describe('Test: security controller - users', () => {
             .match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
+          should(response).be.match({_id: 'test', _source: {} });
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
         });
     });
@@ -347,14 +355,14 @@ describe('Test: security controller - users', () => {
         body: {
           content: {name: 'John Doe', profileIds: ['anonymous']}
         }
-      }))).be.rejectedWith(PreconditionError, { errorName: 'security.user.already_exists'});
+      }))).be.rejectedWith(PreconditionError, { id: 'security.user.already_exists'});
     });
 
     it('should throw an error if no profile is given', () => {
       return should(() => {
         securityController.createUser(new Request({body: {content: {}}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "body.content.profileIds".'
       });
     });
@@ -363,7 +371,7 @@ describe('Test: security controller - users', () => {
       return should(() => {
         securityController.createUser(new Request({body: {content: {profileIds: 'notAnArray'}}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.invalid_type',
+        id: 'api.assert.invalid_type',
         message: 'Wrong type for argument "body.content.profileIds" (expected: array)'
       });
     });
@@ -410,7 +418,7 @@ describe('Test: security controller - users', () => {
 
       return should(securityController.createUser(request))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'security.credentials.unknown_strategy'
+          id: 'security.credentials.unknown_strategy'
         });
     });
 
@@ -427,7 +435,7 @@ describe('Test: security controller - users', () => {
         .returns(sinon.stub().rejects(new Error('error')));
 
       return should(securityController.createUser(request))
-        .be.rejectedWith(BadRequestError, { errorName: 'security.credentials.rejected'});
+        .be.rejectedWith(BadRequestError, { id: 'security.credentials.rejected'});
     });
 
     it('should reject if credentials already exist on the provided user id', () => {
@@ -440,7 +448,7 @@ describe('Test: security controller - users', () => {
 
       return should(securityController.createUser(request))
         .be.rejectedWith(PluginImplementationError, {
-          errorName: 'security.credentials.database_inconsistency'
+          id: 'security.credentials.database_inconsistency'
         });
     });
 
@@ -472,7 +480,7 @@ describe('Test: security controller - users', () => {
         .catch(error => {
           try {
             should(error).be.instanceof(PluginImplementationError);
-            should(error.errorName).eql('plugin.runtime.unexpected_error');
+            should(error.id).eql('plugin.runtime.unexpected_error');
             should(kuzzle.repositories.user.delete)
               .calledOnce()
               .calledWithMatch({_id: 'test'});
@@ -513,7 +521,7 @@ describe('Test: security controller - users', () => {
         .catch(error => {
           try {
             should(error).be.instanceof(PluginImplementationError);
-            should(error.errorName).eql('plugin.runtime.unexpected_error');
+            should(error.id).eql('plugin.runtime.unexpected_error');
             should(kuzzle.repositories.user.delete)
               .calledOnce()
               .calledWithMatch({ _id: 'test' });
@@ -570,7 +578,7 @@ describe('Test: security controller - users', () => {
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response.userContext).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
+          should(response).be.match({_id: 'test', _source: {} });
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
         });
     });
@@ -584,7 +592,7 @@ describe('Test: security controller - users', () => {
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
+          should(response).be.match({_id: 'test', _source: {} });
           should(kuzzle.repositories.user.persist.firstCall.args[0]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
         });
@@ -628,7 +636,7 @@ describe('Test: security controller - users', () => {
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {}, _meta: {}});
+          should(response).be.match({_id: 'test', _source: {} });
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'update'}});
         });
     });
@@ -662,7 +670,6 @@ describe('Test: security controller - users', () => {
           should(response._source.profile).be.an.instanceOf(Object);
           should(response._source.foo).be.exactly('bar');
           should(response._source.bar).be.exactly('baz');
-          should(response._meta).be.an.instanceOf(Object);
         });
     });
 
@@ -690,11 +697,12 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.persist.resolves({_id: 'test'});
       kuzzle.repositories.profile.load.resolves({
         _id: 'anonymous',
-        _source: {},
-        _meta: {}
+        _source: {}
       });
 
-      return securityController.updateUser(new Request({_id: 'test', body: {foo: 'bar'}, refresh: 'wait_for'}))
+      return securityController
+        .updateUser(
+          new Request({_id: 'test', body: {foo: 'bar'}, refresh: 'wait_for'}))
         .then(() => {
           const options = kuzzle.repositories.user.persist.firstCall.args[1];
           should(options).match({
@@ -715,19 +723,28 @@ describe('Test: security controller - users', () => {
     });
 
     it('should replace the user correctly', () => {
-      kuzzle.repositories.user.persist.resolves({_id: 'test', profileIds: ['anonymous'], foo: 'bar'});
-      kuzzle.repositories.user.load = userId => Bluebird.resolve({_id: userId, _source: {}, _meta: {}});
-
-      return securityController.replaceUser(new Request({
+      kuzzle.repositories.user.persist.resolves({
         _id: 'test',
-        body: {profileIds: ['anonymous'], foo: 'bar'}
-      }), {})
+        profileIds: ['anonymous'],
+        foo: 'bar'
+      });
+      kuzzle.repositories.user.load = userId => Bluebird.resolve({
+        _id: userId,
+        _source: {}
+      });
+
+      return securityController
+        .replaceUser(
+          new Request({
+            _id: 'test',
+            body: { profileIds: ['anonymous'], foo: 'bar' }
+          }),
+          {})
         .then(response => {
           should(response).be.instanceOf(Object);
           should(response).match({
             _id: 'test',
-            _source: {profileIds: ['anonymous']},
-            _meta: {}
+            _source: {profileIds: ['anonymous']}
           });
         });
     });
@@ -742,8 +759,16 @@ describe('Test: security controller - users', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.user.persist.resolves({_id: 'test', profileIds: ['anonymous'], foo: 'bar'});
-      kuzzle.repositories.user.load = userId => Bluebird.resolve({_id: userId, _source: {}, _meta: {}});
+      kuzzle.repositories.user.persist.resolves({
+        _id: 'test',
+        profileIds: ['anonymous'],
+        foo: 'bar'
+      });
+
+      kuzzle.repositories.user.load = userId => Bluebird.resolve({
+        _id: userId,
+        _source: {}
+      });
 
       return securityController.replaceUser(new Request({
         _id: 'test',

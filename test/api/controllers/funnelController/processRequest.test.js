@@ -30,7 +30,6 @@ describe('funnelController.processRequest', () => {
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire('../../../../lib/services/internalEngine');
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginContext');
     mockrequire.reRequire('../../../../lib/api/core/plugins/privilegedPluginContext');
     const PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
@@ -58,7 +57,7 @@ describe('funnelController.processRequest', () => {
     const request = new Request({action: 'create'});
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, {errorName: 'api.process.controller_not_found'});
+      .throw(NotFoundError, {id: 'api.process.controller_not_found'});
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -70,7 +69,7 @@ describe('funnelController.processRequest', () => {
     const request = new Request({controller: 'fakeController'});
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
+      .throw(NotFoundError, { id: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -85,7 +84,7 @@ describe('funnelController.processRequest', () => {
     });
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
+      .throw(NotFoundError, { id: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -101,7 +100,7 @@ describe('funnelController.processRequest', () => {
       request = new Request({controller, action: 'create'});
 
     should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { errorName: 'api.process.action_not_found' });
+      .throw(NotFoundError, { id: 'api.process.action_not_found' });
     should(kuzzle.pipe)
       .not.calledWith('request:onSuccess', request);
     should(kuzzle.pipe)
@@ -123,7 +122,7 @@ describe('funnelController.processRequest', () => {
       .catch(e => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
-          should(e.errorName).eql('plugin.controller.invalid_action_response');
+          should(e.id).eql('plugin.controller.invalid_action_response');
           should(kuzzle.pipe)
             .not.calledWith('request:onSuccess', request);
           should(kuzzle.pipe)
@@ -139,7 +138,7 @@ describe('funnelController.processRequest', () => {
       });
   });
 
-  it('should reject if _checkSdkVersion fails', () => {
+  it('should rejects if _checkSdkVersion fail', () => {
     const request = new Request({
       controller: 'fakeController',
       action: 'succeed'
@@ -163,7 +162,7 @@ describe('funnelController.processRequest', () => {
       .then(() => { throw new Error('Expected test to fail'); })
       .catch(e => {
         should(e).be.an.instanceOf(PluginImplementationError);
-        should(e.errorName).eql('plugin.controller.unserializable_response');
+        should(e.id).eql('plugin.controller.unserializable_response');
       });
   });
 
@@ -238,7 +237,7 @@ describe('funnelController.processRequest', () => {
         try {
           should(e).be.instanceOf(PluginImplementationError);
           should(e.message).startWith('Caught an unexpected plugin error: foobar');
-          should(e.errorName).eql('plugin.runtime.unexpected_error');
+          should(e.id).eql('plugin.runtime.unexpected_error');
           should(kuzzle.pipe)
             .calledWith(`${controller}:beforeFail`);
           should(kuzzle.pipe)
@@ -300,9 +299,8 @@ describe('funnelController.processRequest', () => {
     });
 
     pluginsManager.run()
-      .then(() => {
-        funnel.processRequest(request);
-      });
+      .then(() => funnel.processRequest(request))
+      .catch(e => done(e));
   });
 
   describe('_checkSdkVersion', () => {
@@ -334,7 +332,7 @@ describe('funnelController.processRequest', () => {
     });
 
     it('should not throw if the SDK version is unknown', () => {
-      funnel.sdkCompatibility = { js: { max: 6 } };
+      funnel.sdkCompatibility = { js: { min: 7 } };
 
       request.input.volatile.sdkName = 'csharp@8.4.2';
 
@@ -342,7 +340,7 @@ describe('funnelController.processRequest', () => {
     });
 
     it('should not throw if the SDK version is compatible', () => {
-      funnel.sdkCompatibility = { js: { max: 6 } };
+      funnel.sdkCompatibility = { js: { min: 6 } };
 
       request.input.volatile.sdkName = 'js@6.4.2';
 
@@ -350,12 +348,19 @@ describe('funnelController.processRequest', () => {
     });
 
     it('should throw an error if the SDK version is not compatible', () => {
-      funnel.sdkCompatibility = { js: { max: 6 } };
+      funnel.sdkCompatibility = { js: { min: 8 } };
 
       request.input.volatile.sdkName = 'js@7.4.2';
 
       should(() => funnel._checkSdkVersion(request))
-        .throw(BadRequestError, { errorName: 'api.process.incompatible_sdk_version' });
+        .throw(BadRequestError, { id: 'api.process.incompatible_sdk_version' });
+    });
+
+    it('should throw an error if a sdkVersion property from v1 SDKs is present', () => {
+      request.input.volatile.sdkVersion = '7.4.2';
+
+      should(() => funnel._checkSdkVersion(request))
+        .throw(BadRequestError, { id: 'api.process.incompatible_sdk_version' });
     });
   });
 });

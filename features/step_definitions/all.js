@@ -2,10 +2,11 @@ const
   {
     Then
   } = require('cucumber'),
+  _ = require('lodash'),
   should = require('should');
 
 Then(/^The (sorted )?result should match the (regex|json) (.*?)$/, function (sorted, type, pattern, callback) {
-  var
+  let
     regex,
     val = this.result.result;
 
@@ -40,9 +41,9 @@ Then(/^The (sorted )?result should match the (regex|json) (.*?)$/, function (sor
   }
 });
 
-Then(/^The result should raise an error with message "(.*?)"$/, function (message, callback) {
-  var
-    val = this.result.error.error || this.result.error;
+Then('The result should raise an error with message {string}', function (message, callback) {
+  const
+    val = _.get(this.result, 'error.error') || this.result.error;
 
   try {
     should(val.message).be.eql(message);

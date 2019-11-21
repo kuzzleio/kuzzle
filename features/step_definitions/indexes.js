@@ -3,26 +3,30 @@ const
     When,
     Then
   } = require('cucumber'),
-  async = require('async'),
-  Bluebird = require('bluebird');
+  async = require('async');
 
-When(/^I create an index named "([^"]*)"$/, function (index, callback) {
-  this.api.createIndex(index)
-    .then(body => {
-      if (body.error) {
-        callback(new Error(body.error.message));
-        return false;
-      }
+When(/^I create an index named "([^"]*)"$/, async function (index) {
+  const { result: exists } = await this.api.indexExists(index);
 
-      if (!body.result) {
-        callback(new Error('No result provided'));
-        return false;
-      }
+  if (exists) {
+    await this.api.deleteIndex(index);
+  }
 
-      this.result = body.result;
-      callback();
-    })
-    .catch(error => callback(error));
+  const body = await this.api.createIndex(index);
+
+  if (body.error) {
+    throw new Error(body.error.message);
+  }
+});
+
+When('I try to create the index {string}', async function (index) {
+  try {
+    const response = await this.api.createIndex(index);
+
+    this.result = response;
+  } catch (error) {
+    this.result = { error };
+  }
 });
 
 Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, function (not, index, callback) {
@@ -107,58 +111,4 @@ Then(/^I'm able to delete the index named "([^"]*)"$/, function (index, callback
       callback();
     })
     .catch(error => callback(error));
-});
-
-Then(/^I refresh the index(?: "(.*?)")?$/, function (index, callback) {
-  var
-    idx = index ? index : this.fakeIndex;
-
-  this.api.refreshIndex(idx)
-    .then(body => {
-      if (body.error) {
-        if (body.error.message) {
-          callback(body.error.message);
-          return false;
-        }
-
-        callback(body.error);
-        return false;
-      }
-
-      callback();
-    })
-    .catch(error => callback(error));
-});
-
-When(/^I (enable|disable) the autoRefresh(?: on the index "(.*?)")?$/, function (enable, index) {
-  var
-    idx = index ? index : this.fakeIndex,
-    autoRefresh = (enable === 'enable');
-
-  return this.api.setAutoRefresh(idx, autoRefresh)
-    .then(body => {
-      if (body.error) {
-        return Bluebird.reject(new Error(body.error.message));
-      }
-
-      this.result = body;
-
-      return body;
-    });
-});
-
-Then(/^I check the autoRefresh status(?: on the index "(.*?)")?$/, function (index) {
-  var
-    idx = index ? index : this.fakeIndex;
-
-  return this.api.getAutoRefresh(idx)
-    .then(body => {
-      if (body.error) {
-        return Bluebird.reject(body.error);
-      }
-
-      this.result = body;
-
-      return body;
-    });
 });

@@ -160,19 +160,22 @@
           "description": "Invalid rights",
           "code": 6,
           "message": "Invalid rights for role \"%s\" (path: \"%s\"): %s",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "closure_exec_failed": {
           "description": "Execution failed on the provided closure",
           "code": 7,
           "message": "Invalid definition for [%s, %s]: %s",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "closure_missing_test": {
           "description": "Closures must specify a \"test\" attribute",
           "code": 8,
           "message": "Missing or malformed \"test\" attribute  for role %s (%s) : %s",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         }
       }
     },

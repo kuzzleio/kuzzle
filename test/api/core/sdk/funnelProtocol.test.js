@@ -35,7 +35,7 @@ describe('Test: sdk/funnelProtocol', () => {
     it('should throw an InternalError if the funnel is instantiated without a valid User object', () => {
       should(() => {
         new FunnelProtocol(funnel, { _id: 'gordon' });
-      }).throw(PluginImplementationError, { errorName: 'plugin.context.invalid_user' });
+      }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
     });
   });
 
@@ -87,7 +87,7 @@ describe('Test: sdk/funnelProtocol', () => {
             action: 'subscribe'
           }))
             .be.rejectedWith(PluginImplementationError, {
-              errorName: 'plugin.context.unavailable_realtime'
+              id: 'plugin.context.unavailable_realtime'
             });
         })
         .then(() => {
@@ -96,7 +96,7 @@ describe('Test: sdk/funnelProtocol', () => {
             action: 'unsubscribe'
           }))
             .be.rejectedWith(PluginImplementationError, {
-              errorName: 'plugin.context.unavailable_realtime'
+              id: 'plugin.context.unavailable_realtime'
             });
         });
     });

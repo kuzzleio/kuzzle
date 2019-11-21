@@ -6,7 +6,8 @@
 _integration-tests: &integration-tests
   os: linux
   sudo: required
-  language: minimal
+  language: node_js
+  node_js: 12
   services: docker
   cache:
     directories:
@@ -14,24 +15,26 @@ _integration-tests: &integration-tests
       - plugins/available/kuzzle-plugin-auth-passport-local/node_modules
       - plugins/available/kuzzle-plugin-logger/node_modules
   env: &integration-tests-env
-    - NODE_LTS=8
-    - DOCKER_PROXY_TAG=$(if [ "${TRAVIS_BRANCH}" != "master" ]; then echo ":develop"; fi)
     - DOCKER_COMPOSE_TEST=test
   install:
     - sudo sysctl -w vm.max_map_count=262144
   script:
+    # avoid write /dev/stdout: resource temporarily unavailable
+    # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
+    - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
     - docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle
 
 # Documentation deployment
 _doc-deploy: &doc-deploy
   stage: Deployments
   language: node_js
-  node_js: 10
+  node_js: 12
   env: &doc-deploy-env
     - NODE_ENV=production
     - AWS_DEFAULT_REGION=us-west-2
     - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
-    # AWS_SECRET_ACCESS_KEY in Travis CI UI
+    # AWS_SECRET_ACCESS_KEY
+    - secure: h8n58Siclba6vRZEUcVzH2UTCBaA2src/mJvPaiXln1dPP4+/CICkfoljggA/qZDv9pv1ck07u7fHf6EJa7ONO2aNKD/r9CyyKHbZsgT5Wz6zLaOJfu/DmLZq9yclG/e9XmlK7qpjW+H7vCPn98GNVaU2h8cjqNVZ3KpkLwQ0j2RBoM6x4jpOFUsbiwnKWaHxS2u3JHpZ/L8PM9uy2JDoRm52HW5k+fmvyxwNis+R5ezteJJYcqhYhun9CRDVjGg47t8YFkO+fXjtgl5EAhNlOtE1UixV7h8+MVbmS0XJQm4Xen76J0a2O3xEGOggsdMJebTuDlHk97jhR17pMFu0lfM4V2YmiC8BclY/fdnxX7aoc9hPi9Zf6ReHOqVo8jWP4ArS7awHdKW8c5zkH2itf7M6tw89hnDmoXVk/48joOyj+vMwhvI2wJ3oUjhsjpZWG7Mks4hY2CYmkA5n56K/6+qgPq19qZr4MKqW1zr8066TNzqa2ZtdbtSzIyP0jcXLyNOxhwXejyBnHTyJ7ZVbiNxyGTvLQcOP1UYNn1LxmDTJWvDCguXbwLQ2oHzD032xVuNCS2XjZ1dDFtEtEfDniVnOGosEzJWK2kkRCaOzW5GT+VunfZnN9j4MNZVfI1iCW3EQ4CI7n/Ct89y4YrezwRoFjvMQvhb64pVLwMeOp4=
   cache:
     npm: true
     directories:
@@ -47,12 +50,7 @@ _doc-deploy: &doc-deploy
   script:
     - npm run doc-prepare
     - npm run doc-build
-  deploy:
-    provider: script
-    script:
-      - npm run doc-upload
-    skip_cleanup: true
-  after_deploy:
+    - npm run doc-upload
     - npm run doc-cloudfront
 
 # ------------------------
@@ -68,13 +66,17 @@ jobs:
       os: linux
       sudo: required
       language: node_js
-      node_js: 10
+
+      cache: npm
+
+      node_js: 12
+
       install:
         - npm ci --silent
       script:
         - npm run --silent lint
         - npm run unit-testing
-      after_success:
+      after_script:
         - npm run codecov
 
     - stage: Unit Tests & Linters
@@ -97,8 +99,6 @@ jobs:
       cache:
         directories:
           - $HOME/.gem/specs
-      env:
-        - REPOSITORIES=kuzzle-how-to,sdk-javascript-5,sdk-javascript-6,plugin-s3-1,sdk-php-3,plugin-cloudinary-1,sdk-cpp-1,sdk-csharp-1,sdk-go-1,sdk-go-2,sdk-java-1,sdk-java-2,sdk-java-3,kuzzle-1,sdk-android-3,plugin-multi-tenancy-1
       install:
         - gem install typhoeus
         - npm ci --silent
@@ -110,35 +110,16 @@ jobs:
         - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
         - echo "Checking error codes..."
         - npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR/codes-doc-test.md
-        - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/1/api/essentials/errors/codes/index.md
+        - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/2/api/essentials/errors/codes/index.md
 
     # ---------------------------------------
     # Integration tests
     # ---------------------------------------
     - <<: *integration-tests
       stage: Integration tests
-      if: branch =~ /^master|[0-9]+-(dev|stable)$/
-      name: Node.js 6
+      name: Node.js 12
       env:
         - *integration-tests-env
-        - NODE_LTS=6
-
-
-    - <<: *integration-tests
-      stage: Integration tests
-      if: type = cron
-      name: Node.js 8
-      env:
-        - *integration-tests-env
-
-
-    - <<: *integration-tests
-      stage: Integration tests
-      if: type = cron
-      name: Node.js 10
-      env:
-        - *integration-tests-env
-        - NODE_LTS=10
 
     # ---------------------------------------
     # Cross-platform tests
@@ -166,23 +147,6 @@ jobs:
         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
 
     # ---------------------------------------
-    # Redis Tests
-    # ---------------------------------------
-    - <<: *integration-tests
-      name: Redis 3
-      stage: Redis tests
-      env:
-        - *integration-tests-env
-        - REDIS_VERSION=3.2
-
-    - <<: *integration-tests
-      name: Redis 4
-      stage: Redis tests
-      env:
-        - *integration-tests-env
-        - REDIS_VERSION=4.0.14
-
-    # ---------------------------------------
     # Deployments
     # ---------------------------------------
     - stage: Deployments
@@ -191,7 +155,7 @@ jobs:
       os: linux
       sudo: required
       language: node_js
-      node_js: 10
+      node_js: 12
       script: echo "Deploying Kuzzle to NPM.js"
       deploy:
         provider: npm
@@ -222,7 +186,7 @@ jobs:
 
     - <<: *doc-deploy
       name: Deploy docs.kuzzle.io
-      if: branch =~ /^master|[0-9]+-stable$/
+      if: branch =~ /^master|[0-9]+-(stable|beta)$/
       env:
         - *doc-deploy-env
         - S3_BUCKET=docs.kuzzle.io
@@ -233,15 +197,14 @@ jobs:
 # ------------------------
 stages:
   - name: Unit Tests & Linters
-    if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
+    if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
   - name: Integration tests
-    if: type =~ /(cron|push|pull_request)/ AND branch =~ /^master|[0-9]+-(dev|stable)$/
+    # if: type = cron
+    if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
   - name: Cross-platform tests
     if: type = cron
-  - name: Redis tests
-    if: type = cron
   - name: Deployments
-    if: type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/
+    if: type = push AND branch =~ /^master|[0-9]+-(dev|stable|beta)|1-dev|$/
 
 # ---------------------------------------
 # Notifications

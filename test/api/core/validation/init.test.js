@@ -94,11 +94,11 @@ describe('Test: validation initialization', () => {
       };
 
     beforeEach(() => {
-      kuzzle.internalEngine.search.returns(Bluebird.resolve({
+      kuzzle.internalIndex.search.returns(Bluebird.resolve({
         hits: [
-          {_source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
-          {_source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
-          {_source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
+          {_id: 'anIndex#aCollection', _source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
+          {_id: 'anIndex#anotherCollection', _source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
+          {_id: 'anIndex#anotherCollection', _source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
         ],
         length: 3
       }));
@@ -113,7 +113,7 @@ describe('Test: validation initialization', () => {
         .then(() => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual(configurationMock);
-          should(kuzzle.log.info.callCount).be.eql(4);
+          should(kuzzle.log.info.callCount).be.eql(3);
         });
     });
 
@@ -127,19 +127,18 @@ describe('Test: validation initialization', () => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual({});
           should(kuzzle.log.error.callCount).be.eql(6);
-          should(kuzzle.log.info.callCount).be.eql(1);
         });
     });
   });
 
-  describe('#isValidSpecification', () => {
+  describe('#validateFormat', () => {
     it('should resolve true if the specification is correct', () => {
       const
         curateCollectionSpecificationStub = sinon.stub().resolves({});
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
-      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'specification'})
+      return validation.validateFormat('anIndex', 'aCollection', {a: 'specification'})
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.true();
@@ -151,7 +150,7 @@ describe('Test: validation initialization', () => {
         curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
           .rejects(new Error('Mocked Error'));
 
-      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'})
+      return validation.validateFormat('anIndex', 'aCollection', {a: 'bad specification'})
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.false();
@@ -163,7 +162,7 @@ describe('Test: validation initialization', () => {
         curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
           .resolves({isValid: false, errors: ['some error']});
 
-      return validation.isValidSpecification('anIndex', 'aCollection', {a: 'bad specification'}, true)
+      return validation.validateFormat('anIndex', 'aCollection', {a: 'bad specification'}, true)
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.false();
@@ -218,7 +217,7 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.errorName).eql('validation.types.already_exists');
+        should(error.id).eql('validation.types.already_exists');
       }
     });
 
@@ -235,7 +234,7 @@ describe('Test: validation initialization', () => {
         validation.addType(validationType);
       }
       catch (error) {
-        should(error.errorName).be.eql('validation.types.missing_type_name');
+        should(error.id).be.eql('validation.types.missing_type_name');
       }
     });
 
@@ -252,7 +251,7 @@ describe('Test: validation initialization', () => {
       }
       catch (error) {
         should(error.message).startWith('The type "aType" must implement a function "validate".');
-        should(error.errorName).be.eql('validation.types.missing_function');
+        should(error.id).be.eql('validation.types.missing_function');
       }
     });
 
@@ -269,7 +268,7 @@ describe('Test: validation initialization', () => {
       }
       catch (error) {
         should(error.message).startWith('The type "aType" must implement a function "validateFieldSpecification".');
-        should(error.errorName).be.eql('validation.types.missing_function');
+        should(error.id).be.eql('validation.types.missing_function');
       }
     });
 
@@ -287,7 +286,7 @@ describe('Test: validation initialization', () => {
       }
       catch (error) {
         should(error.message).startWith('The type "aType" must implement a function "getStrictness".');
-        should(error.errorName).be.eql('validation.types.missing_function');
+        should(error.id).be.eql('validation.types.missing_function');
       }
     });
   });
@@ -329,7 +328,7 @@ describe('Test: validation initialization', () => {
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(PreconditionError, {
-          errorName: 'validation.assert.unexpected_properties'
+          id: 'validation.assert.unexpected_properties'
         });
     });
 
@@ -349,7 +348,7 @@ describe('Test: validation initialization', () => {
         .then(response => {
           should(response.isValid).be.false();
           should(response.errors.length).be.eql(1);
-          should(response.errors[0]).be.eql(`The object "${indexName}.${collectionName}" contains unexpected properties (allowed: strict,fields,validators).`);
+          should(response.errors[0]).be.eql(`The object "${indexName}.${collectionName}" contains unexpected properties (allowed: strict, fields, validators).`);
         });
     });
 
@@ -445,7 +444,7 @@ describe('Test: validation initialization', () => {
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'validation.assert.invalid_specifications'
+          id: 'validation.assert.invalid_specifications'
         });
     });
 
@@ -521,7 +520,7 @@ describe('Test: validation initialization', () => {
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'validation.assert.invalid_filters'
+          id: 'validation.assert.invalid_filters'
         });
     });
   });
@@ -770,7 +769,7 @@ describe('Test: validation initialization', () => {
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
       }).throw(PluginImplementationError, {
-        errorName: 'plugin.runtime.unexpected_error'
+        id: 'plugin.runtime.unexpected_error'
       });
     });
 
@@ -803,7 +802,7 @@ describe('Test: validation initialization', () => {
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
       }).throw(PreconditionError, {
-        errorName: 'validation.assert.unexpected_properties'
+        id: 'validation.assert.unexpected_properties'
       });
     });
 
@@ -827,7 +826,7 @@ describe('Test: validation initialization', () => {
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(2);
       should(response.errors).be.eql([
-        'The object "anIndex.aCollection.aField" contains unexpected properties (allowed: mandatory,type,defaultValue,description,multivalued,typeOptions).',
+        'The object "anIndex.aCollection.aField" contains unexpected properties (allowed: mandatory, type, defaultValue, description, multivalued, typeOptions).',
         'In "anIndex.aCollection.aField": unknown type "aType".'
       ]);
     });
@@ -870,7 +869,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('The object "undefined.undefined.undefined.multivalued" contains unexpected properties (allowed: value,minCount,maxCount).');
+      }).throw('The object "undefined.undefined.undefined.multivalued" contains unexpected properties (allowed: value, minCount, maxCount).');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {

@@ -40,15 +40,15 @@ describe('Test: hotelClerk.listSubscription', () => {
       isActionAllowed: sinon.stub().resolves(true)
     };
 
-    kuzzle.realtime.getIndexes.returns(['index', 'anotherIndex']);
-    kuzzle.realtime.getCollections.withArgs('index').returns(['collection']);
-    kuzzle.realtime.getCollections
+    kuzzle.koncorde.getIndexes.returns(['index', 'anotherIndex']);
+    kuzzle.koncorde.getCollections.withArgs('index').returns(['collection']);
+    kuzzle.koncorde.getCollections
       .withArgs('anotherIndex')
       .returns(['anotherCollection']);
-    kuzzle.realtime.getFilterIds
+    kuzzle.koncorde.getFilterIds
       .withArgs('index', 'collection')
       .returns(['foo', 'bar']);
-    kuzzle.realtime.getFilterIds
+    kuzzle.koncorde.getFilterIds
       .withArgs('anotherIndex', 'anotherCollection')
       .returns(['baz']);
 
@@ -88,27 +88,27 @@ describe('Test: hotelClerk.listSubscription', () => {
   });
 
   it('should return a correct list according to subscribe on filter and user right', () => {
-    kuzzle.realtime.getIndexes
+    kuzzle.koncorde.getIndexes
       .returns(['index', 'anotherIndex', 'andAnotherOne']);
-    kuzzle.realtime.getCollections
+    kuzzle.koncorde.getCollections
       .withArgs('index')
       .returns(['collection', 'forbidden']);
-    kuzzle.realtime.getCollections
+    kuzzle.koncorde.getCollections
       .withArgs('anotherIndex')
       .returns(['anotherCollection']);
-    kuzzle.realtime.getCollections
+    kuzzle.koncorde.getCollections
       .withArgs('andAnotherOne')
       .returns(['collection']);
-    kuzzle.realtime.getFilterIds
+    kuzzle.koncorde.getFilterIds
       .withArgs('index', 'collection')
       .returns(['foo', 'bar']);
-    kuzzle.realtime.getFilterIds
+    kuzzle.koncorde.getFilterIds
       .withArgs('index', 'forbidden')
       .returns(['foo']);
-    kuzzle.realtime.getFilterIds
+    kuzzle.koncorde.getFilterIds
       .withArgs('anotherIndex', 'anotherCollection')
       .returns(['baz']);
-    kuzzle.realtime.getFilterIds
+    kuzzle.koncorde.getFilterIds
       .withArgs('andAnotherOne', 'collection')
       .returns(['foobar']);
 

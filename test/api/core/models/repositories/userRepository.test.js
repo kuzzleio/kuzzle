@@ -1,10 +1,11 @@
 const
   Bluebird = require('bluebird'),
   should = require('should'),
-  sinon = require('sinon'),
+  sinon = require('sinon').createSandbox(),
   KuzzleMock = require('../../../../mocks/kuzzle.mock'),
   Repository = require('../../../../../lib/api/core/models/repositories/repository'),
   User = require('../../../../../lib/api/core/models/security/user'),
+  ApiKey = require('../../../../../lib/api/core/storage/models/apiKey'),
   UserRepository = require('../../../../../lib/api/core/models/repositories/userRepository'),
   {
     BadRequestError,
@@ -58,7 +59,7 @@ describe('Test: repositories/userRepository', () => {
 
     userRepository = new UserRepository(kuzzle);
 
-    return userRepository.init();
+    return userRepository.init({ indexStorage: kuzzle.internalIndex });
   });
 
   afterEach(() => {
@@ -99,7 +100,7 @@ describe('Test: repositories/userRepository', () => {
 
       return should(userRepository.fromDTO(userInvalidProfile))
         .be.rejectedWith(KuzzleInternalError, {
-          errorName: 'security.user.cannot_hydrate'
+          id: 'security.user.cannot_hydrate'
         });
     });
 
@@ -186,23 +187,36 @@ describe('Test: repositories/userRepository', () => {
           return userRepository.persist(user);
         }))
         .be.rejectedWith(BadRequestError, {
-          errorName: 'security.user.anonymous_profile_required'
+          id: 'security.user.anonymous_profile_required'
         });
     });
   });
 
   describe('#delete', () => {
-    it('should delete user from both cache and database', () => {
-      return userRepository.delete({ _id: 'alyx' })
-        .then(() => {
-          should(kuzzle.services.list.internalCache.del)
-            .calledOnce()
-            .calledWith(userRepository.getCacheKey('alyx'));
+    let deleteByUserStub;
 
-          should(kuzzle.internalEngine.delete)
-            .calledOnce()
-            .calledWith(userRepository.collection, 'alyx');
-        });
+    beforeEach(() => {
+      deleteByUserStub = sinon.stub(ApiKey, 'deleteByUser');
+    });
+
+    afterEach(() => {
+      deleteByUserStub.restore();
+    });
+
+    it('should delete user from both cache and database', async () => {
+      const user = { _id: 'alyx' };
+
+      await userRepository.delete(user, { refresh: 'wait_for' });
+
+      should(userRepository.cacheEngine.del)
+        .calledOnce()
+        .calledWith(userRepository.getCacheKey('alyx'));
+
+      should(userRepository.indexStorage.delete)
+        .calledOnce()
+        .calledWith(userRepository.collection, 'alyx', { refresh: 'wait_for' });
+
+      should(deleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
     });
 
     it('should delete user credentials', () => {
@@ -223,6 +237,14 @@ describe('Test: repositories/userRepository', () => {
         });
     });
 
+    it('should delete associated ApiKey', async () => {
+      const user = { _id: 'alyx' };
+
+      await userRepository.delete(user, { refresh: 'wait_for' });
+
+      should(deleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
+    });
+
     it('should forward refresh option', () => {
       const
         user = { _id: 'mossman' },
@@ -230,7 +252,7 @@ describe('Test: repositories/userRepository', () => {
 
       return userRepository.delete(user, options)
         .then(() => {
-          should(kuzzle.internalEngine.delete.firstCall.args[2]).match(options);
+          should(userRepository.indexStorage.delete.firstCall.args[2]).match(options);
         });
     });
   });

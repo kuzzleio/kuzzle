@@ -4,13 +4,13 @@ const
   sinon = require('sinon'),
   {
     Request,
+    errors: { PreconditionError, NotFoundError }
   } = require('kuzzle-common-objects'),
-  { PreconditionError, NotFoundError } = require('kuzzle-common-objects').errors,
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   AdminController = rewire('../../../lib/api/controllers/adminController'),
   { NativeController } = require('../../../lib/api/controllers/baseController');
 
-describe('Test: admin controller', () => {
+describe('AdminController', () => {
   let
     adminController,
     kuzzle,
@@ -20,7 +20,9 @@ describe('Test: admin controller', () => {
     kuzzle = new KuzzleMock();
 
     adminController = new AdminController(kuzzle);
+
     request = new Request({ controller: 'admin' });
+
     request.input.args.refresh = 'wait_for';
   });
 
@@ -38,7 +40,7 @@ describe('Test: admin controller', () => {
     });
 
     it('should flush the cache for the specified database', done => {
-      kuzzle.services.list.memoryStorage.flushdb = flushdbStub.returns();
+      kuzzle.cacheEngine.public.flushdb = flushdbStub.returns();
       request.input.args.database = 'memoryStorage';
 
       adminController.resetCache(request)
@@ -54,66 +56,40 @@ describe('Test: admin controller', () => {
 
       should(() => adminController.resetCache(request)).throw(
         NotFoundError,
-        { errorName: 'services.cache.database_not_found' });
-    });
-  });
-
-  describe('#resetKuzzleData', () => {
-    beforeEach(() => {
-      request.input.action = 'resetKuzzleData';
-    });
-
-    it('should erase the internal ES & Redis dbs', done => {
-      adminController.resetKuzzleData(request)
-        .then(() => {
-          should(kuzzle.repositories.user.truncate).be.calledOnce();
-          should(kuzzle.internalEngine.deleteIndex).be.calledOnce();
-          should(kuzzle.services.list.internalCache.flushdb).be.calledOnce();
-
-          should(kuzzle.indexCache.remove)
-            .be.calledOnce()
-            .be.calledWithExactly('internalIndex');
-
-          should(kuzzle.internalEngine.bootstrap.all).be.calledOnce();
-          should(kuzzle.validation).be.an.Object();
-          should(kuzzle.start).be.a.Function();
-
-          sinon.assert.callOrder(
-            kuzzle.internalEngine.deleteIndex,
-            kuzzle.services.list.internalCache.flushdb,
-            kuzzle.indexCache.remove,
-            kuzzle.internalEngine.bootstrap.all
-          );
-          done();
-        })
-        .catch(error => done(error));
+        { id: 'services.cache.database_not_found' });
     });
   });
 
   describe('#resetSecurity', () => {
     beforeEach(() => {
       request.input.action = 'resetSecurity';
+      kuzzle.internalIndex.bootstrap.createInitialSecurities.resolves({
+        profileIds: ['anonymous', 'default', 'admin'],
+        roleIds: ['anonymous', 'default', 'admin']
+      });
     });
 
-    it('should scroll and delete all registered users, profiles and roles', done => {
-      adminController.resetSecurity(request)
-        .then(() => {
-          should(kuzzle.repositories.user.truncate).be.calledOnce();
-          should(kuzzle.repositories.profile.truncate).be.calledOnce();
-          should(kuzzle.repositories.role.truncate).be.calledOnce();
-          should(kuzzle.internalEngine.bootstrap.createDefaultProfiles).be.calledOnce();
-          should(kuzzle.internalEngine.bootstrap.createDefaultRoles).be.calledOnce();
+    it('should scroll and delete all registered users, profiles and roles', async () => {
+      await adminController.resetSecurity(request);
 
-          sinon.assert.callOrder(
-            kuzzle.repositories.user.truncate,
-            kuzzle.repositories.profile.truncate,
-            kuzzle.repositories.role.truncate,
-            kuzzle.internalEngine.bootstrap.createDefaultProfiles,
-            kuzzle.internalEngine.bootstrap.createDefaultRoles
-          );
-          done();
-        })
-        .catch(error => done(error));
+      should(kuzzle.repositories.user.truncate).be.calledOnce();
+      should(kuzzle.repositories.profile.truncate).be.calledOnce();
+      should(kuzzle.repositories.role.truncate).be.calledOnce();
+      should(kuzzle.internalIndex.bootstrap.createInitialSecurities)
+        .be.calledOnce();
+      should(kuzzle.repositories.profile.loadProfiles)
+        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
+      should(kuzzle.repositories.role.loadRoles)
+        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
+
+      sinon.assert.callOrder(
+        kuzzle.repositories.user.truncate,
+        kuzzle.repositories.profile.truncate,
+        kuzzle.repositories.role.truncate,
+        kuzzle.internalIndex.bootstrap.createInitialSecurities,
+        kuzzle.repositories.profile.loadProfiles,
+        kuzzle.repositories.role.loadRoles,
+      );
     });
 
     it('should unlock the action even if the promise reject', done => {
@@ -141,32 +117,16 @@ describe('Test: admin controller', () => {
       request.input.action = 'resetDatabase';
     });
 
-    it('remove all indexes handled by Kuzzle', done => {
-      const deleteIndex = kuzzle.services.list.storageEngine.deleteIndex;
-      kuzzle.indexCache.indexes = new Map([
-        [ 'halflife3', [] ],
-        [ 'borealis', [] ],
-        [ 'confirmed', [] ],
-        [ '%kuzzle', [] ]
-      ]);
-      request.input.args.refresh = 'wait_for';
+    it('remove all indexes handled by Kuzzle', async () => {
+      adminController.publicStorage.listIndexes.resolves(['a', 'b', 'c']);
 
-      adminController.resetDatabase(request)
-        .then(() => {
-          should(deleteIndex.callCount).be.eql(3);
-          should(deleteIndex.getCall(0).args[0].input.resource.index)
-            .be.eql('halflife3');
-          should(deleteIndex.getCall(1).args[0].input.resource.index)
-            .be.eql('borealis');
-          should(deleteIndex.getCall(2).args[0].input.resource.index)
-            .be.eql('confirmed');
-          should(kuzzle.indexCache.indexes).have.value('%kuzzle', []);
+      const response = await adminController.resetDatabase(request);
 
-          // Check if unlocked
-          return adminController.resetDatabase(request);
-        })
-        .then(() => done())
-        .catch(error => done(error));
+      should(adminController.publicStorage.listIndexes).be.calledOnce();
+      should(adminController.publicStorage.deleteIndexes)
+        .be.calledWith(['a', 'b', 'c']);
+
+      should(response).match({ acknowledge: true });
     });
   });
 

@@ -74,6 +74,6 @@ describe('funnelController.processRequest', () => {
 
     return should(res).rejectedWith(
       PluginImplementationError,
-      { errorName: 'plugin.runtime.unexpected_error' });
+      { id: 'plugin.runtime.unexpected_error' });
   });
 });

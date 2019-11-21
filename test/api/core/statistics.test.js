@@ -148,12 +148,12 @@ describe('Test: statistics core component', () => {
     request.input.args.startTime = lastFrame - 1000;
     request.input.args.stopTime = new Date(new Date().getTime() + 100000);
 
-    kuzzle.services.list.internalCache.searchKeys.resolves([
+    kuzzle.cacheEngine.internal.searchKeys.resolves([
       '{stats/}' + lastFrame,
       '{stats/}'.concat(lastFrame + 100)
     ]);
 
-    kuzzle.services.list.internalCache.mget.resolves([
+    kuzzle.cacheEngine.internal.mget.resolves([
       JSON.stringify(fakeStats),
       JSON.stringify(fakeStats)
     ]);
@@ -186,11 +186,11 @@ describe('Test: statistics core component', () => {
     stats.lastFrame = lastFrame;
     request.input.args.stopTime = lastFrame + 1000;
 
-    kuzzle.services.list.internalCache.searchKeys.resolves([
+    kuzzle.cacheEngine.internal.searchKeys.resolves([
       '{stats/}' + lastFrame,
       '{stats/}'.concat(lastFrame + 100)
     ]);
-    kuzzle.services.list.internalCache.mget.resolves([
+    kuzzle.cacheEngine.internal.mget.resolves([
       JSON.stringify(fakeStats),
       JSON.stringify(fakeStats)
     ]);
@@ -213,7 +213,7 @@ describe('Test: statistics core component', () => {
 
   it('should get the last frame from the cache when statistics snapshots have been taken', () => {
     stats.lastFrame = lastFrame;
-    kuzzle.services.list.internalCache.get.resolves(JSON.stringify(fakeStats));
+    kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(fakeStats));
 
     stats.getLastStats()
       .then(response => {
@@ -242,11 +242,11 @@ describe('Test: statistics core component', () => {
   it('should return all saved statistics', () => {
     stats.lastFrame = lastFrame;
 
-    kuzzle.services.list.internalCache.searchKeys.resolves([
+    kuzzle.cacheEngine.internal.searchKeys.resolves([
       '{stats/}' + lastFrame,
       '{stats/}'.concat(lastFrame + 100)
     ]);
-    kuzzle.services.list.internalCache.mget.resolves([
+    kuzzle.cacheEngine.internal.mget.resolves([
       JSON.stringify(fakeStats),
       JSON.stringify(fakeStats)
     ]);
@@ -270,7 +270,7 @@ describe('Test: statistics core component', () => {
   it('should write statistics frames in cache', () => {
     const writeStats = Statistics.__get__('writeStats');
 
-    kuzzle.services.list.internalCache.setex.resolves();
+    kuzzle.cacheEngine.internal.setex.resolves();
 
     stats.currentStats = _.extend({}, fakeStats);
 
@@ -278,7 +278,7 @@ describe('Test: statistics core component', () => {
 
     should(stats.currentStats.completedRequests).be.empty();
     should(stats.currentStats.failedRequests).be.empty();
-    should(kuzzle.services.list.internalCache.setex)
+    should(kuzzle.cacheEngine.internal.setex)
       .calledOnce()
       .calledWith('{stats/}' + stats.lastFrame, stats.ttl, JSON.stringify(fakeStats));
   });
@@ -286,9 +286,8 @@ describe('Test: statistics core component', () => {
   it('should reject the promise if the cache returns an error', () => {
     stats.lastFrame = Date.now();
 
-    kuzzle.services.list.internalCache.get.rejects(new Error());
+    kuzzle.cacheEngine.internal.get.rejects(new Error());
 
     return should(stats.getLastStats(request)).be.rejected();
   });
 });
-

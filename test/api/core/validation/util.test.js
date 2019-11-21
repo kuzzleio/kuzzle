@@ -183,7 +183,7 @@ describe('Test: validation utilities', () => {
 
       should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).throw(BadRequestError, { errorName: 'validation.check.failed_field' });
+      }).throw(BadRequestError, { id: 'validation.check.failed_field' });
     });
 
     it('should add a message at the begining of the errorHolder when verbose is false and context is document', () => {
@@ -195,7 +195,7 @@ describe('Test: validation utilities', () => {
 
       should(() => {
         manageErrorMessage(context, errorHolder, message, verbose);
-      }).throw(BadRequestError, { errorName: 'validation.check.failed_document' });
+      }).throw(BadRequestError, { id: 'validation.check.failed_document' });
     });
 
     it('should add a message in the errorHolder in a verbose way when verbose is true and context is not document', () => {
@@ -345,19 +345,19 @@ describe('Test: validation utilities', () => {
 
     it('should return the default configuration if nothing is returned from internal engine', () => {
       kuzzle.config.validation = genericMock;
-      kuzzle.internalEngine.search.resolves({hits: []});
+      kuzzle.internalIndex.search.resolves({hits: []});
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
           should(result).be.deepEqual(kuzzle.config.validation);
-          should(kuzzle.internalEngine.search.callCount).be.eql(1);
-          should(kuzzle.internalEngine.search.args[0][0]).be.eql('validations');
+          should(kuzzle.internalIndex.search.callCount).be.eql(1);
+          should(kuzzle.internalIndex.search.args[0][0]).be.eql('validations');
         });
     });
 
     it('should return an empty object if nothing is returned from internal engine and there is no configuration', () => {
       delete kuzzle.config.validation;
-      kuzzle.internalEngine.search.resolves({hits: []});
+      kuzzle.internalIndex.search.resolves({hits: []});
 
       return getValidationConfiguration(kuzzle)
         .then(result => {
@@ -370,6 +370,7 @@ describe('Test: validation utilities', () => {
         internalEngineResponse = {
           hits: [
             {
+              _id: 'anIndex#aCollection',
               _source: {
                 index: 'anIndex',
                 collection: 'aCollection',
@@ -377,6 +378,7 @@ describe('Test: validation utilities', () => {
               }
             },
             {
+              _id: 'anIndex#anotherCollection',
               _source: {
                 index: 'anIndex',
                 collection: 'anotherCollection',
@@ -384,6 +386,7 @@ describe('Test: validation utilities', () => {
               }
             },
             {
+              _id: 'anotherIndex#aCollection',
               _source: {
                 index: 'anotherIndex',
                 collection: 'aCollection',
@@ -391,6 +394,7 @@ describe('Test: validation utilities', () => {
               }
             },
             {
+              _id: 'anotherIndex#anotherCollection',
               _source: {
                 index: 'anotherIndex',
                 collection: 'anotherCollection',
@@ -410,7 +414,7 @@ describe('Test: validation utilities', () => {
           }
         };
 
-      kuzzle.internalEngine.search.resolves(internalEngineResponse);
+      kuzzle.internalIndex.search.resolves(internalEngineResponse);
 
       return getValidationConfiguration(kuzzle)
         .then(result => {

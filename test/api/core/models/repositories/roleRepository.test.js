@@ -224,7 +224,7 @@ describe('Test: repositories/roleRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(BadRequestError);
-          should(e.errorName).eql('security.role.cannot_delete');
+          should(e.id).eql('security.role.cannot_delete');
           should(kuzzle.emit).not.be.called();
           done();
         })
@@ -247,7 +247,7 @@ describe('Test: repositories/roleRepository', () => {
         })
         .catch(e => {
           should(e).be.an.instanceOf(PreconditionError);
-          should(e.errorName).eql('security.role.in_use');
+          should(e.id).eql('security.role.in_use');
           should(kuzzle.emit).not.be.called();
           done();
         })
@@ -302,7 +302,6 @@ describe('Test: repositories/roleRepository', () => {
       should(result.controllers).match(controllers);
       should(result).not.have.property('_id');
       should(result).not.have.property('restrictedTo');
-      should(result).not.have.property('closures');
     });
   });
 
@@ -420,11 +419,13 @@ describe('Test: repositories/roleRepository', () => {
           }
         },
         role = new Role();
+
       role._id = 'test';
       role.controllers = controllers;
+      roleRepository.indexStorage._storageEngine.get.resolves({});
 
       roleRepository.persistToDatabase = sinon.stub().resolves();
-
+      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
       return roleRepository.validateAndSaveRole(role)
         .then(() => {
           should(roleRepository.persistToDatabase)
@@ -432,7 +433,9 @@ describe('Test: repositories/roleRepository', () => {
             .be.calledWith(role);
           should(kuzzle.emit)
             .be.calledOnce()
-            .be.calledWith('core:roleRepository:save', {_id: 'test', controllers: controllers});
+            .be.calledWith(
+              'core:roleRepository:save',
+              { _id: 'test', controllers: controllers });
         });
     });
   });

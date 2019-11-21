@@ -5,12 +5,14 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
   {
-    BadRequestError,
-    NotFoundError,
-    SizeLimitError
-  } = require('kuzzle-common-objects').errors,
+    Request,
+    errors: {
+      BadRequestError,
+      NotFoundError,
+      SizeLimitError
+    }
+  } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - profiles', () => {
@@ -22,8 +24,8 @@ describe('Test: security controller - profiles', () => {
   beforeEach(() => {
     request = new Request({controller: 'security'});
     kuzzle = new KuzzleMock();
-    kuzzle.internalEngine.get.resolves({});
-    kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {profiles: {properties: {}}}}});
+    kuzzle.internalIndex.get.resolves({});
+    kuzzle.internalIndex.getMapping.resolves({internalIndex: {mappings: {profiles: {properties: {}}}}});
     kuzzle.repositories.profile.getProfileFromRequest.resolves();
     securityController = new SecurityController(kuzzle);
   });
@@ -34,15 +36,17 @@ describe('Test: security controller - profiles', () => {
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
         securityController.updateProfileMapping(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should update the profile mapping', () => {
+      kuzzle.internalIndex.updateMapping.resolves(foo);
       request.input.body = foo;
+
       return securityController.updateProfileMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('profiles', request.input.body);
+          should(kuzzle.internalIndex.updateMapping).be.calledOnce();
+          should(kuzzle.internalIndex.updateMapping).be.calledWith('profiles', request.input.body);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -52,22 +56,34 @@ describe('Test: security controller - profiles', () => {
 
   describe('#getProfileMapping', () => {
     it('should fulfill with a response object', () => {
+      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+
       return securityController.getProfileMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'profiles'});
+          should(kuzzle.internalIndex.getMapping)
+            .be.calledOnce()
+            .be.calledWith('profiles');
 
           should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });
 
   describe('#createOrReplaceProfile', () => {
     it('should resolve to an object on a createOrReplaceProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
+        _id: 'test',
+        _source: {}
+      });
 
-      return securityController.createOrReplaceProfile(new Request({_id: 'test', body: {policies: [{roleId: 'role1'}]}}))
+      return securityController
+        .createOrReplaceProfile(new Request({
+          _id: 'test',
+          body: {
+            policies: [{ roleId: 'role1' }]
+          }
+        }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -85,15 +101,19 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
-
-      return securityController.createOrReplaceProfile(new Request({
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
         _id: 'test',
-        body: {
-          policies: [{roleId: 'role1'}]
-        },
-        refresh: 'wait_for'
-      }))
+        _source: {}
+      });
+
+      return securityController
+        .createOrReplaceProfile(new Request({
+          _id: 'test',
+          body: {
+            policies: [{roleId: 'role1'}]
+          },
+          refresh: 'wait_for'
+        }))
         .then(() => {
           should(kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1])
             .match({
@@ -105,32 +125,32 @@ describe('Test: security controller - profiles', () => {
     it('should throw if an invalid profile format is provided', () => {
       request = new Request({});
       should(() => securityController.createOrReplaceProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+        .throw(BadRequestError, { id: 'api.assert.body_required' });
 
       request = new Request({body: {}});
       should(() => securityController.createOrReplaceProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "body.policies".'
         });
 
       request = new Request({body: {policies: 'foobar'}});
       should(() => securityController.createOrReplaceProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.invalid_type',
+          id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "body.policies" (expected: array)'
         });
 
       request = new Request({body: {policies: []}});
       should(() => securityController.createOrReplaceProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
         });
 
       request = new Request({_id: '_foobar', body: {policies: []}});
       should(() => securityController.createOrReplaceProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_id' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_id' });
     });
   });
 
@@ -145,7 +165,10 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object on a createProfile call', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
+        _id: 'test',
+        _source: {}
+      });
 
       return should(securityController.createProfile(new Request({_id: 'test', body: {policies: [{roleId:'role1'}]}})))
         .be.fulfilled();
@@ -157,58 +180,61 @@ describe('Test: security controller - profiles', () => {
           _id: 'badTest',
           body: { roleId: 'test', policies: 'not-an-array-roleIds' }
         }));
-      }).throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+      }).throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should forward refresh option', () => {
-      kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test', _source: {}, _meta: {}});
-
-      return securityController.createProfile(new Request({
+      kuzzle.repositories.profile.validateAndSaveProfile.resolves({
         _id: 'test',
-        body: {
-          policies: [{roleId:'role1'}]
-        },
-        refresh: 'wait_for'
-      }))
-        .then(() => {
-          const options = kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1];
+        _source: {}
+      });
 
-          should(options)
-            .match({
-              refresh: 'wait_for'
-            });
+      return securityController
+        .createProfile(new Request({
+          _id: 'test',
+          body: {
+            policies: [{roleId:'role1'}]
+          },
+          refresh: 'wait_for'
+        }))
+        .then(() => {
+          const options = kuzzle.repositories.profile.validateAndSaveProfile
+            .firstCall
+            .args[1];
+
+          should(options).match({ refresh: 'wait_for' });
         });
     });
 
     it('should throw if an invalid profile format is provided', () => {
       request = new Request({});
       should(() => securityController.createProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.body_required' });
+        .throw(BadRequestError, { id: 'api.assert.body_required' });
 
       request = new Request({body: {}});
       should(() => securityController.createProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "body.policies".'
         });
 
       request = new Request({body: {policies: 'foobar'}});
       should(() => securityController.createProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.invalid_type',
+          id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "body.policies" (expected: array)'
         });
 
       request = new Request({body: {policies: []}});
       should(() => securityController.createProfile(request))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
         });
 
       request = new Request({_id: '_foobar', body: {policies: []}});
       should(() => securityController.createProfile(request))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_id' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_id' });
     });
   });
 
@@ -216,8 +242,7 @@ describe('Test: security controller - profiles', () => {
     it('should resolve to an object on a getProfile call', () => {
       kuzzle.repositories.profile.load.resolves({
         _id: 'test',
-        _source: {},
-        _meta: {}
+        _source: {}
       });
 
       return securityController.getProfile(new Request({_id: 'test'}))
@@ -230,7 +255,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error on a getProfile call without id', () => {
       return should(() => {
         securityController.getProfile(new Request({_id: ''}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject NotFoundError on a getProfile call with a bad id', () => {
@@ -244,7 +269,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error on a mGetProfiles call without ids', () => {
       return should(() => {
         securityController.mGetProfiles(new Request({body: {}}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject with an object in case of error', () => {
@@ -271,11 +296,14 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should resolve to an object with roles on a mGetProfiles call with hydrate', () => {
-      kuzzle.repositories.profile.loadMultiFromDatabase.resolves([{_id: 'test', _source: {}, _meta: {}}]);
+      kuzzle.repositories.profile.loadMultiFromDatabase.resolves([
+        { _id: 'test', _source: {} }
+      ]);
 
-      return securityController.mGetProfiles(new Request({
-        body: {ids: ['test'], hydrate: true}
-      }))
+      return securityController
+        .mGetProfiles(new Request({
+          body: { ids: ['test'], hydrate: true }
+        }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
@@ -319,7 +347,6 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
-          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.searchProfiles).be.calledWithMatch(['role1'], {});
@@ -334,7 +361,7 @@ describe('Test: security controller - profiles', () => {
       request.input.args.size = 10;
 
       return should(() => securityController.searchProfiles(request))
-        .throw(SizeLimitError, { errorName: 'services.storage.get_limit_exceeded' });
+        .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -349,7 +376,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw if no scrollId is provided', () => {
       should(() => securityController.scrollProfiles(new Request({controller: 'security', action: 'scrollProfiles'})))
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "scrollId".'
         });
     });
@@ -370,7 +397,6 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
-          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', undefined);
@@ -393,7 +419,6 @@ describe('Test: security controller - profiles', () => {
           should(response.hits[0]._id).be.exactly('test');
           should(response.hits[0]._source.policies).be.an.Array();
           should(response.hits[0]._source.policies[0].roleId).be.exactly('default');
-          should(response.hits[0]._meta).be.instanceof(Object);
           should(response.total).be.eql(1);
           should(response.scrollId).be.eql('foobar');
           should(kuzzle.repositories.profile.scroll).be.calledWithMatch('foobar', '4s');
@@ -420,7 +445,7 @@ describe('Test: security controller - profiles', () => {
       return should(() => {
         securityController.updateProfile(new Request({body: {}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });
     });
@@ -428,7 +453,7 @@ describe('Test: security controller - profiles', () => {
     it('should throw an error if no body is given', () => {
       return should(() => {
         securityController.updateProfile(new Request({_id: 'foobar'}));
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should forward refresh option', () => {
@@ -460,7 +485,7 @@ describe('Test: security controller - profiles', () => {
       body: {},
       action: 'updateProfile'
     })))
-      .be.rejectedWith(NotFoundError, { errorName: 'security.profile.not_found' });
+      .be.rejectedWith(NotFoundError, { id: 'security.profile.not_found' });
   });
 
   describe('#deleteProfile', () => {
@@ -528,7 +553,7 @@ describe('Test: security controller - profiles', () => {
       return should(() => {
         securityController.getProfileRights(new Request({_id: ''}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });
     });
@@ -537,7 +562,7 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.load.resolves(null);
 
       return should(securityController.getProfileRights(new Request({_id: 'test'})))
-        .rejectedWith(NotFoundError, { errorName: 'security.profile.not_found' });
+        .rejectedWith(NotFoundError, { id: 'security.profile.not_found' });
     });
   });
 

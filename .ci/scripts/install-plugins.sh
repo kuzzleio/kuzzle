@@ -11,9 +11,8 @@ for target in ${plugins_dir}/* ${protocols_dir}/* ; do
   if [ -d "$target" ]; then
     echo 'Installing dependencies for ' $(basename "$target")
     cd "$target"
-    npm ci --silent --unsafe-perm
-    find -L node_modules/.bin -type f -exec chmod 776 {} \;
-    find node_modules/ -type d -exec chmod 755 {} \;
+    npm install --silent --unsafe-perm
+    chmod -R 777 node_modules/
     cd "$working_dir"
   fi
 done

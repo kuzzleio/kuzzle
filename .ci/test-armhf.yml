@@ -1,13 +1,8 @@
 version: '3'
 
 services:
-  proxy:
-    image: kuzzleio/proxy${DOCKER_PROXY_TAG}
-    environment:
-      - proxy_port=7513
-
   kuzzle:
-    image: kuzzleio/core-dev-armhf
+    image: kuzzleio/core-dev-armhf:2
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
@@ -16,22 +11,20 @@ services:
     cap_add:
       - SYS_PTRACE
     depends_on:
-      - proxy
       - redis
       - elasticsearch
     environment:
-      - kuzzle_services__db__client__host=http://elasticsearch:9200
+      - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+      - kuzzle_services__storageEngine__commonMapping__dynamic=true
+      - kuzzle_services__storageEngine__internalIndex__collections__users__dynamic=true
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
-      - kuzzle_server__entryPoints__proxy=true
-      - kuzzle_server__proxy__host=proxy
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=production
       - DEBUG=
-      - CUCUMBER_EMBEDDED_HOST=localhost
-      - CUCUMBER_PROXY_HOST=proxy
-      - NODE_LTS=${NODE_LTS:-8}
+      - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
+      - KUZZLE_VAULT_KEY=secret-password
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT
@@ -42,12 +35,9 @@ services:
       - TRAVIS_REPO_SLUG
 
   redis:
-    image: redis:${REDIS_VERSION:-5}
+    image: redis:5
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:5.6.10
+    image: kuzzleio/elasticsearch:7.4.0
     ulimits:
       nofile: 65536
-    environment:
-      - cluster.name=kuzzle
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"

@@ -81,6 +81,12 @@
           "code": 13,
           "message": "Invalid filters validator: %s",
           "class": "BadRequestError"
+        },
+        "incorrect_validation_format": {
+          "description": "The Koncorde filters provided as a validator are invalid",
+          "code": 14,
+          "message": "Incorrect validation format stored for collection \"%s\": missing \"%s\" property.",
+          "class": "InternalError"
         }
       }
     },

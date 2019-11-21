@@ -531,16 +531,16 @@ describe('Test: validation/types/geoShape', () => {
 
     it('should throw if a shape type is not recognized', () => {
       should(() => geoShapeType.validateFieldSpecification({shapeTypes: ['circle', 'multipolygon', 'invalid']}))
-        .throw(PreconditionError, { errorName: 'validation.types.invalid_geoshape' });
+        .throw(PreconditionError, { id: 'validation.types.invalid_geoshape' });
 
       should(() => geoShapeType.validateFieldSpecification({shapeTypes: ['invalid', 'circle', 'foo', 'multipolygon', 'bar']}))
-        .throw(PreconditionError, { errorName: 'validation.types.invalid_geoshape' });
+        .throw(PreconditionError, { id: 'validation.types.invalid_geoshape' });
     });
 
     it('should throw if the provided shapeTypes list is empty or not an array', () => {
       [[], null, undefined, 'foo', 123].forEach(t => {
         should(() => geoShapeType.validateFieldSpecification({shapeTypes: t}))
-          .throw(PreconditionError, { errorName: 'validation.assert.invalid_type' });
+          .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
       });
     });
   });

@@ -18,9 +18,28 @@ describe('#errorsManager', () => {
       .throw(
         ExternalServiceError,
         {
-          errorName: 'core.fatal.service_unavailable',
+          id: 'core.fatal.service_unavailable',
           code: parseInt('00000002', 16),
           message: 'Service unavailable: {"status":"red"}.'
+        }
+      );
+  });
+
+  it('should allow to override original message', () => {
+    should(() => {
+      errorsManager.throw(
+        'core',
+        'fatal',
+        'service_unavailable',
+        'Lambda Core',
+        { message: 'Anomalous Materials' });
+    })
+      .throw(
+        ExternalServiceError,
+        {
+          id: 'core.fatal.service_unavailable',
+          code: parseInt('00000002', 16),
+          message: 'Anomalous Materials'
         }
       );
   });
@@ -30,7 +49,7 @@ describe('#errorsManager', () => {
       .throw(
         InternalError,
         {
-          errorName: 'core.fatal.unexpected_error',
+          id: 'core.fatal.unexpected_error',
           code: parseInt('00000001', 16),
           message: 'Caught an unexpected error: {"status":"error"}.'
         }
@@ -42,7 +61,7 @@ describe('#errorsManager', () => {
       .throw(
         NotFoundError,
         {
-          errorName: 'services.storage.not_found',
+          id: 'services.storage.not_found',
           code: parseInt('0101000b', 16),
           message: 'Document "fake_id" not found.'
         }
@@ -54,7 +73,7 @@ describe('#errorsManager', () => {
       .throw(
         PreconditionError,
         {
-          errorName: 'services.storage.unknown_index',
+          id: 'services.storage.unknown_index',
           code: parseInt('01010001', 16),
           message: 'The index "foo" does not exist.'
         }
@@ -66,7 +85,7 @@ describe('#errorsManager', () => {
       .throw(
         UnauthorizedError,
         {
-          errorName: 'security.token.invalid',
+          id: 'security.token.invalid',
           code: parseInt('07010001', 16),
           message: 'Invalid token.'
         }
@@ -78,7 +97,7 @@ describe('#errorsManager', () => {
       .throw(
         PartialError,
         {
-          errorName: 'services.storage.import_failed',
+          id: 'services.storage.import_failed',
           errors: ['foo', 'bar'],
           count: 2,
           code: parseInt('01010005', 16),

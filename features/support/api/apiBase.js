@@ -28,6 +28,15 @@ class ApiBase {
     throw new Error('not implemented');
   }
 
+  adminResetDatabase () {
+    const msg = {
+      controller: 'admin',
+      action: 'resetDatabase'
+    };
+
+    return this.send(msg);
+  }
+
   serverPublicApi () {
     const msg = {
       controller: 'server',
@@ -166,7 +175,8 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'create',
-        body
+        body,
+        refresh: 'wait_for'
       };
 
     if (id) {
@@ -193,13 +203,14 @@ class ApiBase {
     return this.send(msg);
   }
 
-  createCollection (index, collection) {
+  createCollection (index, collection, mappings) {
     const
       msg = {
         controller: 'collection',
         action: 'create',
-        index,
-        collection
+        index: index || this.world.fakeIndex,
+        collection,
+        body: mappings
       };
 
     return this.send(msg);
@@ -542,14 +553,6 @@ class ApiBase {
     });
   }
 
-  getAutoRefresh (index) {
-    return this.send({
-      index: index,
-      controller: 'index',
-      action: 'getAutoRefresh'
-    });
-  }
-
   getCredentials (strategy, userId) {
     return this.send({
       controller: 'security',
@@ -722,17 +725,6 @@ class ApiBase {
     });
   }
 
-  globalBulkImport (bulk) {
-    const
-      msg = {
-        controller: 'bulk',
-        action: 'import',
-        body: {bulkData: bulk}
-      };
-
-    return this.send(msg);
-  }
-
   hasCredentials (strategy, userId) {
     return this.send({
       controller: 'security',
@@ -758,6 +750,18 @@ class ApiBase {
       controller: 'index',
       action: 'exists'
     });
+  }
+
+  refreshCollection (index, collection) {
+    const
+      msg = {
+        controller: 'collection',
+        action: 'refresh',
+        index: index || this.world.fakeIndex,
+        collection: collection || this.world.fakeCollection
+      };
+
+    return this.send(msg);
   }
 
   listCollections (index, type) {
@@ -961,21 +965,6 @@ class ApiBase {
     return this.send(msg);
   }
 
-  refreshIndex (index) {
-    return this.send({
-      index: index,
-      controller: 'index',
-      action: 'refresh'
-    });
-  }
-
-  refreshInternalIndex () {
-    return this.send({
-      controller: 'index',
-      action: 'refreshInternal'
-    });
-  }
-
   refreshToken () {
     return this.send({
       controller: 'auth',
@@ -1131,17 +1120,6 @@ class ApiBase {
     }
 
     return this.send(msg);
-  }
-
-  setAutoRefresh (index, autoRefresh) {
-    return this.send({
-      index: index,
-      controller: 'index',
-      action: 'setAutoRefresh',
-      body: {
-        autoRefresh: autoRefresh
-      }
-    });
   }
 
   subscribe (filters, client, authentified = false) {

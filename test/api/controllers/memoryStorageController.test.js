@@ -12,7 +12,7 @@ const
   } = require('kuzzle-common-objects'),
   MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js');
 
-describe('Test: memoryStorage controller', () => {
+describe('MemoryStorageController', () => {
   let
     msController,
     called,
@@ -79,7 +79,7 @@ describe('Test: memoryStorage controller', () => {
     });
 
     kuzzle = new KuzzleMock();
-    kuzzle.services.list.memoryStorage = new RedisClientMock();
+    kuzzle.cacheEngine.public = new RedisClientMock();
   });
 
   beforeEach(() => {
@@ -233,10 +233,10 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForSet(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
       req.input.body.value = { foo: 'bar' };
       should(() => extractArgumentsFromRequestForSet(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should throw if NX and XX are set together', () => {
@@ -251,7 +251,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForSet(req))
-        .throw(BadRequestError, { errorName: 'api.assert.mutually_exclusive'});
+        .throw(BadRequestError, { id: 'api.assert.mutually_exclusive'});
     });
 
     it('should throw if EX and PX are set together', () => {
@@ -266,7 +266,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForSet(req))
-        .throw(BadRequestError, { errorName: 'api.assert.mutually_exclusive'});
+        .throw(BadRequestError, { id: 'api.assert.mutually_exclusive'});
     });
   });
 
@@ -282,7 +282,7 @@ describe('Test: memoryStorage controller', () => {
       const req = new Request({});
 
       should(() => extractArgumentsFromRequestForSort(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it ('should handle the request if no optional parameter is given', () => {
@@ -326,23 +326,23 @@ describe('Test: memoryStorage controller', () => {
       });
 
       should(() => extractArgumentsFromRequestForSort(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.limit = [10];
       should(() => extractArgumentsFromRequestForSort(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.limit = [10, 'foo'];
       should(() => extractArgumentsFromRequestForSort(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.limit = [null, 20];
       should(() => extractArgumentsFromRequestForSort(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.limit = [10, [20]];
       should(() => extractArgumentsFromRequestForSort(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should throw if an invalid direction parameter is provided', () => {
@@ -354,7 +354,7 @@ describe('Test: memoryStorage controller', () => {
       });
 
       should(() => extractArgumentsFromRequestForSort(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.direction = 'asc';
       should(() => extractArgumentsFromRequestForSort(req)).not.throw();
@@ -417,7 +417,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should throw if an invalid or missing elements parameter is provided', () => {
@@ -432,27 +432,27 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument'});
+        .throw(BadRequestError, { id: 'api.assert.missing_argument'});
 
       req.input.body.elements = { score: 1, member: 'm1' };
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.elements = [];
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.empty_argument' });
+        .throw(BadRequestError, { id: 'api.assert.empty_argument' });
 
       req.input.body.elements = [{ score: 1}];
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
 
       req.input.body.elements = [{ member: 'm1'}];
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.elements = [{ score: 'foo', member: 'm1'}];
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.elements = [{ score: 1.23, member: 'm1'}];
       should(() => extractArgumentsFromRequestForZAdd(req)).not.throw(BadRequestError);
@@ -475,7 +475,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.mutually_exclusive' });
+        .throw(BadRequestError, { id: 'api.assert.mutually_exclusive' });
     });
 
     it('should throw if multiple elements are provided with the INCR option set', () => {
@@ -492,7 +492,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.too_many_arguments' });
+        .throw(BadRequestError, { id: 'api.assert.too_many_arguments' });
     });
   });
 
@@ -551,15 +551,15 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZInterstore(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.keys = [];
       should(() => extractArgumentsFromRequestForZInterstore(req))
-        .throw(BadRequestError, { errorName: 'api.assert.empty_argument' });
+        .throw(BadRequestError, { id: 'api.assert.empty_argument' });
 
       delete req.input.body.keys;
       should(() => extractArgumentsFromRequestForZInterstore(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should throw if no id is provided', () => {
@@ -571,7 +571,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZInterstore(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument'});
+        .throw(BadRequestError, { id: 'api.assert.missing_argument'});
     });
 
     it('should throw if an invalid aggregate parameter is provided', () => {
@@ -585,7 +585,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZInterstore(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.aggregate = 'min';
       should(() => extractArgumentsFromRequestForZInterstore(req)).not.throw();
@@ -608,7 +608,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => extractArgumentsFromRequestForZInterstore(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should add weights only if the provided array is not empty', () => {
@@ -671,7 +671,7 @@ describe('Test: memoryStorage controller', () => {
       });
 
       should(() => msController.expire(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('custom mapping checks - geoadd', () => {
@@ -682,35 +682,35 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
 
       req.input.body.points = [];
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.empty_argument' });
+        .throw(BadRequestError, { id: 'api.assert.empty_argument' });
 
       req.input.body.points = ['foo'];
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.points = [{name: 'foo', lon: '13.361389'}];
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.points = [{name: 'foo', lat: '38.115556'}];
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.points = [{lon: '13.361389', lat: '38.115556'}];
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.points = [{name: 'foo', lon: 'foo', lat: '38.115556'}];
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.points = [{name: 'foo', lon: '13.361389', lat: 'bar'}];
       should(() => msController.geoadd(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.points = [
         {name: 'palermo', lon: '13.361389', lat: '38.115556'},
@@ -831,19 +831,19 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => msController.hmset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
 
       req.input.body.entries = {};
       should(() => msController.hmset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.entries = [{field: 'foo'}];
       should(() => msController.hmset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument'});
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument'});
 
       req.input.body.entries = [{value: 'foo'}];
       should(() => msController.hmset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.entries = [
         {field: 'foo', value: 'bar'},
@@ -885,23 +885,23 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => msController.mset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
 
       req.input.body.entries = {};
       should(() => msController.mset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.body.entries = ['foobar'];
       should(() => msController.mset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.entries = [{key: 'foo'}];
       should(() => msController.mset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.entries = [{value: 'foo'}];
       should(() => msController.mset(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.body.entries = [
         {key: 'key1', value: 'value1'},
@@ -924,12 +924,12 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => msController.scan(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.args.match = 'foobar';
       req.input.args.count = 'foobar';
       should(() => msController.scan(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.args.count = 3;
 
@@ -949,12 +949,12 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => msController.sscan(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.args.match = 'foobar';
       req.input.args.count = 'foobar';
       should(() => msController.sscan(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_type' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
       req.input.args.count = 3;
 
@@ -1043,7 +1043,7 @@ describe('Test: memoryStorage controller', () => {
         });
 
       should(() => msController.zrangebylex(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
       req.input.args.limit = [10, 20];
 
       return msController.zrangebylex(req)
@@ -1062,7 +1062,7 @@ describe('Test: memoryStorage controller', () => {
           });
 
           should(() => msController.zrevrangebylex(zrevrangeRequest))
-            .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+            .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
           zrevrangeRequest.input.args.limit = '10,20';
 
@@ -1097,7 +1097,7 @@ describe('Test: memoryStorage controller', () => {
         ];
 
       should(() => msController.zrangebyscore(req))
-        .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+        .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
       req.input.args.limit = [10, 20];
 
@@ -1118,7 +1118,7 @@ describe('Test: memoryStorage controller', () => {
           });
 
           should(() => msController.zrevrangebyscore(zrevrangebyscore))
-            .throw(BadRequestError, { errorName: 'api.assert.invalid_argument' });
+            .throw(BadRequestError, { id: 'api.assert.invalid_argument' });
 
           zrevrangebyscore.input.args.limit = [10, 20];
 

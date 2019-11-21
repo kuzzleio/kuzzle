@@ -127,16 +127,5 @@ describe('Test: routerController', () => {
       });
       should(routerController.isConnectionAlive(context)).be.true();
     });
-
-    it('should always return true for request coming from the proxy', () => {
-      const context = new RequestContext({
-        connection: {
-          id: 'foobar',
-          protocol: 'foobar',
-          proxy: true
-        }
-      });
-      should(routerController.isConnectionAlive(context)).be.true();
-    });
   });
 });

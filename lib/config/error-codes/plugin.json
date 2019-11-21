@@ -323,6 +323,12 @@
           "code": 9,
           "message": "[%s] No \"name\" property provided in package.json.",
           "class": "PluginImplementationError"
+        },
+        "missing_version": {
+          "description": "Plugin manifest files must provide a kuzzleVersion parameter, with the range of compatible Kuzzle versions",
+          "code": 10,
+          "message": "[%s] A \"kuzzleVersion\" property is required",
+          "class": "PluginImplementationError"
         }
       }
     },

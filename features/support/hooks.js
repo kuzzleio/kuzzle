@@ -5,7 +5,6 @@ const
   minimist = require('minimist'),
   {
     After,
-    AfterAll,
     Before,
     BeforeAll
   } = require('cucumber'),
@@ -13,8 +12,7 @@ const
   Http = require('./api/http'),
   World = require('./world');
 
-// before first
-BeforeAll(function () {
+function bootstrapDatabase () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
     promises = [],
@@ -25,20 +23,20 @@ BeforeAll(function () {
     promises.push(() => http.deleteIndex(index)
       .catch(() => true));
   }
+  const mappings = { dynamic: 'true', properties: { foo: { type: 'keyword' } } };
 
   promises.push(() => http.createIndex(world.fakeIndex));
-  promises.push(() => http.createCollection(world.fakeIndex, world.fakeCollection));
-  promises.push(() => http.createCollection(world.fakeIndex, world.fakeAltCollection));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeCollection, mappings));
+  promises.push(() => http.createCollection(world.fakeIndex, world.fakeAltCollection, mappings));
 
   promises.push(() => http.createIndex(world.fakeAltIndex));
-  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeCollection));
-  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeCollection, mappings));
+  promises.push(() => http.createCollection(world.fakeAltIndex, world.fakeAltCollection, mappings));
 
   return Bluebird.each(promises, promise => promise());
-});
+}
 
-// after last
-AfterAll(function () {
+function cleanDatabase () {
   const
     promises = [],
     world = new World({parameters: parseWorldParameters()}),
@@ -47,20 +45,35 @@ AfterAll(function () {
   for (const index of [
     world.fakeIndex,
     world.fakeAltIndex,
-    world.fakeNewIndex
+    world.fakeNewIndex,
+    'tolkien'
   ]) {
     promises.push(http.deleteIndex(index)
       .catch(() => true));
-    promises.push(http.setAutoRefresh(index, false));
   }
 
   return Bluebird.all(promises);
+}
+
+// before first
+BeforeAll(function () {
+  return cleanDatabase()
+    .then(() => bootstrapDatabase());
 });
 
-Before(function () {
-  return this.api.truncateCollection()
-    .then(() => this.api.truncateCollection(this.fakeAltIndex))
-    .then(() => this.api.refreshIndex(this.fakeIndex));
+Before({ timeout: 10 * 1000 }, function () {
+  const world = new World({ parameters: parseWorldParameters() });
+
+  return this.api.truncateCollection(world.fakeIndex, world.fakeCollection)
+    .catch(() => {})
+    .then(() => this.api.truncateCollection(world.fakeAltIndex, world.fakeAltCollection))
+    .catch(() => {})
+    .then(() => this.api.resetSecurity());
+});
+
+Before({ timeout: 10 * 1000, tags: '@resetDatabase' }, async function () {
+  await cleanDatabase();
+  await bootstrapDatabase();
 });
 
 After(function () {
@@ -73,10 +86,6 @@ After({tags: '@realtime'}, function () {
 });
 
 Before({tags: '@security'}, function () {
-  return cleanSecurity.call(this);
-});
-
-After({tags: '@security'}, function () {
   return cleanSecurity.call(this);
 });
 
@@ -114,30 +123,7 @@ function cleanSecurity () {
     delete this.currentUser;
   }
 
-  return this.api.refreshInternalIndex()
-    .then(() => this.api.searchUsers({match_all: {}}, {from: 0, size: 999}))
-    .then(results => {
-      const regex = new RegExp('^' + this.idPrefix);
-      results = results.result.hits
-        .filter(r => r._id.match(regex))
-        .map(r => r._id);
-
-      return results.length > 0 ? this.api.deleteUsers(results, true) : Bluebird.resolve();
-    })
-    .then(() => this.api.searchProfiles({match_all: {}}, {from: 0, size: 999}))
-    .then(results => {
-      const regex = new RegExp('^' + this.idPrefix);
-      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-
-      return results.length > 0 ? this.api.deleteProfiles(results, true) : Bluebird.resolve();
-    })
-    .then(() => this.api.searchRoles({match_all: {}}, {from: 0, size: 999}))
-    .then(results => {
-      const regex = new RegExp('^' + this.idPrefix);
-      results = results.result.hits.filter(r => r._id.match(regex)).map(r => r._id);
-
-      return results.length > 0 ? this.api.deleteRoles(results, true) : Bluebird.resolve();
-    });
+  return this.api.resetSecurity();
 }
 
 function grantDefaultRoles () {

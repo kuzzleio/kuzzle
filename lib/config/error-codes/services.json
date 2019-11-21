@@ -46,22 +46,10 @@
           "message": "Cannot be run on multiple collections.",
           "class": "BadRequestError"
         },
-        "incomplete_fetch": {
-          "description": "Couldn't retrieve all the requested documents",
-          "code": 8,
-          "message": "Couldn't retrieve all the requested documents.",
-          "class": "PartialError"
-        },
         "incomplete_delete": {
           "description": "Couldn't delete all the requested documents",
           "code": 9,
           "message": "Couldn't delete all the requested documents: %s",
-          "class": "PartialError"
-        },
-        "incomplete_create": {
-          "description": "Couldn't create all the requested documents",
-          "code": 10,
-          "message": "Couldn't create all the requested documents: %s",
           "class": "PartialError"
         },
         "not_found": {
@@ -130,10 +118,10 @@
           "message": "Invalid mapping property \"mapping.%s\".%s",
           "class": "BadRequestError"
         },
-        "index_reserved": {
-          "description": "Index names starting with a \"%\" are reserved and cannot be used",
+        "collection_reserved": {
+          "description": "Collections cannot be named \"_kuzzle_keep\" because it is reserved for internal use.",
           "code": 22,
-          "message": "Indexes starting with a '%' are reserved for internal use. Cannot process index %s.",
+          "message": "Invalid collection name. \"%s\" is reserved for internal usage.",
           "class": "BadRequestError"
         },
         "no_routing": {
@@ -219,6 +207,24 @@
           "code": 37,
           "message": "No mapping found for index \"%s\".",
           "class": "NotFoundError"
+        },
+        "index_already_exists": {
+          "description": "Attempted to create an already existing index",
+          "code": 38,
+          "message": "A %s index named \"%s\" already exists",
+          "class": "PreconditionError"
+        },
+        "forbidden_character": {
+          "description": "An index or a collection name contains a forbidden character",
+          "code": 39,
+          "message": "An index or a collection name cannot contain the character \"%s\"",
+          "class": "BadRequestError"
+        },
+        "invalid_search_query": {
+          "description": "A forbidden argument has been provided in the search query",
+          "code": 40,
+          "message": "The argument \"%s\" is not allowed at this level of a search query.",
+          "class": "BadRequestError"
         }
       }
     },

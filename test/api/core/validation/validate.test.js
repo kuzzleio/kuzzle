@@ -337,19 +337,18 @@ describe('Test: validation.validate', () => {
           action: 'update',
           _id: 'foo'
         });
-
+      kuzzle.storageEngine.public.get.resolves({ _id: 'foo' });
       validation.specification = {};
 
       return validation.validate(request, verbose)
         .then(result => {
           should(result).be.eql(request);
-          should(kuzzle.services.list.storageEngine.get).calledOnce();
-          should(kuzzle.services.list.storageEngine.get.firstCall.args[0]).instanceOf(Request);
-          should(kuzzle.services.list.storageEngine.get.firstCall.args[0].input.resource).match({
+          should(kuzzle.storageEngine.public.get).be.calledOnce();
+          should(kuzzle.storageEngine.public.get).be.calledWith(
             index,
             collection,
-            _id: 'foo'
-          });
+            'foo'
+          );
         });
     });
   });
@@ -578,7 +577,7 @@ describe('Test: validation.validate', () => {
       typeValidateStub.returns(false);
 
       should(() => validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false))
-        .throw(BadRequestError, { errorName: 'validation.check.failed_field' });
+        .throw(BadRequestError, { id: 'validation.check.failed_field' });
     });
 
     it('should returns false in verbose mode', () => {
@@ -805,7 +804,7 @@ describe('Test: validation.validate', () => {
 
       should(() => {
         validation.isValidField('aField', documentSubset, collectionSubset, true, errorMessages, false);
-      }).throw(BadRequestError, { errorName: 'validation.check.failed_field' });
+      }).throw(BadRequestError, { id: 'validation.check.failed_field' });
     });
 
     it('should return false if one of the subfields throws an error in verbose mode', () => {

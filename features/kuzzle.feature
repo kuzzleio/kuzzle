@@ -1,28 +1,15 @@
 Feature: Kuzzle functional tests
 
+  Scenario: Admin reset database
+    When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
+    When I create a collection "kuzzle-test-index-alt":"kuzzle-collection-test-alt"
+    And I reset public database
+    Then I'm not able to find the index named "kuzzle-test-index" in index list
+    Then I'm not able to find the index named "kuzzle-test-index-alt" in index list
+
   Scenario: API method server:publicApi
     When I get the public API
     Then I have the definition of kuzzle and plugins controllers
-
-  Scenario: CLI: dump and restore index
-    And I create an index named "tolkien"
-    When I create a collection "tolkien":"noldor" with "5" documents
-    And I create a collection "tolkien":"angband" with "3" documents
-    And I refresh the index "tolkien"
-    And I use the CLI command 'indexDump tolkien ./index-dump'
-    Then A file "index-dump/tolkien--noldor--data.jsonl" exists
-    And A file "index-dump/tolkien--angband--data.jsonl" exists
-    And a file "index-dump/tolkien--noldor--data.jsonl" contain 6 documents
-    And a file "index-dump/tolkien--angband--data.jsonl" contain 4 documents
-    When I'm able to delete the index named "tolkien"
-    And I create an index named "tolkien"
-    When I create a collection "tolkien":"noldor"
-    And I create a collection "tolkien":"angband"
-    And I use the CLI command 'indexRestore ./index-dump'
-    And I refresh the index "tolkien"
-    Then I count 5 documents in index "tolkien":"noldor"
-    Then I count 3 documents in index "tolkien":"angband"
-    Then I'm able to delete the index named "tolkien"
 
   Scenario: Bulk mWrite
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
@@ -157,14 +144,9 @@ Feature: Kuzzle functional tests
     Then I update the document with value "foo" in field "firstName"
     Then my document has the value "foo" in field "firstName"
 
-  Scenario: Delete a document
-    When I write the document
-    Then I remove the document
-    Then I'm not able to get the document
-
   Scenario: Search a document
     When I write the document "documentGrace"
-    And I refresh the index
+    And I refresh the collection
     Then I find a document with "grace" in field "firstName"
     And I don't find a document with "grace" in field "firstName" in index "kuzzle-test-index-alt"
 
@@ -175,100 +157,19 @@ Feature: Kuzzle functional tests
   Scenario: Can't do a bulk import on internal index
     When I can't do a bulk import from index "%kuzzle"
 
-  Scenario: Global Bulk import
-    When I do a global bulk import
-    Then I can retrieve actions from bulk import
-
   Scenario: Truncate collection
     When I write the document
-    Then I refresh the index
+    Then I refresh the collection
     Then I truncate the collection
     Then I'm not able to get the document
-
-  Scenario: Count document
-    When I write the document "documentGrace"
-    When I write the document "documentAda"
-    When I write the document "documentGrace"
-    When I write the document "documentAda"
-    Then I count 4 documents
-    And I count 0 documents in index "kuzzle-test-index-alt"
-    And I count 2 documents with "NYC" in field "info.city"
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: delete multiple documents with no error
-    When I write the document "documentGrace" with id "Grace"
-    When I write the document "documentAda" with id "Ada"
-    Then I count 2 documents
-    Then I remove the documents '["Grace", "Ada"]'
-    And I count 0 documents
-
-  Scenario: delete multiple documents with partial errors
-    When I write the document "documentGrace" with id "Grace"
-    When I write the document "documentAda" with id "Ada"
-    Then I count 2 documents
-    Then I remove the documents '["Grace", "Ada", "Not exist"]' and get partial errors
-    And I count 0 documents
-
-  Scenario: create multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: replace multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I replace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: replace multiple documents with partial errors
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I replace multiple documents '{"Ada": "documentGrace", "Not Exist": "documentAda"}' and get partial errors
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: update multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I update multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: create and replace multiple documents
-    Then I count 0 documents
-    When I createOrReplace multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I createOrReplace multiple documents '{"Ada": "documentGrace", "Grace": "documentAda"}'
-    Then I count 2 documents
-    Then I truncate the collection
-    And I count 0 documents
-
-  Scenario: Checking that documents exist or not
-    When I write the document with id "documentGrace"
-    Then I check that the document "documentGrace" exists
-    Then I remove the document
-    Then I check that the document "documentGrace" doesn't exists
-
-  Scenario: get multiple documents
-    When I create multiple documents '{"Ada": "documentAda", "Grace": "documentGrace"}'
-    Then I count 2 documents
-    Then I get 2 documents '["Ada", "Grace"]'
-    Then I truncate the collection
-    And I count 0 documents
 
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     When I write the document "documentGrace"
     When I write the document "documentGrace"
-    And I refresh the index
-    Then I find a document with "Grace" in field "firstName" with scroll "5m"
+    And I refresh the collection
+    Then I find a document with "Grace" in field "firstName" with scroll "10s"
     And I am able to scroll previous search
 
   Scenario: Change mapping
@@ -276,7 +177,7 @@ Feature: Kuzzle functional tests
     Then I don't find a document with "Grace" in field "firstName"
     Then I change the mapping
     When I write the document "documentGrace"
-    And I refresh the index
+    And I refresh the collection
     Then I find a document with "Grace" in field "newFirstName"
 
   @realtime
@@ -363,7 +264,7 @@ Feature: Kuzzle functional tests
     Given A room subscription listening to "info.city" having value "NYC"
     When I write the document "documentGrace"
     And I write the document "documentAda"
-    And I refresh the index
+    And I refresh the collection
     Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a document notification with field action equal to "delete"
     And The notification should not have a "_source" member
@@ -407,11 +308,11 @@ Feature: Kuzzle functional tests
 
   Scenario: Index and collection existence
     When I check if index "%kuzzle" exists
-    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should match the json false
     When I check if index "idontexist" exists
     Then The result should match the json false
     When I check if collection "users" exists on index "%kuzzle"
-    Then The result should raise an error with message "Indexes starting with a '%' are reserved for internal use. Cannot process index %kuzzle."
+    Then The result should match the json false
     When I write the document "documentGrace"
     When I check if index "kuzzle-test-index" exists
     Then The result should match the json true
@@ -441,12 +342,6 @@ Feature: Kuzzle functional tests
     Given A room subscription listening to "firstName" having value "Grace"
     And I get the list subscriptions
     Then In my list there is a collection "kuzzle-collection-test" with 2 room and 2 subscriber
-
-  Scenario: create additional index
-    When I create an index named "kuzzle-test-index-new"
-    Then I'm able to find the index named "kuzzle-test-index-new" in index list
-    Then I'm not able to find the index named "my-undefined-index" in index list
-    Then I'm able to delete the index named "kuzzle-test-index-new"
 
   @security
   Scenario: login user
@@ -580,8 +475,6 @@ Feature: Kuzzle functional tests
     Then I'm able to find "2" profiles containing the role with id "role1"
     Given A scrolled search on profiles
     Then I am able to perform a scrollProfiles request
-    Then I delete the profile "my-profile-1"
-    Then I delete the profile "my-profile-2"
 
   @security
   Scenario: get profile rights
@@ -622,11 +515,11 @@ Feature: Kuzzle functional tests
     And I can't create a user "user2" with id "useradmin-id"
     Then I am able to get the user "useradmin-id" matching {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]}}
     Then I am able to get the user "user2-id" matching {"_id":"#prefix#user2-id","_source":{"profileIds":["#prefix#profile2"]}}
-    Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id", "#prefix#user2-id"]}} and find 2 users
+    Then I search for {"ids":{"values":["#prefix#useradmin-id", "#prefix#user2-id"]}} and find 2 users
     Given A scrolled search on users
     Then I am able to perform a scrollUsers request
     Then I delete the user "user2-id"
-    Then I search for {"ids":{"type": "users", "values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
+    Then I search for {"ids":{"values":["#prefix#useradmin-id"]}} and find 1 users matching {"_id":"#prefix#useradmin-id","_source":{"name":{"first":"David","last":"Bowie"}}}
     When I log in as useradmin:testpwd expiring in 1h
     Then I am getting the current user, which matches {"_id":"#prefix#useradmin-id","_source":{"profileIds":["admin"]},"strategies":["local"]}
     Then I log out
@@ -676,6 +569,7 @@ Feature: Kuzzle functional tests
     Then I write the document "documentGrace"
     And I should receive a document notification with field action equal to "create"
 
+  @resetDatabase
   @security
   Scenario: user permissions
     Given I create a new role "role1" with id "role1"
@@ -1846,23 +1740,6 @@ Feature: Kuzzle functional tests
     Then The ms result should match the json ["Agrigento", "Palermo"]
 
 
-  Scenario: autorefresh
-    When I check the autoRefresh status
-    Then The result should match the json false
-    When I write the document "documentGrace"
-    Then I don't find a document with "grace" in field "firstName"
-    Given I refresh the index
-    And I enable the autoRefresh
-    And I truncate the collection
-    When I write the document "documentGrace"
-    Then I find a document with "grace" in field "firstName"
-    When I check the autoRefresh status
-    Then The result should match the json true
-    Given I truncate the collection
-    And I write the document "documentGrace"
-    When I update the document with value "Josepha" in field "firstName"
-    Then I find a document with "josepha" in field "firstName"
-
   @validation
   Scenario: Validation - getSpecification & updateSpecification
     When There is no specifications for index "kuzzle-test-index" and collection "kuzzle-collection-test"
@@ -1872,10 +1749,6 @@ Feature: Kuzzle functional tests
     Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    Then I put a not valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    And There is an error message
-    Then I put a valid deprecated specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-    And There is no error message
 
 
   @validation
@@ -1883,10 +1756,6 @@ Feature: Kuzzle functional tests
     When I post a valid specification
     Then There is no error message
     When I post an invalid specification
-    Then There is an error message in the response body
-    When I post a valid deprecated specification
-    Then There is no error message
-    When I post an invalid deprecated specification
     Then There is an error message in the response body
 
   @validation
@@ -1930,37 +1799,6 @@ Feature: Kuzzle functional tests
 
   Scenario: Get authentication strategies
     Then I get the registrated authentication strategies
-
-  @firstAdmin
-  Scenario: Create First Admin
-    Given I create a new role "foo" with id "foo"
-    And I update the default profile with id "admin" by adding the role "foo"
-    And I update the default profile with id "default" by adding the role "foo"
-    And I update the default profile with id "anonymous" by adding the role "foo"
-    And I'm able to find the default profile with id "admin" with profile "adminfoo"
-    Then I create the first admin with id "useradmin-id"
-    And I log in as useradmin:testpwd expiring in 1h
-    And I'm able to find the default profile with id "admin" with profile "adminfoo"
-    And I'm able to find the default profile with id "default" with profile "defaultfoo"
-    And I'm able to find the default profile with id "anonymous" with profile "anonymousfoo"
-    Then I'm able to find a default role with id "admin" equivalent to role "admin"
-    And I'm able to find a default role with id "default" equivalent to role "admin"
-    And I'm able to find a default role with id "anonymous" equivalent to role "admin"
-
-  @firstAdmin
-  Scenario: Create First Admin and reset profiles and roles
-    Given I create a new role "foo" with id "foo"
-    And I update the default profile with id "admin" by adding the role "foo"
-    And I update the default profile with id "default" by adding the role "foo"
-    And I update the default profile with id "anonymous" by adding the role "foo"
-    Then I create the first admin with id "useradmin-id" and reset profiles and roles
-    And I log in as useradmin:testpwd expiring in 1h
-    And I'm able to find the default profile with id "admin" with profile "admin"
-    And I'm able to find the default profile with id "default" with profile "default"
-    And I'm able to find the default profile with id "anonymous" with profile "anonymous"
-    Then I'm able to find a default role with id "admin" equivalent to role "admin"
-    And I'm able to find a default role with id "default" equivalent to role "default"
-    And I'm able to find a default role with id "anonymous" equivalent to role "anonymous"
 
   Scenario: Load Mappings
     Given I load the mappings '{"kuzzle-test-index-new": {"kuzzle-collection-test": {}}}'

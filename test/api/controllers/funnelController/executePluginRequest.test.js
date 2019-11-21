@@ -32,7 +32,7 @@ describe('funnelController.executePluginRequest', () => {
       .then(() => Promise.reject(new Error('Should not resolve')))
       .catch(err => {
         should(err).be.instanceOf(NotFoundError);
-        should(err.errorName).be.eql('api.process.controller_not_found');
+        should(err.id).be.eql('api.process.controller_not_found');
         should(kuzzle.emit).not.be.called();
       });
   });

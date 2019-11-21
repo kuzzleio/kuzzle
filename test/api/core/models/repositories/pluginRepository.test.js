@@ -18,7 +18,7 @@ describe('models/repositories/pluginRepository', () => {
     kuzzle = new KuzzleMock();
     pluginRepository = new PluginRepository(kuzzle, 'pluginName', someCollection);
     pluginRepository.init({
-      databaseEngine: kuzzle.internalEngine,
+      indexStorage: kuzzle.internalIndex,
       ObjectConstructor: SomeConstructor
     });
   });
@@ -28,7 +28,7 @@ describe('models/repositories/pluginRepository', () => {
       should(pluginRepository.index).be.equal('pluginName');
       should(pluginRepository.collection).be.equal(someCollection);
       should(pluginRepository.ObjectConstructor).be.exactly(SomeConstructor);
-      should(pluginRepository.databaseEngine).be.exactly(kuzzle.internalEngine);
+      should(pluginRepository.indexStorage).be.exactly(kuzzle.internalIndex);
       should(pluginRepository.cacheEngine).be.exactly(null);
     });
   });
@@ -46,7 +46,7 @@ describe('models/repositories/pluginRepository', () => {
 
   describe('#create', () => {
     it('should proxify persistToDatabase with method create properly', () => {
-      const createStub = kuzzle.internalEngine.create;
+      const createStub = kuzzle.internalIndex.create;
 
       return pluginRepository.create(someObject)
         .then(() => {
@@ -59,7 +59,7 @@ describe('models/repositories/pluginRepository', () => {
 
   describe('#createOrReplace', () => {
     it('should proxify persistToDatabase with method createOrReplace properly', () => {
-      const createOrReplaceStub = kuzzle.internalEngine.createOrReplace;
+      const createOrReplaceStub = kuzzle.internalIndex.createOrReplace;
 
       return pluginRepository.createOrReplace(someObject)
         .then(() => {
@@ -72,7 +72,7 @@ describe('models/repositories/pluginRepository', () => {
 
   describe('#replace', () => {
     it('should proxify persistToDatabase with method replace properly', () => {
-      const replaceStub = kuzzle.internalEngine.replace;
+      const replaceStub = kuzzle.internalIndex.replace;
 
       return pluginRepository.replace(someObject)
         .then(() => {
@@ -85,7 +85,7 @@ describe('models/repositories/pluginRepository', () => {
 
   describe('#update', () => {
     it('should proxify persistToDatabase with method update properly', () => {
-      const updateStub = kuzzle.internalEngine.update;
+      const updateStub = kuzzle.internalIndex.update;
 
       return pluginRepository.update(someObject)
         .then(() => {
@@ -98,7 +98,7 @@ describe('models/repositories/pluginRepository', () => {
 
   describe('#delete', () => {
     it('should call parent method delete with proper arguments', () => {
-      const deleteStub = kuzzle.internalEngine.delete;
+      const deleteStub = kuzzle.internalIndex.delete;
 
       return pluginRepository.delete('someId', {refresh: 'wait_for'})
         .then(() => {

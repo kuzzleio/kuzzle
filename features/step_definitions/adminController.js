@@ -12,3 +12,7 @@ When('I load the securities', function (securities) {
   const parsed = JSON.parse(securities.replace(/#prefix#/g, this.idPrefix));
   return this.api.loadSecurities(parsed);
 });
+
+When('I reset public database', function () {
+  return this.api.adminResetDatabase();
+});

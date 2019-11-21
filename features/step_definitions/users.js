@@ -97,9 +97,9 @@ Then(/^I am able to get the user "(.*?)"(?: matching {(.*)})?$/, function (id, m
       if (match) {
         match = match.replace(/#prefix#/g, this.idPrefix);
 
-        const matchObject = JSON.parse('{' + match + '}');
+        const matchingObject = JSON.parse('{' + match + '}');
 
-        if (!_.matches(matchObject)(body.result)) {
+        if (!_.matches(matchingObject)(body.result)) {
           throw new Error('Error: ' + JSON.stringify(body.result) + ' does not match {' + match + '}');
         }
       }
@@ -233,7 +233,7 @@ Then(/^I'm able to find my rights$/, function () {
 Given(/^A scrolled search on users$/, function () {
   this.scrollId = null;
 
-  return this.api.searchUsers({}, {scroll: '1m'})
+  return this.api.searchUsers({}, {scroll: '2s'})
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);

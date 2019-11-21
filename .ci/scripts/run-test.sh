@@ -2,34 +2,25 @@
 
 set -e
 
-elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
+elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
-if [ "$NODE_LTS" = "6" ]; then
-  NODE_VERSION=$NODE_6_VERSION
-elif [ "$NODE_LTS" = "8" ]; then
-  NODE_VERSION=$NODE_8_VERSION
-elif [ "$NODE_LTS" = "10" ]; then
-  NODE_VERSION=$NODE_10_VERSION
-else
-  echo "Unsupported Node LTS: $NODE_LTS"
-  exit 1
-fi
+NODE_VERSION=$NODE_12_VERSION
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
-npm i -g npm
-
-npm ci --unsafe-perm
-npm install --only=dev --unsafe-perm
-find -L node_modules/.bin -type f -exec chmod 776 {} \;
-find node_modules/ -type d -exec chmod 755 {} \;
+npm install --silent --unsafe-perm
+npm install --silent --unsafe-perm --only=dev
+chmod -R 777 node_modules/
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
-timeout 30 bash -c "
-  until curl -f -s -o /dev/null $elastic_host; do
-    echo [$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host
+spinner="/"
+while ! curl -f -s -o /dev/null "$elastic_host"
+do
+    printf '\r'
+    echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host [$spinner]"
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
     sleep 1
   done"
 # create a tmp index just to force the shards to init
@@ -43,12 +34,23 @@ if ! (echo ${E} | grep -E '"status":"(yellow|green)"' > /dev/null); then
     exit 1
 fi
 
-node bin/kuzzle start &
+node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
+
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
-timeout 30 bash -c "
-  until curl -f -s -o /dev/null http://localhost:7512; do
-    echo [$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle
+timeout=$((20 * 60))
+while ! curl -f -s -o /dev/null http://localhost:7512
+do
+    printf '\r'
+    echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle [$spinner]"
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
+
+    timeout=$((timeout - 1))
+    if [ $timeout -eq 0 ]; then
+        echo "[$(date --rfc-3339 seconds)] - Timeout"
+    fi
+
     sleep 1
   done"
 
 npm run functional-testing
+npm run functional-testing2

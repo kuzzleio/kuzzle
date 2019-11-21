@@ -9,4 +9,7 @@ Vagrantfile
 .nyc_output
 .sonar
 sonar-project.properties
-coverage
+
+plugins/available/functional-test-plugin
+plugins/enabled/functional-test-plugin
+plugins/enabled/dummy

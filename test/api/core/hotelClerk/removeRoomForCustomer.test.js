@@ -47,7 +47,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
   it('should reject if the customer cannot be found', () => {
     return hotelClerk._removeRoomForCustomer(requestContext, 'idontexist')
       .should.be.rejectedWith(PreconditionError, {
-        errorName: 'core.realtime.not_subscribed'
+        id: 'core.realtime.not_subscribed'
       });
   });
 
@@ -59,7 +59,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
       .catch(err => {
         try {
           should(err).be.instanceOf(PreconditionError);
-          should(err.errorName).eql('core.realtime.not_subscribed');
+          should(err.id).eql('core.realtime.not_subscribed');
           should(hotelClerk.rooms).have.key('roomId');
           should(hotelClerk.roomsCount).be.eql(1);
           should(kuzzle.notifier.notifyUser).not.be.called();
@@ -77,7 +77,7 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
 
     return hotelClerk._removeRoomForCustomer(requestContext, 'nowhere', false)
       .should.be.rejectedWith(NotFoundError, {
-        errorName: 'core.realtime.room_not_found'
+        id: 'core.realtime.room_not_found'
       });
   });
 

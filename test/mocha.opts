@@ -3,3 +3,4 @@
 --recursive
 --slow 2000
 --timeout 10000
+--file ./test/restore-sinon.js

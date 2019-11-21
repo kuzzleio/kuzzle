@@ -87,7 +87,7 @@ describe('Test: core/janitor', () => {
     it('should reject if the securities object is null', () => {
       return should(janitor.loadSecurities(null))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "null". Expected: object'
         });
     });
@@ -99,7 +99,7 @@ describe('Test: core/janitor', () => {
         users: securities.users
       }))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -111,7 +111,7 @@ describe('Test: core/janitor', () => {
         users: securities.users
       }))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -123,7 +123,7 @@ describe('Test: core/janitor', () => {
         users: { foo: 123},
       }))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -137,25 +137,24 @@ describe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.list.storageEngine;
-      storageEngine.import.onCall(0).resolves(false);
-      storageEngine.import.onCall(1).resolves(true);
-      storageEngine.import.onCall(2).resolves(false);
+      const storageEngine = kuzzle.storageEngine.public;
+      storageEngine.import.onCall(0).resolves({ errors: []});
+      storageEngine.import.onCall(1).resolves({ errors: []});
+      storageEngine.import.onCall(2).resolves({ errors: []});
 
       return janitor.loadFixtures(fixtures)
         .then(() => {
           should(storageEngine.import.callCount).be.eql(3);
-          should(storageEngine.import.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
-          should(storageEngine.import.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
-          should(storageEngine.import.getCall(0).args[0].input.body.bulkData[1]).be.eql({ name: 'alyx' });
-          should(storageEngine.refreshIndex.callCount).be.eql(3);
+          should(storageEngine.import.getCall(0).args[0]).be.eql('nyc-open-data');
+          should(storageEngine.import.getCall(0).args[1]).be.eql('yellow-taxi');
+          should(storageEngine.import.getCall(0).args[2][1]).be.eql({ name: 'alyx' });
         });
     });
 
     it('should reject if fixtures contain non-object properties', () => {
       return should(janitor.loadFixtures({foo: 123}))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -169,7 +168,7 @@ describe('Test: core/janitor', () => {
     });
 
     it('create index and collection that does not exists', () => {
-      const storageEngine = kuzzle.services.list.storageEngine;
+      const storageEngine = kuzzle.storageEngine.public;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);
@@ -178,22 +177,18 @@ describe('Test: core/janitor', () => {
         .then(() => {
           should(storageEngine.indexExists.callCount).be.eql(3);
           should(storageEngine.createIndex.callCount).be.eql(2);
-          should(storageEngine.createIndex.getCall(0).args[0].input.resource.index).be.eql('nyc-open-data');
+          should(storageEngine.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
 
           should(storageEngine.createCollection.callCount).be.eql(3);
-          should(storageEngine.createCollection.getCall(0).args[0].input.resource.collection).be.eql('yellow-taxi');
-          should(storageEngine.createCollection.getCall(0).args[0].input.body.properties).be.eql({ name: { type: 'text' } });
-
-          should(storageEngine.refreshIndex.callCount).be.eql(3);
-
-          should(kuzzle.indexCache.add.callCount).be.eql(3);
+          should(storageEngine.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
+          should(storageEngine.createCollection.getCall(0).args[2].properties).be.eql({ name: { type: 'text' } });
         });
     });
 
     it('should reject if a mapping contains non-object properties', () => {
       return should(janitor.loadMappings({foo: 123}))
         .rejectedWith(BadRequestError, {
-          errorName: 'api.assert.invalid_argument',
+          id: 'api.assert.invalid_argument',
           message: 'Invalid argument "123". Expected: object'
         });
     });
@@ -275,7 +270,7 @@ describe('Test: core/janitor', () => {
         .catch(error => {
           try {
             should(error).be.instanceOf(PreconditionError, {
-              errorName: 'api.assert.action_locked'
+              id: 'api.assert.action_locked'
             });
             done();
           }

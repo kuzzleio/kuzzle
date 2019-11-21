@@ -102,13 +102,13 @@ module.exports = {
     standard: {
       profiles: {
         admin: {
-          policies: [ {roleId: 'admin'} ]
+          policies: [ { roleId: 'admin'} ]
         },
         default: {
-          policies: [ {roleId: 'default'} ]
+          policies: [ { roleId: 'default'} ]
         },
         anonymous: {
-          policies: [ {roleId: 'anonymous'} ]
+          policies: [ { roleId: 'anonymous'} ]
         }
       },
       roles: {
@@ -134,7 +134,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -151,7 +151,7 @@ module.exports = {
             },
             server: {
               actions: {
-                info: true
+                publicApi: true
               }
             }
           }
@@ -161,16 +161,6 @@ module.exports = {
   },
 
   server: {
-    entryPoints: {
-      embedded: true,
-      proxy: false
-    },
-    proxy: {
-      host: 'localhost',
-      port: 7331,
-      retryInterval: 1000,
-      resendClientListDelay: 1000
-    },
     logs: {
       transports: [
         {
@@ -203,10 +193,6 @@ module.exports = {
           port: 1883
         }
       },
-      socketio: {
-        enabled: true,
-        origins: '*:*'
-      },
       websocket: {
         enabled: true,
         idleTimeout: 0,
@@ -235,37 +221,87 @@ module.exports = {
         port: 6379
       }
     },
-    internalEngine: {
+    internalIndex: {
       bootstrapLockTimeout: 5000
     },
-    db: {
+    storageEngine: {
       aliases: ['storageEngine'],
       backend: 'elasticsearch',
       client: {
-        host: 'http://localhost:9200',
-        apiVersion: '5.6'
+        node: 'http://localhost:9200'
       },
       commonMapping: {
-        _kuzzle_info: {
-          properties: {
-            active: {type: 'boolean'},
-            author: {type: 'keyword'},
-            createdAt: {type: 'date'},
-            updatedAt: {type: 'date'},
-            updater: {type: 'keyword'},
-            deletedAt: {type: 'date'}
+        dynamic: 'false',
+        properties: {
+          _kuzzle_info: {
+            properties: {
+              author:     { type: 'keyword' },
+              createdAt:  { type: 'date' },
+              updater:    { type: 'keyword' },
+              updatedAt:  { type: 'date' }
+            }
+          }
+        }
+      },
+      internalIndex: {
+        name: 'kuzzle',
+        collections: {
+          users: {
+            dynamic: 'false',
+            properties: {
+              profileIds: { type: 'keyword' }
+            }
+          },
+          profiles: {
+            dynamic: 'false',
+            properties: {
+              policies: {
+                properties:  {
+                  roleId: { type: 'keyword' }
+                }
+              }
+            }
+          },
+          roles: {
+            dynamic: 'false',
+            properties: {
+              controllers: {
+                dynamic: 'false',
+                properties: {}
+              }
+            }
+          },
+          validations: {
+            properties: {
+              index: { type: 'keyword' },
+              collection: { type: 'keyword' },
+              validations: {
+                dynamic: 'false',
+                properties: {}
+              }
+            }
+          },
+          config: {
+            dynamic: 'false',
+            properties: {}
+          },
+          'api-keys': {
+            dynamic: 'false',
+            properties: {
+              userId: { type: 'keyword' },
+              hash: { type: 'keyword' },
+              description: { type: 'text' },
+              expiresAt: { type: 'long' },
+              ttl: { type: 'keyword' },
+              token: { type: 'keyword' }
+            }
           }
         }
       },
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
-      },
-      dynamic: 'true'
-    },
-    garbageCollector: {
-      cleanInterval: 86400000,
-      maxDelete: 1000
+      }
     }
   },
 

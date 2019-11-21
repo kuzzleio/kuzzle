@@ -2,20 +2,22 @@
   "apps": [
     {
       "name": "KuzzleServer",
-      "script": "bin/kuzzle",
+      "script": "bin/start-kuzzle-server",
       "args": [
-        "start",
         "--mappings",
         "/fixtures/mappings.json",
         "--fixtures",
         "/fixtures/fixtures.json",
         "--securities",
-        "/fixtures/securities.json"
+        "/fixtures/securities.json",
+        "--enable-plugins",
+        "functional-test-plugin"
       ],
       "watch": [
         "lib/**/*.js",
         "default.config.js",
         "plugins/enabled/**/*.js",
+        "plugins/available/functional-test-plugin/*.js",
         "lib/**/*.json"
       ],
       "node_args": "--inspect=0.0.0.0:9229",

@@ -55,20 +55,16 @@ When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([
     .catch(error => callback(no ? null : error));
 });
 
-Then(/^I put a (not )?valid (deprecated)? ?specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, isDeprecated, index, collection, callback) {
+Then(/^I put a (not )?valid ?specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, index, collection, callback) {
   const
     idx = index ? index : this.fakeIndex,
     coll = collection ? collection : this.fakeCollection,
     specifications = not ? notValidSpecifications : validSpecifications,
-    body = !isDeprecated ? specifications : {
-      [idx]: {
-        [coll]: specifications
-      }
-    };
+    body = specifications;
 
   this.api.updateSpecifications(
-    isDeprecated ? null : idx,
-    isDeprecated ? null : coll,
+    idx,
+    coll,
     body)
     .then(_body => {
       this.statusCode = _body.status;
@@ -112,20 +108,16 @@ Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function
   return callback();
 });
 
-When(/^I post a(n in)? ?valid (deprecated)? ?specification$/, {}, function(not, isDeprecated, callback) {
+When(/^I post a(n in)? ?valid ?specification$/, {}, function(not, callback) {
   const
     index = this.fakeIndex,
     collection = this.fakeCollection,
     specifications = not ? notValidSpecifications : validSpecifications,
-    body = !isDeprecated ? specifications : {
-      [index]: {
-        [collection]: specifications
-      }
-    };
+    body = specifications;
 
   this.api.validateSpecifications(
-    isDeprecated ? null : index,
-    isDeprecated ? null : collection,
+    index,
+    collection,
     body)
     .then(_body => {
       this.statusCode = _body.status;
@@ -242,4 +234,3 @@ Then(/^I am able to perform a scrollSpecifications request$/, function () {
       }
     });
 });
-

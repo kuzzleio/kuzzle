@@ -30,7 +30,7 @@ describe('PluginsManager', () => {
         R_OK: true
       }
     };
-    Manifest = rewire('../../../../lib/api/core/plugins/manifest');
+    Manifest = rewire('../../../../lib/api/core/plugins/pluginManifest');
     Manifest.__set__({
       fs: manifestFsStub
     });
@@ -52,7 +52,7 @@ describe('PluginsManager', () => {
     manifestFsStub.accessSync.returns();
 
     mockrequire('fs', fsStub);
-    mockrequire('../../../../lib/api/core/plugins/manifest', Manifest);
+    mockrequire('../../../../lib/api/core/plugins/pluginManifest', Manifest);
     mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
     PluginsManager = rewire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -80,11 +80,11 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', undefined);
 
       should(() => pluginsManager.init())
-        .throw(PluginImplementationError, { errorName: 'plugin.assert.cannot_load' });
+        .throw(PluginImplementationError, { id: 'plugin.assert.cannot_load' });
       should(pluginsManager.plugins).be.empty();
     });
 
-    it('should properly load custom errors from manifest.json', () => {
+    it('should properly load customs errors from manifest.json', () => {
       const errors = rewire('../../../../lib/config/error-codes');
 
       const instanceName = 'kuzzle-plugin-test',
@@ -114,7 +114,7 @@ describe('PluginsManager', () => {
         '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
         {
           name: instanceName,
-          kuzzleVersion: '^1.x',
+          kuzzleVersion: '^2.x',
           errors: newPluginErrors
         });
 
@@ -131,7 +131,7 @@ describe('PluginsManager', () => {
       should(pluginErrors[instanceName].errors).be.deepEqual(newPluginErrors);
     });
 
-    it('should throw PluginImplementationError if custom errors from manifest.json are badly formatted', () => {
+    it('should throw PluginImplementationError if customs errors from manifest.json are badly formatted', () => {
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory: () => true
@@ -141,7 +141,7 @@ describe('PluginsManager', () => {
         '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
         {
           name: 'kuzzle-plugin-test',
-          kuzzleVersion: '^1.x',
+          kuzzleVersion: '^2.x',
           errors: {
             'some_error': {
               'message': 'Some error occured %s',
@@ -155,11 +155,11 @@ describe('PluginsManager', () => {
           }
         });
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.manifest.invalid_errors'
+        id: 'plugin.manifest.invalid_errors'
       });
     });
 
-    it('should throw if a plugin does not contain a manifest.json file nor a package.json one', () => {
+    it('should throw if a plugin does not contain a manifest.json file', () => {
       pluginsManager = new PluginsManager(kuzzle);
       manifestFsStub.accessSync.throws(new Error('foobar'));
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
@@ -170,7 +170,7 @@ describe('PluginsManager', () => {
       });
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        { errorName: 'plugin.manifest.missing_package' });
+        { id: 'plugin.manifest.cannot_load' });
       should(pluginsManager.plugins).be.empty();
     });
 
@@ -185,16 +185,16 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/another-plugin', pluginStub);
       mockrequire(
         '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
-        { name: 'foobar', kuzzleVersion: '^1.x'});
+        { name: 'foobar', kuzzleVersion: '^2.x'});
       mockrequire(
         '/kuzzle/plugins/enabled/another-plugin/manifest.json',
-        { name: 'fooBAR', kuzzleVersion: '^1.x'});
+        { name: 'fooBAR', kuzzleVersion: '^2.x'});
 
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        { errorName: 'plugin.assert.name_already_exists' });
+        { id: 'plugin.assert.name_already_exists' });
     });
 
     it('should throw if a plugin does not expose a "init" method', () => {
@@ -207,12 +207,12 @@ describe('PluginsManager', () => {
       });
       mockrequire(
         '/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json',
-        { name: instanceName, kuzzleVersion: '^1.x'});
+        { name: instanceName, kuzzleVersion: '^2.x'});
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(
         PluginImplementationError,
-        { errorName: 'plugin.assert.init_not_found' });
+        { id: 'plugin.assert.init_not_found' });
     });
 
     it('should return a well-formed plugin instance if a valid requirable plugin is enabled', () => {
@@ -225,7 +225,7 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', {
         name: 'kuzzle-plugin-test',
-        kuzzleVersion: '^1.x'
+        kuzzleVersion: '^2.x'
       });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -239,7 +239,7 @@ describe('PluginsManager', () => {
         .match({
           name: instanceName,
           privileged: false,
-          kuzzleVersion: '^1.x',
+          kuzzleVersion: '^2.x',
           path: '/kuzzle/plugins/enabled/kuzzle-plugin-test'
         });
       should(pluginsManager.plugins[instanceName].object).be.ok();
@@ -255,7 +255,7 @@ describe('PluginsManager', () => {
       mockrequire(`/kuzzle/plugins/enabled/${name}`, pluginStub);
       mockrequire(`/kuzzle/plugins/enabled/${name}/manifest.json`, {
         name,
-        kuzzleVersion: '^1.x'
+        kuzzleVersion: '^2.x'
       });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -287,7 +287,7 @@ describe('PluginsManager', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init())
-        .throw(PluginImplementationError, { errorName: 'plugin.manifest.version_mismatch' });
+        .throw(PluginImplementationError, { id: 'plugin.manifest.version_mismatch' });
     });
 
     it('should load custom plugin configuration if exists', () => {
@@ -304,7 +304,7 @@ describe('PluginsManager', () => {
       });
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', pluginStub);
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^1.x' });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^2.x' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       pluginsManager = new PluginsManager(kuzzle);
@@ -323,7 +323,7 @@ describe('PluginsManager', () => {
       const instanceName = 'kuzzle-plugin-test';
       const manifest = {
         name: instanceName,
-        kuzzleVersion: '^1.x',
+        kuzzleVersion: '^2.x',
         privileged: false
       };
 
@@ -343,7 +343,7 @@ describe('PluginsManager', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.assert.privileged_not_supported'
+        id: 'plugin.assert.privileged_not_supported'
       });
     });
 
@@ -351,7 +351,7 @@ describe('PluginsManager', () => {
       const instanceName = 'kuzzle-plugin-test';
       const manifest = {
         privileged: true,
-        kuzzleVersion: '^1.x',
+        kuzzleVersion: '^2.x',
         name: instanceName
       };
 
@@ -371,7 +371,7 @@ describe('PluginsManager', () => {
       pluginsManager = new PluginsManager(kuzzle);
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.assert.privileged_not_set'
+        id: 'plugin.assert.privileged_not_set'
       });
     });
 
@@ -379,7 +379,7 @@ describe('PluginsManager', () => {
       fsStub.readdirSync.throws();
 
       should(() => pluginsManager.init()).throw(InternalError, {
-        errorName: 'plugin.assert.invalid_plugins_dir'
+        id: 'plugin.assert.invalid_plugins_dir'
       });
       should(pluginsManager.plugins).be.empty();
     });
@@ -393,11 +393,11 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', function () {
         throw new Error('foobar');
       });
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^1.x' });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^2.x' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.runtime.unexpected_error'
+        id: 'plugin.runtime.unexpected_error'
       });
       should(pluginsManager.plugins).be.empty();
     });
@@ -409,11 +409,11 @@ describe('PluginsManager', () => {
       });
 
       mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test', () => {});
-      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^1.x' });
+      mockrequire('/kuzzle/plugins/enabled/kuzzle-plugin-test/manifest.json', { name: 'kuzzle-plugin-test', kuzzleVersion: '^2.x' });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
       should(() => pluginsManager.init()).throw(PluginImplementationError, {
-        errorName: 'plugin.assert.not_a_constructor'
+        id: 'plugin.assert.not_a_constructor'
       });
       should(pluginsManager.plugins).be.empty();
     });
@@ -428,7 +428,7 @@ describe('PluginsManager', () => {
       mockrequire('/kuzzle/plugins/available/kuzzle-plugin-test', pluginStub);
       mockrequire('/kuzzle/plugins/available/kuzzle-plugin-test/manifest.json', {
         name: 'kuzzle-plugin-test',
-        kuzzleVersion: '^1.x'
+        kuzzleVersion: '^2.x'
       });
       PluginsManager = mockrequire.reRequire('../../../../lib/api/core/plugins/pluginsManager');
 
@@ -442,7 +442,7 @@ describe('PluginsManager', () => {
         .match({
           name: instanceName,
           privileged: false,
-          kuzzleVersion: '^1.x',
+          kuzzleVersion: '^2.x',
           path: '/kuzzle/plugins/available/kuzzle-plugin-test'
         });
       should(pluginsManager.plugins[instanceName].object).be.ok();

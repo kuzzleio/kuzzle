@@ -104,8 +104,8 @@ Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value
 });
 
 Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
-  var query = {query: { match: { [field]: (value === 'true' ? true : value) }}};
-  var args = {};
+  const query = {query: { match: { [field]: (value === 'true' ? true : value) }}};
+  const args = {};
 
   if (scroll) {
     args.scroll = scroll;
@@ -217,4 +217,3 @@ Then(/^I check that the document "([^"]*)" ?(doesn't)* exists$/, function (id, d
       callback(error);
     });
 });
-

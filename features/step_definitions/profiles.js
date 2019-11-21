@@ -278,7 +278,7 @@ Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/, fun
 Given(/^A scrolled search on profiles$/, function () {
   this.scrollId = null;
 
-  return this.api.searchProfiles({roles: []}, {scroll: '1m'})
+  return this.api.searchProfiles({roles: []}, {scroll: '2s'})
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);
@@ -308,4 +308,3 @@ Then(/^I am able to perform a scrollProfiles request$/, function () {
       }
     });
 });
-

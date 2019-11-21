@@ -70,6 +70,7 @@ describe('Test the auth controller', () => {
       });
 
       kuzzle.repositories.token.generateToken.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.resolves(null);
 
       return authController.login(request)
         .then(response => {
@@ -80,8 +81,35 @@ describe('Test the auth controller', () => {
             expiresAt: 4567,
             ttl: 1234
           });
-          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {});
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(user, request.context.connection.id, {});
         });
+    });
+
+    it('should refresh the token if it already exists', async () => {
+      const
+        existingToken = new Token({
+          _id: 'foobar#foo',
+          jwt: 'foo',
+          userId: 'foobar',
+          expiresAt: 4567,
+          ttl: 1234
+        }),
+        token = new Token({
+          _id: 'foobar#bar',
+          jwt: 'bar',
+          userId: 'foobar',
+          expiresAt: 4567,
+          ttl: 1234
+        });
+
+      kuzzle.repositories.token.generateToken.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
+
+      await authController.login(request);
+
+      should(kuzzle.tokenManager.getConnectedUserToken).be.called();
+      should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
     });
 
     it('should modify the result according to auth:strategyAuthenticated pipe events', () => {
@@ -132,7 +160,7 @@ describe('Test the auth controller', () => {
 
       return should(() => {authController.login(request);})
         .throw(BadRequestError, {
-          errorName: 'api.assert.missing_argument',
+          id: 'api.assert.missing_argument',
           message: 'Missing argument "strategy".'
         });
     });
@@ -158,7 +186,8 @@ describe('Test the auth controller', () => {
             expiresAt: 4567,
             ttl: 1234
           });
-          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {expiresIn: '1s'});
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(user, request.context.connection.id, {expiresIn: '1s'});
         });
     });
 
@@ -172,7 +201,7 @@ describe('Test the auth controller', () => {
       request.input.args.strategy = 'foobar';
 
       should(() => authController.login(request)).throw(BadRequestError, {
-        errorName: 'security.credentials.unknown_strategy'
+        id: 'security.credentials.unknown_strategy'
       });
     });
   });
@@ -226,7 +255,7 @@ describe('Test the auth controller', () => {
 
       should(() => authController.logout(request)).throw(
         UnauthorizedError,
-        {errorName: 'security.rights.unauthorized'});
+        {id: 'security.rights.unauthorized'});
     });
   });
 
@@ -262,7 +291,7 @@ describe('Test the auth controller', () => {
       return should(() => {
         authController.checkToken(new Request({body: {}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "body.token".'
       });
     });
@@ -309,7 +338,7 @@ describe('Test the auth controller', () => {
       )))
         .throw(
           UnauthorizedError,
-          {errorName: 'security.rights.unauthorized'});
+          {id: 'security.rights.unauthorized'});
     });
 
     it('should throw if the token has already been refreshed', () => {
@@ -320,7 +349,7 @@ describe('Test the auth controller', () => {
           user: {_id: 'bar'}
         }
       )))
-        .throw(UnauthorizedError, {errorName: 'security.token.invalid' });
+        .throw(UnauthorizedError, {id: 'security.token.invalid' });
     });
 
     it('should provide a new jwt and expire the current one after the grace period', () => {
@@ -368,7 +397,7 @@ describe('Test the auth controller', () => {
           should(kuzzle.repositories.token.generateToken)
             .be.calledWith(
               { _id: 'user' },
-              req,
+              req.context.connection.id,
               { expiresIn: '42h' }
             );
 
@@ -400,7 +429,7 @@ describe('Test the auth controller', () => {
           {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.forbidden_argument',
+        id: 'api.assert.forbidden_argument',
         message: 'The argument "body.profileIds" is not allowed by this API action.'});
     });
 
@@ -411,7 +440,7 @@ describe('Test the auth controller', () => {
           {token: {userId: 'admin', _id: 'admin'}, user: {_id: 'admin'}}
         ));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.forbidden_argument',
+        id: 'api.assert.forbidden_argument',
         message: 'The argument "body._id" is not allowed by this API action.'
       });
     });
@@ -423,7 +452,7 @@ describe('Test the auth controller', () => {
 
       should(() => authController.updateSelf(r)).throw(
         UnauthorizedError,
-        {errorName: 'security.rights.unauthorized'});
+        {id: 'security.rights.unauthorized'});
     });
   });
 

@@ -51,20 +51,27 @@ function buildErrorCodes(domains) {
   for (const domainName of domainKeys) {
     const domain = domains[domainName];
 
+    if (domain.deprecated) {
+      continue;
+    }
+
     buffer.writeUInt8(domain.code, 3);
     doc += `\n## 0x${buffer.toString('hex', 3)}: ${domainName}\n\n`;
 
     for (const subdomainName of Object.keys(domain.subdomains)) {
       const subdomain = domain.subdomains[subdomainName];
 
+      if (subdomain.deprecated) {
+        continue;
+      }
+
       buffer.writeUInt16BE(domain.code << 8 | subdomain.code, 2);
 
       doc += `\n\n### Subdomain: 0x${buffer.toString('hex', 2)}: ${subdomainName}\n\n`;
       doc += '| Id | Error Type (Status Code)             | Message           |\n| ------ | -----------------| ------------------ | ------------------ |\n';
 
-      for (const errorName of Object.keys(subdomain.errors)) {
+      for (const [errorName, error] of Object.entries(subdomain.errors)) {
         const
-          error = subdomain.errors[errorName],
           fullName = `${domainName}.${subdomainName}.${errorName}`,
           status = (new errors[error.class]()).status;
 
@@ -72,7 +79,7 @@ function buildErrorCodes(domains) {
           buffer.writeUInt32BE(
             domain.code << 24 | subdomain.code << 16 | error.code,
             0);
-          doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> | [${error.class}](/core/1/api/essentials/errors/handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.description} |\n`;
+          doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> | [${error.class}](/core/2/api/essentials/errors/handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.description} |\n`;
         }
       }
       doc += '\n---\n';
@@ -85,7 +92,7 @@ function buildErrorCodes(domains) {
 
 const output = process.argv[2] === '-o' || process.argv[2] === '--output'
   ? process.argv[3]
-  : `${__dirname}/1/api/essentials/errors/codes/index.md`;
+  : `${__dirname}/2/api/essentials/errors/codes/index.md`;
 
 const doc = buildErrorCodes(codes.domains);
 

@@ -2,19 +2,30 @@
 
 set -e
 
-elastic_host=${kuzzle_services__db__client__host:-http://elasticsearch:9200}
+if [ ! -z "$WITHOUT_KUZZLE" ]; then
+  exit 0
+fi
 
-npm install --unsafe-perm
-npm rebuild all --unsafe-perm
-chmod -R 777 node_modules/
-docker-compose/scripts/install-plugins.sh
+elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
+if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
+    npm ci --unsafe-perm
+    chmod -R 777 node_modules/
+    npm rebuild all --unsafe-perm
+    docker-compose/scripts/install-plugins.sh
+fi
+
+spinner="/"
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "$elastic_host"
 do
-    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host"
+    printf '\r'
+    echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host [$spinner]"
     sleep 1
+
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
 done
+
 # create a tmp index just to force the shards to init
 curl -XPUT -s -o /dev/null "$elastic_host/%25___tmp"
 echo "[$(date --rfc-3339 seconds)] - Elasticsearch is up. Waiting for shards to be active (can take a while)"

@@ -3,7 +3,6 @@ const
     When,
     Then
   } = require('cucumber'),
-  { execSync } = require('child_process'),
   fs = require('fs'),
   ndjson = require('ndjson'),
   should = require('should');
@@ -12,10 +11,6 @@ When('I have a file {string} containing {string}', function (filePath, rawConten
   const content = JSON.parse(rawContent);
 
   fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
-});
-
-When('I use the CLI command {string}', function (cliCommand) {
-  execSync(`./bin/kuzzle ${cliCommand}`);
 });
 
 /* eslint-disable no-useless-escape */

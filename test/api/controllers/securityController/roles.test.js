@@ -6,8 +6,13 @@ const
   Bluebird = require('bluebird'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  Request = require('kuzzle-common-objects').Request,
-  { BadRequestError, SizeLimitError } = require('kuzzle-common-objects').errors,
+  {
+    Request,
+    errors: {
+      BadRequestError,
+      SizeLimitError
+    }
+  } = require('kuzzle-common-objects'),
   SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - roles', () => {
@@ -21,8 +26,8 @@ describe('Test: security controller - roles', () => {
     securityController = new SecurityController(kuzzle);
 
     request = new Request({controller: 'security'});
-    kuzzle.internalEngine.get.resolves({});
-    kuzzle.internalEngine.getMapping.resolves({internalIndex: {mappings: {roles: {properties: {}}}}});
+    kuzzle.internalIndex.get.resolves({});
+    kuzzle.internalIndex.getMapping.resolves({internalIndex: {mappings: {roles: {properties: {}}}}});
   });
 
   describe('#updateRoleMapping', () => {
@@ -31,15 +36,17 @@ describe('Test: security controller - roles', () => {
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
         securityController.updateRoleMapping(request);
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should update the role mapping', () => {
       request.input.body = foo;
+      kuzzle.internalIndex.updateMapping.resolves(foo);
+
       return securityController.updateRoleMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.updateMapping).be.calledOnce();
-          should(kuzzle.internalEngine.updateMapping).be.calledWith('roles', request.input.body);
+          should(kuzzle.internalIndex.updateMapping).be.calledOnce();
+          should(kuzzle.internalIndex.updateMapping).be.calledWith('roles', request.input.body);
 
           should(response).be.instanceof(Object);
           should(response).match(foo);
@@ -50,13 +57,16 @@ describe('Test: security controller - roles', () => {
 
   describe('#getRoleMapping', () => {
     it('should fulfill with a response object', () => {
+      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+
       return securityController.getRoleMapping(request)
         .then(response => {
-          should(kuzzle.internalEngine.getMapping).be.calledOnce();
-          should(kuzzle.internalEngine.getMapping).be.calledWith({index: kuzzle.internalEngine.index, type: 'roles'});
+          should(kuzzle.internalIndex.getMapping)
+            .be.calledOnce()
+            .be.calledWith('roles');
 
           should(response).be.instanceof(Object);
-          should(response).match({mapping: {}});
+          should(response).match({ mapping: { foo: 'bar' } });
         });
     });
   });
@@ -128,7 +138,7 @@ describe('Test: security controller - roles', () => {
     it('should throw an error if no ids is provided', () => {
       return should(() => {
         securityController.mGetRoles(new Request({body: {}}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject an error if loading roles fails', () => {
@@ -137,18 +147,16 @@ describe('Test: security controller - roles', () => {
       return should(securityController.mGetRoles(new Request({body: {ids: ['test']}}))).be.rejected();
     });
 
-    it('should resolve to an object', done => {
-      kuzzle.repositories.role.loadMultiFromDatabase.resolves([{_id: 'test', _source: null, _meta: {}}]);
-      securityController.mGetRoles(new Request({body: {ids: ['test']}}))
+    it('should resolve to an object', () => {
+      kuzzle.repositories.role.loadMultiFromDatabase.resolves([
+        { _id: 'test', _source: null }
+      ]);
+
+      return securityController.mGetRoles(new Request({body: {ids: ['test']}}))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response.hits).be.an.Array();
           should(response.hits).not.be.empty();
-
-          done();
-        })
-        .catch(err => {
-          done(err);
         });
     });
   });
@@ -179,7 +187,7 @@ describe('Test: security controller - roles', () => {
       request.input.args.size = 10;
 
       return should(() => securityController.searchRoles(request))
-        .throw(SizeLimitError, { errorName: 'services.storage.get_limit_exceeded' });
+        .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
     });
 
     it('should reject an error in case of error', () => {
@@ -211,7 +219,7 @@ describe('Test: security controller - roles', () => {
     it('should throw an error if no id is given', () => {
       return should(() => {
         securityController.updateRole(new Request({body: {}}));
-      }).throw(BadRequestError, { errorName: 'api.assert.missing_argument' });
+      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject the promise if the role cannot be found in the database', () => {

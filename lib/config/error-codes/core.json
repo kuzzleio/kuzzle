@@ -50,7 +50,8 @@
           "description": "An invalid value has been provided to the \"state\" argument",
           "code": 3,
           "message": "Invalid value for the \"state\" parameter (allowed: \"all\", \"done\", \"pending\").",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "invalid_scope": {
           "description": "An invalid value has been provided to the \"scope\" argument",
@@ -120,6 +121,7 @@
     },
     "sandbox": {
       "code": 4,
+      "deprecated": true,
       "errors": {
         "process_already_running": {
           "description": "A process is already running for this sandbox",
