@@ -144,11 +144,6 @@ Feature: Kuzzle functional tests
     Then I update the document with value "foo" in field "firstName"
     Then my document has the value "foo" in field "firstName"
 
-  Scenario: Delete a document
-    When I write the document
-    Then I remove the document
-    Then I'm not able to get the document
-
   Scenario: Search a document
     When I write the document "documentGrace"
     And I refresh the collection
@@ -167,12 +162,6 @@ Feature: Kuzzle functional tests
     Then I refresh the collection
     Then I truncate the collection
     Then I'm not able to get the document
-
-  Scenario: Checking that documents exist or not
-    When I write the document with id "documentGrace"
-    Then I check that the document "documentGrace" exists
-    Then I remove the document
-    Then I check that the document "documentGrace" doesn't exists
 
   Scenario: Search with scroll documents
     When I write the document "documentGrace"

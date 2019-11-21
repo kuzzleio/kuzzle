@@ -148,7 +148,7 @@ The following operating systems are actively supported (64-bit versions only):
 
 - [Elasticsearch](https://www.elastic.co/products/elasticsearch) version 7.4.x or higher
 - [Redis](http://redis.io) version 5.x or higher
-- [Node.js](https://nodejs.org/en/download/package-manager) version 10.x or higher
+- [Node.js](https://nodejs.org/en/download/package-manager) version 12.x or higher
 - [NPM](https://www.npmjs.com) version 6 or higher
 - [Python](https://www.python.org) version 2.7 preferred
 - [GDB](https://www.gnu.org/software/gdb) version 7.7 or higher
@@ -275,9 +275,6 @@ pm2 logs
 
 # Start, restart or stop Kuzzle:
 pm2 "<start|stop|restart>" KuzzleServer
-
-# Access the Kuzzle CLI
-~/kuzzle/bin/kuzzle -h
 ```
 
 ::: success

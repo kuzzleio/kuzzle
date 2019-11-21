@@ -16,7 +16,7 @@ const
       PluginImplementationError
     }
   } = require('kuzzle-common-objects'),
-  BaseController = require('../../../lib/api/controllers/baseController');
+  { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test the auth controller', () => {
   let
@@ -31,7 +31,7 @@ describe('Test the auth controller', () => {
 
     user = new User();
     kuzzle.passport.authenticate.returns(Bluebird.resolve(user));
-
+    kuzzle.pluginsManager.strategies.mockup = {};
     request = new Request({
       controller: 'auth',
       action: 'login',
@@ -49,13 +49,13 @@ describe('Test the auth controller', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(authController).instanceOf(BaseController);
+      should(authController).instanceOf(NativeController);
     });
   });
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(authController).instanceOf(BaseController);
+      should(authController).instanceOf(NativeController);
     });
   });
 
@@ -70,6 +70,7 @@ describe('Test the auth controller', () => {
       });
 
       kuzzle.repositories.token.generateToken.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.resolves(null);
 
       return authController.login(request)
         .then(response => {
@@ -80,8 +81,35 @@ describe('Test the auth controller', () => {
             expiresAt: 4567,
             ttl: 1234
           });
-          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {});
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(user, request.context.connection.id, {});
         });
+    });
+
+    it('should refresh the token if it already exists', async () => {
+      const
+        existingToken = new Token({
+          _id: 'foobar#foo',
+          jwt: 'foo',
+          userId: 'foobar',
+          expiresAt: 4567,
+          ttl: 1234
+        }),
+        token = new Token({
+          _id: 'foobar#bar',
+          jwt: 'bar',
+          userId: 'foobar',
+          expiresAt: 4567,
+          ttl: 1234
+        });
+
+      kuzzle.repositories.token.generateToken.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
+
+      await authController.login(request);
+
+      should(kuzzle.tokenManager.getConnectedUserToken).be.called();
+      should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
     });
 
     it('should modify the result according to auth:strategyAuthenticated pipe events', () => {
@@ -116,9 +144,15 @@ describe('Test the auth controller', () => {
     });
 
     it('should call passport.authenticate with input body and query string', () => {
-      authController.login(request);
-      should(kuzzle.passport.authenticate).be.calledOnce();
-      should(kuzzle.passport.authenticate).be.calledWithMatch({body: {username: 'jdoe'}, query: {foo: 'bar'}});
+      return authController.login(request)
+        .then(() => {
+          should(kuzzle.passport.authenticate)
+            .be.calledOnce()
+            .be.calledWithMatch({
+              body: { username: 'jdoe' },
+              query: { foo: 'bar' }
+            });
+        });
     });
 
     it('should throw if no strategy is specified', () => {
@@ -152,7 +186,8 @@ describe('Test the auth controller', () => {
             expiresAt: 4567,
             ttl: 1234
           });
-          should(kuzzle.repositories.token.generateToken).calledWith(user, request, {expiresIn: '1s'});
+          should(kuzzle.repositories.token.generateToken)
+            .be.calledWith(user, request.context.connection.id, {expiresIn: '1s'});
         });
     });
 
@@ -160,6 +195,14 @@ describe('Test the auth controller', () => {
       kuzzle.passport.authenticate.rejects(new Error('error'));
 
       return should(authController.login(request)).be.rejected();
+    });
+
+    it('should reject in case of unknown strategy', () => {
+      request.input.args.strategy = 'foobar';
+
+      should(() => authController.login(request)).throw(BadRequestError, {
+        id: 'security.credentials.unknown_strategy'
+      });
     });
   });
 
@@ -354,7 +397,7 @@ describe('Test the auth controller', () => {
           should(kuzzle.repositories.token.generateToken)
             .be.calledWith(
               { _id: 'user' },
-              req,
+              req.context.connection.id,
               { expiresIn: '42h' }
             );
 

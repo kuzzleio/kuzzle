@@ -15,12 +15,17 @@ if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
     docker-compose/scripts/install-plugins.sh
 fi
 
+spinner="/"
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
 while ! curl -f -s -o /dev/null "$elastic_host"
 do
-    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host"
+    printf '\r'
+    echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host [$spinner]"
     sleep 1
+
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
 done
+
 # create a tmp index just to force the shards to init
 curl -XPUT -s -o /dev/null "$elastic_host/%25___tmp"
 echo "[$(date --rfc-3339 seconds)] - Elasticsearch is up. Waiting for shards to be active (can take a while)"

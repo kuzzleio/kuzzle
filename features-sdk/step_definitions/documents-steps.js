@@ -17,8 +17,7 @@ Given('I create the following document:', async function (dataTable) {
     index,
     collection,
     document.body,
-    document._id,
-    { refresh: 'wait_for' });
+    document._id);
 
   this.props.documentId = this.props.result._id;
 });
@@ -44,8 +43,26 @@ Then('I {string} the following documents:', async function (action, dataTable) {
   this.props.result = await this.sdk.document[action](
     this.props.index,
     this.props.collection,
-    documents,
-    { refresh: 'wait_for' });
+    documents);
+});
+
+Then('I {string} the document {string} with content:', async function (action, _id, dataTable) {
+  const body = this.parseObject(dataTable);
+
+  if (action === 'create') {
+    this.props.result = await this.sdk.document[action](
+      this.props.index,
+      this.props.collection,
+      body,
+      _id);
+  }
+  else {
+    this.props.result = await this.sdk.document[action](
+      this.props.index,
+      this.props.collection,
+      _id,
+      body);
+  }
 });
 
 Then('I should receive a {string} array of objects matching:', function (name, dataTable) {
@@ -53,10 +70,10 @@ Then('I should receive a {string} array of objects matching:', function (name, d
 
   should(this.props.result[name].length).be.eql(
     expected.length,
-    `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
+    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
 
   for (let i = 0; i < expected.length; i++) {
-    should(this.props.result[name][i]).match(expected[i]);
+    should(this.props.result[name][i]).matchObject(expected[i]);
   }
 });
 
@@ -65,7 +82,7 @@ Then('I should receive a {string} array matching:', function (name, dataTable) {
 
   should(this.props.result[name].length).be.eql(
     expected.length,
-    `Array are not the same size: expected ${this.props.result[name].length} got ${expected.length}`);
+    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
 
   should(this.props.result[name].sort()).match(expected.sort());
 });
@@ -122,8 +139,7 @@ Then('I {string} the following document ids:', async function (action, dataTable
   this.props.result = await this.sdk.document[action](
     this.props.index,
     this.props.collection,
-    ids,
-    { refresh: 'wait_for' });
+    ids);
 });
 
 Then('I search documents with the following query:', function (queryRaw) {
@@ -143,4 +159,11 @@ Then('I execute the search query', async function () {
     this.props.index,
     this.props.collection,
     this.props.searchBody);
+});
+
+Then('I delete the document {string}', async function (id) {
+  this.props.result = await this.sdk.document.delete(
+    this.props.index,
+    this.props.collection,
+    id);
 });

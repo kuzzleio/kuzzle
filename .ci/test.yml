@@ -2,7 +2,7 @@ version: '3'
 
 services:
   kuzzle:
-    image: kuzzleio/core-dev:2.x
+    image: kuzzleio/core-dev:2
     command: sh -c 'chmod 755 /run.sh && /run.sh'
     volumes:
       - "..:/var/app"
@@ -10,6 +10,10 @@ services:
       - "./config/pm2.json:/config/pm2.json"
     cap_add:
       - SYS_PTRACE
+    ulimits:
+      nofile: 65536
+    sysctls:
+      - net.core.somaxconn=8192
     ports:
       - "7512:7512"
     depends_on:
@@ -24,8 +28,9 @@ services:
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=production
-      - DEBUG=
-      - NODE_LTS=${NODE_LTS:-10}
+      - DEBUG
+      - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
+      - KUZZLE_VAULT_KEY=secret-password
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT
@@ -36,14 +41,9 @@ services:
       - TRAVIS_REPO_SLUG
 
   redis:
-    image: redis:${REDIS_VERSION:-5}
+    image: redis:5
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.3.0
+    image: kuzzleio/elasticsearch:7.4.0
     ulimits:
       nofile: 65536
-    environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - node.name=alyx
-      - cluster.name=kuzzle
-      - discovery.type=single-node

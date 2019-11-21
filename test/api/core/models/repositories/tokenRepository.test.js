@@ -1,4 +1,5 @@
 const
+  ms = require('ms'),
   jwt = require('jsonwebtoken'),
   Bluebird = require('bluebird'),
   should = require('should'),
@@ -6,7 +7,6 @@ const
   sinon = require('sinon'),
   Token = require('../../../../../lib/api/core/models/security/token'),
   User = require('../../../../../lib/api/core/models/security/user'),
-  Request = require('kuzzle-common-objects').Request,
   RequestContext = require('kuzzle-common-objects').models.RequestContext,
   TokenRepository = require('../../../../../lib/api/core/models/repositories/tokenRepository'),
   {
@@ -157,25 +157,27 @@ describe('Test: repositories/tokenRepository', () => {
         });
     });
 
-    it('should reject the promise if the context is null', () => {
+    it('should reject the promise if the connectionId is null', () => {
       const user = new User();
 
       user._id = 'foobar';
 
-      return should(tokenRepository.generateToken(user, new Request({})))
+      return should(tokenRepository.generateToken(user, null))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'security.token.unknown_connection'
         });
     });
 
     it('should reject the promise if an error occurred while generating the token', () => {
-      const
-        user = new User(),
-        request = new Request({}, context);
-
+      const user = new User();
       user._id = 'foobar';
 
-      return should(tokenRepository.generateToken(user, request, {expiresIn: 'foo'}))
+      const promise = tokenRepository.generateToken(
+        user,
+        context.connection.id,
+        { expiresIn: 'foo' });
+
+      return should(promise)
         .be.rejectedWith(KuzzleInternalError, {
           id: 'security.token.generation_failed'
         });
@@ -184,23 +186,25 @@ describe('Test: repositories/tokenRepository', () => {
     it('should resolve to a token signed with the provided username', () => {
       const
         user = new User(),
-        checkToken = jwt.sign({_id: 'userInCache'}, kuzzle.config.security.jwt.secret, {
-          algorithm: kuzzle.config.security.jwt.algorithm,
-          expiresIn: kuzzle.config.security.jwt.expiresIn
-        });
-
+        checkToken = jwt.sign(
+          { _id: 'userInCache' },
+          kuzzle.config.security.jwt.secret,
+          {
+            algorithm: kuzzle.config.security.jwt.algorithm,
+            expiresIn: ms(kuzzle.config.security.jwt.expiresIn)
+          });
       user._id = 'userInCache';
+      const persistForUserSpy = sinon.spy(tokenRepository, 'persistForUser');
 
-      const request = new Request({}, {
-        user,
-        connectionId: 'connectionId'
-      });
-
-      return tokenRepository.generateToken(user, request)
+      return tokenRepository.generateToken(user, 'connectionId')
         .then(token => {
           should(token).be.an.instanceOf(Token);
           should(token.jwt).be.exactly(checkToken);
           should(token._id).be.exactly(user._id + '#' + checkToken);
+          should(persistForUserSpy).be.calledWith(
+            checkToken,
+            user._id,
+            3600000);
         });
     });
 
@@ -209,14 +213,9 @@ describe('Test: repositories/tokenRepository', () => {
 
       user._id = 'userInCache';
 
-      const request = new Request({}, {
-        connectionId: 'connectionId',
-        user
-      });
-
       tokenRepository.cacheEngine.setex.rejects(new Error('error'));
 
-      return should(tokenRepository.generateToken(user, request))
+      return should(tokenRepository.generateToken(user, 'connectionId'))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'services.cache.write_failed'
         });
@@ -226,12 +225,7 @@ describe('Test: repositories/tokenRepository', () => {
       const user = new User();
       user._id = 'id';
 
-      const request = new Request({}, {
-        user,
-        connectionId: 'connectionId'
-      });
-
-      return tokenRepository.generateToken(user, request, {expiresIn: '1000y'})
+      return tokenRepository.generateToken(user, 'connectionId', {expiresIn: '1000y'})
         .then(token => {
           should(token).be.an.instanceOf(Token);
         });
@@ -241,14 +235,9 @@ describe('Test: repositories/tokenRepository', () => {
       const user = new User();
       user._id = 'id';
 
-      const request = new Request({}, {
-        user,
-        connectionId: 'connectionId'
-      });
-
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      return tokenRepository.generateToken(user, request, {expiresIn: '30s'})
+      return tokenRepository.generateToken(user, 'connectionId', {expiresIn: '30s'})
         .then(token => {
           should(token).be.an.instanceOf(Token);
         });
@@ -258,36 +247,68 @@ describe('Test: repositories/tokenRepository', () => {
       const user = new User();
       user._id = 'id';
 
-      const request = new Request({}, {
-        user,
-        connectionId: 'connectionId'
-      });
-
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      return should(tokenRepository.generateToken(user, request, {expiresIn: '1m'}))
+      return should(tokenRepository.generateToken(user, 'connectionId', {expiresIn: '1m'}))
         .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
     });
 
-    it('should refresh the token if needed', () => {
-      const oldToken = {};
-      kuzzle.tokenManager.getConnectedUserToken.returns(oldToken);
-
+    it('should reject if the ttl is infinite and the maxTTL is finite', async () => {
       const user = new User();
       user._id = 'id';
 
-      const request = new Request({}, {
+      kuzzle.config.security.jwt.maxTTL = 42000;
+
+      const promise = tokenRepository.generateToken(
         user,
-        connectionId: 'connectionId'
-      });
+        'connectionId',
+        { expiresIn: -1 });
 
-      return tokenRepository.generateToken(user, request)
-        .then(token => {
-          should(kuzzle.tokenManager.refresh)
-            .be.calledOnce()
-            .be.calledWith(oldToken, token);
-        });
+      await should(promise)
+        .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
+    });
 
+    it('should reject if the ttl not ms-compatible or not a number', async () => {
+      const user = new User();
+      user._id = 'id';
+
+      const promise = tokenRepository.generateToken(
+        user,
+        'connectionId',
+        { expiresIn: 'ehh' });
+
+      await should(promise).be.rejectedWith(KuzzleInternalError);
+    });
+
+    it('should call #persistForUser', () => {
+
+    });
+  });
+
+  describe('#persistForUser', () => {
+    it('should persist a token with TTL into Redis', async () => {
+      const token = await tokenRepository.persistForUser(
+        'encoded-token',
+        'user-id',
+        42000);
+
+      should(tokenRepository.cacheEngine.setex)
+        .be.calledOnce()
+        .be.calledWith('repos/kuzzle/token/user-id#encoded-token', 42);
+      should(token._id).be.eql('user-id#encoded-token');
+      should(token.ttl).be.eql(42000);
+      should(token.expiresAt).be.approximately(Date.now() + 42000, 20);
+    });
+
+    it('should persist a token without TTL into Redis', async () => {
+      await tokenRepository.persistForUser(
+        'encoded-token',
+        'user-id',
+        -1);
+
+      should(tokenRepository.cacheEngine.set)
+        .be.calledOnce()
+        .be.calledWith('repos/kuzzle/token/user-id#encoded-token');
     });
   });
 
@@ -311,12 +332,7 @@ describe('Test: repositories/tokenRepository', () => {
 
       user._id = 'userInCache';
 
-      const request = new Request({}, {
-        connectionId: 'connectionId',
-        user
-      });
-
-      return tokenRepository.generateToken(user, request)
+      return tokenRepository.generateToken(user, 'connectionId')
         .then(t => {
           token = t;
           return tokenRepository.expire(token);
@@ -330,7 +346,6 @@ describe('Test: repositories/tokenRepository', () => {
   });
 
   describe('#deleteByUserId', () => {
-    // @todo ask seb or benoit for these tests
     it('should delete the tokens associated to a user identifier', () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.resolves([

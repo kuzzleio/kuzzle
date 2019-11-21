@@ -29,8 +29,8 @@ describe('Test: ElasticSearch service', () => {
 
     esClientError = new Error('es client fail');
 
-    elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
     ES.buildClient = () => new ESClientMock();
+    elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
 
     await elasticsearch.init();
 
@@ -358,10 +358,6 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#create', () => {
-    beforeEach(() => {
-      elasticsearch.exists = sinon.stub().resolves(false);
-    });
-
     it('should allow creating document an ID is provided', () => {
       elasticsearch._client.index.resolves({
         body: {
@@ -379,7 +375,6 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(elasticsearch.exists).be.calledWith(index, collection, 'liia');
           should(elasticsearch._client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
@@ -390,7 +385,8 @@ describe('Test: ElasticSearch service', () => {
               }
             },
             id: 'liia',
-            refresh: 'wait_for'
+            refresh: 'wait_for',
+            op_type: 'create'
           });
 
           should(result).match({
@@ -417,7 +413,6 @@ describe('Test: ElasticSearch service', () => {
 
       return promise
         .then(result => {
-          should(elasticsearch.exists).not.be.called();
           should(elasticsearch._client.index).be.calledWithMatch({
             index: esIndexName,
             body: {
@@ -425,7 +420,8 @@ describe('Test: ElasticSearch service', () => {
               _kuzzle_info: {
                 author: null
               }
-            }
+            },
+            op_type: 'index'
           });
 
           should(result).match({
@@ -896,6 +892,74 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#batchExecute', () => {
+    it('should call the callback method with each batch returned by ES', async () => {
+      const
+        hits1 = {
+          hits: [21, 42, 84],
+          total: {
+            value: 5
+          }
+        },
+        hits2 = {
+          hits: [168, 336],
+          total: {
+            value: 5
+          }
+        },
+        callbackStub = sinon
+          .stub()
+          .onCall(0).resolves(1)
+          .onCall(1).resolves(2);
+      elasticsearch._client.search.callsArgWith(
+        1,
+        null,
+        {
+          body: { hits: hits1 },
+          _scroll_id: 'scroll-id'
+        });
+      elasticsearch._client.scroll.callsArgWith(
+        1,
+        null,
+        {
+          body: { hits: hits2 },
+          _scroll_id: 'scroll-id'
+        });
+
+      const result = await elasticsearch.batchExecute(
+        index,
+        collection,
+        { match: 21 },
+        callbackStub);
+
+      should(result).match([1, 2]);
+
+      should(elasticsearch._client.search.getCall(0).args[0]).match({
+        index: esIndexName,
+        body: { query: { match: 21 } },
+        scroll: '5s',
+        from: 0,
+        size: 10
+      });
+
+      should(callbackStub).be.calledTwice();
+      should(callbackStub.getCall(0).args[0]).be.eql(hits1.hits);
+      should(callbackStub.getCall(1).args[0]).be.eql(hits2.hits);
+    });
+
+    it('should reject if the query is empty', () => {
+      const promise = elasticsearch.batchExecute(
+        index,
+        collection,
+        'not an object',
+        () => {});
+
+      return should(promise).be.rejectedWith({
+        id: 'services.storage.missing_argument'
+      });
+    });
+  });
+
   describe('#createIndex', () => {
     beforeEach(() => {
       elasticsearch._client.cat.indices.resolves({
@@ -1018,6 +1082,22 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+        });
+    });
+
+    it('should not reject when a race condition occur between exists and create methods', () => {
+      elasticsearch._client.indices.create.rejects({
+        meta: { body: { error: { type: 'resource_already_exists_exception' } } }
+      });
+
+      const promise = elasticsearch.createCollection(
+        index,
+        collection,
+        { properties: { city: { type: 'keyword' } } });
+
+      return should(promise).be.fulfilled()
+        .then(() => {
+          should(elasticsearch._esWrapper.reject).not.be.called();
         });
     });
 

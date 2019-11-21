@@ -74,7 +74,7 @@ Body:
 ### Optional:
 
 - `_id`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier). An error is returned if the provided identifier already exists. If not provided, a random kuid is automatically generated.
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created user is indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created user is indexed (default: `"wait_for"`)
 
 ---
 
