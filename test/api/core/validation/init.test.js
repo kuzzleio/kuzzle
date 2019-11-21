@@ -113,7 +113,6 @@ describe('Test: validation initialization', () => {
         .then(() => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual(configurationMock);
-          should(kuzzle.log.info.callCount).be.eql(3);
         });
     });
 

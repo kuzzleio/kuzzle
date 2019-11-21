@@ -602,7 +602,7 @@ describe('Test: security controller - users', () => {
       return should(() => {
         securityController.createRestrictedUser(new Request({body: {content: {profileIds: ['foo']}}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.forbidden_argument',
+        id: 'api.assert.forbidden_argument',
         message: 'The argument "body.content.profileIds" is not allowed by this API action.'
       });
     });
@@ -645,7 +645,7 @@ describe('Test: security controller - users', () => {
       return should(() => {
         securityController.updateUser(new Request({body: {}}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });
     });
@@ -679,7 +679,7 @@ describe('Test: security controller - users', () => {
         _id: 'badId',
         body: {},
         action: 'updateProfile'
-      }))).be.rejectedWith(NotFoundError, { errorName: 'security.profile.not_found'});
+      }))).be.rejectedWith(NotFoundError, { id: 'security.profile.not_found'});
     });
 
     it('should return an error if an unknown profile is provided', () => {
@@ -687,7 +687,7 @@ describe('Test: security controller - users', () => {
         securityController.updateUser(new Request({
           _id: 'test',
           body: {profileIds: ['foobar']}
-        })).throw(NotFoundError, { errorName: 'security.profile.not_found' });
+        })).throw(NotFoundError, { id: 'security.profile.not_found' });
       });
     });
 
@@ -719,7 +719,7 @@ describe('Test: security controller - users', () => {
     it('should return an error if the request is invalid', () => {
       return should(() => {
         securityController.replaceUser(new Request({_id: 'test'}));
-      }).throw(BadRequestError, { errorName: 'api.assert.body_required' });
+      }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should replace the user correctly', () => {
@@ -755,7 +755,7 @@ describe('Test: security controller - users', () => {
       return should(securityController.replaceUser(new Request({
         _id: 'i.dont.exist',
         body: { profileIds: ['anonymous'] }
-      }))).be.rejectedWith(NotFoundError, { errorName: 'security.user.not_found'});
+      }))).be.rejectedWith(NotFoundError, { id: 'security.user.not_found'});
     });
 
     it('should forward refresh option', () => {
@@ -838,7 +838,7 @@ describe('Test: security controller - users', () => {
       return should(() => {
         securityController.getUserRights(new Request({_id: ''}));
       }).throw(BadRequestError, {
-        errorName: 'api.assert.missing_argument',
+        id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });
     });
@@ -882,7 +882,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.load.resolves(null);
       return should(securityController.revokeTokens(new Request({
         _id: 'test'
-      }))).be.rejectedWith(NotFoundError, { errorName: 'security.user.not_found' });
+      }))).be.rejectedWith(NotFoundError, { id: 'security.user.not_found' });
     });
   });
 });
