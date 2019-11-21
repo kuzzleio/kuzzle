@@ -7,11 +7,11 @@ order: 200
 
 # Configuring Kuzzle
 
-The Kuzzle **configuration** is stored in a [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample) found in the root folder of your Kuzzle installation.
+The Kuzzle **configuration** is stored in a [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/1-stable/.kuzzlerc.sample) found in the root folder of your Kuzzle installation.
 
 Kuzzle uses [rc](https://github.com/dominictarr/rc) to **override** its default configuration by either:
 
-- loading parameters from a `.kuzzlerc` file ([sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)) ;
+- loading parameters from a `.kuzzlerc` file ([sample file](https://github.com/kuzzleio/kuzzle/blob/1-stable/.kuzzlerc.sample)) ;
 - loading parameters from environment variables with a `kuzzle_` prefix.
 
 ### Example 1: configuring Kuzzle using a custom `.kuzzlerc` file
@@ -76,5 +76,5 @@ services:
 ```
 
 :::info
-For an exhaustive list of configuration parameters, please refer to the [kuzzlerc sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample).
+For an exhaustive list of configuration parameters, please refer to the [kuzzlerc sample file](https://github.com/kuzzleio/kuzzle/blob/1-stable/.kuzzlerc.sample).
 :::
