@@ -6,8 +6,8 @@ const
   } = require('cucumber');
 
 Given('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
-  const data = this.parseObject(dataTable);
-  const policies = [];
+  const data = this.parseObject(dataTable),
+    policies = [];
   for (const [roleId, restrictedTo] of Object.entries(data)) {
     policies.push({ roleId, restrictedTo });
   }
@@ -24,7 +24,8 @@ Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
 
   try {
     await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
-  } catch (e) {
+  }
+  catch (e) {
     if (not) {
       return;
     }
@@ -35,7 +36,8 @@ Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
 Then(/I (can not )?delete the profile "(.*?)"/, async function (not, profileId) {
   try {
     await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' });
-  } catch (e) {
+  }
+  catch (e) {
     if (not) {
       return;
     }
