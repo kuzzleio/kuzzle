@@ -15,9 +15,12 @@ chmod -R 777 node_modules/
 docker-compose/scripts/install-plugins.sh
 
 echo "[$(date --rfc-3339 seconds)] - Waiting for elasticsearch to be available"
+spinner="/"
 while ! curl -f -s -o /dev/null "$elastic_host"
 do
-    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host"
+    printf '\r'
+    echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host [$spinner]"
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
     sleep 1
 done
 # create a tmp index just to force the shards to init
@@ -36,7 +39,9 @@ node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 while ! curl -f -s -o /dev/null http://localhost:7512
 do
-    echo "[$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle"
+    printf '\r'
+    echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to Kuzzle [$spinner]"
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
     sleep 1
 done
 

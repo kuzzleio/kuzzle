@@ -23,12 +23,7 @@ do
     echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host [$spinner]"
     sleep 1
 
-    if [ "$spinner" = "/" ];
-    then
-      spinner="\\"
-    else
-      spinner="/"
-    fi
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
 done
 
 # create a tmp index just to force the shards to init
