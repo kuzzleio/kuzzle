@@ -26,6 +26,13 @@ Body:
 }
 ```
 
+You can either hit the route with `GET` verb
+
+```http
+URL: http://kuzzle:7512/<index>/<collection>/_mGet?ids=documentId,anotherDocumentId
+Method: GET
+```
+
 ### Other protocols
 
 ```js
