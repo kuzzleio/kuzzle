@@ -22,7 +22,7 @@ do
     echo -n "[$(date --rfc-3339 seconds)] - Still trying to connect to $elastic_host [$spinner]"
     if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
     sleep 1
-  done"
+done
 # create a tmp index just to force the shards to init
 curl -XPUT -s -o /dev/null "$elastic_host/%25___tmp"
 echo "[$(date --rfc-3339 seconds)] - Elasticsearch is up. Waiting for shards to be active (can take a while)"
@@ -50,7 +50,7 @@ do
     fi
 
     sleep 1
-  done"
+done
 
 npm run functional-testing
 npm run functional-testing2
