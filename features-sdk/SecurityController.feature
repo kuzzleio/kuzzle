@@ -111,3 +111,26 @@ Feature: Security Controller
     # Test of roles reset
     And The role "anonymous" should match the default one
     And The role "default" should match the default one
+
+  @deleteProfile
+  Scenario: Delete a profile
+    Given I create a role "test-role" with the following API rights:
+    | document | { "actions": { "create": true, "update": true } } |
+    And I create a profile "test-profile" with the following policies:
+    | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    Then I delete the profile "test-profile"
+    And I delete the role "test-role"
+
+  @deleteProfile
+  Scenario: Delete a profile while being assigned to a user
+    Given I create a role "test-role" with the following API rights:
+    | document | { "actions": { "create": true, "update": true } } |
+    And I create a profile "test-profile" with the following policies:
+    | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I create a user "test-user" with content:
+    | profileIds | ["test-profile"] |
+    Then I can not delete the profile "test-profile"
+    And I can not delete the role "test-role"
+    Then I delete the user "test-user"
+    And I delete the profile "test-profile"
+    And I delete the role "test-role"
