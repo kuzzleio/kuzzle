@@ -9,7 +9,7 @@ spinner="/"
 while ! curl -f -s -o /dev/null "$elastic_host"
 do
     printf '\r'
-    echo "[$(date --rfc-3339 seconds)] Still trying to connect to $elastic_host [$spinner]"
+    echo -n "[$(date --rfc-3339 seconds)] Still trying to connect to $elastic_host [$spinner]"
     if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
     sleep 1
 done
