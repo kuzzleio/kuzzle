@@ -140,7 +140,7 @@ Then('I {string} the following document ids with verb {string}:', async function
     this.props.index,
     this.props.collection,
     ids,
-    {verb: verb});
+    { verb });
 });
 
 Then('I search documents with the following query:', function (queryRaw) {
