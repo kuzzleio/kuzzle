@@ -23,24 +23,25 @@ describe('Test: core/janitor', () => {
   let
     Janitor,
     janitor,
-    kuzzle;
+    kuzzle,
+    runShutdown;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
+    runShutdown = sinon.stub().resolves();
+    mockrequire('../../../lib/util/shutdown', runShutdown);
+    Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
     Janitor = rewire('../../../lib/api/core/janitor');
     janitor = new Janitor(kuzzle);
   });
 
+  afterEach(() => {
+    mockrequire.stopAll();
+  });
+
   describe('#loadSecurities', () => {
     const securities = require('../../mocks/securities.json');
-
-    beforeEach(() => {
-      Janitor = mockrequire.reRequire('../../../lib/api/core/janitor');
-    });
-
-    afterEach(() => {
-      mockrequire.stopAll();
-    });
 
     it('should create or replace roles', () => {
       kuzzle.funnel.processRequest.resolves(true);
@@ -132,10 +133,6 @@ describe('Test: core/janitor', () => {
   describe('#loadFixtures', () => {
     const fixtures = require('../../mocks/fixtures.json');
 
-    beforeEach(() => {
-      janitor = new Janitor(kuzzle);
-    });
-
     it('create index and collection that does not exists', () => {
       const storageEngine = kuzzle.storageEngine.public;
       storageEngine.import.onCall(0).resolves({ errors: []});
@@ -162,10 +159,6 @@ describe('Test: core/janitor', () => {
 
   describe('#loadMappings', () => {
     const mappings = require('../../mocks/mappings.json');
-
-    beforeEach(() => {
-      janitor = new Janitor(kuzzle);
-    });
 
     it('create index and collection that does not exists', () => {
       const storageEngine = kuzzle.storageEngine.public;
@@ -201,11 +194,6 @@ describe('Test: core/janitor', () => {
       getAllStatsStub,
       suffix,
       globStub;
-
-    afterEach(() => {
-      mockrequire.stopAll();
-      janitor._dump = false;
-    });
 
     beforeEach(() => {
       fsStub = {
@@ -455,166 +443,9 @@ describe('Test: core/janitor', () => {
   });
 
   describe('#shutdown', () => {
-    let pm2Mock;
-
-    beforeEach(() => {
-      kuzzle.funnel.remainingRequests = 0;
-
-      pm2Mock = {
-        list: sinon.stub(),
-        restart: sinon.stub(),
-        delete: sinon.stub()
-      };
-
-      mockrequire('pm2', pm2Mock);
-      mockrequire.reRequire('../../../lib/api/core/janitor');
-      Janitor = rewire('../../../lib/api/core/janitor');
-
-      Janitor.__set__({
-        // prevent waiting seconds for unit tests
-        setTimeout: sinon.spy(function (...args) { setImmediate(args[0]); })
-      });
-
-      janitor = new Janitor(kuzzle);
-
-      sinon.stub(janitor, '_halt');
-    });
-
-    afterEach(() => {
-      mockrequire.stopAll();
-    });
-
-    it('should exit immediately if unable to retrieve the PM2 process list', done => {
-      pm2Mock.list.yields(new Error('foo'));
-
-      janitor.shutdown(kuzzle, sinon.stub())
-        .then(() => {
-          setTimeout(() => {
-            should(kuzzle.entryPoints.dispatch)
-              .calledOnce()
-              .calledWith('shutdown');
-
-            should(janitor._halt).calledOnce();
-            should(pm2Mock.delete).not.be.called();
-            should(pm2Mock.restart).not.be.called();
-            done();
-          }, 50);
-        });
-    });
-
-    it('should exit immediately if kuzzle was not started with PM2', done => {
-      pm2Mock.list.yields(null, []);
-
-      janitor.shutdown(kuzzle, sinon.stub())
-        .then(() => {
-          setTimeout(() => {
-            should(kuzzle.entryPoints.dispatch)
-              .calledOnce()
-              .calledWith('shutdown');
-
-            should(janitor._halt).calledOnce();
-            should(pm2Mock.delete).not.be.called();
-            should(pm2Mock.restart).not.be.called();
-            done();
-          }, 50);
-        });
-    });
-
-    it('should restart Kuzzle instead of stopping it if the PM2 watcher is active', done => {
-      pm2Mock.list.yields(null, [{
-        pid: process.pid,
-        pm_id: 'foobar',
-        pm2_env: {
-          watch: true
-        }
-      }]);
-
-      janitor.shutdown(kuzzle, sinon.stub())
-        .then(() => {
-          setTimeout(() => {
-            should(kuzzle.entryPoints.dispatch)
-              .calledOnce()
-              .calledWith('shutdown');
-
-            should(janitor._halt).not.called();
-            should(pm2Mock.delete).not.be.called();
-            should(pm2Mock.restart).be.calledOnce().calledWith('foobar');
-            done();
-          }, 50);
-        });
-    });
-
-    it('should delete entries from PM2 if PM2 watcher is inactive and halt Kuzzle', done => {
-      pm2Mock.list.yields(null, [{
-        pid: process.pid,
-        pm_id: 'foobar',
-        pm2_env: {}
-      }]);
-
-      janitor.shutdown(kuzzle, sinon.stub())
-        .then(() => {
-          // should wait until called a second time by PM2
-          setTimeout(() => {
-            should(kuzzle.entryPoints.dispatch)
-              .calledOnce()
-              .calledWith('shutdown');
-
-            should(janitor._halt).not.be.called();
-            should(pm2Mock.delete).be.calledOnce().calledWith('foobar');
-            should(pm2Mock.restart).not.be.called();
-
-            janitor.shutdown(kuzzle, sinon.stub());
-
-            setTimeout(() => {
-              should(kuzzle.entryPoints.dispatch)
-                .calledOnce()
-                .calledWith('shutdown');
-
-              should(janitor._halt).be.calledOnce();
-              should(pm2Mock.delete).be.calledOnce().calledWith('foobar');
-              should(pm2Mock.restart).not.be.called();
-              done();
-            }, 200);
-          }, 50);
-        });
-    });
-
-    it('should wait for the funnel to finish remaining requests before shutting down', done => {
-      // security against a wrong "success" test
-      let remainingChanged = false;
-
-      kuzzle.funnel.remainingRequests = 123;
-
-      pm2Mock.list.yields(new Error('foo'));
-
-      janitor.shutdown(kuzzle, sinon.stub())
-        .then(() => {
-          setTimeout(() => {
-            should(remainingChanged).be.true();
-            should(kuzzle.entryPoints.dispatch)
-              .calledOnce()
-              .calledWith('shutdown');
-
-            should(janitor._halt).calledOnce();
-            should(pm2Mock.delete).not.be.called();
-            should(pm2Mock.restart).not.be.called();
-            done();
-          }, 50);
-        });
-
-      setTimeout(() => {
-        should(kuzzle.entryPoints.dispatch)
-          .calledOnce()
-          .calledWith('shutdown');
-
-        should(pm2Mock.delete).not.be.called();
-        should(pm2Mock.restart).not.be.called();
-        should(janitor._halt).not.be.called();
-
-        kuzzle.funnel.remainingRequests = 0;
-        remainingChanged = true;
-      }, 100);
+    it('should exit immediately if unable to retrieve the PM2 process list', async () => {
+      await janitor.shutdown(kuzzle);
+      should(runShutdown).calledOnce().calledWith(kuzzle);
     });
   });
-
 });
