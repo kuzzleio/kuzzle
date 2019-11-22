@@ -4,7 +4,7 @@ const
   should = require('should'),
   sinon = require('sinon'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  ControllerMock = require('../../../mocks/controller.mock'),
+  { MockNativeController } = require('../../../mocks/controller.mock'),
   FunnelController = require('../../../../lib/api/controllers/funnelController'),
   {
     Request,
@@ -20,7 +20,7 @@ describe('funnelController.executePluginRequest', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
-    funnel.controllers.testme = new ControllerMock(kuzzle);
+    funnel.controllers.set('testme', new MockNativeController(kuzzle));
     originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
   });
@@ -42,7 +42,7 @@ describe('funnelController.executePluginRequest', () => {
 
     return funnel.executePluginRequest(rq)
       .then(res => {
-        should(funnel.controllers.testme.succeed)
+        should(funnel.controllers.get('testme').succeed)
           .calledOnce()
           .calledWith(rq);
 
@@ -72,7 +72,7 @@ describe('funnelController.executePluginRequest', () => {
     funnel.executePluginRequest(rq)
       .then(() => done(new Error('Should not resolve')))
       .catch (e => {
-        if (e === funnel.controllers.testme.failResult) {
+        if (e === funnel.controllers.get('testme').failResult) {
           return callback();
         }
         done(e);
@@ -100,7 +100,7 @@ describe('funnelController.executePluginRequest', () => {
     funnel.executePluginRequest(rq)
       .then(() => done(new Error('Should not resolve')))
       .catch (e => {
-        if (e === funnel.controllers.testme.failResult) {
+        if (e === funnel.controllers.get('testme').failResult) {
           return callback();
         }
         done(e);

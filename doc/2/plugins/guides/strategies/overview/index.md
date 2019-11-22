@@ -14,7 +14,7 @@ All authentication strategies supported by [Passport.js](http://passportjs.org) 
 
 ---
 
-## Registering authentication strategies
+## Exposing authenticators
 
 [Passport.js](http://passportjs.org) provides a wide range of authentication strategies.
 Custom authentication strategies can also be implemented by subclassing the abstract [Passport Strategy](https://github.com/jaredhanson/passport-strategy) class.
@@ -42,19 +42,57 @@ Instead, Kuzzle:
 
 ---
 
-## Managing credentials
-
-There are two ways of interfacing credentials management:
+There are two ways of registering new strategies:
 
 - statically, by exposing a `strategies` object
 - dynamically, by using the dedicated [strategy accessors](/core/2/plugins/plugin-context/accessors/strategies)
 
-Whether strategies are added statically or dynamically, the `strategies` object must expose the following properties:
+Whether strategies are added statically or dynamically, the registered strategy must expose the following properties:
 
 | Arguments | Type              | Description                           |
 | --------- | ----------------- | ------------------------------------- |
 | `config`  | <pre>object</pre> | Authentication strategy configuration |
 | `methods` | <pre>object</pre> | List of exposed methods               |
+
+### statically register strategies
+
+Plugins can declare a `strategies` object which contains the authentication strategies to register.  
+This object will be interpreted by Kuzzle only once, immediately after this plugin's init function has resolved.  
+Each key of this object is the name of the strategy to register and the value is the strategy object containing `config` and `methods` properties.  
+
+For example, to register a strategy named `local` with the `Local` authenticator:
+```js
+this.authenticators = {
+  Local: require('passport-local')
+};
+
+this.strategies = {
+  local: {
+    config: {
+      authenticator: 'Local'
+    },
+    // these methods must be exposed by the plugin 
+    methods: {
+      create: 'create',
+      delete: 'delete',
+      exists: 'exists',
+      getById: 'getById',
+      getInfo: 'getInfo',
+      update: 'update',
+      validate: 'validate',
+      verify: 'verify'
+    }
+  }
+}
+```
+
+### dynamically register strategies
+
+Strategies can be register at runtime with the [strategies.add](/core/1/plugins/plugin-context/accessors/strategies/#add) method.  
+
+::: info
+Strategies added dynamically in the plugin's [init method](/core/1/plugins/guides/manual-setup/init-function/) are added to the static `strategies` object and loaded by Kuzzle after the plugin initialization.
+:::
 
 ### config
 

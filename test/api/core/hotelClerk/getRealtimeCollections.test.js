@@ -10,9 +10,7 @@ describe('Test: hotelClerk.getRealtimeCollections', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.koncorde.storage = {
-      filtersIndex: {}
-    };
+    kuzzle.koncorde.getCollections.returns([]);
 
     hotelClerk = new HotelClerck(kuzzle);
   });
@@ -24,18 +22,9 @@ describe('Test: hotelClerk.getRealtimeCollections', () => {
   });
 
   it('should return an array of unique collection names', () => {
-    kuzzle.koncorde.storage.filtersIndex = {
-      index: {
-        foo: true,
-        bar: true,
-      },
-      anotherIndex: {
-        baz: true
-      }
-    };
+    kuzzle.koncorde.getCollections.withArgs('index').returns(['foo', 'bar']);
+    kuzzle.koncorde.getCollections.withArgs('anotherIndex').returns(['baz']);
 
-    const collections = hotelClerk.getRealtimeCollections('index');
-    should(collections)
-      .match(['foo', 'bar']);
+    should(hotelClerk.getRealtimeCollections('index')).match(['foo', 'bar']);
   });
 });

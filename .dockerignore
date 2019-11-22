@@ -1,8 +1,15 @@
-node_modules
+**/node_modules
 dump
+index-dump
 vagrant
 Vagrantfile
-.git
+**/.git
+/.ci
 .idea
+.nyc_output
 .sonar
 sonar-project.properties
+
+plugins/available/functional-test-plugin
+plugins/enabled/functional-test-plugin
+plugins/enabled/dummy

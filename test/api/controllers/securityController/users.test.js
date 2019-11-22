@@ -253,10 +253,10 @@ describe('Test: security controller - users', () => {
         });
     });
 
-    it('should throw an error when no id is given', () => {
-      return should(() => {
-        securityController.deleteUser(new Request({}));
-      }).throw(BadRequestError, {
+    it('should throw an error when no id is given', async () => {
+      const promise = securityController.deleteUser(new Request({}));
+
+      await should(promise).be.rejectedWith(BadRequestError, {
         id: 'api.assert.missing_argument',
         message: 'Missing argument "_id".'
       });

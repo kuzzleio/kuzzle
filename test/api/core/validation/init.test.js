@@ -113,7 +113,6 @@ describe('Test: validation initialization', () => {
         .then(() => {
           should(validation.rawConfiguration).be.eql(configurationMock);
           should(validation.specification).be.deepEqual(configurationMock);
-          should(kuzzle.log.info.callCount).be.eql(3);
         });
     });
 
@@ -348,7 +347,7 @@ describe('Test: validation initialization', () => {
         .then(response => {
           should(response.isValid).be.false();
           should(response.errors.length).be.eql(1);
-          should(response.errors[0]).be.eql(`The object "${indexName}.${collectionName}" contains unexpected properties (allowed: strict,fields,validators).`);
+          should(response.errors[0]).be.eql(`The object "${indexName}.${collectionName}" contains unexpected properties (allowed: strict, fields, validators).`);
         });
     });
 
@@ -826,7 +825,7 @@ describe('Test: validation initialization', () => {
       should(response.isValid).be.false();
       should(response.errors.length).be.eql(2);
       should(response.errors).be.eql([
-        'The object "anIndex.aCollection.aField" contains unexpected properties (allowed: mandatory,type,defaultValue,description,multivalued,typeOptions).',
+        'The object "anIndex.aCollection.aField" contains unexpected properties (allowed: mandatory, type, defaultValue, description, multivalued, typeOptions).',
         'In "anIndex.aCollection.aField": unknown type "aType".'
       ]);
     });
@@ -869,7 +868,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecificationFormat(fieldSpec);
-      }).throw('The object "undefined.undefined.undefined.multivalued" contains unexpected properties (allowed: value,minCount,maxCount).');
+      }).throw('The object "undefined.undefined.undefined.multivalued" contains unexpected properties (allowed: value, minCount, maxCount).');
     });
 
     it('should throw an error if the multivalued field is malformed', () => {

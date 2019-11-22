@@ -177,4 +177,26 @@ describe('ClientAdapter', () => {
         .be.calledWithMatch({ index: 'index2', scope: 'public' });
     });
   });
+
+  describe('#deleteCollection', () => {
+    it('should call client method', async () => {
+      clientAdapter._client.deleteCollection.resolves('ret');
+
+      const ret = await clientAdapter.deleteCollection('index', 'collection');
+
+      should(ret).be.eql('ret');
+      should(clientAdapter._client.deleteCollection)
+        .be.calledWith('index', 'collection');
+      should(indexCache.exists).be.calledWithMatch({
+        index: 'index',
+        collection: 'collection',
+        scope: 'public'
+      });
+      should(indexCache.remove).be.calledWithMatch({
+        index: 'index',
+        collection: 'collection',
+        scope: 'public'
+      });
+    });
+  });
 });

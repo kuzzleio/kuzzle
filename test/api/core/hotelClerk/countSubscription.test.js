@@ -22,7 +22,7 @@ describe('Test: hotelClerk.countSubscription', () => {
   it('should return the right subscriptions count when handling a correct request', () => {
     const request = new Request({body: {roomId: 'foobar'}});
 
-    kuzzle.hotelClerk.rooms.foobar = {customers: new Set(['foo', 'bar'])};
+    kuzzle.hotelClerk.rooms.set('foobar', {customers: new Set(['foo', 'bar'])});
 
     const response = kuzzle.hotelClerk.countSubscription(request);
 

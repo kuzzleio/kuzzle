@@ -436,7 +436,7 @@ class HttpApi {
 
   createUser (body, id) {
     const options = {
-      url: this.apiPath('users/' + id + '/_create'),
+      url: this.apiPath('users/' + id + '/_create' + '?refresh=wait_for'),
       method: 'POST',
       body
     };

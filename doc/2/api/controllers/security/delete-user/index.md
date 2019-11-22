@@ -39,7 +39,7 @@ Method: DELETE
 
 ### Optional:
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the user deletion is indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the user deletion is indexed (default: `"wait_for"`)
 
 ---
 
