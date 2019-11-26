@@ -6,19 +6,23 @@ title: create
 
 # create
 
-Creates a new [collection](/core/2/guides/essentials/store-access-data), in the provided `index`.
+<SinceBadge version="1.0.0" />
 
-<SinceBadge version="1.3.0" />
+Creates a new [collection](/core/2/guides/essentials/store-access-data), in the provided `index`.
 
 You can also provide an optional body with a [collection mapping](/core/2/guides/essentials/database-mappings) allowing you to exploit the full capabilities of our persistent data storage layer.
 
 This method will only update the mapping when the collection already exists.
 
-<SinceBadge version="1.7.1" />
-
 You can define the collection [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
 
 You can define [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
+
+Collection names must meet the following criteria:
+
+* Lowercase only
+* Cannot include one of the following characters: `\\`, `/`, `*`, `?`, `"`, `<`, `>`, `|`, ` ` (space character), `,`, `#`, `:`, `%`, `&`, `.`
+* Cannot be longer than 126 bytes (note it is bytes, so multi-byte characters will count towards the 126 limit faster)
 
 ---
 

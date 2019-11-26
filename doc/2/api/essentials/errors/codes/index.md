@@ -110,6 +110,8 @@ order: 500
 | services.storage.index_already_exists<br/><pre>0x01010026</pre> | [PreconditionError](/core/2/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | Attempted to create an already existing index |
 | services.storage.forbidden_character<br/><pre>0x01010027</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | An index or a collection name contains a forbidden character |
 | services.storage.invalid_search_query<br/><pre>0x01010028</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A forbidden argument has been provided in the search query |
+| services.storage.invalid_index_name<br/><pre>0x01010029</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided index name is invalid |
+| services.storage.invalid_collection_name<br/><pre>0x0101002a</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided collection name is invalid |
 
 ---
 
