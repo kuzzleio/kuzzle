@@ -110,6 +110,12 @@
           "code": 6,
           "message": "Incompatible SDK client. Your SDK version (%s) does not match Kuzzle requirement (%s).",
           "class": "BadRequestError"
+        },
+        "shutting_down": {
+          "description": "This Kuzzle node is shutting down and refuses new requests",
+          "code": 7,
+          "message": "Rejected: this node is shutting down.",
+          "class": "ServiceUnavailableError"
         }
       }
     }

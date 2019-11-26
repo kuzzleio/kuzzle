@@ -245,5 +245,31 @@ describe('funnelController.execute', () => {
 
   });
 
+  describe('#core:shutdown', () => {
+    it('should reject any new request after the core:shutdown event has been triggered', done => {
+      funnel.controllers.clear();
+      funnel.init();
+
+      should(funnel.shuttingDown).be.false();
+
+      kuzzle.emit.restore();
+      kuzzle.emit('core:shutdown');
+
+      // gives some time for the event to propagate
+      should(funnel.shuttingDown).be.true();
+
+      funnel.execute(request, (err, res) => {
+        try {
+          should(err).be.instanceOf(ServiceUnavailableError);
+          should(res.status).be.exactly(503);
+          should(err.id).be.eql('api.process.shutting_down');
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+  });
 });
 

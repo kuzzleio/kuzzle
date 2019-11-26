@@ -1086,9 +1086,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should not reject when a race condition occur between exists and create methods', () => {
-      elasticsearch._client.indices.create.rejects({
-        meta: { body: { error: { type: 'resource_already_exists_exception' } } }
-      });
+      const esReject = new Error('foo');
+
+      esReject.meta = {
+        body: {
+          error: {
+            type: 'resource_already_exists_exception'
+          }
+        }
+      };
+
+      elasticsearch._client.indices.create.rejects(esReject);
 
       const promise = elasticsearch.createCollection(
         index,
