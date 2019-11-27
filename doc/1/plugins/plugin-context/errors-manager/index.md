@@ -1,14 +1,14 @@
 ---
 code: true
 type: page
-title: customize errors
+title: errorsManager
 ---
 
-# Customize errors
+# Errors Manager
 
-When creating a Kuzzle plugin, custom [API errors](https://docs.kuzzle.io/core/1/api/essentials/errors/) can be defined and thrown, using the `errorsManager`.
+When creating a Kuzzle plugin, custom [API errors](/core/1/api/essentials/errors/) can be defined and thrown, using the `errorsManager`.
 
-Custom errors have to be specified in the [manifest.json](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json), in an `errors` field.
+Custom errors have to be specified in the [manifest.json](/core/1/plugins/guides/manual-setup/prerequisites/#manifest-json), in an `errors` field.
 
 Example:
 ```
@@ -37,7 +37,7 @@ The `errorsManager` provides two functions:
 - To get the built error: `context.errorsManager.get(error, placeholders);`
 
 Note that the `domain` is `plugin`, meaning that its code is fixed to `04` and cannot be changed.
-By default, the [subdomain](https://docs.kuzzle.io/core/1/plugins/plugin-context/errors/kuzzleerror/) code for plugins is set to `0`. A subdomain can be defined for a plugin in its configuration section in the [kuzzlerc file](https://docs.kuzzle.io/core/1/plugins/guides/manual-setup/config/). 
+By default, the [subdomain](/core/1/plugins/plugin-context/errors/kuzzleerror/) code for plugins is set to `0`. A subdomain can be defined for a plugin in its configuration section in the [kuzzlerc file](/core/1/plugins/guides/manual-setup/config/). 
 
 Example, for a plugin name `foobar-plugin`:
 
@@ -60,7 +60,7 @@ Taking the configuration example above, if an error is thrown with:
 
 `context.errorsManager.throw('some_error', 'request badly formatted');`
 
-Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](https://docs.kuzzle.io/core/1/api/essentials/errors/#badrequesterror) error, with the following properties:
+Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](/core/1/api/essentials/errors/#badrequesterror) error, with the following properties:
 
 - message : `An error occured: request badly formatted`
 - errorName : `plugin.foobar-plugin.some_error`
