@@ -23,7 +23,7 @@
 
 const
   fs = require('fs'),
-  Kuzzle = require('../lib/api/kuzzle'),
+  Kuzzle = require('../lib/kuzzle'),
   ColorOutput = require('./.lib/colorOutput'),
   yargs = require('yargs');
 
@@ -88,7 +88,7 @@ const options = yargs
   .describe('secrets-file', 'Output file to write decrypted secrets')
   .describe('enable-plugins', 'Enable plugins from "plugins/available" directory')
   .describe('no-colors', 'do not use ANSI coloring')
-  .argv
+  .argv;
 
 startKuzzle(options);
 
