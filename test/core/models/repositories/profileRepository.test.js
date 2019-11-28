@@ -17,6 +17,8 @@ const
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../../mocks/kuzzle.mock');
 
+const _kuzzle = Symbol.for('_kuzzle');
+
 describe('Test: repositories/profileRepository', () => {
   let
     kuzzle,
@@ -29,6 +31,7 @@ describe('Test: repositories/profileRepository', () => {
     profileRepository = new ProfileRepository(kuzzle);
 
     testProfile = new Profile();
+    testProfile[_kuzzle] = kuzzle;
     testProfile._id = 'foo';
     testProfile.policies = [
       {roleId: 'test', restrictedTo: [{index: 'index'}]},

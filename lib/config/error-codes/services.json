@@ -218,12 +218,25 @@
           "description": "An index or a collection name contains a forbidden character",
           "code": 39,
           "message": "An index or a collection name cannot contain the character \"%s\"",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "invalid_search_query": {
           "description": "A forbidden argument has been provided in the search query",
           "code": 40,
           "message": "The argument \"%s\" is not allowed at this level of a search query.",
+          "class": "BadRequestError"
+        },
+        "invalid_index_name": {
+          "description": "A provided index name is invalid",
+          "code": 41,
+          "message": "The index name \"%s\" is invalid",
+          "class": "BadRequestError"
+        },
+        "invalid_collection_name": {
+          "description": "A provided collection name is invalid",
+          "code": 42,
+          "message": "The collection name \"%s\" is invalid",
           "class": "BadRequestError"
         }
       }

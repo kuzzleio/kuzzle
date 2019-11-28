@@ -11,8 +11,7 @@ const
     errors: { BadRequestError }
   } = require('kuzzle-common-objects');
 
-const
-  _kuzzle = Symbol.for('_kuzzle');
+const _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: security/profileTest', () => {
   const
@@ -28,7 +27,7 @@ describe('Test: security/profileTest', () => {
   let
     kuzzle;
 
-  before(() => {
+  beforeEach(() => {
     kuzzle = new Kuzzle();
 
     // Replace the KuzzleMock stub by an empty function,
@@ -205,35 +204,34 @@ describe('Test: security/profileTest', () => {
   });
 
   describe('#validateDefinition', () => {
-    it('should reject if no policies are provided', () => {
-      const profile = new Profile();
-      profile.policies = null;
+    let profile;
+
+    beforeEach(() => {
+      profile = new Profile();
+      profile[_kuzzle] = kuzzle;
       profile._id = 'test';
+    });
+
+    it('should reject if no policies are provided', () => {
+      profile.policies = null;
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject if invalid policies are provided', () => {
-      const profile = new Profile();
       profile.policies = 'foo';
-      profile._id = 'test';
 
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject if an empty policies array is provided', () => {
-      const profile = new Profile();
-      profile._id = 'test';
-
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, { id: 'api.assert.empty_argument' });
     });
 
     it('should reject if no roleId is given', () => {
-      const profile = new Profile();
-      profile._id = 'test';
       profile.policies = [{}];
 
       return should(profile.validateDefinition())
@@ -244,8 +242,6 @@ describe('Test: security/profileTest', () => {
     });
 
     it('should reject if an invalid attribute is given', () => {
-      const profile = new Profile();
-      profile._id = 'test';
       profile.policies = [{ roleId: 'admin', foo: 'bar' }];
 
       return should(profile.validateDefinition())
@@ -255,8 +251,6 @@ describe('Test: security/profileTest', () => {
     });
 
     it('should reject if restrictedTo is not an array', () => {
-      const profile = new Profile();
-      profile._id = 'test';
       profile.policies = [{ roleId: 'admin', restrictedTo: 'bar' }];
 
       return should(profile.validateDefinition())
@@ -266,8 +260,6 @@ describe('Test: security/profileTest', () => {
     });
 
     it('should reject if restrictedTo contains a non-object value', () => {
-      const profile = new Profile();
-      profile._id = 'test';
       profile.policies = [{ roleId: 'admin', restrictedTo: [null] }];
 
       return should(profile.validateDefinition())
@@ -277,8 +269,6 @@ describe('Test: security/profileTest', () => {
     });
 
     it('should reject if restrictedTo does not contain an index', () => {
-      const profile = new Profile();
-      profile._id = 'test';
       profile.policies = [{ roleId: 'admin', restrictedTo: [{ foo: 'bar' }] }];
 
       return should(profile.validateDefinition())
@@ -288,8 +278,6 @@ describe('Test: security/profileTest', () => {
     });
 
     it('should reject if restrictedTo is given an invalid attribute', () => {
-      const profile = new Profile();
-      profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', foo: 'bar' }]
@@ -301,9 +289,26 @@ describe('Test: security/profileTest', () => {
         });
     });
 
+    it('should reject if restrictedTo points to an invalid index name', () => {
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{ index: 'index'}]
+      }];
+
+      kuzzle.storageEngine.internal.isIndexNameValid.returns(false);
+
+      return should(profile.validateDefinition())
+        .rejectedWith(
+          BadRequestError,
+          { id: 'services.storage.invalid_index_name' })
+        .then(() => {
+          should(profile[_kuzzle].storageEngine.internal.isIndexNameValid)
+            .calledOnce()
+            .calledWith('index');
+        });
+    });
+
     it('should reject if restrictedTo.collections is not an array', () => {
-      const profile = new Profile();
-      profile._id = 'test';
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', collections: 'bar' }]
@@ -315,59 +320,22 @@ describe('Test: security/profileTest', () => {
         });
     });
 
-    it('should reject if restrictedTo.collections is not an array of strings', () => {
-      const profile = new Profile();
-      profile._id = 'test';
+    it('should reject if restrictedTo points to an invalid collection name', () => {
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{ index: 'index', collections: ['bar', 123] }]
+        restrictedTo: [{ index: 'index', collections: ['foo']}]
       }];
 
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {
-          id: 'api.assert.invalid_type'
-        });
-    });
-
-    it('should reject if restrictedTo.collections contains an empty string', () => {
-      const profile = new Profile();
-      profile._id = 'test';
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: [{ index: 'index', collections: ['bar', ''] }]
-      }];
+      kuzzle.storageEngine.internal.isCollectionNameValid.returns(false);
 
       return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {
-          id: 'api.assert.invalid_type'
-        });
-    });
-
-    it('should reject if restrictedTo.index is not a string', () => {
-      const profile = new Profile();
-      profile._id = 'test';
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: [{ index: false, collections: ['bar', 'baz'] }]
-      }];
-
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {
-          id: 'api.assert.invalid_type'
-        });
-    });
-
-    it('should reject if restrictedTo.index is an empty string', () => {
-      const profile = new Profile();
-      profile._id = 'test';
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: [{ index: '', collections: ['bar', 'baz'] }]
-      }];
-
-      return should(profile.validateDefinition())
-        .be.rejectedWith(BadRequestError, {
-          id: 'api.assert.invalid_type'
+        .rejectedWith(
+          BadRequestError,
+          { id: 'services.storage.invalid_collection_name' })
+        .then(() => {
+          should(profile[_kuzzle].storageEngine.internal.isCollectionNameValid)
+            .calledOnce()
+            .calledWith('foo');
         });
     });
   });

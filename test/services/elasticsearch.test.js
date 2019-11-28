@@ -6,7 +6,13 @@ const
   ms = require('ms'),
   KuzzleMock = require('../mocks/kuzzle.mock'),
   ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
-  ES = require('../../lib/services/elasticsearch');
+  ES = require('../../lib/services/elasticsearch'),
+  {
+    errors: {
+      BadRequestError,
+      PreconditionError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('Test: ElasticSearch service', () => {
   let
@@ -978,15 +984,10 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should rejects if the index already exists', () => {
-      const promise = elasticsearch.createIndex('nepali');
-
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            id: 'services.storage.index_already_exists'
-          });
-        });
+    it('should reject if the index already exists', () => {
+      return should(elasticsearch.createIndex('nepali')).be.rejectedWith(
+        PreconditionError,
+        { id: 'services.storage.index_already_exists' });
     });
 
     it('should return a rejected promise if client.cat.indices fails', () => {
@@ -1001,6 +1002,14 @@ describe('Test: ElasticSearch service', () => {
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
         });
+    });
+
+    it('should reject if the index name is invalid', () => {
+      sinon.stub(elasticsearch, 'isIndexNameValid').returns(false);
+
+      return should(elasticsearch.createIndex('foobar')).rejectedWith(
+        BadRequestError,
+        { id: 'services.storage.invalid_index_name' });
     });
   });
 
@@ -1199,6 +1208,21 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should reject if the index name is invalid', () => {
+      sinon.stub(elasticsearch, 'isIndexNameValid').returns(false);
+
+      return should(elasticsearch.createCollection('foo', 'bar')).rejectedWith(
+        BadRequestError,
+        { id: 'services.storage.invalid_index_name' });
+    });
+
+    it('should reject if the collection name is invalid', () => {
+      sinon.stub(elasticsearch, 'isCollectionNameValid').returns(false);
+
+      return should(elasticsearch.createCollection('foo', 'bar')).rejectedWith(
+        BadRequestError,
+        { id: 'services.storage.invalid_collection_name' });
+    });
   });
 
   describe('#getMapping', () => {
@@ -3049,6 +3073,63 @@ describe('Test: ElasticSearch service', () => {
         _id: 'liia',
         _source: { city: 'Kathmandu' }
       }]);
+    });
+  });
+
+  describe('#isIndexNameValid', () => {
+    it('should allow a valid index name', () => {
+      should(elasticsearch.isIndexNameValid('foobar')).be.true();
+    });
+
+    it('should not allow empty index names', () => {
+      should(elasticsearch.isIndexNameValid('')).be.false();
+    });
+
+    it('should not allow uppercase chars', () => {
+      should(elasticsearch.isIndexNameValid('bAr')).be.false();
+    });
+
+    it('should not allow index names that are too long', () => {
+      return should(elasticsearch.isIndexNameValid('Ӣ'.repeat(64))).be.false();
+    });
+
+    it('should not allow forbidden chars in the name', () => {
+      const forbidden = '\\/*?"<>| \t\r\n,#:%.&';
+
+      for (let i = 0; i < forbidden.length; i++) {
+        const name = `foo${forbidden[i]}bar`;
+
+        should(elasticsearch.isIndexNameValid(name)).be.false();
+      }
+    });
+  });
+
+  describe('#isCollectionNameValid', () => {
+    it('should allow a valid collection name', () => {
+      should(elasticsearch.isCollectionNameValid('foobar')).be.true();
+    });
+
+    it('should not allow empty collection names', () => {
+      should(elasticsearch.isCollectionNameValid('')).be.false();
+    });
+
+    it('should not allow uppercase chars', () => {
+      should(elasticsearch.isCollectionNameValid('bAr')).be.false();
+    });
+
+    it('should not allow collection names that are too long', () => {
+      return should(elasticsearch.isCollectionNameValid('Ӣ'.repeat(64)))
+        .be.false();
+    });
+
+    it('should not allow forbidden chars in the name', () => {
+      const forbidden = '\\/*?"<>| \t\r\n,#:%.&';
+
+      for (let i = 0; i < forbidden.length; i++) {
+        const name = `foo${forbidden[i]}bar`;
+
+        should(elasticsearch.isCollectionNameValid(name)).be.false();
+      }
     });
   });
 
