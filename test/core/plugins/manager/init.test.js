@@ -32,7 +32,7 @@ describe('PluginsManager', () => {
     };
     Manifest = rewire('../../../../lib/core/plugins/manifest');
     Manifest.__set__({
-      fs: manifestFsStub
+      fs: manifestFsStub,
     });
   });
 
@@ -46,7 +46,8 @@ describe('PluginsManager', () => {
     fsStub = {
       readdirSync: sinon.stub().returns([]),
       accessSync: sinon.stub(),
-      statSync: sinon.stub()
+      statSync: sinon.stub(),
+      existsSync: sinon.stub().returns(false),
     };
 
     manifestFsStub.accessSync.returns();

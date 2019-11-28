@@ -69,10 +69,6 @@ module.exports = {
     }
   },
 
-  queues: {
-    cliQueue: 'cli-queue'
-  },
-
   repositories: {
     common: {
       cacheTTL: 1440

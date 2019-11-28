@@ -102,9 +102,6 @@ Feature: Kuzzle functional tests
   Scenario: Check server Health
     When I check server health
 
-  Scenario: Get server information
-    When I get server informations
-
   Scenario: Get server configuration
     When I get server configuration
 
