@@ -176,6 +176,18 @@
           "message": "Missing or malformed \"test\" attribute  for role %s (%s) : %s",
           "class": "BadRequestError",
           "deprecated": true
+        },
+        "unknown_controller": {
+          "description": "Trying to set a role with a non-existing controller",
+          "code": 9,
+          "message": "Trying to set role %s with a non-existing controller '%s'.",
+          "class": "BadRequestError"
+        },
+        "unknown_controller_action": {
+          "description": "Trying to set a role with a non-existing controller action",
+          "code": 10,
+          "message": "Trying to set role %s with a non-existing action '%s' in controller '%s'.",
+          "class": "BadRequestError"
         }
       }
     },
