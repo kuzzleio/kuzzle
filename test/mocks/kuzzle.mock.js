@@ -3,7 +3,7 @@
 const
   _ = require('lodash'),
   sinon = require('sinon'),
-  Kuzzle = require('../../lib/api/kuzzle'),
+  Kuzzle = require('../../lib/kuzzle'),
   Bluebird = require('bluebird'),
   config = require('../../lib/config'),
   IndexStorageMock = require('./indexStorage.mock'),
