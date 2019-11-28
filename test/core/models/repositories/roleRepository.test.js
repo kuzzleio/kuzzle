@@ -440,9 +440,9 @@ describe('Test: repositories/roleRepository', () => {
         });
     });
   });
-  describe.only('#checkRoleControllersAndActions', () => {
+  describe('#checkRoleControllersAndActions', () => {
     const Funnel = require('../../../../lib/api/funnel');   
-    it('should reject if a role contains invalid controller.', () => {
+    it('should reject if a role contains invalid controller.', done => {
       const
         controllers = {
           iDontExist: {
@@ -456,10 +456,13 @@ describe('Test: repositories/roleRepository', () => {
       kuzzle.funnel.init();
       role._id = 'test';
       role.controllers = controllers;
-      return should(roleRepository.checkRoleControllersAndActions(role))
-        .be.rejectedWith(BadRequestError); 
+      try {
+        roleRepository.checkRoleControllersAndActions(role);
+      } catch (e) {
+        done();
+      } 
     });
-    it('should reject if a role contains invalid action.', () => {
+    it('should reject if a role contains invalid action.', done => {
       const controllers = {
           '*': {
             actions: {
@@ -472,11 +475,13 @@ describe('Test: repositories/roleRepository', () => {
       kuzzle.funnel.init();
       role._id = 'test';
       role.controllers = controllers;
-      return should(
-        roleRepository.checkRoleControllersAndActions(role)
-      ).be.rejectedWith(BadRequestError);
+      try {
+        roleRepository.checkRoleControllersAndActions(role);
+      } catch (e) {
+        done();
+      }
     });
-    it('should resolve when a role contains valid controller and action.', () => {
+    it('should not throw when a role contains valid controller and action.', () => {
       const
         controllers = {
           document: {
@@ -492,7 +497,7 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
       return should(roleRepository.checkRoleControllersAndActions(role))
-        .be.resolved();
+        .not.throw();
     });
   });
 });
