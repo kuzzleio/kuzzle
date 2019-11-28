@@ -2923,16 +2923,6 @@ describe('Test: ElasticSearch service', () => {
           });
         });
     });
-
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      const promise = elasticsearch.mDelete(index, collection, documentIds);
-
-      return should(promise).be.rejectedWith({
-        id: 'services.storage.write_limit_exceeded'
-      });
-    });
   });
 
   describe('_mExecute', () => {
