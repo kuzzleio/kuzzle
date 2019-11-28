@@ -6,9 +6,17 @@ title: deleteByQuery
 
 # deleteByQuery
 
+Deletes documents matching the provided search query. 
 
+Documents removed that way trigger real-time notifications.
 
-Deletes documents matching the provided search query.
+## Limitations
+
+The request fails if the number of documents returned by the search query exceeds the `documentsFetchCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
+
+To remove a greater number of documents, either change the server configuration, or split the search query.
+
+To remove all documents from a collection, use [collection:truncate](/core/2/api/controllers/collection/truncate) instead.
 
 ---
 

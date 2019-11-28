@@ -6,9 +6,11 @@ title: truncate
 
 # truncate
 
-
-
 Empties a collection by removing all its documents, while keeping any associated mapping.
+
+::: info
+Documents removed that way do not trigger real-time notifications.
+:::
 
 ---
 
