@@ -8,7 +8,7 @@ const
     errors: {
       PluginImplementationError
     },
-    Request: KuzzleRequest
+    Request
   } = require('kuzzle-common-objects');
 
 describe('pluginsManager.pipe', () => {
@@ -102,7 +102,7 @@ describe('pluginsManager.pipe', () => {
         pipes: {
           'foo:*': 'myFunc'
         },
-        myFunc: sinon.stub().callsArgWith(1, null, new KuzzleRequest({}))
+        myFunc: sinon.stub().callsArgWith(1, null, new Request({}))
       },
       config: {},
       activated: true,
@@ -125,7 +125,7 @@ describe('pluginsManager.pipe', () => {
         pipes: {
           'foo:before*': 'myFunc'
         },
-        myFunc: sinon.stub().callsArgWith(1, null, new KuzzleRequest({}))
+        myFunc: sinon.stub().callsArgWith(1, null, new Request({}))
       },
       config: {},
       activated: true,
@@ -148,7 +148,7 @@ describe('pluginsManager.pipe', () => {
         pipes: {
           'foo:after*': 'myFunc'
         },
-        myFunc: sinon.stub().callsArgWith(1, null, new KuzzleRequest({}))
+        myFunc: sinon.stub().callsArgWith(1, null, new Request({}))
       },
       config: {},
       activated: true,

@@ -102,11 +102,25 @@
     //   * initTimeout:
     //        Maximum execution time (in milliseconds)
     //        of a plugin initialization
+    //   * maxConcurrentPipes:
+    //        Maximum number of pipes that can be executed in parallel
+    //        New pipes submitted while the maximum number of pipes is met are
+    //        delayed for later execution.
+    //        This parameter controls is used to limit the stress put on the
+    //        event loop, allowing for Kuzzle to process pipes faster, and to
+    //        protect it from performances degradation if an abnormal number of
+    //        pipes are submitted.
+    //        (timers do not start while a pipe is hold back)
+    //   * pipesBufferSize:
+    //        Maximum number of pipes that can be delayed. If full, new pipes
+    //        are rejected.
     "common": {
       "bootstrapLockTimeout": 5000,
       "pipeWarnTime": 40,
       "pipeTimeout": 250,
-      "initTimeout": 2000
+      "initTimeout": 2000,
+      "maxConcurrentPipes": 50,
+      "pipesBufferSize": 50000
     }
 
     // Custom plugin configurations must be described here.
