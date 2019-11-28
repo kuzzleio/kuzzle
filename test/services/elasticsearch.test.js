@@ -327,15 +327,6 @@ describe('Test: ElasticSearch service', () => {
             .be.calledWith(esClientError);
         });
     });
-
-    it('should reject if the number of ids exceeds the server configured limit', () => {
-      kuzzle.config.limits.documentsFetchCount = 1;
-
-      return should(elasticsearch.mGet(index, collection, ['foo', 'bar']))
-        .rejectedWith(
-          SizeLimitError,
-          { id: 'services.storage.get_limit_exceeded'});
-    });
   });
 
   describe('#count', () => {
@@ -930,7 +921,7 @@ describe('Test: ElasticSearch service', () => {
       return should(elasticsearch.deleteByQuery(index, collection, {}))
         .rejectedWith(
           SizeLimitError,
-          { id: 'services.storage.get_limit_exceeded' });
+          { id: 'services.storage.write_limit_exceeded' });
     });
   });
 
@@ -2317,15 +2308,6 @@ describe('Test: ElasticSearch service', () => {
           should(result).match(mExecuteResult);
         });
     });
-
-    it('should reject if the number of ids exceeds the server configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      return should(elasticsearch.mCreate(index, collection, documentsWithIds))
-        .rejectedWith(
-          SizeLimitError,
-          { id: 'services.storage.write_limit_exceeded'});
-    });
   });
 
   describe('#mCreateOrReplace', () => {
@@ -2449,15 +2431,6 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match(mExecuteResult);
         });
-    });
-
-    it('should reject if the number of ids exceeds the server configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      return should(elasticsearch.mCreateOrReplace(index, collection, documents))
-        .rejectedWith(
-          SizeLimitError,
-          { id: 'services.storage.write_limit_exceeded'});
     });
   });
 
@@ -2609,15 +2582,6 @@ describe('Test: ElasticSearch service', () => {
             toImport,
             rejected);
         });
-    });
-
-    it('should reject if the number of ids exceeds the server configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      return should(elasticsearch.mUpdate(index, collection, documents))
-        .rejectedWith(
-          SizeLimitError,
-          { id: 'services.storage.write_limit_exceeded'});
     });
   });
 
@@ -2821,15 +2785,6 @@ describe('Test: ElasticSearch service', () => {
           should(result).match(mExecuteResult);
         });
     });
-
-    it('should reject if the number of ids exceeds the server configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      return should(elasticsearch.mReplace(index, collection, documents))
-        .rejectedWith(
-          SizeLimitError,
-          { id: 'services.storage.write_limit_exceeded'});
-    });
   });
 
   describe('#mDelete', () => {
@@ -2977,15 +2932,6 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejectedWith({
         id: 'services.storage.write_limit_exceeded'
       });
-    });
-
-    it('should reject if the number of ids exceeds the server configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      return should(elasticsearch.mDelete(index, collection, documentIds))
-        .rejectedWith(
-          SizeLimitError,
-          { id: 'services.storage.write_limit_exceeded'});
     });
   });
 
