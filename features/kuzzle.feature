@@ -99,12 +99,6 @@ Feature: Kuzzle functional tests
     Then I should receive a document id
     Then I'm able to get the document
 
-  Scenario: Check server Health
-    When I check server health
-
-  Scenario: Get server configuration
-    When I get server configuration
-
   @validation
   Scenario: Publish a realtime message
     When I publish a message
