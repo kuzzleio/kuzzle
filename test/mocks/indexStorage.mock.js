@@ -2,7 +2,7 @@
 
 const
   sinon = require('sinon'),
-  IndexStorage = require('../../lib/api/core/storage/indexStorage');
+  IndexStorage = require('../../lib/core/storage/indexStorage');
 
 class IndexStorageMock extends IndexStorage {
   constructor (...args) {

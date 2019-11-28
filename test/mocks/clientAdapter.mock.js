@@ -2,7 +2,7 @@
 
 const
   sinon = require('sinon'),
-  ClientAdapter = require('../../lib/api/core/storage/clientAdapter');
+  ClientAdapter = require('../../lib/core/storage/clientAdapter');
 
 class ClientAdapterMock extends ClientAdapter {
   constructor (storageClient, indexCache) {
