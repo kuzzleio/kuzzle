@@ -7,7 +7,13 @@ title: create
 # create
 
 
-Creates a new [index](/core/2/guides/essentials/store-access-data) in Kuzzle.  
+Creates a new [index](/core/2/guides/essentials/store-access-data) in Kuzzle.
+
+Index names must meet the following criteria:
+
+* Lowercase only
+* Cannot include one of the following characters: `\\`, `/`, `*`, `?`, `"`, `<`, `>`, `|`, ` ` (space character), `,`, `#`, `:`, `%`, `&`, `.`
+* Cannot be longer than 126 bytes (note it is bytes, so multi-byte characters will count towards the 126 limit faster)
 
 ---
 

@@ -108,8 +108,9 @@ order: 500
 | services.storage.unexpected_error<br/><pre>0x01010023</pre> | [ExternalServiceError](/core/2/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | Embeds an unexpected error from Elasticsearch |
 | services.storage.no_mapping_found<br/><pre>0x01010025</pre> | [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | Attempted to read a non-existent mapping |
 | services.storage.index_already_exists<br/><pre>0x01010026</pre> | [PreconditionError](/core/2/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | Attempted to create an already existing index |
-| services.storage.forbidden_character<br/><pre>0x01010027</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | An index or a collection name contains a forbidden character |
 | services.storage.invalid_search_query<br/><pre>0x01010028</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A forbidden argument has been provided in the search query |
+| services.storage.invalid_index_name<br/><pre>0x01010029</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided index name is invalid |
+| services.storage.invalid_collection_name<br/><pre>0x0101002a</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided collection name is invalid |
 
 ---
 
@@ -160,6 +161,7 @@ order: 500
 | api.process.controller_not_found<br/><pre>0x02020004</pre> | [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | API controller not found |
 | api.process.action_not_found<br/><pre>0x02020005</pre> | [NotFoundError](/core/2/api/essentials/errors/handling#notfounderror) <pre>(404)</pre> | API controller action not found |
 | api.process.incompatible_sdk_version<br/><pre>0x02020006</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | SDK is incompatible with the current Kuzzle version |
+| api.process.shutting_down<br/><pre>0x02020007</pre> | [ServiceUnavailableError](/core/2/api/essentials/errors/handling#serviceunavailableerror) <pre>(503)</pre> | This Kuzzle node is shutting down and refuses new requests |
 
 ---
 
