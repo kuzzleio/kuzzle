@@ -103,7 +103,7 @@
     //        Maximum execution time (in milliseconds)
     //        of a plugin initialization
     //   * maxConcurrentPipes:
-    //        Maximum number of pipes that can be executed in parallel
+    //        Maximum number of pipes that can be executed in parallel.
     //        New pipes submitted while the maximum number of pipes is met are
     //        delayed for later execution.
     //        This parameter controls is used to limit the stress put on the
