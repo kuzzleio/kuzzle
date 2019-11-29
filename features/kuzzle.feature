@@ -288,7 +288,6 @@ Feature: Kuzzle functional tests
     Then I get at least 1 statistic frame
 
   Scenario: Getting all statistics frame
-    When I get server informations
     And I get all statistics frames
     Then I get at least 1 statistic frame
 
