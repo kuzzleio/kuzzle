@@ -36,7 +36,7 @@ class RemoteControlledPipe {
   }
 }
 
-describe.only('#pipeRunner', () => {
+describe('#pipeRunner', () => {
   let
     clock,
     pipeRunner,
