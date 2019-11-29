@@ -2,83 +2,56 @@
 
 const
   should = require('should'),
-  sinon = require('sinon'),
   { Request } = require('kuzzle-common-objects'),
   RouterController = require('../../../lib/core/router'),
-  { HttpMessage } = require('../../../lib/core/entrypoints/protocols/http');
+  { HttpMessage } = require('../../../lib/core/entrypoints/protocols/http'),
+  KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: routerController.httpRequest', () => {
   let
-    kuzzleStub,
-    /** @type Request */
-    response,
-    triggerSpy,
+    kuzzle,
     httpRequest,
     routeController;
 
-  before(() => {
-    kuzzleStub = {
-      config: {
-        http: {
-          routes: require('../../../lib/config/httpRoutes'),
-          accessControlAllowOrigin: 'foobar',
-          accessControlAllowMethods: 'GET,HEAD,PUT,POST,OPTIONS',
-          accessControlAllowHeaders: 'headers'
-        },
-        server: {
-          protocols: {
-            http: {
-
-            }
-          }
-        }
-      },
-      pipe: function (event, request) {
-        triggerSpy(event, request);
-        return Promise.resolve(request);
-      },
-      pluginsManager: {
-        routes: [
-          {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
-        ]
-      },
-      funnel: {
-        execute: function (request, cb) {
-          /** @type Request request */
-          response = request;
-          request.status = 1234;
-          cb(null, request);
-        }
-      }
-    };
-
-    routeController = new RouterController(kuzzleStub);
-    routeController.init();
-  });
-
   beforeEach(() => {
+    kuzzle = new KuzzleMock();
+
+    kuzzle.pluginsManager.routes = [
+      {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
+    ];
+
+    kuzzle.funnel.execute.callsFake((request, callback) => {
+      request.setResult({}, {status: 1234});
+      callback(null, request);
+    });
+
+    kuzzle.config.http.accessControlAllowOrigin = 'foobar';
+
+    routeController = new RouterController(kuzzle);
+    routeController.init();
+
     httpRequest = new HttpMessage(
       {id: 'requestId'},
       {url: '', method: '', headers: {}});
-    triggerSpy = sinon.stub();
   });
 
   it('should register GET routes from the config/httpRoutes file', done => {
     httpRequest.url = '/ms/_getrange/someId?start=start&end=end';
     httpRequest.method = 'GET';
 
-    routeController.http.route(httpRequest, result => {
+    routeController.http.route(httpRequest, request => {
       try {
-        should(response.input.controller).be.eql('ms');
-        should(response.input.action).be.eql('getrange');
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.headers['Access-Control-Allow-Origin']).be.eql('foobar');
-        should(result.response.status).be.eql(1234);
-        should(result.response).be.exactly(response.response);
-        should(triggerSpy).be.calledOnce();
-        should(triggerSpy.firstCall.args[0]).be.eql('http:get');
-        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
+        should(request.input.controller).be.eql('ms');
+        should(request.input.action).be.eql('getrange');
+        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.headers['content-type'])
+          .be.eql('application/json');
+        should(request.response.headers['Access-Control-Allow-Origin'])
+          .be.eql('foobar');
+        should(request.response.status).be.eql(1234);
+        should(kuzzle.pipe).be.calledOnce();
+        should(kuzzle.pipe.firstCall.args[0]).be.eql('http:get');
+        should(kuzzle.pipe.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {
@@ -92,17 +65,17 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.method = 'POST';
     httpRequest.addChunk('{"filter": "foobar"}');
 
-    routeController.http.route(httpRequest, result => {
+    routeController.http.route(httpRequest, request => {
       try {
-        should(response.input.controller).be.eql('document');
-        should(response.input.action).be.eql('count');
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.status).be.eql(1234);
-        should(result.response).be.exactly(response.response);
-        should(triggerSpy).be.calledOnce();
-        should(triggerSpy.firstCall.args[0]).be.eql('http:post');
-        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
+        should(request.input.controller).be.eql('document');
+        should(request.input.action).be.eql('count');
+        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.headers['content-type'])
+          .be.eql('application/json');
+        should(request.response.status).be.eql(1234);
+        should(kuzzle.pipe).be.calledOnce();
+        should(kuzzle.pipe.firstCall.args[0]).be.eql('http:post');
+        should(kuzzle.pipe.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {
@@ -111,22 +84,21 @@ describe('Test: routerController.httpRequest', () => {
     });
   });
 
-  it('should register PUT routes from the config/httpRoutes file', (done) => {
+  it('should register PUT routes from the config/httpRoutes file', done => {
     httpRequest.url = '/_updateSelf';
     httpRequest.method = 'PUT';
     httpRequest.addChunk('{"foo": "bar"}');
 
-    routeController.http.route(httpRequest, result => {
+    routeController.http.route(httpRequest, request => {
       try {
-        should(response.input.controller).be.eql('auth');
-        should(response.input.action).be.eql('updateSelf');
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.status).be.eql(1234);
-        should(result.response).be.exactly(response.response);
-        should(triggerSpy).be.calledOnce();
-        should(triggerSpy.firstCall.args[0]).be.eql('http:put');
-        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
+        should(request.input.controller).be.eql('auth');
+        should(request.input.action).be.eql('updateSelf');
+        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.headers['content-type']).be.eql('application/json');
+        should(request.response.status).be.eql(1234);
+        should(kuzzle.pipe).be.calledOnce();
+        should(kuzzle.pipe.firstCall.args[0]).be.eql('http:put');
+        should(kuzzle.pipe.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {
@@ -135,21 +107,20 @@ describe('Test: routerController.httpRequest', () => {
     });
   });
 
-  it('should register DELETE routes from the config/httpRoutes file', (done) => {
+  it('should register DELETE routes from the config/httpRoutes file', done => {
     httpRequest.url = '/foobar';
     httpRequest.method = 'DELETE';
 
-    routeController.http.route(httpRequest, result => {
+    routeController.http.route(httpRequest, request => {
       try {
-        should(response.input.controller).be.eql('index');
-        should(response.input.action).be.eql('delete');
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.status).be.eql(1234);
-        should(result.response).be.exactly(response.response);
-        should(triggerSpy).be.calledOnce();
-        should(triggerSpy.firstCall.args[0]).be.eql('http:delete');
-        should(triggerSpy.firstCall.args[1]).be.instanceOf(Request);
+        should(request.input.controller).be.eql('index');
+        should(request.input.action).be.eql('delete');
+        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.headers['content-type']).be.eql('application/json');
+        should(request.response.status).be.eql(1234);
+        should(kuzzle.pipe).be.calledOnce();
+        should(kuzzle.pipe.firstCall.args[0]).be.eql('http:delete');
+        should(kuzzle.pipe.firstCall.args[1]).be.instanceOf(Request);
         done();
       }
       catch (e) {
@@ -162,14 +133,13 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/_serverInfo';
     httpRequest.method = 'GET';
 
-    routeController.http.route(httpRequest, result => {
+    routeController.http.route(httpRequest, request => {
       try {
-        should(response.input.controller).be.eql('server');
-        should(response.input.action).be.eql('info');
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.status).be.eql(1234);
-        should(result.response).be.exactly(response.response);
+        should(request.input.controller).be.eql('server');
+        should(request.input.action).be.eql('info');
+        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.headers['content-type']).be.eql('application/json');
+        should(request.response.status).be.eql(1234);
         done();
       }
       catch (e) {
@@ -216,14 +186,13 @@ describe('Test: routerController.httpRequest', () => {
     httpRequest.url = '/_plugin/foo/bar/baz';
     httpRequest.method = 'GET';
 
-    routeController.http.route(httpRequest, result => {
+    routeController.http.route(httpRequest, request => {
       try {
-        should(response.input.controller).be.eql('foo');
-        should(response.input.action).be.eql('bar');
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.status).be.eql(1234);
-        should(result.response).be.exactly(response.response);
+        should(request.input.controller).be.eql('foo');
+        should(request.input.action).be.eql('bar');
+        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.headers['content-type']).be.eql('application/json');
+        should(request.response.status).be.eql(1234);
         done();
       }
       catch (e) {
