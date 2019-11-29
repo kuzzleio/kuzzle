@@ -3,11 +3,11 @@
 const
   should = require('should'),
   { Request } = require('kuzzle-common-objects'),
-  RouterController = require('../../../lib/core/router'),
+  Router = require('../../../lib/core/router'),
   { HttpMessage } = require('../../../lib/core/entrypoints/protocols/http'),
   KuzzleMock = require('../../mocks/kuzzle.mock');
 
-describe('Test: routerController.httpRequest', () => {
+describe('Test: router.httpRequest', () => {
   let
     kuzzle,
     httpRequest,
@@ -27,7 +27,7 @@ describe('Test: routerController.httpRequest', () => {
 
     kuzzle.config.http.accessControlAllowOrigin = 'foobar';
 
-    routeController = new RouterController(kuzzle);
+    routeController = new Router(kuzzle);
     routeController.init();
 
     httpRequest = new HttpMessage(
