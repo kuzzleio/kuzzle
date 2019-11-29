@@ -193,8 +193,8 @@ describe('pluginsManager.pipe', () => {
 
   it('should pass the correct number of arguments along the whole pipes chain', async () => {
     const
-      fn = sinon.stub().resolves('foo2'),
-      fn2 = sinon.stub().resolves('foo3');
+      fn = sinon.stub().callsArgWith(3, null, 'foo2'),
+      fn2 = sinon.stub().callsArgWith(3, null, 'foo3');
 
     pluginsManager.plugins = [{
       object: {
