@@ -66,6 +66,8 @@ module.exports = {
       pipeWarnTime: 500,
       pipeTimeout: 5000,
       initTimeout: 10000,
+      prefixRoutes: true,
+      prefixControllers: true
     }
   },
 

@@ -47,7 +47,7 @@
     // * requestsBufferWarningThreshold:
     //      Number of buffered requests after
     //      which Kuzzle will throw 'core:overload' events
-    //      (see https://docs.kuzzle.io/plugins/1/events/core-overload/)
+    //      (see https://docs.kuzzle.io/plugins/2/events/core-overload/)
     // * subscriptionConditionsCount
     //      Maximum number of conditions a subscription filter can contain
     //      NB: A condition is either a "simple" operator (anything but "and",
@@ -87,7 +87,7 @@
   },
 
   // The plugins section lets you define plugins behaviors
-  // (see https://docs.kuzzle.io/guide/1/essentials/plugins/)
+  // (see https://docs.kuzzle.io/guide/2/essentials/plugins/)
   "plugins": {
     // [Common]
     //   * bootstrapLockTimeout
@@ -102,11 +102,23 @@
     //   * initTimeout:
     //        Maximum execution time (in milliseconds)
     //        of a plugin initialization
+    //   * prefixRoutes:
+    //        Prefix plugin routes with "_plugin/<plugin-name>".
+    //        Can be either:
+    //          - a boolean value to activate/deactivate the prefix for all plugins
+    //          - an array of plugin names for whom the routes will be prefixed
+    //   * prefixControllers:
+    //        Prefix plugin controller names with "<plugin-name>/".
+    //        Can be either:
+    //          - a boolean value to activate/deactivate the prefix for all plugins
+    //          - an array of plugin names for whom the controller names will be prefixed
     "common": {
       "bootstrapLockTimeout": 5000,
       "pipeWarnTime": 40,
       "pipeTimeout": 250,
-      "initTimeout": 2000
+      "initTimeout": 2000,
+      "prefixRoutes": true,
+      "prefixControllers": true
     }
 
     // Custom plugin configurations must be described here.
@@ -589,7 +601,7 @@
   // [validation]
   // Defines the specifications used to validate data.
   // Please refer to the guide for more information.
-  // (https://docs.kuzzle.io/guide/1/datavalidation)
+  // (https://docs.kuzzle.io/guide/2/datavalidation)
   //
   // /!\ No syntax check will be performed here /!\
   "validation": {
