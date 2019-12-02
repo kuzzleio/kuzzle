@@ -57,7 +57,11 @@ module.exports = {
     subscriptionConditionsCount: 16,
     subscriptionMinterms: 0,
     subscriptionRooms: 1000000,
-    subscriptionDocumentTTL: 259200
+    subscriptionDocumentTTL: 259200,
+    requestsRate: {
+      anonymous: 50,
+      authenticatedUser: 0
+    }
   },
 
   plugins: {

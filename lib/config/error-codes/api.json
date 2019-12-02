@@ -116,6 +116,12 @@
           "code": 7,
           "message": "Rejected: this node is shutting down.",
           "class": "ServiceUnavailableError"
+        },
+        "too_many_requests": {
+          "description": "The request has been refused because a rate limit has been exceeded for this user",
+          "code": 8,
+          "message": "Rejected: requests rate limit exceeded for this user.",
+          "class": "TooManyRequestsError"
         }
       }
     }
