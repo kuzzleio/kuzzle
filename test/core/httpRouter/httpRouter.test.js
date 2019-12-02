@@ -65,7 +65,10 @@ describe('core/httpRouter', () => {
 
     it('should raise an internal error when trying to add a duplicate', () => {
       router.post('/foo/bar', handler);
+
       should(function () { router.post('/foo/bar', handler); })
+        .throw(InternalError, { id: 'network.http.duplicate_url' });
+      should(function () { router.post('/foo/bar/', handler); })
         .throw(InternalError, { id: 'network.http.duplicate_url' });
     });
   });
@@ -157,6 +160,50 @@ describe('core/httpRouter', () => {
             modifiedBy: 'John Doe',
             reason: 'foobar'
           });
+
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
+    it('should properly handle querystrings (w/o url trailing slash)', done => {
+      router.post('/foo/bar', handler);
+
+      rq.url = '/foo/bar?foo=bar';
+      rq.method = 'POST';
+
+      router.route(rq, () => {
+        try {
+          should(handler).be.calledOnce();
+
+          const payload = handler.firstCall.args[0];
+          should(payload).be.instanceOf(Request);
+          should(payload.input.args.foo).eql('bar');
+
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
+    it('should properly handle querystrings (w/ url trailing slash)', done => {
+      router.post('/foo/bar', handler);
+
+      rq.url = '/foo/bar/?foo=bar';
+      rq.method = 'POST';
+
+      router.route(rq, () => {
+        try {
+          should(handler).be.calledOnce();
+
+          const payload = handler.firstCall.args[0];
+          should(payload).be.instanceOf(Request);
+          should(payload.input.args.foo).eql('bar');
 
           done();
         }
