@@ -11,7 +11,6 @@ const
   } = require('kuzzle-common-objects'),
   Role = require('../../../../lib/core/models/security/role'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  { BaseController } = require('../../../../lib/api/controllers/base'),
   RoleRepository = require('../../../../lib/core/models/repositories/roleRepository');
 
 describe('Test: repositories/roleRepository', () => {
