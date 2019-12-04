@@ -143,6 +143,17 @@ Then('I {string} the following document ids with verb {string}:', async function
     { verb });
 });
 
+Then('I {string} the following document ids:', async function (action, dataTable) {
+  action = `m${action[0].toUpperCase() + action.slice(1)}`;
+
+  const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
+
+  this.props.result = await this.sdk.document[action](
+    this.props.index,
+    this.props.collection,
+    ids);
+});
+
 Then('I search documents with the following query:', function (queryRaw) {
   const query = JSON.parse(queryRaw);
 
