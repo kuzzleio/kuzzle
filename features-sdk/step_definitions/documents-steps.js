@@ -148,10 +148,10 @@ Then('I search documents with the following query:', function (queryRaw) {
   this.props.searchBody = { query };
 });
 
-Then('with the following highlights:', function (highlightsRaw) {
-  const highlights = JSON.parse(highlightsRaw);
+Then('with the following {string}:', function (searchProperty, valueRaw) {
+  const value = JSON.parse(valueRaw);
 
-  this.props.searchBody.highlight = highlights;
+  this.props.searchBody[searchProperty] = value;
 });
 
 Then('I execute the search query', async function () {

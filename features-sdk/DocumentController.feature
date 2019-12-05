@@ -3,7 +3,7 @@ Feature: Document Controller
   # document:search ============================================================
 
   @mappings
-  Scenario: Search with highlight
+  Scenario: Search with highlight or script_fields
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
     | _id          | body  |
@@ -16,7 +16,7 @@ Feature: Document Controller
       "match": { "name": "document" }
     }
     """
-    And with the following highlights:
+    And with the following "highlight":
     """
     {
       "fields": { "name": {} }
@@ -26,6 +26,28 @@ Feature: Document Controller
     Then I should receive a "hits" array of objects matching:
     | _id | highlight |
     | "document-1" | { "name": [ "<em>document</em>" ] } |
+    When I search documents with the following query:
+    """
+    {
+      "match": { "name": "document" }
+    }
+    """
+    And with the following "script_fields":
+    """
+    {
+      "ageValue": {
+        "script": {
+          "lang": "painless",
+          "source": "doc['age'].value"
+        }
+      }
+    }
+    """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching:
+    | _id | fields |
+    | "document-1" | { "ageValue": [42] } |
+
   # document:exists ============================================================
 
   @mappings
