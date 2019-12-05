@@ -14,10 +14,32 @@ Given('I create a profile {string} with the following policies:', async function
   this.props.result = await this.sdk.security.createProfile(profileId, {policies});
 });
 
-Given('I create a role {string} with the following API rights:', async function (roleId, dataTable) {
+Given(/I (can not )?create a role "(.*?)" with the following API rights:/, async function (not, roleId, dataTable) {
 
   const controllers = this.parseObject(dataTable);
-  this.props.result = await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
+
+  try {
+    this.props.result = await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
+  } catch (e) {
+    if (not) {
+      return;
+    }
+    throw new Error(e);
+  }
+});
+
+Given(/I create a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (roleId, invalid, dataTable) {
+
+  const controllers = this.parseObject(dataTable);
+
+  try {
+    this.props.result = await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
+  } catch (e) {
+    if (invalid) {
+      return;
+    }
+    throw new Error(e);
+  }
 });
 
 Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {

@@ -188,6 +188,30 @@
           "code": 10,
           "message": "Trying to set role %s with a non-existing action '%s' in controller '%s'.",
           "class": "BadRequestError"
+        },
+        "unavailable_plugin": {
+          "description": "Trying to set a role with a non-existing plugin",
+          "code": 11,
+          "message": "Trying to set role %s with an unavailable plugin %s.",
+          "class": "BadRequestError"
+        },
+        "unavailable_controller_plugin": {
+          "description": "Trying to set a role with a non-existing plugin controller",
+          "code": 12,
+          "message": "Trying to set role %s with a non-existing controller '%s' in plugin '%s'.",
+          "class": "BadRequestError"
+        },
+        "unavailable_action_plugin": {
+          "description": "Trying to set a role with a non-existing plugin controller action",
+          "code": 13,
+          "message": "Trying to set role %s with a non-existing action '%s' in controller '%s' for plugin '%s'.",
+          "class": "BadRequestError"
+        },
+        "invalid_plugin_rights": {
+          "description": "Trying to set invalid plugin rights",
+          "code": 14,
+          "message": "Trying to set invalid plugin rights to role '%s'",
+          "class": "PartialError"
         }
       }
     },

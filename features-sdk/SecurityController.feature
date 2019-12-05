@@ -134,3 +134,17 @@ Feature: Security Controller
     Then I delete the user "test-user"
     And I delete the profile "test-profile"
     And I delete the role "test-role"
+
+  @security
+  Scenario: Create a role with invalid API rights
+    Given I can not create a role "test-role" with the following API rights:
+    | invalid-controller | { "actions": { "create": true, "update": true } } |
+    And I can not create a role "test-role" with the following API rights:
+    | document | { "actions": { "invalid-action": true, "update": true } } |
+
+  @security
+  Scenario: Create a role with invalid plugin API rights
+    Given I create a role "test-role-plugin" with the following plugin invalid API rights:
+    | functional-plugin-test/non-existing-controller | { "actions": { "manage": true } } |
+    And I create a role "test-role-plugin2" with the following plugin invalid API rights:
+    | non-existing-plugin/controller | { "actions": { "create": true } } |

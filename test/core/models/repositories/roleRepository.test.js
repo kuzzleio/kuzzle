@@ -422,7 +422,8 @@ describe('Test: repositories/roleRepository', () => {
 
       role._id = 'test';
       role.controllers = controllers;
-      roleRepository.checkNativeRoleControllersAndActions = sinon.stub().resolves();
+      roleRepository.checkRoleNativeRights = sinon.stub().resolves();
+      roleRepository.checkRolePluginsRights = sinon.stub().resolves();
       roleRepository.indexStorage._storageEngine.get.resolves({});
 
       roleRepository.persistToDatabase = sinon.stub().resolves();
@@ -440,7 +441,7 @@ describe('Test: repositories/roleRepository', () => {
         });
     });
   });
-  describe('#checkNativeRoleControllersAndActions', () => {
+  describe('#checkRoleNativeRights', () => {
     const Funnel = require('../../../../lib/api/funnel');   
     
     it('should reject if a role contains invalid controller.', done => {
@@ -458,7 +459,7 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
       try {
-        roleRepository.checkNativeRoleControllersAndActions(role);
+        roleRepository.checkRoleNativeRights(role);
       } catch (e) {
         done();
       } 
@@ -478,7 +479,7 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
       try {
-        roleRepository.checkNativeRoleControllersAndActions(role);
+        roleRepository.checkRoleNativeRights(role);
       } catch (e) {
         done();
       }
@@ -499,23 +500,25 @@ describe('Test: repositories/roleRepository', () => {
 
       role._id = 'test';
       role.controllers = controllers;
-      return should(roleRepository.checkNativeRoleControllersAndActions(role))
+      return should(roleRepository.checkRoleNativeRights(role))
         .not.throw();
     });
   });
   
-  describe('#checkPluginsRoleControllersAndActions', () => {
-    it('should warn if a plugin does not exist.', () => {
-      kuzzle.pluginsManager.plugins.plugin_test = {
-        object: {
-          routes: [{
-            verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
-          }],
-          controllers: {
-            foobar: { publicMethod: 'function' }
-          }
+  describe('#checkRolePluginsRights', () => {
+    const plugin_test = {
+      object: {
+        routes: [{
+          verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
+        }],
+        controllers: {
+          foobar: { publicMethod: 'function' }
         }
-      };
+      }
+    };
+
+    it('should warn if a plugin does not exist.', () => {
+      kuzzle.pluginsManager.plugins = { plugin_test };
       const
         controllers = {
           'invalid_plugin/foobar': {
@@ -527,21 +530,12 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      roleRepository.checkPluginsRoleControllersAndActions(role);
+      roleRepository.checkRolePluginsRights(role);
       should(kuzzle.log.warn).be.calledWith('[!WARNING!] Trying to set role "test" with plugin "invalid_plugin" which doesn\'t exist or is not enabled.');
     });
     
     it('should warn if a role contains invalid controller.', () => {
-      kuzzle.pluginsManager.plugins.plugin_test = {
-        object: {
-          routes: [{
-            verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
-          }],
-          controllers: {
-            foobar: { publicMethod: 'function' }
-          }
-        }
-      };
+      kuzzle.pluginsManager.plugins = { plugin_test };
       const
         controllers = {
           'plugin_test/invalid_controller': {
@@ -553,21 +547,12 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      roleRepository.checkPluginsRoleControllersAndActions(role);
+      roleRepository.checkRolePluginsRights(role);
       should(kuzzle.log.warn).be.calledWith('[!WARNING!] Trying to set role "test" with a non-existing controller "invalid_controller" in the plugin "plugin_test".');
     });
     
     it('should warn if a role contains invalid action.', () => {
-      kuzzle.pluginsManager.plugins.plugin_test = {
-        object: {
-          routes: [{
-            verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
-          }],
-          controllers: {
-            foobar: { publicMethod: 'function' }
-          }
-        }
-      };
+      kuzzle.pluginsManager.plugins = { plugin_test };
       const controllers = {
           'plugin_test/foobar': {
             actions: {
@@ -578,21 +563,12 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers; 
-      roleRepository.checkPluginsRoleControllersAndActions(role);
+      roleRepository.checkRolePluginsRights(role);
       should(kuzzle.log.warn).be.calledWith('[!WARNING!] Trying to set role "test" with a non-existing action "iDontExist" for the controller "foobar" in the plugin "plugin_test".');
     });
     
     it('should not warn when a role contains valid controller and action.', () => {
-      kuzzle.pluginsManager.plugins.plugin_test = {
-        object: {
-          routes: [{
-            verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
-          }],
-          controllers: {
-            foobar: {publicMethod: 'function'}
-          }
-        }
-      };
+      kuzzle.pluginsManager.plugins = { plugin_test };
       const
         controllers = {
           'plugin_test/foobar': {
@@ -604,7 +580,7 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      roleRepository.checkPluginsRoleControllersAndActions(role);
+      roleRepository.checkRolePluginsRights(role);
       should(kuzzle.log.warn).be.not.called();
     });
   });
