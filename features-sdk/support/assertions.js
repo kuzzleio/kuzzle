@@ -19,9 +19,16 @@ should.Assertion.add(
       else if (expectedValue === '_NUMBER_') {
         should(objectValue).be.Number();
       }
+      else if (expectedValue === '_OBJECT_') {
+        should(objectValue).be.Object();
+      }
+      else if (expectedValue === '_UNDEFINED_') {
+        should(objectValue).be.undefined();
+      }
       else {
-        should(objectValue)
-          .match(expectedValue, `${keyPath} does not match. Expected ${expectedValue} have ${objectValue}`);
+        should(objectValue).match(
+          expectedValue,
+          `${keyPath} does not match. Expected "${expectedValue}" have "${objectValue}"`);
       }
     }
   },

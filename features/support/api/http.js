@@ -703,24 +703,6 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  getServerConfig () {
-    const options = {
-      url: this.apiBasePath('_getConfig'),
-      method: 'GET'
-    };
-
-    return this.callApi(options);
-  }
-
-  getServerInfo () {
-    const options = {
-      url: this.apiBasePath('_serverInfo'),
-      method: 'GET'
-    };
-
-    return this.callApi(options);
-  }
-
   getSpecifications (index, collection) {
     const options = {
       url: this.apiPath(index + '/' + collection + '/_specifications'),
@@ -764,15 +746,6 @@ class HttpApi {
   hasCredentials (strategy, userId) {
     const options = {
       url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
-      method: 'GET'
-    };
-
-    return this.callApi(options);
-  }
-
-  healthCheck () {
-    const options = {
-      url: this.apiPath('_healthCheck'),
       method: 'GET'
     };
 
