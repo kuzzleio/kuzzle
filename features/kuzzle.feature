@@ -403,26 +403,6 @@ Feature: Kuzzle functional tests
     And The mapping should contain "bar" field of type "keyword"
 
   @security
-  Scenario: Create/get/search/update/delete role
-    When I create a new role "foo" with id "test"
-    Then I'm able to find a role with id "test"
-    And I update the role "test" with the test content "bar"
-    Then I'm able to find a role with id "test" equivalent to role "bar"
-    Then I'm able to find "3" role by searching controller "foo"
-    And I'm able to find "4" role by searching controller "foo,bar"
-    And I'm able to find "4" role by searching controller "bar"
-    And I delete the role with id "test"
-    Then I'm not able to find a role with id "test"
-    Then I create a new role "foobar" with id "test"
-    And I create a new role "foo" with id "test2"
-    And I create a new role "foo" with id "test3"
-    Then I'm able to do a multi get with "test,test2,test3" and get "3" roles
-    Then I'm able to find "6" role by searching controller "foo"
-    And I'm able to find "3" role by searching controller "foo" with maximum "3" results starting from "1"
-    And I'm able to find "2" role by searching controller "foo" with maximum "10" results starting from "4"
-    And I'm able to find "4" role by searching controller "bar"
-
-  @security
   Scenario: create an invalid profile with unexisting role triggers an error
     Then I cannot create an invalid profile
 

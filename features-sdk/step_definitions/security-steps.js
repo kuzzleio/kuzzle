@@ -28,16 +28,73 @@ Given(/I (can not )?create a role "(.*?)" with the following API rights:/, async
   }
 });
 
-Given(/I create a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (roleId, invalid, dataTable) {
+Given(/I (.*?) a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (method, roleId, invalid, dataTable) {
+
+  const controllers = this.parseObject(dataTable);
+  try {
+    await this.sdk.security[method + 'Role'](roleId, { controllers }, { refresh: 'wait_for' });
+  } catch (e) {
+    if ( invalid
+      && e.id === 'security.role.invalid_plugin_rights'
+      && e.status === 206
+    ) {
+      return;
+    }
+    throw new Error(e);
+  }
+});
+
+Then(/I update the role "(.*?)" with the following content:/, async function (roleId, dataTable) {
 
   const controllers = this.parseObject(dataTable);
 
   try {
-    this.props.result = await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
+    this.props.result = await this.sdk.security.updateRole(roleId, { controllers }, { refresh: 'wait_for' });
   } catch (e) {
-    if (invalid) {
+    throw new Error(e);
+  }
+});
+
+Then(/I am (not )?able to get a role with id "(.*?)"/, async function (roleId, not) {
+
+  try {
+    this.props.result = await this.sdk.security.getRole(roleId);
+  } catch (e) {
+    if (not) {
       return;
     }
+    throw new Error(e);
+  }
+});
+
+Then('I am able to find {int} roles by searching controller:', async function (count, dataTable) {
+
+  const controller = this.parseObject(dataTable);
+
+  try {
+    this.props.result = await this.sdk.security.searchRoles(controller);
+    if (this.props.result.hits.length !== count) {
+      throw new Error(`Expected ${count} roles to be found : got ${this.props.result.hits.length}.`);
+    }
+  } catch (e) {
+    throw new Error(e);
+  }
+});
+
+Then('I am able to mGet roles and get {int} roles with the following ids:', async function (count, dataTable) {
+
+  const data = this.parseObject(dataTable);
+  const roleIds = [];
+  for (const role of Object.entries(data.ids)) {
+    roleIds.push(role);
+  }
+
+  try {
+    this.props.result = await this.sdk.security.mGetRoles(roleIds);//['test-role', 'test-role-2', 'test-role-3',]);
+    if (this.props.result.length !== count) {
+      throw new Error(`Exptected ${count} roles, but go ${this.props.result.length}`);
+    }
+  } catch (e) {
     throw new Error(e);
   }
 });

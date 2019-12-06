@@ -143,8 +143,38 @@ Feature: Security Controller
     | document | { "actions": { "invalid-action": true, "update": true } } |
 
   @security
-  Scenario: Create a role with invalid plugin API rights
+  Scenario: Create/get/search/update/delete a role
+    Given I am able to find 3 roles by searching controller:
+    | controllers | ["document"] |
+    Then I create a role "test-role" with the following API rights:
+    | document | { "actions": { "create": true, "update": true } } |
+    Then I am able to get a role with id "test-role"
+    And I am able to find 4 roles by searching controller:
+    | controllers | ["document"] |
+    And I update the role "test-role" with the following content:
+    | document | { "actions": { "create": false, "update": false } } |
+    And I delete the role "test-role"
+    Then I am able to find 3 roles by searching controller:
+    | controllers | ["document"] |
+    Then I am not able to get a role with id "test-role"
+    Then I create a role "test-role" with the following API rights:
+    | document | { "actions": { "create": true, "update": true } } |
+    And I create a role "test-role-2" with the following API rights:
+    | document | { "actions": { "create": true, "update": true } } |
+    And I create a role "test-role-3" with the following API rights:
+    | document | { "actions": { "create": true, "update": true } } |
+    Then I am able to mGet roles and get 3 roles with the following ids:
+    | ids | ["test-role", "test-role-2", "test-role-3"] |
+    And I am able to find 6 roles by searching controller:
+    | controllers | ["document"] |
+
+  @security
+  Scenario: Create/Update a role even with invalid plugin API rights
     Given I create a role "test-role-plugin" with the following plugin invalid API rights:
-    | functional-plugin-test/non-existing-controller | { "actions": { "manage": true } } |
+    | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
     And I create a role "test-role-plugin2" with the following plugin invalid API rights:
     | non-existing-plugin/controller | { "actions": { "create": true } } |
+    And I update a role "test-role-plugin" with the following plugin invalid API rights:
+    | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
+    And I update a role "test-role-plugin2" with the following plugin invalid API rights:
+    | non-existing-plugin/controller | { "actions": { "create": false } } |
