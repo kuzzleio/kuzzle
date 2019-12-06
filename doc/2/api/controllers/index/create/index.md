@@ -55,8 +55,7 @@ Returns a confirmation that the index is being created:
   "index": "<index>",
   "action": "create",
   "controller": "index",
-  "requestId": "<unique request identifier>",
-  "result": {}
+  "requestId": "<unique request identifier>"
 }
 ```
 
