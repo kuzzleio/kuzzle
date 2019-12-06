@@ -19,13 +19,13 @@
         "get_limit_exceeded": {
           "description": "The number of documents returned by this request exceeds the configured server limit",
           "code": 3,
-          "message": "The number of documents returned by this request exceeds the configured server limit ( %s ).",
+          "message": "The number of documents returned by this request exceeds the configured server limit.",
           "class": "SizeLimitError"
         },
         "write_limit_exceeded": {
           "description": "The number of documents edited by this request exceeds the configured server limit",
           "code": 4,
-          "message": "The number of documents edited by this request exceeds the configured server limit ( %s ).",
+          "message": "The number of documents edited by this request exceeds the configured server limit.",
           "class": "SizeLimitError"
         },
         "import_failed": {
@@ -218,12 +218,25 @@
           "description": "An index or a collection name contains a forbidden character",
           "code": 39,
           "message": "An index or a collection name cannot contain the character \"%s\"",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": true
         },
         "invalid_search_query": {
           "description": "A forbidden argument has been provided in the search query",
           "code": 40,
           "message": "The argument \"%s\" is not allowed at this level of a search query.",
+          "class": "BadRequestError"
+        },
+        "invalid_index_name": {
+          "description": "A provided index name is invalid",
+          "code": 41,
+          "message": "The index name \"%s\" is invalid",
+          "class": "BadRequestError"
+        },
+        "invalid_collection_name": {
+          "description": "A provided collection name is invalid",
+          "code": 42,
+          "message": "The collection name \"%s\" is invalid",
           "class": "BadRequestError"
         }
       }

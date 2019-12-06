@@ -6,7 +6,14 @@ const
   ms = require('ms'),
   KuzzleMock = require('../mocks/kuzzle.mock'),
   ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
-  ES = require('../../lib/services/elasticsearch');
+  ES = require('../../lib/services/elasticsearch'),
+  {
+    errors: {
+      BadRequestError,
+      PreconditionError,
+      SizeLimitError
+    }
+  } = require('kuzzle-common-objects');
 
 describe('Test: ElasticSearch service', () => {
   let
@@ -34,8 +41,10 @@ describe('Test: ElasticSearch service', () => {
 
     await elasticsearch.init();
 
-    // eslint-disable-next-line require-atomic-updates
-    elasticsearch._esWrapper.reject = sinon.spy((error) => Promise.reject(error));
+    elasticsearch._esWrapper = {
+      reject: sinon.spy((error) => Promise.reject(error)),
+      formatESError: sinon.spy(error => error)
+    };
 
     Date.now = () => timestamp;
   });
@@ -314,7 +323,8 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError)
+            .be.calledWith(esClientError);
         });
     });
   });
@@ -788,7 +798,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
-      elasticsearch._getAllDocumentsFromQuery = sinon.stub().resolves([
+      sinon.stub(elasticsearch, '_getAllDocumentsFromQuery').resolves([
         { _id: '_id1', _source: '_source1' },
         { _id: '_id2', _source: '_source2' },
       ]);
@@ -821,7 +831,7 @@ describe('Test: ElasticSearch service', () => {
             body: { query: { filter: 'term' } },
             scroll: '5s',
             from: undefined,
-            size: undefined,
+            size: 1000,
             refresh: undefined
           });
 
@@ -876,7 +886,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
     });
 
@@ -889,6 +899,29 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejectedWith({
         id: 'services.storage.missing_argument'
       });
+    });
+
+    it('should reject if the number of impacted documents exceeds the configured limit', () => {
+      elasticsearch._getAllDocumentsFromQuery.restore();
+
+      elasticsearch._client.search.resolves({
+        body: {
+          hits: {
+            hits: [],
+            total: {
+              value: 99999
+            }
+          },
+          _scroll_id: 'foobar'
+        }
+      });
+
+      kuzzle.config.limits.documentsFetchCount = 2;
+
+      return should(elasticsearch.deleteByQuery(index, collection, {}))
+        .rejectedWith(
+          SizeLimitError,
+          { id: 'services.storage.write_limit_exceeded' });
     });
   });
 
@@ -978,15 +1011,10 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should rejects if the index already exists', () => {
-      const promise = elasticsearch.createIndex('nepali');
-
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            id: 'services.storage.index_already_exists'
-          });
-        });
+    it('should reject if the index already exists', () => {
+      return should(elasticsearch.createIndex('nepali')).be.rejectedWith(
+        PreconditionError,
+        { id: 'services.storage.index_already_exists' });
     });
 
     it('should return a rejected promise if client.cat.indices fails', () => {
@@ -1001,6 +1029,14 @@ describe('Test: ElasticSearch service', () => {
         .then(() => {
           should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
         });
+    });
+
+    it('should reject if the index name is invalid', () => {
+      sinon.stub(elasticsearch, 'isIndexNameValid').returns(false);
+
+      return should(elasticsearch.createIndex('foobar')).rejectedWith(
+        BadRequestError,
+        { id: 'services.storage.invalid_index_name' });
     });
   });
 
@@ -1086,9 +1122,17 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should not reject when a race condition occur between exists and create methods', () => {
-      elasticsearch._client.indices.create.rejects({
-        meta: { body: { error: { type: 'resource_already_exists_exception' } } }
-      });
+      const esReject = new Error('foo');
+
+      esReject.meta = {
+        body: {
+          error: {
+            type: 'resource_already_exists_exception'
+          }
+        }
+      };
+
+      elasticsearch._client.indices.create.rejects(esReject);
 
       const promise = elasticsearch.createCollection(
         index,
@@ -1191,6 +1235,21 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
+    it('should reject if the index name is invalid', () => {
+      sinon.stub(elasticsearch, 'isIndexNameValid').returns(false);
+
+      return should(elasticsearch.createCollection('foo', 'bar')).rejectedWith(
+        BadRequestError,
+        { id: 'services.storage.invalid_index_name' });
+    });
+
+    it('should reject if the collection name is invalid', () => {
+      sinon.stub(elasticsearch, 'isCollectionNameValid').returns(false);
+
+      return should(elasticsearch.createCollection('foo', 'bar')).rejectedWith(
+        BadRequestError,
+        { id: 'services.storage.invalid_collection_name' });
+    });
   });
 
   describe('#getMapping', () => {
@@ -2524,7 +2583,6 @@ describe('Test: ElasticSearch service', () => {
             rejected);
         });
     });
-
   });
 
   describe('#mReplace', () => {
@@ -2865,16 +2923,6 @@ describe('Test: ElasticSearch service', () => {
           });
         });
     });
-
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      const promise = elasticsearch.mDelete(index, collection, documentIds);
-
-      return should(promise).be.rejectedWith({
-        id: 'services.storage.write_limit_exceeded'
-      });
-    });
   });
 
   describe('_mExecute', () => {
@@ -3041,6 +3089,63 @@ describe('Test: ElasticSearch service', () => {
         _id: 'liia',
         _source: { city: 'Kathmandu' }
       }]);
+    });
+  });
+
+  describe('#isIndexNameValid', () => {
+    it('should allow a valid index name', () => {
+      should(elasticsearch.isIndexNameValid('foobar')).be.true();
+    });
+
+    it('should not allow empty index names', () => {
+      should(elasticsearch.isIndexNameValid('')).be.false();
+    });
+
+    it('should not allow uppercase chars', () => {
+      should(elasticsearch.isIndexNameValid('bAr')).be.false();
+    });
+
+    it('should not allow index names that are too long', () => {
+      return should(elasticsearch.isIndexNameValid('Ӣ'.repeat(64))).be.false();
+    });
+
+    it('should not allow forbidden chars in the name', () => {
+      const forbidden = '\\/*?"<>| \t\r\n,#:%.&';
+
+      for (let i = 0; i < forbidden.length; i++) {
+        const name = `foo${forbidden[i]}bar`;
+
+        should(elasticsearch.isIndexNameValid(name)).be.false();
+      }
+    });
+  });
+
+  describe('#isCollectionNameValid', () => {
+    it('should allow a valid collection name', () => {
+      should(elasticsearch.isCollectionNameValid('foobar')).be.true();
+    });
+
+    it('should not allow empty collection names', () => {
+      should(elasticsearch.isCollectionNameValid('')).be.false();
+    });
+
+    it('should not allow uppercase chars', () => {
+      should(elasticsearch.isCollectionNameValid('bAr')).be.false();
+    });
+
+    it('should not allow collection names that are too long', () => {
+      return should(elasticsearch.isCollectionNameValid('Ӣ'.repeat(64)))
+        .be.false();
+    });
+
+    it('should not allow forbidden chars in the name', () => {
+      const forbidden = '\\/*?"<>| \t\r\n,#:%.&';
+
+      for (let i = 0; i < forbidden.length; i++) {
+        const name = `foo${forbidden[i]}bar`;
+
+        should(elasticsearch.isCollectionNameValid(name)).be.false();
+      }
     });
   });
 

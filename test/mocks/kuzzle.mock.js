@@ -3,7 +3,7 @@
 const
   _ = require('lodash'),
   sinon = require('sinon'),
-  Kuzzle = require('../../lib/api/kuzzle'),
+  Kuzzle = require('../../lib/kuzzle'),
   Bluebird = require('bluebird'),
   config = require('../../lib/config'),
   IndexStorageMock = require('./indexStorage.mock'),
@@ -22,8 +22,14 @@ class KuzzleMock extends Kuzzle {
     this.config = _.merge({}, config);
 
     // emit + pipe mocks
-    sinon.stub(this, 'pipe').callsFake(
-      (...args) => Bluebird.resolve(args[1]));
+    sinon.stub(this, 'pipe').callsFake((...args) => {
+      if (typeof args[args.length - 1] !== 'function') {
+        return Bluebird.resolve(...args.slice(1));
+      }
+
+      const cb = args.pop();
+      cb(null, ...args.slice(1));
+    });
 
     sinon.spy(this, 'emit');
 
