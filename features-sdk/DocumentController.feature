@@ -276,7 +276,7 @@ Feature: Document Controller
     | "document-1" | { "name": "document1" } |
     | "document-2" | { "name": "document2" } |
     | "document-3" | { "name": "document3" } |
-    When I "get" the following document ids with verb "GET":
+    When I "get" the following document ids:
     | "document-1" |
     | "document-2" |
     Then I should receive a "successes" array of objects matching:

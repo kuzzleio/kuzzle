@@ -92,6 +92,19 @@ describe('DocumentExtractor', () => {
     should(documents[1]._id).equal('bazqux');
   });
 
+  it('extract documents from request with mGet action with an array of ids as argument', () => {
+    const req = new Request({
+      action: 'mGet',
+      ids: ['foobar', 'bazqux'],
+      body: {}
+    });
+
+    const documents = new DocumentExtractor(req).extract();
+    should(documents.length).equal(2);
+    should(documents[0]._id).equal('foobar');
+    should(documents[1]._id).equal('bazqux');
+  });
+
   it('extract documents from request with mGet action with query string', () => {
     const req = new Request({
       action: 'mGet',
