@@ -102,7 +102,7 @@
     //       Note: the "auth:logout" API route is unaffected by this rate limit.
     //   * login:
     //       Impose a global requests rate limit for "auth:login" calls, per
-    //       second and per node.
+    //       second and per node (0 = no limit)
     //       Contrary to other settings, this limit does not apply to users, but
     //       to each opened socket instead.
     "requestsRate": {

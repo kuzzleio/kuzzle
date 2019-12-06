@@ -248,6 +248,7 @@ describe('funnelController.execute', () => {
   describe('#core:shutdown', () => {
     it('should reject any new request after the core:shutdown event has been triggered', done => {
       funnel.controllers.clear();
+      sinon.stub(funnel.rateLimiter, 'init');
       funnel.init();
 
       should(funnel.shuttingDown).be.false();

@@ -2,6 +2,7 @@
 
 const
   should = require('should'),
+  sinon = require('sinon'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   Funnel = require('../../../lib/api/funnel'),
   AuthController = require('../../../lib/api/controllers/auth'),
@@ -21,8 +22,10 @@ describe('funnel.init', () => {
       kuzzle = new KuzzleMock(),
       funnel = new Funnel(kuzzle);
 
+    sinon.stub(funnel.rateLimiter, 'init');
     funnel.init();
 
+    should(funnel.rateLimiter).calledOnce().calledWith(kuzzle);
     should(funnel.controllers.size).be.eql(11);
     should(funnel.controllers.get('auth')).be.instanceOf(AuthController);
     should(funnel.controllers.get('bulk')).be.instanceOf(BulkController);
