@@ -250,6 +250,7 @@ order: 500
 | plugin.runtime.failed_init<br/><pre>0x04020001</pre> | [PluginImplementationError](/core/2/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | An exception was thrown by a plugin's init function |
 | plugin.runtime.unexpected_error<br/><pre>0x04020002</pre> | [PluginImplementationError](/core/2/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | Embeds an unexpected plugin error into a standardized KuzzleError object |
 | plugin.runtime.pipe_timeout<br/><pre>0x04020003</pre> | [GatewayTimeoutError](/core/2/api/essentials/errors/handling#gatewaytimeouterror) <pre>(504)</pre> | A pipe function execution took more than the configured server limit |
+| plugin.runtime.too_many_pipes<br/><pre>0x04020004</pre> | [ServiceUnavailableError](/core/2/api/essentials/errors/handling#serviceunavailableerror) <pre>(503)</pre> | The number of running pipes exceeds the configured capacity (see configuration files). This may be caused by pipes being too slow, or by an insufficient number of Kuzzle nodes. |
 
 ---
 

@@ -66,6 +66,8 @@ module.exports = {
       pipeWarnTime: 500,
       pipeTimeout: 5000,
       initTimeout: 10000,
+      maxConcurrentPipes: 50,
+      pipesBufferSize: 50000
     }
   },
 
