@@ -131,7 +131,7 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
   }
 });
 
-Then('I {string} the following document ids with verb {string}:', async function (action, verb, dataTable) {
+Then(/I "(.*?)" the following document ids( with verb "(.*?)")?:/, async function (action, verb, dataTable) {
   action = `m${action[0].toUpperCase() + action.slice(1)}`;
 
   const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
