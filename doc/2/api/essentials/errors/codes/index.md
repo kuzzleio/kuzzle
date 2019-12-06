@@ -474,6 +474,12 @@ order: 500
 | security.role.cannot_delete<br/><pre>0x07050003</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Attempted to delete a base role (anonymous, default, admin) |
 | security.role.in_use<br/><pre>0x07050004</pre> | [PreconditionError](/core/2/api/essentials/errors/handling#preconditionerror) <pre>(412)</pre> | A role still assigned to profiles cannot be deleted |
 | security.role.uninitialized<br/><pre>0x07050005</pre> | [InternalError](/core/2/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Attempted to access to an unitialized Role object |
+| security.role.unknown_controller<br/><pre>0x07050009</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing controller |
+| security.role.unknown_controller_action<br/><pre>0x0705000a</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing controller action |
+| security.role.unavailable_plugin<br/><pre>0x0705000b</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing plugin |
+| security.role.unavailable_controller_plugin<br/><pre>0x0705000c</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing plugin controller |
+| security.role.unavailable_action_plugin<br/><pre>0x0705000d</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing plugin controller action |
+| security.role.invalid_plugin_rights<br/><pre>0x0705000e</pre> | [PartialError](/core/2/api/essentials/errors/handling#partialerror) <pre>(206)</pre> | Trying to set invalid plugin rights |
 
 ---
 
