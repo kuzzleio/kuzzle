@@ -60,7 +60,8 @@ module.exports = {
     subscriptionDocumentTTL: 259200,
     requestsRate: {
       anonymous: 50,
-      authenticatedUser: 0
+      authenticatedUser: 0,
+      login: 1
     }
   },
 
@@ -70,11 +71,9 @@ module.exports = {
       pipeWarnTime: 500,
       pipeTimeout: 5000,
       initTimeout: 10000,
+      maxConcurrentPipes: 50,
+      pipesBufferSize: 50000
     }
-  },
-
-  queues: {
-    cliQueue: 'cli-queue'
   },
 
   repositories: {

@@ -87,11 +87,12 @@
 
     // [requestsRate]
     // Impose a requests rate limit PER SECOND and PER NODE.
-    // Meaning that a rate limit of xx requests per second for anonymous
+    // Meaning that a rate limit of xx requests per second for
     // requests will be enforced independantly by each node of a cluster.
     //
     //   * anonymous:
-    //       Impose a requests rate limit for anonymous requests (0 = no limit)
+    //       Impose a requests rate limit for requests emitted by
+    //       non-authenticated users (0 = no limit).
     //       This limit is per second, and per node.
     //       Note: the "auth:login" API route is unaffected by this rate limit.
     //   * authenticatedUser:
@@ -99,9 +100,15 @@
     //       per node (0 = no limit)
     //       This limit can be overridden in security profiles.
     //       Note: the "auth:logout" API route is unaffected by this rate limit.
+    //   * login:
+    //       Impose a global requests rate limit for "auth:login" calls, per
+    //       second and per node.
+    //       Contrary to other settings, this limit does not apply to users, but
+    //       to each opened socket instead.
     "requestsRate": {
       "anonymous": 50,
-      "authenticatedUser": 0
+      "authenticatedUser": 0,
+      "login": 1
     }
   },
 
@@ -121,11 +128,25 @@
     //   * initTimeout:
     //        Maximum execution time (in milliseconds)
     //        of a plugin initialization
+    //   * maxConcurrentPipes:
+    //        Maximum number of pipes that can be executed in parallel.
+    //        New pipes submitted while the maximum number of pipes is met are
+    //        delayed for later execution.
+    //        This parameter controls is used to limit the stress put on the
+    //        event loop, allowing for Kuzzle to process pipes faster, and to
+    //        protect it from performances degradation if an abnormal number of
+    //        pipes are submitted.
+    //        (timers do not start while a pipe is hold back)
+    //   * pipesBufferSize:
+    //        Maximum number of pipes that can be delayed. If full, new pipes
+    //        are rejected.
     "common": {
       "bootstrapLockTimeout": 5000,
       "pipeWarnTime": 40,
       "pipeTimeout": 250,
-      "initTimeout": 2000
+      "initTimeout": 2000,
+      "maxConcurrentPipes": 50,
+      "pipesBufferSize": 50000
     }
 
     // Custom plugin configurations must be described here.
