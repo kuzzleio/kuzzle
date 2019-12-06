@@ -398,6 +398,15 @@ describe('DocumentController', () => {
         ]
       });
     });
+
+    it('should reject if the number of documents to edit exceeds server configuration', () => {
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      return should(documentController._mChanges(request, 'foobar'))
+        .rejectedWith(
+          SizeLimitError,
+          { id: 'services.storage.write_limit_exceeded' });
+    });
   });
 
   describe('#createOrReplace', () => {
