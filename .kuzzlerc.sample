@@ -86,7 +86,7 @@
     "subscriptionConditionsCount": 16,
     "subscriptionMinterms": 0,
     "subscriptionRooms": 1000000,
-    "subscriptionDocumentTTL": 259200, // 72 * 60 * 60
+    "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
   },
 
   // The plugins section lets you define plugins behaviors
