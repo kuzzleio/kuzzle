@@ -6,8 +6,6 @@ title: createOrReplaceProfile
 
 # createOrReplaceProfile
 
-
-
 Creates a new profile or, if the provided profile identifier already exists, replaces it.
 
 ---
@@ -24,6 +22,7 @@ Body:
 
 ```js
 {
+  "rateLimit": 50,
   "policies": [
     {
       "roleId": "<roleId>"
@@ -55,6 +54,7 @@ Body:
   "action": "createOrReplaceProfile",
   "_id": "<profileId>",
   "body": {
+    "rateLimit": 50,
     "policies": [
       {
         "roleId": "<anotherRoleId>"
@@ -93,7 +93,7 @@ Body:
 
 ## Body properties
 
-- `policies`: [profile definition](/core/2/guides/essentials/security#defining-profiles)
+See the [profile definition guide](/core/2/guides/essentials/security#defining-profiles).
 
 ---
 

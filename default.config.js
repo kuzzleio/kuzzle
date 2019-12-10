@@ -52,17 +52,13 @@ module.exports = {
     concurrentRequests: 100,
     documentsFetchCount: 10000,
     documentsWriteCount: 200,
+    loginsPerSecond: 1,
     requestsBufferSize: 50000,
     requestsBufferWarningThreshold: 5000,
     subscriptionConditionsCount: 16,
     subscriptionMinterms: 0,
     subscriptionRooms: 1000000,
     subscriptionDocumentTTL: 259200,
-    requestsRate: {
-      anonymous: 50,
-      authenticatedUser: 0,
-      login: 1
-    }
   },
 
   plugins: {
@@ -105,12 +101,15 @@ module.exports = {
     standard: {
       profiles: {
         admin: {
+          rateLimit: 0,
           policies: [ { roleId: 'admin'} ]
         },
         default: {
+          rateLimit: 10,
           policies: [ { roleId: 'default'} ]
         },
         anonymous: {
+          rateLimit: 200,
           policies: [ { roleId: 'anonymous'} ]
         }
       },
