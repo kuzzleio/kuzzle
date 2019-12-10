@@ -89,6 +89,7 @@ The decryption key must be provided in one of the following ways, in order of pr
 Kuzzle start sequence ends in failure if:
   - a decryption key is provided and Kuzzle cannot find a file
   - Kuzzle finds a file and no decryption key is provided
+  - a file is provided but Kuzzle cannot read it
 :::
 
 ## Accessing secrets in plugin
