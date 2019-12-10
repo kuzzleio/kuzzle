@@ -1,6 +1,7 @@
 const
   sinon = require('sinon'),
   should = require('should'),
+  mockrequire = require('mock-require'),
   rewire = require('rewire'),
   Kuzzle = rewire('../lib/kuzzle'),
   KuzzleMock = require('./mocks/kuzzle.mock');
@@ -45,6 +46,10 @@ describe('/lib/api/kuzzle.js', () => {
     kuzzle = _mockKuzzle(Kuzzle);
   });
 
+  afterEach(() => {
+    mockrequire.stopAll();
+  });
+
   it('should build a kuzzle server object with emit and listen event', done => {
     kuzzle.on('event', done);
     kuzzle.emit('event');
@@ -87,16 +92,21 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     it('should call vault with params from the CLI', () => {
-      const params = {
-        vaultKey: 'the spoon does not exists',
-        secretsFile: 'config/secrets.json'
-      };
+      Kuzzle.__with__({
+        fs: {
+          existsSync: sinon.stub().returns(true)
+        }
+      })(async () => {
+        const params = {
+          vaultKey: 'the spoon does not exists',
+          secretsFile: 'config/secrets.json'
+        };
 
-      return kuzzle.start(params)
-        .then(() => {
-          should(kuzzle.vault._vaultKey).be.exactly('the spoon does not exists');
-          should(kuzzle.vault._encryptedSecretsFile).be.exactly('config/secrets.json');
-        });
+        await kuzzle.start(params);
+
+        should(kuzzle.vault._vaultKey).be.exactly('the spoon does not exists');
+        should(kuzzle.vault._encryptedSecretsFile).be.exactly('config/secrets.json');
+      });
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {

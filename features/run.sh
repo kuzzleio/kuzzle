@@ -7,10 +7,10 @@ set -e
 # profiles are defined in the cucumber.js file at the root of this project
 
 # http
-./node_modules/.bin/cucumber-js --format progress-bar --profile "http"
+./node_modules/.bin/cucumber-js --format progress-bar --profile "http" $1
 
 # websocket
-./node_modules/.bin/cucumber-js --format progress-bar --profile "websocket"
+./node_modules/.bin/cucumber-js --format progress-bar --profile "websocket" $1
 
 # mqtt
-./node_modules/.bin/cucumber-js --format progress-bar --profile "mqtt"
+./node_modules/.bin/cucumber-js --format progress-bar --profile "mqtt" $1

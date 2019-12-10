@@ -80,6 +80,12 @@
           "code": 3,
           "message": "Plugin \"%s\": timeout error. A pipe on the event \"%s\" exceeded the timeout delay (%sms). Aborting.",
           "class": "GatewayTimeoutError"
+        },
+        "too_many_pipes": {
+          "description": "The number of running pipes exceeds the configured capacity (see configuration files). This may be caused by pipes being too slow, or by an insufficient number of Kuzzle nodes.",
+          "code": 4,
+          "message": "Request discarded: maximum number of executing pipe functions reached.",
+          "class": "ServiceUnavailableError"
         }
       }
     },

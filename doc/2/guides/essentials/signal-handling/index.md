@@ -13,8 +13,6 @@ Kuzzle handles certain Unix signals which fall into the following three categori
 - Normal termination
 - Dump report generation
 
-The code related to signal handling can be seen here : [lib/api/kuzzle.js#L183](https://github.com/kuzzleio/kuzzle/blob/master/lib/api/kuzzle.js#L183)
-
 ## Abnormal termination
 
 Unix signal names:
