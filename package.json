@@ -48,7 +48,7 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^3.0.0",
-    "kuzzle-common-objects": "github:kuzzleio/kuzzle-common-objects#KZL-1408/add-new-error-class",
+    "kuzzle-common-objects": "^4.1.0",
     "kuzzle-sdk": "7.0.1",
     "kuzzle-vault": "^1.0.1",
     "lodash": "4.17.15",
