@@ -3,12 +3,12 @@
 const
   should = require('should'),
   sinon = require('sinon'),
-  Bluebird = require('bluebird'),
   {
     Request,
     errors: {
       BadRequestError,
-      ServiceUnavailableError
+      ServiceUnavailableError,
+      TooManyRequestsError
     }
   } = require('kuzzle-common-objects'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
@@ -40,8 +40,9 @@ describe('funnelController.execute', () => {
       ['foo', { bar: sinon.spy() } ]
     ]);
 
-    funnel.checkRights = sinon.stub().returns(Bluebird.resolve(request));
+    funnel.checkRights = sinon.stub().resolves(request);
     funnel.processRequest = sinon.stub().returnsArg(0);
+    sinon.stub(funnel.rateLimiter, 'isAllowed').resolves(true);
     sinon.stub(funnel, '_playCachedRequests');
   });
 
@@ -74,12 +75,75 @@ describe('funnelController.execute', () => {
       funnel.checkRights.rejects(error);
 
       funnel.execute(request, (err, res) => {
-        should(err).be.instanceOf(Error);
-        should(res.status).be.exactly(503);
-        should(res.error.message).be.exactly('test');
-        should(funnel.processRequest.calledOnce).be.false();
-        should(funnel.overloaded).be.false();
-        done();
+        try {
+          should(err).be.instanceOf(Error);
+          should(res.status).be.exactly(503);
+          should(res.error.message).be.exactly('test');
+          should(funnel.processRequest.calledOnce).be.false();
+          should(funnel.overloaded).be.false();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
+    it('should immediately reject requests without a controller', done => {
+      request = new Request({action: 'bar'}, {
+        connection: {id: 'connectionid'},
+        token: null
+      });
+
+      funnel.execute(request, (err, res) => {
+        try {
+          should(err).be.instanceOf(BadRequestError);
+          should(err.id).eql('api.assert.missing_argument');
+          should(err.message).eql('Missing argument "controller".');
+          should(res).eql(request);
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
+    it('should immediately reject requests without an action', done => {
+      request = new Request({controller: 'foo'}, {
+        connection: {id: 'connectionid'},
+        token: null
+      });
+
+      funnel.execute(request, (err, res) => {
+        try {
+          should(err).be.instanceOf(BadRequestError);
+          should(err.id).eql('api.assert.missing_argument');
+          should(err.message).eql('Missing argument "action".');
+          should(res).eql(request);
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
+    it('should reject requests exceeding the rate limit', done => {
+      funnel.rateLimiter.isAllowed.resolves(false);
+
+      funnel.execute(request, (err, res) => {
+        try {
+          should(res).eql(request);
+          should(err).be.instanceOf(TooManyRequestsError);
+          should(err.id).eql('api.process.too_many_requests');
+          should(funnel.processRequest).not.called();
+          should(funnel.overloaded).be.false();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
       });
     });
   });
@@ -204,7 +268,7 @@ describe('funnelController.execute', () => {
 
       funnel.checkRights.throws(new Error('funnel.checkRights should not have been called'));
 
-      should(funnel.execute(request, cb)).be.eql(0);
+      should(funnel.execute(request, cb)).be.eql(1);
       should(funnel.checkRights).not.be.called();
       should(cb)
         .calledOnce()
@@ -218,14 +282,14 @@ describe('funnelController.execute', () => {
       funnel._playCachedRequests.restore();
     });
 
-    it('should eventually play cached requests', (done) => {
+    it('should eventually play cached requests', done => {
       funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
       funnel.execute(request, done);
 
       funnel.concurrentRequests = 0;
     });
 
-    it('should play cached request in order', (done) => {
+    it('should play cached request in order', done => {
       const
         serialized = request.serialize(),
         secondRequest = new Request(Object.assign(serialized.data, {id: 'req-2'})),

@@ -25,7 +25,7 @@ describe('funnel.init', () => {
     sinon.stub(funnel.rateLimiter, 'init');
     funnel.init();
 
-    should(funnel.rateLimiter).calledOnce().calledWith(kuzzle);
+    should(funnel.rateLimiter.init).calledOnce();
     should(funnel.controllers.size).be.eql(11);
     should(funnel.controllers.get('auth')).be.instanceOf(AuthController);
     should(funnel.controllers.get('bulk')).be.instanceOf(BulkController);

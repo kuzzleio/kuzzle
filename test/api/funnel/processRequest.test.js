@@ -53,45 +53,45 @@ describe('funnel.processRequest', () => {
     mockrequire.stopAll();
   });
 
-  it('should throw if no controller is specified', () => {
+  it('should reject if no controller is specified', () => {
     const request = new Request({action: 'create'});
 
-    should(() => funnel.processRequest(request))
-      .throw(NotFoundError, {id: 'api.process.controller_not_found'});
-    should(kuzzle.pipe)
-      .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pipe)
-      .not.calledWith('request:onError', request);
-    should(kuzzle.statistics.startRequest).not.be.called();
+    return should(funnel.processRequest(request))
+      .rejectedWith(NotFoundError, {id: 'api.process.controller_not_found'})
+      .then(() => {
+        should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
+        should(kuzzle.pipe).not.calledWith('request:onError', request);
+        should(kuzzle.statistics.startRequest).not.be.called();
+      });
   });
 
-  it('should throw if no action is specified', () => {
+  it('should reject if no action is specified', () => {
     const request = new Request({controller: 'fakeController'});
 
-    should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { id: 'api.process.action_not_found' });
-    should(kuzzle.pipe)
-      .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pipe)
-      .not.calledWith('request:onError', request);
-    should(kuzzle.statistics.startRequest).not.be.called();
+    return should(funnel.processRequest(request))
+      .rejectedWith(NotFoundError, { id: 'api.process.action_not_found' })
+      .then(() => {
+        should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
+        should(kuzzle.pipe).not.calledWith('request:onError', request);
+        should(kuzzle.statistics.startRequest).not.be.called();
+      });
   });
 
-  it('should throw if the action does not exist', () => {
+  it('should reject if the action does not exist', () => {
     const request = new Request({
       controller: 'fakeController',
       action: 'create'
     });
 
-    should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { id: 'api.process.action_not_found' });
-    should(kuzzle.pipe)
-      .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pipe)
-      .not.calledWith('request:onError', request);
-    should(kuzzle.pipe)
-      .not.calledWith('fakeController:errorCreate', request);
-    should(kuzzle.statistics.startRequest).not.be.called();
+    return should(funnel.processRequest(request))
+      .rejectedWith(NotFoundError, { id: 'api.process.action_not_found' })
+      .then(() => {
+        should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
+        should(kuzzle.pipe).not.calledWith('request:onError', request);
+        should(kuzzle.pipe)
+          .not.calledWith('fakeController:errorCreate', request);
+        should(kuzzle.statistics.startRequest).not.be.called();
+      });
   });
 
   it('should throw if a plugin action does not exist', () => {
@@ -99,46 +99,37 @@ describe('funnel.processRequest', () => {
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'create'});
 
-    should(() => funnel.processRequest(request))
-      .throw(NotFoundError, { id: 'api.process.action_not_found' });
-    should(kuzzle.pipe)
-      .not.calledWith('request:onSuccess', request);
-    should(kuzzle.pipe)
-      .not.calledWith('request:onError', request);
-    should(kuzzle.pipe)
-      .not.calledWith('fakePlugin/controller:errorCreate', request);
-    should(kuzzle.statistics.startRequest).not.be.called();
+    return should(funnel.processRequest(request))
+      .rejectedWith(NotFoundError, { id: 'api.process.action_not_found' })
+      .then(() => {
+        should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
+        should(kuzzle.pipe).not.calledWith('request:onError', request);
+        should(kuzzle.pipe)
+          .not.calledWith('fakePlugin/controller:errorCreate', request);
+        should(kuzzle.statistics.startRequest).not.be.called();
+      });
   });
 
-  it('should throw if a plugin action returns a non-thenable object', done => {
+  it('should reject if a plugin action returns a non-thenable object', () => {
     const
       controller = 'fakePlugin/controller',
       request = new Request({controller, action: 'succeed'});
 
     pluginsManager.controllers.get(controller).succeed.returns('foobar');
 
-    funnel.processRequest(request)
-      .then(() => done(new Error('Expected test to fail')))
-      .catch(e => {
-        try {
-          should(e).be.instanceOf(PluginImplementationError);
-          should(e.id).eql('plugin.controller.invalid_action_response');
-          should(kuzzle.pipe)
-            .not.calledWith('request:onSuccess', request);
-          should(kuzzle.pipe)
-            .calledWith('request:onError', request);
-          should(kuzzle.pipe)
-            .calledWith(`${controller}:errorSucceed`, request);
-          should(kuzzle.statistics.startRequest).be.called();
-          done();
-        }
-        catch(err) {
-          done(err);
-        }
+    return should(funnel.processRequest(request))
+      .rejectedWith(
+        PluginImplementationError,
+        {id: 'plugin.controller.invalid_action_response'})
+      .then(() => {
+        should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
+        should(kuzzle.pipe).calledWith('request:onError', request);
+        should(kuzzle.pipe).calledWith(`${controller}:errorSucceed`, request);
+        should(kuzzle.statistics.startRequest).be.called();
       });
   });
 
-  it('should rejects if _checkSdkVersion fail', () => {
+  it('should reject if _checkSdkVersion fail', () => {
     const request = new Request({
       controller: 'fakeController',
       action: 'succeed'
