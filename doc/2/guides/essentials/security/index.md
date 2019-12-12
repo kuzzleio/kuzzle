@@ -115,11 +115,14 @@ A `profile` definition is a JSON object that contains an optional rate limit par
 
 The rate limit parameter controls how many API requests a user can send, **per second and per node**. Further requests made by a user that exceed the limit are rejected with a `429 Too Many Requests` error.  
 
+::: info
 If no rate limit is defined, or if it is set to 0, then no limit is applied.
+If a user has several profiles with rate limits, the most permissive limit applies.
+:::
 
-If a user has multiple profiles with rate limits, the most permissive limit applies.
-
-Note: since unauthenticated users share the same user identifier, a rate limit set on the `anonymous` profile is applied to **all anonymous requests cumulated**, per second and per node. Except for the `auth:login` route, which is statically controlled in Kuzzle's configuration files.
+::: warn
+Since unauthenticated users share the same user identifier, a rate limit set on the `anonymous` profile is applied to **all anonymous requests cumulated**, per second and per node. Except for the `auth:login` route, which is statically controlled in Kuzzle's configuration files.
+:::
 
 Example:
 
