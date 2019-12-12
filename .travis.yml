@@ -80,19 +80,19 @@ jobs:
         - npm run codecov
 
     - stage: Unit Tests & Linters
-      name: SonarQube
+      name: SonarCloud
       if: fork != true
       os: linux
       dist: trusty
       sudo: required
       language: java
-      env:
-        # SonarQube Token
-        secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
       addons:
-        sonarqube: true
+        sonarcloud:
+          organization: "kuzzleio"
+          token:
+            secure: "rZ2CT6CCIESp/IgDOwBdgYJtbJkxD4loZThCGw5BR8U8FBgQ+mcJgqI+TqEwLYJrZtDCLVHtxiKWc+O6g6/AEsA78XsBnp04NdqYn3256MYzIJgUMTt+jAsBfm6siyuWOHLxfbdHmIBLxXiCeePgjs6apLf2Qn+Ev8OMUSlBxeEYpnWfSvhipFNxBv20ynYtGQ1Z5JkEyvTCp5bZPGnv+A7fYb3OkD7YDH76IAt9wUNbRP9+S5FvWP3+1gmWyPB+8pJw3KyuA6ZO47cHyMkuHG2lzZG9D43MmaCjuTWMfJGkbv5iuTB5qZjFdnlvW2HgZiVZvRssBZSlgEO/ji5GGrFTOLEYwixMEvcWehHslYn33WKKCccEzNO0vow+GCd0yciJI9hqBjRyWtvYK4OxRl5Uyz0DOYQeiq9XgeW9d1ExYoUi/mg2es4dBLpWihcKx+ejdh6SIi5/xmOIxWdpToYb1iWbzTlQ77mbTxRwi3j8ccTxfOPxmsYjjBrU5RUJzGH68/gXswpoaYXrqd6hyOzzvz9LuYU0dzU2g+9n8OgZU8MkFnH3J7nwp0BqrMbwl8zThsd5KinwokE7Kmrely3diTXudumGVcDnp6GxxIN6C/dKyxeiDGUyu6enDtgiklTJpwL7v3ZhBlx1ij7jQwAxYZU4uFVnHCEHq7izFdY="
       script:
-        - bash .ci/sonar.sh
+        - sonar-scanner
 
     - stage: Unit Tests & Linters
       name: Documentation dead links & error codes check
