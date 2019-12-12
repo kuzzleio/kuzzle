@@ -28,19 +28,21 @@ Given(/I (can not )?create a role "(.*?)" with the following API rights:/, async
   }
 });
 
-Given(/I (.*?) a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (method, roleId, invalid, dataTable) {
+Given(/I can (not )?(.*?) a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (not, method, roleId, invalid, dataTable) {
 
   const controllers = this.parseObject(dataTable);
+  const options = { refresh: 'wait_for' };
+  options.force = not ? false : true;
   try {
-    await this.sdk.security[method + 'Role'](roleId, { controllers }, { refresh: 'wait_for' });
+    await this.sdk.security[method + 'Role'](roleId, { controllers }, options);
   } catch (e) {
     if ( invalid
-      && e.id === 'security.role.invalid_plugin_rights'
-      && e.status === 206
+      && not
+      && e.status === 400
     ) {
       return;
     }
-    throw new Error(e);
+    throw e;
   }
 });
 

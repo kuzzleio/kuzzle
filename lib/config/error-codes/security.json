@@ -206,12 +206,6 @@
           "code": 13,
           "message": "Trying to set role %s with a non-existing action '%s' in controller '%s' for plugin '%s'.",
           "class": "BadRequestError"
-        },
-        "invalid_plugin_rights": {
-          "description": "Trying to set invalid plugin rights",
-          "code": 14,
-          "message": "Trying to set invalid plugin rights to role '%s'",
-          "class": "PartialError"
         }
       }
     },

@@ -81,6 +81,7 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.statistics.init,
             kuzzle.validation.curateSpecification,
             kuzzle.entryPoints.init,
+            kuzzle.repositories.role.checkAllRolePluginsRights,
             kuzzle.emit // core:kuzzleStart
           );
         });

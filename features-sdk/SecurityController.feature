@@ -169,12 +169,12 @@ Feature: Security Controller
     | controllers | ["document"] |
 
   @security
-  Scenario: Create/Update a role even with invalid plugin API rights
-    Given I create a role "test-role-plugin" with the following plugin invalid API rights:
+  Scenario: Create/Update a role with invalid plugin API rights
+    Given I can not create a role "test-role-plugin" with the following plugin invalid API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
-    And I create a role "test-role-plugin2" with the following plugin invalid API rights:
-    | non-existing-plugin/controller | { "actions": { "create": true } } |
-    And I update a role "test-role-plugin" with the following plugin invalid API rights:
+    And I can create a role "test-role-plugin2" with the following plugin invalid API rights:
+    | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
+    And I can not update a role "test-role-plugin2" with the following plugin invalid API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
-    And I update a role "test-role-plugin2" with the following plugin invalid API rights:
-    | non-existing-plugin/controller | { "actions": { "create": false } } |
+    And I can update a role "test-role-plugin2" with the following plugin invalid API rights:
+    | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |

@@ -479,7 +479,6 @@ order: 500
 | security.role.unavailable_plugin<br/><pre>0x0705000b</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing plugin |
 | security.role.unavailable_controller_plugin<br/><pre>0x0705000c</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing plugin controller |
 | security.role.unavailable_action_plugin<br/><pre>0x0705000d</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Trying to set a role with a non-existing plugin controller action |
-| security.role.invalid_plugin_rights<br/><pre>0x0705000e</pre> | [PartialError](/core/2/api/essentials/errors/handling#partialerror) <pre>(206)</pre> | Trying to set invalid plugin rights |
 
 ---
 
