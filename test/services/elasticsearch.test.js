@@ -10,7 +10,8 @@ const
   {
     errors: {
       BadRequestError,
-      PreconditionError
+      PreconditionError,
+      SizeLimitError
     }
   } = require('kuzzle-common-objects');
 
@@ -40,8 +41,10 @@ describe('Test: ElasticSearch service', () => {
 
     await elasticsearch.init();
 
-    // eslint-disable-next-line require-atomic-updates
-    elasticsearch._esWrapper.reject = sinon.spy((error) => Promise.reject(error));
+    elasticsearch._esWrapper = {
+      reject: sinon.spy((error) => Promise.reject(error)),
+      formatESError: sinon.spy(error => error)
+    };
 
     Date.now = () => timestamp;
   });
@@ -320,7 +323,8 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError)
+            .be.calledWith(esClientError);
         });
     });
   });
@@ -794,7 +798,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
-      elasticsearch._getAllDocumentsFromQuery = sinon.stub().resolves([
+      sinon.stub(elasticsearch, '_getAllDocumentsFromQuery').resolves([
         { _id: '_id1', _source: '_source1' },
         { _id: '_id2', _source: '_source2' },
       ]);
@@ -827,7 +831,7 @@ describe('Test: ElasticSearch service', () => {
             body: { query: { filter: 'term' } },
             scroll: '5s',
             from: undefined,
-            size: undefined,
+            size: 1000,
             refresh: undefined
           });
 
@@ -882,7 +886,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
     });
 
@@ -895,6 +899,29 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejectedWith({
         id: 'services.storage.missing_argument'
       });
+    });
+
+    it('should reject if the number of impacted documents exceeds the configured limit', () => {
+      elasticsearch._getAllDocumentsFromQuery.restore();
+
+      elasticsearch._client.search.resolves({
+        body: {
+          hits: {
+            hits: [],
+            total: {
+              value: 99999
+            }
+          },
+          _scroll_id: 'foobar'
+        }
+      });
+
+      kuzzle.config.limits.documentsFetchCount = 2;
+
+      return should(elasticsearch.deleteByQuery(index, collection, {}))
+        .rejectedWith(
+          SizeLimitError,
+          { id: 'services.storage.write_limit_exceeded' });
     });
   });
 
@@ -2556,7 +2583,6 @@ describe('Test: ElasticSearch service', () => {
             rejected);
         });
     });
-
   });
 
   describe('#mReplace', () => {
@@ -2896,16 +2922,6 @@ describe('Test: ElasticSearch service', () => {
             refresh: true
           });
         });
-    });
-
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      const promise = elasticsearch.mDelete(index, collection, documentIds);
-
-      return should(promise).be.rejectedWith({
-        id: 'services.storage.write_limit_exceeded'
-      });
     });
   });
 

@@ -141,11 +141,13 @@ class HttpApi {
   }
 
   apiBasePath (path) {
-    return encodeURI(this.baseUri + '/' + path);
+    return this.apiPath(path);
   }
 
   apiPath (path) {
-    return encodeURI(this.baseUri + '/' + path);
+    return path.startsWith('/')
+      ? encodeURI(`${this.baseUri}${path}`)
+      : encodeURI(`${this.baseUri}/${path}`);
   }
 
   adminResetDatabase () {
@@ -703,24 +705,6 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  getServerConfig () {
-    const options = {
-      url: this.apiBasePath('_getConfig'),
-      method: 'GET'
-    };
-
-    return this.callApi(options);
-  }
-
-  getServerInfo () {
-    const options = {
-      url: this.apiBasePath('_serverInfo'),
-      method: 'GET'
-    };
-
-    return this.callApi(options);
-  }
-
   getSpecifications (index, collection) {
     const options = {
       url: this.apiPath(index + '/' + collection + '/_specifications'),
@@ -770,34 +754,27 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  healthCheck () {
-    const options = {
-      url: this.apiPath('_healthCheck'),
-      method: 'GET'
-    };
-
-    return this.callApi(options);
-  }
-
   indexExists (index) {
     return this.callApi(this._getRequest(index, null, 'index', 'exists'));
   }
 
-  refreshCollection (index = this.world.fakeIndex, collection = this.world.fakeCollection) {
-    const options = {
-      url: this.apiPath(`${index}/${collection}/_refresh`),
-      method: 'POST'
-    };
+  refreshCollection (index, collection) {
+    const
+      _index = index || this.world.fakeIndex,
+      _collection = collection || this.world.fakeCollection,
+      options = {
+        url: this.apiPath(`${_index}/${_collection}/_refresh`),
+        method: 'POST'
+      };
 
     return this.callApi(options);
   }
 
-  listCollections (index = this.world.fakeIndex, type) {
+  listCollections (index, type) {
     const options = {
-      url: this.apiPath(index + '/_list'),
+      url: this.apiPath(`${index || this.world.fakeIndex}/_list`),
       method: 'GET'
     };
-
     if (type) {
       options.url += '?type=' + type;
     }
@@ -1147,12 +1124,14 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  update (id, body, index, collection = this.world.fakeCollection) {
-    const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + collection + '/' + id + '/_update'),
-      method: 'PUT',
-      body
-    };
+  update (id, body, index, collection) {
+    const
+      _collection = collection || this.world.fakeCollection,
+      options = {
+        url: this.apiPath(`${this.util.getIndex(index)}/${_collection}/${id}/_update`),
+        method: 'PUT',
+        body
+      };
 
     delete body._id;
 

@@ -19,13 +19,13 @@
         "get_limit_exceeded": {
           "description": "The number of documents returned by this request exceeds the configured server limit",
           "code": 3,
-          "message": "The number of documents returned by this request exceeds the configured server limit ( %s ).",
+          "message": "The number of documents returned by this request exceeds the configured server limit.",
           "class": "SizeLimitError"
         },
         "write_limit_exceeded": {
           "description": "The number of documents edited by this request exceeds the configured server limit",
           "code": 4,
-          "message": "The number of documents edited by this request exceeds the configured server limit ( %s ).",
+          "message": "The number of documents edited by this request exceeds the configured server limit.",
           "class": "SizeLimitError"
         },
         "import_failed": {

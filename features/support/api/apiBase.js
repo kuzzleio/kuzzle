@@ -657,28 +657,6 @@ class ApiBase {
     return this.send(msg);
   }
 
-  getServerConfig () {
-    const
-      msg = {
-        controller: 'server',
-        action: 'getConfig',
-        body: {}
-      };
-
-    return this.send(msg);
-  }
-
-  getServerInfo () {
-    const
-      msg = {
-        controller: 'server',
-        action: 'info',
-        body: {}
-      };
-
-    return this.send(msg);
-  }
-
   getSpecifications (index, collection) {
     return this.send({
       index: index,
@@ -732,16 +710,6 @@ class ApiBase {
       strategy,
       _id: userId
     });
-  }
-
-  healthCheck () {
-    const
-      msg = {
-        controller: 'server',
-        action: 'healthCheck'
-      };
-
-    return this.send(msg);
   }
 
   indexExists (index) {
