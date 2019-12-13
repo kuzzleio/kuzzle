@@ -114,8 +114,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
             .calledOnce()
             .calledWith(
               `{notif/${index}/${collection}}/${_id}`,
-              JSON.stringify(['foo'])
-            );
+              JSON.stringify(['foo']));
         });
     });
   });
