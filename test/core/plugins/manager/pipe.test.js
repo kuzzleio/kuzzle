@@ -8,7 +8,7 @@ const
     errors: {
       PluginImplementationError
     },
-    Request: KuzzleRequest
+    Request
   } = require('kuzzle-common-objects');
 
 describe('pluginsManager.pipe', () => {
@@ -102,7 +102,7 @@ describe('pluginsManager.pipe', () => {
         pipes: {
           'foo:*': 'myFunc'
         },
-        myFunc: sinon.stub().callsArgWith(1, null, new KuzzleRequest({}))
+        myFunc: sinon.stub().callsArgWith(1, null, new Request({}))
       },
       config: {},
       activated: true,
@@ -125,7 +125,7 @@ describe('pluginsManager.pipe', () => {
         pipes: {
           'foo:before*': 'myFunc'
         },
-        myFunc: sinon.stub().callsArgWith(1, null, new KuzzleRequest({}))
+        myFunc: sinon.stub().callsArgWith(1, null, new Request({}))
       },
       config: {},
       activated: true,
@@ -148,7 +148,7 @@ describe('pluginsManager.pipe', () => {
         pipes: {
           'foo:after*': 'myFunc'
         },
-        myFunc: sinon.stub().callsArgWith(1, null, new KuzzleRequest({}))
+        myFunc: sinon.stub().callsArgWith(1, null, new Request({}))
       },
       config: {},
       activated: true,
@@ -164,7 +164,7 @@ describe('pluginsManager.pipe', () => {
       });
   });
 
-  it('should reject a pipe returned value if it is not a Request instance', () => {
+  it('should reject a pipe properly if it throws', () => {
     const pluginMock = {
       object: {
         init: () => {},
@@ -189,5 +189,31 @@ describe('pluginsManager.pipe', () => {
     return should(kuzzle.pipe('foo:bar')).rejectedWith(
       PluginImplementationError,
       { id: 'plugin.runtime.unexpected_error' });
+  });
+
+  it('should pass the correct number of arguments along the whole pipes chain', async () => {
+    const
+      fn = sinon.stub().callsArgWith(3, null, 'foo2'),
+      fn2 = sinon.stub().callsArgWith(3, null, 'foo3');
+
+    pluginsManager.plugins = [{
+      object: {
+        init: () => {},
+        pipes: {
+          'foo:bar': [fn, fn2]
+        },
+      },
+      config: {},
+      activated: true,
+      manifest: {
+        name: 'foo'
+      }
+    }];
+
+    await pluginsManager.run();
+    await kuzzle.pipe('foo:bar', 'foo', 'bar', 'baz');
+
+    should(fn).calledOnce().calledWith('foo', 'bar', 'baz', sinon.match.func);
+    should(fn2).calledOnce().calledWith('foo2', 'bar', 'baz', sinon.match.func);
   });
 });

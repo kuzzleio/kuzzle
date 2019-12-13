@@ -8,6 +8,10 @@ title: mCreateOrReplace
 
 Creates or replaces multiple documents.
 
+::: info
+The number of documents that can be created or replaced by a single request is limited by the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
+:::
+
 ---
 
 ## Query Syntax

@@ -6,9 +6,11 @@ title: mUpdate
 
 # mUpdate
 
-
-
 Updates multiple documents.
+
+::: info
+The number of documents that can be updated by a single request is limited by the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
+:::
 
 ---
 
