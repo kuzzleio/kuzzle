@@ -78,21 +78,6 @@ jobs:
         - npm run codecov
 
     - stage: Unit Tests & Linters
-      name: SonarQube
-      if: fork != true
-      os: linux
-      dist: trusty
-      sudo: required
-      language: java
-      env:
-        # SonarQube Token
-        secure: KWhqHGlzE1ioGyZzcWxoTdhJdSnXvORHIZXvHC7WRdnOLa14gTdRkdjezzVT2DIeHcqH5x5uffAaWHgXWYPzqgm64XpR86UAcQeqf5FxF7V91M0jIaBlktzTK7Xf8PGozh0hqJqD4lTcG4hLW99a/dI0Z/LULape5dNBZWHKGwk6XjYY7rQErtSw1l4jrZD2w6xEVjXQSckwFVnbF5whoYiwOJwYzyNnfrY6NNWHtTwzSKmdK1DUQr6Vk+eA+ggndWXe2GA3bJGM9K4lNbG/TcTLUTULOfkqwoZVejOrd5dpuNZqa/iRPubtVuFUZ0W0+DFGl8KBctdkbhqI4qk27uQPIVQO7zF36hR1oaQuSNXyXwWOVtVm3+ymu1YAfzjVUTiRBHg5Uda0Ink8yLo8Wpnp0gRq5Y3iVhymMYbiKHuzs52tnHfZ6NFjIH1M86uZhzrJhCqFKKCX9dzguj1PrM+7zYC0aXIxi3Yt6k1C2DY/8A+g201tBhMB7EwppilH6Rm2sqBXpUKI/P/LW/lJOUmY4EGBOPv+RGX0W3Av28NTI0PisCiNKgD8w5r+4l16/AhMBY3lmvTjZFd6IpfcJohWA25k2h7b4Opemu7/po7faMGMhqUTW64D98YhqiWtR0QpVtIRnLiol4GbwwUjT83p1Nw+korROXsei5ygX/w=
-      addons:
-        sonarqube: true
-      script:
-        - bash .ci/sonar.sh
-
-    - stage: Unit Tests & Linters
       name: Documentation dead links & error codes check
       cache:
         directories:
