@@ -111,7 +111,7 @@ A `profile` definition is a JSON object that contains an optional rate limit par
 
 ### Rate limit
 
-<SinceBadge version="2.0.3" />
+<SinceBadge version="2.0.4" />
 
 The rate limit parameter controls how many API requests a user can send, **per second and per node**. Further requests made by a user that exceed the limit are rejected with a `429 Too Many Requests` error.  
 
