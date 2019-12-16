@@ -30,11 +30,11 @@ describe('/api/controllers/security', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnelController = new FunnelController(kuzzle);
-    errorsManager.throw = sandbox.spy(errorsManager, 'throw');
+    sandbox.spy(errorsManager, 'get');
   });
 
   afterEach(() => {
-    errorsManager.throw.restore();
+    errorsManager.get.restore();
   });
 
   describe('#constructor', () => {

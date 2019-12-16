@@ -717,9 +717,8 @@ describe('Test: security controller - users', () => {
 
   describe('#replaceUser', () => {
     it('should return an error if the request is invalid', () => {
-      return should(() => {
-        securityController.replaceUser(new Request({_id: 'test'}));
-      }).throw(BadRequestError, { id: 'api.assert.body_required' });
+      return should(securityController.replaceUser(new Request({_id: 'test'})))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should replace the user correctly', () => {
