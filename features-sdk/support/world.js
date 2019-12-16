@@ -39,7 +39,11 @@ class KuzzleWorld {
   }
 
   parseObject (dataTable) {
-    const content = dataTable.rowsHash();
+    let content = {};
+
+    if (typeof dataTable.rowsHash === 'function') {
+      content = dataTable.rowsHash();
+    }
 
     for (const key of Object.keys(content)) {
       content[key] = JSON.parse(content[key]);

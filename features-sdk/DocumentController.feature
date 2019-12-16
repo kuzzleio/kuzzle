@@ -62,7 +62,7 @@ Feature: Document Controller
   @mappings
   Scenario: Create multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I create the following document:
+    And I can create the following document:
     | _id | "document-1" |
     | body | { "name": "document1", "age": 42 } |
     When I "create" the following documents:
