@@ -3,8 +3,6 @@
 const
   should = require('should'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  sinon = require('sinon'),
-  rewire = require('rewire'),
   mockrequire = require('mock-require'),
   AbstractManifest = require('../../../../lib/core/abstractManifest'),
   { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
@@ -15,12 +13,6 @@ class AbstractManifestStub extends AbstractManifest {
 
 describe('Plugins manifest class', () => {
   const
-    fsStub = {
-      accessSync: sinon.stub(),
-      constants: {
-        R_OK: true
-      }
-    },
     pluginPath = 'foo/bar';
   let
     kuzzle,
@@ -29,9 +21,7 @@ describe('Plugins manifest class', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     mockrequire('../../../../lib/core/abstractManifest', AbstractManifestStub);
-    mockrequire.reRequire('../../../../lib/core/abstractManifest');
-    Manifest = rewire('../../../../lib/core/plugins/manifest');
-    Manifest.__set__({ fs: fsStub });
+    Manifest = mockrequire.reRequire('../../../../lib/core/plugins/manifest');
   });
 
   afterEach(() => {
