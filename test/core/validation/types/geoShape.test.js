@@ -85,10 +85,6 @@ describe('Test: validation/types/geoShape', () => {
   describe('#recursiveShapeValidation', () => {
     const checkStructureStub = sinon.stub();
 
-    before(() => {
-      GeoShapeType.__set__('convertDistance', convertDistanceStub);
-    });
-
     beforeEach(() => {
       geoShapeType.checkStructure = checkStructureStub;
     });
