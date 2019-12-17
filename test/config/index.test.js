@@ -1,3 +1,5 @@
+'use strict';
+
 const
   rewire = require('rewire'),
   should = require('should'),

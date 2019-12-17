@@ -1,3 +1,5 @@
+'use strict';
+
 const
   errorsManager = require('../../lib/util/errors'),
   stableStringify = require('json-stable-stringify'),

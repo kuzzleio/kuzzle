@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * /!\ DO NOT MODIFY THIS FILE
  *

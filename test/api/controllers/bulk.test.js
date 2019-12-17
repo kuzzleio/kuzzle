@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   BulkController = require('../../../lib/api/controllers/bulk'),

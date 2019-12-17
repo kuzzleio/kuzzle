@@ -1,3 +1,5 @@
+'use strict';
+
 const { Given, When } = require('cucumber');
 
 Given('I load the mappings {string}', function (mappings) {

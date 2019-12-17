@@ -4,7 +4,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2018 Kuzzle
+ * Copyright 2015-2020 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -20,6 +20,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+'use strict';
 
 const
   fs = require('fs'),

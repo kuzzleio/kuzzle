@@ -1,3 +1,5 @@
+'use strict';
+
 const
   {setWorldConstructor} = require('cucumber'),
   HttpApi = require('./api/http'),

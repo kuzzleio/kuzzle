@@ -1,3 +1,5 @@
+'use strict';
+
 const
   NumericType = require('../../../../lib/core/validation/types/numeric'),
   IntegerType = require('../../../../lib/core/validation/types/integer'),

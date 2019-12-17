@@ -1,3 +1,5 @@
+'use strict';
+
 const
   { errors: { PreconditionError } } = require('kuzzle-common-objects'),
   rewire = require('rewire'),

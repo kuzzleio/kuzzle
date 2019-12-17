@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   CollectionController = require('../../../lib/api/controllers/collection'),
