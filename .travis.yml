@@ -80,6 +80,14 @@ jobs:
         - npm run codecov
 
     - stage: Unit Tests & Linters
+      name: SonarCloud
+      if: fork != true
+      os: linux
+      dist: trusty
+      script:
+        - .ci/sonar.sh
+
+    - stage: Unit Tests & Linters
       name: Documentation dead links & error codes check
       cache:
         directories:

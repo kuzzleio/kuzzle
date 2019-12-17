@@ -41,9 +41,8 @@ describe('Test: collection controller', () => {
 
   describe('#updateMapping', () => {
     it('should throw a BadRequestError if the body is missing', () => {
-      return should(() => {
-        collectionController.updateMapping(request);
-      }).throw(BadRequestError, { id: 'api.assert.body_required' });
+      return should(collectionController.updateMapping(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should call updateMapping on publicStorage', async () => {
@@ -386,7 +385,7 @@ describe('Test: collection controller', () => {
     it('should reject the request if an invalid "type" argument is provided', () => {
       request = new Request({index: 'index', type: 'foo'});
 
-      should(() => collectionController.list(request)).throw(
+      should(collectionController.list(request)).rejectedWith(
         BadRequestError,
         { id: 'api.assert.invalid_argument' });
     });
