@@ -38,25 +38,25 @@ describe('RealtimeController', () => {
   });
 
   describe('#subscribe', () => {
-    it('should throw an error if index is not provided',() => {
+    it('should reject if no index is provided',() => {
       request.input.resource.index = null;
 
-      should(() => realtimeController.subscribe(request))
-        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+      should(realtimeController.subscribe(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should throw an error if collection is not provided',() => {
+    it('should reject if no collection is provided',() => {
       request.input.resource.collection = null;
 
-      should(() => realtimeController.subscribe(request))
-        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+      should(realtimeController.subscribe(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should throw an error if body is not provided',() => {
+    it('should reject if no body is provided',() => {
       request.input.body = null;
 
-      should(() => realtimeController.subscribe(request))
-        .throw(BadRequestError, { id: 'api.assert.body_required' });
+      should(realtimeController.subscribe(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -68,14 +68,13 @@ describe('RealtimeController', () => {
         });
     });
 
-    it('should return nothing if the connection is dead', () => {
+    it('should return nothing if the connection is dead', async () => {
       // the check is actually done in the hotelclerk and returns undefined if so
       kuzzle.hotelClerk.addSubscription.resolves();
 
-      return realtimeController.subscribe(request)
-        .then(result => {
-          should(result).be.undefined();
-        });
+      const result = await realtimeController.subscribe(request);
+
+      should(result).be.null();
     });
   });
 
@@ -103,14 +102,13 @@ describe('RealtimeController', () => {
         });
     });
 
-    it('should return nothing if the connection is dead', () => {
-      // the check is actually done in the hotelclerk and returns undefined if so
+    it('should return nothing if the connection is dead', async () => {
+      // the check is actually done in the hotelclerk and returns null if so
       kuzzle.hotelClerk.addSubscription.resolves();
 
-      return realtimeController.subscribe(request)
-        .then(result => {
-          should(result).be.undefined();
-        });
+      const result = await realtimeController.subscribe(request);
+
+      should(result).be.null();
     });
   });
 
