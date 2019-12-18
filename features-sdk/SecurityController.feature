@@ -164,17 +164,17 @@ Feature: Security Controller
     Then I am able to mGet roles and get 3 roles with the following ids:
     | ids | ["test-role", "test-role-2", "test-role-3"] |
     Then I should receive a array of objects matching:
-    | _id |
+    | _id          |
     | "test-role"  |
     | "test-role-2"|
     | "test-role-3"|
     And I am able to find 6 roles by searching controller:
     | controllers | ["document"] |
     Then I should receive a "hits" array of objects matching:
-    | _id|
-    | "admin"     |
+    | _id           |
+    | "admin"       |
     | "anonymous"   |
-    | "default" |
+    | "default"     |
     | "test-role"   |
     | "test-role-2" |
     | "test-role-3" |
