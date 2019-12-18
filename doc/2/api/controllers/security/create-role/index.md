@@ -63,7 +63,7 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created role is indexed (default: `"wait_for"`)
 
-- `force`: if set to `true`, Kuzzle will force the creation of a role even if it contains invalid plugin API rights. However, even if you use this option, you can't set invalid rights about the native API.
+- `force`: if set to `true`, creates the role even if it gives access to non-existent plugins API routes.
 
 ---
 
