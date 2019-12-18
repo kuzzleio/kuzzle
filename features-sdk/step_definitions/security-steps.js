@@ -28,7 +28,7 @@ Given(/I (can not )?create a role "(.*?)" with the following API rights:/, async
   }
 });
 
-Given(/I can (not )?(.*?) a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (not, method, roleId, invalid, dataTable) {
+Given(/I can (not )?"(.*?)" a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (not, method, roleId, invalid, dataTable) {
 
   const controllers = this.parseObject(dataTable);
   const options = { refresh: 'wait_for' };
