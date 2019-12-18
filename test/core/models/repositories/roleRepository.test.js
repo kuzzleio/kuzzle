@@ -335,7 +335,7 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#validateAndSaveRole', () => {
-    it('should reject if we update the anonymous with a role it cannot log with - case 1', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 1', async () => {
       const
         bad1 = {
           controller: {
@@ -349,11 +349,15 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad1;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      }
+      catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
-    it('should reject if we update the anonymous with a role it cannot log with - case 2', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 2', async () => {
       const
         bad = {
           '*': {
@@ -367,11 +371,14 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      } catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
-    it('should reject if we update the anonymous with a role it cannot log with - case 3', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 3', async () => {
       const
         bad = {
           auth: {
@@ -385,8 +392,11 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      } catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
     it('should allow updating the anonymous as long as it can log in', () => {
@@ -556,7 +566,7 @@ describe('Test: repositories/roleRepository', () => {
       }
       catch (e) {
         should(e).be.instanceOf(BadRequestError, {
-          message: 'Trying to set role test with an unavailable plugin invalid_plugin.'
+          id: 'Trying to set role test with an unavailable plugin invalid_plugin.'
         });
         done();
       }

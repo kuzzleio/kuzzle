@@ -163,9 +163,22 @@ Feature: Security Controller
     | document | { "actions": { "create": true, "update": true } } |
     Then I am able to mGet roles and get 3 roles with the following ids:
     | ids | ["test-role", "test-role-2", "test-role-3"] |
+    Then I should receive a array of objects matching:
+    | _id |
+    | "test-role"  |
+    | "test-role-2"|
+    | "test-role-3"|
     And I am able to find 6 roles by searching controller:
     | controllers | ["document"] |
-
+    Then I should receive a "hits" array of objects matching:
+    | _id|
+    | "admin"     |
+    | "anonymous"   |
+    | "default" |
+    | "test-role"   |
+    | "test-role-2" |
+    | "test-role-3" |
+    
   @security
   Scenario: Create/Update a role with invalid plugin API rights
     When I can not "create" a role "test-role-plugin" with the following API rights:

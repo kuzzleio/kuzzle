@@ -64,8 +64,9 @@ Then('I am able to find {int} roles by searching controller:', async function (c
 
   const controller = this.parseObject(dataTable);
 
-  this.props.result = await this.sdk.security.searchRoles(controller);
-  should(this.props.result.hits.length).be.eql(count);
+  const result = await this.sdk.security.searchRoles(controller);
+  //result.hits.sort((a, b) => (a._id > b._id ? 1 : -1));
+  this.props.result = result;
 });
 
 Then('I am able to mGet roles and get {int} roles with the following ids:', async function (count, dataTable) {
@@ -77,7 +78,6 @@ Then('I am able to mGet roles and get {int} roles with the following ids:', asyn
   }
 
   this.props.result = await this.sdk.security.mGetRoles(roleIds);
-  should(this.props.result.length).be.eql(count);
 });
 
 Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
