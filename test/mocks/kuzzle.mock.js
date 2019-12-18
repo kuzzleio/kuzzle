@@ -197,6 +197,8 @@ class KuzzleMock extends Kuzzle {
       getPluginsDescription: sinon.stub().returns({}),
       pipe: sinon.stub().callsFake((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
+      getRoutes: sinon.stub().returns([]),
+      getControllers: sinon.stub().returns(new Map()),
       getStrategyFields: sinon.stub().resolves(),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
       hasStrategyMethod: sinon.stub().returns(false),

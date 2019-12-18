@@ -114,7 +114,7 @@ Feature: Security Controller
 
   @deleteProfile
   Scenario: Delete a profile
-    Given I create a role "test-role" with the following API rights:
+    Given I "create" a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     And I create a profile "test-profile" with the following policies:
     | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
@@ -123,7 +123,7 @@ Feature: Security Controller
 
   @deleteProfile
   Scenario: Delete a profile while being assigned to a user
-    Given I create a role "test-role" with the following API rights:
+    Given I "create" a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     And I create a profile "test-profile" with the following policies:
     | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
@@ -137,31 +137,31 @@ Feature: Security Controller
 
   @security
   Scenario: Create a role with invalid API rights
-    Given I can not create a role "test-role" with the following API rights:
+    When I can not "create" a role "test-role" with the following API rights:
     | invalid-controller | { "actions": { "create": true, "update": true } } |
-    And I can not create a role "test-role" with the following API rights:
-    | document | { "actions": { "invalid-action": true, "update": true } } |
+    And I can not "create" a role "test-role" with the following API rights:
+    | document | { "actions": { "invalid_action": true, "update": true } } |
 
   @security
   Scenario: Create/get/search/update/delete a role
     Given I am able to find 3 roles by searching controller:
     | controllers | ["document"] |
-    Then I create a role "test-role" with the following API rights:
+    Then I "create" a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     Then I am able to get a role with id "test-role"
     And I am able to find 4 roles by searching controller:
     | controllers | ["document"] |
-    And I update the role "test-role" with the following content:
+    And I "update" a role "test-role" with the following API rights:
     | document | { "actions": { "create": false, "update": false } } |
     And I delete the role "test-role"
     Then I am able to find 3 roles by searching controller:
     | controllers | ["document"] |
     Then I am not able to get a role with id "test-role"
-    Then I create a role "test-role" with the following API rights:
+    Then I "create" a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
-    And I create a role "test-role-2" with the following API rights:
+    And I "create" a role "test-role-2" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
-    And I create a role "test-role-3" with the following API rights:
+    And I "create" a role "test-role-3" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     Then I am able to mGet roles and get 3 roles with the following ids:
     | ids | ["test-role", "test-role-2", "test-role-3"] |
@@ -170,11 +170,11 @@ Feature: Security Controller
 
   @security
   Scenario: Create/Update a role with invalid plugin API rights
-    Given I can not create a role "test-role-plugin" with the following plugin invalid API rights:
+    When I can not "create" a role "test-role-plugin" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
-    And I can create a role "test-role-plugin2" with the following plugin invalid API rights:
+    And I "create" a role "test-role-plugin2" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
-    And I can not update a role "test-role-plugin2" with the following plugin invalid API rights:
+    And I can not "update" a role "test-role-plugin2" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
-    And I can update a role "test-role-plugin2" with the following plugin invalid API rights:
+    And I "update" a role "test-role-plugin2" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
