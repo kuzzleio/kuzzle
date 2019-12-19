@@ -88,7 +88,8 @@ class KuzzleMock extends Kuzzle {
       processRequest: sinon.stub().resolves(),
       checkRights: sinon.stub(),
       getEventName: sinon.spy(),
-      executePluginRequest: sinon.stub().resolves()
+      executePluginRequest: sinon.stub().resolves(),
+      isNativeController : sinon.stub()
     };
 
     this.gc = {
@@ -199,6 +200,7 @@ class KuzzleMock extends Kuzzle {
       listStrategies: sinon.stub().returns([]),
       getRoutes: sinon.stub().returns([]),
       getControllers: sinon.stub().returns(new Map()),
+      isPluginController: sinon.stub(),
       getStrategyFields: sinon.stub().resolves(),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
       hasStrategyMethod: sinon.stub().returns(false),
@@ -235,7 +237,7 @@ class KuzzleMock extends Kuzzle {
         scroll: sinon.stub().resolves(),
         validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
         truncate: sinon.stub().resolves(),
-        checkAllRolePluginsRights: sinon.stub().resolves()
+        checkAllRolePluginsRights: sinon.stub()
       },
       user: {
         anonymous: sinon.stub().resolves({
