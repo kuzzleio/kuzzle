@@ -373,7 +373,8 @@ describe('Test: repositories/roleRepository', () => {
 
       try {
         await roleRepository.validateAndSaveRole(role);
-      } catch (e) {
+      }
+      catch (e) {
         should(e).be.instanceOf(BadRequestError);
       }
     });
