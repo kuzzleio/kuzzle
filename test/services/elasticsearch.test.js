@@ -538,7 +538,10 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.update.resolves({
         body: {
           _id: 'liia',
-          _version: 1
+          _version: 1,
+          get: {
+            _source: {city: 'Panipokari'}
+          }
         }
       });
     });
@@ -570,7 +573,10 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match({
             _id: 'liia',
-            _version: 1
+            _version: 1,
+            _source: {
+              city: 'Panipokari'
+            }
           });
         });
     });
@@ -598,12 +604,16 @@ describe('Test: ElasticSearch service', () => {
             },
             id: 'liia',
             refresh: 'wait_for',
+            _source: true,
             retryOnConflict: 42
           });
 
           should(result).match({
             _id: 'liia',
-            _version: 1
+            _version: 1,
+            _source: {
+              city: 'Panipokari'
+            }
           });
         });
     });
