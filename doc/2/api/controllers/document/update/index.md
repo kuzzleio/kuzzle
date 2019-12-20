@@ -17,7 +17,7 @@ Updates a document content.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<documentId>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source=<boolean>]
+URL: http://kuzzle:7512/<index>/<collection>/<documentId>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source]
 Method: PUT
 Body:
 ```
