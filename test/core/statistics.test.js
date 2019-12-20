@@ -1,5 +1,4 @@
 const
-  _ = require('lodash'),
   should = require('should'),
   rewire = require('rewire'),
   Kuzzle = require('../mocks/kuzzle.mock'),
@@ -66,9 +65,10 @@ describe('Test: statistics core component', () => {
   });
 
   it('should do nothing when startRequest is called with invalid arguments', () => {
-    should(stats.startRequest()).be.false();
+    stats.startRequest();
     should(stats.currentStats.ongoingRequests).be.empty();
-    should(stats.startRequest(request)).be.false();
+
+    stats.startRequest(request);
     should(stats.currentStats.ongoingRequests).be.empty();
   });
 
@@ -84,9 +84,10 @@ describe('Test: statistics core component', () => {
   });
 
   it('should do nothing when completedRequest is called with invalid arguments', () => {
-    should(stats.completedRequest()).be.false();
+    stats.completedRequest();
     should(stats.currentStats.completedRequests).be.empty();
-    should(stats.completedRequest(request)).be.false();
+
+    stats.completedRequest(request);
     should(stats.currentStats.completedRequests).be.empty();
   });
 
@@ -103,9 +104,10 @@ describe('Test: statistics core component', () => {
   });
 
   it('should do nothing when failedRequest is called with invalid arguments', () => {
-    should(stats.failedRequest()).be.false();
+    stats.failedRequest();
     should(stats.currentStats.failedRequests).be.empty();
-    should(stats.failedRequest(request)).be.false();
+
+    stats.failedRequest(request);
     should(stats.currentStats.failedRequests).be.empty();
   });
 
@@ -213,18 +215,18 @@ describe('Test: statistics core component', () => {
     return should(stats.getStats(request)).be.rejectedWith(BadRequestError);
   });
 
-  it('should get the last frame from the cache when statistics snapshots have been taken', () => {
+  it('should get the last frame from the cache when statistics snapshots have been taken', async () => {
     stats.lastFrame = lastFrame;
     kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(fakeStats));
 
-    stats.getLastStats()
-      .then(response => {
-        should(response).be.an.Object();
-        ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(response[k]).match(fakeStats[k]);
-        });
-        should(response.timestamp).be.a.Number();
-      });
+    const response = await stats.getLastStats();
+
+    should(response).be.an.Object();
+
+    ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
+      should(response[k]).match(fakeStats[k]);
+    });
+    should(response.timestamp).be.approximately(Date.now(), 500);
   });
 
   it('should return the current frame instead of all statistics if no cache has been initialized', () => {
@@ -274,7 +276,7 @@ describe('Test: statistics core component', () => {
 
     kuzzle.cacheEngine.internal.setex.resolves();
 
-    stats.currentStats = _.extend({}, fakeStats);
+    stats.currentStats = Object.assign({}, fakeStats);
 
     writeStats.call(stats);
 

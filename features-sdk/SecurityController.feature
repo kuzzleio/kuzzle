@@ -112,7 +112,6 @@ Feature: Security Controller
     And The role "anonymous" should match the default one
     And The role "default" should match the default one
 
-  @deleteProfile
   Scenario: Delete a profile
     Given I create a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
@@ -121,7 +120,6 @@ Feature: Security Controller
     Then I delete the profile "test-profile"
     And I delete the role "test-role"
 
-  @deleteProfile
   Scenario: Delete a profile while being assigned to a user
     Given I create a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |

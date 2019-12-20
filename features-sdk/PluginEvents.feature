@@ -211,7 +211,7 @@ Feature: Plugin Events
     And I "activate" the pipe on "generic:document:beforeGet" with the following changes:
     | _id | "`${document._id}-vn`" |
     # mGet
-    When I "get" the following document ids:
+    When I "get" the following document ids with verb "GET":
     | "bus-1" |
     | "bus-2" |
     Then I should receive a "successes" array of objects matching:
@@ -233,7 +233,7 @@ Feature: Plugin Events
     | _source.type | "'sleepingBus'" |
     | _id | "'confidential'" |
     # mGet
-    When I "get" the following document ids:
+    When I "get" the following document ids with verb "GET":
     | "bus-1" |
     | "bus-2" |
     Then I should receive a "successes" array of objects matching:
@@ -256,7 +256,7 @@ Feature: Plugin Events
     And I "activate" the pipe on "generic:document:beforeDelete" with the following changes:
     | _id | "`${document._id}-vn`" |
     # mDelete
-    When I "delete" the following document ids:
+    When I "delete" the following document ids with verb "POST":
     | "bus-1" |
     | "bus-2" |
     Then The document "bus-1-vn" should not exist
@@ -276,7 +276,7 @@ Feature: Plugin Events
     And I "activate" the pipe on "generic:document:afterDelete" with the following changes:
     | _id | "'confidential'" |
     # mDelete
-    When I "delete" the following document ids:
+    When I "delete" the following document ids with verb "POST":
     | "bus-1" |
     | "bus-2" |
     Then The document "bus-1-vn" should not exist
