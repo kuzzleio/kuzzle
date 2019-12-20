@@ -180,31 +180,19 @@
         "unknown_controller": {
           "description": "Trying to set a role with a non-existing controller",
           "code": 9,
-          "message": "Trying to set role %s with a non-existing controller '%s'.",
+          "message": "Trying to set role %s with a non-existing controller '%s'. %s",
           "class": "BadRequestError"
         },
-        "unknown_controller_action": {
+        "unknown_action": {
           "description": "Trying to set a role with a non-existing controller action",
           "code": 10,
-          "message": "Trying to set role %s with a non-existing action '%s' in controller '%s'.",
+          "message": "Trying to set role %s with a non-existing action '%s' in controller '%s'. %s",
           "class": "BadRequestError"
         },
-        "unavailable_plugin": {
+        "unknown_plugin": {
           "description": "Trying to set a role with a non-existing plugin",
           "code": 11,
           "message": "Trying to set role %s with an unavailable plugin %s.",
-          "class": "BadRequestError"
-        },
-        "unavailable_controller_plugin": {
-          "description": "Trying to set a role with a non-existing plugin controller",
-          "code": 12,
-          "message": "Trying to set role %s with a non-existing controller '%s' in plugin '%s'.",
-          "class": "BadRequestError"
-        },
-        "unavailable_action_plugin": {
-          "description": "Trying to set a role with a non-existing plugin controller action",
-          "code": 13,
-          "message": "Trying to set role %s with a non-existing action '%s' in controller '%s' for plugin '%s'.",
           "class": "BadRequestError"
         }
       }

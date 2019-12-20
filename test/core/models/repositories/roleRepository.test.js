@@ -335,7 +335,7 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#validateAndSaveRole', () => {
-    it('should reject if we update the anonymous with a role it cannot log with - case 1', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 1', async () => {
       const
         bad1 = {
           controller: {
@@ -349,11 +349,15 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad1;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      }
+      catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
-    it('should reject if we update the anonymous with a role it cannot log with - case 2', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 2', async () => {
       const
         bad = {
           '*': {
@@ -367,11 +371,15 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      }
+      catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
-    it('should reject if we update the anonymous with a role it cannot log with - case 3', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 3', async () => {
       const
         bad = {
           auth: {
@@ -385,8 +393,11 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      } catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
     it('should allow updating the anonymous as long as it can log in', () => {
@@ -403,6 +414,8 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = rights;
       roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
+      roleRepository.checkRoleNativeRights = sinon.stub().resolves();
+      roleRepository.checkRolePluginsRights = sinon.stub().resolves();
       return roleRepository.validateAndSaveRole(role)
         .then(response => {
           should(response._id).be.eql('anonymous');
@@ -460,7 +473,8 @@ describe('Test: repositories/roleRepository', () => {
       role.controllers = controllers;
       try {
         roleRepository.checkRoleNativeRights(role);
-      } catch (e) {
+      }
+      catch (e) {
         done();
       } 
     });
@@ -480,7 +494,8 @@ describe('Test: repositories/roleRepository', () => {
       role.controllers = controllers;
       try {
         roleRepository.checkRoleNativeRights(role);
-      } catch (e) {
+      }
+      catch (e) {
         done();
       }
     });
@@ -530,8 +545,8 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      roleRepository.checkRolePluginsRights(role, true);
-      should(kuzzle.log.warn).be.calledWith('[!WARNING!] Trying to set role "test" with plugin "invalid_plugin" which doesn\'t exist or is not enabled.');
+      roleRepository.checkRolePluginsRights(role, {force: true});
+      should(kuzzle.log.warn).be.calledWith('[!WARNING!] The role "test" gives access to the non-existing plugin "invalid_plugin".');
     });
     
     it('should throw if we try to write a role with a plugin which does not exist.', done => {
@@ -549,9 +564,10 @@ describe('Test: repositories/roleRepository', () => {
       role.controllers = controllers;
       try {
         roleRepository.checkRolePluginsRights(role);
-      } catch (e) {
+      }
+      catch (e) {
         should(e).be.instanceOf(BadRequestError, {
-          message: 'Trying to set role test with an unavailable plugin invalid_plugin.'
+          id: 'Trying to set role test with an unavailable plugin invalid_plugin.'
         });
         done();
       }
@@ -570,8 +586,8 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      roleRepository.checkRolePluginsRights(role, true);
-      should(kuzzle.log.warn).be.calledWith('[!WARNING!] Trying to set role "test" with a non-existing controller "invalid_controller" in the plugin "plugin_test".');
+      roleRepository.checkRolePluginsRights(role, {force: true});
+      should(kuzzle.log.warn).be.calledWith('[!WARNING!] The role "test" gives access to the non-existing controller "invalid_controller" in the plugin "plugin_test".');
     });
     
     it('should throw if we try to write a role with an invalid plugin controller.', done => {
@@ -587,10 +603,11 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      roleRepository.checkRolePluginsRights(role, true);
+      roleRepository.checkRolePluginsRights(role, {force: true});
       try {
         roleRepository.checkRolePluginsRights(role);
-      } catch (e) {
+      }
+      catch (e) {
         should(e).be.instanceOf(BadRequestError, { message: 'Trying to set role test with a non-existing controller \'invalid_controller\' in plugin \'plugin_test\'.' });
         done();
       }
@@ -598,6 +615,14 @@ describe('Test: repositories/roleRepository', () => {
 
     it('should warn if we force a role having an invalid plugin action.', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.getRoutes = sinon.stub().returns([
+        {
+          verb: 'bar',
+          action: 'publicMethod',
+          controller: 'plugin_test/foobar',
+          url: '/foobar'
+        }
+      ]);   
       const controllers = {
           'plugin_test/foobar': {
             actions: {
@@ -608,8 +633,8 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers; 
-      roleRepository.checkRolePluginsRights(role, true);
-      should(kuzzle.log.warn).be.calledWith('[!WARNING!] Trying to set role "test" with a non-existing action "iDontExist" for the controller "foobar" in the plugin "plugin_test".');
+      roleRepository.checkRolePluginsRights(role, {force: true});
+      should(kuzzle.log.warn).be.calledWith('[!WARNING!] The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar" in the plugin "plugin_test".');
     });
     
     it('should throw if we try to write a role with an invalid plugin action.', done => {
@@ -626,7 +651,8 @@ describe('Test: repositories/roleRepository', () => {
       role.controllers = controllers;
       try {
         roleRepository.checkRolePluginsRights(role);
-      } catch (e) {
+      }
+      catch (e) {
         should(e).be.instanceOf(BadRequestError, {
           message:
             'Trying to set role %s with a non-existing action \'iDontExist\' in controller \'invalid_controller\' for plugin \'plugin_test\'.'
@@ -637,6 +663,14 @@ describe('Test: repositories/roleRepository', () => {
 
     it('should not warn nor throw when a role contains valid controller and action.', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.getRoutes = sinon.stub().returns([
+        {
+          verb: 'bar',
+          action: 'publicMethod',
+          controller: 'plugin_test/foobar',
+          url: '/foobar'
+        }
+      ]);
       const
         controllers = {
           'plugin_test/foobar': {

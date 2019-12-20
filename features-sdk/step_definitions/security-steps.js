@@ -20,25 +20,26 @@ Given(/I (can not )?create a role "(.*?)" with the following API rights:/, async
 
   try {
     this.props.result = await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
-  } catch (e) {
+  }
+  catch (e) {
     if (not) {
       return;
     }
-    throw new Error(e);
+    throw e;
   }
 });
 
-Given(/I can (not )?(.*?) a role "(.*?)" with the following plugin (invalid )?API rights:/, async function (not, method, roleId, invalid, dataTable) {
+Then(/I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/, async function (not, method, roleId, dataTable) {
 
   const controllers = this.parseObject(dataTable);
   const options = { refresh: 'wait_for' };
   options.force = not ? false : true;
   try {
     await this.sdk.security[method + 'Role'](roleId, { controllers }, options);
-  } catch (e) {
-    if ( invalid
-      && not
-      && e.status === 400
+  }
+  catch (e) {
+    if ( not
+      && e.id.match(/security.role.*/)
     ) {
       return;
     }
@@ -46,26 +47,16 @@ Given(/I can (not )?(.*?) a role "(.*?)" with the following plugin (invalid )?AP
   }
 });
 
-Then(/I update the role "(.*?)" with the following content:/, async function (roleId, dataTable) {
-
-  const controllers = this.parseObject(dataTable);
-
-  try {
-    this.props.result = await this.sdk.security.updateRole(roleId, { controllers }, { refresh: 'wait_for' });
-  } catch (e) {
-    throw new Error(e);
-  }
-});
-
 Then(/I am (not )?able to get a role with id "(.*?)"/, async function (roleId, not) {
 
   try {
     this.props.result = await this.sdk.security.getRole(roleId);
-  } catch (e) {
+  }
+  catch (e) {
     if (not) {
       return;
     }
-    throw new Error(e);
+    throw e;
   }
 });
 
@@ -73,14 +64,9 @@ Then('I am able to find {int} roles by searching controller:', async function (c
 
   const controller = this.parseObject(dataTable);
 
-  try {
-    this.props.result = await this.sdk.security.searchRoles(controller);
-    if (this.props.result.hits.length !== count) {
-      throw new Error(`Expected ${count} roles to be found : got ${this.props.result.hits.length}.`);
-    }
-  } catch (e) {
-    throw new Error(e);
-  }
+  const result = await this.sdk.security.searchRoles(controller);
+  //result.hits.sort((a, b) => (a._id > b._id ? 1 : -1));
+  this.props.result = result;
 });
 
 Then('I am able to mGet roles and get {int} roles with the following ids:', async function (count, dataTable) {
@@ -91,14 +77,7 @@ Then('I am able to mGet roles and get {int} roles with the following ids:', asyn
     roleIds.push(role);
   }
 
-  try {
-    this.props.result = await this.sdk.security.mGetRoles(roleIds);//['test-role', 'test-role-2', 'test-role-3',]);
-    if (this.props.result.length !== count) {
-      throw new Error(`Exptected ${count} roles, but go ${this.props.result.length}`);
-    }
-  } catch (e) {
-    throw new Error(e);
-  }
+  this.props.result = await this.sdk.security.mGetRoles(roleIds);
 });
 
 Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
@@ -110,7 +89,7 @@ Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
     if (not) {
       return;
     }
-    throw new Error(e);
+    throw e;
   }
 });
 
@@ -122,7 +101,7 @@ Then(/I (can not )?delete the profile "(.*?)"/, async function (not, profileId) 
     if (not) {
       return;
     }
-    throw new Error(e);
+    throw e;
   }
 });
 
