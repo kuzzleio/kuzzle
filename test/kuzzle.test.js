@@ -85,6 +85,7 @@ describe('/lib/api/kuzzle.js', () => {
             kuzzle.router.init,
             kuzzle.statistics.init,
             kuzzle.validation.curateSpecification,
+            kuzzle.repositories.role.checkAllRolePluginsRights,
             kuzzle.entryPoints.init,
             kuzzle.emit // core:kuzzleStart
           );

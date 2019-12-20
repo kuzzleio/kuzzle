@@ -201,6 +201,7 @@ class KuzzleMock extends Kuzzle {
       getRoutes: sinon.stub().returns([]),
       getControllers: sinon.stub().returns(new Map()),
       isPluginController: sinon.stub(),
+      exists: sinon.stub(),
       getStrategyFields: sinon.stub().resolves(),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
       hasStrategyMethod: sinon.stub().returns(false),

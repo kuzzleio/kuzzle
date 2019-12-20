@@ -14,21 +14,6 @@ Given('I create a profile {string} with the following policies:', async function
   this.props.result = await this.sdk.security.createProfile(profileId, {policies});
 });
 
-Given(/I (can not )?create a role "(.*?)" with the following API rights:/, async function (not, roleId, dataTable) {
-
-  const controllers = this.parseObject(dataTable);
-
-  try {
-    this.props.result = await this.sdk.security.createRole(roleId, { controllers }, { refresh: 'wait_for' });
-  }
-  catch (e) {
-    if (not) {
-      return;
-    }
-    throw e;
-  }
-});
-
 Then(/I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/, async function (not, method, roleId, dataTable) {
 
   const controllers = this.parseObject(dataTable);
@@ -65,7 +50,6 @@ Then('I am able to find {int} roles by searching controller:', async function (c
   const controller = this.parseObject(dataTable);
 
   const result = await this.sdk.security.searchRoles(controller);
-  //result.hits.sort((a, b) => (a._id > b._id ? 1 : -1));
   this.props.result = result;
 });
 

@@ -575,6 +575,7 @@ describe('Test: repositories/roleRepository', () => {
 
     it('should warn if we force a role having an invalid plugin controller.', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.exists = sinon.stub().returns(true);
       const
         controllers = {
           'plugin_test/invalid_controller': {
@@ -615,6 +616,7 @@ describe('Test: repositories/roleRepository', () => {
 
     it('should warn if we force a role having an invalid plugin action.', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.exists = sinon.stub().returns(true);
       kuzzle.pluginsManager.getRoutes = sinon.stub().returns([
         {
           verb: 'bar',
@@ -663,6 +665,7 @@ describe('Test: repositories/roleRepository', () => {
 
     it('should not warn nor throw when a role contains valid controller and action.', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.exists = sinon.stub().returns(true);
       kuzzle.pluginsManager.getRoutes = sinon.stub().returns([
         {
           verb: 'bar',
