@@ -1,5 +1,37 @@
 Feature: Collection Controller
 
+  # collection:truncate ========================================================
+
+  Scenario: Truncate a collection
+    Given an index "nyc-open-data"
+    And I successfully call the route "collection":"create" with args:
+    | index | "nyc-open-data" |
+    | collection | "green-taxi" |
+    | body | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
+    And an existing collection "nyc-open-data":"green-taxi"
+    And I "create" the following documents:
+    | _id          | body  |
+    | "document-1" | { "name": "document1" } |
+    | "document-2" | { "name": "document2" } |
+    When I successfully call the route "collection":"truncate" with args:
+    | index | "nyc-open-data" |
+    | collection | "green-taxi" |
+    And The document "document-1" should not exist
+    And The document "document-2" should not exist
+    And I successfully call the route "collection":"getMapping" with args:
+    | index | "nyc-open-data" |
+    | collection | "green-taxi" |
+    | includeKuzzleMeta | true |
+    And I should receive a result matching:
+    | dynamic | "strict" |
+    And The property "properties" of the result should match:
+    | name | { "type": "keyword" } |
+    And The property "properties._kuzzle_info.properties" of the result should match:
+    | author | { "type": "keyword" } |
+    | updater | { "type": "keyword" } |
+    | createdAt | { "type": "date" } |
+    | updatedAt | { "type": "date" } |
+
   # collection:delete ==========================================================
 
   Scenario: Delete a collection
