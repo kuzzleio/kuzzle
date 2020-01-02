@@ -1,3 +1,5 @@
+'use strict';
+
 const
   PassportResponse = require('../../../lib/core/auth/passportResponse'),
   sinon = require('sinon'),

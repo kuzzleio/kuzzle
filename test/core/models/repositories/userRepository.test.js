@@ -1,3 +1,5 @@
+'use strict';
+
 const
   Bluebird = require('bluebird'),
   should = require('should'),

@@ -48,6 +48,7 @@
     "require-atomic-updates": 0,
     "semi": [2, "always"],
     "space-before-blocks": 2,
+    "strict": [2, "global"],
     "vars-on-top": 2,
     "yoda": [2, "never"]
   },
@@ -57,7 +58,9 @@
     "mocha": true
   },
   "parserOptions": {
-    "sourceType": "module",
+    "ecmaFeatures": {
+        "impliedStrict": false
+    },
     "ecmaVersion": 2018
   },
   "extends": "eslint:recommended"
