@@ -16,6 +16,36 @@ Feature: Collection Controller
     And I should receive a result matching:
     | properties | { "name": { "type": "keyword" }, "age": { "type": "integer" } } |
 
+  # collection:truncate ========================================================
+
+  Scenario: Truncate a collection
+    Given an index "nyc-open-data"
+    When I "create" the collection "nyc-open-data":"green-taxi" with:
+    | mappings | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
+    And an existing collection "nyc-open-data":"green-taxi"
+    And I "create" the following documents:
+    | _id          | body  |
+    | "document-1" | { "name": "document1" } |
+    | "document-2" | { "name": "document2" } |
+    When I successfully call the route "collection":"truncate" with args:
+    | index | "nyc-open-data" |
+    | collection | "green-taxi" |
+    And The document "document-1" should not exist
+    And The document "document-2" should not exist
+    And I successfully call the route "collection":"getMapping" with args:
+    | index | "nyc-open-data" |
+    | collection | "green-taxi" |
+    | includeKuzzleMeta | true |
+    And I should receive a result matching:
+    | dynamic | "strict" |
+    And The property "properties" of the result should match:
+    | name | { "type": "keyword" } |
+    And The property "properties._kuzzle_info.properties" of the result should match:
+    | author | { "type": "keyword" } |
+    | updater | { "type": "keyword" } |
+    | createdAt | { "type": "date" } |
+    | updatedAt | { "type": "date" } |
+
   # collection:delete ==========================================================
 
   Scenario: Delete a collection
@@ -85,7 +115,7 @@ Feature: Collection Controller
     Then I should receive an error matching:
     | id | "services.storage.invalid_collection_name" |
 
-  @deprecated
+  # Deprecated since 2.1.0
   Scenario: Create a new collection with mappings
     Given an index "nyc-open-data"
     When I successfully call the route "collection":"create" with args:
@@ -100,7 +130,7 @@ Feature: Collection Controller
     | dynamic | "strict" |
     | properties | { "name": { "type": "keyword" } } |
 
-  @deprecated
+  # Deprecated since 2.1.0
   Scenario: Re-create an existing collection with mappings
     Given an index "nyc-open-data"
     When I successfully call the route "collection":"create" with args:
@@ -123,5 +153,7 @@ Feature: Collection Controller
     And a collection "nyc-open-data":"yellow-taxi"
     And a collection "nyc-open-data":"green-taxi"
     And I list collections in index "nyc-open-data"
-    Then I should receive a result matching:
-    | collections | [{ "name": "green-taxi", "type": "stored" }, { "name": "yellow-taxi", "type": "stored" }] |
+    Then I should receive a "collections" array of objects matching:
+    | name | type |
+    | "green-taxi" | "stored" |
+    | "yellow-taxi" | "stored" |
