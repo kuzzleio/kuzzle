@@ -83,7 +83,7 @@ describe('lib/config/index.js', () => {
     });
 
     it('should throw on negative limit values', () => {
-      for (const limit of Object.keys(defaultConfig.limits)) {
+      for (const limit of Object.keys(defaultConfig.limits).filter(l => l !== 'requestsRate')) {
         const config = getcfg({
           limits: {
             [limit]: -1
@@ -102,7 +102,7 @@ describe('lib/config/index.js', () => {
         'subscriptionDocumentTTL'
       ];
 
-      for (const limit of Object.keys(defaultConfig.limits)) {
+      for (const limit of Object.keys(defaultConfig.limits).filter(l => l !== 'requestsRate')) {
         const config = getcfg({
           limits: {
             [limit]: 0
