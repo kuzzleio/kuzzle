@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   ClientConnection = require('../../../lib/core/entrypoints/clientConnection');

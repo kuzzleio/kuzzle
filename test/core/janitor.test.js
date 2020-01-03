@@ -1,3 +1,5 @@
+'use strict';
+
 const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),

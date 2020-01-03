@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   Kuzzle = require('../../mocks/kuzzle.mock'),

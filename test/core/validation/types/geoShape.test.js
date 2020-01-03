@@ -1,3 +1,5 @@
+'use strict';
+
 const
   { errors: { PreconditionError } } = require('kuzzle-common-objects'),
   rewire = require('rewire'),
@@ -82,10 +84,6 @@ describe('Test: validation/types/geoShape', () => {
 
   describe('#recursiveShapeValidation', () => {
     const checkStructureStub = sinon.stub();
-
-    before(() => {
-      GeoShapeType.__set__('convertDistance', convertDistanceStub);
-    });
 
     beforeEach(() => {
       geoShapeType.checkStructure = checkStructureStub;
