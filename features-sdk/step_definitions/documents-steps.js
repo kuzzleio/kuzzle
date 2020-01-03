@@ -21,7 +21,7 @@ Given(/I can( not)? create the following document:/, async function (not, dataTa
       document._id);
 
     if (not) {
-      return Promise.reject(new Error(`Document should not have been created`));
+      return Promise.reject(new Error('Document should not have been created'));
     }
 
     this.props.documentId = this.props.result._id;
