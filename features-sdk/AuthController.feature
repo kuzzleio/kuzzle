@@ -16,7 +16,6 @@ Feature: Auth Controller
     And The result should contain a property "_id" of type "string"
     And I can login with the previously created API key
     And I successfully call the route "auth":"searchApiKeys"
-    And I debug "result.hits"
     Then I should receive a "hits" array of objects matching:
     | _id | _source.userId | _source.ttl | _source.expiresAt | _source.description |
     | "_STRING_" | "test-admin" | -1 | -1 | "Sigfox API key" |
