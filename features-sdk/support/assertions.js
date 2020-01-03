@@ -30,7 +30,7 @@ should.Assertion.add(
       else {
         should(objectValue).match(
           expectedValue,
-          `${keyPath} does not match. Expected "${expectedValue}" have "${objectValue}"`);
+          `${keyPath} does not match. Expected "${JSON.stringify(expectedValue)}" have "${JSON.stringify(objectValue)}"`);
       }
     }
   },
