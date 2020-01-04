@@ -41,11 +41,11 @@ class KuzzleWorld {
   }
 
   parseObject (dataTable) {
-    let content = {};
-
-    if (typeof dataTable.rowsHash === 'function') {
-      content = dataTable.rowsHash();
+    if (typeof dataTable.rowsHash !== 'function') {
+      throw new Error('Argument is not a datatTable');
     }
+
+    const content = dataTable.rowsHash();
 
     for (const key of Object.keys(content)) {
       content[key] = JSON.parse(content[key]);
