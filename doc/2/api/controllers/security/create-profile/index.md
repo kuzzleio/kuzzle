@@ -24,6 +24,7 @@ Body:
 
 ```js
 {
+  "rateLimit": 50,
   "policies": [
     {
       "roleId": "<roleId>"
@@ -55,6 +56,7 @@ Body:
   "action": "createProfile",
   "_id": "<profileId>",
   "body": {
+    "rateLimit": 50,
     "policies": [
       {
         "roleId": "<roleId>"
@@ -93,7 +95,7 @@ Body:
 
 ## Body properties
 
-- `policies`: [profile definition](/core/2/guides/essentials/security#defining-profiles)
+See the [profile definition guide](/core/2/guides/essentials/security#defining-profiles).
 
 ---
 

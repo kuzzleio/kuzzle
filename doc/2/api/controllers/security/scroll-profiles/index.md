@@ -69,6 +69,7 @@ Returns a paginated search result set, with the following properties:
       {
         "_id": "profile1",
         "_source": {
+          "rateLimit": 0,
           "policies": [
             // list of policies
           ]
@@ -77,6 +78,7 @@ Returns a paginated search result set, with the following properties:
       {
         "_id": "profile2",
         "_source": {
+          "rateLimit": 50,
           "policies": [
             // list of policies
           ]

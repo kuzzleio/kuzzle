@@ -338,5 +338,45 @@ describe('Test: security/profileTest', () => {
             .calledWith('foo');
         });
     });
+
+    it('should force the rateLimit to 0 if none is provided', async () => {
+      profile.policies = [{roleId: 'admin'}];
+      profile.rateLimit = null;
+      await profile.validateDefinition();
+      should(profile.rateLimit).eql(0);
+
+      profile.rateLimit = undefined;
+      await profile.validateDefinition();
+      should(profile.rateLimit).eql(0);
+    });
+
+    it('should throw if the rate limit is not a valid integer', async () => {
+      profile.policies = [{roleId: 'admin'}];
+
+      for (const l of ['foo', {}, [], 123.45, true, false]) {
+        profile.rateLimit = l;
+
+        try {
+          await profile.validateDefinition();
+        }
+        catch (e) {
+          should(e).instanceOf(BadRequestError);
+          should(e.id).eql('api.assert.invalid_type');
+        }
+      }
+    });
+
+    it('should throw if the rate limit is a negative integer', async () => {
+      profile.policies = [{roleId: 'admin'}];
+      profile.rateLimit = -2;
+
+      try {
+        await profile.validateDefinition();
+      }
+      catch (e) {
+        should(e).instanceOf(BadRequestError);
+        should(e.id).eql('api.assert.invalid_argument');
+      }
+    });
   });
 });
