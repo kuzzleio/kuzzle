@@ -496,6 +496,45 @@ describe('Test: collection controller', () => {
     });
   });
 
+  describe('#refresh', () => {
+    it('should call the storageEngine', async () => {
+      const response = await collectionController.refresh(request);
+
+      should(response).be.null();
+      should(collectionController.publicStorage.refreshCollection)
+        .be.calledWith(index, collection);
+    });
+  });
+
+  describe('#refreshInternal', () => {
+    beforeEach(() => {
+      collectionController.internalIndex = 'kuzzle';
+      collectionController.internalCollections = ['users', 'roles'];
+    });
+
+    it('should call the storageEngine', async () => {
+      request.input.resource.collection = 'users';
+
+      const response = await collectionController.refreshInternal(request);
+
+      should(response).be.null();
+      should(kuzzle.storageEngine.internal.refreshCollection)
+        .be.calledWith('kuzzle', 'users');
+    });
+
+    it('should raise an error with unknown collection', async () => {
+      request.input.resource.collection = 'frontend-security';
+
+      const promise = collectionController.refreshInternal(request);
+
+      return should(promise).be.rejectedWith({ id: 'api.assert.unexpected_argument' })
+        .then(() => {
+          should(collectionController.publicStorage.refreshCollection)
+            .not.be.called();
+        });
+    });
+  });
+
   describe('#create', () => {
     it('should resolve to a valid response', async () => {
       const response = await collectionController.create(request);

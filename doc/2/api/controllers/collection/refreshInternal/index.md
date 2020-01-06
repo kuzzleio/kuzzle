@@ -6,19 +6,17 @@ title: refresh
 
 # refresh
 
-<SinceBadge version="2.0.0"/>
+<SinceBadge version="2.1.0"/>
 
-Forces an immediate [reindexation](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-refresh.html) of the provided collection.
+Forces an immediate [reindexation](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-refresh.html) of the provided internal collection.
+
+The default internal collections are: `users`, `profiles`, `roles`, `validations`, `config`, `api-keys`.
 
 When writing or deleting documents in Kuzzle, the changes need to be indexed before being reflected in the search results.
 By default, this operation can take up to 1 second.
 
 ::: warn
 Forcing immediate refreshes comes with performance costs, and should only performed when absolutely necessary.
-:::
-
-::: info
-Use [collection:refreshInternal](/core/2/api/controllers/collection/refresh-internal) to trigger a refresh on an internal collection (eg: users or profiles)
 :::
 
 ---
@@ -28,7 +26,7 @@ Use [collection:refreshInternal](/core/2/api/controllers/collection/refresh-inte
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_refresh
+URL: http://kuzzle:7512/<index>/<collection>/_refreshInternal
 Method: POST
 ```
 
@@ -36,10 +34,9 @@ Method: POST
 
 ```js
 {
-  "index": "<index>",
   "collection": "<collection>",
   "controller": "collection",
-  "action": "refresh"
+  "action": "refreshInternal"
 }
 ```
 
@@ -47,7 +44,6 @@ Method: POST
 
 ## Arguments
 
-- `index`: index name to refresh
 - `collection`: collection name to refresh
 
 ---
@@ -60,10 +56,9 @@ Returns a response with `status` 200 if the refresh succeeds.
 {
   "status": 200,
   "error": null,
-  "index": "<index>",
   "collection": "<collection>",
   "controller": "collection",
-  "action": "refresh",
+  "action": "refreshInternal",
   "requestId": "<unique request identifier>",
   "result": null
 }

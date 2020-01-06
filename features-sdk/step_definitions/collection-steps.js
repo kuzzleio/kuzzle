@@ -50,3 +50,13 @@ Then('I get mappings of collection {string}:{string}', async function (index, co
 Then('I refresh the collection', function () {
   return this.sdk.collection.refresh(this.props.index, this.props.collection);
 });
+
+Then('I refresh the internal collection {string}', async function (collection) {
+  const request = {
+    controller: 'collection',
+    action: 'refreshInternal',
+    collection
+  };
+
+  return this.sdk.query(request);
+});
