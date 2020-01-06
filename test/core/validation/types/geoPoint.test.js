@@ -1,3 +1,5 @@
+'use strict';
+
 const
   BaseType = require('../../../../lib/core/validation/baseType'),
   GeoPointType = require('../../../../lib/core/validation/types/geoPoint'),

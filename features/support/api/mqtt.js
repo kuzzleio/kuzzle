@@ -1,3 +1,5 @@
+'use strict';
+
 const
   Bluebird = require('bluebird'),
   ApiBase = require('./apiBase'),
@@ -55,7 +57,7 @@ class MqttApi extends ApiBase {
             };
           });
         }
-        
+
         client.publish('Kuzzle/request', JSON.stringify(msg));
 
         return promise;

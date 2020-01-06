@@ -107,7 +107,35 @@ curl -X GET 'http://localhost:7512/?pretty'
 
 ## Defining Profiles
 
-A `profile` definition is a JSON object that contains an array of policies, each composed of a roleId and an array of restrictions:
+A `profile` definition is a JSON object that contains an optional rate limit parameter, and an array of policies.
+
+### Rate limit
+
+<SinceBadge version="2.0.4" />
+
+The rate limit parameter controls how many API requests a user can send, **per second and per node**. Further requests made by a user that exceed the limit are rejected with a `429 Too Many Requests` error.  
+
+::: info
+If no rate limit is defined, or if it is set to 0, then no limit is applied.
+If a user has several profiles with rate limits, the most permissive limit applies.
+:::
+
+::: warn
+Since unauthenticated users share the same user identifier, a rate limit set on the `anonymous` profile is applied to **all anonymous requests cumulated**, per second and per node. Except for the `auth:login` route, which is statically controlled in Kuzzle's configuration files.
+:::
+
+Example:
+
+```js
+{
+  "rateLimit": 20,
+  "policies": [ /* ...role policies, see below ... */ ]
+}
+```
+
+### Policies
+
+Each policy is composed of a roleId and an array of restrictions:
 
 ```js
 {
@@ -139,9 +167,9 @@ A `profile` definition is a JSON object that contains an array of policies, each
 };
 ```
 
-When applying a role to a profile, the role can be applied to all indexes and collections or it can be applied to a specific index or collection.
+When adding a role to a profile, by default, it impacts all indexes and collections. For more precise control, roles can be restricted to specific indexes or collections.
 
-For example, if we have a "publisher" role which allows any action on the `document` controller:
+For example, consider a "publisher" role allowing any action on the `document` controller:
 
 ```js
 {
@@ -155,7 +183,7 @@ For example, if we have a "publisher" role which allows any action on the `docum
 }
 ```
 
-Then we can declare three different profiles using this same role, each with varying levels of access based on the index and collection:
+Three different profiles can be created using that same role, each with varying index/collections restrictions:
 
 * Applies the publisher role to all indexes and collections
 
@@ -167,7 +195,7 @@ Then we can declare three different profiles using this same role, each with var
 }
 ```
 
-* Applies the publisher role only to the index "index1" and all its collections
+* Applies the publisher role only to the index "index1", and to all its collections
 
 ```js
 {

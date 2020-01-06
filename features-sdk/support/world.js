@@ -1,3 +1,5 @@
+'use strict';
+
 const
   config = require('../../lib/config'),
   { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),

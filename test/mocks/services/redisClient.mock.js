@@ -1,3 +1,5 @@
+'use strict';
+
 const
   sinon = require('sinon'),
   EventEmitter = require('eventemitter3'),
