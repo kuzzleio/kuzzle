@@ -490,8 +490,8 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      return should(roleRepository.checkRoleNativeRights(role))
-        .not.throw();
+
+      should(roleRepository.checkRoleNativeRights(role)).not.throw();
     });
   });
   
@@ -521,13 +521,16 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
+
       roleRepository.checkRolePluginsRights(role, {force: true});
+
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
     });
     
-    it('should throw if we try to write a role with an invalid plugin controller.', done => {
+    it('should throw if we try to write a role with an invalid plugin controller.', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
       kuzzle.pluginsManager.isController = sinon.stub().returns(false);
+      kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
       const
         controllers = {
           'invalid_controller': {
@@ -540,13 +543,10 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
       roleRepository.checkRolePluginsRights(role, {force: true});
-      try {
+
+      should(() => {
         roleRepository.checkRolePluginsRights(role);
-      }
-      catch (e) {
-        should(e).be.instanceOf(BadRequestError, { message: 'Trying to set role test with a non-existing controller \'invalid_controller\'.' });
-        done();
-      }
+      }).throwError({ id: 'security.role.unknown_controller' });
     });
 
     it('should warn if we force a role having an invalid plugin action.', () => {
@@ -567,8 +567,9 @@ describe('Test: repositories/roleRepository', () => {
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".');
     });
     
-    it('should throw if we try to write a role with an invalid plugin action.', done => {
+    it('should throw if we try to write a role with an invalid plugin action.', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
       const controllers = {
           'foobar': {
             actions: {
@@ -579,16 +580,10 @@ describe('Test: repositories/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
-      try {
+      
+      should(() => {
         roleRepository.checkRolePluginsRights(role);
-      }
-      catch (e) {
-        should(e).be.instanceOf(BadRequestError, {
-          message:
-            'Trying to set role %s with a non-existing action \'iDontExist\' in controller \'invalid_controller\'.'
-        });
-        done();
-      }
+      }).throwError({ id: 'security.role.unknown_controller' });
     });
 
     it('should not warn nor throw when a role contains valid controller and action.', () => {
