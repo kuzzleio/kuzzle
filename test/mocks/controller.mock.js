@@ -1,3 +1,5 @@
+'use strict';
+
 const
   { BaseController, NativeController } = require('../../lib/api/controllers/base'),
   {

@@ -1,3 +1,5 @@
+'use strict';
+
 const
   stripJson = require('strip-json-comments'),
   fs = require('fs');

@@ -1,3 +1,5 @@
+'use strict';
+
 const
   ms = require('ms'),
   jwt = require('jsonwebtoken'),

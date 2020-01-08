@@ -19,7 +19,7 @@ Also returns the collection [dynamic mapping policy](/core/2/guides/essentials/d
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_mapping
+URL: http://kuzzle:7512/<index>/<collection>/_mapping[?includeKuzzleMeta]
 Method: GET
 ```
 
@@ -30,7 +30,8 @@ Method: GET
   "index": "<index>",
   "collection": "<collection>",
   "controller": "collection",
-  "action": "getMapping"
+  "action": "getMapping",
+  "includeKuzzleMeta": false
 }
 ```
 
@@ -40,6 +41,7 @@ Method: GET
 
 - `collection`: collection name
 - `index`: index name
+- `includeKuzzleMeta`: include [Kuzzle metadata](/core/2/guides/essentials/database-mappings#collection-metadata) mappings in the response
 
 ---
 

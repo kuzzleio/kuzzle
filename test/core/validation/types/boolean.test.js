@@ -1,3 +1,5 @@
+'use strict';
+
 const
   BaseType = require('../../../../lib/core/validation/baseType'),
   BooleanType = require('../../../../lib/core/validation/types/boolean'),

@@ -26,6 +26,7 @@ Feature: Document Controller
     Then I should receive a "hits" array of objects matching:
     | _id | highlight |
     | "document-1" | { "name": [ "<em>document</em>" ] } |
+
   # document:exists ============================================================
 
   @mappings

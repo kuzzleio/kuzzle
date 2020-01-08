@@ -25,6 +25,7 @@ services:
       - kuzzle_services__storageEngine__internalIndex__collections__users__dynamic=true
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_limits__loginsPerSecond=50
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=production

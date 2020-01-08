@@ -1,3 +1,5 @@
+'use strict';
+
 const
   BaseType = require('../../../../lib/core/validation/baseType'),
   AnythingType = require('../../../../lib/core/validation/types/anything'),

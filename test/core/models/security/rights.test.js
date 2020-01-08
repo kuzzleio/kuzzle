@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   Rights = require('../../../../lib/core/models/security/rights');

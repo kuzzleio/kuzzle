@@ -148,12 +148,6 @@ Feature: Kuzzle functional tests
   Scenario: Can't do a bulk import on internal index
     When I can't do a bulk import from index "%kuzzle"
 
-  Scenario: Truncate collection
-    When I write the document
-    Then I refresh the collection
-    Then I truncate the collection
-    Then I'm not able to get the document
-
   Scenario: Search with scroll documents
     When I write the document "documentGrace"
     When I write the document "documentGrace"
