@@ -137,31 +137,42 @@ Feature: Security Controller
   Scenario: Create a role with invalid API rights
     When I can not "create" a role "test-role" with the following API rights:
     | invalid-controller | { "actions": { "create": true, "update": true } } |
+    Then I should receive an error matching:
+    | id | "security.role.unknown_controller" |
     And I can not "create" a role "test-role" with the following API rights:
     | document | { "actions": { "invalid_action": true, "update": true } } |
+    Then I should receive an error matching:
+    | id | "security.role.unknown_action" |
 
   @security
   Scenario: Create/get/search/update/delete a role
     Given I am able to find 3 roles by searching controller:
     | controllers | ["document"] |
-    Then I "create" a role "test-role" with the following API rights:
+    When I "create" a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     Then I am able to get a role with id "test-role"
+    And The property "controllers.document.actions" of the result should match:
+    | create | true |
+    | update | true |
     And I am able to find 4 roles by searching controller:
     | controllers | ["document"] |
-    And I "update" a role "test-role" with the following API rights:
+    When I "update" a role "test-role" with the following API rights:
     | document | { "actions": { "create": false, "update": false } } |
-    And I delete the role "test-role"
+    Then I am able to get a role with id "test-role"
+    And The property "controllers.document.actions" of the result should match:
+    | create | false |
+    | update | false |
+    When I delete the role "test-role"
     Then I am able to find 3 roles by searching controller:
     | controllers | ["document"] |
-    Then I am not able to get a role with id "test-role"
-    Then I "create" a role "test-role" with the following API rights:
+    And I am not able to get a role with id "test-role"
+    Given I "create" a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     And I "create" a role "test-role-2" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
     And I "create" a role "test-role-3" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
-    Then I am able to mGet roles and get 3 roles with the following ids:
+    When I am able to mGet roles and get 3 roles with the following ids:
     | ids | ["test-role", "test-role-2", "test-role-3"] |
     Then I should receive a array of objects matching:
     | _id          |
@@ -170,7 +181,7 @@ Feature: Security Controller
     | "test-role-3"|
     And I am able to find 6 roles by searching controller:
     | controllers | ["document"] |
-    Then I should receive a "hits" array of objects matching:
+    And I should receive a "hits" array of objects matching:
     | _id           |
     | "admin"       |
     | "anonymous"   |
@@ -180,7 +191,7 @@ Feature: Security Controller
     | "test-role-3" |
     And I am able to find 3 roles by searching controller:
     | controllers | ["document", "auth", "security"] |
-    Then I should receive a "hits" array of objects matching:
+    And I should receive a "hits" array of objects matching:
     | _id           |
     | "admin"       |
     | "anonymous"   |
@@ -193,17 +204,24 @@ Feature: Security Controller
   Scenario: Create/Update a role with invalid plugin API rights
     When I can not "create" a role "test-role-plugin" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
-    And I "create" a role "test-role-plugin2" with the following API rights:
+    Then I should receive an error matching:
+    | id | "security.role.unknown_controller" |
+    When I "create" a role "test-role-plugin2" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
     Then I am able to find 1 roles by searching controller:
     | controllers | ["functional-test-plugin/non-existing-controller"] |
-    Then I should receive a "hits" array of objects matching:
+    And I should receive a "hits" array of objects matching:
     | _id                |
     | "admin"            |
     | "anonymous"        |
     | "default"          |
     | "test-role-plugin2"|
-    And I can not "update" a role "test-role-plugin2" with the following API rights:
+    When I can not "update" a role "test-role-plugin2" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
-    And I "update" a role "test-role-plugin2" with the following API rights:
+    Then I should receive an error matching:
+    | id | "security.role.unknown_controller" |
+    When I "update" a role "test-role-plugin2" with the following API rights:
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
+    Then I am able to get a role with id "test-role-plugin2"
+    And The property "controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
+    | manage | false |
