@@ -8,9 +8,9 @@ title: refresh
 
 <SinceBadge version="2.1.0"/>
 
-Forces an immediate [reindexation](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-refresh.html) of the provided internal collection.
+Forces an immediate [reindexation](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-refresh.html) of the provided security collection.
 
-The default internal collections are: `users`, `profiles`, `roles`, `validations`, `config`, `api-keys`.
+The available security collections are: `users`, `profiles`, `roles`.
 
 When writing or deleting documents in Kuzzle, the changes need to be indexed before being reflected in the search results.
 By default, this operation can take up to 1 second.
@@ -26,7 +26,7 @@ Forcing immediate refreshes comes with performance costs, and should only perfor
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_refreshInternal
+URL: http://kuzzle:7512/<collection>/_refresh
 Method: POST
 ```
 
@@ -35,8 +35,8 @@ Method: POST
 ```js
 {
   "collection": "<collection>",
-  "controller": "collection",
-  "action": "refreshInternal"
+  "controller": "security",
+  "action": "refresh"
 }
 ```
 
@@ -57,8 +57,8 @@ Returns a response with `status` 200 if the refresh succeeds.
   "status": 200,
   "error": null,
   "collection": "<collection>",
-  "controller": "collection",
-  "action": "refreshInternal",
+  "controller": "security",
+  "action": "refresh",
   "requestId": "<unique request identifier>",
   "result": null
 }

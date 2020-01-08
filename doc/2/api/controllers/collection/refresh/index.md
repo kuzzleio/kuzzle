@@ -18,7 +18,7 @@ Forcing immediate refreshes comes with performance costs, and should only perfor
 :::
 
 ::: info
-Use [collection:refreshInternal](/core/2/api/controllers/collection/refresh-internal) to trigger a refresh on an internal collection (eg: users or profiles)
+Use [security:refresh](/core/2/api/controllers/security/refresh) to trigger a refresh on a security collection (`users`, `profiles` or `roles`)
 :::
 
 ---

@@ -1,27 +1,5 @@
 Feature: Collection Controller
 
-  # collection:refreshInternal =================================================
-
-  @security
-  Scenario: Refresh an internal collection
-    Given I successfully call the route "security":"createUser" with args:
-    | _id | "aschen" |
-    | refresh | false |
-    | body | { "content": { "profileIds": ["default"] } } |
-    # Refresh success on known collection
-    When I successfully call the route "collection":"refreshInternal" with args:
-    | collection | "users" |
-    Then I successfully call the route "security":"searchUsers"
-    And I should receive a "hits" array of objects matching:
-    | _id |
-    | "test-admin" |
-    | "aschen" |
-    # Error on unknown collection
-    When I call the route "collection":"refreshInternal" with args:
-    | collection | "frontend-security" |
-    Then I should receive an error matching:
-    | id | "api.assert.unexpected_argument" |
-
   # collection:truncate ========================================================
 
   Scenario: Truncate a collection
