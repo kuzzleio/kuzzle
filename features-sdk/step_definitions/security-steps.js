@@ -18,7 +18,7 @@ Given('I create a profile {string} with the following policies:', async function
   this.props.result = await this.sdk.security.createProfile(
     profileId,
     { policies },
-    { refresh: false });
+    { refresh: 'wait_for' });
 });
 
 Given('I create a role {string} with the following API rights:', async function (roleId, dataTable) {
@@ -27,12 +27,12 @@ Given('I create a role {string} with the following API rights:', async function 
   this.props.result = await this.sdk.security.createRole(
     roleId,
     { controllers },
-    { refresh: false });
+    { refresh: 'wait_for' });
 });
 
 Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
   try {
-    await this.sdk.security.deleteRole(roleId, { refresh: false });
+    await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
   }
   catch (e) {
     if (not) {
@@ -45,7 +45,7 @@ Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
 
 Then(/I (can not )?delete the profile "(.*?)"/, async function (not, profileId) {
   try {
-    await this.sdk.security.deleteProfile(profileId, { refresh: false });
+    await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' });
   }
   catch (e) {
     if (not) {
@@ -56,7 +56,7 @@ Then(/I (can not )?delete the profile "(.*?)"/, async function (not, profileId) 
 });
 
 Given('I delete the user {string}', async function (userId) {
-  this.props.result = await this.sdk.security.deleteUser(userId, { refresh: false });
+  this.props.result = await this.sdk.security.deleteUser(userId, { refresh: 'wait_for' });
 });
 
 Given('I create a user {string} with content:', async function (userId, dataTable) {
@@ -75,7 +75,7 @@ Given('I create a user {string} with content:', async function (userId, dataTabl
   this.props.result = await this.sdk.security.createUser(
     userId,
     body,
-    { refresh: false });
+    { refresh: 'wait_for' });
 });
 
 Given('I update the role {string} with:', async function (roleId, dataTable) {
@@ -87,7 +87,7 @@ Given('I update the role {string} with:', async function (roleId, dataTable) {
     rights[controller] = { actions };
   }
 
-  this.props.result = await this.sdk.security.updateRole(roleId, rights, { refresh: false });
+  this.props.result = await this.sdk.security.updateRole(roleId, rights, { refresh: 'wait_for' });
 });
 
 Given('The role {string} should match the default one', async function (roleId) {
