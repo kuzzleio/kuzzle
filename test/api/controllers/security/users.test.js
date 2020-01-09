@@ -90,6 +90,17 @@ describe('Test: security controller - users', () => {
     });
   });
 
+  describe('#mGetUsers', () => {
+    it('should throw an error if no ids are given', () => {
+      return should(() => {
+        securityController.mGetUsers(new Request({}));
+      }).throw(BadRequestError, {
+        id: 'api.assert.missing_argument',
+        message: 'Missing argument "ids".'});
+    });
+  });
+
+
   describe('#searchUsers', () => {
     it('should return a valid responseObject', () => {
       request = new Request({

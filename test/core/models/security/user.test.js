@@ -8,7 +8,7 @@ const
   Profile = require('../../../../lib/core/models/security/profile'),
   User = require('../../../../lib/core/models/security/user'),
   { Request,
-    errors: { InternalError }
+    errors: { InternalError, BadRequestError }
   } = require('kuzzle-common-objects');
 
 const
