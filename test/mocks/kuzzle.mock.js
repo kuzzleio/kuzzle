@@ -239,7 +239,7 @@ class KuzzleMock extends Kuzzle {
         scroll: sinon.stub().resolves(),
         validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
         truncate: sinon.stub().resolves(),
-        checkAllRolePluginsRights: sinon.stub()
+        sanityCheck: sinon.stub()
       },
       user: {
         anonymous: sinon.stub().resolves({
