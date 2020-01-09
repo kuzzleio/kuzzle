@@ -8,7 +8,7 @@ title: mGetUsers
 
 
 
-Gets multiple security users.
+Gets multiple users.
 
 ---
 
