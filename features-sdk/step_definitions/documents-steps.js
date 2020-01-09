@@ -67,18 +67,6 @@ Then('I {string} the document {string} with content:', async function (action, _
   }
 });
 
-Then('I should receive a {string} array of objects matching:', function (name, dataTable) {
-  const expected = this.parseObjectArray(dataTable);
-
-  should(this.props.result[name].length).be.eql(
-    expected.length,
-    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
-
-  for (let i = 0; i < expected.length; i++) {
-    should(this.props.result[name][i]).matchObject(expected[i]);
-  }
-});
-
 Then('I should receive a {string} array matching:', function (name, dataTable) {
   const expected = _.flatten(dataTable.rawTable).map(JSON.parse);
 

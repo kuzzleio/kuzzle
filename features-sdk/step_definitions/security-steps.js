@@ -98,3 +98,13 @@ Given('The role {string} should match:', async function (roleId, dataTable) {
     should(actions).match(role.controllers[controller].actions);
   }
 });
+
+Then('I am able to mGet users and get {int} users with the following ids:', async function (count, dataTable) {
+  const data = this.parseObject(dataTable);
+  const userIds = [];
+  for (const user of Object.entries(data.ids)) {
+    userIds.push(user);
+  }
+
+  this.props.result = await this.sdk.security.mGetUsers(userIds);
+});
