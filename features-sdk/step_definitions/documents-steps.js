@@ -67,16 +67,6 @@ Then('I {string} the document {string} with content:', async function (action, _
   }
 });
 
-Then('I should receive a {string} array matching:', function (name, dataTable) {
-  const expected = _.flatten(dataTable.rawTable).map(JSON.parse);
-
-  should(this.props.result[name].length).be.eql(
-    expected.length,
-    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
-
-  should(this.props.result[name].sort()).match(expected.sort());
-});
-
 Then('I should receive a empty {string} array', function (name) {
   should(this.props.result[name]).be.Array().be.empty();
 });
