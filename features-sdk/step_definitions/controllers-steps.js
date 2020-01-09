@@ -48,6 +48,7 @@ Then(/I should receive a ("(.*?)" )?array (of objects )?matching:/, function (na
     `Array are not the same size: expected ${expected.length} got ${result.length}`);
 
   if (!objects) {
+    should(result.sort()).match(expected.sort());
     return;
   }
   for (let i = 0; i < expected.length; i++) {
