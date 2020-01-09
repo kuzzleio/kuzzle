@@ -60,7 +60,7 @@ Method: GET
 Returns a `hits` array of objects. Each object is an user object with the following properties:
 
 - `_id`: user kuid
-- `_source`: user description
+- `_source`: user content
 
 ```js
 {
