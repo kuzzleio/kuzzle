@@ -57,7 +57,7 @@ Method: GET
 
 ## Response
 
-Returns a `hits` array of objects. Each object is a user description, with the following properties:
+Returns a `hits` array of objects. Each object is an user object with the following properties:
 
 - `_id`: user unique identifier
 - `_source`: user description
