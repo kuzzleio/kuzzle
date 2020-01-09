@@ -67,17 +67,6 @@ Then('I {string} the document {string} with content:', async function (action, _
   }
 });
 
-Then(/I update the document "(.*)?" (with option source )?with content:/, async function (id, source, dataTable) {
-  const body = this.parseObject(dataTable);
-
-  this.props.result = await this.sdk.document.update(
-    this.props.index,
-    this.props.collection,
-    id,
-    body,
-    {source: Boolean(source)});
-});
-
 Then('I should receive a {string} array of objects matching:', function (name, dataTable) {
   const expected = this.parseObjectArray(dataTable);
 
