@@ -51,7 +51,7 @@ Method: GET
 
 ## Body properties
 
-- `ids`: an array of user identifiers to get
+- `ids`: an array of user kuids to get
 
 ---
 
