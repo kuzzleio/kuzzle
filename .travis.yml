@@ -28,6 +28,7 @@ _doc-deploy: &doc-deploy
   language: node_js
   node_js: 10
   env: &doc-deploy-env
+    - BRANCH=dev
     - NODE_ENV=production
     - AWS_DEFAULT_REGION=us-west-2
     - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
@@ -36,7 +37,6 @@ _doc-deploy: &doc-deploy
     npm: true
     directories:
       - $HOME/.cache/pip
-      - doc/framework/node_modules
   addons:
     apt:
       packages:
@@ -44,6 +44,7 @@ _doc-deploy: &doc-deploy
         - python-pip
   install:
     - pip install awscli --upgrade --user
+    - npm ci
   script:
     - npm run doc-prepare
     - npm run doc-build
@@ -79,6 +80,8 @@ jobs:
 
     - stage: Unit Tests & Linters
       name: Documentation dead links & error codes check
+      language: node_js
+      node_js: 10
       cache:
         directories:
           - $HOME/.gem/specs
@@ -89,10 +92,11 @@ jobs:
         - npm ci --silent
       before_script:
         - npm run doc-prepare
-        - npm run --prefix doc/framework clone-repos
+        - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
+        - $(npm bin)/kuzdoc framework:link -d /core/1/ -v 1
       script:
         - echo "Checking dead links..."
-        - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
+        - cd doc/framework/ && HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/1/
         - echo "Checking error codes..."
         - npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR/codes-doc-test.md
         - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/1/api/essentials/errors/codes/index.md
