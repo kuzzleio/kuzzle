@@ -6,8 +6,6 @@ title: search
 
 # search
 
-
-
 Searches documents.
 
 There is a limit to how many documents can be returned by a single search query.
@@ -92,6 +90,11 @@ Body:
 - `sort`: contains a list of fields, used to [sort search results](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-sort.html), in order of importance
 
 An empty body matches all documents in the queried collection.
+
+::: info
+Only the following fields are available in the top level of the search body: `aggregations`, `aggs`, `collapse`, `explain`, `from`, `highlight`, `query`, `search_timeout`, `size`, `sort`, `_name`, `_source`, `_source_excludes`, `_source_includes`
+:::
+
 
 ---
 

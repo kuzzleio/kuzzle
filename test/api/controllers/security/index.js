@@ -23,6 +23,7 @@ const
 
 describe('/api/controllers/security', () => {
   let
+    securityController,
     funnelController,
     sandbox = sinon.createSandbox(),
     kuzzle;
@@ -31,6 +32,7 @@ describe('/api/controllers/security', () => {
     kuzzle = new KuzzleMock();
     funnelController = new FunnelController(kuzzle);
     sandbox.spy(errorsManager, 'get');
+    securityController = new SecurityController(kuzzle);
   });
 
   afterEach(() => {
@@ -42,6 +44,39 @@ describe('/api/controllers/security', () => {
       should(new SecurityController(kuzzle)).instanceOf(NativeController);
     });
   });
+
+  describe('#refresh', () => {
+    let request;
+
+    beforeEach(() => {
+      request = new Request({ controller: 'security' });
+      securityController.internalIndex = 'kuzzle';
+      securityController.internalCollections = ['users', 'roles'];
+    });
+
+    it('should call the storageEngine', async () => {
+      request.input.resource.collection = 'users';
+
+      const response = await securityController.refresh(request);
+
+      should(response).be.null();
+      should(kuzzle.storageEngine.internal.refreshCollection)
+        .be.calledWith('kuzzle', 'users');
+    });
+
+    it('should raise an error with unknown collection', async () => {
+      request.input.resource.collection = 'frontend-security';
+
+      const promise = securityController.refresh(request);
+
+      return should(promise).be.rejectedWith({ id: 'api.assert.unexpected_argument' })
+        .then(() => {
+          should(securityController.publicStorage.refreshCollection)
+            .not.be.called();
+        });
+    });
+  });
+
 
   describe('#mDelete', () => {
     const mDelete = SecurityController.__get__('mDelete');
