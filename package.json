@@ -22,7 +22,8 @@
     "doc-upload": "kuzdoc repo:deploy -d /core/1/ -v 1",
     "doc-cloudfront": "kuzdoc repo:cloudfront -d /core/1/",
     "doc-deploy": "npm run doc-upload && npm run doc-cloudfront",
-    "doc-netlify": "npm run doc-prepare && kuzdoc repo:build -d / -v 1"
+    "doc-netlify": "npm run doc-prepare && kuzdoc repo:build -d / -v 1",
+    "doc-error-codes": "node doc/build-error-codes"
   },
   "directories": {
     "lib": "lib"
