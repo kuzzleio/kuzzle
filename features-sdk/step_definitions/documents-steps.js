@@ -114,7 +114,6 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
 Then(/I "(.*?)" the following document ids( with verb "(.*?)")?:/, async function (action, verb, dataTable) {
   action = `m${action[0].toUpperCase() + action.slice(1)}`;
   const options = verb ? { verb, refresh: 'wait_for' } : { refresh: 'wait_for' };
-  console.log(options);
   const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
 
   this.props.result = await this.sdk.document[action](
