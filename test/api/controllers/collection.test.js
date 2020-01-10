@@ -496,6 +496,16 @@ describe('Test: collection controller', () => {
     });
   });
 
+  describe('#refresh', () => {
+    it('should call the storageEngine', async () => {
+      const response = await collectionController.refresh(request);
+
+      should(response).be.null();
+      should(collectionController.publicStorage.refreshCollection)
+        .be.calledWith(index, collection);
+    });
+  });
+
   describe('#create', () => {
     it('should resolve to a valid response', async () => {
       const response = await collectionController.create(request);
