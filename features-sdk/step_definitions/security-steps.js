@@ -111,7 +111,7 @@ Given('The role {string} should match:', async function (roleId, dataTable) {
   }
 });
 
-Then('I am able to mGet {int} users with the following ids:', async function (count, dataTable) {
+Then('I am able to mGet users with the following ids:', async function (dataTable) {
   const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
   this.props.result = await this.sdk.security.mGetUsers(userIds);
 });

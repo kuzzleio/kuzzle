@@ -160,7 +160,7 @@ Feature: Security Controller
     | profileIds | ["default"] |
     And I create a user "test-user2" with content:
     | profileIds | ["default"] |
-    Then I am able to mGet 2 users with the following ids:
+    Then I am able to mGet users with the following ids:
     | "test-user" |
     | "test-user2" |
     And I should receive a array of objects matching:
