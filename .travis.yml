@@ -28,7 +28,6 @@ _doc-deploy: &doc-deploy
   language: node_js
   node_js: 10
   env: &doc-deploy-env
-    - BRANCH=dev
     - NODE_ENV=production
     - AWS_DEFAULT_REGION=us-west-2
     - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
@@ -206,6 +205,7 @@ jobs:
       if: branch =~ /^[0-9]+-dev$/
       env:
         - *doc-deploy-env
+        - BRANCH=dev
         - S3_BUCKET=docs-next.kuzzle.io
         - CLOUDFRONT_DISTRIBUTION_ID=E2ZCCEK9GRB49U
 
