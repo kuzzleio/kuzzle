@@ -80,7 +80,7 @@ jobs:
     - stage: Unit Tests & Linters
       name: Documentation dead links & error codes check
       language: node_js
-      node_js: 10
+      node_js: 12
       cache:
         directories:
           - $HOME/.gem/specs
