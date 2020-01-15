@@ -59,8 +59,8 @@ describe('IndexStorage', () => {
       await indexStorage.init(collections);
 
       should(indexStorage._storageEngine.createCollection)
-        .be.calledWith('kuzzle', 'users', collections.users)
-        .be.calledWith('kuzzle', 'tokens', collections.tokens);
+        .be.calledWith('kuzzle', 'users', { mappings: collections.users })
+        .be.calledWith('kuzzle', 'tokens', { mappings: collections.tokens });
     });
   });
 

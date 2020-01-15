@@ -27,6 +27,41 @@ Given('an existing collection {string}:{string}', async function (index, collect
   this.props.collection = collection;
 });
 
+Then('I {string} the collection {string}:{string} with:', async function (action, index, collection, dataTable) {
+  let
+    mappings = {},
+    settings = {};
+
+  if (dataTable.rowsHash) {
+    ({ mappings, settings } = this.parseObject(dataTable));
+  }
+
+  try {
+    // @todo remove the condition when collection.update is available in sdk
+    if (action === 'update') {
+      this.props.result = await this.sdk.query({
+        controller: 'collection',
+        action: 'create',
+        index,
+        collection,
+        body: { mappings, settings }
+      });
+    }
+    else {
+      this.props.result = await this.sdk.collection[action](
+        index,
+        collection,
+        { mappings, settings });
+    }
+
+    this.props.index = index;
+    this.props.collection = collection;
+  }
+  catch (error) {
+    this.props.error = error;
+  }
+});
+
 Then('I list collections in index {string}', async function (index) {
   this.props.result = await this.sdk.collection.list(index);
 });

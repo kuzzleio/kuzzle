@@ -162,22 +162,22 @@ describe('Test: core/janitor', () => {
   describe('#loadMappings', () => {
     const mappings = require('../mocks/mappings.json');
 
-    it('create index and collection that does not exists', () => {
+    it('create index and collection that does not exists', async () => {
       const storageEngine = kuzzle.storageEngine.public;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);
 
-      return janitor.loadMappings(mappings)
-        .then(() => {
-          should(storageEngine.indexExists.callCount).be.eql(3);
-          should(storageEngine.createIndex.callCount).be.eql(2);
-          should(storageEngine.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
+      await janitor.loadMappings(mappings);
 
-          should(storageEngine.createCollection.callCount).be.eql(3);
-          should(storageEngine.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
-          should(storageEngine.createCollection.getCall(0).args[2].properties).be.eql({ name: { type: 'text' } });
-        });
+      should(storageEngine.indexExists.callCount).be.eql(3);
+      should(storageEngine.createIndex.callCount).be.eql(2);
+      should(storageEngine.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
+
+      should(storageEngine.createCollection.callCount).be.eql(3);
+      should(storageEngine.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
+      should(storageEngine.createCollection.getCall(0).args[2].mappings.properties)
+        .be.eql({ name: { type: 'text' } });
     });
 
     it('should reject if a mapping contains non-object properties', () => {
