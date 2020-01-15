@@ -218,8 +218,20 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
+    });
+
+    it('should return a rejected promise if an unhautorized property is in the query', () => {
+      filter = {
+        not_authorized: 42,
+        query : {}
+      };
+
+      const promise = elasticsearch.search(index, collection, filter);
+
+      return should(promise)
+        .be.rejectedWith({ id: 'services.storage.invalid_search_query' });
     });
 
     it('should not save the scrollId in the cache if not present in response', () => {
@@ -538,7 +550,10 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.update.resolves({
         body: {
           _id: 'liia',
-          _version: 1
+          _version: 1,
+          get: {
+            _source: {city: 'Panipokari'}
+          }
         }
       });
     });
@@ -570,7 +585,10 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match({
             _id: 'liia',
-            _version: 1
+            _version: 1,
+            _source: {
+              city: 'Panipokari'
+            }
           });
         });
     });
@@ -598,12 +616,16 @@ describe('Test: ElasticSearch service', () => {
             },
             id: 'liia',
             refresh: 'wait_for',
+            _source: true,
             retryOnConflict: 42
           });
 
           should(result).match({
             _id: 'liia',
-            _version: 1
+            _version: 1,
+            _source: {
+              city: 'Panipokari'
+            }
           });
         });
     });

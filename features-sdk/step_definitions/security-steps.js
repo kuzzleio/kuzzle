@@ -110,7 +110,10 @@ Given('I create a user {string} with content:', async function (userId, dataTabl
     }
   };
 
-  this.props.result = await this.sdk.security.createUser(userId, body);
+  this.props.result = await this.sdk.security.createUser(
+    userId,
+    body,
+    { refresh: 'wait_for' });
 });
 
 Given('I update the role {string} with:', async function (roleId, dataTable) {
@@ -122,7 +125,7 @@ Given('I update the role {string} with:', async function (roleId, dataTable) {
     rights[controller] = { actions };
   }
 
-  this.props.result = await this.sdk.security.updateRole(roleId, rights);
+  this.props.result = await this.sdk.security.updateRole(roleId, rights, { refresh: 'wait_for' });
 });
 
 Given('The role {string} should match the default one', async function (roleId) {

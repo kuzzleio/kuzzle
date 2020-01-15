@@ -46,10 +46,12 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     kuzzle.cacheEngine.internal.get.resolves(
       JSON.stringify(['foo', 'bar']));
 
-    return notifier.notifyDocumentUpdate(request)
+    return notifier.notifyDocumentUpdate(request, {
+      _id,
+      _source: { foo: 'bar' },
+      _updatedFields: ['foo']
+    })
       .then(() => {
-        should(kuzzle.storageEngine.public.get)
-          .be.calledWith(index, collection, _id);
 
         should(kuzzle.koncorde.test)
           .calledOnce()
@@ -100,7 +102,11 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       kuzzle.cacheEngine.internal.get.resolves(
         JSON.stringify(['foo', 'bar']));
 
-      return notifier.notifyDocumentUpdate(request)
+      return notifier
+        .notifyDocumentUpdate(request, {
+          _id,
+          _source: { foo: 'bar' }
+        })
         .then(() => {
           should(kuzzle.cacheEngine.internal.setex).not.be.called();
 

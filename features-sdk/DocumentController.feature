@@ -121,6 +121,39 @@ Feature: Document Controller
     And The document "document-1" content match:
     | name | "document1" |
 
+
+  # document:update ===========================================================
+  @mappings
+  Scenario: Update document with and without returning updated document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the document "document-1" with content:
+    | name          | "document-1" |
+    | age           | 42  |
+    When I successfully call the route "document":"update" with args:
+    | index | "nyc-open-data" |
+    | collection| "yellow-taxi"|
+    | _id | "document-1" |
+    | body | { "name": "updated1" } |
+    | source | true |
+    Then I should receive a result matching:
+    | _id          |      "document-1"            |
+    | _source | { "name": "updated1", "age": 42 } |
+    And The document "document-1" content match:
+    | name | "updated1" |
+    | age | 42 |
+    When I successfully call the route "document":"update" with args:
+    | index      | "nyc-open-data"        |
+    | collection | "yellow-taxi"          |
+    | _id        | "document-1"           |
+    | body       | { "name": "updated2" } |
+    | source     | false                  |
+    Then I should receive a result matching:
+    | _id     | "document-1" |
+    And The document "document-1" content match:
+    | name | "updated2" |
+    | age  | 42         |
+
+
   # document:mUpdate ===========================================================
 
   @mappings
