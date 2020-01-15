@@ -8,7 +8,7 @@ title: healthCheck
 
 
 
-Returns status of the different services.
+Returns the status of the different services.
 
 ---
 
