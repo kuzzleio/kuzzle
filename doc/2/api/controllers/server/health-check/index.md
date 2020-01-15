@@ -8,7 +8,7 @@ title: healthCheck
 
 
 
-Returns the status of the different services.
+Returns the status of Kuzzle and it's internal services.
 
 ---
 
