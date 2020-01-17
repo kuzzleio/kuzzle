@@ -28,6 +28,7 @@ class ElasticsearchClientMock {
     this.search = sinon.stub().resolves();
     this.scroll = sinon.stub().resolves();
     this.deleteByQuery = sinon.stub().resolves();
+    this.updateByQuery = sinon.stub().resolves();
 
     this.cat = {
       aliases: sinon.stub().resolves(),

@@ -540,6 +540,42 @@ describe('DocumentController', () => {
     });
   });
 
+  describe('#updateByQuery', () => {
+    beforeEach(() => {
+      documentController.publicStorage.updateByQuery.resolves(({
+        documents: [
+          { _id: 'id1', _source: '_source1' },
+          { _id: 'id2', _source: '_source2' }
+        ],
+        total: 2,
+        updated: 2,
+        failures: []
+      }));
+    });
+
+    it('should call publicStorage updateByQuery method and notify the changes', async () => {
+      request.input.body = { query: { foo: 'bar'} };
+      request.input.args.refresh = 'wait_for';
+
+      const response = await documentController.updateByQuery(request);
+
+      should(documentController.publicStorage.updateByQuery).be.calledWith(
+        index,
+        collection,
+        { foo: 'bar' },
+        { refresh: 'wait_for' });
+      
+      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+        request,
+        [
+          { _id: 'id1', _source: '_source1'},
+          { _id: 'id2', _source: '_source2'}
+        ]);
+
+      should(response).be.eql({ ids: ['id1', 'id2']});
+    });
+  });
+
   describe('#replace', () => {
     let content;
 
