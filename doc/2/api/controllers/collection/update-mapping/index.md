@@ -10,6 +10,8 @@ Updates a collection mapping.
 
 <SinceBadge version="1.7.1" />
 
+<DeprecatedBadge version="2.1.0">
+
 You can define the collection [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
 
 You can define [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
@@ -56,7 +58,7 @@ Body:
   "controller": "collection",
   "action": "updateMapping",
   "body": {
-  "dynamic": "[true|false|strict]",
+    "dynamic": "[true|false|strict]",
     "_meta": {
       "field": "value"
     },

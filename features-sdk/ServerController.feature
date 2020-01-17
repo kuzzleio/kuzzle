@@ -45,3 +45,16 @@ Feature: Server Controller
     | internalCache | "green" |
     | memoryStorage | "green" |
     | storageEngine | "green" |
+    When I successfully call the route "server":"healthCheck" with args:
+    | services | "storageEngine" |
+    Then I should receive a result matching:
+    | status | "green" |
+    Then The property "services" of the result should match:
+    | storageEngine | "green" |
+    When I successfully call the route "server":"healthCheck" with args:
+    | services | "storageEngine,memoryStorage" |
+    Then I should receive a result matching:
+    | status | "green" |
+    Then The property "services" of the result should match:
+    | memoryStorage | "green" |
+    | storageEngine | "green" |
