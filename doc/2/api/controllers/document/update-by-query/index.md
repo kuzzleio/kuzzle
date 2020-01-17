@@ -63,13 +63,13 @@ Body:
 
 ## Body properties
 
-- `query`: documents matching this search query will be deleted. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
+- `query`: documents matching this search query will be updated. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
 
 ---
 
 ## Response
 
-Returns a `ids` array containing the list of deleted document identifiers.
+Returns a `ids` array containing the list of updated document identifiers.
 
 ```js
 {
