@@ -375,3 +375,20 @@ Feature: Document Controller
     Then I should receive a "string" result equals to "document-1"
     Then The document "document-1" should not exist
     Then The document "document-2" should exist
+
+  @mappings
+  Scenario: updateByQuery
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+    | _id          | body                 |
+    | "document-1" | { "name": "kuzzle" } |
+    | "document-2" | { "name": "puzzle" } |
+    | "document-3" | { "name": "puzzle" } |
+    | "document-4" | { "name": "kuzzle" } |
+    When I successfully call the route "document":"updateByQuery" with args:
+    | index      | "nyc-open-data"      |
+    | collection | "yellow-taxi"        |
+    | body       | { "query": { "match": {"name": "kuzzle" } } } |
+    Then I should receive a "ids" array matching:
+    | "document-1" |
+    | "document-4" |
