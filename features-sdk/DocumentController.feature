@@ -381,14 +381,21 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
     | _id          | body                 |
-    | "document-1" | { "name": "kuzzle" } |
-    | "document-2" | { "name": "puzzle" } |
-    | "document-3" | { "name": "puzzle" } |
-    | "document-4" | { "name": "kuzzle" } |
+    | "document-1" | { "name": "Sylvanas Windrunner" } |
+    | "document-2" | { "name": "Tirion Fordring" } |
+    | "document-3" | { "name": "Tirion Fordring" } |
+    | "document-4" | { "name": "Sylvanas Windrunner" } |
     When I successfully call the route "document":"updateByQuery" with args:
     | index      | "nyc-open-data"      |
     | collection | "yellow-taxi"        |
-    | body       | { "query": { "match": {"name": "kuzzle" } } } |
+    | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"name": "The liberator"} } |
     Then I should receive a "ids" array matching:
     | "document-1" |
     | "document-4" |
+    When I "get" the following document ids:
+    | "document-1"  |
+    | "document-4"  |
+    Then I should receive a "successes" array of objects matching:
+    | _id          | _source                 |
+    | "document-1" | { "name": "The liberator" } |
+    | "document-4" | { "name": "The liberator" } |

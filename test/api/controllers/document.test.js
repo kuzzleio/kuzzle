@@ -554,7 +554,14 @@ describe('DocumentController', () => {
     });
 
     it('should call publicStorage updateByQuery method and notify the changes', async () => {
-      request.input.body = { query: { foo: 'bar'} };
+      request.input.body = {
+        query: {
+          match: { foo: 'bar'}
+        },
+        changes: {
+          foo: 'foo'
+        }
+      };
       request.input.args.refresh = 'wait_for';
 
       const response = await documentController.updateByQuery(request);
@@ -562,7 +569,8 @@ describe('DocumentController', () => {
       should(documentController.publicStorage.updateByQuery).be.calledWith(
         index,
         collection,
-        { foo: 'bar' },
+        { match: { foo: 'bar' } },
+        { foo: 'foo'},
         { refresh: 'wait_for' });
       
       should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
