@@ -544,8 +544,8 @@ describe('DocumentController', () => {
     beforeEach(() => {
       documentController.publicStorage.updateByQuery.resolves(({
         documents: [
-          { _id: 'id1', _source: '_source1' },
-          { _id: 'id2', _source: '_source2' }
+          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
+          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
         ],
         total: 2,
         updated: 2,
@@ -556,13 +556,14 @@ describe('DocumentController', () => {
     it('should call publicStorage updateByQuery method and notify the changes', async () => {
       request.input.body = {
         query: {
-          match: { foo: 'bar'}
+          match: { foo: 'bar' }
         },
         changes: {
-          foo: 'foo'
+          bar: 'foo'
         }
       };
       request.input.args.refresh = 'wait_for';
+      request.input.args.source = true;
 
       const response = await documentController.updateByQuery(request);
 
@@ -570,25 +571,25 @@ describe('DocumentController', () => {
         index,
         collection,
         { match: { foo: 'bar' } },
-        { foo: 'foo'},
+        { bar: 'foo'},
         { refresh: 'wait_for' });
-      
+
       should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
         request,
         [
-          { _id: 'id1', _source: '_source1'},
-          { _id: 'id2', _source: '_source2'}
+          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
+          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
         ]);
 
       should(response).be.eql({
         documents: [
           {
             _id: 'id1',
-            _source: '_source1'
+            _source: { foo: 'bar', bar: 'foo' }
           },
           {
             _id: 'id2',
-            _source: '_source2'
+            _source: { foo: 'bar', bar: 'foo' }
           }
         ],
         failures: [],
