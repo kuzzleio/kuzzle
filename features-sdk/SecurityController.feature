@@ -155,15 +155,21 @@ Feature: Security Controller
     And I delete the profile "test-profile"
     And I delete the role "test-role"
 
+  @security
   Scenario: Get multiple users
     Given I create a user "test-user" with content:
     | profileIds | ["default"] |
     And I create a user "test-user2" with content:
     | profileIds | ["default"] |
-    Then I am able to mGet users with the following ids:
-    | "test-user" |
-    | "test-user2" |
-    And I should receive a array of objects matching:
+    When I successfully call the route "security":"mGetUsers" with args:
+    | ids | "test-user,test-user2" |
+    Then I should receive a "hits" array of objects matching:
     | _id        |
     | "test-user" |
+    | "test-user2" |
+    When I successfully call the route "security":"mGetUsers" with args:
+    | body | {"ids": ["test-user", "test-user2"] } |
+    Then I should receive a "hits" array of objects matching:
+    | _id          |
+    | "test-user"  |
     | "test-user2" |
