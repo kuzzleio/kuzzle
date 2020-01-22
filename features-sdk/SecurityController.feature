@@ -224,12 +224,15 @@ Feature: Security Controller
 
   @security
   Scenario: Create/Update a role with invalid plugin API rights
-    When I can not "create" a role "test-role-plugin" with the following API rights:
-    | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
+    When I call the route "security":"createRole" with args:
+    | _id | "test-role-plugin" |
+    | body | { "controllers" :{ "functional-test-plugin/non-existing-controller": {"actions": { "manage": true } } } } |
     Then I should receive an error matching:
     | id | "security.role.unknown_controller" |
-    When I "create" a role "test-role-plugin2" with the following API rights:
-    | functional-test-plugin/non-existing-controller | { "actions": { "manage": true } } |
+    When I successfully call the route "security":"createRole" with args:
+    | _id   | "test-role-plugin2" |
+    | body  | { "controllers" :{ "functional-test-plugin/non-existing-controller": {"actions": { "manage": true } } } } |
+    | force | true |
     Then I am able to find 1 roles by searching controller:
     | controllers | ["functional-test-plugin/non-existing-controller"] |
     And I should receive a "hits" array of objects matching:
@@ -242,8 +245,10 @@ Feature: Security Controller
     | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
     Then I should receive an error matching:
     | id | "security.role.unknown_controller" |
-    When I "update" a role "test-role-plugin2" with the following API rights:
-    | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
+    When I successfully call the route "security":"updateRole" with args:
+    | _id   | "test-role-plugin2" |
+    | body  | {"controllers" : {"functional-test-plugin/non-existing-controller": {"actions": { "manage": false } } } } |
+    | force | true |
     Then I am able to get a role with id "test-role-plugin2"
-    And The property "controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
+    And The property "_source.controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
     | manage | false |
