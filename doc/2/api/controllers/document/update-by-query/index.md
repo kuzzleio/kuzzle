@@ -81,12 +81,23 @@ Returns a `ids` array containing the list of updated document identifiers.
   "action": "updateByQuery",
   "requestId": "<unique request identifier>",
   "result": {
-    "ids": [
-      "id 1",
-      "id 2",
-      "id ...",
-      "id n"
-    ]
+    "documents": [
+      {
+        _id: "document-1",
+        _source: [Object],
+        status: 200,
+        result: "updated"
+      },
+      {
+        _id: "document-2",
+        _source: [Object],
+        status: 200,
+        result: "updated"
+      }
+    ],
+    "total": 2,
+    "updated": 2,
+    "failures": []
   }
 }
 ```

@@ -580,7 +580,21 @@ describe('DocumentController', () => {
           { _id: 'id2', _source: '_source2'}
         ]);
 
-      should(response).be.eql({ ids: ['id1', 'id2']});
+      should(response).be.eql({
+        documents: [
+          {
+            _id: 'id1',
+            _source: '_source1'
+          },
+          {
+            _id: 'id2',
+            _source: '_source2'
+          }
+        ],
+        failures: [],
+        total: 2,
+        updated: 2
+      });
     });
   });
 

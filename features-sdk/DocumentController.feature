@@ -389,7 +389,8 @@ Feature: Document Controller
     | index      | "nyc-open-data"      |
     | collection | "yellow-taxi"        |
     | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"name": "The liberator"} } |
-    Then I should receive a "ids" array matching:
+    Then I should receive a "documents" array of objects matching:
+    | _id |
     | "document-1" |
     | "document-4" |
     When I "get" the following document ids:
