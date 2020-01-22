@@ -8,20 +8,31 @@ const
     Then
   } = require('cucumber');
 
-Given('I create the following document:', async function (dataTable) {
+Given(/I can( not)? create the following document:/, async function (not, dataTable) {
   const document = this.parseObject(dataTable);
 
   const
     index = document.index || this.props.index,
     collection = document.collection || this.props.collection;
 
-  this.props.result = await this.sdk.document.create(
-    index,
-    collection,
-    document.body,
-    document._id);
+  try {
+    this.props.result = await this.sdk.document.create(
+      index,
+      collection,
+      document.body,
+      document._id);
 
-  this.props.documentId = this.props.result._id;
+    if (not) {
+      return Promise.reject(new Error('Document should not have been created'));
+    }
+
+    this.props.documentId = this.props.result._id;
+  }
+  catch (error) {
+    if (!not) {
+      throw error;
+    }
+  }
 });
 
 Then('The document {string} content match:', async function (documentId, dataTable) {
@@ -65,10 +76,6 @@ Then('I {string} the document {string} with content:', async function (action, _
       _id,
       body);
   }
-});
-
-Then('I should receive a empty {string} array', function (name) {
-  should(this.props.result[name]).be.Array().be.empty();
 });
 
 Then('I count {int} documents', async function (expectedCount) {

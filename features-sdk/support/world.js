@@ -41,6 +41,10 @@ class KuzzleWorld {
   }
 
   parseObject (dataTable) {
+    if (typeof dataTable.rowsHash !== 'function') {
+      throw new Error('Argument is not a datatTable');
+    }
+
     const content = dataTable.rowsHash();
 
     for (const key of Object.keys(content)) {

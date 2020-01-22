@@ -10,6 +10,12 @@ title: create
 
 Creates a new [collection](/core/2/guides/essentials/store-access-data), in the provided `index`.
 
+Collection names must meet the following criteria:
+
+* Lowercase only
+* Cannot include one of the following characters: `\\`, `/`, `*`, `?`, `"`, `<`, `>`, `|`, ` ` (space character), `,`, `#`, `:`, `%`, `&`, `.`
+* Cannot be longer than 126 bytes (note it is bytes, so multi-byte characters will count towards the 126 limit faster)
+
 You can also provide an optional body with a [collection mapping](/core/2/guides/essentials/database-mappings) allowing you to exploit the full capabilities of our persistent data storage layer.
 
 This method will only update the mapping when the collection already exists.
@@ -18,11 +24,9 @@ You can define the collection [dynamic mapping policy](/core/2/guides/essentials
 
 You can define [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
 
-Collection names must meet the following criteria:
+<SinceBadge version="2.1.0">
 
-* Lowercase only
-* Cannot include one of the following characters: `\\`, `/`, `*`, `?`, `"`, `<`, `>`, `|`, ` ` (space character), `,`, `#`, `:`, `%`, `&`, `.`
-* Cannot be longer than 126 bytes (note it is bytes, so multi-byte characters will count towards the 126 limit faster)
+You can also provide Elasticsearch index [settings]((https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)) when creating a new collection.
 
 ---
 
@@ -35,6 +39,43 @@ URL: http://kuzzle:7512/<index>/<collection>
 Method: PUT
 Body:
 ```
+
+<SinceBadge version="2.1.0">
+
+```js
+{
+  "mappings": {
+    "dynamic": "[true|false|strict]",
+    "_meta": {
+      "field": "value"
+    },
+    "properties": {
+      "field1": {
+        "type": "integer"
+      },
+      "field2": {
+        "type": "keyword"
+      },
+      "field3": {
+        "type":   "date",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+      }
+    }
+  },
+  "settings": {
+    "analysis" : {
+      "analyzer":{
+        "content":{
+          "type":"custom",
+          "tokenizer":"whitespace"
+        }
+      }
+    }
+  }
+}
+```
+
+<DeprecatedBadge version="2.1.0">
 
 ```js
 {
@@ -59,6 +100,8 @@ Body:
 
 ### Other protocols
 
+<SinceBadge version="2.1.0">
+
 ```js
 {
   "index": "<index>",
@@ -66,7 +109,48 @@ Body:
   "controller": "collection",
   "action": "create",
   "body": {
-    "dynamic": "[false|true|strict]",
+    "mappings": {
+      "dynamic": "[true|false|strict]",
+      "_meta": {
+        "field": "value"
+      },
+      "properties": {
+        "field1": {
+          "type": "integer"
+        },
+        "field2": {
+          "type": "keyword"
+        },
+        "field3": {
+          "type":   "date",
+          "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+        }
+      }
+    },
+    "settings": {
+      "analysis" : {
+        "analyzer":{
+          "content":{
+            "type":"custom",
+            "tokenizer":"whitespace"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+<DeprecatedBadge version="2.1.0">
+
+```js
+{
+  "index": "<index>",
+  "collection": "<collection>",
+  "controller": "collection",
+  "action": "create",
+  "body": {
+    "dynamic": "[true|false|strict]",
     "_meta": {
       "field": "value"
     },
@@ -86,6 +170,7 @@ Body:
 }
 ```
 
+
 ---
 
 ## Arguments
@@ -98,6 +183,13 @@ Body:
 ## Body properties
 
 ### Optional:
+
+<SinceBadge version="2.1.0">
+
+* `settings`: Elasticsearch index [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)
+* `mappings`: [collection mappings](/core/2/guides/essentials/database-mappings)
+
+<DeprecatedBadge version="2.1.0">
 
 * `dynamic`: [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
 * `_meta`: [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) stored next to the collection

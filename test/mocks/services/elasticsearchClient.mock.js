@@ -40,6 +40,10 @@ class ElasticsearchClientMock {
     };
 
     this.indices = {
+      open: sinon.stub().resolves(),
+      close: sinon.stub().resolves(),
+      putSettings: sinon.stub().resolves(),
+      getSettings: sinon.stub().resolves(),
       create: sinon.stub().resolves(),
       delete: sinon.stub().resolves(),
       exists: sinon.stub().resolves(),
