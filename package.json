@@ -79,6 +79,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
+    "async": "^3.1.0",
     "codecov": "^3.6.1",
     "cucumber": "^6.0.5",
     "eslint": "^6.7.2",
