@@ -61,6 +61,10 @@ Body:
 
 ---
 
+### Optional:
+
+- `source`: if set to `true` Kuzzle will return the updated documents body in the response.
+
 ## Body properties
 
 - `query`: documents matching this search query will be updated. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
@@ -69,7 +73,7 @@ Body:
 
 ## Response
 
-Returns a `ids` array containing the list of updated document identifiers.
+Returns a `result` object containing the a `documents` array of the updated documents.
 
 ```js
 {
@@ -84,13 +88,13 @@ Returns a `ids` array containing the list of updated document identifiers.
     "documents": [
       {
         _id: "document-1",
-        _source: [Object],
+        _source: [Object],  // If `source` option is set to true
         status: 200,
         result: "updated"
       },
       {
         _id: "document-2",
-        _source: [Object],
+        _source: [Object],  // If `source` option is set to true
         status: 200,
         result: "updated"
       }
