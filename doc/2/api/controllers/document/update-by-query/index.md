@@ -24,7 +24,7 @@ To update a greater number of documents, either change the server configuration,
 
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/_queryUpdate
-Method: POST
+Method: PUT
 Body:
 ```
 
