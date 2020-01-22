@@ -388,7 +388,7 @@ Feature: Document Controller
     When I successfully call the route "document":"updateByQuery" with args:
     | index      | "nyc-open-data"      |
     | collection | "yellow-taxi"        |
-    | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"name": "The liberator"} } |
+    | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
     Then I should receive a "documents" array of objects matching:
     | _id |
     | "document-1" |
@@ -398,5 +398,5 @@ Feature: Document Controller
     | "document-4"  |
     Then I should receive a "successes" array of objects matching:
     | _id          | _source                 |
-    | "document-1" | { "name": "The liberator" } |
-    | "document-4" | { "name": "The liberator" } |
+    | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+    | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |

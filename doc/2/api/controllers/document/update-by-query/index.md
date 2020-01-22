@@ -23,7 +23,7 @@ To update a greater number of documents, either change the server configuration,
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_query
+URL: http://kuzzle:7512/<index>/<collection>/_queryUpdate
 Method: POST
 Body:
 ```
@@ -46,7 +46,10 @@ Body:
   "action": "updateByQuery",
   "body": {
     "query": {
-      // ...
+      // query to match documents
+    },
+    "changes": {
+      // documents changes
     }
   }
 }
@@ -100,7 +103,6 @@ Returns a `result` object containing the a `documents` array of the updated docu
       }
     ],
     "total": 2,
-    "updated": 2,
     "failures": []
   }
 }
