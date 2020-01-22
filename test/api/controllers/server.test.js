@@ -140,6 +140,45 @@ describe('ServerController', () => {
         });
     });
 
+    it('should return 200 response with status "green" if storageEngine status is "green"', () => {
+      request.input.args.services = 'storageEngine';
+      
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.null();
+          should(response.status).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
+          should(response.services.internalCache).be.exactly(undefined);
+          should(response.services.memoryStorage).be.exactly(undefined);
+        });
+    });
+
+    it('should return 200 response with status "green" if storageEngine and memoryStorage status are "green"', () => {
+      request.input.args.services = 'storageEngine,memoryStorage';
+
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.null();
+          should(response.status).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
+          should(response.services.internalCache).be.exactly(undefined);
+          should(response.services.memoryStorage).be.exactly('green');
+        });
+    });
+
+    it('should return 200 response with status "green" if storageEngine, memoryStorage and internalCache status are "green"', () => {
+      request.input.args.services = 'storageEngine,memoryStorage,internalCache';
+
+      return serverController.healthCheck(request)
+        .then(response => {
+          should(request.response.error).be.null();
+          should(response.status).be.exactly('green');
+          should(response.services.storageEngine).be.exactly('green');
+          should(response.services.internalCache).be.exactly('green');
+          should(response.services.memoryStorage).be.exactly('green');
+        });
+    });
+
     it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
       kuzzle.storageEngine.public.info.resolves({status: 'red'});
 
