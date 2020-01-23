@@ -76,7 +76,7 @@ Body:
 
 ## Response
 
-Returns a `result` object containing the a `documents` array of the updated documents.
+Returns a `result` object containing a `documents` array representing updated documents.
 
 ```js
 {
