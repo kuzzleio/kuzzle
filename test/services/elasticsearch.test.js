@@ -852,14 +852,14 @@ describe('Test: ElasticSearch service', () => {
     const documents = [
       {
         _id: '_id1',
-        _source: null,
+        _source: undefined,
         body: {
           name: 'bar'
         }
       },
       {
         _id: '_id2',
-        _source: null,
+        _source: undefined,
         body: {
           name: 'bar'
         }
