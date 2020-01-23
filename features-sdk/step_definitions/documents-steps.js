@@ -56,7 +56,7 @@ Then('I {string} the following documents:', async function (action, dataTable) {
   this.props.result = await this.sdk.document[action](
     this.props.index,
     this.props.collection,
-    documents, { refresh: 'wait_for' });
+    documents);
 });
 
 Then('I {string} the document {string} with content:', async function (action, _id, dataTable) {

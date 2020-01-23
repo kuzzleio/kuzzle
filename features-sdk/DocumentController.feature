@@ -168,9 +168,9 @@ Feature: Document Controller
     | "document-1" | { "name": "updated1" } |
     | "document-2" | { "age": 21 } |
     Then I should receive a "successes" array of objects matching:
-    | _id | _source | status | result |
-    | "document-1" | { "name": "updated1", "age": 42 } | 200 | "updated" |
-    | "document-2" | { "name": "document2", "age": 21 } | 200 | "updated" |
+    | _id | _source | status |
+    | "document-1" | { "name": "updated1", "age": 42 } | 200 |
+    | "document-2" | { "name": "document2", "age": 21 } | 200 |
     And I should receive a empty "errors" array
     And The document "document-1" content match:
     | name | "updated1" |
@@ -193,8 +193,8 @@ Feature: Document Controller
     | "document-1" | { "name": "updated1" } |
     | "document-2" | "not a body" |
     Then I should receive a "successes" array of objects matching:
-    | _id | _source | status | result |
-    | "document-1" | { "name": "updated1", "age": 42 } | 200 | "updated" |
+    | _id | _source | status |
+    | "document-1" | { "name": "updated1", "age": 42 } | 200 |
     And I should receive a "errors" array of objects matching:
     | reason | status | document |
     | "document body must be an object" | 400 | { "_id": "document-2", "body": "not a body" } |
@@ -221,9 +221,9 @@ Feature: Document Controller
     | "document-1" | { "name": "replaced1" } |
     | "document-2" | { "name": "replaced2" } |
     Then I should receive a "successes" array of objects matching:
-    | _id | _source | status | result |
-    | "document-1" | { "name": "replaced1" } | 200 | "updated" |
-    | "document-2" | { "name": "replaced2" } | 200 | "updated" |
+    | _id | _source | status |
+    | "document-1" | { "name": "replaced1" } | 200 |
+    | "document-2" | { "name": "replaced2" } | 200 |
     And I should receive a empty "errors" array
     And The document "document-1" content match:
     | name | "replaced1" |
@@ -244,8 +244,8 @@ Feature: Document Controller
     | "document-2" | { "name": "replaced2" } |
     | "document-1" | "not a body" |
     Then I should receive a "successes" array of objects matching:
-    | _id | _source | status | result |
-    | "document-2" | { "name": "replaced2" } | 200 | "updated" |
+    | _id | _source | status |
+    | "document-2" | { "name": "replaced2" } | 200 |
     And I should receive a "errors" array of objects matching:
     | reason | status | document |
     | "document _id must be a string" | 400 | { "body": { "name": "replaced1" } } |
@@ -385,6 +385,7 @@ Feature: Document Controller
     | "document-2" | { "name": "Tirion Fordring" } |
     | "document-3" | { "name": "Tirion Fordring" } |
     | "document-4" | { "name": "Sylvanas Windrunner" } |
+    And I refresh the collection
     When I successfully call the route "document":"updateByQuery" with args:
     | index      | "nyc-open-data"      |
     | collection | "yellow-taxi"        |

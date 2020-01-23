@@ -830,14 +830,12 @@ describe('Test: ElasticSearch service', () => {
           {
             _id: '_id1',
             _source: { name: 'bar' },
-            status: 200,
-            result: 'updated'
+            status: 200
           },
           {
             _id: '_id2',
             _source: { name: 'bar' },
-            status: 200,
-            result: 'updated'
+            status: 200
           }
         ],
         errors: []
@@ -887,14 +885,12 @@ describe('Test: ElasticSearch service', () => {
               {
                 _id: '_id1',
                 _source: {name: 'bar'},
-                status: 200,
-                result: 'updated'
+                status: 200
               },
               {
                 _id: '_id2',
                 _source: {name: 'bar'},
-                status: 200,
-                result: 'updated'
+                status: 200
               }
             ],
             errors: []
@@ -930,8 +926,8 @@ describe('Test: ElasticSearch service', () => {
 
           should(result).match({
             successes: [
-              { _id: '_id1', _source: { name: 'bar' }, status: 200, result: 'updated' },
-              { _id: '_id2', _source: { name: 'bar' }, status: 200, result: 'updated' },
+              { _id: '_id1', _source: { name: 'bar' }, status: 200 },
+              { _id: '_id2', _source: { name: 'bar' }, status: 200 },
             ],
             errors: []
           });
