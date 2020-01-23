@@ -96,13 +96,13 @@ Returns a `result` object containing a `successes` array representing updated do
     "successes": [
       {
         "_id": "document-1",
-        "_source": "<updated document>" // If `source` option is set to true
+        "_source": "<updated document>", // If `source` option is set to true
         "status": 200,
         "result": "updated"
       },
       {
         "_id": "document-2",
-        "_source": "<updated document>",  // If `source` option is set to true
+        "_source": "<updated document>", // If `source` option is set to true
         "status": 200,
         "result": "updated"
       }
