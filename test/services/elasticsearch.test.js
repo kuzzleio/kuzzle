@@ -883,7 +883,7 @@ describe('Test: ElasticSearch service', () => {
           );
 
           should(result).match({
-            documents: [
+            successes: [
               {
                 _id: '_id1',
                 _source: {name: 'bar'},
@@ -897,8 +897,7 @@ describe('Test: ElasticSearch service', () => {
                 result: 'updated'
               }
             ],
-            total: 2,
-            failures: []
+            errors: []
           });
         });
     });
@@ -930,12 +929,11 @@ describe('Test: ElasticSearch service', () => {
             });
 
           should(result).match({
-            documents: [
+            successes: [
               { _id: '_id1', _source: { name: 'bar' }, status: 200, result: 'updated' },
               { _id: '_id2', _source: { name: 'bar' }, status: 200, result: 'updated' },
             ],
-            total: 2,
-            failures: []
+            errors: []
           });
         });
     });

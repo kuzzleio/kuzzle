@@ -31,7 +31,10 @@ Body:
 ```js
 {
   "query": {
-    // ...
+    // query to match documents
+  },
+  "changes": {
+    // documents changes
   }
 }
 ```
@@ -72,11 +75,13 @@ Body:
 
 - `query`: documents matching this search query will be updated. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
 
+- `changes`: partial changes to apply to the documents
+
 ---
 
 ## Response
 
-Returns a `result` object containing a `documents` array representing updated documents.
+Returns a `result` object containing a `successes` array representing updated documents.
 
 ```js
 {
@@ -88,22 +93,21 @@ Returns a `result` object containing a `documents` array representing updated do
   "action": "updateByQuery",
   "requestId": "<unique request identifier>",
   "result": {
-    "documents": [
+    "successes": [
       {
         "_id": "document-1",
-        _source: "<updated document>" // If `source` option is set to true
-        status: 200,
-        result: "updated"
+        "_source": "<updated document>" // If `source` option is set to true
+        "status": 200,
+        "result": "updated"
       },
       {
-        _id: "document-2",
-        _source: [Object],  // If `source` option is set to true
-        status: 200,
-        result: "updated"
+        "_id": "document-2",
+        "_source": "<updated document>",  // If `source` option is set to true
+        "status": 200,
+        "result": "updated"
       }
     ],
-    "total": 2,
-    "failures": []
+    "errors": []
   }
 }
 ```

@@ -543,13 +543,11 @@ describe('DocumentController', () => {
   describe('#updateByQuery', () => {
     beforeEach(() => {
       documentController.publicStorage.updateByQuery.resolves(({
-        documents: [
+        successes: [
           { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
           { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
         ],
-        total: 2,
-        updated: 2,
-        failures: []
+        errors: []
       }));
     });
 
@@ -582,7 +580,7 @@ describe('DocumentController', () => {
         ]);
 
       should(response).be.eql({
-        documents: [
+        successes: [
           {
             _id: 'id1',
             _source: { foo: 'bar', bar: 'foo' }
@@ -592,9 +590,7 @@ describe('DocumentController', () => {
             _source: { foo: 'bar', bar: 'foo' }
           }
         ],
-        failures: [],
-        total: 2,
-        updated: 2
+        errors: []
       });
     });
   });
