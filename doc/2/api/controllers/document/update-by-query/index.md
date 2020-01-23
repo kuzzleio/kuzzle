@@ -91,7 +91,7 @@ Returns a `result` object containing a `documents` array representing updated do
     "documents": [
       {
         _id: "document-1",
-        _source: [Object],  // If `source` option is set to true
+        _source: "<updated document>" // If `source` option is set to true
         status: 200,
         result: "updated"
       },
