@@ -50,7 +50,9 @@
     "space-before-blocks": 2,
     "strict": [2, "global"],
     "vars-on-top": 2,
-    "yoda": [2, "never"]
+    "yoda": [2, "never"],
+    "sort-keys": ["error", "asc"],
+    "sort-keys-fix/sort-keys-fix": "warn"
   },
   "env": {
     "node": true,
@@ -63,5 +65,8 @@
     },
     "ecmaVersion": 2018
   },
-  "extends": "eslint:recommended"
+  "extends": "eslint:recommended",
+  "plugins": [
+    "sort-keys-fix"
+  ]
 }
