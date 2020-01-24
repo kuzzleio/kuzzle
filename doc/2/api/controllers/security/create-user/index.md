@@ -10,6 +10,12 @@ Creates a new user.
 
 The body contains the user data and must have the following properties:
 
+::: warning
+This method is not intended to be exposed to the anonymous user because it allows the user to assign the profile of their choice.
+
+Expose the [security:createRestrictedUser](/core/2/api/controllers/security/create-restricted-user) method instead.
+:::
+
 ---
 
 ## Query Syntax
