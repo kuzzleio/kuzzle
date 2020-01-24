@@ -1723,7 +1723,7 @@ describe('Test: ElasticSearch service', () => {
         { index: { _id: 1 } },
         { firstName: 'foo' },
 
-        { index: { _id: 2, _type: "foo" } },
+        { index: { _id: 2, _type: 'foo' } },
         { firstName: 'bar' },
 
         { update: { _id: 3 } },
