@@ -251,7 +251,7 @@ describe('Test: security controller - roles', () => {
 
   describe('#deleteRole', () => {
     it('should return response with on deleteRole call', done => {
-      const role = {my: 'role'};
+      const role = {_id: 'role'};
 
       kuzzle.repositories.role.load.resolves(role);
       kuzzle.repositories.role.delete.resolves();
@@ -270,8 +270,9 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should forward refresh option', () => {
-      const role = {my: 'role'};
+      const role = {_id: 'role'};
 
+      kuzzle.repositories.role.load.resolves(role);
       kuzzle.repositories.role.getRoleFromRequest.resolves(role);
       kuzzle.repositories.role.delete.resolves();
 

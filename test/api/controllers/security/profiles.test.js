@@ -490,6 +490,7 @@ describe('Test: security controller - profiles', () => {
 
   describe('#deleteProfile', () => {
     it('should return an object with on deleteProfile call', () => {
+      kuzzle.repositories.profile.load.resolves({ _id: 'test' });
       kuzzle.repositories.profile.delete.resolves({_id: 'test'});
 
       return securityController.deleteProfile(new Request({_id: 'test'}))
@@ -501,6 +502,7 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with an error in case of error', () => {
       const error = new Error('Mocked error');
+      kuzzle.repositories.profile.load.resolves({ _id: 'test' });
       kuzzle.repositories.profile.delete.rejects(error);
 
       return should(securityController.deleteProfile(new Request({_id: 'test'}))).be.rejectedWith(error);

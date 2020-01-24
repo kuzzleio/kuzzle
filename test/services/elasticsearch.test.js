@@ -1650,7 +1650,7 @@ describe('Test: ElasticSearch service', () => {
             }
           },
 
-          { index: { _id: 2, _index: esIndexName } },
+          { index: { _id: 2, _index: esIndexName, _type: undefined } },
           {
             firstName: 'bar',
             _kuzzle_info: {
@@ -1723,7 +1723,7 @@ describe('Test: ElasticSearch service', () => {
         { index: { _id: 1 } },
         { firstName: 'foo' },
 
-        { index: { _id: 2 } },
+        { index: { _id: 2, _type: "foo" } },
         { firstName: 'bar' },
 
         { update: { _id: 3 } },
@@ -2353,7 +2353,7 @@ describe('Test: ElasticSearch service', () => {
             {
               document: {
                 _id: 'liia',
-                body: { city: 'Ho Chi Minh City' }
+                body: { _kuzzle_info: undefined, city: 'Ho Chi Minh City' }
               },
               reason: 'document already exists',
               status: 400
@@ -2701,7 +2701,7 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: undefined, body: { city: 'Ho Chi Minh City' } },
+              document: { _id: undefined, body: { _kuzzle_info: undefined, city: 'Ho Chi Minh City' } },
               reason: 'document _id must be a string',
               status: 400
             }
@@ -2819,7 +2819,7 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: 'liia', body: { city: 'Ho Chi Minh City' } },
+              document: { _id: 'liia', body: { _kuzzle_info: undefined, city: 'Ho Chi Minh City' } },
               reason: 'document not found',
               status: 404
             }
