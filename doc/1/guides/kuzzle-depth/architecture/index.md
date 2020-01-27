@@ -27,7 +27,7 @@ In our architecture, a "Service" is an interface that interacts with external co
 
 Kuzzle currently implements the following Services:
 
-- [elasticsearch.js](https://github.com/kuzzleio/kuzzle/blob/1-stable/lib/services/elasticsearch.js): interface to [Elasticsearch](https://www.elastic.co/products/elasticsearch), used for persistent data storage.
+- [elasticsearch.js](https://github.com/kuzzleio/kuzzle/blob/1-stable/lib/services/elasticsearch.js): interface to [Elasticsearch](https://www.elastic.co/elastic-stack), used for persistent data storage.
 - [redis.js](https://github.com/kuzzleio/kuzzle/blob/1-stable/lib/services/redis.js): interface to the [redis](http://redis.io), used as a cache.
 - [internalEngine.js](https://github.com/kuzzleio/kuzzle/blob/1-stable/lib/services/internalEngine): interface to Kuzzle's configuration index in Elastic Search.
 
