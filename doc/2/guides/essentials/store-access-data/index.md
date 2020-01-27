@@ -7,7 +7,7 @@ order: 350
 
 # Store and access data
 
-Kuzzle uses [Elasticsearch](https://www.elastic.co/products/elasticsearch) as a document-oriented storage.  
+Kuzzle uses [Elasticsearch](https://www.elastic.co/elastic-stack) as a document-oriented storage.  
 
 All documents, including internal Kuzzle ones (such as security information), are stored in Elasticsearch indexes.  
 
