@@ -23,7 +23,7 @@ To update a greater number of documents, either change the server configuration,
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_queryUpdate
+URL: http://kuzzle:7512/<index>/<collection>/_query
 Method: PUT
 Body:
 ```
