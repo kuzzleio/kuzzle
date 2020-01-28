@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  _ = require('lodash'),
   should = require('should'),
   {
     Given,
@@ -108,4 +109,9 @@ Given('The role {string} should match:', async function (roleId, dataTable) {
   for (const [controller, actions] of Object.entries(controllers)) {
     should(actions).match(role.controllers[controller].actions);
   }
+});
+
+Then('I am able to mGet users with the following ids:', async function (dataTable) {
+  const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
+  this.props.result = await this.sdk.security.mGetUsers(userIds);
 });

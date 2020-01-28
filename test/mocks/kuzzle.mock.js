@@ -246,6 +246,7 @@ class KuzzleMock extends Kuzzle {
         ObjectConstructor: sinon.stub().returns({}),
         hydrate: sinon.stub().resolves(),
         persist: sinon.stub().resolves({}),
+        loadMultiFromDatabase: sinon.stub().resolves(),
         search: sinon.stub().resolves(),
         scroll: sinon.stub().resolves(),
         toDTO: sinon.stub(),
