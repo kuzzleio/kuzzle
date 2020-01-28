@@ -59,7 +59,9 @@
         "test/**/*.js",
         "features/**/*.js",
         "features-sdk/**/*.js",
-        "lib/api/controllers/memoryStorage.js"
+        "lib/api/controllers/memoryStorage.js",
+        "lib/config/httpRoutes.js",
+        "lib/util/esWrapper.js"
       ],
       "rules": {
         "sort-keys": "off"
