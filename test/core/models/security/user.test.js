@@ -156,4 +156,5 @@ describe('Test: security/userTest', () => {
       InternalError,
       { id: 'security.user.uninitialized' });
   });
+
 });

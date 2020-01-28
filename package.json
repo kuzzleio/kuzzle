@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.5.0",
-    "async": "^3.1.0",
     "bluebird": "^3.7.2",
     "bufferutil": "^4.0.1",
     "busboy": "^0.3.1",
@@ -48,6 +47,7 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^3.0.0",
+    "kuzdoc": "^1.2.2",
     "kuzzle-common-objects": "^4.1.0",
     "kuzzle-sdk": "7.0.1",
     "kuzzle-vault": "^1.0.1",
@@ -80,10 +80,10 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
+    "async": "^3.1.0",
     "codecov": "^3.6.1",
     "cucumber": "^6.0.5",
     "eslint": "^6.7.2",
-    "kuzdoc": "^1.2.2",
     "minimist": "1.2.0",
     "mocha": "^6.2.2",
     "mock-require": "^3.0.3",

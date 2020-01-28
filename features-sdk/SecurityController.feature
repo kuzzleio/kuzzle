@@ -252,3 +252,22 @@ Feature: Security Controller
     Then I am able to get a role with id "test-role-plugin2"
     And The property "_source.controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
     | manage | false |
+
+  Scenario: Get multiple users
+    Given I create a user "test-user" with content:
+    | profileIds | ["default"] |
+    And I create a user "test-user2" with content:
+    | profileIds | ["default"] |
+    When I successfully call the route "security":"mGetUsers" with args:
+    | ids | "test-user,test-user2" |
+    Then I should receive a "hits" array of objects matching:
+    | _id        |
+    | "test-user" |
+    | "test-user2" |
+    When I successfully call the route "security":"mGetUsers" with args:
+    | body | {"ids": ["test-user", "test-user2"] } |
+    Then I should receive a "hits" array of objects matching:
+    | _id          |
+    | "test-user"  |
+    | "test-user2" |
+
