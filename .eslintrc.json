@@ -58,10 +58,7 @@
       "files": [
         "test/**/*.js",
         "features/**/*.js",
-        "features-sdk/**/*.js",
-        "lib/api/controllers/memoryStorage.js",
-        "lib/config/httpRoutes.js",
-        "lib/util/esWrapper.js"
+        "features-sdk/**/*.js"
       ],
       "rules": {
         "sort-keys": "off"
