@@ -100,4 +100,4 @@ class FileFormatter extends PrefixedFormatter {
   }
 }
 
-module.exports = { ColoredFormatter, PrefixedFormatter, FileFormatter };
+module.exports = { ColoredFormatter, FileFormatter, PrefixedFormatter };
