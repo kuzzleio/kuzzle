@@ -290,8 +290,8 @@ describe('Test: core/janitor', () => {
           .be.exactly(baseDumpPath.concat('/kuzzle.json'));
         should(fsStub.writeFileSync.getCall(0).args[1])
           .be.exactly(JSON.stringify({
-            version: require('../../package.json').version,
-            config: kuzzle.config
+            config: kuzzle.config,
+            version: require('../../package.json').version
           }, null, ' ').concat('\n'));
 
         should(fsStub.writeFileSync.getCall(1).args[0]).be.exactly(baseDumpPath.concat('/plugins.json'));
