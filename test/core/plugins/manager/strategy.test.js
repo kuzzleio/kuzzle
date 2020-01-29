@@ -497,7 +497,7 @@ describe('PluginsManager: strategy management', () => {
   describe('#unregisterStrategy', () => {
     it('should remove a strategy using its provided name', () => {
       pluginsManager.unregisterStrategy(plugin.manifest.name, 'someStrategy');
-      should(pluginsManager.strategies).be.an.Object().and.match({ someStrategy: undefined });
+      should(pluginsManager.strategies).be.an.Object().and.match({});
       should(kuzzle.passport.unuse).calledWith('someStrategy');
     });
 
