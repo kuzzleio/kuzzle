@@ -594,7 +594,7 @@ describe('DocumentController', () => {
       });
     });
 
-    it('should call publicStorage updateByQuery method and notify the changes, without returning the document contents', async () => {
+    it('should not include documents content in the response of updateByQuery', async () => {
       request.input.body = {
         query: {
           match: { foo: 'bar' }
@@ -606,6 +606,15 @@ describe('DocumentController', () => {
       request.input.args.refresh = 'wait_for';
       request.input.args.source = false;
 
+
+      kuzzle.notifier.notifyDocumentMChanges.callsFake((req, documents) => {
+        should(req).be.eql(request);
+        should(documents).be.eql([
+          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
+          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
+        ]);
+      });
+
       const response = await documentController.updateByQuery(request);
 
       should(documentController.publicStorage.updateByQuery).be.calledWith(
@@ -614,13 +623,6 @@ describe('DocumentController', () => {
         { match: { foo: 'bar' } },
         { bar: 'foo' },
         { refresh: 'wait_for' });
-
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
-        request,
-        [
-          { _id: 'id1', _source: undefined },
-          { _id: 'id2', _source: undefined }
-        ]);
 
       should(response).be.eql({
         successes: [
