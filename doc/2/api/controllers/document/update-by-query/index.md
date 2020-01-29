@@ -69,6 +69,7 @@ Body:
 
 ### Optional:
 
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `source`: if set to `true` Kuzzle will return the updated documents body in the response.
 
 ## Body properties

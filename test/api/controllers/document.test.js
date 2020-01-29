@@ -593,6 +593,79 @@ describe('DocumentController', () => {
         errors: []
       });
     });
+
+    it('should call publicStorage updateByQuery method and notify the changes, without returning the document contents', async () => {
+      request.input.body = {
+        query: {
+          match: { foo: 'bar' }
+        },
+        changes: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = false;
+
+      const response = await documentController.updateByQuery(request);
+
+      should(documentController.publicStorage.updateByQuery).be.calledWith(
+        index,
+        collection,
+        { match: { foo: 'bar' } },
+        { bar: 'foo' },
+        { refresh: 'wait_for' });
+
+      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+        request,
+        [
+          { _id: 'id1', _source: undefined },
+          { _id: 'id2', _source: undefined }
+        ]);
+
+      should(response).be.eql({
+        successes: [
+          {
+            _id: 'id1',
+            _source: undefined
+          },
+          {
+            _id: 'id2',
+            _source: undefined
+          }
+        ],
+        errors: []
+      });
+    });
+
+    it('should throw if field "query" is missing', () => {
+      request.input.body = {
+        invalidField: {
+          match: { foo: 'bar' }
+        },
+        changes: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = false;
+
+      should(() => documentController.updateByQuery(request).throw(BadRequestError, { message: 'Missing argument "body.changes"' }));
+    });
+
+    it('should throw if field "changes" is missing', () => {
+      request.input.body = {
+        query: {
+          match: { foo: 'bar' }
+        },
+        invalidField: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = false;
+
+      should(() => documentController.updateByQuery(request).throw(BadRequestError, {message: 'Missing argument "body.changes"'}));
+    });
   });
 
   describe('#replace', () => {

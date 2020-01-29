@@ -904,7 +904,7 @@ describe('Test: ElasticSearch service', () => {
         collection,
         { filter: 'term' },
         { name: 'bar'},
-        { refresh: 'wait_for', from: 1, size: 3 });
+        { refresh: 'wait_for', size: 3 });
 
       return promise
         .then(result => {
@@ -912,7 +912,6 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName,
             body: { query: { filter: 'term'} },
             scroll: '5s',
-            from: 1,
             size: 3
           });
 
@@ -1024,7 +1023,6 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { filter: 'term' } },
-            from: 1,
             size: 3,
             refresh: true
           });
