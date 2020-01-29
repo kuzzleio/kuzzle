@@ -10,7 +10,6 @@ const
 
 When(/I (successfully )?call the route "(.*?)":"(.*?)" with args:/, async function (expectSuccess, controller, action, dataTable) {
   const args = this.parseObject(dataTable);
-
   try {
     const response = await this.sdk.query({ controller, action, ...args });
 
@@ -37,6 +36,22 @@ When(/I (successfully )?call the route "(.*?)":"(.*?)"$/, async function (expect
     }
 
     this.props.error = error;
+  }
+});
+
+Then(/I should receive a ("(.*?)" )?array (of objects )?matching:/, function (name, objects, dataTable) {
+  const expected = objects ? this.parseObjectArray(dataTable) : _.flatten(dataTable.rawTable).map(JSON.parse);
+  const result = name ? this.props.result[name] : this.props.result;
+  should(result.length).be.eql(
+    expected.length,
+    `Array are not the same size: expected ${expected.length} got ${result.length}`);
+
+  if (!objects) {
+    should(result.sort()).match(expected.sort());
+    return;
+  }
+  for (let i = 0; i < expected.length; i++) {
+    should(result[i]).matchObject(expected[i]);
   }
 });
 
@@ -103,28 +118,6 @@ Then('I should receive an error matching:', function (dataTable) {
 
 Then('I debug {string}', function (path) {
   console.log(JSON.stringify(_.get(this.props, path), null, 2));
-});
-
-Then('I should receive a {string} array of objects matching:', function (name, dataTable) {
-  const expected = this.parseObjectArray(dataTable);
-
-  should(this.props.result[name].length).be.eql(
-    expected.length,
-    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
-
-  for (let i = 0; i < expected.length; i++) {
-    should(this.props.result[name][i]).matchObject(expected[i]);
-  }
-});
-
-Then('I should receive a {string} array matching:', function (name, dataTable) {
-  const expected = _.flatten(dataTable.rawTable).map(JSON.parse);
-
-  should(this.props.result[name].length).be.eql(
-    expected.length,
-    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
-
-  should(this.props.result[name].sort()).match(expected.sort());
 });
 
 Then('I should receive a empty {string} array', function (name) {

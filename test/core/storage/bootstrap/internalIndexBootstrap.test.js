@@ -104,8 +104,8 @@ describe('InternalIndexBootstrap', () => {
       should(internalIndexStorage.createOrReplace.getCall(3).args[0])
         .be.eql('profiles');
       should(ret).be.eql({
-        profileIds: ['admin', 'default', 'anonymous'],
-        roleIds: ['admin', 'default', 'anonymous']
+        profileIds: ['admin', 'anonymous', 'default'],
+        roleIds: ['admin', 'anonymous', 'default']
       });
     });
   });
