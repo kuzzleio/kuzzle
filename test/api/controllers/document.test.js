@@ -624,6 +624,8 @@ describe('DocumentController', () => {
         { bar: 'foo' },
         { refresh: 'wait_for' });
 
+      should(kuzzle.notifier.notifyDocumentMChanges).be.calledOnce();
+      
       should(response).be.eql({
         successes: [
           {
