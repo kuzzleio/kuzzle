@@ -368,7 +368,6 @@ describe('Test: repositories/repository', () => {
     it('should remove the _id', () => {
       should(repository.serializeToDatabase(cachePojo))
         .eql({
-          _id: undefined,
           some: 'source'
         });
     });

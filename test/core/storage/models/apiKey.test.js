@@ -144,7 +144,7 @@ describe('ApiKey', () => {
 
       should(serialized).be.eql({
         _id: 'api-key-id',
-        _source: { userId: 'mylehuong', token: undefined }
+        _source: { userId: 'mylehuong' }
       });
 
       should(serialized2).be.eql({

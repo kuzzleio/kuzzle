@@ -40,7 +40,7 @@ describe('models/repositories/pluginRepository', () => {
       let copy = {};
       _.assign(copy, someObject);
 
-      copy._id = undefined;
+      delete copy._id;
 
       should(pluginRepository.serializeToDatabase(someObject)).be.deepEqual(copy);
     });
