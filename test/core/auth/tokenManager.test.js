@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   sinon = require('sinon'),
@@ -172,6 +174,16 @@ describe('Test: token manager core component', () => {
   });
 
   describe('#checkTokensValidity', () => {
+    let clock;
+
+    beforeEach(() => {
+      clock = sinon.useFakeTimers();
+    });
+
+    afterEach(() => {
+      clock.restore();
+    });
+
     it('should do nothing if no token has expired', () => {
       const
         expiresAt = Date.now() + 1000000,
@@ -189,7 +201,7 @@ describe('Test: token manager core component', () => {
       should(runTimerStub).be.calledOnce();
     });
 
-    it('should clean up subscriptions upon a token expiration', () => {
+    it('should clean up subscriptions upon a token expiration', async () => {
       const
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
@@ -212,35 +224,44 @@ describe('Test: token manager core component', () => {
         'roomId2');
 
       runTimerStub.resetHistory();
-      return tokenManager.checkTokensValidity()
-        .then(() => {
-          should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
-          should(kuzzle.notifier.notifyServer)
-            .be.calledOnce()
-            .be.calledWith(
-              ['room1', 'room2'],
-              'connectionId2',
-              'TokenExpired',
-              'Authentication Token Expired');
+      await tokenManager.checkTokensValidity();
 
-          should(tokenManager.tokens.array.length).be.eql(1);
-          should(tokenManager.tokens.array[0]._id).be.eql('bar');
-          should(runTimerStub).be.calledOnce();
-        });
+      clock.runAll();
+
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
+      should(kuzzle.notifier.notifyServer)
+        .be.calledOnce()
+        .be.calledWith(
+          ['room1', 'room2'],
+          'connectionId2',
+          'TokenExpired',
+          'Authentication Token Expired');
+
+      should(tokenManager.tokens.array.length).be.eql(1);
+      should(tokenManager.tokens.array[0]._id).be.eql('bar');
+      should(runTimerStub).be.calledOnce();
     });
 
-    it('should behave correctly if the token does not match any subscription', () => {
+    it('should behave correctly if the token does not match any subscription', async () => {
       const
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
       kuzzle.hotelClerk.customers.clear();
 
-      tokenManager.link(new Token({_id: 'bar', expiresAt: now + 1000000}), 'connectionId1', 'roomId1');
-      tokenManager.link(new Token({_id: 'foo', expiresAt: now - 1000}), 'connectionId2', 'roomId2');
+      tokenManager.link(
+        new Token({_id: 'bar', expiresAt: now + 1000000}),
+        'connectionId1',
+        'roomId1');
+      tokenManager.link(
+        new Token({_id: 'foo', expiresAt: now - 1000}),
+        'connectionId2',
+        'roomId2');
 
       runTimerStub.resetHistory();
-      tokenManager.checkTokensValidity();
+      await tokenManager.checkTokensValidity();
+
+      clock.runAll();
 
       should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
       should(kuzzle.notifier.notifyServer).not.be.called();
@@ -250,7 +271,7 @@ describe('Test: token manager core component', () => {
       should(runTimerStub).be.calledOnce();
     });
 
-    it('should not rerun a timer if the last token has been removed', () => {
+    it('should not rerun a timer if the last token has been removed', async () => {
       const
         now = Date.now(),
         runTimerStub = sinon.stub(tokenManager, 'runTimer');
@@ -260,7 +281,9 @@ describe('Test: token manager core component', () => {
       tokenManager.link(new Token({_id: 'foo', expiresAt: now - 1000}), 'connectionId2', 'roomId2');
 
       runTimerStub.resetHistory();
-      tokenManager.checkTokensValidity();
+      await tokenManager.checkTokensValidity();
+
+      clock.runAll();
 
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
       should(runTimerStub).not.be.called();

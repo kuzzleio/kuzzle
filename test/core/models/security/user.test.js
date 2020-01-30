@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   sinon = require('sinon'),
@@ -154,4 +156,5 @@ describe('Test: security/userTest', () => {
       InternalError,
       { id: 'security.user.uninitialized' });
   });
+
 });

@@ -11,30 +11,20 @@ const
       PluginImplementationError,
       InternalError
     }
-  } = require('kuzzle-common-objects');
+  } = require('kuzzle-common-objects'),
+  Manifest = require('../../../../lib/core/plugins/manifest');
 
 describe('PluginsManager', () => {
   let
     PluginsManager,
     pluginsManager,
     fsStub,
-    manifestFsStub,
     kuzzle,
-    pluginStub,
-    Manifest;
+    pluginStub;
 
-  before(() => {
-    manifestFsStub = {
-      accessSync: sinon.stub(),
-      constants: {
-        R_OK: true
-      }
-    };
-    Manifest = rewire('../../../../lib/core/plugins/manifest');
-    Manifest.__set__({
-      fs: manifestFsStub
-    });
-  });
+  // before(() => {
+  //   Manifest = rewire('../../../../lib/core/plugins/manifest');
+  // });
 
   beforeEach(() => {
     pluginStub = function () {
@@ -49,8 +39,6 @@ describe('PluginsManager', () => {
       statSync: sinon.stub(),
       existsSync: sinon.stub().returns(false)
     };
-
-    manifestFsStub.accessSync.returns();
 
     mockrequire('fs', fsStub);
     mockrequire('../../../../lib/core/plugins/manifest', Manifest);
@@ -162,7 +150,6 @@ describe('PluginsManager', () => {
 
     it('should throw if a plugin does not contain a manifest.json file', () => {
       pluginsManager = new PluginsManager(kuzzle);
-      manifestFsStub.accessSync.throws(new Error('foobar'));
       fsStub.readdirSync.returns(['kuzzle-plugin-test']);
       fsStub.statSync.returns({
         isDirectory () {

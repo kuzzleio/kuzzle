@@ -1,3 +1,5 @@
+'use strict';
+
 const
   assert = require('assert'),
   should = require('should'),
@@ -141,14 +143,14 @@ describe('#pipeRunner', () => {
       pipeRunner.running = maxConcurrentPipes - 1;
       should(pipeRunner.buffer.length).eql(0);
 
-      pipeRunner.run(remoteControlledPipe.chain, runCB);
+      pipeRunner.run(remoteControlledPipe.chain, runCB, {});
 
       should(pipeRunner.running).eql(maxConcurrentPipes);
       should(pipeRunner.buffer.length).eql(0);
 
       const remoteControlledPipe2 = new RemoteControlledPipe();
 
-      pipeRunner.run(remoteControlledPipe2.chain, runCB);
+      pipeRunner.run(remoteControlledPipe2.chain, runCB, {});
 
       should(pipeRunner.running).eql(maxConcurrentPipes);
       should(pipeRunner.buffer.length).eql(1);

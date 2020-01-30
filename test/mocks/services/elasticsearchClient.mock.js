@@ -1,3 +1,5 @@
+'use strict';
+
 const sinon = require('sinon');
 
 /**
@@ -26,6 +28,7 @@ class ElasticsearchClientMock {
     this.search = sinon.stub().resolves();
     this.scroll = sinon.stub().resolves();
     this.deleteByQuery = sinon.stub().resolves();
+    this.updateByQuery = sinon.stub().resolves();
 
     this.cat = {
       aliases: sinon.stub().resolves(),
@@ -38,6 +41,10 @@ class ElasticsearchClientMock {
     };
 
     this.indices = {
+      open: sinon.stub().resolves(),
+      close: sinon.stub().resolves(),
+      putSettings: sinon.stub().resolves(),
+      getSettings: sinon.stub().resolves(),
       create: sinon.stub().resolves(),
       delete: sinon.stub().resolves(),
       exists: sinon.stub().resolves(),

@@ -1,3 +1,5 @@
+'use strict';
+
 const
   ms = require('ms'),
   jwt = require('jsonwebtoken'),
@@ -328,22 +330,17 @@ describe('Test: repositories/tokenRepository', () => {
   });
 
   describe('#expire', () => {
-    it('should be able to expires a token', () => {
+    it('should be able to expires a token', async () => {
       const user = new User();
-      let token;
-
       user._id = 'userInCache';
 
-      return tokenRepository.generateToken(user, 'connectionId')
-        .then(t => {
-          token = t;
-          return tokenRepository.expire(token);
-        })
-        .then(() => {
-          should(kuzzle.tokenManager.expire)
-            .be.calledOnce()
-            .be.calledWith(token);
-        });
+      const token = await tokenRepository.generateToken(user, 'connectionId');
+
+      await tokenRepository.expire(token);
+
+      should(kuzzle.tokenManager.expire)
+        .be.calledOnce()
+        .be.calledWith(token);
     });
   });
 

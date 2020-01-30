@@ -41,6 +41,8 @@
     //      There is no higher limit to this value, but you may
     //      also have to change the value of the "maxRequestSize" parameter
     //      (in the "server" section) to make Kuzzle accept larger requests.
+    // * loginsPerSecond:
+    //      Maximum number of logins per second and per network connection.
     // * requestsBufferSize:
     //      Maximum number of requests that can be buffered.
     //      Requests received above this limit are discarded with a 503 error
@@ -78,6 +80,7 @@
     "concurrentRequests": 50,
     "documentsFetchCount": 10000,
     "documentsWriteCount": 200,
+    "loginsPerSecond": 1,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
     "subscriptionConditionsCount": 16,
@@ -250,12 +253,15 @@
       },
       "profiles": {
         "admin": {
+          "rateLimit": 0,
           "policies": [ {"roleId": "admin"} ]
         },
         "default": {
+          "rateLimit": 10,
           "policies": [ {"roleId": "default"} ]
         },
         "anonymous": {
+          "rateLimit": 200,
           "policies": [ {"roleId": "anonymous"} ]
         }
       }
@@ -264,7 +270,16 @@
 
   // Kuzzle server is the entry point for incoming requests
   "server": {
-    // [logs] (embedded only)
+    // General network configuration:
+    //   * maxRequestSize:
+    //       The maximum size of an incoming request. Units can be expressed in
+    //       bytes ("b" or none), kilobytes ("kb"), megabytes ("mb"), gigabytes
+    //       ("gb") or terabytes ("tb")
+    //   * port:
+    //       The http+websocket port to listen
+    "maxRequestSize": "1mb",
+    "port": 7512,
+    // [logs]
     // Configuration section for Kuzzle access logs
     //   * transports:
     //       An array of Winston transports configurations to output access
@@ -294,19 +309,9 @@
       "accessLogFormat": "combined",
       "accessLogIpOffset": 0
     },
-    // (embedded only)
-    //   * maxRequestSize:
-    //     The maximum size of an incoming request. Units can be expressed in
-    //     bytes ("b" or none), kilobytes ("kb"), megabytes ("mb"), gigabytes
-    //     ("gb") or terabytes ("tb")
-    //   * port:
-    //     The port on which Kuzzle should bind to
-    //
-    "maxRequestSize": "1mb",
-    "port": 7512,
-    // [protocols] (embedded only)
+    // [protocols]
     // protocols accepted by Kuzzle.
-    // protocols can be extended using plugins and configured in this section.
+    // protocols can be extended and configured in this section.
     "protocols": {
       "http": {
         // * enabled:

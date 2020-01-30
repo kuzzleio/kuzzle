@@ -1,3 +1,5 @@
+'use strict';
+
 const
   _ = require('lodash'),
   should = require('should'),
@@ -6,20 +8,31 @@ const
     Then
   } = require('cucumber');
 
-Given('I create the following document:', async function (dataTable) {
+Given(/I can( not)? create the following document:/, async function (not, dataTable) {
   const document = this.parseObject(dataTable);
 
   const
     index = document.index || this.props.index,
     collection = document.collection || this.props.collection;
 
-  this.props.result = await this.sdk.document.create(
-    index,
-    collection,
-    document.body,
-    document._id);
+  try {
+    this.props.result = await this.sdk.document.create(
+      index,
+      collection,
+      document.body,
+      document._id);
 
-  this.props.documentId = this.props.result._id;
+    if (not) {
+      return Promise.reject(new Error('Document should not have been created'));
+    }
+
+    this.props.documentId = this.props.result._id;
+  }
+  catch (error) {
+    if (!not) {
+      throw error;
+    }
+  }
 });
 
 Then('The document {string} content match:', async function (documentId, dataTable) {
@@ -65,32 +78,6 @@ Then('I {string} the document {string} with content:', async function (action, _
   }
 });
 
-Then('I should receive a {string} array of objects matching:', function (name, dataTable) {
-  const expected = this.parseObjectArray(dataTable);
-
-  should(this.props.result[name].length).be.eql(
-    expected.length,
-    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
-
-  for (let i = 0; i < expected.length; i++) {
-    should(this.props.result[name][i]).matchObject(expected[i]);
-  }
-});
-
-Then('I should receive a {string} array matching:', function (name, dataTable) {
-  const expected = _.flatten(dataTable.rawTable).map(JSON.parse);
-
-  should(this.props.result[name].length).be.eql(
-    expected.length,
-    `Array are not the same size: expected ${expected.length} got ${this.props.result[name].length}`);
-
-  should(this.props.result[name].sort()).match(expected.sort());
-});
-
-Then('I should receive a empty {string} array', function (name) {
-  should(this.props.result[name]).be.Array().be.empty();
-});
-
 Then('I count {int} documents', async function (expectedCount) {
   const count = await this.sdk.document.count(
     this.props.index,
@@ -131,15 +118,16 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
   }
 });
 
-Then('I {string} the following document ids:', async function (action, dataTable) {
+Then(/I "(.*?)" the following document ids( with verb "(.*?)")?:/, async function (action, verb, dataTable) {
   action = `m${action[0].toUpperCase() + action.slice(1)}`;
-
+  const options = verb ? { verb, refresh: 'wait_for' } : { refresh: 'wait_for' };
   const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
 
   this.props.result = await this.sdk.document[action](
     this.props.index,
     this.props.collection,
-    ids);
+    ids,
+    options);
 });
 
 Then('I search documents with the following query:', function (queryRaw) {

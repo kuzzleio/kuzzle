@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2018 Kuzzle
+ * Copyright 2015-2020 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -18,6 +18,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+'use strict';
 
 const
   _ = require('lodash'),
@@ -62,11 +64,11 @@ function fixIndexName (context, index, collection, newIndex) {
 
 async function moveData (context, index, collection, newIndex, transform) {
   let page = await context.source.search({
-    index,
-    type: collection,
     body: { sort: [ '_doc' ] },
+    index,
     scroll: '1m',
-    size: 1000
+    size: 1000,
+    type: collection
   });
 
   const
@@ -94,15 +96,15 @@ async function moveData (context, index, collection, newIndex, transform) {
 
       bulk.push({
         create: {
-          _index: newIndex,
           _id: doc._id,
+          _index: newIndex,
           _type: context._type
         }
       });
       bulk.push(doc._source);
     }
 
-    await context.target.bulk({ body: bulk, _source: false });
+    await context.target.bulk({ _source: false, body: bulk });
 
     moved += page.body.hits.hits.length;
 
@@ -110,8 +112,8 @@ async function moveData (context, index, collection, newIndex, transform) {
 
     if (moved < total) {
       page = await context.source.scroll({
-        scroll_id: page.body._scroll_id,
-        scroll: '1m'
+        scroll: '1m',
+        scroll_id: page.body._scroll_id
       });
     }
   }
@@ -134,13 +136,13 @@ async function upgradeMappings (context, index, collection, newIndex) {
       context.config.services.storageEngine.commonMapping.properties._kuzzle_info;
   }
   await context.target.indices.putMapping({
-    index: newIndex,
-    type: context._type,
     body: {
-      properties: mappings.properties,
+      _meta: mappings._meta,
       dynamic: mappings.dynamic || false,
-      _meta: mappings._meta
-    }
+      properties: mappings.properties
+    },
+    index: newIndex,
+    type: context._type
   });
 }
 
@@ -168,11 +170,11 @@ async function upgradeInternalStorage (context) {
     index = `${INTERNAL_PREFIX}${config.name}`,
     mapconfig = config.collections,
     collections = {
-      validations: mapconfig.validations,
       config: mapconfig.config,
+      profiles: mapconfig.profiles,
       roles: mapconfig.roles,
       users: null,
-      profiles: mapconfig.profiles
+      validations: mapconfig.validations
     };
 
   for (const [collection, mappings] of Object.entries(collections)) {
@@ -182,9 +184,9 @@ async function upgradeInternalStorage (context) {
     if (mappings) {
       await createNewIndex(context, newIndex);
       await context.target.indices.putMapping({
+        body: mappings,
         index: newIndex,
-        type: context._type,
-        body: mappings
+        type: context._type
       });
 
       total = await moveData(
@@ -203,17 +205,17 @@ async function upgradeInternalStorage (context) {
 
   // bootstrap document
   await context.target.create({
-    index: `${index}.config`,
-    type: context._type,
+    body: { version: '2.0.0' },
     id: 'internalIndex.dataModelVersion',
-    body: { version: '2.0.0' }
+    index: `${index}.config`,
+    type: context._type
   });
 
   await context.target.create({
-    index: `${index}.config`,
-    type: context._type,
+    body: { timestamp: Date.now() },
     id: `${config.name}.done`,
-    body: { timestamp: Date.now() }
+    index: `${index}.config`,
+    type: context._type
   });
 }
 
@@ -262,9 +264,9 @@ due to the removal of native collections in Elasticsearch, future aliases will
 be duplicated across all of an index upgraded collections.`);
 
   const choice = await context.inquire.direct({
-    type: 'confirm',
+    default: false,
     message: 'Upgrade aliases?',
-    default: false
+    type: 'confirm'
   });
 
   if (!choice) {
@@ -274,10 +276,10 @@ be duplicated across all of an index upgraded collections.`);
   for (const [index, obj] of Object.entries(aliases)) {
     for (const [name, body] of Object.entries(obj)) {
       await context.target.indices.putAlias({
-        index,
-        name,
+        _type: context._type,
         body,
-        _type: context._type
+        index,
+        name
       });
       context.log.ok(`...... alias ${name} on index ${index} upgraded`);
     }
@@ -295,16 +297,16 @@ async function upgradeDataStorage (context) {
   context.log.notice(`There are ${indexes.length} data indexes that can be upgraded`);
   const choices = {
     all: 'upgrade all indexes',
-    askIndex: 'choose which indexes can be upgraded',
     askCollection: 'choose which collections can be upgraded',
+    askIndex: 'choose which indexes can be upgraded',
     skip: 'skip all data index upgrades'
   };
 
   const action = await context.inquire.direct({
-    type: 'list',
-    message: 'You want to',
     choices: Object.values(choices),
-    default: choices.all
+    default: choices.all,
+    message: 'You want to',
+    type: 'list'
   });
 
   if (action === choices.skip) {
@@ -313,9 +315,9 @@ async function upgradeDataStorage (context) {
 
   if (action === choices.askIndex) {
     indexes = await context.inquire.direct({
-      type: 'checkbox',
+      choices: indexes.map(i => ({ checked: true, name: i })),
       message: 'Select the indexes to upgrade:',
-      choices: indexes.map(i => ({ name: i, checked: true }))
+      type: 'checkbox'
     });
   }
 
@@ -328,9 +330,9 @@ async function upgradeDataStorage (context) {
     if (action === choices.askCollection) {
       context.log.notice(`Starting to upgrade the index ${index}`);
       collections = await context.inquire.direct({
-        type: 'checkbox',
+        choices: collections.map(c => ({ checked: true, name: c })),
         message: 'Select the collections to upgrade:',
-        choices: collections.map(c => ({ name: c, checked: true }))
+        type: 'checkbox'
       });
     }
 
@@ -377,17 +379,17 @@ async function destroyPreviousStructure (context, upgraded) {
 
   const
     choices = {
-      no: 'No - keep everything as is',
+      everything: 'Yes - remove all upgraded structures',
       internal: 'Remove only Kuzzle internal data',
       kuzzleAndPlugins: 'Remove Kuzzle internal data and plugins storages',
-      everything: 'Yes - remove all upgraded structures'
+      no: 'No - keep everything as is'
     };
 
   const action = await context.inquire.direct({
-    type: 'list',
-    message: 'Destroy? (THIS CANNOT BE REVERTED)',
+    choices: Object.values(choices),
     default: choices[0],
-    choices: Object.values(choices)
+    message: 'Destroy? (THIS CANNOT BE REVERTED)',
+    type: 'list'
   });
 
   if (action === choices.no) {
@@ -425,9 +427,9 @@ Kuzzle indexes already exist in the target storage space, they will be
 overwritten without notice.`);
 
   const confirm = await context.inquire.direct({
-    type: 'confirm',
+    default: true,
     message: 'Continue?',
-    default: true
+    type: 'confirm'
   });
 
   if (!confirm) {

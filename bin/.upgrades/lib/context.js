@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2018 Kuzzle
+ * Copyright 2015-2020 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -18,6 +18,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+'use strict';
 
 const
   fs = require('fs'),
@@ -85,9 +87,9 @@ class UpgradeContext {
     // To prevent aborting unnecessarily during the upgrade process, we ask the
     // user to fix the situation
     const retry = await this.inquire.direct({
-      type: 'confirm',
+      default: true,
       message: 'Retry?',
-      default: true
+      type: 'confirm'
     });
 
     if (!retry) {
@@ -120,10 +122,10 @@ class UpgradeContext {
     }
     else {
       version.from = await inquirer.direct({
-        type: 'list',
-        message: 'Migrate from which version',
         choices: version.list,
-        default: version.list[version.list.length - 1]
+        default: version.list[version.list.length - 1],
+        message: 'Migrate from which version',
+        type: 'list'
       });
 
       version.list = version.list.slice(version.list.indexOf(version.from));

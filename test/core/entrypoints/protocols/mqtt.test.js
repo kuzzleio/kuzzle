@@ -1,3 +1,5 @@
+'use strict';
+
 const
   Bluebird = require('bluebird'),
   mockrequire = require('mock-require'),

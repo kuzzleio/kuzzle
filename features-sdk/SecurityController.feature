@@ -1,6 +1,28 @@
 Feature: Security Controller
 
-  # security:createApiKey =======================================================
+  # security:refresh ===========================================================
+
+  @security
+  Scenario: Refresh a security collection
+    Given I successfully call the route "security":"createUser" with args:
+    | _id | "aschen" |
+    | refresh | false |
+    | body | { "content": { "profileIds": ["default"] } } |
+    # Refresh success on known collection
+    When I successfully call the route "security":"refresh" with args:
+    | collection | "users" |
+    Then I successfully call the route "security":"searchUsers"
+    And I should receive a "hits" array of objects matching:
+    | _id |
+    | "test-admin" |
+    | "aschen" |
+    # Error on unknown collection
+    When I call the route "security":"refresh" with args:
+    | collection | "frontend-security" |
+    Then I should receive an error matching:
+    | id | "api.assert.unexpected_argument" |
+
+  # security:createApiKey ======================================================
 
   @security @login
   Scenario: Create an API key for an user
@@ -112,7 +134,6 @@ Feature: Security Controller
     And The role "anonymous" should match the default one
     And The role "default" should match the default one
 
-  @deleteProfile
   Scenario: Delete a profile
     Given I create a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
@@ -121,7 +142,6 @@ Feature: Security Controller
     Then I delete the profile "test-profile"
     And I delete the role "test-role"
 
-  @deleteProfile
   Scenario: Delete a profile while being assigned to a user
     Given I create a role "test-role" with the following API rights:
     | document | { "actions": { "create": true, "update": true } } |
@@ -134,3 +154,22 @@ Feature: Security Controller
     Then I delete the user "test-user"
     And I delete the profile "test-profile"
     And I delete the role "test-role"
+
+  @security
+  Scenario: Get multiple users
+    Given I create a user "test-user" with content:
+    | profileIds | ["default"] |
+    And I create a user "test-user2" with content:
+    | profileIds | ["default"] |
+    When I successfully call the route "security":"mGetUsers" with args:
+    | ids | "test-user,test-user2" |
+    Then I should receive a "hits" array of objects matching:
+    | _id        |
+    | "test-user" |
+    | "test-user2" |
+    When I successfully call the route "security":"mGetUsers" with args:
+    | body | {"ids": ["test-user", "test-user2"] } |
+    Then I should receive a "hits" array of objects matching:
+    | _id          |
+    | "test-user"  |
+    | "test-user2" |

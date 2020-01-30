@@ -1,3 +1,5 @@
+'use strict';
+
 const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
@@ -160,22 +162,22 @@ describe('Test: core/janitor', () => {
   describe('#loadMappings', () => {
     const mappings = require('../mocks/mappings.json');
 
-    it('create index and collection that does not exists', () => {
+    it('create index and collection that does not exists', async () => {
       const storageEngine = kuzzle.storageEngine.public;
       storageEngine.indexExists.onCall(0).resolves(false);
       storageEngine.indexExists.onCall(1).resolves(true);
       storageEngine.indexExists.onCall(2).resolves(false);
 
-      return janitor.loadMappings(mappings)
-        .then(() => {
-          should(storageEngine.indexExists.callCount).be.eql(3);
-          should(storageEngine.createIndex.callCount).be.eql(2);
-          should(storageEngine.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
+      await janitor.loadMappings(mappings);
 
-          should(storageEngine.createCollection.callCount).be.eql(3);
-          should(storageEngine.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
-          should(storageEngine.createCollection.getCall(0).args[2].properties).be.eql({ name: { type: 'text' } });
-        });
+      should(storageEngine.indexExists.callCount).be.eql(3);
+      should(storageEngine.createIndex.callCount).be.eql(2);
+      should(storageEngine.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
+
+      should(storageEngine.createCollection.callCount).be.eql(3);
+      should(storageEngine.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
+      should(storageEngine.createCollection.getCall(0).args[2].mappings.properties)
+        .be.eql({ name: { type: 'text' } });
     });
 
     it('should reject if a mapping contains non-object properties', () => {
@@ -220,13 +222,9 @@ describe('Test: core/janitor', () => {
       coreStub = sinon.stub().returns({});
       getAllStatsStub = sinon.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
 
-      const globMock = function (pattern, cb) {
-        if (typeof cb === 'function') {
-          return cb(null, ['core']);
-        }
+      globStub = {
+        sync: sinon.stub().returns(['core'])
       };
-      globMock.sync = sinon.stub();
-      globStub = sinon.spy(globMock);
 
       kuzzle.config.dump = {
         history: {
@@ -277,49 +275,48 @@ describe('Test: core/janitor', () => {
         fsStub.accessSync.throws(new Error('deactivated'));
       });
 
-      it('should generate dump files', () => {
+      it('should generate dump files', async () => {
         let
           processDump,
           osDump,
           baseDumpPath = `/tmp/${(new Date()).getFullYear()}-${suffix}`;
 
-        return janitor.dump(suffix)
-          .then(() => {
-            should(fsStub.mkdirsSync).be.calledOnce();
-            should(fsStub.mkdirsSync.getCall(0).args[0]).be.exactly(baseDumpPath);
+        await janitor.dump(suffix);
 
-            should(fsStub.writeFileSync.getCall(0).args[0])
-              .be.exactly(baseDumpPath.concat('/kuzzle.json'));
-            should(fsStub.writeFileSync.getCall(0).args[1])
-              .be.exactly(JSON.stringify({
-                version: require('../../package.json').version,
-                config: kuzzle.config
-              }, null, ' ').concat('\n'));
+        should(fsStub.mkdirsSync).be.calledOnce();
+        should(fsStub.mkdirsSync.getCall(0).args[0]).be.exactly(baseDumpPath);
 
-            should(fsStub.writeFileSync.getCall(1).args[0]).be.exactly(baseDumpPath.concat('/plugins.json'));
-            should(fsStub.writeFileSync.getCall(1).args[1]).be.exactly(JSON.stringify(kuzzle.pluginsManager.plugins, null, ' ').concat('\n'));
+        should(fsStub.writeFileSync.getCall(0).args[0])
+          .be.exactly(baseDumpPath.concat('/kuzzle.json'));
+        should(fsStub.writeFileSync.getCall(0).args[1])
+          .be.exactly(JSON.stringify({
+            config: kuzzle.config,
+            version: require('../../package.json').version
+          }, null, ' ').concat('\n'));
 
-            should(fsStub.writeFileSync.getCall(2).args[0]).be.exactly(baseDumpPath.concat('/nodejs.json'));
-            processDump = JSON.parse(fsStub.writeFileSync.getCall(2).args[1]);
-            should(processDump).have.keys('env', 'config', 'argv', 'versions', 'release', 'moduleLoadList');
+        should(fsStub.writeFileSync.getCall(1).args[0]).be.exactly(baseDumpPath.concat('/plugins.json'));
+        should(fsStub.writeFileSync.getCall(1).args[1]).be.exactly(JSON.stringify(kuzzle.pluginsManager.plugins, null, ' ').concat('\n'));
 
-            should(fsStub.writeFileSync.getCall(3).args[0]).be.exactly(baseDumpPath.concat('/os.json'));
-            osDump = JSON.parse(fsStub.writeFileSync.getCall(3).args[1]);
-            should(osDump).have.keys('platform', 'loadavg', 'uptime', 'cpus', 'mem', 'networkInterfaces');
-            should(osDump.mem).have.keys('total', 'free');
+        should(fsStub.writeFileSync.getCall(2).args[0]).be.exactly(baseDumpPath.concat('/nodejs.json'));
+        processDump = JSON.parse(fsStub.writeFileSync.getCall(2).args[1]);
+        should(processDump).have.keys('env', 'config', 'argv', 'versions', 'release', 'moduleLoadList');
 
-            should(fsStub.writeFileSync.getCall(4).args[0]).be.exactly(baseDumpPath.concat('/statistics.json'));
-            should(fsStub.writeFileSync.getCall(4).args[1]).be.exactly(JSON.stringify([{stats: 42}], null, ' ').concat('\n'));
+        should(fsStub.writeFileSync.getCall(3).args[0]).be.exactly(baseDumpPath.concat('/os.json'));
+        osDump = JSON.parse(fsStub.writeFileSync.getCall(3).args[1]);
+        should(osDump).have.keys('platform', 'loadavg', 'uptime', 'cpus', 'mem', 'networkInterfaces');
+        should(osDump.mem).have.keys('total', 'free');
 
-            should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
+        should(fsStub.writeFileSync.getCall(4).args[0]).be.exactly(baseDumpPath.concat('/statistics.json'));
+        should(fsStub.writeFileSync.getCall(4).args[1]).be.exactly(JSON.stringify([{stats: 42}], null, ' ').concat('\n'));
 
-            should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('core');
-            should(fsStub.createWriteStream).be.calledOnce();
-            should(fsStub.createReadStream().pipe).be.called(2);
+        should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 
-            should(fsStub.copySync.getCall(0).args[0]).be.exactly(process.argv[0]);
-            should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
-          });
+        should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('core');
+        should(fsStub.createWriteStream).be.calledOnce();
+        should(fsStub.createReadStream().pipe).be.called(2);
+
+        should(fsStub.copySync.getCall(0).args[0]).be.exactly(process.argv[0]);
+        should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
       });
 
       it('should copy pm2 logs and error files if any', () => {

@@ -47,6 +47,7 @@ _doc-deploy: &doc-deploy
         - python-pip
   install:
     - pip install awscli --upgrade --user
+    - npm ci
   script:
     - npm run doc-prepare
     - npm run doc-build
@@ -80,7 +81,17 @@ jobs:
         - npm run codecov
 
     - stage: Unit Tests & Linters
+      name: SonarCloud
+      if: fork != true
+      os: linux
+      dist: trusty
+      script:
+        - .ci/sonar.sh
+
+    - stage: Unit Tests & Linters
       name: Documentation dead links & error codes check
+      language: node_js
+      node_js: 12
       cache:
         directories:
           - $HOME/.gem/specs
@@ -89,10 +100,11 @@ jobs:
         - npm ci --silent
       before_script:
         - npm run doc-prepare
-        - npm run --prefix doc/framework clone-repos
+        - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
+        - $(npm bin)/kuzdoc framework:link -d /core/2/ -v 2
       script:
         - echo "Checking dead links..."
-        - HYDRA_MAX_CONCURRENCY=20 npm run --prefix doc/framework dead-links
+        - cd doc/framework/ && HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/ && cd ../../
         - echo "Checking error codes..."
         - npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR/codes-doc-test.md
         - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/2/api/essentials/errors/codes/index.md
@@ -166,6 +178,7 @@ jobs:
       if: branch =~ /^[0-9]+-dev$/
       env:
         - *doc-deploy-env
+        - BRANCH=dev
         - S3_BUCKET=docs-next.kuzzle.io
         - CLOUDFRONT_DISTRIBUTION_ID=E2ZCCEK9GRB49U
 

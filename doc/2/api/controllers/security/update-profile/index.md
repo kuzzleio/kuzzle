@@ -24,26 +24,27 @@ Body:
 
 ```js
 {
-    "policies": [
-      {
-        "roleId": "<roleId>"
-      },
-      {
-        "roleId": "<roleId>",
-        "restrictedTo": [
-          {
-            "index": "<index>"
-          },
-          {
-            "index": "<index>",
-            "collections": [
-              "<coll1>",
-              "<coll2>"
-            ]
-          }
-        ]
-      }
-    ]
+  "rateLimit": 50,
+  "policies": [
+    {
+      "roleId": "<roleId>"
+    },
+    {
+      "roleId": "<roleId>",
+      "restrictedTo": [
+        {
+          "index": "<index>"
+        },
+        {
+          "index": "<index>",
+          "collections": [
+            "<coll1>",
+            "<coll2>"
+          ]
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -55,6 +56,7 @@ Body:
   "action": "updateProfile",
   "_id": "<profileId>",
   "body": {
+    "rateLimit": 50,
     "policies": [
       {
         "roleId": "<roleId>"
@@ -93,7 +95,7 @@ Body:
 
 ## Body properties
 
-- `policies`: [profile definition](/core/2/guides/essentials/security#defining-profiles)
+See the [profile definition guide](/core/2/guides/essentials/security#defining-profiles).
 
 ---
 

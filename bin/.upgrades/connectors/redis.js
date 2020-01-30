@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2018 Kuzzle
+ * Copyright 2015-2020 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -18,6 +18,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+'use strict';
 
 const
   { formatWithOptions } = require('util'),
@@ -42,10 +44,10 @@ async function getRedisClient(context) {
     formatWithOptions({ colors: false, depth: null }, currentConfiguration));
 
   const current = await context.inquire.direct({
-    type: 'list',
-    message: 'For this migration, use this current instance as the data',
     choices: ['source', 'target', 'source and target'],
     default: 'target',
+    message: 'For this migration, use this current instance as the data',
+    type: 'list',
   });
 
   const remaining = current === 'source' ? 'target': 'source';
@@ -54,17 +56,17 @@ async function getRedisClient(context) {
   if (current !== 'source and target') {
     answers = await context.inquire.prompt([
       {
-        type: 'input',
+        default: '',
         message: `${remaining} server name or IP:`,
         name: 'server',
-        default: '',
+        type: 'input',
         validate: name => name.length > 0 || 'Non-empty string expected'
       },
       {
-        type: 'input',
+        default: '',
         message: `${remaining} server port:`,
         name: 'port',
-        default: '',
+        type: 'input',
         validate: name => {
           const i = Number.parseFloat(name);
 

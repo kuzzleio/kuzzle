@@ -117,12 +117,12 @@ describe('Test: repositories/profileRepository', () => {
     });
 
     it('should resolve to an empty array if the input is empty', () => {
-      profileRepository.loadProfile = sinon.spy();
+      profileRepository.loadOneFromDatabase = sinon.spy();
 
       return profileRepository.loadProfiles([])
         .then(result => {
           should(result).eql([]);
-          should(profileRepository.loadProfile)
+          should(profileRepository.loadOneFromDatabase)
             .have.callCount(0);
         });
     });

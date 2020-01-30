@@ -1,3 +1,5 @@
+'use strict';
+
 const
   { Given } = require('cucumber');
 

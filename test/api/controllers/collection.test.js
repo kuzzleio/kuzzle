@@ -1,3 +1,5 @@
+'use strict';
+
 const
   should = require('should'),
   CollectionController = require('../../../lib/api/controllers/collection'),
@@ -41,9 +43,8 @@ describe('Test: collection controller', () => {
 
   describe('#updateMapping', () => {
     it('should throw a BadRequestError if the body is missing', () => {
-      return should(() => {
-        collectionController.updateMapping(request);
-      }).throw(BadRequestError, { id: 'api.assert.body_required' });
+      return should(collectionController.updateMapping(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should call updateMapping on publicStorage', async () => {
@@ -386,7 +387,7 @@ describe('Test: collection controller', () => {
     it('should reject the request if an invalid "type" argument is provided', () => {
       request = new Request({index: 'index', type: 'foo'});
 
-      should(() => collectionController.list(request)).throw(
+      should(collectionController.list(request)).rejectedWith(
         BadRequestError,
         { id: 'api.assert.invalid_argument' });
     });
@@ -492,6 +493,16 @@ describe('Test: collection controller', () => {
           should(response).match(true);
           should(collectionController.publicStorage.collectionExists).be.calledOnce();
         });
+    });
+  });
+
+  describe('#refresh', () => {
+    it('should call the storageEngine', async () => {
+      const response = await collectionController.refresh(request);
+
+      should(response).be.null();
+      should(collectionController.publicStorage.refreshCollection)
+        .be.calledWith(index, collection);
     });
   });
 

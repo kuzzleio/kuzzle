@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2018 Kuzzle
+ * Copyright 2015-2020 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+'use strict';
+
 const _ = require('lodash');
 
 module.exports = async function check (context) {
@@ -26,10 +28,10 @@ module.exports = async function check (context) {
   const
     warn = msg => context.log.warn(`[CONFIG. FILES] ${msg}`),
     renamed = {
-      'services.internalEngine': 'services.internalIndex',
       'services.db': 'services.storageEngine',
-      'services.storageEngine.dynamic': 'services.storageEngine.commonMapping.dynamic',
-      'services.storageEngine.commonMapping._kuzzle_info': 'services.storageEngine.commonMapping.properties._kuzzle_info'
+      'services.internalEngine': 'services.internalIndex',
+      'services.storageEngine.commonMapping._kuzzle_info': 'services.storageEngine.commonMapping.properties._kuzzle_info',
+      'services.storageEngine.dynamic': 'services.storageEngine.commonMapping.dynamic'
     },
     deprecated = [
       'realtime',
@@ -65,10 +67,10 @@ module.exports = async function check (context) {
         'Ignore (not recommended)'
       ],
       proceed = await context.inquire.direct({
-        type: 'list',
-        message: 'Configuration files need to be updated:',
+        choices,
         default: choices[0],
-        choices
+        message: 'Configuration files need to be updated:',
+        type: 'list'
       });
 
     if (proceed === choices[0]) {

@@ -1,3 +1,5 @@
+'use strict';
+
 const
   { errors: { BadRequestError } } = require('kuzzle-common-objects'),
   should = require('should'),

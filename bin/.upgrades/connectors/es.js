@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2018 Kuzzle
+ * Copyright 2015-2020 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -18,6 +18,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+'use strict';
 
 const
   { formatWithOptions } = require('util'),
@@ -44,19 +46,19 @@ async function getEsClient(context) {
 
   const answers = await context.inquire.prompt([
     {
-      type: 'list',
-      message: 'For this migration, use this current instance as the data',
-      name: 'current',
       choices: ['source', 'target', 'source and target'],
       default: 'target',
+      message: 'For this migration, use this current instance as the data',
+      name: 'current',
+      type: 'list',
     },
     {
-      type: 'input',
+      default: '',
       message: ({ current }) => `Enter the URL for the ${current === 'source' ? 'target': 'source'} instance:`,
       name: 'url',
-      when: ({ current }) => current !== 'source and target',
-      default: '',
-      validate: url => validator.isURL(url) || 'A valid URL must be provided'
+      type: 'input',
+      validate: url => validator.isURL(url) || 'A valid URL must be provided',
+      when: ({ current }) => current !== 'source and target'
     }
   ]);
 

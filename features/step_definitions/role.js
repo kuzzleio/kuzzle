@@ -1,3 +1,5 @@
+'use strict';
+
 const
   {
     When,
@@ -252,34 +254,32 @@ Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" roles$/, functi
   });
 });
 
-Then(/^I'm ?(not)* allowed to create a document in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
-  var
-    document = this.documentGrace;
+Then(
+  /^I'm ?(not)* allowed to create a document in index "([^"]*)" and collection "([^"]*)"$/,
+  async function (not, index, collection) {
+    const document = this.documentGrace;
+    let body;
 
-  this.api.create(document, index, collection)
-    .then(body => {
-      if (not && body.status === 403) {
-        callback();
-        return true;
-      }
-      if (not) {
-        callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 403'));
-        return false;
-      }
-      if (body.status === 200) {
-        callback();
-        return true;
-      }
-      callback(new Error('Unexpected status response. Got ' + body.status + ' ; Expected 200'));
-    })
-    .catch(error => {
+    try {
+      body = await this.api.create(document, index, collection);
+    }
+    catch (error) {
       if (not && error.statusCode === 403) {
-        callback();
-        return true;
+        return;
       }
-      callback(error);
-    });
-});
+      throw error;
+    }
+
+    if (not) {
+      throw new Error(`Unexpected status response. Got ${body.status}; Expected 403`);
+    }
+
+    if (body.status === 200) {
+      return true;
+    }
+
+    throw new Error(`Unexpected status response. Got ${body.status}; Expected 200`);
+  });
 
 Then(/^I'm ?(not)* allowed to search for documents in index "([^"]*)" and collection "([^"]*)"$/, function (not, index, collection, callback) {
   this.api.search({}, index, collection)

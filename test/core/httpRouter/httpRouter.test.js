@@ -133,7 +133,7 @@ describe('core/httpRouter', () => {
       });
     });
 
-    it('should init request.context with the good values', done => {
+    it('should init request.context with the right values', done => {
       router.post('/foo/bar', handler);
 
       rq.url = '/foo/bar';
@@ -149,12 +149,13 @@ describe('core/httpRouter', () => {
           const apiRequest = handler.firstCall.args[0];
 
           should(apiRequest).be.instanceOf(Request);
-          should(apiRequest.context.protocol).be.exactly('http');
-          should(apiRequest.context.connectionId).be.exactly('requestId');
-          should(apiRequest.input.headers).be.eql({
+          should(apiRequest.context.connection.protocol).be.exactly('http');
+          should(apiRequest.context.connection.id).be.exactly('requestId');
+          should(apiRequest.context.connection.misc.headers).be.eql({
             foo: 'bar',
             Authorization: 'Bearer jwtFoobar',
             'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'});
+          should(apiRequest.context.connection.misc.verb).eql('POST');
           should(apiRequest.input.jwt).be.exactly('jwtFoobar');
           should(apiRequest.input.volatile).be.eql({
             modifiedBy: 'John Doe',
