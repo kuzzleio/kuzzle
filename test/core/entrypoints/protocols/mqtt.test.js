@@ -225,7 +225,7 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
         close: sinon.spy()
       };
 
-      protocol.connectionsById.id = connection;
+      protocol.connectionsById.set('id', connection);
 
       protocol.disconnect('id');
 
@@ -236,15 +236,9 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
 
   describe('#notify', () => {
     it('should forward the payload to the matching clients', () => {
-      protocol.connectionsById = {
-        id: {
-          forward: sinon.spy()
-        },
-        foo: {
-          forward: sinon.spy()
-        }
-      };
 
+      protocol.connectionsById.set('id', {forward: sinon.spy()});
+      protocol.connectionsById.set('foo', {forward: sinon.spy()});
       protocol.notify({
         connectionId: 'id',
         payload: 'payload',
@@ -254,11 +248,11 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
         ]
       });
 
-      should(protocol.connectionsById.id.forward)
+      should(protocol.connectionsById.get('id').forward)
         .be.calledTwice()
         .be.calledWith('ch1', '"payload"', {}, 'ch1', 0);
 
-      should(protocol.connectionsById.foo.forward)
+      should(protocol.connectionsById.get('foo').forward)
         .have.callCount(0);
     });
   });
@@ -280,9 +274,9 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
       protocol.onConnection(client);
 
       should(protocol.connections.size).eql(1);
-      should(Object.keys(protocol.connectionsById)).length(1);
+      should(protocol.connectionsById.size).eql(1);
 
-      const connectionId = Object.keys(protocol.connectionsById)[0];
+      const connectionId = protocol.connectionsById.entries().next().value[0];
       should(protocol.connections.get(client).id)
         .be.exactly(connectionId);
 
@@ -309,9 +303,7 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
         client = {};
 
       protocol.connections.set(client, {id: 'id'});
-      protocol.connectionsById = {
-        id: client
-      };
+      protocol.connectionsById.set('id', client);
 
       protocol.onDisconnection(client);
       clock.tick(protocol.config.disconnectDelay + 1);

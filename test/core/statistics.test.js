@@ -19,11 +19,15 @@ describe('Test: statistics core component', () => {
   const
     lastFrame = Date.now(),
     fakeStats = {
-      connections: { foo: 42 },
-      ongoingRequests: { bar: 1337 },
-      completedRequests: { baz: 666 },
-      failedRequests: { qux: 667 }
+      connections: new Map(),
+      ongoingRequests: new Map(),
+      completedRequests: new Map(),
+      failedRequests: new Map()
     };
+  fakeStats.connections.set('foo', 42 );
+  fakeStats.ongoingRequests.set('bar', 1337 );
+  fakeStats.completedRequests.set('baz', 666 );
+  fakeStats.failedRequests.set('qux', 667 );
 
   before(() => {
     kuzzle = new Kuzzle();
@@ -61,9 +65,9 @@ describe('Test: statistics core component', () => {
   it('should register a new request when asked to', () => {
     request.context.protocol = 'foobar';
     stats.startRequest(request);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.ongoingRequests.get('foobar')).not.be.undefined().and.be.exactly(1);
     stats.startRequest(request);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(2);
+    should(stats.currentStats.ongoingRequests.get('foobar')).not.be.undefined().and.be.exactly(2);
   });
 
   it('should do nothing when startRequest is called with invalid arguments', () => {
@@ -75,14 +79,14 @@ describe('Test: statistics core component', () => {
   });
 
   it('should handle completed requests', () => {
-    stats.currentStats.ongoingRequests.foobar = 2;
+    stats.currentStats.ongoingRequests.set('foobar', 2);
     request.context.protocol = 'foobar';
     stats.completedRequest(request);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(1);
-    should(stats.currentStats.completedRequests.foobar).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.ongoingRequests.get('foobar')).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.completedRequests.get('foobar')).not.be.undefined().and.be.exactly(1);
     stats.completedRequest(request);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(0);
-    should(stats.currentStats.completedRequests.foobar).not.be.undefined().and.be.exactly(2);
+    should(stats.currentStats.ongoingRequests.get('foobar')).not.be.undefined().and.be.exactly(0);
+    should(stats.currentStats.completedRequests.get('foobar')).not.be.undefined().and.be.exactly(2);
   });
 
   it('should do nothing when completedRequest is called with invalid arguments', () => {
@@ -94,15 +98,15 @@ describe('Test: statistics core component', () => {
   });
 
   it('should handle failed requests', () => {
-    stats.currentStats.ongoingRequests.foobar = 2;
+    stats.currentStats.ongoingRequests.set('foobar', 2);
     request.context.protocol = 'foobar';
 
     stats.failedRequest(request);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(1);
-    should(stats.currentStats.failedRequests.foobar).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.ongoingRequests.get('foobar')).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.failedRequests.get('foobar')).not.be.undefined().and.be.exactly(1);
     stats.failedRequest(request);
-    should(stats.currentStats.ongoingRequests.foobar).not.be.undefined().and.be.exactly(0);
-    should(stats.currentStats.failedRequests.foobar).not.be.undefined().and.be.exactly(2);
+    should(stats.currentStats.ongoingRequests.get('foobar')).not.be.undefined().and.be.exactly(0);
+    should(stats.currentStats.failedRequests.get('foobar')).not.be.undefined().and.be.exactly(2);
   });
 
   it('should do nothing when failedRequest is called with invalid arguments', () => {
@@ -116,19 +120,19 @@ describe('Test: statistics core component', () => {
   it('should handle new connections', () => {
     const context = new RequestContext({connection: {protocol: 'foobar'}});
     stats.newConnection(context);
-    should(stats.currentStats.connections.foobar).not.be.undefined().and.be.exactly(1);
+    should(stats.currentStats.connections.get('foobar')).not.be.undefined().and.be.exactly(1);
     stats.newConnection(context);
-    should(stats.currentStats.connections.foobar).not.be.undefined().and.be.exactly(2);
+    should(stats.currentStats.connections.get('foobar')).not.be.undefined().and.be.exactly(2);
   });
 
   it('should be able to unregister a connection', () => {
     const context = new RequestContext({connection: {protocol: 'foobar'}});
 
-    stats.currentStats.connections.foobar = 2;
+    stats.currentStats.connections.set('foobar', 2);
     stats.dropConnection(context);
-    should(stats.currentStats.connections.foobar).be.exactly(1);
+    should(stats.currentStats.connections.get('foobar')).be.exactly(1);
     stats.dropConnection(context);
-    should(stats.currentStats.connections.foobar).be.undefined();
+    should(stats.currentStats.connections.get('foobar')).be.undefined();
   });
 
   it('should return the current frame when there is still no statistics in cache', () => {
@@ -143,7 +147,7 @@ describe('Test: statistics core component', () => {
         should(response.total).be.exactly(1);
 
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(response.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(Object.fromEntries(fakeStats[k]));
         });
         should(response.hits[0].timestamp).be.a.Number();
       });
@@ -159,9 +163,16 @@ describe('Test: statistics core component', () => {
       '{stats/}'.concat(lastFrame + 100)
     ]);
 
+    const returnedFakeStats = {
+      completedRequests: Object.fromEntries(fakeStats.completedRequests),
+      connections: Object.fromEntries(fakeStats.connections),
+      failedRequests: Object.fromEntries(fakeStats.failedRequests),
+      ongoingRequests: Object.fromEntries(fakeStats.ongoingRequests)
+    };
+
     kuzzle.cacheEngine.internal.mget.resolves([
-      JSON.stringify(fakeStats),
-      JSON.stringify(fakeStats)
+      JSON.stringify(returnedFakeStats),
+      JSON.stringify(returnedFakeStats)
     ]);
 
     return stats.getStats(request)
@@ -170,7 +181,7 @@ describe('Test: statistics core component', () => {
         should(response.hits).have.length(2);
         should(response.total).be.exactly(2);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(response.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(Object.fromEntries(fakeStats[k]));
         });
         should(response.hits[0].timestamp).be.a.Number();
       });
@@ -219,14 +230,21 @@ describe('Test: statistics core component', () => {
 
   it('should get the last frame from the cache when statistics snapshots have been taken', async () => {
     stats.lastFrame = lastFrame;
-    kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(fakeStats));
+    const returnedFakeStats = {
+      completedRequests: Object.fromEntries(fakeStats.completedRequests),
+      connections: Object.fromEntries(fakeStats.connections),
+      failedRequests: Object.fromEntries(fakeStats.failedRequests),
+      ongoingRequests: Object.fromEntries(fakeStats.ongoingRequests)
+    };
+
+    kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(returnedFakeStats));
 
     const response = await stats.getLastStats();
 
     should(response).be.an.Object();
 
     ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-      should(response[k]).match(fakeStats[k]);
+      should(response[k]).match(Object.fromEntries(fakeStats[k]));
     });
     should(response.timestamp).be.approximately(Date.now(), 500);
   });
@@ -240,7 +258,7 @@ describe('Test: statistics core component', () => {
         should(response.hits).have.length(1);
         should(response.total).be.exactly(1);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(response.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(Object.fromEntries(fakeStats[k]));
         });
       });
   });
@@ -252,9 +270,16 @@ describe('Test: statistics core component', () => {
       '{stats/}' + lastFrame,
       '{stats/}'.concat(lastFrame + 100)
     ]);
+
+    const returnedFakeStats = {
+      completedRequests: Object.fromEntries(fakeStats.completedRequests),
+      connections: Object.fromEntries(fakeStats.connections),
+      failedRequests: Object.fromEntries(fakeStats.failedRequests),
+      ongoingRequests: Object.fromEntries(fakeStats.ongoingRequests)
+    };
     kuzzle.cacheEngine.internal.mget.resolves([
-      JSON.stringify(fakeStats),
-      JSON.stringify(fakeStats)
+      JSON.stringify(returnedFakeStats),
+      JSON.stringify(returnedFakeStats)
     ]);
 
     return stats.getAllStats()
@@ -263,11 +288,11 @@ describe('Test: statistics core component', () => {
         should(response.hits).have.length(2);
         should(response.total).be.exactly(2);
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(response.hits[0][k]).match(fakeStats[k]);
+          should(response.hits[0][k]).match(Object.fromEntries(fakeStats[k]));
         });
         should(response.hits[0].timestamp).be.a.Number();
         ['completedRequests', 'connections', 'failedRequests', 'ongoingRequests'].forEach(k => {
-          should(response.hits[1][k]).match(fakeStats[k]);
+          should(response.hits[1][k]).match(Object.fromEntries(fakeStats[k]));
         });
         should(response.hits[1].timestamp).be.a.Number();
       });

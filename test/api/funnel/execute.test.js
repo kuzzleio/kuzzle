@@ -197,7 +197,7 @@ describe('funnelController.execute', () => {
       should(funnel.processRequest).not.be.called();
       should(funnel.requestsCacheQueue.length).be.eql(1);
       should(funnel.requestsCacheQueue.shift()).eql(request.internalId);
-      should(funnel.requestsCacheById[request.internalId]).eql(new (FunnelController.__get__('CacheItem'))('execute', request, callback));
+      should(funnel.requestsCacheById.get(request.internalId)).eql(new (FunnelController.__get__('CacheItem'))('execute', request, callback));
       should(funnel._playCachedRequests).be.calledOnce();
     });
 
@@ -227,7 +227,7 @@ describe('funnelController.execute', () => {
       should(funnel.processRequest).not.be.called();
       should(funnel.requestsCacheQueue.length).be.eql(1);
       should(funnel.requestsCacheQueue.shift()).be.eql(request.internalId);
-      should(funnel.requestsCacheById[request.internalId]).match({request, callback});
+      should(funnel.requestsCacheById.get(request.internalId)).match({request, callback});
       should(funnel._playCachedRequests).have.callCount(0);
     });
 
