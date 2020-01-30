@@ -540,6 +540,138 @@ describe('DocumentController', () => {
     });
   });
 
+  describe('#updateByQuery', () => {
+    beforeEach(() => {
+      documentController.publicStorage.updateByQuery.resolves(({
+        successes: [
+          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
+          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
+        ],
+        errors: []
+      }));
+    });
+
+    it('should call publicStorage updateByQuery method and notify the changes', async () => {
+      request.input.body = {
+        query: {
+          match: { foo: 'bar' }
+        },
+        changes: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = true;
+
+      const response = await documentController.updateByQuery(request);
+
+      should(documentController.publicStorage.updateByQuery).be.calledWith(
+        index,
+        collection,
+        { match: { foo: 'bar' } },
+        { bar: 'foo'},
+        { refresh: 'wait_for' });
+
+      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+        request,
+        [
+          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
+          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
+        ]);
+
+      should(response).be.eql({
+        successes: [
+          {
+            _id: 'id1',
+            _source: { foo: 'bar', bar: 'foo' }
+          },
+          {
+            _id: 'id2',
+            _source: { foo: 'bar', bar: 'foo' }
+          }
+        ],
+        errors: []
+      });
+    });
+
+    it('should not include documents content in the response of updateByQuery', async () => {
+      request.input.body = {
+        query: {
+          match: { foo: 'bar' }
+        },
+        changes: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = false;
+
+
+      kuzzle.notifier.notifyDocumentMChanges.callsFake((req, documents) => {
+        should(req).be.eql(request);
+        should(documents).be.eql([
+          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
+          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
+        ]);
+      });
+
+      const response = await documentController.updateByQuery(request);
+
+      should(documentController.publicStorage.updateByQuery).be.calledWith(
+        index,
+        collection,
+        { match: { foo: 'bar' } },
+        { bar: 'foo' },
+        { refresh: 'wait_for' });
+
+      should(kuzzle.notifier.notifyDocumentMChanges).be.calledOnce();
+      
+      should(response).be.eql({
+        successes: [
+          {
+            _id: 'id1',
+            _source: undefined
+          },
+          {
+            _id: 'id2',
+            _source: undefined
+          }
+        ],
+        errors: []
+      });
+    });
+
+    it('should throw if field "query" is missing', () => {
+      request.input.body = {
+        invalidField: {
+          match: { foo: 'bar' }
+        },
+        changes: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = false;
+
+      should(() => documentController.updateByQuery(request).throw(BadRequestError, { message: 'Missing argument "body.changes"' }));
+    });
+
+    it('should throw if field "changes" is missing', () => {
+      request.input.body = {
+        query: {
+          match: { foo: 'bar' }
+        },
+        invalidField: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = false;
+
+      should(() => documentController.updateByQuery(request).throw(BadRequestError, {message: 'Missing argument "body.changes"'}));
+    });
+  });
+
   describe('#replace', () => {
     let content;
 
