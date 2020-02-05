@@ -74,7 +74,7 @@ describe('Test: security controller - roles', () => {
   describe('#createOrReplaceRole', () => {
     it('should resolve to an object on a createOrReplaceRole call', () => {
       kuzzle.repositories.role.validateAndSaveRole.resolves({_id: 'test'});
-      return securityController.createOrReplaceRole(new Request({_id: 'test', body: {controllers: {}}}))
+      return securityController.createOrReplaceRole(new Request({ _id: 'test', body: { controllers: {} } }, { user: { _id: 'User' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -96,7 +96,7 @@ describe('Test: security controller - roles', () => {
           controllers: {}
         },
         refresh: 'wait_for'
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.role.validateAndSaveRole.firstCall.args[1];
 
@@ -110,7 +110,7 @@ describe('Test: security controller - roles', () => {
   describe('#createRole', () => {
     it('should resolve to an object on a createRole call', () => {
       kuzzle.repositories.role.validateAndSaveRole.resolves({_id: 'test'});
-      return should(securityController.createRole(new Request({_id: 'test', body: {controllers: {}}})))
+      return should(securityController.createRole(new Request({ _id: 'test', body: { controllers: {} } }, { user: { _id: 'User' } })))
         .be.fulfilled();
     });
   });
@@ -209,7 +209,7 @@ describe('Test: security controller - roles', () => {
         return Bluebird.resolve(role);
       };
 
-      return securityController.updateRole(new Request({_id: 'test', body: {foo: 'bar'}}))
+      return securityController.updateRole(new Request({ _id: 'test', body: { foo: 'bar' } }, { user: { _id: 'User' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -239,7 +239,7 @@ describe('Test: security controller - roles', () => {
           foo: 'bar'
         },
         refresh: 'wait_for'
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.role.validateAndSaveRole.firstCall.args[1];
           should(options).match({
@@ -256,7 +256,7 @@ describe('Test: security controller - roles', () => {
       kuzzle.repositories.role.load.resolves(role);
       kuzzle.repositories.role.delete.resolves();
 
-      securityController.deleteRole(new Request({_id: 'test',body: {}}))
+      securityController.deleteRole(new Request({ _id: 'test', body: {} }, { user: { _id: 'User' } }))
         .then(() => {
           should(kuzzle.repositories.role.delete.calledWith(role)).be.true();
           done();
@@ -280,7 +280,7 @@ describe('Test: security controller - roles', () => {
         _id: 'test',
         body: {},
         refresh: 'wait_for'
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.role.delete.firstCall.args[1];
 

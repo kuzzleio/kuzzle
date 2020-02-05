@@ -63,7 +63,7 @@ describe('Test: security controller - createFirstAdmin', () => {
         action: 'createFirstAdmin',
         _id: 'toto',
         body: {content: {password: 'pwd'}}
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           should(createUser).be.calledOnce();
           should(createUser.firstCall.args[0]).be.instanceOf(Request);

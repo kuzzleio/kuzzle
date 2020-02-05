@@ -278,7 +278,7 @@ describe('Test: security controller - users', () => {
     it('should return a valid response', () => {
       kuzzle.repositories.user.delete.resolves({_id: 'test'});
 
-      return securityController.deleteUser(new Request({_id: 'test'}))
+      return securityController.deleteUser(new Request({ _id: 'test' }, { user: { _id: 'User' } } ))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -313,7 +313,7 @@ describe('Test: security controller - users', () => {
         .onFirstCall().returns(existsMethod)
         .onSecondCall().returns(deleteMethod);
 
-      return securityController.deleteUser(new Request({_id: 'test'}))
+      return securityController.deleteUser(new Request({ _id: 'test' }, { user: { _id: 'User' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -323,7 +323,7 @@ describe('Test: security controller - users', () => {
     it('should forward refresh option', () => {
       kuzzle.repositories.user.delete.resolves({_id: 'test'});
 
-      return securityController.deleteUser(new Request({_id: 'test', refresh: 'wait_for'}))
+      return securityController.deleteUser(new Request({ _id: 'test', refresh: 'wait_for' }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.user.delete.firstCall.args[1];
           should(options).match({
@@ -345,7 +345,7 @@ describe('Test: security controller - users', () => {
         body: {
           content: {name: 'John Doe', profileIds: ['anonymous']}
         }
-      }))
+      }, { user: { _id: 'User' } }))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
@@ -366,7 +366,7 @@ describe('Test: security controller - users', () => {
             profileIds: ['anonymous']
           }
         }
-      }))
+      }, { user: { _id: 'User' } }))
         .then(response => {
           should(kuzzle.repositories.user.persist)
             .be.calledOnce();
@@ -387,7 +387,7 @@ describe('Test: security controller - users', () => {
         body: {
           content: {name: 'John Doe', profileIds: ['anonymous']}
         }
-      }))).be.rejectedWith(PreconditionError, { id: 'security.user.already_exists'});
+      }, { user: { _id: 'User' } }))).be.rejectedWith(PreconditionError, { id: 'security.user.already_exists'});
     });
 
     it('should throw an error if no profile is given', () => {
@@ -419,7 +419,7 @@ describe('Test: security controller - users', () => {
           content: {name: 'John Doe', profileIds: ['anonymous']}
         },
         refresh: 'wait_for'
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.user.persist.firstCall.args[1];
           should(options).match({
@@ -439,7 +439,7 @@ describe('Test: security controller - users', () => {
           content: {name: 'John Doe', profileIds: ['anonymous']},
           credentials: {someStrategy: {some: 'credentials'}}
         }
-      });
+      }, { user: { _id: 'User' } });
     });
 
     it('should reject an error if a strategy is unknown', () => {
@@ -606,7 +606,7 @@ describe('Test: security controller - users', () => {
 
       return securityController.createRestrictedUser(new Request({
         body: {content: {_id: 'test', name: 'John Doe'}}
-      }), {})
+      }, { user: { _id: 'User' } }), {})
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response.userContext).be.instanceof(Object);
@@ -620,7 +620,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.persist.resolves({_id: 'test'});
       kuzzle.repositories.user.fromDTO.callsFake((...args) => Bluebird.resolve(args[0]));
 
-      return securityController.createRestrictedUser(new Request({body: {content: {name: 'John Doe'}}}))
+      return securityController.createRestrictedUser(new Request({ body: { content: { name: 'John Doe' } } }, { user: { _id: 'User' } }))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response).be.instanceof(Object);
@@ -632,7 +632,7 @@ describe('Test: security controller - users', () => {
 
     it('should throw an error if a profile is given', () => {
       return should(() => {
-        securityController.createRestrictedUser(new Request({body: {content: {profileIds: ['foo']}}}));
+        securityController.createRestrictedUser(new Request({ body: { content: { profileIds: ['foo'] } } }, { user: { _id: 'User' } }));
       }).throw(BadRequestError, {
         id: 'api.assert.forbidden_argument',
         message: 'The argument "body.content.profileIds" is not allowed by this API action.'
@@ -647,7 +647,7 @@ describe('Test: security controller - users', () => {
       return securityController.createRestrictedUser(new Request({
         body: {content: {_id: 'test', name: 'John Doe'}},
         refresh: 'wait_for'
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.user.persist.firstCall.args[1];
           should(options).match({
@@ -664,7 +664,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.toDTO.returns({_id: 'test'});
       kuzzle.repositories.user.persist.resolves({_id: 'test'});
 
-      return securityController.updateUser(new Request({_id: 'test', body: {foo: 'bar'}}))
+      return securityController.updateUser(new Request({ _id: 'test', body: { foo: 'bar' } }, { user: { _id: 'User' } }))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response).be.instanceof(Object);
@@ -695,7 +695,7 @@ describe('Test: security controller - users', () => {
       return securityController.updateUser(new Request({
         _id: 'test',
         body: {profileIds: ['anonymous'], foo: 'bar'}
-      }))
+      }, { user: { _id: 'User' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -734,7 +734,7 @@ describe('Test: security controller - users', () => {
 
       return securityController
         .updateUser(
-          new Request({_id: 'test', body: {foo: 'bar'}, refresh: 'wait_for'}))
+          new Request({ _id: 'test', body: { foo: 'bar' }, refresh: 'wait_for' }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.user.persist.firstCall.args[1];
           should(options).match({
@@ -769,7 +769,7 @@ describe('Test: security controller - users', () => {
           new Request({
             _id: 'test',
             body: { profileIds: ['anonymous'], foo: 'bar' }
-          }),
+          }, { user: { _id: 'User' } }),
           {})
         .then(response => {
           should(response).be.instanceOf(Object);
@@ -805,7 +805,7 @@ describe('Test: security controller - users', () => {
         _id: 'test',
         body: {profileIds: ['anonymous'], foo: 'bar'},
         refresh: 'wait_for'
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.user.persist.firstCall.args[1];
 

@@ -83,7 +83,7 @@ describe('Test: security controller - profiles', () => {
           body: {
             policies: [{ roleId: 'role1' }]
           }
-        }))
+        }, { user: { _id: 'User' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -113,7 +113,7 @@ describe('Test: security controller - profiles', () => {
             policies: [{roleId: 'role1'}]
           },
           refresh: 'wait_for'
-        }))
+        }, { user: { _id: 'User' } }))
         .then(() => {
           should(kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1])
             .match({
@@ -170,7 +170,7 @@ describe('Test: security controller - profiles', () => {
         _source: {}
       });
 
-      return should(securityController.createProfile(new Request({_id: 'test', body: {policies: [{roleId:'role1'}]}})))
+      return should(securityController.createProfile(new Request({ _id: 'test', body: { policies: [{ roleId: 'role1' }] } }, { user: { _id: 'User' } })))
         .be.fulfilled();
     });
 
@@ -196,7 +196,7 @@ describe('Test: security controller - profiles', () => {
             policies: [{roleId:'role1'}]
           },
           refresh: 'wait_for'
-        }))
+        }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.profile.validateAndSaveProfile
             .firstCall
@@ -434,7 +434,7 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.load.resolves(profile);
       kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test'});
 
-      return securityController.updateProfile(new Request({_id: 'test', body: {foo: 'bar'}}))
+      return securityController.updateProfile(new Request({ _id: 'test', body: { foo: 'bar' } }, { user: { _id: 'User' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -466,7 +466,7 @@ describe('Test: security controller - profiles', () => {
           foo: 'bar'
         },
         refresh: 'wait_for'
-      }))
+      }, { user: { _id: 'User' } }))
         .then(() => {
           const options = kuzzle.repositories.profile.validateAndSaveProfile.firstCall.args[1];
 
@@ -493,7 +493,7 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.load.resolves({ _id: 'test' });
       kuzzle.repositories.profile.delete.resolves({_id: 'test'});
 
-      return securityController.deleteProfile(new Request({_id: 'test'}))
+      return securityController.deleteProfile(new Request({ _id: 'test' }, { user: { _id: 'User' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -505,7 +505,7 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.load.resolves({ _id: 'test' });
       kuzzle.repositories.profile.delete.rejects(error);
 
-      return should(securityController.deleteProfile(new Request({_id: 'test'}))).be.rejectedWith(error);
+      return should(securityController.deleteProfile(new Request({ _id: 'test' }, { user: { _id: 'User' } }))).be.rejectedWith(error);
     });
   });
 
