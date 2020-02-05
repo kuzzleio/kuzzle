@@ -21,6 +21,7 @@ class ElasticsearchMock extends Elasticsearch {
     this.replace = sinon.stub().resolves();
     this.delete = sinon.stub().resolves();
     this.deleteByQuery = sinon.stub().resolves();
+    this.updateByQuery = sinon.stub().resolves();
     this.createIndex = sinon.stub().resolves();
     this.createCollection = sinon.stub().resolves();
     this.getMapping = sinon.stub().resolves();

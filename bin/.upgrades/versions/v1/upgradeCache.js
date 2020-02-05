@@ -72,15 +72,15 @@ make the cache data compatible with Kuzzle v2.`);
 
   const
     choices = {
+      abort: 'Abort',
       copy: 'Copy to new keys (obsolete keys will be delete once expired)',
-      move: 'Move keys (cannot be undone, cache won\'t work with Kuzzle v1 anymore)',
-      abort: 'Abort'
+      move: 'Move keys (cannot be undone, cache won\'t work with Kuzzle v1 anymore)'
     },
     action = await context.inquire.direct({
-      type: 'list',
-      message: 'Select how the database should be migrated:',
       choices: Object.values(choices),
-      default: choices.copy
+      default: choices.copy,
+      message: 'Select how the database should be migrated:',
+      type: 'list'
     });
 
   if (action === choices.abort) {
@@ -110,9 +110,9 @@ Then, it will COPY all data from the source cache instance, without altering it
 in any way.`);
 
   const confirm = await context.inquire.direct({
-    type: 'confirm',
+    default: true,
     message: 'Continue?',
-    default: true
+    type: 'confirm'
   });
 
   if (!confirm) {

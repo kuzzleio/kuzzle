@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  _ = require('lodash'),
   should = require('should'),
   {
     Given,
@@ -15,19 +16,58 @@ Given('I create a profile {string} with the following policies:', async function
     policies.push({ roleId, restrictedTo });
   }
 
-  this.props.result = await this.sdk.security.createProfile(
-    profileId,
-    { policies },
-    { refresh: 'wait_for' });
+  this.props.result = await this.sdk.security.createProfile(profileId, {policies});
 });
 
-Given('I create a role {string} with the following API rights:', async function (roleId, dataTable) {
-  const controllers = this.parseObject(dataTable);
+Then(/I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/, async function (not, method, roleId, dataTable) {
+  const 
+    controllers = this.parseObject(dataTable),
+    options = { 
+      force: not ? false : true
+    };
+  
+  try {
+    this.props.result = await this.sdk.security[method + 'Role'](roleId, { controllers }, options);
+  }
+  catch (e) {
+    this.props.error = e;
 
-  this.props.result = await this.sdk.security.createRole(
-    roleId,
-    { controllers },
-    { refresh: 'wait_for' });
+    if (not) {
+      return;
+    }
+    throw e;
+  }
+});
+
+Then(/I am (not )?able to get a role with id "(.*?)"/, async function (roleId, not) {
+  try {
+    this.props.result = await this.sdk.security.getRole(roleId);
+  }
+  catch (e) {
+    this.props.error = e;
+    
+    if (not) {
+      return;
+    }
+    throw e;
+  }
+});
+
+Then('I am able to find {int} roles by searching controller:', async function (count, dataTable) {
+  const controller = this.parseObject(dataTable);
+
+  const result = await this.sdk.security.searchRoles(controller);
+  this.props.result = result;
+});
+
+Then('I am able to mGet roles and get {int} roles with the following ids:', async function (count, dataTable) {
+  const data = this.parseObject(dataTable);
+  const roleIds = [];
+  for (const role of Object.entries(data.ids)) {
+    roleIds.push(role);
+  }
+
+  this.props.result = await this.sdk.security.mGetRoles(roleIds);
 });
 
 Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
@@ -38,8 +78,7 @@ Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
     if (not) {
       return;
     }
-
-    throw new Error(e);
+    throw e;
   }
 });
 
@@ -51,7 +90,7 @@ Then(/I (can not )?delete the profile "(.*?)"/, async function (not, profileId) 
     if (not) {
       return;
     }
-    throw new Error(e);
+    throw e;
   }
 });
 
@@ -108,4 +147,9 @@ Given('The role {string} should match:', async function (roleId, dataTable) {
   for (const [controller, actions] of Object.entries(controllers)) {
     should(actions).match(role.controllers[controller].actions);
   }
+});
+
+Then('I am able to mGet users with the following ids:', async function (dataTable) {
+  const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
+  this.props.result = await this.sdk.security.mGetUsers(userIds);
 });

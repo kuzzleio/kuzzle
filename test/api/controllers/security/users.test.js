@@ -90,6 +90,38 @@ describe('Test: security controller - users', () => {
     });
   });
 
+  describe('#mGetUsers', () => {
+    it('should throw an error if no ids are given', () => {
+      return should(() => securityController.mGetUsers(new Request({}))
+        .throw(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "ids".'}));
+    });
+
+    it('should not throw if ids are given as a body array', () => {
+      kuzzle.repositories.user.loadMultiFromDatabase.resolves([
+        {_id: 'test', profileIds: ['profile1']}
+      ]);
+      
+      should(securityController.mGetUsers(new Request({
+        body: {
+          ids: ['user1', 'user2']
+        }
+      }))).not.throw();
+    });
+
+    it('should not throw if ids are given as string', () => {
+      kuzzle.repositories.user.loadMultiFromDatabase.resolves([
+        { _id: 'test', profileIds: ['profile1'] }
+      ]);
+      
+      should(securityController.mGetUsers(new Request({
+        ids: 'user1,user2' 
+      }
+      ))).not.throw();
+    });
+  });
+
   describe('#searchUsers', () => {
     it('should return a valid responseObject', () => {
       request = new Request({

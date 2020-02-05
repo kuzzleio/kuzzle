@@ -88,7 +88,8 @@ class KuzzleMock extends Kuzzle {
       processRequest: sinon.stub().resolves(),
       checkRights: sinon.stub(),
       getEventName: sinon.spy(),
-      executePluginRequest: sinon.stub().resolves()
+      executePluginRequest: sinon.stub().resolves(),
+      isNativeController : sinon.stub()
     };
 
     this.gc = {
@@ -197,6 +198,11 @@ class KuzzleMock extends Kuzzle {
       getPluginsDescription: sinon.stub().returns({}),
       pipe: sinon.stub().callsFake((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
+      getActions: sinon.stub(),
+      getControllerNames: sinon.stub(),
+      isController: sinon.stub(),
+      isAction: sinon.stub(),
+      exists: sinon.stub(),
       getStrategyFields: sinon.stub().resolves(),
       getStrategyMethod: sinon.stub().returns(sinon.stub()),
       hasStrategyMethod: sinon.stub().returns(false),
@@ -232,7 +238,8 @@ class KuzzleMock extends Kuzzle {
         search: sinon.stub().resolves(),
         scroll: sinon.stub().resolves(),
         validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-        truncate: sinon.stub().resolves()
+        truncate: sinon.stub().resolves(),
+        sanityCheck: sinon.stub()
       },
       user: {
         anonymous: sinon.stub().resolves({
@@ -246,6 +253,7 @@ class KuzzleMock extends Kuzzle {
         ObjectConstructor: sinon.stub().returns({}),
         hydrate: sinon.stub().resolves(),
         persist: sinon.stub().resolves({}),
+        loadMultiFromDatabase: sinon.stub().resolves(),
         search: sinon.stub().resolves(),
         scroll: sinon.stub().resolves(),
         toDTO: sinon.stub(),

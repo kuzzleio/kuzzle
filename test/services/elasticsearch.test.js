@@ -818,6 +818,146 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#updateByQuery', () => {
+    beforeEach(() => {
+      sinon.stub(elasticsearch, '_getAllDocumentsFromQuery').resolves([
+        { _id: '_id1', _source: { name: 'Ok' } },
+        { _id: '_id2', _source: { name: 'Ok' } },
+      ]);
+
+      sinon.stub(elasticsearch, 'mUpdate').resolves({
+        items: [
+          {
+            _id: '_id1',
+            _source: { name: 'bar' },
+            status: 200
+          },
+          {
+            _id: '_id2',
+            _source: { name: 'bar' },
+            status: 200
+          }
+        ],
+        errors: []
+      });
+
+    
+      elasticsearch._client.indices.refresh.resolves({
+        body: { _shards: 1 }
+      });
+    });
+
+    const documents = [
+      {
+        _id: '_id1',
+        _source: undefined,
+        body: {
+          name: 'bar'
+        }
+      },
+      {
+        _id: '_id2',
+        _source: undefined,
+        body: {
+          name: 'bar'
+        }
+      }
+    ];
+
+    it('should have updateByQuery capability', () => {
+      const promise = elasticsearch.updateByQuery(
+        index,
+        collection,
+        { filter: { term: { name: 'Ok' } } },
+        { name: 'bar' });
+      
+      return promise
+        .then(result => {
+          should(elasticsearch.mUpdate).be.calledWithMatch(
+            index,
+            collection,
+            documents,
+            { refresh: undefined }
+          );
+
+          should(result).match({
+            successes: [
+              {
+                _id: '_id1',
+                _source: {name: 'bar'},
+                status: 200
+              },
+              {
+                _id: '_id2',
+                _source: {name: 'bar'},
+                status: 200
+              }
+            ],
+            errors: []
+          });
+        });
+    });
+
+    it('should allow additional options', () => {
+      const promise = elasticsearch.updateByQuery(
+        index,
+        collection,
+        { filter: 'term' },
+        { name: 'bar'},
+        { refresh: 'wait_for', size: 3 });
+
+      return promise
+        .then(result => {
+          should(elasticsearch._getAllDocumentsFromQuery).be.calledWithMatch({
+            index: esIndexName,
+            body: { query: { filter: 'term'} },
+            scroll: '5s',
+            size: 3
+          });
+
+          should(elasticsearch.mUpdate).be.calledWithMatch(
+            index,
+            collection,
+            documents,
+            {
+              refresh: 'wait_for'
+            });
+
+          should(result).match({
+            successes: [
+              { _id: '_id1', _source: { name: 'bar' }, status: 200 },
+              { _id: '_id2', _source: { name: 'bar' }, status: 200 },
+            ],
+            errors: []
+          });
+        });
+    });
+
+    it('should reject if the number of impacted documents exceeds the configured limit', () => {
+      elasticsearch._getAllDocumentsFromQuery.restore();
+
+      elasticsearch._client.search.resolves({
+        body: {
+          hits: {
+            hits: [],
+            total: {
+              value: 99999
+            }
+          },
+          _scroll_id: 'foobar'
+        }
+      });
+
+      kuzzle.config.limits.documentsFetchCount = 2;
+
+      return should(elasticsearch.updateByQuery(index, collection, {}, {}))
+        .rejectedWith(
+          SizeLimitError,
+          { id: 'services.storage.write_limit_exceeded' });
+    });
+  });
+
+
   describe('#deleteByQuery', () => {
     beforeEach(() => {
       sinon.stub(elasticsearch, '_getAllDocumentsFromQuery').resolves([
@@ -883,7 +1023,6 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
             index: esIndexName,
             body: { query: { filter: 'term' } },
-            from: 1,
             size: 3,
             refresh: true
           });

@@ -11,6 +11,7 @@ const
   } = require('kuzzle-common-objects'),
   Role = require('../../../../lib/core/models/security/role'),
   KuzzleMock = require('../../../mocks/kuzzle.mock'),
+  Funnel = require('../../../../lib/api/funnel'),   
   RoleRepository = require('../../../../lib/core/models/repositories/roleRepository');
 
 describe('Test: repositories/roleRepository', () => {
@@ -335,7 +336,7 @@ describe('Test: repositories/roleRepository', () => {
   });
 
   describe('#validateAndSaveRole', () => {
-    it('should reject if we update the anonymous with a role it cannot log with - case 1', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 1', async () => {
       const
         bad1 = {
           controller: {
@@ -349,11 +350,15 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad1;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      }
+      catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
-    it('should reject if we update the anonymous with a role it cannot log with - case 2', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 2', async () => {
       const
         bad = {
           '*': {
@@ -367,11 +372,15 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      }
+      catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
-    it('should reject if we update the anonymous with a role it cannot log with - case 3', () => {
+    it('should throw if we update the anonymous with a role it cannot log with - case 3', async () => {
       const
         bad = {
           auth: {
@@ -385,8 +394,11 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = bad;
 
-      return should(roleRepository.validateAndSaveRole(role))
-        .be.rejectedWith(BadRequestError);
+      try {
+        await roleRepository.validateAndSaveRole(role);
+      } catch (e) {
+        should(e).be.instanceOf(BadRequestError);
+      }
     });
 
     it('should allow updating the anonymous as long as it can log in', () => {
@@ -403,6 +415,8 @@ describe('Test: repositories/roleRepository', () => {
       role._id = 'anonymous';
       role.controllers = rights;
       roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
+      roleRepository.checkRoleNativeRights = sinon.stub().resolves();
+      roleRepository.checkRolePluginsRights = sinon.stub().resolves();
       return roleRepository.validateAndSaveRole(role)
         .then(response => {
           should(response._id).be.eql('anonymous');
@@ -422,6 +436,8 @@ describe('Test: repositories/roleRepository', () => {
 
       role._id = 'test';
       role.controllers = controllers;
+      roleRepository.checkRoleNativeRights = sinon.stub().resolves();
+      roleRepository.checkRolePluginsRights = sinon.stub().resolves();
       roleRepository.indexStorage._storageEngine.get.resolves({});
 
       roleRepository.persistToDatabase = sinon.stub().resolves();
@@ -437,6 +453,156 @@ describe('Test: repositories/roleRepository', () => {
               'core:roleRepository:save',
               { _id: 'test', controllers: controllers });
         });
+    });
+  });
+  describe('#checkRoleNativeRights', () => {
+    beforeEach(async () => {
+      kuzzle.funnel = new Funnel(kuzzle);
+      kuzzle.funnel.rateLimiter = { init: sinon.stub() };
+      await kuzzle.funnel.init();
+    });
+    
+    it('should throw if a role contains invalid action.', () => {
+      const controllers = {
+          '*': {
+            actions: {
+              iDontExist: true
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.controllers = controllers;
+      should(() => {
+        roleRepository.checkRoleNativeRights(role);
+      }).throwError({ id: 'security.role.unknown_action' });
+    });
+    
+    it('should not throw when a role contains valid controller and action.', () => {
+      const
+        controllers = {
+          document: {
+            actions: {
+              create: true
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.controllers = controllers;
+
+      should(roleRepository.checkRoleNativeRights(role)).not.throw();
+    });
+  });
+  
+  describe('#checkRolePluginsRights', () => {
+    const plugin_test = {
+      object: {
+        routes: [{
+          verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
+        }],
+        controllers: {
+          foobar: { publicMethod: 'function' }
+        }
+      }
+    };
+
+    it('should warn if we force a role having an invalid plugin controller.', () => {
+      kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.isController = sinon.stub().returns(false);
+      const
+        controllers = {
+          'invalid_controller': {
+            actions: {
+              publicMethod: true
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.controllers = controllers;
+
+      roleRepository.checkRolePluginsRights(role, {force: true});
+
+      should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
+    });
+    
+    it('should throw if we try to write a role with an invalid plugin controller.', () => {
+      kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.isController = sinon.stub().returns(false);
+      kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
+      const
+        controllers = {
+          'invalid_controller': {
+            actions: {
+              publicMethod: true
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.controllers = controllers;
+      roleRepository.checkRolePluginsRights(role, {force: true});
+
+      should(() => {
+        roleRepository.checkRolePluginsRights(role);
+      }).throwError({ id: 'security.role.unknown_controller' });
+    });
+
+    it('should warn if we force a role having an invalid plugin action.', () => {
+      kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.isController = sinon.stub().returns(true);
+      kuzzle.pluginsManager.isAction = sinon.stub().returns(false);
+      const controllers = {
+          'foobar': {
+            actions: {
+              iDontExist: true
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.controllers = controllers; 
+      roleRepository.checkRolePluginsRights(role, {force: true});
+      should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".');
+    });
+    
+    it('should throw if we try to write a role with an invalid plugin action.', () => {
+      kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
+      const controllers = {
+          'foobar': {
+            actions: {
+              iDontExist: true
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.controllers = controllers;
+      
+      should(() => {
+        roleRepository.checkRolePluginsRights(role);
+      }).throwError({ id: 'security.role.unknown_controller' });
+    });
+
+    it('should not warn nor throw when a role contains valid controller and action.', () => {
+      kuzzle.pluginsManager.plugins = { plugin_test };
+      kuzzle.pluginsManager.isController = sinon.stub().returns(true);
+      kuzzle.pluginsManager.isAction = sinon.stub().returns(true);
+      const
+        controllers = {
+          'foobar': {
+            actions: {
+              publicMethod: true
+            }
+          }
+        },
+        role = new Role();
+      role._id = 'test';
+      role.controllers = controllers;
+      should(roleRepository.checkRolePluginsRights(role)).not.throw();
+      should(kuzzle.log.warn).be.not.called();
     });
   });
 });

@@ -87,9 +87,9 @@ class UpgradeContext {
     // To prevent aborting unnecessarily during the upgrade process, we ask the
     // user to fix the situation
     const retry = await this.inquire.direct({
-      type: 'confirm',
+      default: true,
       message: 'Retry?',
-      default: true
+      type: 'confirm'
     });
 
     if (!retry) {
@@ -122,10 +122,10 @@ class UpgradeContext {
     }
     else {
       version.from = await inquirer.direct({
-        type: 'list',
-        message: 'Migrate from which version',
         choices: version.list,
-        default: version.list[version.list.length - 1]
+        default: version.list[version.list.length - 1],
+        message: 'Migrate from which version',
+        type: 'list'
       });
 
       version.list = version.list.slice(version.list.indexOf(version.from));
