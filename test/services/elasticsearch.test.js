@@ -2701,7 +2701,7 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: undefined, body: { _kuzzle_info:undefined, city: 'Ho Chi Minh City' } },
+              document: { _id: undefined, body: { _kuzzle_info: undefined, city: 'Ho Chi Minh City' } },
               reason: 'document _id must be a string',
               status: 400
             }
