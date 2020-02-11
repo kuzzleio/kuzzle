@@ -182,7 +182,7 @@ describe('RealtimeController', () => {
     });
 
     it('should resolve to a valid response', async () => {
-      const response = await realtimeController.publish(request)
+      const response = await realtimeController.publish(request);
 
       should(kuzzle.validation.validate).be.calledOnce();
 
@@ -193,7 +193,7 @@ describe('RealtimeController', () => {
     });
 
     it('should add basic metadata to body', async () => {
-      await realtimeController.publish(request)
+      await realtimeController.publish(request);
 
       should(kuzzle.notifier.publish).be.calledOnce();
 
@@ -206,7 +206,7 @@ describe('RealtimeController', () => {
     it('should allow to publish without user in context', async () => {
       request.context.user = undefined;
 
-      const response = await realtimeController.publish(request)
+      const response = await realtimeController.publish(request);
 
       should(kuzzle.validation.validate).be.calledOnce();
 
