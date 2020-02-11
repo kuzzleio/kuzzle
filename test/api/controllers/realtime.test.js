@@ -79,16 +79,16 @@ describe('RealtimeController', () => {
   });
 
   describe('#join', () => {
-    it('should throw an error if body is not provided',() => {
+    it('should reject an error if body is not provided',() => {
       request.input.body = null;
 
-      return should(() => realtimeController.join(request))
-        .throw(BadRequestError, { id: 'api.assert.body_required' });
+      return should(realtimeController.join(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
-      return should(() => realtimeController.join(request))
-        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+      return should(realtimeController.join(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -116,15 +116,13 @@ describe('RealtimeController', () => {
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
-      should(() => {
-        realtimeController.unsubscribe(request);
-      }).throw(BadRequestError, { id: 'api.assert.body_required' });
+      should(realtimeController.unsubscribe(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
-      should(() => {
-        realtimeController.unsubscribe(request);
-      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
+      should(realtimeController.unsubscribe(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -143,15 +141,13 @@ describe('RealtimeController', () => {
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
-      should(() => {
-        realtimeController.count(request);
-      }).throw(BadRequestError, { id: 'api.assert.body_required' });
+      should(realtimeController.count(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
-      should(() => {
-        realtimeController.count(request);
-      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
+      should(realtimeController.count(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call the proper hotelClerk method',() => {
@@ -180,41 +176,45 @@ describe('RealtimeController', () => {
   });
 
   describe('#publish', () => {
-    it('should resolve to a valid response', () => {
+    beforeEach(() => {
       request.input.resource.index = '%test';
       request.input.resource.collection = 'test-collection';
-
-      return realtimeController.publish(request)
-        .then(response => {
-          try {
-            should(kuzzle.validation.validate).be.calledOnce();
-
-            should(kuzzle.notifier.publish).be.calledOnce();
-            should(kuzzle.notifier.publish).be.calledWith(request);
-
-            should(response).match({published: true});
-
-            return Promise.resolve();
-          }
-          catch(error) {
-            return Promise.reject(error);
-          }
-        });
     });
 
-    it('should add basic metadata to body', () => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
+    it('should resolve to a valid response', async () => {
+      const response = await realtimeController.publish(request)
 
-      return realtimeController.publish(request)
-        .then(() => {
-          should(kuzzle.notifier.publish).be.calledOnce();
+      should(kuzzle.validation.validate).be.calledOnce();
 
-          const req = kuzzle.notifier.publish.getCall(0).args[0];
-          should(req.input.body._kuzzle_info).be.instanceof(Object);
-          should(req.input.body._kuzzle_info.author).be.eql('42');
-          should(req.input.body._kuzzle_info.createdAt).be.approximately(Date.now(), 100);
-        });
+      should(kuzzle.notifier.publish).be.calledOnce();
+      should(kuzzle.notifier.publish).be.calledWith(request);
+
+      should(response).match({published: true});
     });
+
+    it('should add basic metadata to body', async () => {
+      await realtimeController.publish(request)
+
+      should(kuzzle.notifier.publish).be.calledOnce();
+
+      const req = kuzzle.notifier.publish.getCall(0).args[0];
+      should(req.input.body._kuzzle_info).be.instanceof(Object);
+      should(req.input.body._kuzzle_info.author).be.eql('42');
+      should(req.input.body._kuzzle_info.createdAt).be.approximately(Date.now(), 100);
+    });
+
+    it('should allow to publish without user in context', async () => {
+      request.context.user = undefined;
+
+      const response = await realtimeController.publish(request)
+
+      should(kuzzle.validation.validate).be.calledOnce();
+
+      should(kuzzle.notifier.publish).be.calledOnce();
+      should(kuzzle.notifier.publish).be.calledWith(request);
+
+      should(response).match({published: true});
+    });
+
   });
 });
