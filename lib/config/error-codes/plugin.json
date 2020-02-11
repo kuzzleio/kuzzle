@@ -354,7 +354,7 @@
           "class": "PluginImplementationError"
         },
         "invalid_user": {
-          "description": "The user object provided to the sdk.as() method is not of type User",
+          "description": "The user object provided to the sdk.as() method is not a valid user with a least an '_id' property",
           "code": 3,
           "message": "You must provide a valid User object when adding context with as().",
           "class": "PluginImplementationError"
