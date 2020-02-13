@@ -23,7 +23,7 @@ describe('AdminController', () => {
 
     adminController = new AdminController(kuzzle);
 
-    request = new Request({ controller: 'admin' }, {user: {_id: 'test-user'}});
+    request = new Request({ controller: 'admin' });
 
     request.input.args.refresh = 'wait_for';
   });
@@ -234,7 +234,6 @@ describe('AdminController', () => {
     beforeEach(() => {
       request.input.action = 'loadSecurities';
       request.input.body = { gordon: { freeman: [] } };
-      request.context.user = {_id: 'test-user'};
     });
 
     it('should call Janitor.loadSecurities', () => {
@@ -242,7 +241,7 @@ describe('AdminController', () => {
         .then(() => {
           should(kuzzle.janitor.loadSecurities)
             .be.calledOnce()
-            .be.calledWith({ gordon: { freeman: [] } }, {user: { _id: 'test-user'}} );
+            .be.calledWith({ gordon: { freeman: [] } });
         });
     });
   });
