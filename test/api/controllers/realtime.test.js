@@ -116,12 +116,12 @@ describe('RealtimeController', () => {
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
-      should(realtimeController.unsubscribe(request))
+      return should(realtimeController.unsubscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
-      should(realtimeController.unsubscribe(request))
+      return should(realtimeController.unsubscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
@@ -141,12 +141,12 @@ describe('RealtimeController', () => {
     it('should throw an error if body is not provided',() => {
       request.input.body = null;
 
-      should(realtimeController.count(request))
+      return should(realtimeController.count(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should throw an error if roomId is not provided',() => {
-      should(realtimeController.count(request))
+      return should(realtimeController.count(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
