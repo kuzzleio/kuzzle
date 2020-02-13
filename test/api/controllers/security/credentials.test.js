@@ -34,7 +34,7 @@ describe('Test: security controller - credentials', () => {
           some: 'credentials'
         },
         _id: 'someUserId',
-      }, { user: { _id: 'User' } });
+      });
       kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.createCredentials(request)
@@ -86,7 +86,7 @@ describe('Test: security controller - credentials', () => {
           some: 'credentials'
         },
         _id: 'someUserId',
-      }, { user: { _id: 'User' } });
+      });
       kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.updateCredentials(request)
@@ -188,7 +188,7 @@ describe('Test: security controller - credentials', () => {
         action: 'deleteCredentials',
         strategy: 'someStrategy',
         _id: 'someUserId'
-      }, { user: { _id: 'User' } });
+      });
       kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
       return securityController.deleteCredentials(request)

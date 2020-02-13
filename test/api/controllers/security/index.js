@@ -116,7 +116,7 @@ describe('/api/controllers/security', () => {
             'baz'
           ]
         }
-      }, { user: { _id: 'User' } });
+      });
 
       kuzzle.funnel.mExecute = funnelController.mExecute.bind(kuzzle.funnel);
       kuzzle.funnel.processRequest = req => Bluebird.resolve(req);
@@ -166,7 +166,7 @@ describe('/api/controllers/security', () => {
             'baz'
           ]
         }
-      }, { user: { _id: 'User' } });
+      });
 
       kuzzle.funnel.mExecute = (req, cb) => cb(null, req);
 
@@ -188,7 +188,7 @@ describe('/api/controllers/security', () => {
           body: {
             ids: ['foo', 'bar', 'baz']
           }
-        }, { user: { _id: 'User' } });
+        });
 
       kuzzle.funnel.mExecute.yields(null, new Request({_id: 'test'}));
       kuzzle.funnel.mExecute
