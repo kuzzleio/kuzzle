@@ -24,7 +24,7 @@ Errors returned by the Kuzzle API in the `error` part of a response are objects 
 The `id` property is unique to each type of error that can be returned, and is built by concatenating the following information:
 
 * Domain: from where the error comes from (API, network, plugin, ...)
-* Subdomain: what kind of error is it is (assertion, runtime, ...)
+* Subdomain: what kind of error it is (assertion, runtime, ...)
 * Error: the error itself
 
 For instance:
