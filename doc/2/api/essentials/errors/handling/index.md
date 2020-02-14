@@ -2,47 +2,53 @@
 code: false
 type: page
 title: Handling Errors
-description: Understanding the Kuzzle error handling mechanisms
+description: Understanding Kuzzle error handling mechanism
 order: 0
 ---
 
 # Error Handling
 
-All errors received by Kuzzle clients are `KuzzleError` error objects.
-
-A `KuzzleError` object has the following properties:
+Errors returned by the Kuzzle API in the `error` part of a response are objects with the following properties:
 
 | Property     | Type               | Description                                            |
 | ------------ | ------------------ | ------------------------------------------------------ |
-| `status`     | <pre>number</pre>            | HTTP status code                                       |
-| `message`    | <pre>string</pre>               | Short description of the error                         |
-| `stack`      | <pre>string</pre>               | (Available in development mode only) Error stack trace |
-| `id`  | <pre>string</pre>  | Error unique identifier |
-| `code`       | <pre>number</pre> | Error unique code |
-
-Clients can detect the error type based on the `status` and process the error accordingly.
+| `status`     | <pre>number</pre>  | HTTP status code                                       |
+| `message`    | <pre>string</pre>  | Short description of the error                         |
+| `stack`      | <pre>string</pre>  | (Available in development mode only) Error stack trace |
+| `id`         | <pre>string</pre>  | Error unique identifier |
+| `code`       | <pre>number</pre>  | Error unique code |
 
 
 ### id
 
-The `id` property is a concatenation of 3 levels of precisions, telling what kind of error it is.
+The `id` property is unique to each type of error that can be returned, and is built by concatenating the following information:
 
-For instance, the error `api.assert.missing_argument` is triggered because an API assertion, indicating that a received request is malformed.
+* Domain: from where the error comes from (API, network, plugin, ...)
+* Subdomain: what kind of error is it is (assertion, runtime, ...)
+* Error: the error itself
 
-You can see the full definition about Kuzzle errors [here](/core/2/api/essentials/errors/codes/)
+For instance:
+* `api.assert.missing_argument` is an assertion error triggered by the API because of a missing argument
+* `network.http.url_not_found` is a HTTP error triggered by the network layer, because a requested URL couldn't be found
+
+
+The complete list of API errors is available [here](/core/2/api/essentials/errors/codes/).
 
 ---
 
 ### code
 
-The `code` property is a concatenation of 3 codes:
-- The domain code (eg. `02` for `api`).
-- The subdomain code (eg. `04` for `auth`).
-- The proper error code (eg. `0001` for `database_not_found`).
+The `code` property is a 32-bits integer representation of the unique `id` error identifier, detailed above.
 
-So a `code` `0x02040001` has `02` as domain code on 1 byte, `04` as subdomain code on 1 byte and `0001` as error code on 2 bytes.
+It's meant to be used by low-level languages to efficiently catch specific error codes and act on them.
 
-The full list of Kuzzle API errors is available [here](/core/2/api/essentials/errors/codes).
+Code format:
+- Domain: ranges from `00` to `FF` (1 byte)
+- Subdomain: ranges from `00` to `FF` (1 byte)
+- Error: ranges from `0000` to `FFFF` (2 bytes)
+
+
+The complete list of API errors is available [here](/core/2/api/essentials/errors/codes/).
 
 
 ## Common errors
