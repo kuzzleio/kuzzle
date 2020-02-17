@@ -293,17 +293,11 @@ describe('Test: security controller - roles', () => {
 
   describe('#mDeleteRoles', () => {
     it('should forward its args to mDelete', () => {
-      const spy = sinon.spy();
-
-      SecurityController.__with__({
-        mDelete: spy
-      })(() => {
-        securityController.mDeleteRoles(request);
-
-        should(spy)
-          .be.calledOnce()
-          .be.calledWith(kuzzle, 'role', request);
-      });
+      securityController.mDelete = sinon.spy();
+      securityController.mDeleteRoles(request);
+      should(securityController.mDelete)
+        .be.calledOnce()
+        .be.calledWith(kuzzle, 'role', request);
     });
   });
 });

@@ -79,10 +79,9 @@ describe('/api/controllers/security', () => {
 
 
   describe('#mDelete', () => {
-    const mDelete = SecurityController.__get__('mDelete');
 
     it('should fail if the request has no body', () => {
-      should(() => mDelete(kuzzle, 'type', new Request({controller: 'security', action: 'type'})))
+      should(() => securityController.mDelete(kuzzle, 'type', new Request({controller: 'security', action: 'type'})))
         .throw(BadRequestError, {message: 'The request must specify a body.'});
     });
 
@@ -91,7 +90,7 @@ describe('/api/controllers/security', () => {
         body: {}
       });
 
-      should(() => mDelete(kuzzle, 'type', request))
+      should(() => securityController.mDelete(kuzzle, 'type', request))
         .throw(BadRequestError, { id: 'api.assert.missing_argument'});
 
     });
@@ -103,7 +102,7 @@ describe('/api/controllers/security', () => {
         }
       });
 
-      should(() => mDelete(kuzzle, 'type', request))
+      should(() => securityController.mDelete(kuzzle, 'type', request))
         .throw(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
@@ -131,7 +130,7 @@ describe('/api/controllers/security', () => {
         return true;
       };
 
-      return mDelete(kuzzle, 'type', request)
+      return securityController.mDelete(kuzzle, 'type', request)
         .then(result => {
           should(result.length).be.eql(2, 'Only 1 document should have been deleted');
           should(request.status).be.eql(206);
@@ -153,7 +152,7 @@ describe('/api/controllers/security', () => {
       });
 
       kuzzle.config.limits.documentsWriteCount = 1;
-      return should(() => mDelete(kuzzle, 'type', request))
+      return should(() => securityController.mDelete(kuzzle, 'type', request))
         .throw(SizeLimitError, { id: 'services.storage.write_limit_exceeded' });
     });
 
@@ -170,7 +169,7 @@ describe('/api/controllers/security', () => {
 
       kuzzle.funnel.mExecute = (req, cb) => cb(null, req);
 
-      return mDelete(kuzzle, 'type', request)
+      return securityController.mDelete(kuzzle, 'type', request)
         .then(ids => {
           should(ids)
             .match([
@@ -198,7 +197,7 @@ describe('/api/controllers/security', () => {
           return req;
         })());
 
-      return mDelete(kuzzle, 'type', request)
+      return securityController.mDelete(kuzzle, 'type', request)
         .then(() => {
           should(request.error)
             .be.an.instanceOf(PartialError);

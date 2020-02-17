@@ -886,17 +886,12 @@ describe('Test: security controller - users', () => {
 
   describe('#mDeleteUser', () => {
     it('should forward its args to mDelete', () => {
-      const spy = sinon.spy();
+      securityController.mDelete = sinon.spy();
+      securityController.mDeleteUsers(request);
 
-      SecurityController.__with__({
-        mDelete: spy
-      })(() => {
-        securityController.mDeleteUsers(request);
-
-        should(spy)
-          .be.calledOnce()
-          .be.calledWith(kuzzle, 'user', request);
-      });
+      should(securityController.mDelete)
+        .be.calledOnce()
+        .be.calledWith(kuzzle, 'user', request);
     });
   });
 

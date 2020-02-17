@@ -570,18 +570,12 @@ describe('Test: security controller - profiles', () => {
 
   describe('#mDeleteProfiles', () => {
     it('should call forward to mDelete', () => {
-      SecurityController.__with__({
-        mDelete: sinon.spy()
-      })(() => {
-        const
-          mDelete = SecurityController.__get__('mDelete');
+      securityController.mDelete = sinon.spy();
+      securityController.mDeleteProfiles(request);
 
-        securityController.mDeleteProfiles(request);
-
-        should(mDelete)
-          .be.calledOnce()
-          .be.calledWith(kuzzle, 'profile', request);
-      });
+      should(securityController.mDelete)
+        .be.calledOnce()
+        .be.calledWith(kuzzle, 'profile', request);
     });
   });
 });
