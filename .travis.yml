@@ -49,6 +49,7 @@ _doc-deploy: &doc-deploy
     - pip install awscli --upgrade --user
     - npm ci
   script:
+    - rm -rf doc/framework
     - npm run doc-prepare
     - npm run doc-build
     - npm run doc-upload
