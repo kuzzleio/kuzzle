@@ -14,7 +14,7 @@ Errors returned by the Kuzzle API in the `error` part of a response are objects 
 | ------------ | ------------------ | ------------------------------------------------------ |
 | `status`     | <pre>number</pre>  | HTTP status code                                       |
 | `message`    | <pre>string</pre>  | Short description of the error                         |
-| `stack`      | <pre>string</pre>  | (Available in development mode only) Error stack trace |
+| `stack`      | <pre>string</pre>  | Error stack trace (Available in development mode only) |
 | `id`         | <pre>string</pre>  | Error unique identifier |
 | `code`       | <pre>number</pre>  | Error unique code |
 
