@@ -3,7 +3,7 @@ code: false
 type: page
 title: Handling Errors
 description: Understanding Kuzzle error handling mechanism
-order: 0
+order: 600
 ---
 
 # Error Handling
