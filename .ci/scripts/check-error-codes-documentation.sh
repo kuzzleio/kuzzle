@@ -4,13 +4,15 @@ set -e
 
 echo "Checking error codes..."
 
-mkdir $TRAVIS_BUILD_DIR/codes
+TMPDIR=$TRAVIS_BUILD_DIR/codes
 
-npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR
+mkdir $TMPDIR
+
+npm run doc-error-codes -- --output $TMPDIR
 
 for f in doc/2/api/essentials/error-codes/*
 do
   if [ -d "$f" ]; then
-    diff $f ~/tmp/codes/$(basename $f)
+    diff $f $TMPDIR/$(basename $f)
   fi
 done
