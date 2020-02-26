@@ -58,7 +58,7 @@ Taking the configuration example above, if an error is thrown with:
 
 `context.errorsManager.throw('some_error', 'request badly formatted');`
 
-Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](/core/2/api/essentials/errors/#badrequesterror) error, with the following properties:
+Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](/core/2/api/essentials/error-handling/#badrequesterror) error, with the following properties:
 
 - message : `An error occured: request badly formatted`
 - id : `plugin.foobar-plugin.some_error`
