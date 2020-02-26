@@ -42,7 +42,7 @@ describe('Test: core/janitor', () => {
     mockrequire.stopAll();
   });
 
-  describe.only('#loadSecurities', () => {
+  describe('#loadSecurities', () => {
     const securities = require('../mocks/securities.json');
 
     it('should create or replace roles', () => {
