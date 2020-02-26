@@ -111,6 +111,7 @@ order: 500
 | services.storage.invalid_search_query<br/><pre>0x01010028</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A forbidden argument has been provided in the search query |
 | services.storage.invalid_index_name<br/><pre>0x01010029</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided index name is invalid |
 | services.storage.invalid_collection_name<br/><pre>0x0101002a</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided collection name is invalid |
+| services.storage.strict_mapping_rejection<br/><pre>0x0101002b</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | Document rejected because it contains a field that is not declared in the strict mapping. |
 
 ---
 
