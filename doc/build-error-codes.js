@@ -107,7 +107,7 @@ function buildErrorCodes (name) {
 function run () {
   const output = process.argv[2] === '-o' || process.argv[2] === '--output'
     ? process.argv[3]
-    : `${__dirname}/2/api/essentials/codes`;
+    : `${__dirname}/2/api/essentials/error-codes`;
 
   clearCodeDirectories(output);
 

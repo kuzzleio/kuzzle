@@ -8,7 +8,7 @@ mkdir $TRAVIS_BUILD_DIR/codes
 
 npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR
 
-for f in doc/2/api/essentials/codes/*
+for f in doc/2/api/essentials/error-codes/*
 do
   if [ -d "$f" ]; then
     diff $f ~/tmp/codes/$(basename $f)
