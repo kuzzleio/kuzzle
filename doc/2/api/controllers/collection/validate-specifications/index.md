@@ -100,5 +100,5 @@ Example:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors/handling#common-errors)
+- [Common errors](/core/2/api/essentials/error-handling#common-errors)
 

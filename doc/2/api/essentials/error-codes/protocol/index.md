@@ -16,8 +16,8 @@ description: error codes definitions
 
 | Id | Error Type (Status Code)             | Message           |
 | ------ | -----------------| ------------------ | ------------------ |
-| protocol.runtime.invalid_connection<br/><pre>0x06010001</pre> | [PluginImplementationError](/core/2/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | Connection objects must have both their id and protocol set |
-| protocol.runtime.unknown_connection<br/><pre>0x06010002</pre> | [PluginImplementationError](/core/2/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | The provided connection identifier is unknown |
-| protocol.runtime.already_exists<br/><pre>0x06010003</pre> | [PluginImplementationError](/core/2/api/essentials/errors/handling#pluginimplementationerror) <pre>(500)</pre> | A protocol of the same name already exists |
+| protocol.runtime.invalid_connection<br/><pre>0x06010001</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Connection objects must have both their id and protocol set |
+| protocol.runtime.unknown_connection<br/><pre>0x06010002</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | The provided connection identifier is unknown |
+| protocol.runtime.already_exists<br/><pre>0x06010003</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A protocol of the same name already exists |
 
 ---
