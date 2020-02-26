@@ -23,7 +23,6 @@
 
 const path = require('path');
 const fs = require('fs');
-const child_process = require('child_process');
 const { domains } = require(`${__dirname}/../lib/config/error-codes/`);
 const { errors } = require('kuzzle-common-objects');
 
@@ -43,14 +42,25 @@ description: error codes definitions
 `;
 }
 
-function clearDirectory (target) {
+function rimraf (dir) {
+  for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
+    const fulldir = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      rimraf(fulldir);
+    }
+    else {
+      fs.unlinkSync(fulldir);
+    }
+  }
+
+  fs.rmdirSync(dir);
+}
+
+function clearCodeDirectories (target) {
   for (const entry of fs.readdirSync(target, {withFileTypes: true})) {
     if (entry.isDirectory()) {
-      const dirpath = path.join(target, entry.name);
-      // Lazyness level over 9000: I don't want to write a recursive method
-      // cleaning everything file by file, directory by directory. And I don't
-      // want to install rimraf just for this script either.
-      child_process.spawnSync('rm', ['-rf', dirpath]);
+      rimraf(path.join(target, entry.name));
     }
   }
 }
@@ -99,7 +109,7 @@ function run () {
     ? process.argv[3]
     : `${__dirname}/2/api/essentials/codes`;
 
-  clearDirectory(output);
+  clearCodeDirectories(output);
 
   for (const name of Object.keys(domains)) {
     const doc = buildErrorCodes(name);

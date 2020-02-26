@@ -106,7 +106,7 @@ jobs:
       script:
         - echo "Checking dead links..."
         - cd doc/framework/ && HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/ && cd ../../
-        - .ci/scripts/check-error-codes-documentation.sh
+        - chmod 755 .ci/scripts/check-error-codes-documentation.sh && .ci/scripts/check-error-codes-documentation.sh
 
     # ---------------------------------------
     # Integration tests
