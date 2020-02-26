@@ -1,1 +1,11 @@
-{}
+{
+  "users": {
+    "jean": {
+      "content": {
+        "profileIds": ["default"]
+      },
+      "credentials": {
+      }
+    }
+  }
+}

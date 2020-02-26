@@ -42,7 +42,7 @@ describe('Test: core/janitor', () => {
     mockrequire.stopAll();
   });
 
-  describe('#loadSecurities', () => {
+  describe.only('#loadSecurities', () => {
     const securities = require('../mocks/securities.json');
 
     it('should create or replace roles', () => {
@@ -71,20 +71,31 @@ describe('Test: core/janitor', () => {
         });
     });
 
-    it('should delete then create users', () => {
-      kuzzle.funnel.processRequest.resolves(true);
+    it('should delete only existing users then create users', async () => {
+      kuzzle.funnel.processRequest
+        .onCall(0).resolves({ result: { hits: [{ _id: 'gfreeman' }] } })
+        .onCall(1).resolves();
 
-      return janitor.loadSecurities({ users: securities.users })
-        .then(() => {
-          should(kuzzle.funnel.processRequest.callCount).be.eql(3);
+      await janitor.loadSecurities({ users: securities.users });
 
-          should(kuzzle.funnel.processRequest.getCall(0).args[0].input.action).be.eql('mDeleteUsers');
-          should(kuzzle.funnel.processRequest.getCall(0).args[0].input.body.ids).be.eql(['gfreeman', 'bcalhoun']);
+      should(kuzzle.funnel.processRequest.callCount).be.eql(4);
 
-          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createUser');
-          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.resource._id).be.eql('gfreeman');
-          should(kuzzle.funnel.processRequest.getCall(1).args[0].input.body.content.profileIds).be.eql(['driver']);
-        });
+      should(kuzzle.funnel.processRequest.getCall(0).args[0].input.action)
+        .be.eql('mGetUsers');
+      should(kuzzle.funnel.processRequest.getCall(0).args[0].input.body.ids)
+        .be.eql(['gfreeman', 'bcalhoun']);
+
+      should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action)
+        .be.eql('mDeleteUsers');
+      should(kuzzle.funnel.processRequest.getCall(1).args[0].input.body.ids)
+        .be.eql(['gfreeman']);
+
+      should(kuzzle.funnel.processRequest.getCall(2).args[0].input.action)
+        .be.eql('createUser');
+      should(kuzzle.funnel.processRequest.getCall(2).args[0].input.resource._id)
+        .be.eql('gfreeman');
+      should(kuzzle.funnel.processRequest.getCall(2).args[0].input.body.content.profileIds)
+        .be.eql(['driver']);
     });
 
     it('should reject if the securities object is null', () => {
@@ -120,9 +131,13 @@ describe('Test: core/janitor', () => {
     });
 
     it('should reject if users contains non-object properties', () => {
+      kuzzle.funnel.processRequest
+        .onCall(0).resolves({ result: { hits: [{ _id: 'gfreeman' }] } })
+        .onCall(1).resolves();
+
       return should(janitor.loadSecurities({
-        roles: securities.roles,
-        profiles: securities.profiles,
+        roles: {},
+        profiles: {},
         users: { foo: 123},
       }))
         .rejectedWith(BadRequestError, {
