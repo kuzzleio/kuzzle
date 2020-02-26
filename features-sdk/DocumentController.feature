@@ -1,5 +1,20 @@
 Feature: Document Controller
 
+  # document:create ============================================================
+
+  Scenario: Rejected document because of strict mapping
+    Given an index "nyc-open-data"
+    And I "create" the collection "nyc-open-data":"strict-taxi" with:
+      | mappings | { "dynamic": "strict" } |
+    When I call the route "document":"create" with args:
+      | index      | "nyc-open-data"         |
+      | collection | "strict-taxi"           |
+      | body       | { "name": "lehuong" } |
+    Then I should receive an error matching:
+      | id | "services.storage.strict_mapping_rejection" |
+      | message | "Cannot create document. Field \"name\" is not present in collection \"nyc-open-data:strict-taxi\" strict mapping" |
+
+
   # document:search ============================================================
 
   @mappings
