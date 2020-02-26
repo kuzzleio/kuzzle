@@ -6,7 +6,7 @@ title: errorsManager
 
 # Errors Manager
 
-When creating a Kuzzle plugin, custom [API errors](/core/2/api/essentials/errors/) can be defined and thrown, using the `errorsManager`.
+When creating a Kuzzle plugin, custom [API errors](/core/2/api/essentials/error-codes) can be defined and thrown, using the `errorsManager`.
 
 Custom errors have to be specified in the [manifest.json](/core/2/plugins/guides/manual-setup/prerequisites/#manifest-json), in an `errors` field.
 
