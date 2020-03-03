@@ -42,21 +42,9 @@ class FunctionalTestPlugin {
     this.pipes['generic:document:afterDelete'] = (...args) => this.genericDocumentEvent('afterDelete', ...args);
   }
 
-  async init (config, context) {
+  init (config, context) {
     this.config = config;
     this.context = context;
-
-    // context.onDocument* related declarations ================================
-
-    const filters = { exists: 'name' };
-
-    await this.context.accessors.beforeDocumentWrite('test', 'test', filters, async (document, request) => {
-      console.log({ document });
-
-      document._source.age = 42;
-
-      return document;
-    });
   }
 
   // context.constructor.ESClient related methods ============================
