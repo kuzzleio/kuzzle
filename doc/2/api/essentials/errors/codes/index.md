@@ -111,6 +111,8 @@ order: 500
 | services.storage.invalid_search_query<br/><pre>0x01010028</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A forbidden argument has been provided in the search query |
 | services.storage.invalid_index_name<br/><pre>0x01010029</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided index name is invalid |
 | services.storage.invalid_collection_name<br/><pre>0x0101002a</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | A provided collection name is invalid |
+| services.storage.too_many_scroll<br/><pre>0x0101002c</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The maximum number of concurrent scroll requests as been reached. (See config.services.storageEngine.maxScroll) |
+| services.storage.scroll_duration_too_great<br/><pre>0x0101002d</pre> | [BadRequestError](/core/2/api/essentials/errors/handling#badrequesterror) <pre>(400)</pre> | The scroll duration exceed the configured maxium value. (See config.services.storageEngine.maxScrollDuration) |
 
 ---
 

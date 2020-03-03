@@ -585,6 +585,10 @@
           }
         }
       },
+      // Maximum number of simultaneous scroll session
+      "maxScroll": 300,
+      // Maximum duration for a scroll session
+      "maxScrollDuration": '15m',
       "defaults": {
         // Number of retries to attempt on an update conflict
         // before throwing an error
