@@ -50,7 +50,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeWrite': async documents => {
+      'generic:document:beforeWrite': async (documents, request) => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -86,7 +86,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterWrite': async documents => {
+      'generic:document:afterWrite': async (documents, request) => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -123,7 +123,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeUpdate': async documents => {
+      'generic:document:beforeUpdate': async (documents, request) => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -156,7 +156,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterUpdate': async documents => {
+      'generic:document:afterUpdate': async (documents, request) => {
         // some random change
         documents[0]._source.foo = 'bar';
 
@@ -189,7 +189,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeDelete': async documents => {
+      'generic:document:beforeDelete': async (documents, request) => {
         // some random change
         documents[0]._id += 'foo';
 
@@ -222,7 +222,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterDelete': async documents => {
+      'generic:document:afterDelete': async (documents, request) => {
         // some random change
         documents[0]._id += 'foo';
 
@@ -256,7 +256,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeGet': async documents => {
+      'generic:document:beforeGet': async (documents, request) => {
         // some random change
         documents[0]._id += 'foo';
 
@@ -289,7 +289,7 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeGet': async documents => {
+      'generic:document:beforeGet': async (documents, request) => {
         // some random change
         documents[0]._id += 'foo';
 
