@@ -50,10 +50,7 @@ _doc-deploy: &doc-deploy
     - npm ci
   script:
     - rm -rf doc/framework
-    - npm run doc-prepare
-    - npm run doc-build
-    - npm run doc-upload
-    - npm run doc-cloudfront
+    - npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront
 
 # ------------------------
 # Jobs configuration
