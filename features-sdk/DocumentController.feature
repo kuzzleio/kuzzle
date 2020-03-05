@@ -168,9 +168,9 @@ Feature: Document Controller
     | "document-1" | { "name": "updated1" } |
     | "document-2" | { "age": 21 } |
     Then I should receive a "successes" array of objects matching:
-    | _id | _source | status |
-    | "document-1" | { "name": "updated1", "age": 42 } | 200 |
-    | "document-2" | { "name": "document2", "age": 21 } | 200 |
+    | _id | _source | _version | status |
+    | "document-1" | { "name": "updated1", "age": 42 } | 2 | 200 |
+    | "document-2" | { "name": "document2", "age": 21 } | 2 | 200 |
     And I should receive a empty "errors" array
     And The document "document-1" content match:
     | name | "updated1" |
