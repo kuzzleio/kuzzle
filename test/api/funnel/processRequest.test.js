@@ -137,7 +137,7 @@ describe('funnel.processRequest', () => {
     funnel._checkSdkVersion = sinon.stub().rejects(new Error('incompatible sdk'));
 
     return should(funnel.processRequest(request))
-      .be.rejectedWith(Error, { message: 'incompatible sdk' });
+      .be.rejectedWith(Error, { message: 'Caught an unexpected plugin error: incompatible sdk\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.' });
   });
 
   it('should throw if a plugin action returns a non-serializable response', () => {

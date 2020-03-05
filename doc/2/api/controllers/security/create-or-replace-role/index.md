@@ -63,6 +63,8 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced role is indexed (default: `"wait_for"`)
 
+- `force`: if set to `true`, creates or replaces the role even if it gives access to non-existent plugins API routes.
+
 ---
 
 ## Body properties

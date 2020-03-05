@@ -117,7 +117,14 @@ Then('I should receive an error matching:', function (dataTable) {
 });
 
 Then('I debug {string}', function (path) {
-  console.log(JSON.stringify(_.get(this.props, path), null, 2));
+  const prop = _.get(this.props, path);
+  
+  try {
+    console.log(JSON.stringify(prop, null, 2));
+  }
+  catch (e) {
+    console.log(prop);
+  }
 });
 
 Then('I should receive a empty {string} array', function (name) {
