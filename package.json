@@ -14,7 +14,7 @@
     "functional-testing2": "bash features-sdk/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "lint": "eslint --max-warnings=0 ./lib ./test ./features ./bin ./features-sdk",
+    "lint": "eslint --max-warnings=0 ./lib ./test ./features ./bin ./features-sdk ./doc/build-error-codes.js",
     "doc-prepare": "kuzdoc framework:install",
     "doc-dev": "kuzdoc repo:dev -d /core/2/ -v 2",
     "doc-build": "kuzdoc repo:build -d /core/2/ -v 2",

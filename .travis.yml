@@ -106,9 +106,7 @@ jobs:
       script:
         - echo "Checking dead links..."
         - cd doc/framework/ && HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/ && cd ../../
-        - echo "Checking error codes..."
-        - npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR/codes-doc-test.md
-        - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/2/api/essentials/errors/codes/index.md
+        - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
 
     # ---------------------------------------
     # Integration tests
