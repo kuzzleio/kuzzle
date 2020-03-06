@@ -170,7 +170,7 @@ describe('Test: security controller - profiles', () => {
         _source: {}
       });
 
-      return should(securityController.createProfile(new Request({_id: 'test', body: {policies: [{roleId:'role1'}]}})))
+      return should(securityController.createProfile(new Request({ _id: 'test', body: { policies: [{ roleId: 'role1' }] } })))
         .be.fulfilled();
     });
 
@@ -434,7 +434,7 @@ describe('Test: security controller - profiles', () => {
       kuzzle.repositories.profile.load.resolves(profile);
       kuzzle.repositories.profile.validateAndSaveProfile.resolves({_id: 'test'});
 
-      return securityController.updateProfile(new Request({_id: 'test', body: {foo: 'bar'}}))
+      return securityController.updateProfile(new Request({ _id: 'test', body: { foo: 'bar' } }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -490,9 +490,10 @@ describe('Test: security controller - profiles', () => {
 
   describe('#deleteProfile', () => {
     it('should return an object with on deleteProfile call', () => {
+      kuzzle.repositories.profile.load.resolves({ _id: 'test' });
       kuzzle.repositories.profile.delete.resolves({_id: 'test'});
 
-      return securityController.deleteProfile(new Request({_id: 'test'}))
+      return securityController.deleteProfile(new Request({ _id: 'test' }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -501,9 +502,10 @@ describe('Test: security controller - profiles', () => {
 
     it('should reject with an error in case of error', () => {
       const error = new Error('Mocked error');
+      kuzzle.repositories.profile.load.resolves({ _id: 'test' });
       kuzzle.repositories.profile.delete.rejects(error);
 
-      return should(securityController.deleteProfile(new Request({_id: 'test'}))).be.rejectedWith(error);
+      return should(securityController.deleteProfile(new Request({ _id: 'test' }))).be.rejectedWith(error);
     });
   });
 
@@ -568,18 +570,12 @@ describe('Test: security controller - profiles', () => {
 
   describe('#mDeleteProfiles', () => {
     it('should call forward to mDelete', () => {
-      SecurityController.__with__({
-        mDelete: sinon.spy()
-      })(() => {
-        const
-          mDelete = SecurityController.__get__('mDelete');
+      securityController.mDelete = sinon.spy();
+      securityController.mDeleteProfiles(request);
 
-        securityController.mDeleteProfiles(request);
-
-        should(mDelete)
-          .be.calledOnce()
-          .be.calledWith(kuzzle, 'profile', request);
-      });
+      should(securityController.mDelete)
+        .be.calledOnce()
+        .be.calledWith(kuzzle, 'profile', request);
     });
   });
 });
