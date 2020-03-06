@@ -112,7 +112,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should rejects promise if a scroll fails', () => {
+    it('should reject promise if a scroll fails', () => {
       elasticsearch._client.scroll.rejects(esClientError);
 
       const promise = elasticsearch.scroll('i-am-scroll-id');

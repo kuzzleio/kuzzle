@@ -9,19 +9,19 @@ title: search
 Searches documents.
 
 There is a limit to how many documents can be returned by a single search query.
-That limit is by default set at 10000 documents (See `limits.documentsFetchCount`), and you can't get over it even with the `from` and `size` pagination options.
+That limit is by default set at 10000 documents (see `limits.documentsFetchCount`), and you can't get over it even with the `from` and `size` pagination options.
 
 To handle larger result sets, you have to either create a cursor by providing a value to the `scroll` option or, if you sort the results, by using the Elasticsearch [search_after](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-search-after) command.
 
 ::: warning
 When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.  
-It can lead to memory leaks in a too great scroll duration is provided or if too many scroll session are open simultaneously.  
+It can lead to memory leaks if a scroll duration too large is provided, or if too many scroll sessions are open simultaneously.  
 :::
 
 
 ::: info
 <SinceBadge version="2.2.0"/>
-You can restrict the scroll session maximum duration under the `services.storage.maxScrollDuration` configuration key and the maximum number of simultaneously opened scroll session under the `services.storage.maxScroll` configuration key.
+You can restrict the scroll session maximum duration under the `services.storage.maxScrollDuration` configuration key and the maximum number of simultaneously opened scroll sessions under the `services.storage.maxScroll` configuration key.
 :::
 
 ---
