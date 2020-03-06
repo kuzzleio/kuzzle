@@ -159,7 +159,7 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       filter = {};
 
-      kuzzle.cacheEngine.internal.keys.resolves([]);
+      kuzzle.cacheEngine.internal.keys.resolves({ values: [] });
     });
 
     it('should be able to search documents', () => {
@@ -267,7 +267,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should return a rejected promise if a there is too many concurrent scroll', () => {
       elasticsearch._config.maxScroll = 2;
-      kuzzle.cacheEngine.internal.keys.resolves(['scroll1', 'scroll2']);
+      kuzzle.cacheEngine.internal.scan.resolves({ values: ['scroll1', 'scroll2'] });
 
       const promise = elasticsearch.search(index, collection, filter, { scroll: '1m' });
 
