@@ -125,7 +125,6 @@ this.hooks = {
 
 <h2>Deprecated Usage <DeprecatedBadge version="2.2.0" /></h2>
 
-
 Plugins can register hooks by exposing a `hooks` object: keys are listened [events](/core/2/plugins/guides/events), and values are either a function to execute whenever that event is triggered, or an array of functions.
 
 ```js
