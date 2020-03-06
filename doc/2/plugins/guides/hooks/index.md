@@ -17,18 +17,22 @@ Hooks can only listen: the received information cannot be changed. And Kuzzle do
 
 <SinceBadge version="2.2.0" />
 
-Plugins can register hooks by exposing a `hooks` object: keys are listened [events](/core/2/plugins/guides/events), and values are configuration object to describe the hook behavior.
+Plugins can register hooks by exposing a `hooks` object: 
+ - keys are listened [events](/core/2/plugins/guides/events)
+ - values are hook configuration object to describe the hook behavior.
 
 Hook configuration objects contains 2 properties:
  - `callback`: a function that will be called with a payload related to the event
- - `filter`: an optional Koncorde filter conditioning the execution of the callback
+ - `filter`: an optional [Koncorde filter](/core/2/guides/cookbooks/realtime-api/introduction/) conditioning the execution of the callback
 
 Hook declaration structure:
 ```js
 this.hooks = {
   'event-name': {
     callback: <fn>,
-    filter: { ... }
+    filter: {
+      // Koncorde filter
+    }
   }
 };
 ```
@@ -95,7 +99,7 @@ this.hooks = {
   'document:generic:beforeWrite': {
     callback: (document, request) => {
       // this callback will be called only when a document contains
-      // a 'name' property equals to 'Saigon'
+      // a 'city' property equals to 'Saigon'
     },
     filter: {
       equals: { '_source.city': 'Saigon' }
@@ -106,7 +110,7 @@ this.hooks = {
 
 ### Other
 
-If a filter is provided with an event so the first argument is neither an object nor an array of objects, then Kuzzle will return an error when initializing the plugin and end the startup sequence.
+If a filter is provided with an event whose first argument is neither an object nor an array of objects, then Kuzzle will throw an error when initializing the plugin and end the startup sequence.
 
 Example with the [core:overload event](/core/2/plugins/guides/events/core-overload/):
 
