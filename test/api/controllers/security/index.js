@@ -168,14 +168,12 @@ describe('/api/controllers/security', () => {
       kuzzle.funnel.mExecute = (req, cb) => cb(null, req);
 
       const ids = await securityController.mDelete(kuzzle, 'type', request);
-      // .then(ids => {
       should(ids)
         .match([
           'foo',
           'bar',
           'baz'
         ]);
-      // });
     });
 
     it('should set a partial error if something went wrong', async () => {
@@ -196,7 +194,6 @@ describe('/api/controllers/security', () => {
         })());
 
       await securityController.mDelete(kuzzle, 'type', request);
-      //  .then(() => {
       should(request.error)
         .be.an.instanceOf(PartialError);
       should(request.error.errors)
@@ -205,6 +202,5 @@ describe('/api/controllers/security', () => {
       should(request.error.errors[0])
         .match(new KuzzleInternalError(error));
     });
-    //});
   });
 });
