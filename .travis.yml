@@ -49,10 +49,8 @@ _doc-deploy: &doc-deploy
     - pip install awscli --upgrade --user
     - npm ci
   script:
-    - npm run doc-prepare
-    - npm run doc-build
-    - npm run doc-upload
-    - npm run doc-cloudfront
+    - rm -rf doc/framework
+    - npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront
 
 # ------------------------
 # Jobs configuration
@@ -113,8 +111,7 @@ jobs:
       install:
         - npm ci --silent
       script:
-        - npm run doc-error-codes -- --output $TRAVIS_BUILD_DIR/codes-doc-test.md
-        - diff $TRAVIS_BUILD_DIR/codes-doc-test.md $TRAVIS_BUILD_DIR/doc/2/api/essentials/errors/codes/index.md
+        - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
 
     # ---------------------------------------
     # Integration tests

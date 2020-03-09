@@ -6,7 +6,7 @@ title: create
 
 # create
 
-<SinceBadge version="1.0.0" />
+<SinceBadge version="1.0.0"/>
 
 Creates a new [collection](/core/2/guides/essentials/store-access-data), in the provided `index`.
 
@@ -24,7 +24,7 @@ You can define the collection [dynamic mapping policy](/core/2/guides/essentials
 
 You can define [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
 
-<SinceBadge version="2.1.0">
+<SinceBadge version="2.1.0"/>
 
 You can also provide Elasticsearch index [settings]((https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)) when creating a new collection.
 
@@ -40,7 +40,7 @@ Method: PUT
 Body:
 ```
 
-<SinceBadge version="2.1.0">
+<SinceBadge version="2.1.0"/>
 
 ```js
 {
@@ -75,7 +75,7 @@ Body:
 }
 ```
 
-<DeprecatedBadge version="2.1.0">
+<DeprecatedBadge version="2.1.0"/>
 
 ```js
 {
@@ -100,7 +100,7 @@ Body:
 
 ### Other protocols
 
-<SinceBadge version="2.1.0">
+<SinceBadge version="2.1.0"/>
 
 ```js
 {
@@ -141,7 +141,7 @@ Body:
 }
 ```
 
-<DeprecatedBadge version="2.1.0">
+<DeprecatedBadge version="2.1.0"/>
 
 ```js
 {
@@ -184,12 +184,12 @@ Body:
 
 ### Optional:
 
-<SinceBadge version="2.1.0">
+<SinceBadge version="2.1.0"/>
 
 * `settings`: Elasticsearch index [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)
 * `mappings`: [collection mappings](/core/2/guides/essentials/database-mappings)
 
-<DeprecatedBadge version="2.1.0">
+<DeprecatedBadge version="2.1.0"/>
 
 * `dynamic`: [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
 * `_meta`: [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) stored next to the collection
@@ -220,6 +220,6 @@ Returns a confirmation that the collection is being created:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/errors/handling#common-errors)
-- [PreconditionError](/core/2/api/essentials/errors/handling#preconditionerror)
+- [Common errors](/core/2/api/essentials/error-handling#common-errors)
+- [PreconditionError](/core/2/api/essentials/error-handling#preconditionerror)
 

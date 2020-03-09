@@ -217,12 +217,24 @@ describe('Plugin Context', () => {
 
         should(kuzzle.log[level])
           .calledOnce()
-          .calledWithExactly('test');
+          .calledWithExactly('[plugin-pluginName] test');
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
       should(context.accessors).have.properties(
         ['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
+    });
+
+    it('should adds the plugin name in logs', done => {
+      context.log.info('foobar');
+
+      process.nextTick(() => {
+        should(kuzzle.log.info)
+          .be.calledOnce()
+          .be.calledWith('[plugin-pluginName] foobar');
+
+        done();
+      });
     });
 
     it('should expose a data validation accessor', () => {
