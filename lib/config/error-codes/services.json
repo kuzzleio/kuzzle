@@ -245,15 +245,9 @@
           "message": "Cannot create document. Field \"%s\" is not present in collection \"%s:%s\" strict mapping",
           "class": "BadRequestError"
         },
-        "too_many_scroll": {
-          "description": "The maximum number of concurrent scroll requests as been reached. (See config.services.storageEngine.maxScroll)",
-          "code": 44,
-          "message": "Maximum number of concurrent scroll requests reached.",
-          "class": "BadRequestError"
-        },
         "scroll_duration_too_great": {
           "description": "The scroll duration exceed the configured maxium value. (See config.services.storageEngine.maxScrollDuration)",
-          "code": 45,
+          "code": 44,
           "message": "Scroll duration \"%s\" is too great.",
           "class": "BadRequestError"
         }

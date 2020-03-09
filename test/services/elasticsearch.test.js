@@ -283,20 +283,6 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if a there is too many concurrent scroll', () => {
-      elasticsearch._config.maxScroll = 2;
-      kuzzle.cacheEngine.internal.scan.resolves({ values: ['scroll1', 'scroll2'] });
-
-      const promise = elasticsearch.search(index, collection, filter, { scroll: '1m' });
-
-      return should(promise).be.rejectedWith({
-        id: 'services.storage.too_many_scroll'
-      })
-        .then(() => {
-          should(elasticsearch._client.search).not.be.called();
-        });
-    });
-
     it('should return a rejected promise if the scroll duration is too great', () => {
       elasticsearch._config.maxScrollDuration = '21m';
 
