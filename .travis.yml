@@ -87,7 +87,7 @@ jobs:
         - .ci/sonar.sh
 
     - stage: Unit Tests & Linters
-      name: Documentation dead links & error codes check
+      name: Documentation dead links
       language: node_js
       node_js: 12
       cache:
@@ -101,8 +101,16 @@ jobs:
         - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
         - $(npm bin)/kuzdoc framework:link -d /core/2/ -v 2
       script:
-        - echo "Checking dead links..."
-        - cd doc/framework/ && HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/ && cd ../../
+        - cd doc/framework/
+        - HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/
+
+    - stage: Unit Tests & Linters
+      name: Error codes check
+      language: node_js
+      node_js: 12
+      install:
+        - npm ci --silent
+      script:
         - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
 
     # ---------------------------------------
