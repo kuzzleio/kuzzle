@@ -65,7 +65,7 @@ this.hooks = {
 
 If a filter is set in the `withRequest` property, then the callback will be executed only if the filter match the request.  
 
-This allow you to easily decide when you want to execute a precise callback:
+This allows you to easily decide when you want to execute a specific callback:
  - for particular index and/or collection
  - for a specific user
  - when the request body contain a certain field
