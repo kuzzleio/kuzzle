@@ -37,7 +37,7 @@ If you're more familiar with the way relational databases store data, here is ho
 | document | line |
 | field | column |
 
-*Note:* collections are specific to Kuzzle, this notion does not exist in Elasticsearch 
+*Note:* collections are specific to Kuzzle, this notion does not exist in Elasticsearch. Indexes and collections allows to have a more fine grained rights management system.
 
 Comparing document-oriented storages with relational databases would require a more thorough analysis, but for the purposes of this guide, we shall reduce the list of differences to the following 3 items:
   - Documents are identified with a unique identifier, which is stored separately from the content of documents (compared to primary/foreign keys, stored alongside the data they identify),

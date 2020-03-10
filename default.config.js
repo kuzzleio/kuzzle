@@ -302,6 +302,7 @@ module.exports = {
           }
         }
       },
+      maxScrollDuration: '1m',
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'

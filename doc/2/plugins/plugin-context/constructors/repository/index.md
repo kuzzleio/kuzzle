@@ -387,7 +387,7 @@ scroll(scrollId, [ttl]);
 | Arguments  | Type              | Description                                                                                                                                                |
 | ---------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scrollId` | <pre>string</pre> | Scroll unique identifier, obtained by the last search/scroll function call (scroll identifiers may change from page to page)                               |
-| `ttl`      | <pre>string</pre> | Refreshes the cursor duration, using the [time to live](https://www.elastic.co/guide/en/elasticsearch/reference/5.4/common-options.html#time-units) syntax |
+| `ttl`      | <pre>string</pre> | Refreshes the cursor duration, using the [time to live](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units) syntax |
 
 ### Return
 

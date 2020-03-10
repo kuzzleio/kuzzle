@@ -112,14 +112,15 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if a scroll fails', () => {
+    it('should reject promise if a scroll fails', () => {
       elasticsearch._client.scroll.rejects(esClientError);
 
       const promise = elasticsearch.scroll('i-am-scroll-id');
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError)
+            .be.calledWith(esClientError);
         });
     });
 
@@ -128,11 +129,24 @@ describe('Test: ElasticSearch service', () => {
 
       const promise = elasticsearch.scroll('i-am-scroll-id');
 
-      return should(promise).be.rejected()
+      return should(promise).be.rejectedWith({
+        id: 'services.storage.unknown_scroll_id'
+      })
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWithMatch({
-            id: 'services.storage.unknown_scroll_id'
-          });
+          should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
+          should(elasticsearch._client.scroll).not.be.called();
+        });
+    });
+
+    it('should reject if the scroll duration is too great', () => {
+      elasticsearch._config.maxScrollDuration = '21m';
+
+      const promise = elasticsearch.scroll('i-am-scroll-id', { scrollTTL: '42m' });
+
+      return should(promise).be.rejectedWith({
+        id: 'services.storage.scroll_duration_too_great'
+      })
+        .then(() => {
           should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
           should(elasticsearch._client.scroll).not.be.called();
         });
@@ -161,7 +175,9 @@ describe('Test: ElasticSearch service', () => {
     let filter;
 
     beforeEach(() => {
-      filter = { };
+      filter = {};
+
+      kuzzle.cacheEngine.internal.keys.resolves({ values: [] });
     });
 
     it('should be able to search documents', () => {
@@ -266,7 +282,21 @@ describe('Test: ElasticSearch service', () => {
           should(kuzzle.cacheEngine.internal.psetex).not.be.called();
         });
     });
+
+    it('should return a rejected promise if the scroll duration is too great', () => {
+      elasticsearch._config.maxScrollDuration = '21m';
+
+      const promise = elasticsearch.search(index, collection, filter, { scroll: '42m' });
+
+      return should(promise).be.rejectedWith({
+        id: 'services.storage.scroll_duration_too_great'
+      })
+        .then(() => {
+          should(elasticsearch._client.search).not.be.called();
+        });
+    });
   });
+
 
   describe('#get', () => {
     it('should allow getting a single document', () => {

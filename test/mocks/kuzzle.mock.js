@@ -143,6 +143,7 @@ class KuzzleMock extends Kuzzle {
         expire: sinon.stub().resolves(),
         flushdb: sinon.stub().resolves(),
         info: sinon.stub().resolves(),
+        keys: sinon.stub().resolves(),
         mget: sinon.stub().resolves(),
         persist: sinon.stub().resolves(),
         pexpire: sinon.stub().resolves(),
