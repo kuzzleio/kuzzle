@@ -13,7 +13,7 @@ Hooks can only listen: the received information cannot be changed. And Kuzzle do
 
 ---
 
-## Usage
+## Declaration
 
 <SinceBadge version="2.2.0" />
 
@@ -21,23 +21,27 @@ Plugins can register hooks by exposing a `hooks` object:
  - keys are listened [events](/core/2/plugins/guides/events)
  - values are hook configuration object to describe the hook behavior.
 
-Hook configuration objects contains 2 properties:
+Hook configuration objects can contains:
  - `callback`: a function that will be called with a payload related to the event
- - `filter`: an optional [Koncorde filter](/core/2/guides/cookbooks/realtime-api/introduction/) conditioning the execution of the callback
+ - `withRequest`: an optional [Koncorde filter](/core/2/guides/cookbooks/realtime-api/introduction/) conditioning the execution of the callback
+ - `withDocument`: an optional [Koncorde filter](/core/2/guides/cookbooks/realtime-api/introduction/) conditioning the execution of the callback
 
 Hook declaration structure:
 ```js
 this.hooks = {
   'event-name': {
     callback: <fn>,
-    filter: {
+    withRequest: {
       // Koncorde filter
-    }
+    },
+    withDocument: {
+      // Koncorde filter
+    },
   }
 };
 ```
 
-### Unconditional listening
+## Unconditional listening
 
 If no filter is set, then the callback is called each time the event is triggered.  
 The callback arguments depend on the selected event. 
@@ -57,21 +61,15 @@ this.hooks = {
 };
 ```
 
-### Conditional listening
+## Filter on Request
 
-If a filter is defined, then its application depends on the type of the first argument usually passed to the callback.  
+If a filter is set in the `withRequest` property, then the callback will be executed only if the filter match the request.  
 
-::: warning
-Filters are only compatible with events that have an object or an array of objects as the first argument.
-:::
-
-#### Object as first event arguments
-
-If the first argument of the event is an object, then the filter is applied to that object.
-
-When the object matches the chosen filter, then the callback is called with the usual arguments of the event.
-
-Example with an [API event](/core/2/plugins/guides/events/api-events/):
+This allow you to easily decide when you want to execute a precise callback:
+ - for particular index and/or collection
+ - for a specific user
+ - when the request body contain a certain field
+ - etc
 
 ```js
 this.hooks = {
@@ -80,49 +78,119 @@ this.hooks = {
       // this callback will be called only 
       // when request.input.resource.index is equals to 'nyc-open-data'
     },
-    filter: {
+    withRequest: {
       equals: { 'input.resource.index': 'nyc-open-data' }
     }
   }
 }
 ```
 
-#### Object array as first event argument
-
-If the first argument of the event is an array of objects, then the filter is applied on each object.  
-
-When an object matches the chosen filter, then the callback is called with that object as the first parameter, and if the event had other arguments then they will also  be passed.
-
-Example with a [Document generic event](/core/2/plugins/guides/events/generic-document-events/):
-```js
-this.hooks = {
-  'document:generic:beforeWrite': {
-    callback: (document, request) => {
-      // this callback will be called only when a document contains
-      // a 'city' property equals to 'Saigon'
-    },
-    filter: {
-      equals: { '_source.city': 'Saigon' }
-    }
-  }
-}
-```
-
-### Other
-
-If a filter is provided with an event whose first argument is neither an object nor an array of objects, then Kuzzle will throw an error when initializing the plugin and end the startup sequence.
-
-Example with the [core:overload event](/core/2/plugins/guides/events/core-overload/):
+::: warning
+The `withRequest` filter is only available for events that receive a Request object, with other events Kuzzle will throw an error and interrupt its initialization sequence. (eg: [core:overload](/core/2/plugins/guides/events/core:overload))  
+:::
 
 ```js
 this.hooks = {
   'core:overload': {
     callback: fill => {
-      // the first argument is an integer so Kuzzle will throw an error and shutdown
+      // this event does not have a request object in its arguments 
+      // so Kuzzle with throw an error and shutdown
     },
-    filter: {
-      // any filter
+    withRequest: {
+      equals: { 'input.resource.index': 'nyc-open-data' }
     }
+  }
+}
+```
+
+## Filter on Document
+
+This filter is meant to be used with [Generic Document events](/core/2/plugins/guides/events/generic-document-events).  
+
+If a filter is set in the `withDocument` property, then the callback will be executed only with the documents matching that filter.  
+
+### Callback behavior
+
+The callback is called with two arguments: 
+ - `document`: one of the document matching the provided filter
+ - `request`: the request object
+
+The callback can return either the document or a promise resolving to it.  
+If `null` is returned, then the document will be excluded from further processing.  
+
+```js
+this.hooks = {
+  'generic:document:beforeWrite': {
+    callback: (document, request) => {
+      // This callback will be executed only with document 
+      // containing an "age" property
+      // 
+      // Then if this age is less than 18, the document is filtered
+      if (document.body.age >= 18) {
+        return document
+      }
+      else {
+        return null;
+      }
+    },
+    withDocument: {
+      exists: 'age'
+    }
+  }
+}
+```
+
+::: warning
+The `withDocument` filter is only available for [Generic Document events](/core/2/plugins/guides/events/generic-document-events), if a `withDocument` filter is set on another event, Kuzzle will throw an error and interrupt its initialization sequence.
+:::
+
+
+### Example: Duplicate specific documents in another collection
+
+In this example, we have an index `persons` and 3 collections:
+ - `all`
+ - `adults`
+ - `kids`
+
+We receive our data in the `all` collection and we need to duplicate every document in either `adults` or `kids` collection based on the age.
+
+```js
+
+this.hooks = {
+  'generic:document:afterWrite': {
+    callback: async (document, request) => {
+      let collection;
+
+      // document.body.age will always exists since it's the filter
+      // condition
+      if (document.body.age >= 18) {
+        collection = 'adults';
+      }
+      else {
+        collection = 'kids';
+      }
+
+      // duplicate the document in one of the collection
+      await this.context.accessors.sdk.document.create(
+        'persons', 
+        'adult',
+        document.body,
+        document._id);
+
+      return document;
+    },
+    withRequest: {
+      // trigger the callback only when writing document 
+      // inside the "persons" collection 
+      and: [
+        equals: { 'input.resource.index': 'persons' },
+        equals: { 'input.resource.collection': 'all' }
+      ]
+    }
+    withDocument: {
+      // trigger the callback only for documents containing the property "age"
+      exists: 'age'
+    },
   }
 }
 ```
