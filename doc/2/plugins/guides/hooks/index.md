@@ -141,7 +141,7 @@ this.hooks = {
 ```
 
 ::: warning
-The `withDocument` filter is only available for [Generic Document events](/core/2/plugins/guides/events/generic-document-events), if a `withDocument` filter is set on another event, Kuzzle will throw an error and interrupt its initialization sequence.
+The `withDocument` filter is only available for [Generic Document events](/core/2/plugins/guides/events/generic-document-events). If a `withDocument` filter is set on any other event, Kuzzle throws an error and interrupts its initialization sequence.
 :::
 
 
