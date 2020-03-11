@@ -86,7 +86,8 @@ this.hooks = {
 ```
 
 ::: warning
-The `withRequest` filter is only available for events that receive a Request object, with other events Kuzzle will throw an error and interrupt its initialization sequence. (eg: [core:overload](/core/2/plugins/guides/events/core:overload))  
+The `withRequest` filter is only available for events that provide a Request object.  
+If set on other events (e.g. [core:overload](/core/2/plugins/guides/events/core:overload)), Kuzzle throws an error and interrupts its initialization sequence.
 :::
 
 ```js
