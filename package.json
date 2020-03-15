@@ -84,7 +84,7 @@
     "codecov": "^3.6.5",
     "cucumber": "^6.0.5",
     "eslint": "^6.8.0",
-    "minimist": "1.2.0",
+    "minimist": "1.2.2",
     "mocha": "^7.1.0",
     "mock-require": "^3.0.3",
     "mqtt": "^3.0.0",
