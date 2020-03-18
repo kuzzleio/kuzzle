@@ -11,7 +11,7 @@
           "class": "PreconditionError"
         },
         "unknown_collection": {
-          "description": "The provided data collection does not exist in the index",
+          "description": "The provided data collection does not exist in the provided index",
           "code": 2,
           "message": "The collection \"%s\" does not exist in index \"%s\".",
           "class": "PreconditionError"

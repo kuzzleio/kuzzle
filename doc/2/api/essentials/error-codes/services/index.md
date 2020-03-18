@@ -17,7 +17,7 @@ description: error codes definitions
 | Id | Error Type (Status Code)             | Message           |
 | ------ | -----------------| ------------------ | ------------------ |
 | services.storage.unknown_index<br/><pre>0x01010001</pre> | [PreconditionError](/core/2/api/essentials/error-handling#preconditionerror) <pre>(412)</pre> | The provided data index does not exist |
-| services.storage.unknown_collection<br/><pre>0x01010002</pre> | [PreconditionError](/core/2/api/essentials/error-handling#preconditionerror) <pre>(412)</pre> | The provided data collection does not exist in the index |
+| services.storage.unknown_collection<br/><pre>0x01010002</pre> | [PreconditionError](/core/2/api/essentials/error-handling#preconditionerror) <pre>(412)</pre> | The provided data collection does not exist in the provided index |
 | services.storage.get_limit_exceeded<br/><pre>0x01010003</pre> | [SizeLimitError](/core/2/api/essentials/error-handling#sizelimiterror) <pre>(413)</pre> | The number of documents returned by this request exceeds the configured server limit |
 | services.storage.write_limit_exceeded<br/><pre>0x01010004</pre> | [SizeLimitError](/core/2/api/essentials/error-handling#sizelimiterror) <pre>(413)</pre> | The number of documents edited by this request exceeds the configured server limit |
 | services.storage.import_failed<br/><pre>0x01010005</pre> | [PartialError](/core/2/api/essentials/error-handling#partialerror) <pre>(206)</pre> | Failed to import some or all documents |
