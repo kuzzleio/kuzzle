@@ -50,6 +50,7 @@ Body:
 {
   "controller": "admin",
   "action": "loadMappings",
+  
   "body": {
     "index-name": {
       "collection-name": {

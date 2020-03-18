@@ -62,6 +62,7 @@ Body:
 {
   "controller": "admin",
   "action": "loadSecurities",
+  
   "body": {
     "roles": {
       "role-id": {

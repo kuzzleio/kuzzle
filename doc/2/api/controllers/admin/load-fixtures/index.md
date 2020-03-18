@@ -48,6 +48,7 @@ Body:
 {
   "controller": "admin",
   "action": "loadFixtures",
+  
   "body": {
     "index-name": {
       "collection-name": [
