@@ -1,7 +1,6 @@
 'use strict';
 
 const
-  sinon = require('sinon'),
   should = require('should'),
   mockrequire = require('mock-require'),
   KuzzleMock = require('../../mocks/kuzzle.mock'),
@@ -42,19 +41,17 @@ describe('StorageEngine', () => {
 
   describe('#init', () => {
     it('should initialize storage clients, models and populate cache', async () => {
-      storageEngine._populateIndexCache = sinon.stub().resolves();
-
       await storageEngine.init();
 
       should(storageEngine._publicClient.init).be.called();
       should(storageEngine._internalClient.init).be.called();
-      should(storageEngine._populateIndexCache).be.called();
+      should(storageEngine.populateIndexCache).be.called();
       should(BaseModel.kuzzle).be.eql(kuzzle);
       should(BaseModel.indexStorage).be.eql(kuzzle.internalIndex);
     });
   });
 
-  describe('#_populateIndexCache', () => {
+  describe('#populateIndexCache', () => {
     beforeEach(() => {
       storageEngine._internalClient.listIndexes.resolves(['foobar']);
       storageEngine._internalClient.listCollections.resolves(['foolection']);

@@ -124,6 +124,7 @@ class KuzzleMock extends Kuzzle {
 
     this.storageEngine = {
       init: sinon.stub().resolves(),
+      populateIndexCache: sinon.stub().resolves(),
       indexCache: {
         add: sinon.stub().resolves(),
         remove: sinon.stub().resolves(),

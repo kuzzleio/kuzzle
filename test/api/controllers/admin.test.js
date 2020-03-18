@@ -34,6 +34,14 @@ describe('AdminController', () => {
     });
   });
 
+  describe('#refreshIndexCache', () => {
+    it('should call underlaying storageEngine method', async () => {
+      await adminController.refreshIndexCache();
+
+      should(kuzzle.storageEngine.populateIndexCache).be.calledOnce();
+    });
+  });
+
   describe('#resetCache', () => {
     let flushdbStub = sinon.stub();
 

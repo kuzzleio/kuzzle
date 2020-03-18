@@ -23,8 +23,6 @@ describe('ApiKey', () => {
     StorageEngine = mockrequire.reRequire('../../../../lib/core/storage/storageEngine');
     storageEngine = new StorageEngine(kuzzle);
 
-    storageEngine._populateIndexCache = sinon.stub().resolves();
-
     return storageEngine.init();
   });
 
