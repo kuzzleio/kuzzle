@@ -285,24 +285,6 @@ Feature: Kuzzle functional tests
     And I get all statistics frames
     Then I get at least 1 statistic frame
 
-  Scenario: list known stored collections
-    When I write the document "documentGrace"
-    And I list "stored" data collections
-    Then I can find a stored collection kuzzle-collection-test
-
-  Scenario: Index and collection existence
-    When I check if index "%kuzzle" exists
-    Then The result should match the json false
-    When I check if index "idontexist" exists
-    Then The result should match the json false
-    When I check if collection "users" exists on index "%kuzzle"
-    Then The result should match the json false
-    When I write the document "documentGrace"
-    When I check if index "kuzzle-test-index" exists
-    Then The result should match the json true
-    When I check if collection "kuzzle-collection-test" exists on index "kuzzle-test-index"
-    Then The result should match the json true
-
   @realtime
   Scenario: list known realtime collections
     Given A room subscription listening to "lastName" having value "Hopper"

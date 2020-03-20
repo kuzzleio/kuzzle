@@ -128,6 +128,8 @@ class KuzzleMock extends Kuzzle {
         add: sinon.stub().resolves(),
         remove: sinon.stub().resolves(),
         exists: sinon.stub().resolves(),
+        listIndexes: sinon.stub().resolves(),
+        listCollections: sinon.stub().resolves()
       },
       public: new ClientAdapterMock(),
       internal: new ClientAdapterMock(),

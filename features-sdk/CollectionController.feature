@@ -157,3 +157,17 @@ Feature: Collection Controller
       | name          | type     |
       | "green-taxi"  | "stored" |
       | "yellow-taxi" | "stored" |
+
+  # collection:exists ==========================================================
+
+  Scenario: Test if a collection exists
+    Given an index "nyc-open-data"
+    And a collection "nyc-open-data":"yellow-taxi"
+    When I successfully call the route "collection":"exists" with args:
+    | index | "nyc-open-data" |
+    | collection | "yellow-taxi" |
+    Then The result should be "true"
+    When I successfully call the route "collection":"exists" with args:
+    | index | "nyc-open-data" |
+    | collection | "green-taxi" |
+    Then The result should be "false"

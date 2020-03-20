@@ -31,3 +31,24 @@ Feature: Index Controller
       | index | "kuz.zle" |
     Then I should receive an error matching:
       | status | 400 |
+
+  # index:exists ===============================================================
+
+  Scenario: Test index existence
+    Given an index "nyc-open-data"
+    When I successfully call the route "index":"exists" with args:
+      | index | "nyc-open-data" |
+    Then The result should be "true"
+    When I successfully call the route "index":"exists" with args:
+      | index | "mtp-open-data" |
+    Then The result should be "false"
+
+  # index:list =================================================================
+
+  Scenario: List indexes
+    Given an index "nyc-open-data"
+    And an index "mtp-open-data"
+    When I successfully call the route "index":"list"
+    Then I should receive a result matching:
+      | indexes | ["nyc-open-data", "mtp-open-data"] |
+
