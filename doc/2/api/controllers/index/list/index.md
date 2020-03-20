@@ -6,8 +6,6 @@ title: list
 
 # list
 
-
-
 Returns the complete list of indexes.
 
 ---
@@ -62,7 +60,7 @@ If the `countCollections` argument has been set to `true`, then the object conta
       "index_...",
       "index_n"
     ],
-    
+
     // only when countCollections is set to true
     "collections": {
       "index_1": 42,
