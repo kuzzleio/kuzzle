@@ -52,3 +52,14 @@ Feature: Index Controller
     Then I should receive a result matching:
       | indexes | ["nyc-open-data", "mtp-open-data"] |
 
+  Scenario: List indexes with collection count
+    Given an index "nyc-open-data"
+    And a collection "nyc-open-data":"yellow-taxi"
+    And a collection "nyc-open-data":"green-taxi"
+    And an index "mtp-open-data"
+    And a collection "mtp-open-data":"red-taxi"
+    When I successfully call the route "index":"list" with args:
+      | countCollection | true |
+    Then I should receive a result matching:
+      | indexes | ["nyc-open-data", "mtp-open-data"] |
+      | collections | { "nyc-open-data": 2, "mtp-open-data": 1 } |
