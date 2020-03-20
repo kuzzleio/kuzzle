@@ -1,11 +1,11 @@
 'use strict';
 
-const
-  should = require('should'),
-  mockrequire = require('mock-require'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  BaseModel = require('../../../lib/core/storage/models/baseModel'),
-  ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+const sinon = require('sinon');
+const should = require('should');
+const mockrequire = require('mock-require');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const BaseModel = require('../../../lib/core/storage/models/baseModel');
+const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
 
 describe('StorageEngine', () => {
   let
@@ -41,6 +41,8 @@ describe('StorageEngine', () => {
 
   describe('#init', () => {
     it('should initialize storage clients, models and populate cache', async () => {
+      sinon.stub(storageEngine, 'populateIndexCache').resolves();
+
       await storageEngine.init();
 
       should(storageEngine._publicClient.init).be.called();
