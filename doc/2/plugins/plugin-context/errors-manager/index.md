@@ -6,7 +6,7 @@ title: errorsManager
 
 # Errors Manager
 
-When creating a Kuzzle plugin, custom [API errors](/core/2/api/essentials/errors/) can be defined and thrown, using the `errorsManager`.
+When creating a Kuzzle plugin, custom [API errors](/core/2/api/essentials/error-codes) can be defined and thrown, using the `errorsManager`.
 
 Custom errors have to be specified in the [manifest.json](/core/2/plugins/guides/manual-setup/prerequisites/#manifest-json), in an `errors` field.
 
@@ -58,7 +58,7 @@ Taking the configuration example above, if an error is thrown with:
 
 `context.errorsManager.throw('some_error', 'request badly formatted');`
 
-Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](/core/2/api/essentials/errors/#badrequesterror) error, with the following properties:
+Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](/core/2/api/essentials/error-handling/#badrequesterror) error, with the following properties:
 
 - message : `An error occured: request badly formatted`
 - id : `plugin.foobar-plugin.some_error`

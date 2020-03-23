@@ -137,6 +137,24 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.scroll).not.be.called();
         });
     });
+
+    it('should default an explictly null scrollTTL argument', async () => {
+      elasticsearch._client.scroll.resolves({
+        body: {
+          hits: { hits: [], total: { value: 0 } },
+          _scroll_id: 'azerty'
+        }
+      });
+
+      await elasticsearch.scroll('scroll-id', { scrollTTL: null });
+
+      should(kuzzle.cacheEngine.internal.exists).be.called();
+      should(kuzzle.cacheEngine.internal.pexpire).be.called();
+      should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scrollId: 'scroll-id',
+        scroll: elasticsearch.config.defaults.scrollTTL
+      });
+    });
   });
 
   describe('#search', () => {
@@ -644,6 +662,32 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
         });
     });
+
+    it('should default an explicitly null retryOnConflict', async () => {
+      await elasticsearch.update(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        { refresh: 'wait_for', userId: 'oh noes', retryOnConflict: null });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: 'oh noes'
+            }
+          }
+        },
+        id: 'liia',
+        refresh: 'wait_for',
+        _source: true,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+    });
   });
 
   describe('#replace', () => {
@@ -841,7 +885,7 @@ describe('Test: ElasticSearch service', () => {
         errors: []
       });
 
-    
+
       elasticsearch._client.indices.refresh.resolves({
         body: { _shards: 1 }
       });
@@ -870,7 +914,7 @@ describe('Test: ElasticSearch service', () => {
         collection,
         { filter: { term: { name: 'Ok' } } },
         { name: 'bar' });
-      
+
       return promise
         .then(result => {
           should(elasticsearch.mUpdate).be.calledWithMatch(
@@ -1789,7 +1833,7 @@ describe('Test: ElasticSearch service', () => {
             }
           },
 
-          { index: { _id: 2, _index: esIndexName } },
+          { index: { _id: 2, _index: esIndexName, _type: undefined } },
           {
             firstName: 'bar',
             _kuzzle_info: {
@@ -1862,7 +1906,7 @@ describe('Test: ElasticSearch service', () => {
         { index: { _id: 1 } },
         { firstName: 'foo' },
 
-        { index: { _id: 2 } },
+        { index: { _id: 2, _type: undefined } },
         { firstName: 'bar' },
 
         { update: { _id: 3 } },
@@ -2492,7 +2536,7 @@ describe('Test: ElasticSearch service', () => {
             {
               document: {
                 _id: 'liia',
-                body: { city: 'Ho Chi Minh City' }
+                body: { _kuzzle_info: undefined, city: 'Ho Chi Minh City' }
               },
               reason: 'document already exists',
               status: 400
@@ -2840,7 +2884,7 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: undefined, body: { city: 'Ho Chi Minh City' } },
+              document: { _id: undefined, body: { _kuzzle_info: undefined, city: 'Ho Chi Minh City' } },
               reason: 'document _id must be a string',
               status: 400
             }
@@ -2958,7 +3002,7 @@ describe('Test: ElasticSearch service', () => {
           ];
           const rejected = [
             {
-              document: { _id: 'liia', body: { city: 'Ho Chi Minh City' } },
+              document: { _id: 'liia', body: { _kuzzle_info: undefined, city: 'Ho Chi Minh City' } },
               reason: 'document not found',
               status: 404
             }

@@ -256,7 +256,7 @@ Feature: Plugin Events
     And I "activate" the pipe on "generic:document:beforeDelete" with the following changes:
     | _id | "`${document._id}-vn`" |
     # mDelete
-    When I "delete" the following document ids with verb "POST":
+    When I "delete" the following document ids:
     | "bus-1" |
     | "bus-2" |
     Then The document "bus-1-vn" should not exist
@@ -276,7 +276,7 @@ Feature: Plugin Events
     And I "activate" the pipe on "generic:document:afterDelete" with the following changes:
     | _id | "'confidential'" |
     # mDelete
-    When I "delete" the following document ids with verb "POST":
+    When I "delete" the following document ids:
     | "bus-1" |
     | "bus-2" |
     Then The document "bus-1-vn" should not exist
