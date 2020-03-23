@@ -1,12 +1,11 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  should = require('should'),
-  mockrequire = require('mock-require'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  BaseModel = require('../../../lib/core/storage/models/baseModel'),
-  ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+const sinon = require('sinon');
+const should = require('should');
+const mockrequire = require('mock-require');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const BaseModel = require('../../../lib/core/storage/models/baseModel');
+const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
 
 describe('StorageEngine', () => {
   let
@@ -245,6 +244,53 @@ describe('StorageEngine', () => {
 
       should(indexExists).be.false();
       should(collectionExists).be.false();
+    });
+  });
+
+  describe('#listIndexes', () => {
+    beforeEach(() => {
+      storageEngine.indexCache.add({ index: 'covid-19', scope: 'public' });
+      storageEngine.indexCache.add({ index: 'foobar', scope: 'public' });
+
+      storageEngine.indexCache.add({ index: 'barfoo', scope: 'internal' });
+    });
+
+    it('should returns the public index list by default', () => {
+      const indexes = storageEngine.indexCache.listIndexes();
+
+      should(indexes).be.eql(['covid-19', 'foobar']);
+    });
+
+    it('should accept scope argument', () => {
+      const indexes = storageEngine.indexCache.listIndexes({ scope: 'internal' });
+
+      should(indexes).be.eql(['barfoo']);
+    });
+  });
+
+  describe('#listCollections', () => {
+    beforeEach(() => {
+      storageEngine.indexCache.add(
+        { index: 'covid-19', collection: 'france', scope: 'public' });
+      storageEngine.indexCache.add(
+        { index: 'covid-19', collection: 'italia', scope: 'public' });
+
+      storageEngine.indexCache.add(
+        { index: 'barfoo', collection: 'deutschland', scope: 'internal' });
+    });
+
+    it('should returns the public index list by default', () => {
+      const collections = storageEngine.indexCache.listCollections(
+        { index: 'covid-19'});
+
+      should(collections).be.eql(['france', 'italia']);
+    });
+
+    it('should accept scope argument', () => {
+      const collections = storageEngine.indexCache.listCollections(
+        { index: 'barfoo', scope: 'internal' });
+
+      should(collections).be.eql(['deutschland']);
     });
   });
 });
