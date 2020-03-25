@@ -9,7 +9,7 @@ order: 900
 
 A [Command line interface](https://en.wikipedia.org/wiki/Command-line_interface) is available for Kuzzle as a separate NPM package.  
 
-This CLI can connects to Kuzzle API and allows you to perform tasks like:
+This CLI connects to the Kuzzle API and allows you to perform tasks like:
 
 - Manage API keys
 - Add secrets to the vault
@@ -27,7 +27,7 @@ To install the CLI globally, you can use the following command: `npm install -g 
 
 ## Connect and authenticate to Kuzzle API
 
-Commands that needs to send requests to Kuzzle API can specify the Kuzzle server address and authentication informations.
+Commands that need to send requests to the Kuzzle API can specify the Kuzzle server address and authentication informations.
 
 By command line:
 ```
@@ -50,7 +50,7 @@ By environment variables:
 ## Available commands
 
 ::: warning
-Kourou is still in beta and breaking changes may occur until the 1.0.0
+Kourou is still in beta and breaking changes may occur until the 1.0.0 version is released. 
 :::
 
 See the complete documentation on Github: https://github.com/kuzzleio/kourou/
