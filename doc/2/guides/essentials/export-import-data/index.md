@@ -1,3 +1,11 @@
+---
+code: false
+type: page
+title: Export and import data
+description: Export and import data from Kuzzle. Backup and restore Kuzzle cluster.
+order: 910
+---
+
 # Export and import data
 
 All Kuzzle data is contained in Elasticsearch and separated into two categories:
