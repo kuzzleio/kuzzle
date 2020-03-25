@@ -66,7 +66,7 @@ $ kourou index:export nyc-open-data ./dump/
   Dumping index "nyc-open-data" in nyc-open-data/ ...
   Dumping yellow-taxi |==================================================== 100% ||| 42532/42532 documents
   Dumping green-taxi |==================================================== 100% ||| 21782/21782 documents
- [✔] Omniscient index exported
+ [✔] nyc-open-data index exported
 
 $ tree dump/
 
