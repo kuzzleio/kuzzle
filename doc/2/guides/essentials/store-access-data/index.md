@@ -103,7 +103,7 @@ curl -X PUT localhost:7512/nyc-open-data/yellow-taxi?pretty
 </details>
 
 ::: info
-It is also possible to define in advance a set of indexes and collections, then load them at the start of Kuzzle (`bin/start-kuzzle-server --mappings mappings.json`) or with [Kourou](/core/2/guides/essentials/kourou-command-line-interface) `(kourou query admin:loadMappings < mappings.json`).
+It is also possible to define in advance a set of indexes and collections, then load them at the start of Kuzzle (`bin/start-kuzzle-server --mappings mappings.json`) or with [Kourou](/core/2/guides/essentials/kourou-cli) `(kourou query admin:loadMappings < mappings.json`).
 :::
 
 ## Writing documents
