@@ -28,7 +28,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^7.6.0",
+    "@elastic/elasticsearch": "^7.6.1",
     "bluebird": "^3.7.2",
     "bufferutil": "^4.0.1",
     "busboy": "^0.3.1",
@@ -41,7 +41,7 @@
     "eventemitter3": "^4.0.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
-    "inquirer": "^7.0.6",
+    "inquirer": "^7.1.0",
     "ioredis": "^4.16.0",
     "json-stable-stringify": "1.0.1",
     "json2yaml": "^1.1.0",
@@ -49,7 +49,7 @@
     "koncorde": "^3.0.0",
     "kuzdoc": "^1.2.2",
     "kuzzle-common-objects": "^4.1.0",
-    "kuzzle-sdk": "7.1.0",
+    "kuzzle-sdk": "^7.1.1",
     "kuzzle-vault": "^1.0.2",
     "lodash": "4.17.15",
     "moment": "^2.24.0",
@@ -70,10 +70,10 @@
     "validator": "^12.2.0",
     "winston": "^3.2.1",
     "winston-elasticsearch": "0.8.4",
-    "winston-syslog": "^2.4.0",
+    "winston-syslog": "^2.4.4",
     "winston-transport": "^4.3.0",
-    "ws": "^7.2.1",
-    "yargs": "^15.1.0"
+    "ws": "^7.2.3",
+    "yargs": "^15.3.1"
   },
   "repository": {
     "type": "git",
@@ -85,7 +85,7 @@
     "cucumber": "^6.0.5",
     "eslint": "^6.8.0",
     "minimist": "1.2.0",
-    "mocha": "^7.1.0",
+    "mocha": "^7.1.1",
     "mock-require": "^3.0.3",
     "mqtt": "^3.0.0",
     "nyc": "^15.0.0",
@@ -94,7 +94,7 @@
     "rewire": "^4.0.1",
     "should": "13.2.3",
     "should-sinon": "0.0.6",
-    "sinon": "^9.0.0",
+    "sinon": "^9.0.1",
     "strip-json-comments": "^3.0.1"
   },
   "engines": {
