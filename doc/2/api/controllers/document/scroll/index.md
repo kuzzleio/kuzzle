@@ -6,13 +6,15 @@ title: scroll
 
 # scroll
 
-
-
 Moves a search cursor forward.
 
 A search cursor is created by a [search](/core/2/api/controllers/document/search) API call, with a `scroll` value provided.
 
 Results returned by a `scroll` request reflect the state of the index at the time of the initial search request, like a fixed snapshot. Subsequent changes to documents do not affect the scroll results.
+
+::: info
+The maximum value for a scroll session can be configured under the configuration key `services.storage.maxScrollDuration`.
+:::
 
 ---
 
@@ -46,7 +48,7 @@ Method: GET
 
 ### Optional:
 
-- `scroll`: refresh the cursor duration, using the [time to live](https://www.elastic.co/guide/en/elasticsearch/reference/5.4/common-options.html#time-units) syntax.
+- `scroll`: refresh the cursor duration, using the [time to live](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units) syntax.
 
 ---
 

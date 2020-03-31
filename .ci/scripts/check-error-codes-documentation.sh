@@ -2,7 +2,7 @@
 
 set -e
 
-echo "Checking error codes..."
+echo "Checking error codes.."
 
 TMPDIR=$TRAVIS_BUILD_DIR/codes
 mkdir $TMPDIR
