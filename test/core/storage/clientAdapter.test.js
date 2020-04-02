@@ -26,6 +26,8 @@ describe('ClientAdapter', () => {
       add: sinon.stub().returns(true),
       remove: sinon.stub().returns(true),
       exists: sinon.stub().returns(true),
+      listIndexes: sinon.stub().resolves(),
+      listCollections: sinon.stub().resolves()
     };
 
     clientAdapter = new ClientAdapter(elasticsearch, indexCache);
@@ -63,33 +65,6 @@ describe('ClientAdapter', () => {
     });
   });
 
-  describe('assertIndex methods', () => {
-    it('should define methods', () => {
-      for (const method of clientAdapter._assertIndexMethods) {
-        should(clientAdapter[method]).be.a.Function();
-      }
-    });
-
-    it('should use index cache to assert index existence and call client method', async () => {
-      const method = clientAdapter._assertIndexMethods[0];
-      clientAdapter._client[method].resolves('ret');
-
-      const ret = await clientAdapter[method](
-        'index',
-        'collection',
-        'arg1',
-        'arg2');
-
-      should(ret).be.eql('ret');
-      should(indexCache.exists).be.calledWithMatch({
-        index: 'index',
-        scope: 'public'
-      });
-      should(clientAdapter._client[method])
-        .be.calledWith('index', 'collection', 'arg1', 'arg2');
-    });
-  });
-
   describe('raw methods', () => {
     it('should define methods', () => {
       for (const method of clientAdapter._rawMethods) {
@@ -98,7 +73,7 @@ describe('ClientAdapter', () => {
     });
 
     it('should call client method', async () => {
-      const method = clientAdapter._rawMethods[3];
+      const method = clientAdapter._rawMethods[1];
       clientAdapter._client[method].resolves('ret');
 
       const ret = await clientAdapter[method](
@@ -197,6 +172,74 @@ describe('ClientAdapter', () => {
         collection: 'collection',
         scope: 'public'
       });
+    });
+  });
+
+  describe('#collectionExists', () => {
+    it('should call the index cache by default', async () => {
+      await clientAdapter.collectionExists('index', 'collection');
+
+      should(clientAdapter._indexCache.exists).be.calledWithMatch({
+        index: 'index',
+        collection: 'collection',
+        scope: clientAdapter._client.scope
+      });
+    });
+
+    it('should call the client if specified', async () => {
+      await clientAdapter.collectionExists('index', 'collection', { fromCache: false });
+
+      should(clientAdapter._client.collectionExists).be.calledWith('index', 'collection');
+    });
+  });
+
+  describe('#indexExists', () => {
+    it('should call the index cache by default', async () => {
+      await clientAdapter.indexExists('index', 'index');
+
+      should(clientAdapter._indexCache.exists).be.calledWithMatch({
+        index: 'index',
+        scope: clientAdapter._client.scope
+      });
+    });
+
+    it('should call the client if specified', async () => {
+      await clientAdapter.indexExists('index', { fromCache: false });
+
+      should(clientAdapter._client.indexExists).be.calledWith('index');
+    });
+  });
+
+  describe('#listCollections', () => {
+    it('should call the index cache by default', async () => {
+      await clientAdapter.listCollections('index');
+
+      should(clientAdapter._indexCache.listCollections).be.calledWithMatch({
+        index: 'index',
+        scope: clientAdapter._client.scope
+      });
+    });
+
+    it('should call the client if specified', async () => {
+      await clientAdapter.listCollections('index', { fromCache: false });
+
+      should(clientAdapter._client.listCollections).be.calledWith('index');
+    });
+  });
+
+  describe('#listIndexes', () => {
+    it('should call the index cache by default', async () => {
+      await clientAdapter.listIndexes();
+
+      should(clientAdapter._indexCache.listIndexes).be.calledWithMatch({
+        scope: clientAdapter._client.scope
+      });
+    });
+
+    it('should call the client if specified', async () => {
+      await clientAdapter.listIndexes({ fromCache: false });
+
+      should(clientAdapter._client.listIndexes).be.calledWith();
     });
   });
 });

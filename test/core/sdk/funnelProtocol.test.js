@@ -34,7 +34,7 @@ describe('Test: sdk/funnelProtocol', () => {
   describe('#constructor', () => {
     it('should throw an InternalError if the funnel is instantiated without a valid User object', () => {
       should(() => {
-        new FunnelProtocol(funnel, { _id: 'gordon' });
+        new FunnelProtocol(funnel, { id: 42 });
       }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
     });
   });

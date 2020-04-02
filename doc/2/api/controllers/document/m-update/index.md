@@ -100,6 +100,7 @@ Each updated document is an object of the `successes` array with the following p
 
 - `_id`: document unique identifier
 - `_source`: document content
+- `_version`: updated document version
 - `status`: HTTP status code
 
 Each errored document is an object of the `errors` array with the following properties:
@@ -124,14 +125,16 @@ Each errored document is an object of the `errors` array with the following prop
         "status": 200,
         "_source": {
           // updated document content
-        }
+        },
+        "_version": 2
       },
       {
         "_id": "<anotherDocumentId>",
         "status": 200,
         "_source": {
           // updated document content
-        }
+        },
+        "_version": 2
       }
     ],
     "errors": [

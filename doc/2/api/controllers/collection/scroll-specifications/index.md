@@ -44,7 +44,7 @@ Method: GET
 
 ### Optional:
 
-- `scroll`: reset the cursor TTL to the provided duration, using the [time to live](https://www.elastic.co/guide/en/elasticsearch/reference/5.4/common-options.html#time-units) format.
+- `scroll`: reset the cursor TTL to the provided duration, using the [time to live](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units) format.
 
 ---
 
