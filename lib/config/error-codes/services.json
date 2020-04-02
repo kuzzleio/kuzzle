@@ -238,6 +238,18 @@
           "code": 42,
           "message": "The collection name \"%s\" is invalid",
           "class": "BadRequestError"
+        },
+        "strict_mapping_rejection": {
+          "description": "Document rejected because it contains a field that is not declared in the strict mapping.",
+          "code": 43,
+          "message": "Cannot create document. Field \"%s\" is not present in collection \"%s:%s\" strict mapping",
+          "class": "BadRequestError"
+        },
+        "scroll_duration_too_great": {
+          "description": "The scroll duration exceed the configured maxium value. (See config.services.storageEngine.maxScrollDuration)",
+          "code": 44,
+          "message": "Scroll duration \"%s\" is too great.",
+          "class": "BadRequestError"
         }
       }
     },

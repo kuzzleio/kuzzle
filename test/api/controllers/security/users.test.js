@@ -278,7 +278,7 @@ describe('Test: security controller - users', () => {
     it('should return a valid response', () => {
       kuzzle.repositories.user.delete.resolves({_id: 'test'});
 
-      return securityController.deleteUser(new Request({_id: 'test'}))
+      return securityController.deleteUser(new Request({ _id: 'test' }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -313,7 +313,7 @@ describe('Test: security controller - users', () => {
         .onFirstCall().returns(existsMethod)
         .onSecondCall().returns(deleteMethod);
 
-      return securityController.deleteUser(new Request({_id: 'test'}))
+      return securityController.deleteUser(new Request({ _id: 'test' }))
         .then(response => {
           should(response).be.instanceof(Object);
           should(response._id).be.exactly('test');
@@ -323,7 +323,7 @@ describe('Test: security controller - users', () => {
     it('should forward refresh option', () => {
       kuzzle.repositories.user.delete.resolves({_id: 'test'});
 
-      return securityController.deleteUser(new Request({_id: 'test', refresh: 'wait_for'}))
+      return securityController.deleteUser(new Request({ _id: 'test', refresh: 'wait_for' }))
         .then(() => {
           const options = kuzzle.repositories.user.delete.firstCall.args[1];
           should(options).match({
@@ -620,7 +620,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.persist.resolves({_id: 'test'});
       kuzzle.repositories.user.fromDTO.callsFake((...args) => Bluebird.resolve(args[0]));
 
-      return securityController.createRestrictedUser(new Request({body: {content: {name: 'John Doe'}}}))
+      return securityController.createRestrictedUser(new Request({ body: { content: { name: 'John Doe' } } }))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response).be.instanceof(Object);
@@ -632,7 +632,7 @@ describe('Test: security controller - users', () => {
 
     it('should throw an error if a profile is given', () => {
       return should(() => {
-        securityController.createRestrictedUser(new Request({body: {content: {profileIds: ['foo']}}}));
+        securityController.createRestrictedUser(new Request({ body: { content: { profileIds: ['foo'] } } }));
       }).throw(BadRequestError, {
         id: 'api.assert.forbidden_argument',
         message: 'The argument "body.content.profileIds" is not allowed by this API action.'
@@ -664,7 +664,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.toDTO.returns({_id: 'test'});
       kuzzle.repositories.user.persist.resolves({_id: 'test'});
 
-      return securityController.updateUser(new Request({_id: 'test', body: {foo: 'bar'}}))
+      return securityController.updateUser(new Request({ _id: 'test', body: { foo: 'bar' } }))
         .then(response => {
           should(kuzzle.repositories.user.persist).be.calledOnce();
           should(response).be.instanceof(Object);
@@ -734,7 +734,7 @@ describe('Test: security controller - users', () => {
 
       return securityController
         .updateUser(
-          new Request({_id: 'test', body: {foo: 'bar'}, refresh: 'wait_for'}))
+          new Request({ _id: 'test', body: { foo: 'bar' }, refresh: 'wait_for' }))
         .then(() => {
           const options = kuzzle.repositories.user.persist.firstCall.args[1];
           should(options).match({
@@ -886,17 +886,12 @@ describe('Test: security controller - users', () => {
 
   describe('#mDeleteUser', () => {
     it('should forward its args to mDelete', () => {
-      const spy = sinon.spy();
+      securityController.mDelete = sinon.spy();
+      securityController.mDeleteUsers(request);
 
-      SecurityController.__with__({
-        mDelete: spy
-      })(() => {
-        securityController.mDeleteUsers(request);
-
-        should(spy)
-          .be.calledOnce()
-          .be.calledWith(kuzzle, 'user', request);
-      });
+      should(securityController.mDelete)
+        .be.calledOnce()
+        .be.calledWith(kuzzle, 'user', request);
     });
   });
 

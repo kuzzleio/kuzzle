@@ -48,30 +48,33 @@ The easiest way to setup a kuzzle server for Linux-like systems without prerequi
 $ sudo bash -c "$(curl https://get.kuzzle.io/)"
 ```
 
-You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#docker)
+You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/core/2/guides/essentials/installing-kuzzle/#docker)
 
 ### Manual install
 
-Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle/#manual-installation)
+Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/core/2/guides/essentials/installing-kuzzle/#manual-installation)
 
 ## Quick start with Kuzzle
 
-* [Install and start Kuzzle server](https://docs.kuzzle.io/guide/1/essentials/installing-kuzzle)
-* [Choose a SDK](https://docs.kuzzle.io/sdk-reference/)
+* [Run Kuzzle server](https://docs.kuzzle.io/core/2/guides/getting-started/running-kuzzle/)
+* [Choose a SDK](https://docs.kuzzle.io/sdk/)
 * Build your application without caring about your backend !
 
-Check the [**Getting started page on docs.kuzzle.io**](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
+Check the [**First steps for database and realtime actions on docs.kuzzle.io**](https://docs.kuzzle.io/core/2/guides/getting-started/first-steps/)
 
 ### Useful links
 
-* [How to run a Kuzzle instance](https://docs.kuzzle.io/guide/1/getting-started/running-kuzzle/)
-* [Basic usage examples](https://docs.kuzzle.io/guide/1/getting-started/first-steps/)
-* [Getting started with Node.js](https://docs.kuzzle.io/sdk-reference/js/6/getting-started/node-js/)
-* [Full documentation](https://docs.kuzzle.io/)
-* [SDKs Reference](https://docs.kuzzle.io/sdk-reference/)
-* [API Documentation](https://docs.kuzzle.io/api)  
-* [Data Validation documentation](https://docs.kuzzle.io/guide/1/datavalidation)
-* [Realtime engine documentation](https://docs.kuzzle.io/koncorde)
+* [Basic usage examples](https://docs.kuzzle.io/core/2/guides/getting-started/first-steps/)
+* [Store and access data](https://docs.kuzzle.io/core/2/guides/essentials/store-access-data/)
+* [Define database mappings](https://docs.kuzzle.io/core/2/guides/essentials/database-mappings/)
+* [Configure roles and profiles](https://docs.kuzzle.io/core/2/guides/essentials/security/)
+* [Users and authentication](https://docs.kuzzle.io/core/2/guides/essentials/user-authentication/)
+* [Command Line Interface (CLI)](https://docs.kuzzle.io/core/2/guides/essentials/kourou-cli/)
+* [Getting started with Node.js](https://docs.kuzzle.io/sdk/js/7/getting-started/node-js/)
+* [Write core plugin](https://docs.kuzzle.io/core/2/plugins/)
+* [Realtime engine documentation](https://docs.kuzzle.io/core/2/guides/essentials/real-time/)
+* [API Documentation](https://docs.kuzzle.io/core/2/api/)  
+* [SDKs Reference](https://docs.kuzzle.io/sdk)
 * [View release notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle
