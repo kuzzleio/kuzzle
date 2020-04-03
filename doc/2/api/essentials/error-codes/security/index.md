@@ -42,7 +42,7 @@ description: error codes definitions
 
 | Id | Error Type (Status Code)             | Message           |
 | ------ | -----------------| ------------------ | ------------------ |
-| security.rights.unauthorized<br/><pre>0x07030001</pre> | [UnauthorizedError](/core/2/api/essentials/error-handling#unauthorizederror) <pre>(401)</pre> | Authentication required |
+| security.rights.unauthorized<br/><pre>0x07030001</pre> | [UnauthorizedError](/core/2/api/essentials/error-handling#unauthorizederror) <pre>(401)</pre> | Authentication required to execute this action |
 | security.rights.forbidden<br/><pre>0x07030002</pre> | [ForbiddenError](/core/2/api/essentials/error-handling#forbiddenerror) <pre>(403)</pre> | Insufficient permissions to execute this action |
 
 ---
