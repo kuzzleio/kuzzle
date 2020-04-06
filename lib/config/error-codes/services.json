@@ -13,7 +13,7 @@
         "unknown_collection": {
           "description": "The provided data collection does not exist",
           "code": 2,
-          "message": "The collection \"%s\" does not exist.",
+          "message": "The collection \"%s\":\"%s\" does not exist.",
           "class": "PreconditionError"
         },
         "get_limit_exceeded": {
