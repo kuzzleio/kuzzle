@@ -4,7 +4,6 @@ const
   mockrequire = require('mock-require'),
   rewire = require('rewire'),
   sinon = require('sinon'),
-  path = require('path'),
   should = require('should'),
   {
     errors: {
@@ -209,37 +208,34 @@ describe('Test: core/janitor', () => {
       fsStub,
       coreStub,
       getAllStatsStub,
-      suffix,
-      globStub;
+      suffix;
 
     beforeEach(() => {
       fsStub = {
         accessSync: sinon.stub(),
         constants: {},
-        copySync: sinon.stub(),
+        copyFileSync: sinon.stub(),
         createReadStream: sinon.stub().returns({
           pipe: sinon.stub().returnsThis(),
           on: sinon.stub().callsArgWith(1)
         }),
         createWriteStream: sinon.stub(),
-        ensureDirSync: sinon.stub(),
-        mkdirsSync: sinon.stub(),
+        mkdirSync: sinon.stub(),
         readdir: sinon.stub(),
-        readdirSync: sinon.stub(),
+        readdirSync: sinon.stub().returns(['core']),
         removeSync: sinon.stub(),
         unlink: sinon.stub(),
         unlinkSync: sinon.stub(),
         stat: sinon.stub(),
         statSync: sinon.stub(),
+        lstatSync: sinon.stub().returns({
+          isFile: sinon.stub().returns(true)
+        }),
         writeFileSync: sinon.stub(),
       };
 
       coreStub = sinon.stub().returns({});
       getAllStatsStub = sinon.stub().returns(Promise.resolve({hits: [{stats: 42}]}));
-
-      globStub = {
-        sync: sinon.stub().returns(['core'])
-      };
 
       kuzzle.config.dump = {
         history: {
@@ -253,9 +249,8 @@ describe('Test: core/janitor', () => {
       kuzzle.pluginsManager.plugins = { foo: {} };
       kuzzle.statistics.getAllStats = getAllStatsStub;
 
-      mockrequire('fs-extra', fsStub);
+      mockrequire('fs', fsStub);
       mockrequire('dumpme', coreStub);
-      mockrequire('glob', globStub);
 
       mockrequire.reRequire('../../lib/core/janitor');
       Janitor = rewire('../../lib/core/janitor');
@@ -298,8 +293,8 @@ describe('Test: core/janitor', () => {
 
         await janitor.dump(suffix);
 
-        should(fsStub.mkdirsSync).be.calledOnce();
-        should(fsStub.mkdirsSync.getCall(0).args[0]).be.exactly(baseDumpPath);
+        should(fsStub.mkdirSync).be.calledOnce();
+        should(fsStub.mkdirSync.getCall(0).args[0]).be.exactly(baseDumpPath);
 
         should(fsStub.writeFileSync.getCall(0).args[0])
           .be.exactly(baseDumpPath.concat('/kuzzle.json'));
@@ -326,12 +321,12 @@ describe('Test: core/janitor', () => {
 
         should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 
-        should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('core');
+        should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('/tmp/2020-dump-me-master/core');
         should(fsStub.createWriteStream).be.calledOnce();
         should(fsStub.createReadStream().pipe).be.called(2);
 
-        should(fsStub.copySync.getCall(0).args[0]).be.exactly(process.argv[0]);
-        should(fsStub.copySync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
+        should(fsStub.copyFileSync.getCall(0).args[0]).be.exactly(process.argv[0]);
+        should(fsStub.copyFileSync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
       });
 
       it('should copy pm2 logs and error files if any', () => {
@@ -390,7 +385,7 @@ describe('Test: core/janitor', () => {
 
         return janitor.dump(suffix)
           .then(() => {
-            should(fsStub.readdirSync).not.be.called();
+            should(fsStub.removeSync).not.be.called();
           });
       });
 
@@ -409,13 +404,11 @@ describe('Test: core/janitor', () => {
           birthtime: new Date('1979-11-13 01:13')
         });
 
-        fsStub.readdirSync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        fsStub.readdirSync.returns(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
         fsStub.accessSync.throws(new Error('no coredump here'));
         fsStub.accessSync
           .withArgs('/tmp', 0)
           .returns();
-
-        globStub.sync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
         return janitor.dump(suffix)
           .then(() => {
@@ -430,10 +423,13 @@ describe('Test: core/janitor', () => {
 
       it('should delete coredumps in reports directories, if over the limit', () => {
         // do not let directory removals interfers with coredump removals
+        const stub = sinon.stub();
+        for (let i = 0; i < 10; i++) {
+          stub.onCall(i).returns([`/tmp/${i}/core.gz`]);
+        }
+        janitor._listFilesMatching = stub;
         kuzzle.config.dump.history.reports = 100;
-
-        fsStub.readdirSync.returns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        globStub.sync = sinon.spy(pattern => [path.join(path.dirname(pattern), 'core.gz')]);
+        fsStub.readdirSync.returns(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
 
         fsStub.accessSync.throws(new Error('no coredump here'));
         fsStub.accessSync
@@ -443,14 +439,14 @@ describe('Test: core/janitor', () => {
         return janitor.dump(suffix)
           .then(() => {
             for (let i = 1; i < 8; i++) {
-              should(globStub.sync)
-                .be.calledWith(`/tmp/${i}/core*`);
+              should(stub)
+                .be.calledWith(`/tmp/${i}`, 'core');
               should(fsStub.unlinkSync)
                 .be.calledWith(`/tmp/${i}/core.gz`);
             }
             for (let i = 9; i < 11; i++) {
-              should(globStub.sync)
-                .not.be.calledWith(`/tmp/${i}/core*`);
+              should(stub)
+                .not.be.calledWith(`/tmp/${i}/`, 'core');
             }
           });
       });
