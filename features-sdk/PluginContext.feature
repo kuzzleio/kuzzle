@@ -12,7 +12,6 @@ Feature: Plugin context
     Then The document "es-document" content match:
       | from | "embedded-es-client" |
 
-
   # secrets ====================================================================
 
   Scenario: Access provided secrets
