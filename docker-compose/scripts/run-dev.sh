@@ -8,7 +8,7 @@ fi
 
 elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
-if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
+if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ] || [ ! -d "node_modules" ]; then
     npm ci --unsafe-perm
     chmod -R 777 node_modules/
     npm rebuild all --unsafe-perm
