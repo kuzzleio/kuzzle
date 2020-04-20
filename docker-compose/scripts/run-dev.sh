@@ -8,13 +8,6 @@ fi
 
 elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
 
-if [ ! -d "./node_modules/" ]; then
-    git submodule init
-    git submodule update
-    npm ci --unsafe-perm
-    ./docker-compose/scripts/install-plugins.sh
-fi
-
 if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
     npm ci --unsafe-perm
     chmod -R 777 node_modules/
