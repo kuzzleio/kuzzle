@@ -136,6 +136,12 @@ Then('I search documents with the following query:', function (queryRaw) {
   this.props.searchBody = { query };
 });
 
+Then('I search documents with the following search body:', function (searchBodyRaw) {
+  const searchBody = JSON.parse(searchBodyRaw);
+
+  this.props.searchBody = searchBody;
+});
+
 Then('with the following highlights:', function (highlightsRaw) {
   const highlights = JSON.parse(highlightsRaw);
 
