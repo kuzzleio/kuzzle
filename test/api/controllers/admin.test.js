@@ -220,13 +220,19 @@ describe('AdminController', () => {
         });
     });
 
-    it('should handle rejections if the janitor rejects when not waiting for a refresh', () => {
+    it('should handle rejections if the janitor rejects when not waiting for a refresh', async () => {
       const err = new Error('err');
       kuzzle.janitor.loadFixtures.rejects(err);
-      request.input.args.refresh = null;
+      request.input.args.refresh = false;
 
-      return adminController.loadFixtures(request)
-        .then(() => should(kuzzle.log.error).calledWith(err));
+      /* eslint-disable no-empty */
+      try {
+        await adminController.loadFixtures(request);
+      }
+      catch (error) {}
+      /* eslint-enable no-empty */
+
+      should(kuzzle.log.error).calledWith(err);
     });
   });
 

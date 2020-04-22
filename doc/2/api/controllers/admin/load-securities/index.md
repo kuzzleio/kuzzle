@@ -16,6 +16,13 @@ The roles, profiles and users definitions follow the same structure as in the bo
  - [createProfile](/core/2/api/controllers/security/create-profile)
  - [createUser](/core/2/api/controllers/security/create-user)
 
+If some users already exists, they will be deleted and then created again.
+
+::: warning
+Kuzzle prevent existing user deletion in production environment. (`NODE_ENV=production`)
+User overriding can be forced by passing the flag `force`.
+:::
+
 **Notes:**
 
 * The body can contain any number of roles, profiles and users.
@@ -29,7 +36,7 @@ The roles, profiles and users definitions follow the same structure as in the bo
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for]
+URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&forceDeletion]
 Method: POST
 Body:
 ```
@@ -62,6 +69,7 @@ Body:
 {
   "controller": "admin",
   "action": "loadSecurities",
+  "forceDeletion": false,
   "body": {
     "roles": {
       "role-id": {
@@ -86,6 +94,7 @@ Body:
 
 ### Optional:
 
+* `force`: if set, Kuzzle will override existing users
 * `refresh`: if set to `wait_for`, Kuzzle will not respond until the fixtures are loaded
 
 ---
