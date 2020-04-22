@@ -1585,7 +1585,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.updateSettings = sinon.stub().resolves();
       elasticsearch.updateSearchIndex = sinon.stub().resolves();
     });
-    it('should call updateSettings, updateMapping and UpdateSearchIndex', async () => {
+    it('should call updateSettings, updateMapping and updateSearchIndex', async () => {
       await elasticsearch.updateCollection(index, collection, { mappings, settings });
 
       should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
