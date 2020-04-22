@@ -29,7 +29,7 @@ Feature: Document Controller
       """
       {
         "match": {
-          "name": "document"
+          "name": "document1"
         }
       }
       """
