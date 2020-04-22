@@ -17,8 +17,8 @@ Feature: Auth Controller
     And I can login with the previously created API key
     And I successfully call the route "auth":"searchApiKeys"
     Then I should receive a "hits" array of objects matching:
-      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Sigfox API key"    |
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.hash |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Sigfox API key"    | "_STRING_"   |
 
   # auth:searchApiKeys =====================================================
 
@@ -43,9 +43,9 @@ Feature: Auth Controller
     When I successfully call the route "auth":"searchApiKeys" with args:
       | body | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
-      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    |
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.hash |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"   |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"   |
 
   # auth:deleteApiKey =======================================================
 

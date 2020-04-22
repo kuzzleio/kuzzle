@@ -77,6 +77,7 @@ Returns an object containing the newly created API key:
   - `expiresAt`: expiration date in UNIX micro-timestamp format (`-1` if the token never expires)
   - `ttl`: original ttl
   - `description`: description
+  - `hash`: SHA256 hash of the authentication token
   - `token`: authentication token associated with this API key
 
 ::: warning
@@ -97,6 +98,7 @@ The authentication token `token` will never be returned by Kuzzle again. If you 
       "expiresAt": -1,
       "ttl": -1,
       "description": "Sigfox callback authentication token",
+      "hash": "4ee98cb8c614e99213e7695f822e42325d86c93cfaf39cb40e860939e784c8e6",
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJNeSIsImlhdCI6MTU3MzE4NTkzNSwiZXhwIjoxNTczMTg1OTM0fQ.08qAnSD03V0N1OcviGVUAZEjjv4DxULTgoQQwojn1PA"
     }
   }
