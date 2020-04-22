@@ -8,7 +8,6 @@ const
   } = require('cucumber');
 
 Given('I\'m logged in Kuzzle as user {string} with password {string}', async function (username, password) {
-  await new Promise(resolve => setTimeout(resolve, 1000));
   this.props.result = await this.sdk.auth.login('local', { username, password });
 });
 

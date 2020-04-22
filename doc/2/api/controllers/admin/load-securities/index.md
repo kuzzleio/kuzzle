@@ -36,7 +36,7 @@ User overriding can be forced by passing the flag `force`.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&forceDeletion]
+URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&force]
 Method: POST
 Body:
 ```
@@ -69,7 +69,7 @@ Body:
 {
   "controller": "admin",
   "action": "loadSecurities",
-  "forceDeletion": false,
+  "force": false,
   "body": {
     "roles": {
       "role-id": {
