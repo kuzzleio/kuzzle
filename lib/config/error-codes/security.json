@@ -75,15 +75,15 @@
       "code": 3,
       "errors": {
         "unauthorized": {
-          "description": "Authentication required",
+          "description": "Authentication required to execute this action",
           "code": 1,
-          "message": "Unauthorized: authentication required.",
+          "message": "Unauthorized: authentication required to execute the action \"%s:%s\".",
           "class": "UnauthorizedError"
         },
         "forbidden": {
           "description": "Insufficient permissions to execute this action",
           "code": 2,
-          "message": "Insufficient permissions to execute this action.",
+          "message": "Insufficient permissions to execute the action \"%s:%s\".",
           "class": "ForbiddenError"
         }
       }

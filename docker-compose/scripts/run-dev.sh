@@ -13,6 +13,11 @@ if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
     chmod -R 777 node_modules/
     npm rebuild all --unsafe-perm
     docker-compose/scripts/install-plugins.sh
+elif [ ! -d "./node_modules/" ]; then
+    git submodule init
+    git submodule update
+    npm ci --unsafe-perm
+    ./docker-compose/scripts/install-plugins.sh
 fi
 
 spinner="/"

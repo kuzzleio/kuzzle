@@ -22,14 +22,14 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
       | _id          | body                               |
-      | "document-1" | { "name": "document", "age": 42 }  |
+      | "document-1" | { "name": "document1", "age": 42 } |
       | -            | { "name": "document2", "age": 21 } |
     And I refresh the collection
     When I search documents with the following query:
       """
       {
         "match": {
-          "name": "document"
+          "name": "document1"
         }
       }
       """
@@ -43,8 +43,35 @@ Feature: Document Controller
       """
     And I execute the search query
     Then I should receive a "hits" array of objects matching:
-      | _id          | highlight                           |
-      | "document-1" | { "name": [ "<em>document</em>" ] } |
+      | _id          | highlight                            |
+      | "document-1" | { "name": [ "<em>document1</em>" ] } |
+
+  @mappings
+  Scenario: Search with search_after
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+      | "document-2" | { "name": "document2", "age": 21 } |
+      | "document-3" | { "name": "document2", "age": 84 } |
+    And I refresh the collection
+    When I search documents with the following search body:
+      """
+      {
+        "search_after": [
+          42
+        ],
+        "sort": [
+          {
+            "age": "asc"
+          }
+        ]
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching:
+      | _id          |
+      | "document-3" |
 
   # document:exists ============================================================
 
