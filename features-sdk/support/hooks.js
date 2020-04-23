@@ -90,7 +90,7 @@ After({ tags: '@firstAdmin', timeout: 60 * 1000 }, async function () {
 
 // security hooks ==============================================================
 
-Before({ tags: '@security', timeout: 60 * 1000 }, async function () {
+After({ tags: '@security', timeout: 60 * 1000 }, async function () {
   await resetSecurityDefault(this.sdk);
 });
 
