@@ -10,7 +10,9 @@ Updates a collection mapping.
 
 <SinceBadge version="1.7.1" />
 
-<DeprecatedBadge version="2.1.0">
+<DeprecatedBadge version="2.1.0" />
+
+__Use [collection:update](/core/2/api/controllers/collection/update) instead.__
 
 You can define the collection [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
 

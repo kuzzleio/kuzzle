@@ -52,12 +52,12 @@ describe('#errorsManager', () => {
   });
 
   it('should return a NotFoundError with default name, msg and code', () => {
-    const err = errorsManager.get('services', 'storage', 'not_found', 'fake_id');
+    const err = errorsManager.get('services', 'storage', 'not_found', 'fake_id', 'index', 'collection');
     should(err).be.instanceOf(NotFoundError);
     should(err).match({
       id: 'services.storage.not_found',
       code: parseInt('0101000b', 16),
-      message: 'Document "fake_id" not found.'
+      message: 'Document "fake_id" not found in "index":"collection".'
     });
   });
 

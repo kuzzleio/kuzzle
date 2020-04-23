@@ -78,6 +78,12 @@ Then('The property {string} of the result should match:', function (path, dataTa
   }
 });
 
+Then('The result should be {string}', function (rawValue) {
+  const expectedValue = JSON.parse(rawValue);
+
+  should(this.props.result).be.eql(expectedValue);
+});
+
 Then('The result should contain a property {string} of type {string}', function (path, type) {
   const property = _.get(this.props.result, path);
 
@@ -118,7 +124,7 @@ Then('I should receive an error matching:', function (dataTable) {
 
 Then('I debug {string}', function (path) {
   const prop = _.get(this.props, path);
-  
+
   try {
     console.log(JSON.stringify(prop, null, 2));
   }

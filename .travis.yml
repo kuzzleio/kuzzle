@@ -47,7 +47,7 @@ _doc-deploy: &doc-deploy
         - python-pip
   install:
     - pip install awscli --upgrade --user
-    - npm ci
+    - npm install --production=false
   script:
     - rm -rf doc/framework
     - npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront

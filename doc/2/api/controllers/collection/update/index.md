@@ -13,7 +13,7 @@ Updates a collection configuration.
 You can update the collection [mappings](/core/2/guides/essentials/database-mappings) and [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings).
 
 ::: warning
-While updating the collection [analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/analysis-custom-analyzer.html) using the `analysis` property, the collection will be [closed](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/indices-close.html) until the new configuration has been applied.
+While updating the collection [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings), the collection will be [closed](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/indices-close.html) until the new configuration has been applied.
 :::
 
 ---

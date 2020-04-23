@@ -31,3 +31,35 @@ Feature: Index Controller
       | index | "kuz.zle" |
     Then I should receive an error matching:
       | status | 400 |
+
+  # index:exists ===============================================================
+
+  Scenario: Test index existence
+    Given an index "nyc-open-data"
+    When I successfully call the route "index":"exists" with args:
+      | index | "nyc-open-data" |
+    Then The result should be "true"
+    When I successfully call the route "index":"exists" with args:
+      | index | "mtp-open-data" |
+    Then The result should be "false"
+
+  # index:list =================================================================
+
+  Scenario: List indexes
+    Given an index "nyc-open-data"
+    And an index "mtp-open-data"
+    When I successfully call the route "index":"list"
+    Then I should receive a result matching:
+      | indexes | ["nyc-open-data", "mtp-open-data"] |
+
+  Scenario: List indexes with collection count
+    Given an index "nyc-open-data"
+    And a collection "nyc-open-data":"yellow-taxi"
+    And a collection "nyc-open-data":"green-taxi"
+    And an index "mtp-open-data"
+    And a collection "mtp-open-data":"red-taxi"
+    When I successfully call the route "index":"list" with args:
+      | countCollection | true |
+    Then I should receive a result matching:
+      | indexes | ["nyc-open-data", "mtp-open-data"] |
+      | collections | { "nyc-open-data": 2, "mtp-open-data": 1 } |
