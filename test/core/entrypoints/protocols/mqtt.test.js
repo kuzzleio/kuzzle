@@ -110,6 +110,7 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
         .be.calledOnce()
         .be.calledWith('test');
 
+      protocol.onDisconnection.resetHistory();
       cb = protocol.aedes.on.getCall(1).args[1];
       cb('test');
       should(protocol.onDisconnection)
