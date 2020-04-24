@@ -1586,6 +1586,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.updateSearchIndex = sinon.stub().resolves();
     });
     it('should call updateSettings, updateMapping and updateSearchIndex', async () => {
+      elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'false', properties: { city: { type: 'keyword' } } });
       await elasticsearch.updateCollection(index, collection, { mappings, settings });
 
       should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
@@ -1593,7 +1594,17 @@ describe('Test: ElasticSearch service', () => {
       should(elasticsearch.updateSearchIndex).be.calledWith(index, collection);
     });
 
+    it('should call updateSettings and updateMapping', async () => {
+      elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'true', properties: { city: { type: 'keyword' } } });
+      await elasticsearch.updateCollection(index, collection, { mappings, settings });
+
+      should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
+      should(elasticsearch.updateMapping).be.calledWith(index, collection, mappings);
+      should(elasticsearch.updateSearchIndex).not.be.called();
+    });
+
     it('should revert settings if updateMapping fail', () => {
+      elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'true', properties: { city: { type: 'keyword' } } });
       elasticsearch.updateMapping.rejects();
 
       const promise = elasticsearch.updateCollection(index, collection, { mappings, settings });
