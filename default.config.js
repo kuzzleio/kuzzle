@@ -189,7 +189,7 @@ module.exports = {
         allowCompression: true
       },
       mqtt: {
-        enabled: true,
+        enabled: false,
         allowPubSub: false,
         developmentMode: false,
         disconnectDelay: 250,
