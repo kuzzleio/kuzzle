@@ -1,19 +1,17 @@
 'use strict';
 
-const
-  should = require('should'),
-  waterfall = require('../../lib/util/waterfall');
+const should = require('should');
+const waterfall = require('../../lib/util/waterfall');
 
-describe('waterfall', () => {
+describe.only('waterfall', () => {
   it('should chain callback and pass the result', done => {
     const chain = [
-      cb => cb(null, { data: 'foobar' }),
       (data, cb) => cb(null, data),
       (data, cb) => cb(null, data)
     ];
     const context = { done };
 
-    waterfall(chain, function (error, result) {
+    waterfall(chain, [{ data: 'foobar' }], function (error, result) {
       should(error).be.null();
       should(result).be.eql({ data: 'foobar' });
 
@@ -23,7 +21,6 @@ describe('waterfall', () => {
 
   it('should chain callback with many arguments', done => {
     const chain = [
-      cb => cb(null, 21, 42, 84),
       (...args) => {
         const cb = args.pop();
         cb(null, ...args);
@@ -35,7 +32,7 @@ describe('waterfall', () => {
     ];
     const context = { done };
 
-    waterfall(chain, function (error, ...result) {
+    waterfall(chain, [21, 42, 84], function (error, ...result) {
       should(error).be.null();
       should(result).be.eql([21, 42, 84]);
 
@@ -45,13 +42,12 @@ describe('waterfall', () => {
 
   it('should propagate error', done => {
     const chain = [
-      cb => cb(null, { data: 'foobar' }),
       (data, cb) => cb(new Error('error'), data),
       (data, cb) => cb(null, data)
     ];
     const context = { done };
 
-    waterfall(chain, function (error, result) {
+    waterfall(chain, [{ data: 'foobar' }], function (error, result) {
       should(error).not.be.null();
       should(result).be.null();
 
