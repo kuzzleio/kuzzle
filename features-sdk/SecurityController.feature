@@ -43,7 +43,7 @@ Feature: Security Controller
     And I successfully call the route "security":"searchApiKeys" with args:
       | userId | "My" |
     Then I should receive a "hits" array of objects matching:
-      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.hash |
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
       | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"   |
 
   # security:searchApiKeys =====================================================
@@ -73,7 +73,7 @@ Feature: Security Controller
       | userId | "test-admin"                           |
       | body   | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
-      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.hash |
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"   |
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"   |
 

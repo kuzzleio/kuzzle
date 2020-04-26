@@ -9,7 +9,7 @@ title: searchApiKeys
 Searches for API keys.
 
 ::: info
-To search for an API key corresponding to a token you can search on the `hash` property which is a SHA256 hash of the token.
+To search for an API key corresponding to a token you can search on the `fingerprint` property which is a SHA256 hash of the token.
 :::
 
 ---
