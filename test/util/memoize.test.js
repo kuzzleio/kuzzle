@@ -13,13 +13,21 @@ describe('#memoize', () => {
   it('should invoke the underlying function only once for a same argument', () => {
     const spiedFunction = sinon.stub().callsFake(Math.random);
     const memoized = memoize(spiedFunction);
-    const result = memoized('foo');
 
-    should(memoized('foo')).eql(result);
-    should(memoized('foo')).eql(result);
-    should(memoized('foo')).eql(result);
+    const foo = memoized('foo');
+    const bar = memoized('bar');
 
-    should(spiedFunction).calledOnce().calledWith('foo');
+    should(memoized('foo')).eql(foo);
+    should(memoized('foo')).eql(foo);
+    should(memoized('bar')).eql(bar);
+    should(memoized('bar')).eql(bar);
+    should(memoized('foo')).eql(foo);
+    should(memoized('bar')).eql(bar);
+
+    should(spiedFunction)
+      .calledTwice()
+      .calledWith('foo')
+      .calledWith('bar');
   });
 
   it('should invoke the underlying function using the provided resolver', () => {
