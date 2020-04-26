@@ -61,3 +61,32 @@ Feature: Admin Controller
       | "coolie" |
     And The user "coolie" should have the following profiles:
       | coolie |
+
+  @security
+  Scenario: Rejects on existing users
+    When I call the route "admin":"loadSecurities" with body:
+      """
+      {
+        "users": {
+          "coolie": {
+            "content": {
+              "profileIds": [
+                "default"
+              ]
+            },
+            "credentials": {}
+          },
+          "test-admin": {
+            "content": {
+              "profileIds": [
+                "admin"
+              ]
+            },
+            "credentials": {}
+          }
+        }
+      }
+      """
+    Then I should receive an error matching:
+      | id | "security.user.prevent_override" |
+    And The user "coolie" should not exists

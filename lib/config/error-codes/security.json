@@ -122,9 +122,9 @@
           "class": "InternalError"
         },
         "prevent_override": {
-          "description": "Attempted to override users in a production environment",
+          "description": "Attempted to override existing users. Change \"onExistingUsers\" params to modify this method behavior.",
           "code": 6,
-          "message": "Cannot override existing users in a production environment.",
+          "message": "Cannot override existing users.",
           "class": "BadRequestError"
         }
       }

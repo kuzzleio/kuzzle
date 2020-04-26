@@ -19,8 +19,8 @@ The roles, profiles and users definitions follow the same structure as in the bo
 If some users already exists, they will be deleted and then created again.
 
 ::: warning
-Kuzzle prevent existing user deletion in production environment. (`NODE_ENV=production`)
-User overriding can be forced by passing the flag `force`.
+Kuzzle prevent existing user overriding in production environment.  
+You can either skip or override existing users with the `onExistingUsers` option.
 :::
 
 **Notes:**
@@ -36,7 +36,7 @@ User overriding can be forced by passing the flag `force`.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&force]
+URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&onExistingUsers=skip|override]
 Method: POST
 Body:
 ```
@@ -94,7 +94,7 @@ Body:
 
 ### Optional:
 
-* `force`: if set, Kuzzle will override existing users
+* `onExistingUsers`: can be set to either `skip` or `override` to skip or override existing users
 * `refresh`: if set to `wait_for`, Kuzzle will not respond until the fixtures are loaded
 
 ---

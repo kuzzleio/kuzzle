@@ -165,6 +165,26 @@ Then('The user {string} should have the following profiles:', async function (us
   should(user.profileIds).be.eql(expectedProfiles);
 });
 
+Then(/The user "(.*?)"( should not)? exists/, async function (userId, shouldNot) {
+  try {
+    await this.sdk.security.getUser(userId);
+
+    if (shouldNot) {
+      throw new Error(`User "${userId}" should not exists.`);
+    }
+  }
+  catch (error) {
+    if (error.status === 404) {
+      if (! shouldNot) {
+        throw new Error(`User "${userId}" should exists.`);
+      }
+    }
+    else {
+      throw error;
+    }
+  }
+});
+
 Then('I am able to mGet users with the following ids:', async function (dataTable) {
   const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
   this.props.result = await this.sdk.security.mGetUsers(userIds);

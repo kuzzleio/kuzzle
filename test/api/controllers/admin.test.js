@@ -239,16 +239,18 @@ describe('AdminController', () => {
   describe('#loadSecurities', () => {
     beforeEach(() => {
       request.input.action = 'loadSecurities';
+      request.input.args.onExistingUsers = 'override';
       request.input.body = { gordon: { freeman: [] } };
     });
 
-    it('should call Janitor.loadSecurities', () => {
-      return adminController.loadSecurities(request)
-        .then(() => {
-          should(kuzzle.janitor.loadSecurities)
-            .be.calledOnce()
-            .be.calledWith({ gordon: { freeman: [] } });
-        });
+    it('should call Janitor.loadSecurities', async () => {
+      await adminController.loadSecurities(request);
+
+      should(kuzzle.janitor.loadSecurities)
+        .be.calledOnce()
+        .be.calledWith(
+          { gordon: { freeman: [] } },
+          { onExistingUsers: 'override', user: null });
     });
   });
 });
