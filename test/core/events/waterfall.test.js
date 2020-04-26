@@ -1,9 +1,9 @@
 'use strict';
 
 const should = require('should');
-const waterfall = require('../../lib/util/waterfall');
+const waterfall = require('../../../lib/core/events/waterfall');
 
-describe.only('waterfall', () => {
+describe('waterfall', () => {
   it('should chain callback and pass the result', done => {
     const chain = [
       (data, cb) => cb(null, data),

@@ -2,29 +2,27 @@
 
 const root = '../../../../';
 
-const
-  mockrequire = require('mock-require'),
-  should = require('should'),
-  ElasticsearchClientMock = require(`${root}/test/mocks/services/elasticsearchClient.mock`),
-  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
-  sinon = require('sinon'),
-  {
-    Request,
-    errors: {
-      KuzzleError,
-      GatewayTimeoutError,
-      PluginImplementationError
-    }
-  } = require('kuzzle-common-objects'),
-  { BaseController } = require(`${root}/lib/api/controllers/base`);
+const mockrequire = require('mock-require');
+const should = require('should');
+const ElasticsearchClientMock = require(`${root}/test/mocks/services/elasticsearchClient.mock`);
+const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+const sinon = require('sinon');
+const {
+  Request,
+  errors: {
+    KuzzleError,
+    GatewayTimeoutError,
+    PluginImplementationError
+  }
+} = require('kuzzle-common-objects');
+const { BaseController } = require(`${root}/lib/api/controllers/base`);
 
 describe('PluginsManager.run', () => {
-  let
-    plugin,
-    pluginMock,
-    kuzzle,
-    PluginsManager,
-    pluginsManager;
+  let plugin;
+  let pluginMock;
+  let kuzzle;
+  let PluginsManager;
+  let pluginsManager;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -53,7 +51,7 @@ describe('PluginsManager.run', () => {
   });
 
   describe('#hook', () => {
-    it('should attach event hook with method name', () => {
+    it('should attach event hook with method name', async () => {
       plugin.object.hooks = {
         'foo:bar': 'foo',
         'bar:foo': 'bar'
@@ -65,30 +63,25 @@ describe('PluginsManager.run', () => {
       pluginMock.expects('foo').once();
       pluginMock.expects('bar').never();
 
-      return pluginsManager.run()
-        .then(() => {
-          kuzzle.emit('foo:bar');
-          pluginMock.verify();
-        });
+      await pluginsManager.run();
+      kuzzle.emit('foo:bar');
+      pluginMock.verify();
     });
 
-    it('should attach event hook with function', () => {
-      const
-        bar = sinon.spy(),
-        foo = sinon.spy();
+    it('should attach event hook with function', async () => {
+      const bar = sinon.spy();
+      const foo = sinon.spy();
 
       plugin.object.hooks = {
         'foo:bar': bar,
-        'bar:foo': foo
+        'bar:foo': foo,
       };
 
-      return pluginsManager.run()
-        .then(() => {
-          kuzzle.emit('foo:bar');
+      await pluginsManager.run();
+      kuzzle.emit('foo:bar');
 
-          should(bar).be.calledOnce();
-          should(foo).not.be.called();
-        });
+      should(bar).be.calledOnce();
+      should(foo).not.be.called();
     });
 
     it('should attach multi-target hook with method name', () => {

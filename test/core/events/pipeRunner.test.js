@@ -3,7 +3,7 @@
 const assert = require('assert');
 const should = require('should');
 const sinon = require('sinon');
-const PipeRunner = require('../../../../lib/core/plugins/pipeRunner');
+const PipeRunner = require('../../../lib/core/events/pipeRunner');
 const {
   errors: {
     BadRequestError,
@@ -38,7 +38,7 @@ class RemoteControlledPipe {
   }
 }
 
-describe.only('#pipeRunner', () => {
+describe('#pipeRunner', () => {
   let clock;
   let pipeRunner;
   let maxConcurrentPipes;
