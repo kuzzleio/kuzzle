@@ -50,7 +50,7 @@ Congratulations! You have completed the Kuzzle installation, it will now accept 
 ::: info
 Having trouble?
 
-- Get in touch with us on [Gitter](https://gitter.im/kuzzleio/kuzzle)
+- Get in touch with us on [Discord](http://join.discord.kuzzle.io)
 - Try one of [these](/core/2/guides/essentials/installing-kuzzle) alternative installation methods
 :::
 
