@@ -13,26 +13,27 @@ Custom errors have to be specified in the [manifest.json](/core/2/plugins/guides
 Example:
 ```
 {
-    "name": "<plugin name>",
-    "kuzzleVersion": ">=1.0.0 <2.0.0",
-    "errors": {
-        "some_error": {
-            "code": 1,
-            "message": "An error occurred: %s",
-            "class": "BadRequestError"
+  "name": "<plugin name>",
+  "kuzzleVersion": ">=2.0.0 <3.0.0",
+  "errors": {
+    "some_error": {
+      "code": 1,
+      "message": "An error occurred: %s",
+      "class": "BadRequestError"
 	},
-        "some_other_error": {
-            "code": 2,
-            "message": "An other error occurred: %s",
-            "class": "ForbiddenError"
+    "some_other_error": {
+      "code": 2,
+      "message": "An other error occurred: %s",
+      "class": "ForbiddenError"
 	}
-    }
 }
 ```
 
-The `errorsManager` provides two functions:
-- To throw : `context.errorsManager.throw(error, placeholders);`.
-- To get the built error: `context.errorsManager.get(error, placeholders);`
+The `errorsManager` exposes 4 functions:
+  - `get(errorId, ...placeholders)`: Returns the corresponding error
+  - `getFrom(error, errorId, ...placeholders)`: Returns the corresponding error derived from a previous one (eg: to keep the stacktrace)
+  - `reject(errorId, ...placeholders)`: Like `get(...)` but returns a rejected promise
+  - `rejectFrom(error, errorId, ...placeholders)`: Like `getFrom(...)` but returns a rejected promise
 
 Note that the `domain` is `plugins`, meaning that its code is fixed to `04` and cannot be changed.
 By default, the [subdomain](/core/2/plugins/plugin-context/errors/kuzzleerror/) code for plugins is set to `0`. A subdomain can be defined for a plugin in its configuration section in the [kuzzlerc file](/core/2/plugins/guides/manual-setup/config/). 
@@ -54,9 +55,9 @@ Example, for a plugin name `foobar-plugin`:
 
 ## Example
 
-Taking the configuration example above, if an error is thrown with:
+Taking the configuration example above, if an error is thrown like this:
 
-`context.errorsManager.throw('some_error', 'request badly formatted');`
+`throw context.errorsManager.get('some_error', 'request badly formatted');`
 
 Then when triggered on an API request, Kuzzle will respond to the querying user with a [BadRequestError](/core/2/api/essentials/error-handling/#badrequesterror) error, with the following properties:
 
