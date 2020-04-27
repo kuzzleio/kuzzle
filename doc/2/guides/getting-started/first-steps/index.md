@@ -16,7 +16,7 @@ Before proceeding, please make sure your system has these programs installed:
 - Kuzzle
 
 :::info
-Having trouble? Get in touch with us on [Gitter](https://gitter.im/kuzzleio/kuzzle)!
+Having trouble? Get in touch with us on [Discord](http://join.discord.kuzzle.io)!
 :::
 
 ## Prepare your environment
