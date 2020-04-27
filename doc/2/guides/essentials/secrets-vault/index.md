@@ -76,7 +76,7 @@ kourou vault:decrypt config/secrets.enc.json --vault-key strongpassword
 You can also specify the vault key in the `KUZZLE_VAULT_KEY` environment variable.
 :::
 
-You can see the complete list of Kuzzle Vault related command in Kourou on [Github](https://github.com/kuzzleio/kourou/#kourou-vaultadd-secrets-file-key-value).
+You can see the complete list of Kuzzle Vault related commands in Kourou on [Github](https://github.com/kuzzleio/kourou/#kourou-vaultadd-secrets-file-key-value).
 
 ## Load encrypted secrets at startup
 
