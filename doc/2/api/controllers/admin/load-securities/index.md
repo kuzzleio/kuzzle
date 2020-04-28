@@ -36,7 +36,7 @@ You can either skip or override existing users with the `onExistingUsers` option
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&onExistingUsers=skip|override]
+URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&onExistingUsers=skip|override][&force]
 Method: POST
 Body:
 ```
@@ -69,7 +69,6 @@ Body:
 {
   "controller": "admin",
   "action": "loadSecurities",
-  "force": false,
   "body": {
     "roles": {
       "role-id": {
@@ -96,6 +95,7 @@ Body:
 
 * `onExistingUsers`: can be set to either `skip` or `override` to skip or override existing users
 * `refresh`: if set to `wait_for`, Kuzzle will not respond until the fixtures are loaded
+* `force`: if set to `true`, creates the role even if it gives access to non-existent plugins API routes.
 
 ---
 
