@@ -47,12 +47,13 @@ describe('Test: core/janitor', () => {
     it('should create or replace roles', () => {
       kuzzle.funnel.processRequest.resolves(true);
 
-      return janitor.loadSecurities({ roles: securities.roles })
+      return janitor.loadSecurities({ roles: securities.roles }, { force: true })
         .then(() => {
           should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
           should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createOrReplaceRole');
           should(kuzzle.funnel.processRequest.getCall(0).args[0].input.resource._id).be.eql('driver');
+          should(kuzzle.funnel.processRequest.getCall(0).args[0].input.args.force).be.eql(true);
           should(kuzzle.funnel.processRequest.getCall(0).args[0].input.body.controllers.document.actions['*']).be.eql(true);
         });
     });
