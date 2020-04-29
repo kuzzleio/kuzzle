@@ -31,7 +31,7 @@ Example:
 
 The `errorsManager` exposes 4 functions:
   - `get(errorId, ...placeholders)`: Returns the corresponding error
-  - `getFrom(error, errorId, ...placeholders)`: Returns the corresponding error derived from a previous one (eg: to keep the stacktrace)
+  - `getFrom(error, errorId, ...placeholders)`: Returns the corresponding error but keep the stacktrace from `error`
   - `reject(errorId, ...placeholders)`: Like `get(...)` but returns a rejected promise
   - `rejectFrom(error, errorId, ...placeholders)`: Like `getFrom(...)` but returns a rejected promise
 
