@@ -250,7 +250,7 @@ describe('AdminController', () => {
         .be.calledOnce()
         .be.calledWith(
           { gordon: { freeman: [] } },
-          { onExistingUsers: 'override', user: null });
+          { onExistingUsers: 'override', user: null, force: false });
     });
   });
 });
