@@ -47,10 +47,10 @@ class PipePlugin {
         // 
         // Example: adds a "foo: 'bar'" key/value to all documents' content
         // if added to the foo:bar collection
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
-          documents.forEach(d => d._source.foo = 'bar');
+          documents.forEach(d => (d._source.foo = 'bar'));
         }
 
         return documents;
@@ -91,7 +91,7 @@ class PipePlugin {
         // 
         // Example: logs the number of documents created in the foo:bar 
         // collection
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
           context.log.info(`${documents.length} documents written in foo:bar`);
@@ -137,10 +137,10 @@ class PipePlugin {
         // 
         // Example: adds a "foo: 'bar'" key/value to all documents' content
         // if added to the foo:bar collection
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
-          documents.forEach(d => d._source.foo = 'bar');
+          documents.forEach(d => (d._source.foo = 'bar'));
         }
 
         return documents;
@@ -179,7 +179,7 @@ class PipePlugin {
         // 
         // Example: logs the number of documents updated in the foo:bar 
         // collection
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
           context.log.info(`${documents.length} documents updated in foo:bar`);
@@ -219,7 +219,7 @@ class PipePlugin {
         // deleted.
         // 
         // Example: forbid deletions of documents containing a "foo:bar" field
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         const response = await context.accessors.sdk.document.mGet(
           index, 
@@ -268,7 +268,7 @@ class PipePlugin {
         // 
         // Example: logs the number of documents deleted in the foo:bar 
         // collection
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
           context.log.info(`${documents.length} documents deleted in foo:bar`);
@@ -310,7 +310,7 @@ class PipePlugin {
         // 
         // Example: refuses to fetch documents with ids starting with "foobar_"
         //          in collection foo:bar
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
           for (const document of documents) {
@@ -356,7 +356,7 @@ class PipePlugin {
         // 
         // Example: removes sensitive information from documents of the
         //          foo:bar collectin
-        const {index, collection} = request.input.resources;
+        const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
           documents.forEach(d => delete d._source.foo);
