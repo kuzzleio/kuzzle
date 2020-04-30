@@ -25,6 +25,7 @@ description: error codes definitions
 | plugin.assert.privileged_not_set<br/><pre>0x04010007</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | The 'privileged' flag has been set in the plugin's manifest file, but it needs also to be added in Kuzzle's configuration |
 | plugin.assert.not_a_constructor<br/><pre>0x04010008</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | The exposed plugin is not a constructor |
 | plugin.assert.name_already_exists<br/><pre>0x04010009</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Another plugin with the same name has already been loaded |
+| plugin.assert.invalid_plugin_name<br/><pre>0x0401000a</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | The plugin name in the manifest is invalid. Plugin can only contain lowercase letters and dash. |
 
 ---
 
