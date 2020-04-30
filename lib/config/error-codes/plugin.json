@@ -57,6 +57,12 @@
           "code": 9,
           "message": "A plugin named %s already exists",
           "class": "PluginImplementationError"
+        },
+        "invalid_plugin_name": {
+          "description": "The plugin name in the manifest is invalid. Plugin can only contain lowercase letters and dash.",
+          "code": 10,
+          "message": "Plugin name \"%s\" is invalid.",
+          "class": "PluginImplementationError"
         }
       }
     },
