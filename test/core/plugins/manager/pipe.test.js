@@ -1,22 +1,20 @@
 'use strict';
 
-const
-  mockrequire = require('mock-require'),
-  should = require('should'),
-  sinon = require('sinon'),
-  ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  {
-    errors: {
-      PluginImplementationError
-    },
-    Request
-  } = require('kuzzle-common-objects');
+const mockrequire = require('mock-require');
+const should = require('should');
+const sinon = require('sinon');
+const ElasticsearchClientMock = require('../../../mocks/services/elasticsearchClient.mock');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const {
+  errors: {
+    PluginImplementationError
+  },
+  Request
+} = require('kuzzle-common-objects');
 
 describe('pluginsManager.pipe', () => {
-  let
-    kuzzle,
-    pluginsManager;
+  let kuzzle;
+  let pluginsManager;
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
@@ -29,28 +27,6 @@ describe('pluginsManager.pipe', () => {
     kuzzle.pipe.restore();
     pluginsManager = new PluginsManager(kuzzle);
     kuzzle.pluginsManager = pluginsManager;
-  });
-
-  it('should trigger hooks with wildcard event', done => {
-    pluginsManager.plugins = [{
-      object: {
-        init: () => {},
-        hooks: {
-          'foo:*': 'myFunc'
-        },
-        myFunc: done
-      },
-      config: {},
-      activated: true,
-      manifest: {
-        name: 'foo'
-      }
-    }];
-
-    pluginsManager.run()
-      .then(() => {
-        kuzzle.emit('foo:bar');
-      });
   });
 
   it('should trigger hooks with before wildcard event', done => {
