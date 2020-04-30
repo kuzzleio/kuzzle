@@ -9,28 +9,19 @@ order: 150
 
 <SinceBadge version="1.9.0" />
 
-Some actions in the document controller trigger generic events. Generic events are used to apply modifications on the documents in the request or result of these actions.
+Some actions in the document controller trigger generic events. Generic events can be used to apply modifications homogeneously on documents processed by this API controller, without having to write dedicated pipes for each action, independantly.
 
-Generic "before" events (`generic:document:before*`) are triggered **before** the regular `document:before*` event.  
-Generic "after" events (`generic:document:after*`) are triggered **after** the regular `document:after*` event.
+There are 4 types of generic events, depending on the action performed on documents: 
+* get: when documents are fetched
+* write: when documents are created or replaced
+* update: when partial updates are applied to documents
+* delete: when documents are deleted
 
-All the pipes triggered by generic events have the same signature and should resolves the array of the updated documents from parameters.
+As with other API events, generic ones are triggered before and after documents are processed:
+* generic "before" events (`generic:document:before*`) are triggered **before** the regular `document:before*` events
+* generic "after" events (`generic:document:after*`) are triggered **after** the regular `document:after*` events
 
-```javascript
-class PipePlugin {
-
-  init(customConfig, context) {
-    this.pipes = {
-      'generic:document:<event>': async (documents, request) => {
-        // some random change on documents
-
-        return documents;
-      }
-    };
-  }
-
-}
-```
+All generic events share the same payload signature, and pipes plugged to them must resolve to the updated (or not) array of documents received in their parameters.
 
 ---
 
@@ -41,28 +32,36 @@ class PipePlugin {
 | documents | `Array` | Array of documents (containing a document's `_id` and `_source` fields) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:beforeWrite` generic events allow to intercept the Request lifecycle before all the actions related to document writing.
+
+Triggered before documents are created or replaced.
 
 ### Example
 
 ```javascript
 class PipePlugin {
-
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeWrite': async documents => {
-        // some random change
-        documents[0]._source.foo = 'bar';
+      'generic:document:beforeWrite': async (documents, request) => {
+        // The "documents" argument contains the documents about to be 
+        // created/replaced, and it can be updated by this pipe function.
+        // 
+        // Example: adds a "foo: 'bar'" key/value to all documents' content
+        // if added to the foo:bar collection
+        const {index, collection} = request.input.resources;
+
+        if (index === 'foo' && collection === 'bar') {
+          documents.forEach(d => d._source.foo = 'bar');
+        }
 
         return documents;
       }
     };
   }
-
 }
 ```
 
-### Associated controller actions:
+### Triggered by
+
 - [document:create](/core/2/api/controllers/document/create)
 - [document:createOrReplace](/core/2/api/controllers/document/create-or-replace)
 - [document:mCreate](/core/2/api/controllers/document/m-create)
@@ -77,7 +76,7 @@ class PipePlugin {
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:afterWrite` generic events allow to intercept the request lifecycle after all the actions related to document writing.
+Triggered after documents have been created or replaced.
 
 ### Example
 
@@ -86,9 +85,17 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterWrite': async documents => {
-        // some random change
-        documents[0]._source.foo = 'bar';
+      'generic:document:afterWrite': async (documents, request) => {
+        // The "documents" argument contains the documents that have been 
+        // created/replaced, and it can be updated by this pipe function.
+        // 
+        // Example: logs the number of documents created in the foo:bar 
+        // collection
+        const {index, collection} = request.input.resources;
+
+        if (index === 'foo' && collection === 'bar') {
+          context.log.info(`${documents.length} documents written in foo:bar`);
+        }
 
         return documents;
       }
@@ -98,7 +105,8 @@ class PipePlugin {
 }
 ```
 
-### Associated controller actions:
+### Triggered by 
+
 - [document:create](/core/2/api/controllers/document/create)
 - [document:createOrReplace](/core/2/api/controllers/document/create-or-replace)
 - [document:mCreate](/core/2/api/controllers/document/m-create)
@@ -114,7 +122,7 @@ class PipePlugin {
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:beforeUpdate` generic events allow to intercept the Request lifecycle before all the actions related to document updating.
+Triggered before partial updates are applied to documents.
 
 ### Example
 
@@ -123,9 +131,17 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeUpdate': async documents => {
-        // some random change
-        documents[0]._source.foo = 'bar';
+      'generic:document:beforeUpdate': async (documents, request) => {
+        // The "documents" argument contains the documents about to be 
+        // updated, and it can be changed by this pipe function.
+        // 
+        // Example: adds a "foo: 'bar'" key/value to all documents' content
+        // if added to the foo:bar collection
+        const {index, collection} = request.input.resources;
+
+        if (index === 'foo' && collection === 'bar') {
+          documents.forEach(d => d._source.foo = 'bar');
+        }
 
         return documents;
       }
@@ -135,7 +151,8 @@ class PipePlugin {
 }
 ```
 
-### Associated controller actions:
+### Triggered by
+
 - [document:update](/core/2/api/controllers/document/update)
 - [document:mUpdate](/core/2/api/controllers/document/m-update)
 
@@ -147,7 +164,7 @@ class PipePlugin {
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:afterUpdate` generic events allos to intercept the Request lifecycle after all the actions related to document updating.
+Triggered after partial updates are applied to documents.
 
 ### Example
 
@@ -156,9 +173,17 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterUpdate': async documents => {
-        // some random change
-        documents[0]._source.foo = 'bar';
+      'generic:document:afterUpdate': async (documents, request) => {
+        // The "documents" argument contains the documents that have been
+        // updated, and it can be changed by this pipe function.
+        // 
+        // Example: logs the number of documents updated in the foo:bar 
+        // collection
+        const {index, collection} = request.input.resources;
+
+        if (index === 'foo' && collection === 'bar') {
+          context.log.info(`${documents.length} documents updated in foo:bar`);
+        }
 
         return documents;
       }
@@ -168,7 +193,8 @@ class PipePlugin {
 }
 ```
 
-### Associated controller actions:
+### Triggered by
+
 - [document:update](/core/2/api/controllers/document/update)
 - [document:mUpdate](/core/2/api/controllers/document/m-update)
 
@@ -180,18 +206,31 @@ class PipePlugin {
 | documents | `Array` | Array of documents (containing document `_id`) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:beforeDelete` generic events allow to intercept the Request lifecycle before all the actions related to document deleting.
+Triggered before documents are deleted.
 
 ### Example
 
 ```javascript
 class PipePlugin {
-
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeDelete': async documents => {
-        // some random change
-        documents[0]._id += 'foo';
+      'generic:document:beforeDelete': async (documents, request) => {
+        // The "documents" argument contains the documents about to be 
+        // deleted.
+        // 
+        // Example: forbid deletions of documents containing a "foo:bar" field
+        const {index, collection} = request.input.resources;
+
+        const response = await context.accessors.sdk.document.mGet(
+          index, 
+          collection,
+          documents.map(d => d._id));
+
+        for (const document of response.successes) {
+          if (document._source.foo === 'bar') {
+            throw context.errors.ForbiddenError('foobar documents cannot be deleted');
+          }
+        }
 
         return documents;
       }
@@ -201,7 +240,8 @@ class PipePlugin {
 }
 ```
 
-### Associated controller actions:
+### Triggered by
+
 - [document:delete](/core/2/api/controllers/document/delete)
 - [document:mDelete](/core/2/api/controllers/document/m-delete)
 
@@ -213,7 +253,7 @@ class PipePlugin {
 | documents | `Array` | Array of documents (containing document `_id`) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:afterDelete` generic events allow to intercept the Request lifecycle after all the actions related to document deleting.
+Triggered after documents have been deleted.
 
 ### Example
 
@@ -222,9 +262,17 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterDelete': async documents => {
-        // some random change
-        documents[0]._id += 'foo';
+      'generic:document:afterDelete': async (documents, request) => {
+        // The "documents" argument contains the documents that have been
+        // deleted.
+        // 
+        // Example: logs the number of documents deleted in the foo:bar 
+        // collection
+        const {index, collection} = request.input.resources;
+
+        if (index === 'foo' && collection === 'bar') {
+          context.log.info(`${documents.length} documents deleted in foo:bar`);
+        }
 
         return documents;
       }
@@ -234,7 +282,8 @@ class PipePlugin {
 }
 ```
 
-### Associated controller actions:
+### Triggered by
+
 - [document:delete](/core/2/api/controllers/document/delete)
 - [document:mDelete](/core/2/api/controllers/document/m-delete)
 - [document:deleteByQuery](/core/2/api/controllers/document/delete-by-query)
@@ -247,18 +296,29 @@ class PipePlugin {
 | documents | `Array` | Array of documents (containing document `_id`) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:beforeGet` generic events allow to intercept the Request liecycle before all the actions related to document getting.
+Triggered before documents are fetched.
 
 ### Example
 
 ```javascript
 class PipePlugin {
-
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeGet': async documents => {
-        // some random change
-        documents[0]._id += 'foo';
+      'generic:document:beforeGet': async (documents, request) => {
+        // The "documents" argument contains the documents about to be 
+        // fetched.
+        // 
+        // Example: refuses to fetch documents with ids starting with "foobar_"
+        //          in collection foo:bar
+        const {index, collection} = request.input.resources;
+
+        if (index === 'foo' && collection === 'bar') {
+          for (const document of documents) {
+            if (document._id.startsWith('foobar_')) {
+              throw context.errors.ForbiddenError('Cannot fetch foobar documents');
+            }
+          }
+        }
 
         return documents;
       }
@@ -268,7 +328,8 @@ class PipePlugin {
 }
 ```
 
-### Associated controller actions:
+### Triggered by 
+
 - [document:get](/core/2/api/controllers/document/get)
 - [document:mGet](/core/2/api/controllers/document/m-get)
 
@@ -277,10 +338,10 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing document `_id`) |
+| documents | `Array` | Array of documents (containing documents `_id` and `_source`) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-`generic:document:afterGet` generic events allow to intercept the Request lifecycle after all the actions related to document getting.
+Triggered after documents are fetched.
 
 ### Example
 
@@ -289,9 +350,17 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeGet': async documents => {
-        // some random change
-        documents[0]._id += 'foo';
+      'generic:document:afterGet': async (documents, request) => {
+        // The "documents" argument contains the documents that have been
+        // fetched.
+        // 
+        // Example: removes sensitive information from documents of the
+        //          foo:bar collectin
+        const {index, collection} = request.input.resources;
+
+        if (index === 'foo' && collection === 'bar') {
+          documents.forEach(d => delete d._source.foo);
+        }
 
         return documents;
       }
@@ -301,7 +370,8 @@ class PipePlugin {
 }
 ```
 
-### Associated controller actions:
+### Triggered by
+
 - [document:get](/core/2/api/controllers/document/get)
 - [document:mGet](/core/2/api/controllers/document/m-get)
 - [document:search](/core/2/api/controllers/document/search)
