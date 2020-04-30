@@ -1586,6 +1586,15 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.updateSearchIndex = sinon.stub().resolves();
     });
     it('should call updateSettings, updateMapping and updateSearchIndex', async () => {
+      elasticsearch.getMapping = sinon.stub().resolves({dynamic: 'true', properties: { city: { type: 'keyword' }, dynamic: 'false' } });
+      await elasticsearch.updateCollection(index, collection, { mappings, settings });
+
+      should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
+      should(elasticsearch.updateMapping).be.calledWith(index, collection, mappings);
+      should(elasticsearch.updateSearchIndex).be.calledWith(index, collection);
+    });
+
+    it('should call updateSettings, updateMapping and updateSearchIndex', async () => {
       elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'false', properties: { city: { type: 'keyword' } } });
       await elasticsearch.updateCollection(index, collection, { mappings, settings });
 

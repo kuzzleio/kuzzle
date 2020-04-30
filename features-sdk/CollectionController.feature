@@ -19,13 +19,13 @@ Feature: Collection Controller
   Scenario: Update a collection and search document
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:
-      | mappings | { "dynamic": "false", "properties": { "name": { "type": "keyword" } } } |
+      | mappings | { "dynamic": "true", "properties": { "name": { "type": "keyword" }, "metadata": {"properties": {}, "dynamic": "false"} } } |
     And I "create" the following documents:
       | _id          | body        |
-      | "document-1" | {"age": 2 } |
+      | "document-1" | {"age": 2} |
     And I refresh the collection
     When I "update" the collection "nyc-open-data":"green-taxi" with:
-      | mappings | { "properties": { "age": { "type": "integer" } } } |
+      | mappings | { "properties": { "age": { "type": "long" } } } |
     When I search documents with the following query:
       """
       {
