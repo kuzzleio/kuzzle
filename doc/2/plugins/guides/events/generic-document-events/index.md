@@ -25,49 +25,136 @@ All generic events share the same payload signature, and pipes plugged to them m
 
 ---
 
-## generic:document:beforeWrite
+## generic:document:afterDelete
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing a document's `_id` and `_source` fields) |
+| documents | `Array` | Array of documents (containing document `_id`) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-
-Triggered before documents are created or replaced.
+Triggered after documents have been deleted.
 
 ### Example
 
 ```javascript
 class PipePlugin {
+
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:beforeWrite': async (documents, request) => {
-        // The "documents" argument contains the documents about to be 
-        // created/replaced, and it can be updated by this pipe function.
+      'generic:document:afterDelete': async (documents, request) => {
+        // The "documents" argument contains the documents that have been
+        // deleted.
         // 
-        // Example: adds a "foo: 'bar'" key/value to all documents' content
-        // if added to the foo:bar collection
+        // Example: logs the number of documents deleted in the foo:bar 
+        // collection
         const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
-          documents.forEach(d => (d._source.foo = 'bar'));
+          context.log.info(`${documents.length} documents deleted in foo:bar`);
         }
 
         return documents;
       }
     };
   }
+
 }
 ```
 
 ### Triggered by
 
-- [document:create](/core/2/api/controllers/document/create)
-- [document:createOrReplace](/core/2/api/controllers/document/create-or-replace)
-- [document:mCreate](/core/2/api/controllers/document/m-create)
-- [document:mCreateOrReplace](/core/2/api/controllers/document/m-create-or-replace)
-- [document:mReplace](/core/2/api/controllers/document/m-replace)
-- [document:replace](/core/2/api/controllers/document/replace)
+- [document:delete](/core/2/api/controllers/document/delete)
+- [document:mDelete](/core/2/api/controllers/document/m-delete)
+- [document:deleteByQuery](/core/2/api/controllers/document/delete-by-query)
+
+---
+
+## generic:document:afterGet
+
+| Arguments | Type                                                           | Description                |
+| --------- | -------------------------------------------------------------- | -------------------------- |
+| documents | `Array` | Array of documents (containing documents `_id` and `_source`) |
+| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+
+Triggered after documents are fetched.
+
+### Example
+
+```javascript
+class PipePlugin {
+
+  init(customConfig, context) {
+    this.pipes = {
+      'generic:document:afterGet': async (documents, request) => {
+        // The "documents" argument contains the documents that have been
+        // fetched.
+        // 
+        // Example: removes sensitive information from documents of the
+        //          foo:bar collectin
+        const {index, collection} = request.input.resource;
+
+        if (index === 'foo' && collection === 'bar') {
+          documents.forEach(d => delete d._source.foo);
+        }
+
+        return documents;
+      }
+    };
+  }
+
+}
+```
+
+### Triggered by
+
+- [document:get](/core/2/api/controllers/document/get)
+- [document:mGet](/core/2/api/controllers/document/m-get)
+- [document:search](/core/2/api/controllers/document/search)
+
+---
+
+## generic:document:afterUpdate
+
+| Arguments | Type                                                           | Description                |
+| --------- | -------------------------------------------------------------- | -------------------------- |
+| documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
+| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+
+Triggered after partial updates are applied to documents.
+
+### Example
+
+```javascript
+class PipePlugin {
+
+  init(customConfig, context) {
+    this.pipes = {
+      'generic:document:afterUpdate': async (documents, request) => {
+        // The "documents" argument contains the documents that have been
+        // updated, and it can be changed by this pipe function.
+        // 
+        // Example: logs the number of documents updated in the foo:bar 
+        // collection
+        const {index, collection} = request.input.resource;
+
+        if (index === 'foo' && collection === 'bar') {
+          context.log.info(`${documents.length} documents updated in foo:bar`);
+        }
+
+        return documents;
+      }
+    };
+  }
+
+}
+```
+
+### Triggered by
+
+- [document:update](/core/2/api/controllers/document/update)
+- [document:mUpdate](/core/2/api/controllers/document/m-update)
+
+---
 
 ## generic:document:afterWrite
 
@@ -114,90 +201,7 @@ class PipePlugin {
 - [document:mReplace](/core/2/api/controllers/document/m-replace)
 - [document:replace](/core/2/api/controllers/document/replace)
 
-
-## generic:document:beforeUpdate
-
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
-
-Triggered before partial updates are applied to documents.
-
-### Example
-
-```javascript
-class PipePlugin {
-
-  init(customConfig, context) {
-    this.pipes = {
-      'generic:document:beforeUpdate': async (documents, request) => {
-        // The "documents" argument contains the documents about to be 
-        // updated, and it can be changed by this pipe function.
-        // 
-        // Example: adds a "foo: 'bar'" key/value to all documents' content
-        // if added to the foo:bar collection
-        const {index, collection} = request.input.resource;
-
-        if (index === 'foo' && collection === 'bar') {
-          documents.forEach(d => (d._source.foo = 'bar'));
-        }
-
-        return documents;
-      }
-    };
-  }
-
-}
-```
-
-### Triggered by
-
-- [document:update](/core/2/api/controllers/document/update)
-- [document:mUpdate](/core/2/api/controllers/document/m-update)
-
-
-## generic:document:afterUpdate
-
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
-
-Triggered after partial updates are applied to documents.
-
-### Example
-
-```javascript
-class PipePlugin {
-
-  init(customConfig, context) {
-    this.pipes = {
-      'generic:document:afterUpdate': async (documents, request) => {
-        // The "documents" argument contains the documents that have been
-        // updated, and it can be changed by this pipe function.
-        // 
-        // Example: logs the number of documents updated in the foo:bar 
-        // collection
-        const {index, collection} = request.input.resource;
-
-        if (index === 'foo' && collection === 'bar') {
-          context.log.info(`${documents.length} documents updated in foo:bar`);
-        }
-
-        return documents;
-      }
-    };
-  }
-
-}
-```
-
-### Triggered by
-
-- [document:update](/core/2/api/controllers/document/update)
-- [document:mUpdate](/core/2/api/controllers/document/m-update)
-
+---
 
 ## generic:document:beforeDelete
 
@@ -245,49 +249,7 @@ class PipePlugin {
 - [document:delete](/core/2/api/controllers/document/delete)
 - [document:mDelete](/core/2/api/controllers/document/m-delete)
 
-
-## generic:document:afterDelete
-
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
-
-Triggered after documents have been deleted.
-
-### Example
-
-```javascript
-class PipePlugin {
-
-  init(customConfig, context) {
-    this.pipes = {
-      'generic:document:afterDelete': async (documents, request) => {
-        // The "documents" argument contains the documents that have been
-        // deleted.
-        // 
-        // Example: logs the number of documents deleted in the foo:bar 
-        // collection
-        const {index, collection} = request.input.resource;
-
-        if (index === 'foo' && collection === 'bar') {
-          context.log.info(`${documents.length} documents deleted in foo:bar`);
-        }
-
-        return documents;
-      }
-    };
-  }
-
-}
-```
-
-### Triggered by
-
-- [document:delete](/core/2/api/controllers/document/delete)
-- [document:mDelete](/core/2/api/controllers/document/m-delete)
-- [document:deleteByQuery](/core/2/api/controllers/document/delete-by-query)
-
+---
 
 ## generic:document:beforeGet
 
@@ -333,15 +295,16 @@ class PipePlugin {
 - [document:get](/core/2/api/controllers/document/get)
 - [document:mGet](/core/2/api/controllers/document/m-get)
 
+---
 
-## generic:document:afterGet
+## generic:document:beforeUpdate
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing documents `_id` and `_source`) |
+| documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
 | request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
 
-Triggered after documents are fetched.
+Triggered before partial updates are applied to documents.
 
 ### Example
 
@@ -350,16 +313,16 @@ class PipePlugin {
 
   init(customConfig, context) {
     this.pipes = {
-      'generic:document:afterGet': async (documents, request) => {
-        // The "documents" argument contains the documents that have been
-        // fetched.
+      'generic:document:beforeUpdate': async (documents, request) => {
+        // The "documents" argument contains the documents about to be 
+        // updated, and it can be changed by this pipe function.
         // 
-        // Example: removes sensitive information from documents of the
-        //          foo:bar collectin
+        // Example: adds a "foo: 'bar'" key/value to all documents' content
+        // if added to the foo:bar collection
         const {index, collection} = request.input.resource;
 
         if (index === 'foo' && collection === 'bar') {
-          documents.forEach(d => delete d._source.foo);
+          documents.forEach(d => (d._source.foo = 'bar'));
         }
 
         return documents;
@@ -372,6 +335,51 @@ class PipePlugin {
 
 ### Triggered by
 
-- [document:get](/core/2/api/controllers/document/get)
-- [document:mGet](/core/2/api/controllers/document/m-get)
-- [document:search](/core/2/api/controllers/document/search)
+- [document:update](/core/2/api/controllers/document/update)
+- [document:mUpdate](/core/2/api/controllers/document/m-update)
+
+---
+
+## generic:document:beforeWrite
+
+| Arguments | Type                                                           | Description                |
+| --------- | -------------------------------------------------------------- | -------------------------- |
+| documents | `Array` | Array of documents (containing a document's `_id` and `_source` fields) |
+| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+
+
+Triggered before documents are created or replaced.
+
+### Example
+
+```javascript
+class PipePlugin {
+  init(customConfig, context) {
+    this.pipes = {
+      'generic:document:beforeWrite': async (documents, request) => {
+        // The "documents" argument contains the documents about to be 
+        // created/replaced, and it can be updated by this pipe function.
+        // 
+        // Example: adds a "foo: 'bar'" key/value to all documents' content
+        // if added to the foo:bar collection
+        const {index, collection} = request.input.resource;
+
+        if (index === 'foo' && collection === 'bar') {
+          documents.forEach(d => (d._source.foo = 'bar'));
+        }
+
+        return documents;
+      }
+    };
+  }
+}
+```
+
+### Triggered by
+
+- [document:create](/core/2/api/controllers/document/create)
+- [document:createOrReplace](/core/2/api/controllers/document/create-or-replace)
+- [document:mCreate](/core/2/api/controllers/document/m-create)
+- [document:mCreateOrReplace](/core/2/api/controllers/document/m-create-or-replace)
+- [document:mReplace](/core/2/api/controllers/document/m-replace)
+- [document:replace](/core/2/api/controllers/document/replace)
