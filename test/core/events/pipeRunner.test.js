@@ -191,16 +191,16 @@ describe('#pipeRunner', () => {
     });
 
     it('should resubmit the first item of the buffer', () => {
-      const chain = {chain: 'foo', payload: ['bar'], callback: sinon.stub()};
+      const chain = {chain: 'foo', args: ['bar'], callback: sinon.stub()};
       pipeRunner.buffer.push(chain);
       pipeRunner.buffer.push({
         chain: 'bar',
-        payload: ['oh'],
+        args: ['oh'],
         callback: sinon.stub()
       });
       pipeRunner.buffer.push({
         chain: 'baz',
-        payload: ['noes'],
+        args: ['noes'],
         callback: sinon.stub()
       });
 
@@ -209,7 +209,7 @@ describe('#pipeRunner', () => {
       should(pipeRunner.buffer.length).eql(2);
       should(pipeRunner.run)
         .calledOnce()
-        .calledWith(chain.chain, chain.payload, chain.callback);
+        .calledWith(chain.chain, chain.args, chain.callback);
     });
 
     it('should skip if the buffer is empty', () => {
@@ -222,17 +222,17 @@ describe('#pipeRunner', () => {
     it('should skip if there are already too many pipes running', () => {
       pipeRunner.buffer.push({
         chain: 'foo',
-        payload: ['qux'],
+        args: ['qux'],
         callback: sinon.stub()
       });
       pipeRunner.buffer.push({
         chain: 'bar',
-        payload: ['qux'],
+        args: ['qux'],
         callback: sinon.stub()
       });
       pipeRunner.buffer.push({
         chain: 'baz',
-        payload: ['qux'],
+        args: ['qux'],
         callback: sinon.stub()
       });
 
