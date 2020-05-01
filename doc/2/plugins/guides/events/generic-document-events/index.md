@@ -9,7 +9,7 @@ order: 150
 
 <SinceBadge version="1.9.0" />
 
-Some actions in the document controller trigger generic events. Generic events can be used to apply modifications homogeneously on documents processed by this API controller, without having to write dedicated pipes for each action, independantly.
+Some actions in the document controller trigger generic events. Generic events can be used to apply modifications homogeneously on documents processed by this API controller, without having to write dedicated pipes for each action, independently.
 
 There are 4 types of generic events, depending on the action performed on documents: 
 * get: when documents are fetched
