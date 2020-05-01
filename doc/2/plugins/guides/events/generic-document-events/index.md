@@ -222,7 +222,7 @@ class PipePlugin {
         // The "documents" argument contains the documents about to be 
         // deleted.
         // 
-        // Example: forbid deletions of documents containing a "foo:bar" field
+        // Example: forbids deletions of documents containing a "foo:bar" field
         const {index, collection} = request.input.resource;
 
         const response = await context.accessors.sdk.document.mGet(
