@@ -49,7 +49,7 @@ describe('waterfall', () => {
 
     waterfall(chain, [{ data: 'foobar' }], function (error, result) {
       should(error).not.be.null();
-      should(result).be.null();
+      should(result).be.undefined();
 
       this.done();
     }, context);
