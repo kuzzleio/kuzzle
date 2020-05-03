@@ -303,7 +303,7 @@ describe('PluginsManager.run', () => {
 
       should(fooStub).be.calledOnce();
       should(kuzzle.log.warn)
-        .calledWithMatch(/Plugin testPlugin: pipe for event 'foo:bar' exceeded \d+ms to execute \(\d+\)\./);
+        .calledWithMatch(/\[testPlugin\] pipe for event 'foo:bar' is slow \(\d+ms\)/);
 
       kuzzle.config.plugins.common.pipeWarnTime = warnTime;
     });
