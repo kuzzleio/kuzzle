@@ -189,7 +189,7 @@ describe('Test the bulk controller', () => {
     });
   });
 
-  describe('#deleteByQuery', async () => {
+  describe.only('#deleteByQuery', async () => {
     let query;
 
     beforeEach(() => {
@@ -209,6 +209,7 @@ describe('Test the bulk controller', () => {
     it('should call deleteByQuery with fetch=false', async () => {
       const response = await controller.deleteByQuery(request);
 
+      should(controller.publicStorage.deleteByQuery).be.called()
       should(controller.publicStorage.deleteByQuery).be.calledWith(
         index,
         collection,
