@@ -43,7 +43,7 @@ BeforeAll(({ timeout: 10 * 1000 }), async function () {
     controller: 'admin',
     action: 'loadSecurities',
     body: testSecurities,
-    onExistingUsers: 'override',
+    onExistingUsers: 'overwrite',
     refresh: 'wait_for'
   });
 

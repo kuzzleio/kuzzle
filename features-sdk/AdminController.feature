@@ -88,5 +88,5 @@ Feature: Admin Controller
       }
       """
     Then I should receive an error matching:
-      | id | "security.user.prevent_override" |
+      | id | "security.user.prevent_overwrite" |
     And The user "coolie" should not exists

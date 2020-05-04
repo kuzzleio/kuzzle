@@ -239,7 +239,7 @@ describe('AdminController', () => {
   describe('#loadSecurities', () => {
     beforeEach(() => {
       request.input.action = 'loadSecurities';
-      request.input.args.onExistingUsers = 'override';
+      request.input.args.onExistingUsers = 'overwrite';
       request.input.body = { gordon: { freeman: [] } };
     });
 
@@ -250,7 +250,7 @@ describe('AdminController', () => {
         .be.calledOnce()
         .be.calledWith(
           { gordon: { freeman: [] } },
-          { onExistingUsers: 'override', user: null, force: false });
+          { onExistingUsers: 'overwrite', user: null, force: false });
     });
   });
 });

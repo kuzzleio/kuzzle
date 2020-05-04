@@ -19,8 +19,8 @@ The roles, profiles and users definitions follow the same structure as in the bo
 If users already exist, they will be deleted and then created again.
 
 ::: warning
-Kuzzle prevent existing user overriding in production environment.  
-You can either skip or override existing users with the `onExistingUsers` option.
+By default, Kuzzle prevent existing user overwriting.  
+You can either skip or overwrite existing users with the `onExistingUsers` option.
 :::
 
 **Notes:**
@@ -36,7 +36,7 @@ You can either skip or override existing users with the `onExistingUsers` option
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&onExistingUsers=skip|override][&force]
+URL: http://kuzzle:7512/admin/_loadSecurities[?refresh=wait_for][&onExistingUsers=skip|overwrite|fail][&force]
 Method: POST
 Body:
 ```
@@ -93,7 +93,7 @@ Body:
 
 ### Optional:
 
-* `onExistingUsers`: can be set to either `skip` or `override` to skip or override existing users
+* `onExistingUsers`: can be set to either `fail` (default), `skip` or `overwrite` to either fail, skip or overwrite existing users
 * `refresh`: if set to `wait_for`, Kuzzle will not respond until the fixtures are loaded
 * `force`: if set to `true`, creates the role even if it gives access to non-existent plugins API routes.
 

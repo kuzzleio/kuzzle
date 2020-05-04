@@ -71,14 +71,14 @@ describe('Test: core/janitor', () => {
         });
     });
 
-    it('should reject instead of overriding existing users', async () => {
+    it('should reject instead of overwriting existing users', async () => {
       kuzzle.funnel.processRequest
         .onCall(0).resolves({ result: { hits: [{ _id: 'gfreeman' }] } })
         .onCall(1).resolves();
 
       return should(janitor.loadSecurities({ users: securities.users }))
         .be.rejectedWith(BadRequestError, {
-          id: 'security.user.prevent_override'
+          id: 'security.user.prevent_overwrite'
         });
     });
 
@@ -106,14 +106,14 @@ describe('Test: core/janitor', () => {
         .be.eql(['customer']);
     });
 
-    it('should delete only existing users then create users when onExistingUsers is override', async () => {
+    it('should delete only existing users then create users when onExistingUsers is overwrite', async () => {
       kuzzle.funnel.processRequest
         .onCall(0).resolves({ result: { hits: [{ _id: 'gfreeman' }] } })
         .onCall(1).resolves();
 
       await janitor.loadSecurities(
         { users: securities.users },
-        { onExistingUsers: 'override' });
+        { onExistingUsers: 'overwrite' });
 
       should(kuzzle.funnel.processRequest.callCount).be.eql(4);
 

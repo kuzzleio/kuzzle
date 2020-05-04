@@ -121,10 +121,10 @@
           "message": "Cannot get profiles for uninitialized user \"%s\"",
           "class": "InternalError"
         },
-        "prevent_override": {
-          "description": "Attempted to override existing users. Change \"onExistingUsers\" params to modify this method behavior.",
+        "prevent_overwrite": {
+          "description": "Attempted to overwrite existing users. Change \"onExistingUsers\" params to modify this method behavior.",
           "code": 6,
-          "message": "Cannot override existing users.",
+          "message": "Cannot overwrite existing users.",
           "class": "BadRequestError"
         }
       }
