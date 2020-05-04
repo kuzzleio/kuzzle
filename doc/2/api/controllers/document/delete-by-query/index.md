@@ -14,7 +14,7 @@ Documents removed that way trigger real-time notifications.
 
 The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
 
-This behavior is to prevent Kuzzle from Out of Memory error or DOS because every deleted document has to be fetched first to trigger realtime notifications.
+This behavior aims at limiting the pressure on memory and on real-time notifications.
 
 To remove a greater number of documents, you can:
  - change the server configuration
