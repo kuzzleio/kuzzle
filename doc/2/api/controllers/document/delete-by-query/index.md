@@ -70,7 +70,7 @@ Body:
 
 ### Optional
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are removed from the search indexes
 
 ---
 
