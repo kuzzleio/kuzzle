@@ -3188,30 +3188,31 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should allow to delete multiple documents with deleteByQuery', () => {
-      const promise = elasticsearch.mDelete(index, collection, documentIds);
+    it('should allow to delete multiple documents with deleteByQuery', async () => {
+      const result = await elasticsearch.mDelete(index, collection, documentIds);
 
-      return promise
-        .then(result => {
-          should(elasticsearch.mGet).be.calledWithMatch(
-            index,
-            collection,
-            ['mehry', 'liia']);
+      should(elasticsearch._client.indices.refresh).be.calledWith({
+        index: `&${index}.${collection}`
+      });
 
-          should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
-            index: esIndexName,
-            body: { query: { ids: { values: ['mehry', 'liia'] } } },
-            scroll: '5s'
-          });
+      should(elasticsearch.mGet).be.calledWithMatch(
+        index,
+        collection,
+        ['mehry', 'liia']);
 
-          should(result).match({
-            documents: [
-              { _id: 'mehry', _source: { city: 'Kathmandu' } },
-              { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
-            ],
-            errors: []
-          });
-        });
+      should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { ids: { values: ['mehry', 'liia'] } } },
+        scroll: '5s'
+      });
+
+      should(result).match({
+        documents: [
+          { _id: 'mehry', _source: { city: 'Kathmandu' } },
+          { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
+        ],
+        errors: []
+      });
     });
 
     it('should add non existing documents to rejected', () => {
