@@ -31,7 +31,7 @@ Example:
 
 The `errorsManager` exposes 2 functions:
   - `get(errorId, ...placeholders)`: Returns the corresponding error
-  - `getFrom(error, errorId, ...placeholders)`: Returns the corresponding error but keep the stacktrace from `error`
+  - `getFrom(error, errorId, ...placeholders)`: Returns the corresponding error with its stacktrace taken from the provided `error` argument
 
 Note that the `domain` is `plugins`, meaning that its code is fixed to `04` and cannot be changed.
 By default, the [subdomain](/core/2/plugins/plugin-context/errors/kuzzleerror/) code for plugins is set to `0`. A subdomain can be defined for a plugin in its configuration section in the [kuzzlerc file](/core/2/plugins/guides/manual-setup/config/). 
