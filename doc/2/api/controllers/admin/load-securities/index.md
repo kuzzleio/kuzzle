@@ -16,7 +16,7 @@ The roles, profiles and users definitions follow the same structure as in the bo
  - [createProfile](/core/2/api/controllers/security/create-profile)
  - [createUser](/core/2/api/controllers/security/create-user)
 
-If some users already exists, they will be deleted and then created again.
+If users already exist, they will be deleted and then created again.
 
 ::: warning
 Kuzzle prevent existing user overriding in production environment.  
