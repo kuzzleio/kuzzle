@@ -189,7 +189,7 @@ describe('Test the bulk controller', () => {
     });
   });
 
-  describe.only('#deleteByQuery', async () => {
+  describe('#deleteByQuery', async () => {
     let query;
 
     beforeEach(() => {
