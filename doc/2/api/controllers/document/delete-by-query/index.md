@@ -68,7 +68,7 @@ Body:
 - `collection`: collection name
 - `index`: index name
 
-### Optional:
+### Optional
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
 
