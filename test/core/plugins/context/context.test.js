@@ -347,13 +347,12 @@ describe('Plugin Context', () => {
     });
 
     describe('#trigger', () => {
-      it('should log an error if the event name contains a colon', () => {
-        context.accessors.trigger('event:with:colons');
-        should(kuzzle.log.error).be.calledOnce();
+      it('should rejects if the event name contains a colon', () => {
+        return should(context.accessors.trigger('event:with:colons')).be.rejected();
       });
 
-      it('should call trigger with the given event name and payload and return pipe chain result', () => {
-        kuzzle.pipe.returns('pipe chain result');
+      it('should call trigger with the given event name and payload and return pipe chain result', async () => {
+        kuzzle.pipe.resolves('pipe chain result');
         const eventName = 'backHome';
         const payload = {
           question: 'whose motorcycle is this?',
@@ -364,7 +363,7 @@ describe('Plugin Context', () => {
           yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
         };
 
-        const result = context.accessors.trigger(eventName, payload);
+        const result = await context.accessors.trigger(eventName, payload);
 
         should(result).be.eql('pipe chain result');
         should(kuzzle.pipe)
