@@ -302,5 +302,24 @@ describe('#KuzzleEventEmitter', () => {
       should(await emitter.ask('foo:bar', 'foo', 'bar')).eql('foobar');
       should(answerer).calledWith('foo', 'bar');
     });
+
+    it('should trigger wildcarded hooks on ask events', async () => {
+      const answerer = sinon.stub().resolves('oh noes');
+      const listener1 = sinon.stub();
+      const listener2 = sinon.stub();
+      const listener3 = sinon.stub();
+
+      emitter.onAsk('foo:bar', answerer);
+      emitter.on('foo:bar', listener1);
+      emitter.on('foo:bar', listener2);
+      emitter.on('foo:*', listener3);
+
+      should(await emitter.ask('foo:bar', 'foo', 'bar')).eql('oh noes');
+
+      should(answerer).calledOnce().calledWith('foo', 'bar');
+      should(listener1).calledOnce().calledWith('foo', 'bar');
+      should(listener2).calledOnce().calledWith('foo', 'bar');
+      should(listener3).calledOnce().calledWith('foo', 'bar');
+    });
   });
 });
