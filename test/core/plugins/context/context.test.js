@@ -352,19 +352,21 @@ describe('Plugin Context', () => {
         should(kuzzle.log.error).be.calledOnce();
       });
 
-      it('should call trigger with the given event name and payload', () => {
-        const
-          eventName = 'backHome',
-          payload = {
-            question: 'whose motorcycle is this?',
-            answer: 'it\'s a chopper, baby.',
-            anotherQuestion: 'whose chopper is this, then?',
-            anotherAnswer: 'it\'s Zed\'s',
-            yetAnotherQuestion: 'who\'s Zed?',
-            yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
-          };
+      it('should call trigger with the given event name and payload and return pipe chain result', () => {
+        kuzzle.pipe.returns('pipe chain result');
+        const eventName = 'backHome';
+        const payload = {
+          question: 'whose motorcycle is this?',
+          answer: 'it\'s a chopper, baby.',
+          anotherQuestion: 'whose chopper is this, then?',
+          anotherAnswer: 'it\'s Zed\'s',
+          yetAnotherQuestion: 'who\'s Zed?',
+          yetAnotherAnswer: 'Zed\'s dead, baby, Zed\'s dead.'
+        };
 
-        context.accessors.trigger(eventName, payload);
+        const result = context.accessors.trigger(eventName, payload);
+
+        should(result).be.eql('pipe chain result');
         should(kuzzle.pipe)
           .be.calledWithExactly(`plugin-pluginName:${eventName}`, payload);
       });
