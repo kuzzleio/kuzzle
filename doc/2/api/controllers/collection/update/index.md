@@ -16,6 +16,10 @@ You can update the collection [mappings](/core/2/guides/essentials/database-mapp
 While updating the collection [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings), the collection will be [closed](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/indices-close.html) until the new configuration has been applied.
 :::
 
+::: info
+The search index is automatically refreshed, so you can perform a `document:search` on [new properties](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html#picking-up-a-new-property) right after.
+:::
+
 ---
 
 ## Query Syntax

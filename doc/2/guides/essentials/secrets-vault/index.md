@@ -24,6 +24,8 @@ Kuzzle offers a secure storage system for these secrets, the operation is as fol
 
 Thus, the only secret that it is necessary to communicate to the rest of a team is the encryption password for this file.
 
+See this project on [Github](https://github.com/kuzzleio/kuzzle-vault).
+
 ## Secrets file format
 
 The secrets file is in JSON format. String values are encrypted but the key names remain the same.
@@ -52,10 +54,10 @@ Once encrypted, the file looks like the following:
 
 ## Encrypt and decrypt with the CLI
 
-The encryption of a secret file is done using the CLI with the following command:
+The encryption of a secret file is done using [Kourou](/core/2/guides/essentials/kourou-cli), the Kuzzle CLI with the following command:
 
 ```bash
-kuzzle encryptSecrets config/secrets.json --vault-key strongpassword
+kourou vault:encrypt config/secrets.json --vault-key strongpassword
 [ℹ] Encrypting secrets...
 [✔] Secrets successfully encrypted: config/secrets.enc.json
 ```
@@ -65,7 +67,7 @@ The file `config/secrets.enc.json` can be added safely to the project repository
 To decrypt a previously encrypted file, use the following command:
 
 ```bash
-kuzzle decryptSecrets config/secrets.enc.json --vault-key strongpassword
+kourou vault:decrypt config/secrets.enc.json --vault-key strongpassword
 [ℹ] Decrypting secrets...
 [✔] Secrets successfully encrypted: config/secrets.json
 ```
@@ -74,15 +76,17 @@ kuzzle decryptSecrets config/secrets.enc.json --vault-key strongpassword
 You can also specify the vault key in the `KUZZLE_VAULT_KEY` environment variable.
 :::
 
+You can see the complete list of Kuzzle Vault related commands in Kourou on [Github](https://github.com/kuzzleio/kourou/#kourou-vaultadd-secrets-file-key-value).
+
 ## Load encrypted secrets at startup
 
 Kuzzle will try to decrypt the provided file using the following locations, in that order of priority:
-  - in the command line: `kuzzle start --secrets-file /var/secrets.enc.json`
+  - in the command line: `bin/start-kuzzle-server --secrets-file /var/secrets.enc.json`
   - in an environment variable `export KUZZLE_SECRETS_FILE=/var/secrets.enc.json`
   - the default one present at the location `<kuzzle dir>/config/secrets.enc.json`
 
 The decryption key must be provided in one of the following ways, in order of priority as well:
-  - in the command line: `kuzzle start --vault-key verystrongpassword`
+  - in the command line: `bin/start-kuzzle-server --vault-key verystrongpassword`
   - in an environment variable `export KUZZLE_VAULT_KEY=verystrongpassword`
 
 ::: warning

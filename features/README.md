@@ -4,5 +4,5 @@ Tests features using [cucumber.js](https://cucumber.io/docs/reference/javascript
 
 ## Running Functional Tests
 
-    $ npm run functional-testing
+    $ npm run test:functional
 
