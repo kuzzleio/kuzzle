@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.6.1",
+    "aedes": "^0.41.0",
     "bluebird": "^3.7.2",
     "bufferutil": "^4.0.1",
     "busboy": "^0.3.1",
@@ -51,7 +52,6 @@
     "kuzzle-vault": "^2.0.0",
     "lodash": "4.17.15",
     "moment": "^2.24.0",
-    "mosca": "^2.8.3",
     "ms": "^2.1.2",
     "murmurhash-native": "^3.4.1",
     "passport": "^0.4.1",
