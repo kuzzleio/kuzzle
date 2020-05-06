@@ -1,11 +1,10 @@
 'use strict';
 
-const
-  should = require('should'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  mockrequire = require('mock-require'),
-  AbstractManifest = require('../../../../lib/core/abstractManifest'),
-  { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
+const should = require('should');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const mockrequire = require('mock-require');
+const AbstractManifest = require('../../../../lib/core/shared/abstractManifest');
+const { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
 
 class AbstractManifestStub extends AbstractManifest {
   load() {}
@@ -20,7 +19,7 @@ describe('Plugins manifest class', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    mockrequire('../../../../lib/core/abstractManifest', AbstractManifestStub);
+    mockrequire('../../../../lib/core/shared/abstractManifest', AbstractManifestStub);
     Manifest = mockrequire.reRequire('../../../../lib/core/plugins/manifest');
   });
 
