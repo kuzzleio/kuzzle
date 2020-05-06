@@ -347,7 +347,7 @@ describe('Plugin Context', () => {
     });
 
     describe('#trigger', () => {
-      it('should rejects if the event name contains a colon', () => {
+      it('should reject if the event name contains a colon', () => {
         return should(context.accessors.trigger('event:with:colons')).be.rejected();
       });
 
