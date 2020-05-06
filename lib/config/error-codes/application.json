@@ -1,66 +1,36 @@
 {
-  "code": 4,
+  "code": 8,
   "subdomains": {
     "assert": {
       "code": 1,
       "errors" : {
-        "invalid_plugins_dir": {
-          "description": "The enabled plugins directory cannot be opened",
-          "code": 1,
-          "message": "Unable to read plugins directory \"%s\"; %s.",
-          "class": "InternalError"
-        },
-        "cannot_load": {
-          "description": "Kuzzle is unable to load a plugin",
-          "code": 2,
-          "message": "Unable to load plugin from path \"%s\"; %s.",
-          "class": "PluginImplementationError"
-        },
         "invalid_hook": {
-          "description": "A hook must point to either a function named directly exposed by the plugin, or a function. This error is thrown when a hook property is configured with neither of these values",
-          "code": 3,
-          "message": "Unable to configure a hook for the event \"%s\": \"%s\" should be a plugin method name, or a function. %s",
+          "description": "A hook handler must be a function.",
+          "code": 1,
+          "message": "Unable to configure a hook for the event \"%s\". Handler should be a function.",
           "class": "PluginImplementationError"
         },
         "invalid_pipe": {
-          "description": "A pipe must point to either a function named directly exposed by the plugin, or a function. This error is thrown when a hook property is configured with neither of these values",
-          "code": 4,
-          "message": "Unable to configure a pipe for the event \"%s\": \"%s\" should be a plugin method name, or a function. %s",
+          "description": "A pipe handler must be a function.",
+          "code": 2,
+          "message": "Unable to configure a pipe for the event \"%s\". Handler should be a function.",
           "class": "PluginImplementationError"
         },
-        "init_not_found": {
-          "description": "The plugin does not have an 'init' function",
-          "code": 5,
-          "message": "Plugin \"%s\": No \"init\" method found.",
-          "class": "PluginImplementationError"
-        },
-        "privileged_not_supported": {
-          "description": "The 'privileged' flag has been set in Kuzzle's configuration for that plugin, but not in the plugin's manifest",
-          "code": 6,
-          "message": "The plugin \"%s\" is configured to run in privileged mode, but it does not seem to support it.",
-          "class": "PluginImplementationError"
-        },
-        "privileged_not_set": {
-          "description": "The 'privileged' flag has been set in the plugin's manifest file, but it needs also to be added in Kuzzle's configuration",
-          "code": 7,
-          "message": "The plugin \"%s\" needs to run in privileged mode to work, you have to explicitly set \"privileged: true\" in its configuration.",
-          "class": "PluginImplementationError"
-        },
-        "not_a_constructor": {
-          "description": "The exposed plugin is not a constructor",
-          "code": 8,
-          "message": "Plugin \"%s\" is not a constructor.",
+        "invalid_controller": {
+          "description": "A controller action handler must be a function.",
+          "code": 3,
+          "message": "Unable to configure the controller action \"%s\":\"%s\". Handler should be a function.",
           "class": "PluginImplementationError"
         },
         "name_already_exists": {
           "description": "Another plugin with the same name has already been loaded",
-          "code": 9,
+          "code": 4,
           "message": "A plugin named %s already exists",
           "class": "PluginImplementationError"
         },
-        "invalid_plugin_name": {
+        "invalid_application_name": {
           "description": "The plugin name in the manifest is invalid. Plugin can only contain lowercase letters and dash.",
-          "code": 10,
+          "code": 5,
           "message": "Plugin name \"%s\" is invalid. Plugin can only contain lowercase letters and dash.",
           "class": "PluginImplementationError"
         }

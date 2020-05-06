@@ -1,7 +1,7 @@
 const mappings = require('./mappings.json');
-const { Backend, errors } = require('../index');
+const { Application, errors } = require('../index');
 
-const app = new Backend('omniscient');
+const app = new Application('omniscient');
 
 app.mappings = mappings;
 app.securities = './securities.json';
