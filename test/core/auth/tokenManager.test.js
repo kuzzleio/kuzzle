@@ -177,7 +177,7 @@ describe('Test: token manager core component', () => {
     let clock;
 
     beforeEach(() => {
-      clock = sinon.useFakeTimers();
+      clock = sinon.useFakeTimers(new Date());
     });
 
     afterEach(() => {
