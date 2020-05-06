@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/kuzzleio/kuzzle.svg?branch=master)](https://travis-ci.org/kuzzleio/kuzzle)
 [![codecov.io](http://codecov.io/github/kuzzleio/kuzzle/coverage.svg?branch=master)](http://codecov.io/github/kuzzleio/kuzzle?branch=master)
-[![Join the chat at https://gitter.im/kuzzleio/kuzzle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kuzzleio/kuzzle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Code Quality: Javascript](https://img.shields.io/lgtm/grade/javascript/g/kuzzleio/kuzzle.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/kuzzle/context:javascript)
 [![Total Alerts](https://img.shields.io/lgtm/alerts/g/kuzzleio/kuzzle.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/kuzzle/alerts)
 
@@ -86,7 +85,7 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 * Follow us on [twitter](https://twitter.com/kuzzleio) to get latest news
 * Register to our monthly [newsletter](http://eepurl.com/bxRxpr) to get highlighed news
 * Visit our [blog](https://blog.kuzzle.io/) to be informed about what we are doing
-* Come chat with us on [gitter](https://gitter.im/kuzzleio/kuzzle)
+* Come chat with us on [Discord](http://join.discord.kuzzle.io)
 * Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
 * Check out our [public roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap) and vote for the upcoming features
 

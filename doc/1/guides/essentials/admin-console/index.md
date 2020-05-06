@@ -14,7 +14,7 @@ If you don't want to install Kuzzle Admin Console yourself you can use our [pubi
 In both cases the configuration is the same and you'll be able to select which [Kuzzle](/core/1/guides/essentials/admin-console#connect-to-kuzzle) installation you want to manage.
 
 :::info
-Having trouble? Get in touch with us on [Gitter](https://gitter.im/kuzzleio/kuzzle)!
+Having trouble? Get in touch with us on [Discord](http://join.discord.kuzzle.io)!
 :::
 
 ## Connect to Kuzzle
