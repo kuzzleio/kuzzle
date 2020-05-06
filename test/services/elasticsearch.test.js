@@ -1,30 +1,28 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  ms = require('ms'),
-  KuzzleMock = require('../mocks/kuzzle.mock'),
-  ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
-  ES = require('../../lib/services/elasticsearch'),
-  {
-    errors: {
-      BadRequestError,
-      PreconditionError,
-      SizeLimitError
-    }
-  } = require('kuzzle-common-objects');
+const should = require('should');
+const sinon = require('sinon');
+const ms = require('ms');
+const KuzzleMock = require('../mocks/kuzzle.mock');
+const ESClientMock = require('../mocks/services/elasticsearchClient.mock');
+const ES = require('../../lib/services/elasticsearch');
+const {
+  errors: {
+    BadRequestError,
+    PreconditionError,
+    SizeLimitError,
+  }
+} = require('kuzzle-common-objects');
 
 describe('Test: ElasticSearch service', () => {
-  let
-    kuzzle,
-    index,
-    collection,
-    esIndexName,
-    elasticsearch,
-    timestamp,
-    esClientError,
-    dateNow = Date.now;
+  let kuzzle;
+  let index;
+  let collection;
+  let esIndexName;
+  let elasticsearch;
+  let timestamp;
+  let esClientError;
+  let dateNow = Date.now;
 
   beforeEach(async () => {
     kuzzle = new KuzzleMock();
@@ -85,85 +83,144 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#scroll', () => {
-    it('should be able to scroll an old search', () => {
+    it('should be able to scroll an old search', async () => {
+      kuzzle.cacheEngine.internal.get.resolves('1');
       elasticsearch._client.scroll.resolves({
         body: {
-          hits: { hits: [], total: { value: 0 } },
+          hits: {
+            hits: [
+              {_id: 'foo', _source: {}},
+              {_id: 'bar', _source: {}},
+            ],
+            total: { value: 1000 }
+          },
           _scroll_id: 'azerty'
         }
       });
 
-      const promise = elasticsearch.scroll('i-am-scroll-id', { scrollTTL: '10s' });
+      const result = await elasticsearch.scroll('i-am-scroll-id', {
+        scrollTTL: '10s'
+      });
 
-      return promise
-        .then(result => {
-          should(kuzzle.cacheEngine.internal.exists).be.called();
-          should(kuzzle.cacheEngine.internal.pexpire).be.called();
-          should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
-            scrollId: 'i-am-scroll-id',
-            scroll: '10s'
-          });
-          should(result).be.deepEqual({
-            total: 0,
-            hits: [],
-            scrollId: 'azerty',
-            aggregations: undefined
-          });
-        });
+      should(kuzzle.cacheEngine.internal.get).be.calledOnce();
+
+      const redisKey = kuzzle.cacheEngine.internal.get.firstCall.args[0];
+
+      should(kuzzle.cacheEngine.internal.psetex)
+        .calledOnce()
+        // 10000: scrollTTL of 10s converted to millisecondes
+        // 3:
+        //   the redis key stub returns "1" (1 result fetched so far) +
+        //   the 2 results contained in the stubbed result of _client.scroll
+        .calledWith(redisKey, 10000, 3);
+
+      should(elasticsearch._client.clearScroll).not.called();
+
+      should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scrollId: 'i-am-scroll-id',
+        scroll: '10s'
+      });
+
+      should(result).be.match({
+        total: 1000,
+        hits: [
+          {_id: 'foo', _source: {}},
+          {_id: 'bar', _source: {}},
+        ],
+        scrollId: 'azerty',
+        aggregations: undefined
+      });
     });
 
-    it('should reject promise if a scroll fails', () => {
-      elasticsearch._client.scroll.rejects(esClientError);
-
-      const promise = elasticsearch.scroll('i-am-scroll-id');
-
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.formatESError)
-            .be.calledWith(esClientError);
-        });
-    });
-
-    it('should rejects if the scrollId does not exists in Kuzzle cache', () => {
-      kuzzle.cacheEngine.internal.exists.resolves(0);
-
-      const promise = elasticsearch.scroll('i-am-scroll-id');
-
-      return should(promise).be.rejectedWith({
-        id: 'services.storage.unknown_scroll_id'
-      })
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
-          should(elasticsearch._client.scroll).not.be.called();
-        });
-    });
-
-    it('should reject if the scroll duration is too great', () => {
-      elasticsearch._config.maxScrollDuration = '21m';
-
-      const promise = elasticsearch.scroll('i-am-scroll-id', { scrollTTL: '42m' });
-
-      return should(promise).be.rejectedWith({
-        id: 'services.storage.scroll_duration_too_great'
-      })
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
-          should(elasticsearch._client.scroll).not.be.called();
-        });
-    });
-
-    it('should default an explictly null scrollTTL argument', async () => {
+    it('should clear a scroll upon fetching its last page of results', async () => {
+      kuzzle.cacheEngine.internal.get.resolves('998');
       elasticsearch._client.scroll.resolves({
         body: {
-          hits: { hits: [], total: { value: 0 } },
+          hits: {
+            hits: [
+              {_id: 'foo', _source: {}},
+              {_id: 'bar', _source: {}},
+            ],
+            total: { value: 1000 }
+          },
+          _scroll_id: 'azerty'
+        }
+      });
+
+      const result = await elasticsearch.scroll('i-am-scroll-id', {
+        scrollTTL: '10s'
+      });
+
+      should(kuzzle.cacheEngine.internal.get).be.calledOnce();
+
+      const redisKey = kuzzle.cacheEngine.internal.get.firstCall.args[0];
+
+      should(kuzzle.cacheEngine.internal.psetex).not.called();
+      should(kuzzle.cacheEngine.internal.del).calledOnce().calledWith(redisKey);
+
+      should(elasticsearch._client.clearScroll)
+        .calledOnce()
+        .calledWithMatch({scrollId: 'azerty'});
+
+      should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scrollId: 'i-am-scroll-id',
+        scroll: '10s'
+      });
+
+      should(result).be.match({
+        total: 1000,
+        hits: [
+          {_id: 'foo', _source: {}},
+          {_id: 'bar', _source: {}},
+        ],
+        scrollId: 'azerty',
+        aggregations: undefined
+      });
+    });
+
+    it('should reject promise if a scroll fails', async () => {
+      elasticsearch._client.scroll.rejects(esClientError);
+      kuzzle.cacheEngine.internal.get.resolves('1');
+
+      await should(elasticsearch.scroll('i-am-scroll-id')).be.rejected();
+      should(elasticsearch._esWrapper.formatESError).calledWith(esClientError);
+    });
+
+    it('should reject if the scrollId does not exists in Kuzzle cache', async () => {
+      kuzzle.cacheEngine.internal.get.resolves(null);
+
+      await should(elasticsearch.scroll('i-am-scroll-id')).be.rejectedWith({
+        id: 'services.storage.unknown_scroll_id'
+      });
+
+      should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
+      should(elasticsearch._client.scroll).not.be.called();
+    });
+
+    it('should reject if the scroll duration is too great', async () => {
+      elasticsearch._config.maxScrollDuration = '21m';
+      kuzzle.cacheEngine.internal.get.resolves('1');
+
+      await should(elasticsearch.scroll('i-am-scroll-id', { scrollTTL: '42m' }))
+        .be.rejectedWith({ id: 'services.storage.scroll_duration_too_great' });
+
+      should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
+      should(elasticsearch._client.scroll).not.be.called();
+    });
+
+    it('should default an explicitly null scrollTTL argument', async () => {
+      kuzzle.cacheEngine.internal.get.resolves('1');
+      elasticsearch._client.scroll.resolves({
+        body: {
+          hits: { hits: [], total: { value: 1000 } },
           _scroll_id: 'azerty'
         }
       });
 
       await elasticsearch.scroll('scroll-id', { scrollTTL: null });
 
-      should(kuzzle.cacheEngine.internal.exists).be.called();
-      should(kuzzle.cacheEngine.internal.pexpire).be.called();
+      should(kuzzle.cacheEngine.internal.get).be.called();
+      should(kuzzle.cacheEngine.internal.psetex).be.called();
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
         scrollId: 'scroll-id',
         scroll: elasticsearch.config.defaults.scrollTTL
@@ -1162,37 +1219,32 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#batchExecute', () => {
     it('should call the callback method with each batch returned by ES', async () => {
-      const
-        hits1 = {
-          hits: [21, 42, 84],
-          total: {
-            value: 5
-          }
-        },
-        hits2 = {
-          hits: [168, 336],
-          total: {
-            value: 5
-          }
-        },
-        callbackStub = sinon
-          .stub()
-          .onCall(0).resolves(1)
-          .onCall(1).resolves(2);
-      elasticsearch._client.search.callsArgWith(
-        1,
-        null,
-        {
-          body: { hits: hits1 },
-          _scroll_id: 'scroll-id'
-        });
-      elasticsearch._client.scroll.callsArgWith(
-        1,
-        null,
-        {
-          body: { hits: hits2 },
-          _scroll_id: 'scroll-id'
-        });
+      const hits1 = {
+        hits: [21, 42, 84],
+        total: {
+          value: 5
+        }
+      };
+      const hits2 = {
+        hits: [168, 336],
+        total: {
+          value: 5
+        }
+      };
+      const callbackStub = sinon
+        .stub()
+        .onCall(0).resolves(1)
+        .onCall(1).resolves(2);
+
+      elasticsearch._client.search.callsArgWith(1, null, {
+        body: { hits: hits1 },
+        _scroll_id: 'scroll-id'
+      });
+
+      elasticsearch._client.scroll.callsArgWith(1, null, {
+        body: { hits: hits2 },
+        _scroll_id: 'scroll-id'
+      });
 
       const result = await elasticsearch.batchExecute(
         index,

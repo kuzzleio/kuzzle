@@ -1,8 +1,7 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  Elasticsearch = require('../../lib/services/elasticsearch');
+const sinon = require('sinon');
+const Elasticsearch = require('../../lib/services/elasticsearch');
 
 class ElasticsearchMock extends Elasticsearch {
   constructor (kuzzle, config, scope) {
@@ -42,6 +41,7 @@ class ElasticsearchMock extends Elasticsearch {
     this.mReplace = sinon.stub().resolves();
     this.mDelete = sinon.stub().resolves();
     this.deleteCollection = sinon.stub().resolves();
+    this.clearScroll = sinon.stub().resolves();
   }
 }
 
