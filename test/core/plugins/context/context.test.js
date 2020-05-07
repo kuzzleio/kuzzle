@@ -347,10 +347,6 @@ describe('Plugin Context', () => {
     });
 
     describe('#trigger', () => {
-      it('should rejects if the event name contains a colon', () => {
-        return should(context.accessors.trigger('event:with:colons')).be.rejected();
-      });
-
       it('should call trigger with the given event name and payload and return pipe chain result', async () => {
         kuzzle.pipe.resolves('pipe chain result');
         const eventName = 'backHome';

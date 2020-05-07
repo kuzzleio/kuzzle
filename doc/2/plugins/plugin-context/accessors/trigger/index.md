@@ -12,6 +12,7 @@ This allows interactions with other plugins using [hooks](/core/2/plugins/guides
 
 ::: info
 If the event is listened by pipes, the result of the pipe chain will be returned in a promise.
+If there is no listener, the result will be the same payload.
 This behavior can be used for a Remote Procedure Call (RPC) system between plugins.
 :::
 
