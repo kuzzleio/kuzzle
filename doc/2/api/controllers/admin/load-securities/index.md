@@ -19,7 +19,7 @@ The roles, profiles and users definitions follow the same structure as in the bo
 If users already exist, they will be deleted and then created again.
 
 ::: warning
-By default, Kuzzle prevent existing user overwriting.  
+By default, Kuzzle prevents existing user overwriting.  
 You can either skip or overwrite existing users with the `onExistingUsers` option.
 :::
 
