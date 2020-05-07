@@ -379,6 +379,7 @@
         },
         "invalid_event": {
           "description": "Invalid event name (colons are not allowed in event names)",
+          "deprecated": true,
           "code": 7,
           "message": "Custom event invalid name (%s). Colons are not allowed in custom events.",
           "class": "PluginImplementationError"
