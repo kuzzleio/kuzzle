@@ -1,14 +1,10 @@
 'use strict';
 
-const
-  _ = require('lodash'),
-  should = require('should'),
-  {
-    Given,
-    Then
-  } = require('cucumber');
+const _ = require('lodash');
+const should = require('should');
+const { Then } = require('cucumber');
 
-Given('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
+Then('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
   const data = this.parseObject(dataTable),
     policies = [];
 
@@ -20,12 +16,12 @@ Given('I create a profile {string} with the following policies:', async function
 });
 
 Then(/I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/, async function (not, method, roleId, dataTable) {
-  const 
+  const
     controllers = this.parseObject(dataTable),
-    options = { 
+    options = {
       force: not ? false : true
     };
-  
+
   try {
     this.props.result = await this.sdk.security[method + 'Role'](roleId, { controllers }, options);
   }
@@ -45,7 +41,7 @@ Then(/I am (not )?able to get a role with id "(.*?)"/, async function (roleId, n
   }
   catch (e) {
     this.props.error = e;
-    
+
     if (not) {
       return;
     }
@@ -94,11 +90,11 @@ Then(/I (can not )?delete the profile "(.*?)"/, async function (not, profileId) 
   }
 });
 
-Given('I delete the user {string}', async function (userId) {
+Then('I delete the user {string}', async function (userId) {
   this.props.result = await this.sdk.security.deleteUser(userId, { refresh: 'wait_for' });
 });
 
-Given('I create a user {string} with content:', async function (userId, dataTable) {
+Then('I create a user {string} with content:', async function (userId, dataTable) {
   const content = this.parseObject(dataTable);
 
   const body = {
@@ -117,7 +113,7 @@ Given('I create a user {string} with content:', async function (userId, dataTabl
     { refresh: 'wait_for' });
 });
 
-Given('I update the role {string} with:', async function (roleId, dataTable) {
+Then('I update the role {string} with:', async function (roleId, dataTable) {
   const controllers = this.parseObject(dataTable);
 
   const rights = {};
@@ -129,7 +125,7 @@ Given('I update the role {string} with:', async function (roleId, dataTable) {
   this.props.result = await this.sdk.security.updateRole(roleId, rights, { refresh: 'wait_for' });
 });
 
-Given('The role {string} should match the default one', async function (roleId) {
+Then('The role {string} should match the default one', async function (roleId) {
   const
     defaultRoles = this.kuzzleConfig.security.standard.roles,
     role = await this.sdk.security.getRole(roleId);
@@ -139,13 +135,53 @@ Given('The role {string} should match the default one', async function (roleId) 
   }
 });
 
-Given('The role {string} should match:', async function (roleId, dataTable) {
+Then('The role {string} should match:', async function (roleId, dataTable) {
   const
     controllers = this.parseObject(dataTable),
     role = await this.sdk.security.getRole(roleId);
 
   for (const [controller, actions] of Object.entries(controllers)) {
     should(actions).match(role.controllers[controller].actions);
+  }
+});
+
+Then('The profile {string} policies should match:', async function (profileId, dataTable) {
+  const expectedPolicies = this.parseObjectArray(dataTable);
+
+  const profile = await this.sdk.security.getProfile(profileId);
+
+  should(profile.policies).have.length(expectedPolicies.length);
+
+  for (let i = 0; i < profile.policies; i++) {
+    should(profile.policies[i]).match(expectedPolicies[i]);
+  }
+});
+
+Then('The user {string} should have the following profiles:', async function (userId, dataTable) {
+  const expectedProfiles = _.flatten(dataTable.rawTable);
+
+  const user = await this.sdk.security.getUser(userId);
+
+  should(user.profileIds).be.eql(expectedProfiles);
+});
+
+Then(/The user "(.*?)"( should not)? exists/, async function (userId, shouldNot) {
+  try {
+    await this.sdk.security.getUser(userId);
+
+    if (shouldNot) {
+      throw new Error(`User "${userId}" should not exists.`);
+    }
+  }
+  catch (error) {
+    if (error.status === 404) {
+      if (! shouldNot) {
+        throw new Error(`User "${userId}" should exists.`);
+      }
+    }
+    else {
+      throw error;
+    }
   }
 });
 

@@ -57,6 +57,7 @@ description: error codes definitions
 | security.user.anonymous_profile_required<br/><pre>0x07040003</pre> | [BadRequestError](/core/2/api/essentials/error-handling#badrequesterror) <pre>(400)</pre> | The anonymous user must be assigned to the anonymous profile |
 | security.user.cannot_hydrate<br/><pre>0x07040004</pre> | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Database inconsistency error: a user is referencing non-existing profiles |
 | security.user.uninitialized<br/><pre>0x07040005</pre> | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Attempted to access to an unitialized User object |
+| security.user.prevent_overwrite<br/><pre>0x07040006</pre> | [BadRequestError](/core/2/api/essentials/error-handling#badrequesterror) <pre>(400)</pre> | Attempted to overwrite existing users. Change "onExistingUsers" params to modify this method behavior. |
 
 ---
 
