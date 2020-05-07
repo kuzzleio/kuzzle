@@ -16,6 +16,29 @@ Feature: Collection Controller
     And I should receive a result matching:
       | properties | { "name": { "type": "keyword" }, "age": { "type": "integer" } } |
 
+  Scenario: Update a collection and search document
+    Given an index "nyc-open-data"
+    And I "create" the collection "nyc-open-data":"green-taxi" with:
+      | mappings | { "dynamic": "true", "properties": { "name": { "type": "keyword" }, "metadata": {"properties": {}, "dynamic": "false"} } } |
+    And I "create" the following documents:
+      | _id          | body        |
+      | "document-1" | {"age": 2} |
+    And I refresh the collection
+    When I "update" the collection "nyc-open-data":"green-taxi" with:
+      | mappings | { "properties": { "age": { "type": "long" } } } |
+    When I search documents with the following query:
+      """
+      {
+        "match": {
+          "age": 2
+        }
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching:
+      | _id          | _source      |
+      | "document-1" | { "age": 2 } |
+
   # collection:truncate ========================================================
 
   Scenario: Truncate a collection

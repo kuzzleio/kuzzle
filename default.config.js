@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable sort-keys */
+
 /**
  * /!\ DO NOT MODIFY THIS FILE
  *

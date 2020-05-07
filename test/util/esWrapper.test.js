@@ -55,6 +55,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       const error = new Error('test');
       error.meta = { statusCode: 404 };
       error.body = {
+        _index: '&nyc-open-data.yellow-taxi',
         found: false,
         _id: 'mehry',
         error: {
@@ -66,6 +67,7 @@ describe('Test: ElasticSearch Wrapper', () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.match({
+        message: 'Document "mehry" not found in "nyc-open-data":"yellow-taxi".',
         id: 'services.storage.not_found'
       });
     });

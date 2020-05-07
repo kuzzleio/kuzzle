@@ -54,5 +54,4 @@ do
     sleep 1
 done
 
-npm run functional-testing
-npm run functional-testing2
+npm run test:functional
