@@ -19,7 +19,7 @@ Updates a security role definition.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/roles/<_id>/_update[?refresh=wait_for]
+URL: http://kuzzle:7512/roles/<_id>/_update[?refresh=wait_for][&force]
 Method: PUT
 Body:
 ```

@@ -1,12 +1,11 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  should = require('should'),
-  mockrequire = require('mock-require'),
-  rewire = require('rewire'),
-  Kuzzle = rewire('../lib/kuzzle'),
-  KuzzleMock = require('./mocks/kuzzle.mock');
+const sinon = require('sinon');
+const should = require('should');
+const mockrequire = require('mock-require');
+const rewire = require('rewire');
+const Kuzzle = rewire('../lib/kuzzle');
+const KuzzleMock = require('./mocks/kuzzle.mock');
 
 describe('/lib/api/kuzzle.js', () => {
   let kuzzle;
@@ -33,9 +32,8 @@ describe('/lib/api/kuzzle.js', () => {
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
-    const
-      mock = new KuzzleMock(),
-      k = new KuzzleConstructor();
+    const mock = new KuzzleMock();
+    const k = new KuzzleConstructor();
 
     mockedProperties.forEach(p => {
       k[p] = mock[p];
@@ -168,27 +166,25 @@ describe('/lib/api/kuzzle.js', () => {
     });
 
     // @deprecated
-    it('should instantiate Koncorde with PCRE support if asked to', () => {
+    it('should instantiate Koncorde with PCRE support if asked to', async () => {
       const Koncorde = sinon.stub();
-      let
-        kuzzleDefault,
-        kuzzleWithPCRE;
+      const stubbedKuzzle = Kuzzle.__with__({ Koncorde, initVault: () => {} });
 
-      return Kuzzle
-        .__with__({ Koncorde })(() => {
-          kuzzleDefault = _mockKuzzle(Kuzzle);
-          kuzzleWithPCRE = _mockKuzzle(Kuzzle);
+      await stubbedKuzzle(async () => {
+        await _mockKuzzle(Kuzzle).start();
 
-          kuzzleWithPCRE.config =
-            JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
-          kuzzleWithPCRE.config.realtime.pcreSupport = true;
+        const kuzzleWithPCRE = _mockKuzzle(Kuzzle);
 
-          return kuzzleDefault.start().then(() => kuzzleWithPCRE.start());
-        })
-        .then(() => {
-          should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2'});
-          should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js'});
-        });
+        kuzzleWithPCRE.config =
+          JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
+
+        kuzzleWithPCRE.config.realtime.pcreSupport = true;
+
+        await kuzzleWithPCRE.start();
+      });
+
+      should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2'});
+      should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js'});
     });
   });
 });

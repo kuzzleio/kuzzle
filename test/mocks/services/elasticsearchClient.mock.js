@@ -59,6 +59,7 @@ class ElasticsearchClientMock {
     this.mreplace = sinon.stub().resolves();
     this.mcreateOrReplace = sinon.stub().resolves();
     this.mdelete = sinon.stub().resolves();
+    this.clearScroll = sinon.stub().resolves();
   }
 }
 

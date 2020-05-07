@@ -1,12 +1,11 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  mockrequire = require('mock-require'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  ClientAdapterMock = require('../../../mocks/clientAdapter.mock'),
-  BaseModel = require('../../../../lib/core/storage/models/baseModel');
+const should = require('should');
+const sinon = require('sinon');
+const mockrequire = require('mock-require');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const ClientAdapterMock = require('../../../mocks/clientAdapter.mock');
+const BaseModel = require('../../../../lib/core/storage/models/baseModel');
 
 class Model extends BaseModel {
   constructor (_source, _id) {
@@ -25,10 +24,9 @@ class Model extends BaseModel {
 BaseModel.register(Model);
 
 describe('BaseModel', () => {
-  let
-    StorageEngine,
-    storageEngine,
-    kuzzle;
+  let StorageEngine;
+  let storageEngine;
+  let kuzzle;
 
   beforeEach(() => {
     Model.prototype._afterDelete = sinon.stub().resolves();
@@ -125,30 +123,25 @@ describe('BaseModel', () => {
   });
 
   describe('BaseModel.deleteByQuery', () => {
-    let
-      documents,
-      deleteStub;
+    let documents;
 
     beforeEach(() => {
-      deleteStub = sinon.stub(Model.prototype, 'delete').resolves();
-
       documents = [
         { _id: 'mylehuong', _source: {} },
         { _id: 'thehive', _source: {} }
       ];
 
-      BaseModel.indexStorage.batchExecute =
-        sinon.stub().callsArgWith(2, documents);
+      BaseModel.indexStorage.deleteByQuery = sinon.stub().resolves({documents});
     });
 
-    it('should call batchExecute and delete each instantiated model', async () => {
+    it('should call the driver\'s deleteByQuery', async () => {
       await Model.deleteByQuery({ match_all: {} });
 
-      should(BaseModel.indexStorage.batchExecute).be.calledOnce();
-      const [ collection, query ] = BaseModel.indexStorage.batchExecute.getCall(0).args;
+      should(BaseModel.indexStorage.deleteByQuery).be.calledOnce();
+      const [ collection, query ] = BaseModel.indexStorage.deleteByQuery.getCall(0).args;
       should(collection).be.eql('models');
       should(query).be.eql({ match_all: {} });
-      should(deleteStub).be.calledTwice();
+      should(Model.prototype._afterDelete).be.calledTwice();
     });
 
     it('should refresh the collection if the option.refresh is set', async () => {
