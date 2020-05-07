@@ -1,11 +1,11 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  ElasticsearchMock = require('../../mocks/elasticsearch.mock'),
-  ClientAdapter = require('../../../lib/core/storage/clientAdapter');
+const should = require('should');
+const sinon = require('sinon');
+const { errors: { BadRequestError } } = require('kuzzle-common-objects');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const ElasticsearchMock = require('../../mocks/elasticsearch.mock');
+const ClientAdapter = require('../../../lib/core/storage/clientAdapter');
 
 describe('ClientAdapter', () => {
   let
@@ -240,6 +240,70 @@ describe('ClientAdapter', () => {
       await clientAdapter.listIndexes({ fromCache: false });
 
       should(clientAdapter._client.listIndexes).be.calledWith();
+    });
+  });
+
+  describe('#loadFixtures', () => {
+    const fixtures = require('../../mocks/fixtures.json');
+
+    beforeEach(() => {
+      sinon.stub(clientAdapter, 'import');
+    });
+
+    it('create index and collection that does not exists', async () => {
+      clientAdapter.import.onCall(0).resolves({ errors: []});
+      clientAdapter.import.onCall(1).resolves({ errors: []});
+      clientAdapter.import.onCall(2).resolves({ errors: []});
+
+      await clientAdapter.loadFixtures(fixtures);
+
+      should(clientAdapter.import.callCount).be.eql(3);
+      should(clientAdapter.import.getCall(0).args[0]).be.eql('nyc-open-data');
+      should(clientAdapter.import.getCall(0).args[1]).be.eql('yellow-taxi');
+      should(clientAdapter.import.getCall(0).args[2][1]).be.eql({ name: 'alyx' });
+    });
+
+    it('should reject if fixtures contain non-object properties', () => {
+      return should(clientAdapter.loadFixtures({foo: 123}))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.invalid_argument',
+          message: 'Invalid argument "123". Expected: object'
+        });
+    });
+  });
+
+  describe('#loadMappings', () => {
+    const mappings = require('../../mocks/mappings.json');
+
+    beforeEach(() => {
+      sinon.stub(clientAdapter, 'indexExists');
+      sinon.stub(clientAdapter, 'createIndex');
+      sinon.stub(clientAdapter, 'createCollection');
+    });
+
+    it('create index and collection that does not exists', async () => {
+      clientAdapter.indexExists.onCall(0).resolves(false);
+      clientAdapter.indexExists.onCall(1).resolves(true);
+      clientAdapter.indexExists.onCall(2).resolves(false);
+
+      await clientAdapter.loadMappings(mappings);
+
+      should(clientAdapter.indexExists.callCount).be.eql(3);
+      should(clientAdapter.createIndex.callCount).be.eql(2);
+      should(clientAdapter.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
+
+      should(clientAdapter.createCollection.callCount).be.eql(3);
+      should(clientAdapter.createCollection.getCall(0).args[1]).be.eql('yellow-taxi');
+      should(clientAdapter.createCollection.getCall(0).args[2].mappings.properties)
+        .be.eql({ name: { type: 'text' } });
+    });
+
+    it('should reject if a mapping contains non-object properties', () => {
+      return should(clientAdapter.loadMappings({foo: 123}))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.invalid_argument',
+          message: 'Invalid argument "123". Expected: object'
+        });
     });
   });
 });

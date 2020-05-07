@@ -1,7 +1,7 @@
 'use strict';
 
 const should = require('should');
-const waterfall = require('../../../lib/core/events/waterfall');
+const waterfall = require('../../../lib/kuzzle/events/waterfall');
 
 describe('waterfall', () => {
   it('should chain callback and pass the result', done => {

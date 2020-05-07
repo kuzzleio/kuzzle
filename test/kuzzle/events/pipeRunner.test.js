@@ -3,7 +3,7 @@
 const assert = require('assert');
 const should = require('should');
 const sinon = require('sinon');
-const PipeRunner = require('../../../lib/core/events/pipeRunner');
+const PipeRunner = require('../../../lib/kuzzle/events/pipeRunner');
 const {
   errors: {
     BadRequestError,

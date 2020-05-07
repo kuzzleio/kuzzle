@@ -4,10 +4,10 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
-const Kuzzle = rewire('../lib/kuzzle');
-const KuzzleMock = require('./mocks/kuzzle.mock');
+const Kuzzle = rewire('../../lib/kuzzle');
+const KuzzleMock = require('../mocks/kuzzle.mock');
 
-describe('/lib/api/kuzzle.js', () => {
+describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
 
   const mockedProperties = [

@@ -10,7 +10,8 @@ const {
     PreconditionError
   }
 } = require('kuzzle-common-objects');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
+const KuzzleMock = require('../mocks/kuzzle.mock');
+const DumpGenerator = require('../../lib/kuzzle/dumpGenerator');
 
 /*
  /!\ In these tests, the promise returned by shutdown
@@ -20,24 +21,12 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
  to finish and exit while Kuzzle is shutting down.
  */
 describe('Test: core/janitor', () => {
-  let
-    Janitor,
-    janitor,
-    kuzzle,
-    runShutdown;
+  let dumpGenerator;
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-
-    runShutdown = sinon.stub().resolves();
-    mockrequire('../../../lib/util/shutdown', runShutdown);
-    Janitor = mockrequire.reRequire('../../../lib/core/janitor');
-    Janitor = rewire('../../../lib/core/janitor');
-    janitor = new Janitor(kuzzle);
-  });
-
-  afterEach(() => {
-    mockrequire.stopAll();
+    dumpGenerator = new DumpGenerator(kuzzle);
   });
 
   describe('#dump', () => {
@@ -289,11 +278,3 @@ describe('Test: core/janitor', () => {
       });
     });
   });
-
-  describe('#shutdown', () => {
-    it('should exit immediately if unable to retrieve the PM2 process list', async () => {
-      await janitor.shutdown(kuzzle);
-      should(runShutdown).calledOnce().calledWith(kuzzle);
-    });
-  });
-});
