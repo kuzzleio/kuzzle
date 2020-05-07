@@ -1,16 +1,16 @@
 'use strict';
 
-const
-  assert = require('assert'),
-  should = require('should'),
-  sinon = require('sinon'),
-  PipeRunner = require('../../../../lib/core/plugins/pipeRunner'),
-  {
-    errors: {
-      BadRequestError,
-      PluginImplementationError,
-      ServiceUnavailableError}
-  } = require('kuzzle-common-objects');
+const assert = require('assert');
+const should = require('should');
+const sinon = require('sinon');
+const PipeRunner = require('../../../lib/core/events/pipeRunner');
+const {
+  errors: {
+    BadRequestError,
+    PluginImplementationError,
+    ServiceUnavailableError
+  }
+} = require('kuzzle-common-objects');
 
 class RemoteControlledPipe {
   constructor () {
@@ -39,12 +39,11 @@ class RemoteControlledPipe {
 }
 
 describe('#pipeRunner', () => {
-  let
-    clock,
-    pipeRunner,
-    maxConcurrentPipes,
-    bufferSize,
-    remoteControlledPipe;
+  let clock;
+  let pipeRunner;
+  let maxConcurrentPipes;
+  let bufferSize;
+  let remoteControlledPipe;
 
   beforeEach(() => {
     maxConcurrentPipes = 50;
@@ -79,7 +78,7 @@ describe('#pipeRunner', () => {
     it('should run a pipe immediately if there is space', () => {
       should(pipeRunner.running).eql(0);
 
-      pipeRunner.run(remoteControlledPipe.chain, (err, res) => {
+      pipeRunner.run(remoteControlledPipe.chain, ['bar'], (err, res) => {
         should(err).be.null();
         should(res).eql('foo');
       });
@@ -99,7 +98,7 @@ describe('#pipeRunner', () => {
 
       should(pipeRunner.running).eql(0);
 
-      pipeRunner.run(remoteControlledPipe.chain, err => {
+      pipeRunner.run(remoteControlledPipe.chain, ['bar'], err => {
         should(err).eql(error);
       });
 
@@ -118,7 +117,7 @@ describe('#pipeRunner', () => {
 
       should(pipeRunner.running).eql(0);
 
-      pipeRunner.run(remoteControlledPipe.chain, err => {
+      pipeRunner.run(remoteControlledPipe.chain, ['bar'], err => {
         should(err).instanceof(PluginImplementationError);
         should(err.message).containEql(error.message);
         should(err.id).eql('plugin.runtime.unexpected_error');
@@ -143,14 +142,14 @@ describe('#pipeRunner', () => {
       pipeRunner.running = maxConcurrentPipes - 1;
       should(pipeRunner.buffer.length).eql(0);
 
-      pipeRunner.run(remoteControlledPipe.chain, runCB, {});
+      pipeRunner.run(remoteControlledPipe.chain, ['bar'], runCB, {});
 
       should(pipeRunner.running).eql(maxConcurrentPipes);
       should(pipeRunner.buffer.length).eql(0);
 
       const remoteControlledPipe2 = new RemoteControlledPipe();
 
-      pipeRunner.run(remoteControlledPipe2.chain, runCB, {});
+      pipeRunner.run(remoteControlledPipe2.chain, ['qux'], runCB, {});
 
       should(pipeRunner.running).eql(maxConcurrentPipes);
       should(pipeRunner.buffer.length).eql(1);
@@ -176,7 +175,7 @@ describe('#pipeRunner', () => {
       pipeRunner.running = maxConcurrentPipes;
       pipeRunner.buffer = { length: bufferSize };
 
-      pipeRunner.run(remoteControlledPipe.chain, err => {
+      pipeRunner.run(remoteControlledPipe.chain, ['bar'], err => {
         should(err).instanceof(ServiceUnavailableError);
         should(err.id).eql('plugin.runtime.too_many_pipes');
         should(remoteControlledPipe._callback).be.null();
@@ -192,17 +191,25 @@ describe('#pipeRunner', () => {
     });
 
     it('should resubmit the first item of the buffer', () => {
-      const chain = {chain: 'foo', callback: sinon.stub()};
+      const chain = {chain: 'foo', args: ['bar'], callback: sinon.stub()};
       pipeRunner.buffer.push(chain);
-      pipeRunner.buffer.push({chain: 'bar', callback: sinon.stub()});
-      pipeRunner.buffer.push({chain: 'baz', callback: sinon.stub()});
+      pipeRunner.buffer.push({
+        chain: 'bar',
+        args: ['oh'],
+        callback: sinon.stub()
+      });
+      pipeRunner.buffer.push({
+        chain: 'baz',
+        args: ['noes'],
+        callback: sinon.stub()
+      });
 
       pipeRunner._runNext();
 
       should(pipeRunner.buffer.length).eql(2);
       should(pipeRunner.run)
         .calledOnce()
-        .calledWith(chain.chain, chain.callback);
+        .calledWith(chain.chain, chain.args, chain.callback);
     });
 
     it('should skip if the buffer is empty', () => {
@@ -213,9 +220,21 @@ describe('#pipeRunner', () => {
     });
 
     it('should skip if there are already too many pipes running', () => {
-      pipeRunner.buffer.push({chain: 'foo', callback: sinon.stub()});
-      pipeRunner.buffer.push({chain: 'bar', callback: sinon.stub()});
-      pipeRunner.buffer.push({chain: 'baz', callback: sinon.stub()});
+      pipeRunner.buffer.push({
+        chain: 'foo',
+        args: ['qux'],
+        callback: sinon.stub()
+      });
+      pipeRunner.buffer.push({
+        chain: 'bar',
+        args: ['qux'],
+        callback: sinon.stub()
+      });
+      pipeRunner.buffer.push({
+        chain: 'baz',
+        args: ['qux'],
+        callback: sinon.stub()
+      });
 
       pipeRunner.running = maxConcurrentPipes;
 

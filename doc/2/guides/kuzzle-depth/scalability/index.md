@@ -109,15 +109,14 @@ ln -s ../available/kuzzle-plugin-cluster
 ### Cluster plugin configuration
 
 * The cluster plugin requires a privileged context from Kuzzle. This context is granted by Kuzzle via the global configuration.
-* The cluster plugin registers a few [pipes](/core/2/plugins/guides/pipes), and some of them may exceed the default pipe timeouts. 
+* The cluster plugin registers a few [pipes](/core/2/plugins/guides/pipes). 
 
 Add the following to your kuzzlerc configuration file (see our [Kuzzle configuration guide](/core/2/guides/essentials/configuration)):
 
 ```js
 "plugins": {
   "common": {
-    "pipeWarnTime": 5000,
-    "pipeTimeout": 10000
+    "pipeWarnTime": 5000
   },
   "cluster": {
     "privileged": true
