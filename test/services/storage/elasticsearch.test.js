@@ -3,9 +3,9 @@
 const should = require('should');
 const sinon = require('sinon');
 const ms = require('ms');
-const KuzzleMock = require('../mocks/kuzzle.mock');
-const ESClientMock = require('../mocks/services/elasticsearchClient.mock');
-const ES = require('../../lib/services/elasticsearch');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const ESClientMock = require('../../mocks/services/elasticsearchClient.mock');
+const ES = require('../../../lib/services/storage/elasticsearch');
 const {
   errors: {
     BadRequestError,

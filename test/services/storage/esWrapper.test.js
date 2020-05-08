@@ -1,14 +1,9 @@
 'use strict';
 
-const
-  should = require('should'),
-  {
-    errors: {
-      ExternalServiceError
-    }
-  } = require('kuzzle-common-objects'),
-  ESClientMock = require('../mocks/services/elasticsearchClient.mock'),
-  ESWrapper = require('../../lib/util/esWrapper');
+const should = require('should');
+const { errors: { ExternalServiceError } } = require('kuzzle-common-objects');
+const ESClientMock = require('../../mocks/services/elasticsearchClient.mock');
+const ESWrapper = require('../../../lib/services/storage/esWrapper');
 
 describe('Test: ElasticSearch Wrapper', () => {
   const

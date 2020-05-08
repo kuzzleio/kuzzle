@@ -1,12 +1,11 @@
 'use strict';
 
-const
-  should = require('should'),
-  rewire = require('rewire'),
-  Redis = rewire('../../lib/services/redis'),
-  KuzzleMock = require('../mocks/kuzzle.mock'),
-  sinon = require('sinon'),
-  RedisClientMock = require('../mocks/services/redisClient.mock');
+const should = require('should');
+const rewire = require('rewire');
+const Redis = rewire('../../../lib/services/cache/redis');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const sinon = require('sinon');
+const RedisClientMock = require('../../mocks/services/redisClient.mock');
 
 describe('Redis', () => {
   let
