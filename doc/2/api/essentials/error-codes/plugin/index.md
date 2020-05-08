@@ -113,7 +113,6 @@ description: error codes definitions
 | plugin.context.invalid_callback<br/><pre>0x04060004</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A non-function callback has been provided |
 | plugin.context.missing_request<br/><pre>0x04060005</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A Request object is required, but none was supplied |
 | plugin.context.missing_request_data<br/><pre>0x04060006</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A Request object and/or request data must be provided |
-| plugin.context.invalid_event<br/><pre>0x04060007</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Invalid event name (colons are not allowed in event names) |
 | plugin.context.missing_authenticator<br/><pre>0x04060008</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Missing "strategy.config.authenticator" property |
 
 ---
