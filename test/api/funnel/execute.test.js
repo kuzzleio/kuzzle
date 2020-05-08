@@ -309,8 +309,8 @@ describe('funnelController.execute', () => {
 
   });
 
-  describe('#core:shutdown', () => {
-    it('should reject any new request after the core:shutdown event has been triggered', done => {
+  describe('#kuzzle:shutdown', () => {
+    it('should reject any new request after the kuzzle:shutdown event has been triggered', done => {
       funnel.controllers.clear();
       sinon.stub(funnel.rateLimiter, 'init');
       funnel.init();
@@ -318,7 +318,7 @@ describe('funnelController.execute', () => {
       should(funnel.shuttingDown).be.false();
 
       kuzzle.emit.restore();
-      kuzzle.emit('core:shutdown');
+      kuzzle.emit('kuzzle:shutdown');
 
       // gives some time for the event to propagate
       should(funnel.shuttingDown).be.true();

@@ -110,13 +110,8 @@ class KuzzleMock extends Kuzzle {
       listSubscriptions: sinon.stub().resolves(foo),
     };
 
-    this.janitor = {
-      dump: sinon.stub().resolves(),
-      shutdown: sinon.stub(),
-      loadMappings: sinon.stub().resolves(),
-      loadFixtures: sinon.stub().resolves(),
-      loadSecurities: sinon.stub().resolves()
-    };
+    this.dump = sinon.stub().resolves();
+    this.shutdown = sinon.stub();
 
     this.storageEngine = {
       init: sinon.stub().resolves(),
@@ -265,7 +260,8 @@ class KuzzleMock extends Kuzzle {
         persistToCache: sinon.stub().resolves(),
         persistForUser: sinon.stub().resolves(),
         loadForUser: sinon.stub().resolves()
-      }
+      },
+      loadSecurities: sinon.stub().resolves(),
     };
 
     this.rootPath = '/kuzzle';

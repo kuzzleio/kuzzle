@@ -45,6 +45,8 @@ class ClientAdapterMock extends ClientAdapter {
     this.deleteCollection = sinon.stub().resolves();
     this.isIndexNameValid = sinon.stub().returns(true);
     this.isCollectionNameValid = sinon.stub().returns(true);
+    this.loadMappings = sinon.stub().resolves();
+    this.loadFixtures = sinon.stub().resolves();
   }
 }
 

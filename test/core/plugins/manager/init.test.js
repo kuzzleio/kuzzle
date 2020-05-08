@@ -1,26 +1,25 @@
 'use strict';
 
-const
-  should = require('should'),
-  mockrequire = require('mock-require'),
-  rewire = require('rewire'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  {
-    errors: {
-      PluginImplementationError,
-      InternalError
-    }
-  } = require('kuzzle-common-objects'),
-  Manifest = require('../../../../lib/core/plugins/manifest');
+const should = require('should');
+const mockrequire = require('mock-require');
+const rewire = require('rewire');
+const sinon = require('sinon');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const FsMock = require('../../../mocks/fs.mock');
+const {
+  errors: {
+    PluginImplementationError,
+    InternalError
+  }
+} = require('kuzzle-common-objects');
+const Manifest = require('../../../../lib/core/plugins/manifest');
 
 describe('PluginsManager', () => {
-  let
-    PluginsManager,
-    pluginsManager,
-    fsStub,
-    kuzzle,
-    pluginStub;
+  let PluginsManager;
+  let pluginsManager;
+  let fsStub;
+  let kuzzle;
+  let pluginStub;
 
   // before(() => {
   //   Manifest = rewire('../../../../lib/core/plugins/manifest');
@@ -33,12 +32,7 @@ describe('PluginsManager', () => {
       };
     };
 
-    fsStub = {
-      readdirSync: sinon.stub().returns([]),
-      accessSync: sinon.stub(),
-      statSync: sinon.stub(),
-      existsSync: sinon.stub().returns(false)
-    };
+    fsStub = new FsMock();
 
     mockrequire('fs', fsStub);
     mockrequire('../../../../lib/core/plugins/manifest', Manifest);

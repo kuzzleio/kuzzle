@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
-const Kuzzle = rewire('../../lib/kuzzle');
+const Kuzzle = rewire('../../lib/kuzzle/kuzzle');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
@@ -24,11 +24,13 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'validation',
     'emit',
     'vault',
-    'janitor',
     'log',
     'internalIndex',
     'cacheEngine',
-    'storageEngine'
+    'storageEngine',
+    'dump',
+    'shutdown',
+    'pipe',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
@@ -56,58 +58,40 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   });
 
   describe('#start', () => {
-    it('should init the components in proper order', () => {
+    it('should init the components in proper order', async () => {
       const params = {
         mappings: {},
         fixtures: {},
         securities: {}
       };
 
-      return kuzzle.start(params)
-        .then(() => {
-          sinon.assert.callOrder(
-            kuzzle.cacheEngine.init,
-            kuzzle.log.info, // cacheEngine init
-            kuzzle.storageEngine.init,
-            kuzzle.internalIndex.init,
-            kuzzle.log.info, // storageEngine init
-            kuzzle.validation.init,
-            kuzzle.repositories.init,
-            kuzzle.funnel.init,
-            kuzzle.janitor.loadMappings,
-            kuzzle.janitor.loadFixtures,
-            kuzzle.pluginsManager.init,
-            kuzzle.pluginsManager.run,
-            kuzzle.log.info, // core components loaded
-            kuzzle.log.info, // load default rights
-            kuzzle.janitor.loadSecurities,
-            kuzzle.log.info, // default rights loaded
-            kuzzle.router.init,
-            kuzzle.statistics.init,
-            kuzzle.validation.curateSpecification,
-            kuzzle.repositories.role.sanityCheck,
-            kuzzle.entryPoints.init,
-            kuzzle.emit // core:kuzzleStart
-          );
-        });
-    });
+      await kuzzle.start(params);
 
-    it('should call vault with params from the CLI', () => {
-      Kuzzle.__with__({
-        fs: {
-          existsSync: sinon.stub().returns(true)
-        }
-      })(async () => {
-        const params = {
-          vaultKey: 'the spoon does not exists',
-          secretsFile: 'config/secrets.json'
-        };
-
-        await kuzzle.start(params);
-
-        should(kuzzle.vault._vaultKey).be.exactly('the spoon does not exists');
-        should(kuzzle.vault._encryptedSecretsFile).be.exactly('config/secrets.json');
-      });
+      sinon.assert.callOrder(
+        kuzzle.cacheEngine.init,
+        kuzzle.log.info, // cacheEngine init
+        kuzzle.storageEngine.init,
+        kuzzle.internalIndex.init,
+        kuzzle.log.info, // storageEngine init
+        kuzzle.validation.init,
+        kuzzle.repositories.init,
+        kuzzle.funnel.init,
+        kuzzle.storageEngine.public.loadMappings,
+        kuzzle.storageEngine.public.loadFixtures,
+        kuzzle.pluginsManager.init,
+        kuzzle.pluginsManager.run,
+        kuzzle.log.info, // core components loaded
+        kuzzle.log.info, // load default rights
+        kuzzle.repositories.loadSecurities,
+        kuzzle.log.info, // default rights loaded
+        kuzzle.router.init,
+        kuzzle.statistics.init,
+        kuzzle.validation.curateSpecification,
+        kuzzle.repositories.role.sanityCheck,
+        kuzzle.pipe, // kuzzle:start
+        kuzzle.entryPoints.init,
+        kuzzle.emit // core:kuzzleStart
+      );
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
@@ -168,7 +152,10 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     // @deprecated
     it('should instantiate Koncorde with PCRE support if asked to', async () => {
       const Koncorde = sinon.stub();
-      const stubbedKuzzle = Kuzzle.__with__({ Koncorde, initVault: () => {} });
+      const stubbedKuzzle = Kuzzle.__with__({
+        Koncorde,
+        vault: { load: () => {} }
+      });
 
       await stubbedKuzzle(async () => {
         await _mockKuzzle(Kuzzle).start();

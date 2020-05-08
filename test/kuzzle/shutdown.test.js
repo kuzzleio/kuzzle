@@ -1,17 +1,11 @@
 'use strict';
 
-const
-  rewire = require('rewire'),
-  sinon = require('sinon'),
-  should = require('should'),
-  KuzzleMock = require('../mocks/kuzzle.mock');
+const rewire = require('rewire');
+const sinon = require('sinon');
+const should = require('should');
+const KuzzleMock = require('../mocks/kuzzle.mock');
 
-// require runShutdown only after fake timers are installed
-function requireRunShutdown() {
-  return rewire('../../lib/util/shutdown');
-}
-
-describe('#util/shutdown', () => {
+describe('#kuzzle/shutdown', () => {
   let kuzzle;
   const saveExit = process.exit;
 
@@ -27,11 +21,18 @@ describe('#util/shutdown', () => {
   it('should exit only when there is no request left in the funnel', () => {
     const clock = sinon.useFakeTimers();
 
-    const runShutdown = requireRunShutdown();
+    const shutdown = rewire('../../lib/kuzzle/shutdown');
     kuzzle.funnel.remainingRequests = 1;
 
     try {
-      runShutdown(kuzzle);
+      shutdown(kuzzle);
+
+      should(kuzzle.entryPoints.dispatch).calledOnce().calledWith('shutdown');
+      should(kuzzle.emit).calledWith('kuzzle:shutdown');
+
+      // @deprecated
+      should(kuzzle.emit).calledWith('core:shutdown');
+
       clock.next();
       should(process.exit).not.be.called();
 
