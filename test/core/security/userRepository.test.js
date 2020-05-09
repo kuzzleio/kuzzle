@@ -16,17 +16,15 @@ const {
 } = require('kuzzle-common-objects');
 
 describe('Test: security/userRepository', () => {
-  let
-    kuzzle,
-    userRepository,
-    userInCache,
-    userInDB,
-    userInvalidProfile,
-    repositoryLoadStub;
+  let kuzzle;
+  let userRepository;
+  let userInCache;
+  let userInDB;
+  let userInvalidProfile;
+  let repositoryLoadStub;
 
   beforeEach(() => {
-    const
-      encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a';
+    const encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a';
 
     repositoryLoadStub = sinon.stub(Repository.prototype, 'load');
 
@@ -98,7 +96,7 @@ describe('Test: security/userRepository', () => {
         });
     });
 
-    it('should reject the promise if the profile cannot be found', () => {
+    it('should reject if the profile cannot be found', () => {
       kuzzle.repositories.profile.loadProfiles.resolves([null]);
 
       return should(userRepository.fromDTO(userInvalidProfile))
@@ -107,9 +105,10 @@ describe('Test: security/userRepository', () => {
         });
     });
 
-    it('should add the default profile if none is set', () => {
-      return userRepository.fromDTO({_id: 'foo'})
-        .then(user => should(user.profileIds).match(kuzzle.config.security.restrictedProfileIds));
+    it('should reject if the user has no profile associated to it', () => {
+      return should(userRepository.fromDTO({_id: 'foo'})).rejectedWith(
+        KuzzleInternalError,
+        { id: 'security.user.no_profile' });
     });
   });
 
