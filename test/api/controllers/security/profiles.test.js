@@ -575,7 +575,7 @@ describe('Test: security controller - profiles', () => {
 
       should(securityController.mDelete)
         .be.calledOnce()
-        .be.calledWith(kuzzle, 'profile', request);
+        .be.calledWith('profile', request);
     });
   });
 });

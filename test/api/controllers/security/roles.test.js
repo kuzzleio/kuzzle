@@ -297,7 +297,7 @@ describe('Test: security controller - roles', () => {
       securityController.mDeleteRoles(request);
       should(securityController.mDelete)
         .be.calledOnce()
-        .be.calledWith(kuzzle, 'role', request);
+        .be.calledWith('role', request);
     });
   });
 });
