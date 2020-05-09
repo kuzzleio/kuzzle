@@ -1,15 +1,12 @@
 'use strict';
 
-const
-  _ = require('lodash'),
-  should = require('should'),
-  {
-    When,
-    Then
-  } = require('cucumber');
+const _ = require('lodash');
+const should = require('should');
+const { Then } = require('cucumber');
 
-When(/I (successfully )?call the route "(.*?)":"(.*?)" with args:/, async function (expectSuccess, controller, action, dataTable) {
+Then(/I (successfully )?call the route "(.*?)":"(.*?)" with args:$/, async function (expectSuccess, controller, action, dataTable) {
   const args = this.parseObject(dataTable);
+
   try {
     const response = await this.sdk.query({ controller, action, ...args });
 
@@ -24,7 +21,24 @@ When(/I (successfully )?call the route "(.*?)":"(.*?)" with args:/, async functi
   }
 });
 
-When(/I (successfully )?call the route "(.*?)":"(.*?)"$/, async function (expectSuccess, controller, action) {
+Then(/I (successfully )?call the route "(.*?)":"(.*?)" with body:$/, async function (expectSuccess, controller, action, bodyRaw) {
+  const body = JSON.parse(bodyRaw);
+
+  try {
+    const response = await this.sdk.query({ controller, action, body });
+
+    this.props.result = response.result;
+  }
+  catch (error) {
+    if (expectSuccess) {
+      throw error;
+    }
+
+    this.props.error = error;
+  }
+});
+
+Then(/I (successfully )?call the route "(.*?)":"(.*?)"$/, async function (expectSuccess, controller, action) {
   try {
     const response = await this.sdk.query({ controller, action });
 
@@ -53,6 +67,12 @@ Then(/I should receive a ("(.*?)" )?array (of objects )?matching:/, function (na
   for (let i = 0; i < expected.length; i++) {
     should(result[i]).matchObject(expected[i]);
   }
+});
+
+Then(/I should receive a ("(.*?)" )?array containing (\d+) elements/, function (name, expectedCount) {
+  const result = name ? this.props.result[name] : this.props.result;
+
+  should(result).have.length(expectedCount);
 });
 
 Then('I should receive a result matching:', function (dataTable) {

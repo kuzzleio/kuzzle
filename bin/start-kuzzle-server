@@ -71,7 +71,7 @@ async function startKuzzle (options = {}) {
     }
   }
   catch (error) {
-    console.error(`[x] [ERROR] ${err.stack}`);
+    console.error(`[x] [ERROR] ${error.stack}`);
     process.exit(1);
   }
 }

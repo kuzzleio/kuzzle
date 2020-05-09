@@ -68,7 +68,7 @@ describe('ApiKey', () => {
       should(saveStub)
         .be.calledWith({ userId: 'aschen', refresh: 'wait_for' });
 
-      should(apiKey._source).be.eql({
+      should(apiKey._source).match({
         description: 'Sigfox API key',
         userId: 'mylehuong',
         expiresAt: 42,

@@ -83,7 +83,7 @@
         "forbidden": {
           "description": "Insufficient permissions to execute this action",
           "code": 2,
-          "message": "Insufficient permissions to execute the action \"%s:%s\".",
+          "message": "Insufficient permissions to execute the action \"%s:%s\" (User \"%s\").",
           "class": "ForbiddenError"
         }
       }
@@ -120,6 +120,12 @@
           "code": 5,
           "message": "Cannot get profiles for uninitialized user \"%s\"",
           "class": "InternalError"
+        },
+        "prevent_overwrite": {
+          "description": "Attempted to overwrite existing users. Change \"onExistingUsers\" params to modify this method behavior.",
+          "code": 6,
+          "message": "Cannot overwrite existing users.",
+          "class": "BadRequestError"
         }
       }
     },

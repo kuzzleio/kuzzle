@@ -19,3 +19,11 @@ Feature: Plugin context
       | body | {  "awsAccessKey": "I am the access key" } |
     Then I should receive a result matching:
       | result | true |
+
+  # accessors.trigger
+
+  Scenario: Trigger returns the pipe chain result
+    When I successfully call the route "functional-test-plugin/pipes":"testReturn" with args:
+      | name | "Mr Freeman" |
+    Then I should receive a result matching:
+      | result | "Hello, Mr Freeman" |
