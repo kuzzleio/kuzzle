@@ -6,8 +6,6 @@ title: updateUser
 
 # updateUser
 
-
-
 Updates a user definition.
 
 ---
@@ -17,7 +15,7 @@ Updates a user definition.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/users/<_id>/_update[?refresh=wait_for]
+URL: http://kuzzle:7512/users/<_id>/_update[?refresh=wait_for][?retryOnConflict=10]
 Method: PUT
 Body:
 ```
@@ -37,7 +35,10 @@ Body:
   "_id": "<kuid>",
   "body": {
     "fullname": "Walter Smith"
-  }
+  },
+  // Optional
+  "refresh": "wait_for",
+  "retryOnConflict": 10
 }
 ```
 
@@ -47,9 +48,10 @@ Body:
 
 - `_id`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
 
-### Optional:
+### Optional arguments
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the user changes are indexed (default: `"wait_for"`)
+- `retryOnConflict`: in case of an update conflict in Elasticsearch, the number of retries before aborting the operation (default: `10`)
 
 ---
 
