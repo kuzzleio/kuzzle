@@ -2,7 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const Emitter = require('../../../lib/kuzzle/events/emitter');
+const Emitter = require('../../../lib/kuzzle/events/kuzzleEventEmitter');
 
 describe('#KuzzleEventEmitter', () => {
   let emitter;
