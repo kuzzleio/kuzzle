@@ -8,21 +8,9 @@ title: deleteByQuery
 
 Deletes documents matching the provided search query. 
 
-Documents removed that way trigger real-time notifications.
-
-## Limitations
-
-The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
-
-This behavior aims at limiting the pressure on memory and on real-time notifications.
-
-To remove a greater number of documents, you can:
- - change the server configuration
- - split the search query
- - use a paginated [document:search](/core/2/api/controllers/document/search) with [document:mDelete](/core/2/api/controllers/document/m-delete)
- - use [bulk:deleteByQuery](/core/2/api/controllers/bulk/delete-by-query)
-
-To remove all documents from a collection, use [collection:truncate](/core/2/api/controllers/collection/truncate) instead.
+This is a low level route intended to bypass Kuzzle actions on document deletion, notably:
+  - check document write limit
+  - trigger [realtime notifications](/core/2/guides/essentials/real-time)
 
 ---
 
@@ -31,7 +19,7 @@ To remove all documents from a collection, use [collection:truncate](/core/2/api
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/_bulk/_query[?refresh=wait_for]
 Method: DELETE
 Body:
 ```
@@ -82,7 +70,7 @@ Body:
 
 ## Response
 
-Returns a `ids` array containing the list of deleted document identifiers.
+Returns the number of deleted documents.
 
 ```js
 {
@@ -90,16 +78,11 @@ Returns a `ids` array containing the list of deleted document identifiers.
   "error": null,
   "index": "<index>",
   "collection": "<collection>",
-  "controller": "document",
+  "controller": "bulk",
   "action": "deleteByQuery",
   "requestId": "<unique request identifier>",
   "result": {
-    "ids": [
-      "id 1",
-      "id 2",
-      "id ...",
-      "id n"
-    ]
+    "deleted": 42
   }
 }
 ```
