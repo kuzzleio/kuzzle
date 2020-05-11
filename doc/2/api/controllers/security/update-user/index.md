@@ -15,7 +15,7 @@ Updates a user definition.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/users/<_id>/_update[?refresh=wait_for][?retryOnConflict=10]
+URL: http://kuzzle:7512/users/<_id>/_update[?refresh=wait_for][&retryOnConflict=10]
 Method: PUT
 Body:
 ```
