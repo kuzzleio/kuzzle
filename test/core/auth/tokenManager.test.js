@@ -177,7 +177,7 @@ describe('Test: token manager core component', () => {
     let clock;
 
     beforeEach(() => {
-      clock = sinon.useFakeTimers();
+      clock = sinon.useFakeTimers(new Date());
     });
 
     afterEach(() => {
@@ -268,6 +268,30 @@ describe('Test: token manager core component', () => {
 
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]._id).be.eql('bar');
+      should(runTimerStub).be.calledOnce();
+    });
+
+    it('should not expire API key', async () => {
+      const runTimerStub = sinon.stub(tokenManager, 'runTimer');
+
+      kuzzle.hotelClerk.customers.clear();
+
+      tokenManager.link(
+        new Token({_id: 'api-key-1', expiresAt: -1}),
+        'connectionId1',
+        'roomId1');
+
+      runTimerStub.resetHistory();
+
+      await tokenManager.checkTokensValidity();
+
+      clock.runAll();
+
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
+      should(kuzzle.notifier.notifyServer).not.be.called();
+
+      should(tokenManager.tokens.array.length).be.eql(1);
+      should(tokenManager.tokens.array[0]._id).be.eql('api-key-1');
       should(runTimerStub).be.calledOnce();
     });
 

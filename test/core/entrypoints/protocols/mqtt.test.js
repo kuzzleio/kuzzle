@@ -1,36 +1,50 @@
 'use strict';
 
-const
-  Bluebird = require('bluebird'),
-  mockrequire = require('mock-require'),
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  { errors: { BadRequestError } } = require('kuzzle-common-objects'),
-  errorMatcher = require('../../../util/errorMatcher');
+const Bluebird = require('bluebird');
+const mockrequire = require('mock-require');
+const should = require('should');
+const sinon = require('sinon');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const { errors: { BadRequestError } } = require('kuzzle-common-objects');
+const errorMatcher = require('../../../util/errorMatcher');
+
+class AedesMock {
+  constructor (config) {
+    this.config = config;
+    this.authorizePublish = null;
+    this.authorizeSubscribe = null;
+    this.handle = sinon.spy();
+    this.on = sinon.stub();
+    this.publish = sinon.spy();
+  }
+}
+
+class FakeClient {
+  constructor (id) {
+    this.id = id;
+    this.publish = sinon.stub();
+    this.conn = { remoteAddress: 'ip' };
+    this.close = sinon.stub();
+  }
+}
 
 describe('/lib/core/entrypoints/protocols/mqtt', () => {
-  const moscaOnMock = sinon.stub();
-  const moscaMock = function (config) {
-    this.config = config;
-    this.on = moscaOnMock;
-    this.publish = sinon.spy();
-  };
-
-  let
-    entrypoint,
-    kuzzle,
-    protocol,
-    MqttProtocol;
+  let netMock;
+  let entrypoint;
+  let kuzzle;
+  let protocol;
+  let MqttProtocol;
+  let fakeClient;
 
   before(() => {
-    moscaOnMock
-      .withArgs('ready')
-      .yields();
+    netMock = {
+      createServer: sinon.stub().returns({
+        listen: sinon.stub().callsArg(1)
+      })
+    };
 
-    mockrequire('mosca', {
-      Server: moscaMock
-    });
+    mockrequire('net', netMock);
+    mockrequire('aedes', {Server: AedesMock});
 
     MqttProtocol = mockrequire.reRequire('../../../../lib/core/entrypoints/protocols/mqtt');
   });
@@ -59,6 +73,7 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
     };
 
     protocol = new MqttProtocol();
+    fakeClient = new FakeClient('foo');
   });
 
   describe('#init', () => {
@@ -68,133 +83,126 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
       return should(protocol.init(entrypoint)).fulfilledWith(false);
     });
 
-    it('should attach events', () => {
-      return protocol.init(entrypoint)
-        .then(() => {
-          protocol.onConnection = sinon.stub();
-          protocol.onDisconnection = sinon.spy();
-          protocol.onMessage = sinon.spy();
+    it('should attach events', async () => {
+      protocol.onConnection = sinon.stub();
+      protocol.onDisconnection = sinon.stub();
+      protocol.onMessage = sinon.stub();
 
-          should(protocol.server.on)
-            .be.calledWith('clientConnected')
-            .be.calledWith('clientDisconnecting')
-            .be.calledWith('clientDisconnected')
-            .be.calledWith('published');
+      await protocol.init(entrypoint);
 
-          {
-            const cb = protocol.server.on.getCall(1).args[1];
-            cb('test');
-            should(protocol.onConnection)
-              .be.calledOnce()
-              .be.calledWith('test');
-          }
-          {
-            const cb = protocol.server.on.getCall(2).args[1];
-            cb('test');
-            should(protocol.onDisconnection)
-              .be.calledOnce()
-              .be.calledWith('test');
-          }
-          {
-            const cb = protocol.server.on.getCall(3).args[1];
-            cb('test');
-            should(protocol.onDisconnection)
-              .be.calledTwice();
-          }
-          {
-            const cb = protocol.server.on.getCall(4).args[1];
-            cb('packet', 'client');
-            should(protocol.onMessage)
-              .be.calledOnce()
-              .be.calledWith('packet', 'client');
-          }
-        });
+      should(protocol.aedes.on)
+        .be.calledWith('client')
+        .be.calledWith('clientError')
+        .be.calledWith('clientDisconnect')
+        .be.calledWith('publish');
+
+      let cb;
+
+      cb = protocol.aedes.on.getCall(0).args[1];
+      cb(fakeClient);
+      should(protocol.onConnection)
+        .be.calledOnce()
+        .be.calledWith(fakeClient);
+
+      cb = protocol.aedes.on.getCall(1).args[1];
+      cb('test');
+      should(protocol.onDisconnection)
+        .be.calledOnce()
+        .be.calledWith('test');
+
+      protocol.onDisconnection.resetHistory();
+      cb = protocol.aedes.on.getCall(1).args[1];
+      cb('test');
+      should(protocol.onDisconnection)
+        .be.calledOnce()
+        .be.calledWith('test');
+
+      cb = protocol.aedes.on.getCall(3).args[1];
+      cb('packet', 'client');
+      should(protocol.onMessage)
+        .be.calledOnce()
+        .be.calledWith('packet', 'client');
     });
   });
 
   describe('#authorizePublish', () => {
-    let
-      auth;
+    let auth;
 
-    beforeEach(() => {
-      return protocol.init(entrypoint)
-        .then(() => {
-          auth = Bluebird.promisify(protocol.server.authorizePublish);
-        });
+    beforeEach(async () => {
+      await protocol.init(entrypoint);
+      auth = Bluebird.promisify(protocol.aedes.authorizePublish);
     });
 
-    it('should restrict to the requestTopic if allowPubSub is set to false', () => {
+    it('should restrict to the requestTopic if allowPubSub is set to false', async () => {
       protocol.config.allowPubSub = false;
 
-      const tests = [];
+      const payload = {
+        payload: Buffer.from('payload'),
+        topic: 'topic',
+      };
 
-      tests.push(auth('client', 'topic', 'payload')
-        .then(res => should(res).be.false())
-      );
+      await should(auth(fakeClient, payload)).rejectedWith({
+        message: 'Cannot publish on this topic: unauthorized'
+      });
 
-      tests.push(auth('client', protocol.config.requestTopic, 'payload')
-        .then(res => should(res).be.true())
-      );
-
-      return Bluebird.all(tests);
+      payload.topic = protocol.config.requestTopic;
+      await should(auth(fakeClient, payload)).fulfilled();
     });
 
-    it('should allow any topic different than the response one, provided it does not contain any wildcard', () => {
+    it('should allow any topic different than the response one, provided it does not contain any wildcard', async () => {
       protocol.config.allowPubSub = true;
 
-      const tests = [];
+      const payload = {
+        payload: Buffer.from('payload'),
+        topic: 'topic',
+      };
 
-      tests.push(auth('client', 'topic', 'payload')
-        .then(res => should(res).be.true())
-      );
+      await should(auth(fakeClient, payload)).fulfilled();
 
-      tests.push(auth('client', protocol.config.responseTopic, 'payload')
-        .then(res => should(res).be.false())
-      );
+      payload.topic = protocol.config.responseTopic;
+      await should(auth(fakeClient, payload)).rejectedWith({
+        message: 'Cannot publish: this topic is read-only'
+      });
 
-      tests.push(auth('client', 'wildcard#forbidden', 'payload')
-        .then(res => should(res).be.false())
-      );
+      payload.topic = 'wildcard#forbidden';
+      await should(auth(fakeClient, payload)).rejectedWith({
+        message: 'Cannot publish: wildcards are disabled'
+      });
 
-      tests.push(auth('client', 'wildcard+forbidden', 'payload')
-        .then(res => should(res).be.false())
-      );
-
-      return Bluebird.all(tests);
+      payload.topic = 'wildcard+forbidden';
+      await should(auth(fakeClient, payload)).rejectedWith({
+        message: 'Cannot publish: wildcards are disabled'
+      });
     });
   });
 
   describe('#authorizeSubscribe', () => {
-    let
-      auth;
+    let auth;
 
-    beforeEach(() => {
-      return protocol.init(entrypoint)
-        .then(() => {
-          auth = Bluebird.promisify(protocol.server.authorizeSubscribe);
-        });
+    beforeEach(async () => {
+      await protocol.init(entrypoint);
+      auth = Bluebird.promisify(protocol.aedes.authorizeSubscribe);
     });
 
-    it('should allow any topic different than the request one, provided it does not contain any wildcard', () => {
-      const tests = [];
+    it('should allow any topic different than the request one, provided it does not contain any wildcard', async () => {
+      const sub = {topic: 'topic'};
 
-      tests.push(auth('client', 'topic')
-        .then(res => should(res).be.true())
-      );
+      await should(auth(fakeClient, sub)).fulfilledWith(sub);
 
-      tests.push(auth('client', protocol.config.requestTopic)
-        .then(res => should(res).be.false())
-      );
+      sub.topic = protocol.config.requestTopic;
+      await should(auth(fakeClient, sub)).rejectedWith({
+        message: 'Cannot subscribe: this topic is write-only'
+      });
 
-      tests.push(auth('client', 'wildcard#forbidden')
-        .then(res => should(res).be.false())
-      );
+      sub.topic = 'wildcard#forbidden';
+      await should(auth(fakeClient, sub)).rejectedWith({
+        message: 'Cannot subscribe: wildcards are disabled'
+      });
 
-      tests.push(auth('client', 'wilcard+forbidden')
-        .then(res => should(res).be.false())
-      );
-
-      return Bluebird.all(tests);
+      sub.topic = 'wildcard+forbidden';
+      await should(auth(fakeClient, sub)).rejectedWith({
+        message: 'Cannot subscribe: wildcards are disabled'
+      });
     });
   });
 
@@ -212,7 +220,7 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
         ]
       });
 
-      should(protocol.server.publish)
+      should(protocol.aedes.publish)
         .be.calledTwice()
         .be.calledWith({topic: 'ch1', payload: '"payload"'});
     });
@@ -220,40 +228,33 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
 
   describe('#disconnect', () => {
     it('should close the matching connection', () => {
-      const connection = {
-        id: 'id',
-        close: sinon.spy()
-      };
+      protocol.connectionsById.set(fakeClient.id, fakeClient);
 
-      protocol.connectionsById.set('id', connection);
+      protocol.disconnect(fakeClient.id);
 
-      protocol.disconnect('id');
-
-      should(connection.close)
-        .be.calledOnce();
+      should(fakeClient.close).be.calledOnce();
     });
   });
 
   describe('#notify', () => {
     it('should forward the payload to the matching clients', () => {
 
-      protocol.connectionsById.set('id', {forward: sinon.spy()});
-      protocol.connectionsById.set('foo', {forward: sinon.spy()});
+      const client1 = new FakeClient('foo');
+      const client2 = new FakeClient('bar');
+      protocol.connectionsById.set(client1.id, client1);
+      protocol.connectionsById.set(client2.id, client2);
       protocol.notify({
-        connectionId: 'id',
+        connectionId: client1.id,
         payload: 'payload',
-        channels: [
-          'ch1',
-          'ch2'
-        ]
+        channels: ['ch1', 'ch2']
       });
 
-      should(protocol.connectionsById.get('id').forward)
+      should(client1.publish)
         .be.calledTwice()
-        .be.calledWith('ch1', '"payload"', {}, 'ch1', 0);
+        .be.calledWith({payload: Buffer.from('"payload"'), topic: 'ch1'})
+        .be.calledWith({payload: Buffer.from('"payload"'), topic: 'ch2'});
 
-      should(protocol.connectionsById.get('foo').forward)
-        .have.callCount(0);
+      should(client2.publish).not.called();
     });
   });
 
@@ -263,25 +264,15 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
     });
 
     it('should register new connections', () => {
-      const client = {
-        connection: {
-          stream: {
-            remoteAddress: 'ip'
-          }
-        }
-      };
-
-      protocol.onConnection(client);
+      protocol.onConnection(fakeClient);
 
       should(protocol.connections.size).eql(1);
       should(protocol.connectionsById.size).eql(1);
 
       const connectionId = protocol.connectionsById.entries().next().value[0];
-      should(protocol.connections.get(client).id)
-        .be.exactly(connectionId);
 
-      should(entrypoint.newConnection)
-        .be.calledOnce();
+      should(protocol.connections.get(fakeClient).id).be.exactly(connectionId);
+      should(entrypoint.newConnection).be.calledOnce();
     });
   });
 
@@ -291,26 +282,23 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
     });
 
     it('should do nothing if the connection is unknown', () => {
-      protocol.onDisconnection({});
+      protocol.onDisconnection(fakeClient);
 
-      should(entrypoint.removeConnection)
-        .have.callCount(0);
+      should(entrypoint.removeConnection).have.callCount(0);
     });
 
     it('should remove the connection', () => {
-      const
-        clock = sinon.useFakeTimers(),
-        client = {};
+      const clock = sinon.useFakeTimers();
 
-      protocol.connections.set(client, {id: 'id'});
-      protocol.connectionsById.set('id', client);
+      protocol.connections.set(fakeClient, {id: fakeClient.id});
+      protocol.connectionsById.set(fakeClient.id, fakeClient);
 
-      protocol.onDisconnection(client);
+      protocol.onDisconnection(fakeClient);
       clock.tick(protocol.config.disconnectDelay + 1);
 
       should(entrypoint.removeConnection)
         .be.calledOnce()
-        .be.calledWith('id');
+        .be.calledWith(fakeClient.id);
 
       clock.restore();
     });
@@ -324,70 +312,69 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
 
     it('should do nothing if topic is not the request one of if the payload is not valid', () => {
       // invalid topic
-      protocol.onMessage({
-        topic: 'topic',
-        payload: 'payload'
-      }, {id: 'id'});
+      protocol.onMessage({payload: 'payload', topic: 'topic'}, fakeClient);
 
       // invalid payload
-      protocol.onMessage({
-        topic: protocol.config.requestTopic
-      }, {id: 'id'});
+      protocol.onMessage({topic: protocol.config.requestTopic}, fakeClient);
 
       // no client id
-      protocol.onMessage({
-        topic: protocol.config.requestTopic,
-        payload: 'payload'
-      }, {});
+      protocol.onMessage(
+        {
+          topic: protocol.config.requestTopic,
+          payload: 'payload'
+        },
+        new FakeClient(null));
 
-      should(entrypoint.execute)
-        .have.callCount(0);
+      should(entrypoint.execute).have.callCount(0);
     });
 
     it('should do nothing if the connection is unknown', () => {
-      protocol.onMessage({
-        topic: protocol.config.requestTopic,
-        payload: 'payload'
-      }, {id: 'foo'});
+      protocol.onMessage(
+        {
+          topic: protocol.config.requestTopic,
+          payload: 'payload'
+        },
+        fakeClient);
 
-      should(entrypoint.execute)
-        .have.callCount(0);
+      should(entrypoint.execute).have.callCount(0);
     });
 
     it('should forward the client payload to kuzzle and respond the client back', () => {
-      const client = {
-        id: 'clientId',
-        forward: sinon.spy()
-      };
-      protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
+      protocol.connections.set(fakeClient, {
+        id: fakeClient.id,
+        protocol: 'mqtt',
+      });
 
-      protocol.onMessage({
-        topic: protocol.config.requestTopic,
-        payload: Buffer.from(JSON.stringify({foo: 'bar'}))
-      }, client);
+      protocol.onMessage(
+        {
+          payload: Buffer.from(JSON.stringify({foo: 'bar'})),
+          topic: protocol.config.requestTopic,
+        },
+        fakeClient);
 
-      should(entrypoint.execute)
-        .be.calledOnce();
+      should(entrypoint.execute).be.calledOnce();
 
       const request = entrypoint.execute.firstCall.args[0];
-      should(request.serialize())
-        .match({
-          data: {
-            foo: 'bar'
-          },
-          options: {
-            connection: {
-              id: 'id',
-              protocol: protocol.name
-            }
+      should(request.serialize()).match({
+        data: {
+          foo: 'bar'
+        },
+        options: {
+          connection: {
+            id: fakeClient.id,
+            protocol: protocol.name
           }
-        });
+        }
+      });
 
       const cb = entrypoint.execute.firstCall.args[1];
       cb({content: 'response'});
-      should(client.forward)
+      should(fakeClient.publish)
         .be.calledOnce()
-        .be.calledWith(protocol.config.responseTopic, '"response"', {}, protocol.config.responseTopic, 0);
+        .be.calledWithMatch({
+          payload: Buffer.from('"response"'),
+          topic: protocol.config.responseTopic,
+        });
     });
 
     it('should respond with an error if the payload cannot be parsed', () => {
@@ -397,16 +384,15 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
         process.env.NODE_ENV = env;
         protocol._respond = sinon.spy();
 
-        const client = {
-          id: 'clientId',
-          forward: sinon.spy()
-        };
-        protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
+        const client = new FakeClient(env);
+        protocol.connections.set(client, {id: client.id, protocol: 'mqtt'});
 
-        protocol.onMessage({
-          topic: protocol.config.requestTopic,
-          payload: Buffer.from('invalid')
-        }, client);
+        protocol.onMessage(
+          {
+            payload: Buffer.from('invalid'),
+            topic: protocol.config.requestTopic,
+          },
+          client);
 
         const matcher = errorMatcher.fromMessage(
           'network',
@@ -427,24 +413,24 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
     it('should respond with an error if the requestId is not a string', () => {
       protocol._respond = sinon.spy();
 
-      const client = {
-        id: 'clientId',
-        forward: sinon.spy()
-      };
-      protocol.connections.set(client, {id: 'id', protocol: 'mqtt'});
+      protocol.connections.set(fakeClient, {
+        id: fakeClient.id,
+        protocol: 'mqtt',
+      });
 
-      protocol.onMessage({
-        topic: protocol.config.requestTopic,
-        payload: Buffer.from(JSON.stringify({ requestId: 42 }))
-      }, client);
+      protocol.onMessage(
+        {
+          payload: Buffer.from(JSON.stringify({ requestId: 42 })),
+          topic: protocol.config.requestTopic,
+        },
+        fakeClient);
 
       should(protocol._respond)
         .be.calledOnce()
-        .be.calledWith(client);
+        .be.calledWith(fakeClient);
 
       const response = protocol._respond.firstCall.args[1];
-      should(response.content.error)
-        .be.an.instanceOf(BadRequestError);
+      should(response.content.error).be.an.instanceOf(BadRequestError);
     });
   });
 
@@ -454,16 +440,13 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
     });
 
     it('should broadcast if in development mode', () => {
-      const client = {
-        forward: sinon.spy()
-      };
       const currentEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
       protocol.broadcast = sinon.spy();
       protocol.config.developmentMode = true;
 
-      protocol._respond(client, {content: 'response'});
+      protocol._respond(fakeClient, {content: 'response'});
       process.env.NODE_ENV = currentEnv;
 
       should(protocol.broadcast)
@@ -473,8 +456,7 @@ describe('/lib/core/entrypoints/protocols/mqtt', () => {
           payload: 'response'
         });
 
-      should(client.forward)
-        .have.callCount(0);
+      should(fakeClient.publish).have.callCount(0);
     });
   });
 });

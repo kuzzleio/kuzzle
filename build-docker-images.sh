@@ -2,7 +2,7 @@
 
 set -e
 
-KUZZLE_LATEST_MAJOR=1
+KUZZLE_LATEST_MAJOR=2
 
 if [ -z "$MODE" ]; then
   echo "This script has three mode that you can use with the variable MODE"
