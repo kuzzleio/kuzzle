@@ -102,7 +102,7 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.loadMultiFromDatabase.resolves([
         {_id: 'test', profileIds: ['profile1']}
       ]);
-      
+
       should(securityController.mGetUsers(new Request({
         body: {
           ids: ['user1', 'user2']
@@ -114,9 +114,9 @@ describe('Test: security controller - users', () => {
       kuzzle.repositories.user.loadMultiFromDatabase.resolves([
         { _id: 'test', profileIds: ['profile1'] }
       ]);
-      
+
       should(securityController.mGetUsers(new Request({
-        ids: 'user1,user2' 
+        ids: 'user1,user2'
       }
       ))).not.throw();
     });
@@ -891,7 +891,7 @@ describe('Test: security controller - users', () => {
 
       should(securityController.mDelete)
         .be.calledOnce()
-        .be.calledWith(kuzzle, 'user', request);
+        .be.calledWith('user', request);
     });
   });
 
