@@ -1096,10 +1096,6 @@ describe('Test: ElasticSearch service', () => {
         { _id: '_id2', _source: '_source2' },
       ]);
 
-      elasticsearch._client.indices.refresh.resolves({
-        body: { _shards: 1 }
-      });
-
       elasticsearch._client.deleteByQuery.resolves({
         body: {
           total: 2,
@@ -1111,64 +1107,95 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should have deleteByQuery capability', () => {
-      const promise = elasticsearch.deleteByQuery(
+    it('should have deleteByQuery capability', async () => {
+      const result = await elasticsearch.deleteByQuery(
         index,
         collection,
         { filter: 'term' });
 
-      return promise
-        .then(result => {
-          should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
-            index: esIndexName,
-            body: { query: { filter: 'term' } },
-            scroll: '5s',
-            from: undefined,
-            size: 1000,
-            refresh: undefined
-          });
+      should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { filter: 'term' } },
+        scroll: '5s',
+        from: undefined,
+        size: 1000,
+        refresh: undefined
+      });
 
-          should(result).match({
-            documents: [
-              { _id: '_id1', _source: '_source1' },
-              { _id: '_id2', _source: '_source2' },
-            ],
-            total: 2,
-            deleted: 1,
-            failures: [
-              { shardId: 42, reason: 'error' }
-            ]
-          });
-        });
+      should(elasticsearch._getAllDocumentsFromQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { filter: 'term' } },
+        scroll: '5s',
+        from: undefined,
+        size: 1000,
+        refresh: undefined
+      });
+
+      should(result).match({
+        documents: [
+          { _id: '_id1', _source: '_source1' },
+          { _id: '_id2', _source: '_source2' },
+        ],
+        total: 2,
+        deleted: 1,
+        failures: [
+          { shardId: 42, reason: 'error' }
+        ]
+      });
     });
 
-    it('should allow additional options', () => {
-      const promise = elasticsearch.deleteByQuery(
+    it('should allow additional options', async () => {
+      const result = await elasticsearch.deleteByQuery(
         index,
         collection,
         { filter: 'term' },
         { refresh: 'wait_for', from: 1, size: 3 });
 
-      return promise
-        .then(result => {
-          should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
-            index: esIndexName,
-            body: { query: { filter: 'term' } },
-            size: 3,
-            refresh: true
-          });
+      should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { filter: 'term' } },
+        size: 3,
+        refresh: true
+      });
 
-          should(result).match({
-            total: 2,
-            deleted: 1,
-            failures: [
-              { shardId: 42, reason: 'error' }
-            ]
-          });
-        });
+      should(result).match({
+        total: 2,
+        deleted: 1,
+        failures: [
+          { shardId: 42, reason: 'error' }
+        ]
+      });
     });
 
-    it('should return a rejected promise if client.deleteByQuery fails', () => {
+    it('should not fetch documents if fetch=false', async () => {
+      const result = await elasticsearch.deleteByQuery(
+        index,
+        collection,
+        { filter: 'term' },
+        { fetch: false });
+
+      should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { filter: 'term' } },
+        scroll: '5s',
+        from: undefined,
+        size: 1000,
+        refresh: undefined
+      });
+
+      should(elasticsearch._getAllDocumentsFromQuery).not.be.called();
+
+      should(result).match({
+        documents: [],
+        total: 2,
+        deleted: 1,
+        failures: [
+          { shardId: 42, reason: 'error' }
+        ]
+      });
+    });
+
+    it('should rejects if client.deleteByQuery fails', () => {
       elasticsearch._client.deleteByQuery.rejects(esClientError);
 
       const promise = elasticsearch.deleteByQuery(
@@ -3235,30 +3262,31 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should allow to delete multiple documents with deleteByQuery', () => {
-      const promise = elasticsearch.mDelete(index, collection, documentIds);
+    it('should allow to delete multiple documents with deleteByQuery', async () => {
+      const result = await elasticsearch.mDelete(index, collection, documentIds);
 
-      return promise
-        .then(result => {
-          should(elasticsearch.mGet).be.calledWithMatch(
-            index,
-            collection,
-            ['mehry', 'liia']);
+      should(elasticsearch._client.indices.refresh).be.calledWith({
+        index: `&${index}.${collection}`
+      });
 
-          should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
-            index: esIndexName,
-            body: { query: { ids: { values: ['mehry', 'liia'] } } },
-            scroll: '5s'
-          });
+      should(elasticsearch.mGet).be.calledWithMatch(
+        index,
+        collection,
+        ['mehry', 'liia']);
 
-          should(result).match({
-            documents: [
-              { _id: 'mehry', _source: { city: 'Kathmandu' } },
-              { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
-            ],
-            errors: []
-          });
-        });
+      should(elasticsearch._client.deleteByQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { ids: { values: ['mehry', 'liia'] } } },
+        scroll: '5s'
+      });
+
+      should(result).match({
+        documents: [
+          { _id: 'mehry', _source: { city: 'Kathmandu' } },
+          { _id: 'liia', _source: { city: 'Ho Chi Minh City' } }
+        ],
+        errors: []
+      });
     });
 
     it('should add non existing documents to rejected', () => {

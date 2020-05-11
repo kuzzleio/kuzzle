@@ -188,4 +188,34 @@ describe('Test the bulk controller', () => {
         request, mCreateOrReplaceResult, true);
     });
   });
+
+  describe('#deleteByQuery', async () => {
+    let query;
+
+    beforeEach(() => {
+      query = {
+        range: { age: { gt: 21 } }
+      };
+
+      request.input.action = 'deleteByQuery';
+      request.input.args.refresh = 'wait_for';
+      request.input.body = { query };
+
+      controller.publicStorage.deleteByQuery.resolves({
+        deleted: 2
+      });
+    });
+
+    it('should call deleteByQuery with fetch=false', async () => {
+      const response = await controller.deleteByQuery(request);
+
+      should(controller.publicStorage.deleteByQuery).be.calledWith(
+        index,
+        collection,
+        query,
+        { refresh: 'wait_for', fetch: false });
+
+      should(response.deleted).be.eql(2);
+    });
+  });
 });
