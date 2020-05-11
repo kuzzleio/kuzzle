@@ -56,9 +56,9 @@ Body:
 - `collection`: collection name
 - `index`: index name
 
-### Optional:
+### Optional
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are removed from the search indexes
 
 ---
 
