@@ -3,7 +3,7 @@
 const should = require('should');
 const rewire = require('rewire');
 const Kuzzle = require('../../mocks/kuzzle.mock');
-const Statistics = rewire('../../../lib/core/statistics');
+const Statistics = rewire('../../../lib/core/statistics/statistics');
 const {
   Request,
   models: { RequestContext },
@@ -11,25 +11,23 @@ const {
 } = require('kuzzle-common-objects');
 
 describe('Test: statistics core component', () => {
-  let
-    request,
-    kuzzle,
-    stats;
-  const
-    lastFrame = Date.now(),
-    fakeStats = {
-      connections: new Map(),
-      ongoingRequests: new Map(),
-      completedRequests: new Map(),
-      failedRequests: new Map()
-    };
-  fakeStats.connections.set('foo', 42 );
-  fakeStats.ongoingRequests.set('bar', 1337 );
-  fakeStats.completedRequests.set('baz', 666 );
-  fakeStats.failedRequests.set('qux', 667 );
+  let request;
+  let kuzzle;
+  let stats;
+  const lastFrame = Date.now();
+  const fakeStats = {
+    connections: new Map(),
+    ongoingRequests: new Map(),
+    completedRequests: new Map(),
+    failedRequests: new Map()
+  };
 
   before(() => {
     kuzzle = new Kuzzle();
+    fakeStats.connections.set('foo', 42 );
+    fakeStats.ongoingRequests.set('bar', 1337 );
+    fakeStats.completedRequests.set('baz', 666 );
+    fakeStats.failedRequests.set('qux', 667 );
   });
 
   beforeEach(() => {

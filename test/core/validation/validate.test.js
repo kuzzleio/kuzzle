@@ -1,40 +1,37 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  rewire = require('rewire'),
-  Validation = rewire('../../../lib/core/validation'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    Request,
-    errors: { BadRequestError }
-  } = require('kuzzle-common-objects');
+const should = require('should');
+const sinon = require('sinon');
+const rewire = require('rewire');
+const Validation = rewire('../../../lib/core/validation/validation');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const {
+  Request,
+  errors: { BadRequestError }
+} = require('kuzzle-common-objects');
 
 describe('Test: validation.validate', () => {
-  let
-    validation,
-    kuzzle;
-  const
-    typeValidateStub = sinon.stub(),
-    getStrictnessStub = sinon.stub(),
-    manageErrorMessage = Validation.__get__('manageErrorMessage'),
-    checkAllowedProperties = Validation.__get__('checkAllowedProperties'),
-    index = 'anIndex',
-    collection = 'aCollection',
-    typeChildren = {
-      typeName: 'typeChildren',
-      allowChildren: true,
-      validate: typeValidateStub,
-      validateFieldSpecification: () => {},
-      getStrictness: () => getStrictnessStub
-    },
-    typeNoChild = {
-      typeName: 'typeNoChild',
-      allowChildren: false,
-      validate: typeValidateStub,
-      validateFieldSpecification: () => {}
-    };
+  let validation;
+  let kuzzle;
+  const typeValidateStub = sinon.stub();
+  const getStrictnessStub = sinon.stub();
+  const manageErrorMessage = Validation.__get__('manageErrorMessage');
+  const checkAllowedProperties = Validation.__get__('checkAllowedProperties');
+  const index = 'anIndex';
+  const collection = 'aCollection';
+  const typeChildren = {
+    typeName: 'typeChildren',
+    allowChildren: true,
+    validate: typeValidateStub,
+    validateFieldSpecification: () => {},
+    getStrictness: () => getStrictnessStub
+  };
+  const typeNoChild = {
+    typeName: 'typeNoChild',
+    allowChildren: false,
+    validate: typeValidateStub,
+    validateFieldSpecification: () => {}
+  };
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
