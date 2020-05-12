@@ -1,38 +1,39 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  mockrequire = require('mock-require'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  ClientAdapterMock = require('../../../mocks/clientAdapter.mock'),
-  BaseModel = require('../../../../lib/core/storage/models/baseModel'),
-  ApiKey = require('../../../../lib/core/storage/models/apiKey');
+const should = require('should');
+const sinon = require('sinon');
+const mockrequire = require('mock-require');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+const BaseModel = require('../../../lib/models/storage/baseModel');
+const ApiKey = require('../../../lib/models/storage/apiKey');
 
 describe('ApiKey', () => {
-  let
-    StorageEngine,
-    storageEngine,
-    kuzzle;
+  let StorageEngine;
+  let storageEngine;
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    mockrequire('../../../../lib/core/storage/clientAdapter', ClientAdapterMock);
+    mockrequire('../../../lib/core/storage/clientAdapter', ClientAdapterMock);
 
-    StorageEngine = mockrequire.reRequire('../../../../lib/core/storage/storageEngine');
+    StorageEngine = mockrequire.reRequire('../../../lib/core/storage/storageEngine');
     storageEngine = new StorageEngine(kuzzle);
 
-    storageEngine._populateIndexCache = sinon.stub().resolves();
+    sinon.stub(storageEngine, '_populateIndexCache');
 
     return storageEngine.init();
   });
 
+  afterEach(() => {
+    mockrequire.stopAll();
+  });
+
   describe('ApiKey.create', () => {
-    let
-      saveStub,
-      user,
-      token;
+    let saveStub;
+    let user;
+    let token;
 
     beforeEach(() => {
       user = {
@@ -46,10 +47,13 @@ describe('ApiKey', () => {
       };
 
       BaseModel.kuzzle.repositories.token.generateToken.resolves(token);
-      BaseModel.kuzzle.constructor.hash =
-        sinon.stub().returns('hashed-jwt-token');
+      sinon.stub(BaseModel.kuzzle.constructor, 'hash').returns('hashed-jwt-token');
 
       saveStub = sinon.stub(ApiKey.prototype, 'save').resolves();
+    });
+
+    afterEach(() => {
+      BaseModel.kuzzle.constructor.hash.restore();
     });
 
     it('should create a new API key and generate a token', async () => {
@@ -103,9 +107,8 @@ describe('ApiKey', () => {
 
   describe('ApiKey.deleteByUser', () => {
     it('should call BaseModel.deleteByQuery with the correct query', async () => {
-      const
-        user = { _id: 'mylehuong' },
-        deleteByQueryStub = sinon.stub(ApiKey, 'deleteByQuery').resolves();
+      const user = { _id: 'mylehuong' };
+      const deleteByQueryStub = sinon.stub(ApiKey, 'deleteByQuery').resolves();
 
       await ApiKey.deleteByUser(user, { refresh: 'wait_for' });
 
@@ -117,9 +120,8 @@ describe('ApiKey', () => {
 
   describe('#_afterDelete', () => {
     it('should delete the corresponding token', async () => {
-      const
-        token = { _id: 'token-id' },
-        apiKey = new ApiKey({ token: 'encrypted-token', userId: 'userId' });
+      const token = { _id: 'token-id' };
+      const apiKey = new ApiKey({ token: 'encrypted-token', userId: 'userId' });
       kuzzle.repositories.token.loadForUser.resolves(token);
 
       await apiKey._afterDelete();
@@ -131,13 +133,12 @@ describe('ApiKey', () => {
 
   describe('#serialize', () => {
     it('should return the apiKey without the token if specified', () => {
-      const
-        apiKey = new ApiKey(
-          { token: 'encrypted-token', userId: 'mylehuong' },
-          'api-key-id'),
-        apiKey2 = new ApiKey(
-          { token: 'encrypted-token', userId: 'mylehuong' },
-          'api-key-id2');
+      const apiKey = new ApiKey(
+        { token: 'encrypted-token', userId: 'mylehuong' },
+        'api-key-id');
+      const apiKey2 = new ApiKey(
+        { token: 'encrypted-token', userId: 'mylehuong' },
+        'api-key-id2');
 
       const serialized = apiKey.serialize();
       const serialized2 = apiKey2.serialize({ includeToken: true });

@@ -1,24 +1,22 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  should = require('should'),
-  mockrequire = require('mock-require'),
-  KuzzleMock = require('../../../mocks/kuzzle.mock'),
-  IndexStorageMock = require('../../../mocks/indexStorage.mock'),
-  ClientAdapterMock = require('../../../mocks/clientAdapter.mock'),
-  ApiKey = require('../../../../lib/core/storage/models/apiKey'),
-  SafeBootstrap = require('../../../../lib/core/storage/bootstrap/safeBootstrap'),
-  InternalIndexBootstrap = require('../../../../lib/core/storage/bootstrap/internalIndexBootstrap');
+const sinon = require('sinon');
+const should = require('should');
+const mockrequire = require('mock-require');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const IndexStorageMock = require('../../../mocks/indexStorage.mock');
+const ClientAdapterMock = require('../../../mocks/clientAdapter.mock');
+const ApiKey = require('../../../../lib/models/storage/apiKey');
+const SafeBootstrap = require('../../../../lib/core/storage/bootstrap/safeBootstrap');
+const InternalIndexBootstrap = require('../../../../lib/core/storage/bootstrap/internalIndexBootstrap');
 
 describe('InternalIndexBootstrap', () => {
-  let
-    storageEngine,
-    StorageEngine,
-    internalIndexName,
-    internalIndexStorage,
-    internalIndexBootstrap,
-    kuzzle;
+  let storageEngine;
+  let StorageEngine;
+  let internalIndexName;
+  let internalIndexStorage;
+  let internalIndexBootstrap;
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();

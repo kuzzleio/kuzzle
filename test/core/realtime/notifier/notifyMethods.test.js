@@ -4,7 +4,10 @@ const should = require('should');
 const { Request } = require('kuzzle-common-objects');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const Notifier = require('../../../../lib/core/realtime/notifier');
-const Notification = require('../../../../lib/core/realtime/document');
+const {
+  DocumentNotification,
+  UserNotification,
+} = require('../../../../lib/models/notification');
 
 describe('notify methods', () => {
   let
@@ -78,7 +81,7 @@ describe('notify methods', () => {
             ['matching_all', 'matching_out', 'always']);
 
           should(dispatch.firstCall.args[1].payload).be.instanceof(
-            Notification.Document);
+            DocumentNotification);
 
           const notification = dispatch.firstCall.args[1].payload;
 
@@ -169,7 +172,7 @@ describe('notify methods', () => {
             .match(['matching_all', 'matching_userOut']);
 
           should(dispatch.firstCall.args[1].payload)
-            .be.instanceof(Notification.User);
+            .be.instanceof(UserNotification);
 
           const notification = dispatch.firstCall.args[1].payload;
 

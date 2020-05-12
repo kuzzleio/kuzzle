@@ -2,7 +2,7 @@
 
 const sinon = require('sinon');
 const should = require('should');
-const Role = require('../../../lib/core/security/document/role');
+const Role = require('../../../lib/models/security/role');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const Funnel = require('../../../lib/api/funnel');
 const RoleRepository = require('../../../lib/core/security/roleRepository');

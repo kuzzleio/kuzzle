@@ -3,9 +3,9 @@
 const should = require('should');
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
-const Kuzzle = require('../../../mocks/kuzzle.mock');
-const Profile = require('../../../../lib/core/security/document/profile');
-const User = require('../../../../lib/core/security/document/user');
+const Kuzzle = require('../../mocks/kuzzle.mock');
+const Profile = require('../../../lib/models/security/profile');
+const User = require('../../../lib/models/security/user');
 const {
   errors: { InternalError },
   Request,
@@ -14,7 +14,7 @@ const {
 const
   _kuzzle = Symbol.for('_kuzzle');
 
-describe('Test: security/document/user', () => {
+describe('Test: models/security/user', () => {
   let
     kuzzle,
     profile,

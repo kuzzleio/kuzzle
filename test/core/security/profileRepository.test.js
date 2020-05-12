@@ -2,8 +2,8 @@
 
 const sinon = require('sinon');
 const should = require('should');
-const Role = require('../../../lib/core/security/document/role');
-const Profile = require('../../../lib/core/security/document/profile');
+const Role = require('../../../lib/models/security/role');
+const Profile = require('../../../lib/models/security/profile');
 const ProfileRepository = require('../../../lib/core/security/profileRepository');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
@@ -19,10 +19,9 @@ const {
 const _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: security/profileRepository', () => {
-  let
-    kuzzle,
-    profileRepository,
-    testProfile;
+  let kuzzle;
+  let profileRepository;
+  let testProfile;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();

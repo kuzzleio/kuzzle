@@ -1,9 +1,9 @@
 'use strict';
 
 const should = require('should');
-const Rights = require('../../../../lib/core/security/document/rights');
+const Rights = require('../../../lib/models/security/rights');
 
-describe('Test: security/document/rights', () => {
+describe('Test: models/security/rights', () => {
   it('should correclty merge Rights', () => {
     let result;
 
