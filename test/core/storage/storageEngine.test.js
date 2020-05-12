@@ -4,14 +4,13 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const BaseModel = require('../../../lib/core/storage/models/baseModel');
+const BaseModel = require('../../../lib/models/storage/baseModel');
 const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
 
 describe('StorageEngine', () => {
-  let
-    StorageEngine,
-    storageEngine,
-    kuzzle;
+  let StorageEngine;
+  let storageEngine;
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();

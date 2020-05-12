@@ -3,9 +3,9 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockrequire = require('mock-require');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const ClientAdapterMock = require('../../../mocks/clientAdapter.mock');
-const BaseModel = require('../../../../lib/core/storage/models/baseModel');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+const BaseModel = require('../../../lib/models/storage/baseModel');
 
 class Model extends BaseModel {
   constructor (_source, _id) {
@@ -33,9 +33,9 @@ describe('BaseModel', () => {
 
     kuzzle = new KuzzleMock();
 
-    mockrequire('../../../../lib/core/storage/clientAdapter', ClientAdapterMock);
+    mockrequire('../../../lib/core/storage/clientAdapter', ClientAdapterMock);
 
-    StorageEngine = mockrequire.reRequire('../../../../lib/core/storage/storageEngine');
+    StorageEngine = mockrequire.reRequire('../../../lib/core/storage/storageEngine');
     storageEngine = new StorageEngine(kuzzle);
 
     storageEngine._populateIndexCache = sinon.stub().resolves();

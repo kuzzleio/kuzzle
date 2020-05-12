@@ -3,10 +3,10 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockrequire = require('mock-require');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const ClientAdapterMock = require('../../../mocks/clientAdapter.mock');
-const BaseModel = require('../../../../lib/core/storage/models/baseModel');
-const ApiKey = require('../../../../lib/core/storage/models/apiKey');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+const BaseModel = require('../../../lib/models/storage/baseModel');
+const ApiKey = require('../../../lib/models/storage/apiKey');
 
 describe('ApiKey', () => {
   let StorageEngine;
@@ -16,9 +16,9 @@ describe('ApiKey', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    mockrequire('../../../../lib/core/storage/clientAdapter', ClientAdapterMock);
+    mockrequire('../../../lib/core/storage/clientAdapter', ClientAdapterMock);
 
-    StorageEngine = mockrequire.reRequire('../../../../lib/core/storage/storageEngine');
+    StorageEngine = mockrequire.reRequire('../../../lib/core/storage/storageEngine');
     storageEngine = new StorageEngine(kuzzle);
 
     sinon.stub(storageEngine, '_populateIndexCache');
