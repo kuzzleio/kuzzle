@@ -79,7 +79,8 @@
           "description": "A pipe function execution took more than the configured server limit",
           "code": 3,
           "message": "Plugin \"%s\": timeout error. A pipe on the event \"%s\" exceeded the timeout delay (%sms). Aborting.",
-          "class": "GatewayTimeoutError"
+          "class": "GatewayTimeoutError",
+          "deprecated": true
         },
         "too_many_pipes": {
           "description": "The number of running pipes exceeds the configured capacity (see configuration files). This may be caused by pipes being too slow, or by an insufficient number of Kuzzle nodes.",

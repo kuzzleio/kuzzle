@@ -2,29 +2,26 @@
 
 const root = '../../../../';
 
-const
-  mockrequire = require('mock-require'),
-  should = require('should'),
-  ElasticsearchClientMock = require(`${root}/test/mocks/services/elasticsearchClient.mock`),
-  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
-  sinon = require('sinon'),
-  {
-    Request,
-    errors: {
-      KuzzleError,
-      GatewayTimeoutError,
-      PluginImplementationError
-    }
-  } = require('kuzzle-common-objects'),
-  { BaseController } = require(`${root}/lib/api/controllers/base`);
+const mockrequire = require('mock-require');
+const should = require('should');
+const ElasticsearchClientMock = require(`${root}/test/mocks/services/elasticsearchClient.mock`);
+const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+const sinon = require('sinon');
+const {
+  Request,
+  errors: {
+    KuzzleError,
+    PluginImplementationError,
+  }
+} = require('kuzzle-common-objects');
+const { BaseController } = require(`${root}/lib/api/controllers/base`);
 
 describe('PluginsManager.run', () => {
-  let
-    plugin,
-    pluginMock,
-    kuzzle,
-    PluginsManager,
-    pluginsManager;
+  let plugin;
+  let pluginMock;
+  let kuzzle;
+  let PluginsManager;
+  let pluginsManager;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -39,12 +36,12 @@ describe('PluginsManager.run', () => {
     plugin = {
       path: '',
       object: {
-        init: () => {}
+        init: () => {},
       },
       config: {},
       manifest: {
         name: 'testPlugin',
-        path: ''
+        path: '',
       }
     };
 
@@ -53,10 +50,10 @@ describe('PluginsManager.run', () => {
   });
 
   describe('#hook', () => {
-    it('should attach event hook with method name', () => {
+    it('should attach event hook with method name', async () => {
       plugin.object.hooks = {
         'foo:bar': 'foo',
-        'bar:foo': 'bar'
+        'bar:foo': 'bar',
       };
 
       plugin.object.foo = () => {};
@@ -65,36 +62,31 @@ describe('PluginsManager.run', () => {
       pluginMock.expects('foo').once();
       pluginMock.expects('bar').never();
 
-      return pluginsManager.run()
-        .then(() => {
-          kuzzle.emit('foo:bar');
-          pluginMock.verify();
-        });
+      await pluginsManager.run();
+      kuzzle.emit('foo:bar');
+      pluginMock.verify();
     });
 
-    it('should attach event hook with function', () => {
-      const
-        bar = sinon.spy(),
-        foo = sinon.spy();
+    it('should attach event hook with function', async () => {
+      const bar = sinon.spy();
+      const foo = sinon.spy();
 
       plugin.object.hooks = {
         'foo:bar': bar,
-        'bar:foo': foo
+        'bar:foo': foo,
       };
 
-      return pluginsManager.run()
-        .then(() => {
-          kuzzle.emit('foo:bar');
+      await pluginsManager.run();
+      kuzzle.emit('foo:bar');
 
-          should(bar).be.calledOnce();
-          should(foo).not.be.called();
-        });
+      should(bar).be.calledOnce();
+      should(foo).not.be.called();
     });
 
-    it('should attach multi-target hook with method name', () => {
+    it('should attach multi-target hook with method name', async () => {
       plugin.object.hooks = {
         'foo:bar': ['foo', 'bar'],
-        'bar:foo': ['baz']
+        'bar:foo': ['baz'],
       };
 
       plugin.object.foo = () => {};
@@ -105,38 +97,36 @@ describe('PluginsManager.run', () => {
       pluginMock.expects('bar').once();
       pluginMock.expects('baz').never();
 
-      return pluginsManager.run()
-        .then(() => {
-          kuzzle.emit('foo:bar');
-          pluginMock.verify();
-        });
+      await pluginsManager.run();
+
+      kuzzle.emit('foo:bar');
+
+      pluginMock.verify();
     });
 
-    it('should attach multi-target hook with function', () => {
-      const
-        bar = sinon.spy(),
-        foo = sinon.spy(),
-        baz = sinon.spy();
+    it('should attach multi-target hook with function', async () => {
+      const bar = sinon.spy();
+      const foo = sinon.spy();
+      const baz = sinon.spy();
 
       plugin.object.hooks = {
         'foo:bar': [foo, bar],
-        'bar:foo': [baz]
+        'bar:foo': [baz],
       };
 
-      return pluginsManager.run()
-        .then(() => {
-          kuzzle.emit('foo:bar');
+      await pluginsManager.run();
 
-          should(bar).be.calledOnce();
-          should(foo).be.calledOnce();
-          should(baz).not.be.called();
-        });
+      kuzzle.emit('foo:bar');
+
+      should(bar).be.calledOnce();
+      should(foo).be.calledOnce();
+      should(baz).not.be.called();
     });
 
-    it('should attach event hook with wildcard with method name', () => {
+    it('should attach event hook with wildcard with method name', async () => {
       plugin.object.hooks = {
         'foo:*': 'foo',
-        'bar:foo': 'bar'
+        'bar:foo': 'bar',
       };
 
       plugin.object.foo = () => {};
@@ -145,16 +135,15 @@ describe('PluginsManager.run', () => {
       pluginMock.expects('foo').once();
       pluginMock.expects('bar').never();
 
-      return pluginsManager.run()
-        .then(() => {
-          kuzzle.emit('foo:bar');
-          pluginMock.verify();
-        });
+      await pluginsManager.run();
+
+      kuzzle.emit('foo:bar');
+      pluginMock.verify();
     });
 
     it('should throw if a hook target is not a function and not a method name', () => {
       plugin.object.hooks = {
-        'foo:bar': 'fou'
+        'foo:bar': 'fou',
       };
 
       plugin.object.foo = () => {};
@@ -170,86 +159,80 @@ describe('PluginsManager.run', () => {
       kuzzle.pluginsManager = pluginsManager;
     });
 
-    it('should attach pipes event with method name', () => {
+    it('should attach pipes event with method name', async () => {
       plugin.object.pipes = {
         'foo:bar': 'foo',
-        'bar:foo': 'bar'
+        'bar:foo': 'bar',
       };
 
       plugin.object.foo = sinon.stub().callsArgWith(1, null, new Request({}));
       plugin.object.bar = sinon.stub().callsArgWith(1, null, new Request({}));
 
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(() => {
-          should(plugin.object.foo).be.calledOnce();
-          should(plugin.object.bar).not.be.called();
-        });
+      await pluginsManager.run();
+      await kuzzle.pipe('foo:bar');
+
+      should(plugin.object.foo).be.calledOnce();
+      should(plugin.object.bar).not.be.called();
     });
 
-    it('should attach pipes event with function', () => {
-      const
-        bar = sinon.stub().callsArgWith(1, null, new Request({})),
-        foo = sinon.stub().callsArgWith(1, null, new Request({}));
+    it('should attach pipes event with function', async () => {
+      const bar = sinon.stub().callsArgWith(1, null, new Request({}));
+      const foo = sinon.stub().callsArgWith(1, null, new Request({}));
 
       plugin.object.pipes = {
         'foo:bar': foo,
-        'bar:foo': bar
+        'bar:foo': bar,
       };
 
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(() => {
-          should(foo).be.calledOnce();
-          should(bar).not.be.called();
-        });
+      await pluginsManager.run();
+      await kuzzle.pipe('foo:bar');
+
+      should(foo).be.calledOnce();
+      should(bar).not.be.called();
     });
 
-    it('should attach pipes event with wildcard with method name', () => {
+    it('should attach pipes event with wildcard with method name', async () => {
       plugin.object.pipes = {
         'foo:*': 'foo',
-        'bar:foo': 'bar'
+        'bar:foo': 'bar',
       };
 
       plugin.object.foo = sinon.stub().callsArgWith(1, null, new Request({}));
       plugin.object.bar = sinon.stub().callsArgWith(1, null, new Request({}));
 
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(() => {
-          should(plugin.object.foo).be.calledOnce();
-          should(plugin.object.bar).not.be.called();
-        });
+      await pluginsManager.run();
+      await kuzzle.pipe('foo:bar');
+
+      should(plugin.object.foo).be.calledOnce();
+      should(plugin.object.bar).not.be.called();
     });
 
-    it('should attach multi-target event to pipes with method name', () => {
+    it('should attach multi-target event to pipes with method name', async () => {
       plugin.object.pipes = {
         'foo:bar': ['foo', 'baz'],
-        'bar:foo': ['bar']
+        'bar:foo': ['bar'],
       };
 
       plugin.object.foo = sinon.stub().callsArgWith(1, null, new Request({}));
       plugin.object.bar = sinon.stub().callsArgWith(1, null, new Request({}));
       plugin.object.baz = sinon.stub().callsArgWith(1, null, new Request({}));
 
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(() => {
-          should(plugin.object.foo).be.calledOnce();
-          should(plugin.object.bar).not.be.called();
-          should(plugin.object.baz).be.calledOnce();
-        });
+      await pluginsManager.run();
+      await kuzzle.pipe('foo:bar');
+
+      should(plugin.object.foo).be.calledOnce();
+      should(plugin.object.bar).not.be.called();
+      should(plugin.object.baz).be.calledOnce();
     });
 
     it('should attach multi-target event to pipes with function', () => {
-      const
-        bar = sinon.stub().callsArgWith(1, null, new Request({})),
-        foo = sinon.stub().callsArgWith(1, null, new Request({})),
-        baz = sinon.stub().callsArgWith(1, null, new Request({}));
+      const bar = sinon.stub().callsArgWith(1, null, new Request({}));
+      const foo = sinon.stub().callsArgWith(1, null, new Request({}));
+      const baz = sinon.stub().callsArgWith(1, null, new Request({}));
 
       plugin.object.pipes = {
         'foo:bar': [foo, baz],
-        'bar:foo': [bar]
+        'bar:foo': [bar],
       };
 
       return pluginsManager.run()
@@ -301,9 +284,9 @@ describe('PluginsManager.run', () => {
           { id: 'plugin.runtime.unexpected_error' });
     });
 
-    it('should log a warning in case a pipe plugin exceeds the warning delay', () => {
+    it('should log a warning in case a pipe plugin exceeds the warning delay', async () => {
       plugin.object.pipes = {
-        'foo:bar': 'foo'
+        'foo:bar': 'foo',
       };
 
       plugin.object.foo = () => {};
@@ -315,36 +298,14 @@ describe('PluginsManager.run', () => {
         setTimeout(() => cb(null, new Request({})), 11);
       });
 
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(() => {
-          should(fooStub).be.calledOnce();
-          should(kuzzle.log.warn)
-            .calledWithMatch(/Plugin pipe .*? exceeded [0-9]*ms to execute\./);
+      await pluginsManager.run();
+      await kuzzle.pipe('foo:bar');
 
-          kuzzle.config.plugins.common.pipeWarnTime = warnTime;
-        });
-    });
+      should(fooStub).be.calledOnce();
+      should(kuzzle.log.warn)
+        .calledWithMatch(/\[testPlugin\] pipe for event 'foo:bar' is slow \(\d+ms\)/);
 
-    it('should timeout the pipe when taking too long to execute', () => {
-      plugin.object.pipes = {
-        'foo:bar': 'foo'
-      };
-
-      plugin.object.foo = () => {}; // does not call the callback
-
-      const timeout = kuzzle.config.plugins.common.pipeTimeout;
-      kuzzle.config.plugins.common.pipeTimeout = 50;
-
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(() =>{
-          throw new Error('expected this promise to be rejected');
-        })
-        .catch(error => {
-          kuzzle.config.plugins.common.pipeTimeout = timeout;
-          should(error).be.an.instanceOf(GatewayTimeoutError);
-        });
+      kuzzle.config.plugins.common.pipeWarnTime = warnTime;
     });
 
     it('should accept promises for pipes', () => {
