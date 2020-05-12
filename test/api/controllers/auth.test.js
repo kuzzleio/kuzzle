@@ -6,8 +6,8 @@ const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
 const AuthController = require('../../../lib/api/controllers/auth');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Token = require('../../../lib/core/security/document/token');
-const User = require('../../../lib/core/security/document/user');
+const Token = require('../../../lib/models/security/token');
+const User = require('../../../lib/models/security/user');
 const {
   Request,
   errors: {

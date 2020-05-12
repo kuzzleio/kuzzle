@@ -2,7 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const User = require('../../../lib/core/security/document/user');
+const User = require('../../../lib/models/security/user');
 const FunnelProtocol = require('../../../lib/core/sdk/funnelProtocol');
 const {
   Request,

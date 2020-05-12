@@ -5,7 +5,7 @@ const root = '../../../..';
 const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
-const User = require(`${root}/lib/core/security/document/user`);
+const User = require(`${root}/lib/models/security/user`);
 const { Client: ESClient } = require('@elastic/elasticsearch');
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
 const {

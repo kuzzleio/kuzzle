@@ -5,7 +5,7 @@ const should = require('should');
 const sinon = require('sinon').createSandbox();
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const Repository = require('../../../lib/core/shared/repository');
-const User = require('../../../lib/core/security/document/user');
+const User = require('../../../lib/models/security/user');
 const ApiKey = require('../../../lib/core/storage/models/apiKey');
 const UserRepository = require('../../../lib/core/security/userRepository');
 const {

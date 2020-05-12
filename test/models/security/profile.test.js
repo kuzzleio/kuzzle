@@ -2,9 +2,9 @@
 
 const should = require('should');
 const Bluebird = require('bluebird');
-const Kuzzle = require('../../../mocks/kuzzle.mock');
-const Profile = require('../../../../lib/core/security/document/profile');
-const Role = require('../../../../lib/core/security/document/role');
+const Kuzzle = require('../../mocks/kuzzle.mock');
+const Profile = require('../../../lib/models/security/profile');
+const Role = require('../../../lib/models/security/role');
 const {
   Request,
   errors: { BadRequestError }
@@ -12,7 +12,7 @@ const {
 
 const _kuzzle = Symbol.for('_kuzzle');
 
-describe('Test: security/document/profile', () => {
+describe('Test: models/security/profile', () => {
   const
     context = {connectionId: null, userId: null},
     request = new Request(
@@ -101,17 +101,12 @@ describe('Test: security/document/profile', () => {
       .then(isAllowed => should(isAllowed).be.false());
   });
 
-  it('should retrieve the correct rights list', () => {
-    const
-      profile = new Profile(),
-      role1 = new Role(),
-      role2 = new Role(),
-      role3 = new Role(),
-      roles = {
-        role1: role1,
-        role2: role2,
-        role3: role3
-      };
+  it('should retrieve the correct rights list', async () => {
+    const profile = new Profile();
+    const role1 = new Role();
+    const role2 = new Role();
+    const role3 = new Role();
+    const roles = { role1, role2, role3 };
 
     role1._id = 'role1';
     role1.controllers = {
@@ -157,49 +152,48 @@ describe('Test: security/document/profile', () => {
     kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
 
     profile[_kuzzle] = kuzzle;
-    return profile.getRights()
-      .then(rights => {
-        let filteredItem;
 
-        should(rights).be.an.Object();
-        rights = Object.keys(rights).reduce((array, item) => array.concat(rights[item]), []);
-        should(rights).be.an.Array();
+    let rights = await profile.getRights();
+    let filteredItem;
 
-        filteredItem = rights.filter(
-          item => item.controller === 'document' && item.action === 'get');
+    should(rights).be.an.Object();
+    rights = Object.keys(rights).reduce((array, item) => array.concat(rights[item]), []);
+    should(rights).be.an.Array();
 
-        should(filteredItem).length(1);
-        should(filteredItem[0].index).be.equal('*');
-        should(filteredItem[0].collection).be.equal('*');
-        should(filteredItem[0].value).be.equal('allowed');
+    filteredItem = rights.filter(
+      item => item.controller === 'document' && item.action === 'get');
 
-        filteredItem = rights.filter(
-          item => item.controller === 'document' && item.action === '*');
+    should(filteredItem).length(1);
+    should(filteredItem[0].index).be.equal('*');
+    should(filteredItem[0].collection).be.equal('*');
+    should(filteredItem[0].value).be.equal('allowed');
 
-        should(filteredItem).length(2);
-        should(filteredItem.every(item => item.index === 'index1')).be.equal(true);
-        should(filteredItem.some(item => item.collection === 'collection1')).be.equal(true);
-        should(filteredItem.some(item => item.collection === 'collection2')).be.equal(true);
-        should(filteredItem.every(item => item.value === 'allowed')).be.equal(true);
+    filteredItem = rights.filter(
+      item => item.controller === 'document' && item.action === '*');
 
-        filteredItem = rights.filter(
-          item => item.controller === 'document' && item.action === 'delete');
+    should(filteredItem).length(2);
+    should(filteredItem.every(item => item.index === 'index1')).be.equal(true);
+    should(filteredItem.some(item => item.collection === 'collection1')).be.equal(true);
+    should(filteredItem.some(item => item.collection === 'collection2')).be.equal(true);
+    should(filteredItem.every(item => item.value === 'allowed')).be.equal(true);
 
-        should(filteredItem).length(1);
-        should(filteredItem[0].index).be.equal('index2');
-        should(filteredItem[0].collection).be.equal('*');
-        should(filteredItem[0].value).be.equal('allowed');
+    filteredItem = rights.filter(
+      item => item.controller === 'document' && item.action === 'delete');
 
-        filteredItem = rights.filter(
-          item => item.controller === 'document' && item.action === 'update');
+    should(filteredItem).length(1);
+    should(filteredItem[0].index).be.equal('index2');
+    should(filteredItem[0].collection).be.equal('*');
+    should(filteredItem[0].value).be.equal('allowed');
 
-        should(
-          filteredItem
-            .every(item => item.index === 'index2'
-              && item.collection === '*'
-              && item.value === 'allowed'))
-          .be.equal(true);
-      });
+    filteredItem = rights.filter(
+      item => item.controller === 'document' && item.action === 'update');
+
+    should(
+      filteredItem
+        .every(item => item.index === 'index2'
+          && item.collection === '*'
+          && item.value === 'allowed'))
+      .be.equal(true);
   });
 
   describe('#validateDefinition', () => {

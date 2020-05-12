@@ -1,8 +1,8 @@
 'use strict';
 
 const should = require('should');
-const Kuzzle = require('../../../mocks/kuzzle.mock');
-const Role = require('../../../../lib/core/security/document/role');
+const Kuzzle = require('../../mocks/kuzzle.mock');
+const Role = require('../../../lib/models/security/role');
 const {
   Request,
   errors: { BadRequestError }
@@ -11,7 +11,7 @@ const {
 const
   _kuzzle = Symbol.for('_kuzzle');
 
-describe('Test: security/document/role', () => {
+describe('Test: models/security/role', () => {
   let
     kuzzle,
     context = {
