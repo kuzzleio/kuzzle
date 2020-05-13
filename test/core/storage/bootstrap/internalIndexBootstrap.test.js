@@ -6,7 +6,7 @@ const mockrequire = require('mock-require');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const IndexStorageMock = require('../../../mocks/indexStorage.mock');
 const ClientAdapterMock = require('../../../mocks/clientAdapter.mock');
-const ApiKey = require('../../../../lib/models/storage/apiKey');
+const ApiKey = require('../../../../lib/model/storage/apiKey');
 const SafeBootstrap = require('../../../../lib/core/storage/bootstrap/safeBootstrap');
 const InternalIndexBootstrap = require('../../../../lib/core/storage/bootstrap/internalIndexBootstrap');
 

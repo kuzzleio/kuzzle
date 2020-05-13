@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Token = require('../../../lib/models/security/token');
+const Token = require('../../../lib/model/security/token');
 const TokenManager = require('../../../lib/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
