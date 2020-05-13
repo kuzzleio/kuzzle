@@ -2,20 +2,19 @@
 
 const root = '../../../..';
 
-const
-  mockrequire = require('mock-require'),
-  should = require('should'),
-  sinon = require('sinon'),
-  User = require(`${root}/lib/core/models/security/user`),
-  { Client: ESClient } = require('@elastic/elasticsearch'),
-  KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`),
-  {
-    Request,
-    errors: {
-      PluginImplementationError
-    }
-  } = require('kuzzle-common-objects'),
-  _ = require('lodash');
+const mockrequire = require('mock-require');
+const should = require('should');
+const sinon = require('sinon');
+const User = require(`${root}/lib/models/security/user`);
+const { Client: ESClient } = require('@elastic/elasticsearch');
+const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+const {
+  Request,
+  errors: {
+    PluginImplementationError
+  }
+} = require('kuzzle-common-objects');
+const _ = require('lodash');
 
 describe('Plugin Context', () => {
   const someCollection = 'someCollection';

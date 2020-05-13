@@ -1,22 +1,20 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  {
-    Request,
-    errors: {
-      PluginImplementationError
-    }
-  } = require('kuzzle-common-objects'),
-  User = require('../../../lib/core/models/security/user'),
-  FunnelProtocol = require('../../../lib/core/sdk/funnelProtocol');
+const should = require('should');
+const sinon = require('sinon');
+const User = require('../../../lib/models/security/user');
+const FunnelProtocol = require('../../../lib/core/sdk/funnelProtocol');
+const {
+  Request,
+  errors: {
+    PluginImplementationError
+  }
+} = require('kuzzle-common-objects');
 
 describe('Test: sdk/funnelProtocol', () => {
-  let
-    request,
-    funnel,
-    funnelProtocol;
+  let request;
+  let funnel;
+  let funnelProtocol;
 
   beforeEach(() => {
     funnel = {};

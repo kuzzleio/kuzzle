@@ -1,31 +1,29 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  should = require('should'),
-  jwt = require('jsonwebtoken'),
-  Bluebird = require('bluebird'),
-  AuthController = require('../../../lib/api/controllers/auth'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Token = require('../../../lib/core/models/security/token'),
-  User = require('../../../lib/core/models/security/user'),
-  {
-    Request,
-    errors: {
-      UnauthorizedError,
-      BadRequestError,
-      InternalError: KuzzleInternalError,
-      PluginImplementationError
-    }
-  } = require('kuzzle-common-objects'),
-  { NativeController } = require('../../../lib/api/controllers/base');
+const sinon = require('sinon');
+const should = require('should');
+const jwt = require('jsonwebtoken');
+const Bluebird = require('bluebird');
+const AuthController = require('../../../lib/api/controllers/auth');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const Token = require('../../../lib/models/security/token');
+const User = require('../../../lib/models/security/user');
+const {
+  Request,
+  errors: {
+    UnauthorizedError,
+    BadRequestError,
+    InternalError: KuzzleInternalError,
+    PluginImplementationError
+  }
+} = require('kuzzle-common-objects');
+const { NativeController } = require('../../../lib/api/controllers/base');
 
 describe('Test the auth controller', () => {
-  let
-    request,
-    kuzzle,
-    user,
-    authController;
+  let request;
+  let kuzzle;
+  let user;
+  let authController;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();

@@ -1,25 +1,16 @@
 'use strict';
 
-const
-  should = require('should'),
-  rewire = require('rewire'),
-  Validation = rewire('../../../lib/core/validation'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    errors: {
-      BadRequestError
-    }
-  } = require('kuzzle-common-objects');
+const should = require('should');
+const rewire = require('rewire');
+const Validation = rewire('../../../lib/core/validation/validation');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const {errors: {BadRequestError}} = require('kuzzle-common-objects');
 
 describe('Test: validation utilities', () => {
-  const
-    genericMock = {
-      foo: 'bar'
-    };
+  const genericMock = { foo: 'bar' };
 
   describe('#checkAllowedProperties', () => {
-    const
-      checkAllowedProperties = Validation.__get__('checkAllowedProperties');
+    const checkAllowedProperties = Validation.__get__('checkAllowedProperties');
 
     it('should be true with proper arguments', () => {
       should(checkAllowedProperties(genericMock, ['foo', 'mod'])).be.true();

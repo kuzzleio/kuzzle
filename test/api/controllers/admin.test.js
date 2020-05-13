@@ -1,22 +1,20 @@
 'use strict';
 
-const
-  rewire = require('rewire'),
-  should = require('should'),
-  sinon = require('sinon'),
-  {
-    Request,
-    errors: { PreconditionError, NotFoundError }
-  } = require('kuzzle-common-objects'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  AdminController = rewire('../../../lib/api/controllers/admin'),
-  { NativeController } = require('../../../lib/api/controllers/base');
+const rewire = require('rewire');
+const should = require('should');
+const sinon = require('sinon');
+const {
+  Request,
+  errors: { PreconditionError, NotFoundError }
+} = require('kuzzle-common-objects');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const AdminController = rewire('../../../lib/api/controllers/admin');
+const { NativeController } = require('../../../lib/api/controllers/base');
 
 describe('AdminController', () => {
-  let
-    adminController,
-    kuzzle,
-    request;
+  let adminController;
+  let kuzzle;
+  let request;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -133,59 +131,38 @@ describe('AdminController', () => {
   });
 
   describe('#dump', () => {
-    it('should call janitor dump action', done => {
+    it('should call kuzzle dump action', async () => {
       request.input.action = 'dump';
       request.input.args.suffix = 'dump-me-master';
 
-      adminController.dump(request)
-        .then(() => {
-          should(kuzzle.janitor.dump).be.calledOnce();
-          should(kuzzle.janitor.dump.getCall(0).args[0]).be.eql('dump-me-master');
+      await adminController.dump(request);
 
-          done();
-        })
-        .catch(error => done(error));
+      should(kuzzle.dump).be.calledOnce();
+      should(kuzzle.dump.getCall(0).args[0]).be.eql('dump-me-master');
     });
   });
 
   describe('#shutdown', () => {
-    let
-      originalKill;
-
     beforeEach(() => {
-      originalKill = process.kill;
-      Object.defineProperty(process, 'kill', {
-        value: sinon.stub()
-      });
-
       request.input.action = 'shutdown';
     });
 
     afterEach(() => {
-      Object.defineProperty(process, 'kill', {
-        value: originalKill
-      });
       AdminController.__set__('_locks', { shutdown: null });
     });
 
-    it('should throw an error if shutdown is in progress', () => {
+    it('should throw an error if shutdown is in progress', async () => {
       AdminController.__set__('_locks', { shutdown: true });
       adminController = new AdminController(kuzzle);
 
-      return should(() => {
-        adminController.shutdown(request);
-      }).throw(PreconditionError);
+      await should(adminController.shutdown(request))
+        .rejectedWith(PreconditionError, { id: 'api.process.action_locked' });
     });
 
-    it('should send a SIGTERM', done => {
-      adminController.shutdown(request);
+    it('should send invoke kuzzle.shutdown', async () => {
+      await adminController.shutdown(request);
 
-      setTimeout(() => {
-        should(process.kill).be.calledOnce();
-        should(process.kill.getCall(0).args[0]).be.eql(process.pid);
-        should(process.kill.getCall(0).args[1]).be.eql('SIGTERM');
-        done();
-      }, 50);
+      should(kuzzle.shutdown).be.calledOnce();
     });
   });
 
@@ -195,13 +172,12 @@ describe('AdminController', () => {
       request.input.body = { city: { seventeen: {} } };
     });
 
-    it('should call Janitor.loadMappings', () => {
-      return adminController.loadMappings(request)
-        .then(() => {
-          should(kuzzle.janitor.loadMappings)
-            .be.calledOnce()
-            .be.calledWith({ city: { seventeen: {} } });
-        });
+    it('should call loadMappings from the public storage engine', async () => {
+      await adminController.loadMappings(request);
+
+      should(kuzzle.storageEngine.public.loadMappings)
+        .be.calledOnce()
+        .be.calledWith({ city: { seventeen: {} } });
     });
   });
 
@@ -211,26 +187,20 @@ describe('AdminController', () => {
       request.input.body = { city: { seventeen: [] } };
     });
 
-    it('should call Janitor.loadFixtures', () => {
-      return adminController.loadFixtures(request)
-        .then(() => {
-          should(kuzzle.janitor.loadFixtures)
-            .be.calledOnce()
-            .be.calledWith({ city: { seventeen: [] } });
-        });
+    it('should call loadFixtures from the public storage engine', async () => {
+      await adminController.loadFixtures(request);
+
+      should(kuzzle.storageEngine.public.loadFixtures)
+        .be.calledOnce()
+        .be.calledWith({ city: { seventeen: [] } });
     });
 
-    it('should handle rejections if the janitor rejects when not waiting for a refresh', async () => {
+    it('should handle promise rejections when not waiting for a refresh', async () => {
       const err = new Error('err');
-      kuzzle.janitor.loadFixtures.rejects(err);
+      kuzzle.storageEngine.public.loadFixtures.rejects(err);
       request.input.args.refresh = false;
 
-      /* eslint-disable no-empty */
-      try {
-        await adminController.loadFixtures(request);
-      }
-      catch (error) {}
-      /* eslint-enable no-empty */
+      await should(adminController.loadFixtures(request)).fulfilled();
 
       should(kuzzle.log.error).calledWith(err);
     });
@@ -243,10 +213,10 @@ describe('AdminController', () => {
       request.input.body = { gordon: { freeman: [] } };
     });
 
-    it('should call Janitor.loadSecurities', async () => {
+    it('should call loadSecurities from the secutiry module', async () => {
       await adminController.loadSecurities(request);
 
-      should(kuzzle.janitor.loadSecurities)
+      should(kuzzle.repositories.loadSecurities)
         .be.calledOnce()
         .be.calledWith(
           { gordon: { freeman: [] } },
