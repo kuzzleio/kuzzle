@@ -6,8 +6,8 @@ const Bluebird = require('bluebird');
 const should = require('should');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const sinon = require('sinon');
-const Token = require('../../../lib/models/security/token');
-const User = require('../../../lib/models/security/user');
+const Token = require('../../../lib/model/security/token');
+const User = require('../../../lib/model/security/user');
 const TokenRepository = require('../../../lib/core/security/tokenRepository');
 const {
   models: { RequestContext },
