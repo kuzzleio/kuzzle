@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const BaseModel = require('../../../lib/models/storage/baseModel');
+const BaseModel = require('../../../lib/model/storage/baseModel');
 const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
 
 describe('StorageEngine', () => {

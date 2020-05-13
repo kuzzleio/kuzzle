@@ -2,8 +2,8 @@
 
 const sinon = require('sinon');
 const should = require('should');
-const Role = require('../../../lib/models/security/role');
-const Profile = require('../../../lib/models/security/profile');
+const Role = require('../../../lib/model/security/role');
+const Profile = require('../../../lib/model/security/profile');
 const ProfileRepository = require('../../../lib/core/security/profileRepository');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
