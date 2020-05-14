@@ -1,26 +1,25 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  should = require('should'),
-  Funnel = require('../../../lib/api/funnel'),
-  DocumentController = require('../../../lib/api/controllers/document'),
-  mockrequire = require('mock-require'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    MockBaseController,
-    MockNativeController
-  } = require('../../mocks/controller.mock'),
-  ElasticsearchClientMock = require('../../mocks/services/elasticsearchClient.mock'),
-  {
-    Request,
-    errors: {
-      NotFoundError,
-      PluginImplementationError,
-      InternalError: KuzzleInternalError,
-      BadRequestError
-    }
-  } = require('kuzzle-common-objects');
+const sinon = require('sinon');
+const should = require('should');
+const Funnel = require('../../../lib/api/funnel');
+const DocumentController = require('../../../lib/api/controller/document');
+const mockrequire = require('mock-require');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const {
+  MockBaseController,
+  MockNativeController
+} = require('../../mocks/controller.mock');
+const ElasticsearchClientMock = require('../../mocks/service/elasticsearchClient.mock');
+const {
+  Request,
+  errors: {
+    NotFoundError,
+    PluginImplementationError,
+    InternalError: KuzzleInternalError,
+    BadRequestError
+  }
+} = require('kuzzle-common-objects');
 
 describe('funnel.processRequest', () => {
   let
@@ -30,9 +29,9 @@ describe('funnel.processRequest', () => {
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire('../../../lib/core/plugins/context');
-    mockrequire.reRequire('../../../lib/core/plugins/privilegedContext');
-    const PluginsManager = mockrequire.reRequire('../../../lib/core/plugins/manager');
+    mockrequire.reRequire('../../../lib/core/plugin/context');
+    mockrequire.reRequire('../../../lib/core/plugin/privilegedContext');
+    const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/manager');
 
     kuzzle = new KuzzleMock();
     funnel = new Funnel(kuzzle);

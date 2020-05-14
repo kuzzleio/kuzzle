@@ -17,7 +17,7 @@ Creates a new role.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/roles/<_id>/_create[?refresh=wait_for]
+URL: http://kuzzle:7512/roles/<_id>/_create[?refresh=wait_for][&force]
 Method: POST
 Body:
 ```

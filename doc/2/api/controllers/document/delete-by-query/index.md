@@ -14,7 +14,13 @@ Documents removed that way trigger real-time notifications.
 
 The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
 
-To remove a greater number of documents, either change the server configuration, or split the search query.
+This behavior aims at limiting the pressure on memory and on real-time notifications.
+
+To remove a greater number of documents, you can:
+ - change the server configuration
+ - split the search query
+ - use a paginated [document:search](/core/2/api/controllers/document/search) with [document:mDelete](/core/2/api/controllers/document/m-delete)
+ - use [bulk:deleteByQuery](/core/2/api/controllers/bulk/delete-by-query)
 
 To remove all documents from a collection, use [collection:truncate](/core/2/api/controllers/collection/truncate) instead.
 
@@ -25,7 +31,7 @@ To remove all documents from a collection, use [collection:truncate](/core/2/api
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_query
+URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for]
 Method: DELETE
 Body:
 ```
@@ -46,6 +52,7 @@ Body:
   "collection": "<collection>",
   "controller": "document",
   "action": "deleteByQuery",
+  "refresh": "wait_for",
   "body": {
     "query": {
       // ...
@@ -60,6 +67,10 @@ Body:
 
 - `collection`: collection name
 - `index`: index name
+
+### Optional
+
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are removed from the search indexes
 
 ---
 

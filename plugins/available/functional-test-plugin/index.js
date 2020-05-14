@@ -27,11 +27,13 @@ class FunctionalTestPlugin {
 
     this.controllers.pipes = {
       manage: 'pipesManage',
-      deactivateAll: 'pipesDeactivateAll'
+      deactivateAll: 'pipesDeactivateAll',
+      testReturn: 'pipesTestReturn'
     };
 
     this.routes.push({ verb: 'post', url: '/pipes/:event/:state', controller: 'pipes', action: 'manage' });
     this.routes.push({ verb: 'delete', url: '/pipes', controller: 'pipes', action: 'deactivateAll' });
+    this.routes.push({ verb: 'post', url: '/pipes/test-return/:name', controller: 'pipes', action: 'testReturn' });
 
     this.pipes['generic:document:beforeWrite'] = (...args) => this.genericDocumentEvent('beforeWrite', ...args);
     this.pipes['generic:document:afterWrite'] = (...args) => this.genericDocumentEvent('afterWrite', ...args);
@@ -41,6 +43,8 @@ class FunctionalTestPlugin {
     this.pipes['generic:document:afterGet'] = (...args) => this.genericDocumentEvent('afterGet', ...args);
     this.pipes['generic:document:beforeDelete'] = (...args) => this.genericDocumentEvent('beforeDelete', ...args);
     this.pipes['generic:document:afterDelete'] = (...args) => this.genericDocumentEvent('afterDelete', ...args);
+
+    this.pipes['plugin-functional-test-plugin:testPipesReturn'] = async name => `Hello, ${name}`;
 
     // hooks related declarations ==============================================
 
@@ -80,9 +84,7 @@ class FunctionalTestPlugin {
 
     should(this.context.secrets).match(expectedSecrets);
 
-    return {
-      result: true
-    };
+    return { result: true };
   }
 
   // pipes related methods =====================================================
@@ -123,6 +125,17 @@ class FunctionalTestPlugin {
     }
 
     return documents;
+  }
+
+  /**
+   * Tests that the context.accessors.trigger method returns the results of the pipe chain
+   */
+  async pipesTestReturn (request) {
+    const helloName = await this.context.accessors.trigger(
+      'testPipesReturn',
+      request.input.args.name);
+
+    return { result: helloName };
   }
 }
 

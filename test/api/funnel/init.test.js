@@ -1,26 +1,24 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Funnel = require('../../../lib/api/funnel'),
-  AuthController = require('../../../lib/api/controllers/auth'),
-  BulkController = require('../../../lib/api/controllers/bulk'),
-  CollectionController = require('../../../lib/api/controllers/collection'),
-  DocumentController = require('../../../lib/api/controllers/document'),
-  IndexController = require('../../../lib/api/controllers/index'),
-  MSController = require('../../../lib/api/controllers/memoryStorage'),
-  RealtimeController = require('../../../lib/api/controllers/realtime'),
-  SecurityController = require('../../../lib/api/controllers/security'),
-  ServerController = require('../../../lib/api/controllers/server'),
-  AdminController = require('../../../lib/api/controllers/admin');
+const should = require('should');
+const sinon = require('sinon');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const Funnel = require('../../../lib/api/funnel');
+const AuthController = require('../../../lib/api/controller/auth');
+const BulkController = require('../../../lib/api/controller/bulk');
+const CollectionController = require('../../../lib/api/controller/collection');
+const DocumentController = require('../../../lib/api/controller/document');
+const IndexController = require('../../../lib/api/controller/index');
+const MSController = require('../../../lib/api/controller/memoryStorage');
+const RealtimeController = require('../../../lib/api/controller/realtime');
+const SecurityController = require('../../../lib/api/controller/security');
+const ServerController = require('../../../lib/api/controller/server');
+const AdminController = require('../../../lib/api/controller/admin');
 
 describe('funnel.init', () => {
   it('should initialize API and plugins controller', () => {
-    const
-      kuzzle = new KuzzleMock(),
-      funnel = new Funnel(kuzzle);
+    const kuzzle = new KuzzleMock();
+    const funnel = new Funnel(kuzzle);
 
     sinon.stub(funnel.rateLimiter, 'init');
     funnel.init();
