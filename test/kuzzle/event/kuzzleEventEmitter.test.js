@@ -97,15 +97,17 @@ describe('#KuzzleEventEmitter', () => {
     });
 
     it('should not loop on hook:onError event', done => {
+      const infiniteLoopHook = sinon.stub();
       const hookOnError = sinon.stub().throws(new Error('exception'));
 
+      emitter.on('plugin:hook:loop-error', infiniteLoopHook);
       emitter.registerPluginHook('plugin-foobar', 'hook:onError', hookOnError);
 
       emitter.emit('hook:onError', 'plugin-foobar', 'foo:bar', new Error('error'));
 
       setImmediate(() => {
-        should(hookOnError).be.calledTwice();
-
+        should(hookOnError).be.calledOnce();
+        should(infiniteLoopHook).be.calledOnce();
         done();
       });
     });

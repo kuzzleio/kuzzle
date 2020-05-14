@@ -24,7 +24,7 @@ Handlers attached to this event will receive the following arguments:
 | `error`      | `Error`  | Error object                                  |
 
 ::: info
-If a hook attached to the `hook:onError` event fail, Kuzzle will trigger the `hook:onError` event only once more to prevent infinite loop.
+If a hook attached to the `hook:onError` event fail, it will not trigger another event to prevent infinite loop
 :::
 
 ### Example
