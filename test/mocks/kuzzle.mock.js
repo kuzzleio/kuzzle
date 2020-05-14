@@ -32,6 +32,7 @@ class KuzzleMock extends Kuzzle {
       cb(null, ...args.slice(1));
     });
 
+    sinon.stub(this, 'ask').resolves();
     sinon.spy(this, 'emit');
     sinon.spy(this, 'registerPluginHook');
     sinon.spy(this, 'registerPluginPipe');
@@ -200,68 +201,6 @@ class KuzzleMock extends Kuzzle {
       strategies: {},
       registerStrategy: sinon.stub(),
       unregisterStrategy: sinon.stub()
-    };
-
-    this.repositories = {
-      init: sinon.stub().resolves(),
-      profile: {
-        fromDTO: sinon.stub().resolves(),
-        initialize: sinon.stub().resolves(),
-        load: sinon.stub().resolves(),
-        loadMultiFromDatabase: sinon.stub().resolves(),
-        loadProfiles: sinon.stub().resolves(),
-        searchProfiles: sinon.stub().resolves(),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
-        validateAndSaveProfile: sinon.stub(),
-        delete: sinon.stub(),
-        getProfileFromRequest: sinon.stub(),
-        truncate: sinon.stub().resolves()
-      },
-      role: {
-        delete: sinon.stub().resolves(),
-        fromDTO: sinon.stub().resolves(),
-        getRoleFromRequest: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-        load: sinon.stub().resolves(),
-        loadMultiFromDatabase: sinon.stub().resolves(),
-        loadRoles: sinon.stub().resolves(),
-        searchRole: sinon.stub().resolves(),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
-        validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-        truncate: sinon.stub().resolves(),
-        sanityCheck: sinon.stub()
-      },
-      user: {
-        anonymous: sinon.stub().resolves({
-          _id: '-1',
-          name: 'Anonymous',
-          profileIds: ['anonymous']
-        }),
-        delete: sinon.stub().usingPromise(Bluebird).resolves(),
-        fromDTO: sinon.stub().resolves(),
-        load: sinon.stub().resolves(foo),
-        ObjectConstructor: sinon.stub().returns({}),
-        hydrate: sinon.stub().resolves(),
-        persist: sinon.stub().resolves({}),
-        loadMultiFromDatabase: sinon.stub().resolves(),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
-        toDTO: sinon.stub(),
-        truncate: sinon.stub().resolves()
-      },
-      token: {
-        anonymous: sinon.stub().returns({_id: 'anonymous'}),
-        verifyToken: sinon.stub().resolves(),
-        generateToken: sinon.stub().resolves({}),
-        expire: sinon.stub().resolves(),
-        deleteByUserId: sinon.stub().resolves(),
-        truncate: sinon.stub().resolves(),
-        persistToCache: sinon.stub().resolves(),
-        persistForUser: sinon.stub().resolves(),
-        loadForUser: sinon.stub().resolves()
-      },
-      loadSecurities: sinon.stub().resolves(),
     };
 
     this.rootPath = '/kuzzle';

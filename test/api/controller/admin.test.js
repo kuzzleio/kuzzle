@@ -72,43 +72,29 @@ describe('AdminController', () => {
     it('should scroll and delete all registered users, profiles and roles', async () => {
       await adminController.resetSecurity(request);
 
-      should(kuzzle.repositories.user.truncate).be.calledOnce();
-      should(kuzzle.repositories.profile.truncate).be.calledOnce();
-      should(kuzzle.repositories.role.truncate).be.calledOnce();
+      const userSpy = kuzzle.ask.withArgs('core:security:user:truncate');
+      const profileSpy = kuzzle.ask.withArgs('core:security:profile:truncate');
+      const roleSpy = kuzzle.ask.withArgs('core:security:role:truncate');
       should(kuzzle.internalIndex.bootstrap.createInitialSecurities)
         .be.calledOnce();
-      should(kuzzle.repositories.profile.loadProfiles)
-        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
-      should(kuzzle.repositories.role.loadRoles)
-        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
 
       sinon.assert.callOrder(
-        kuzzle.repositories.user.truncate,
-        kuzzle.repositories.profile.truncate,
-        kuzzle.repositories.role.truncate,
+        userSpy,
+        profileSpy,
+        roleSpy,
         kuzzle.internalIndex.bootstrap.createInitialSecurities,
-        kuzzle.repositories.profile.loadProfiles,
-        kuzzle.repositories.role.loadRoles,
       );
     });
 
-    it('should unlock the action even if the promise reject', done => {
+    it('should unlock the action even if the promise reject', async () => {
       request.input.args.refresh = 'wait_for';
-      kuzzle.repositories.user.truncate.rejects();
+      kuzzle.ask.withArgs('core:security:user:truncate').rejects();
 
-      adminController.resetSecurity(request)
-        .then(() => {
-          done(new Error('Should reject'));
-        })
-        .catch(error => {
-          should(error).be.instanceOf(Error);
+      await should(adminController.resetSecurity(request)).be.rejected();
 
-          kuzzle.repositories.user.truncate.resolves();
-          return adminController.resetSecurity(request);
-        })
-        .then(() => done())
-        .catch(error => done(error));
+      kuzzle.ask.withArgs('core:security:user:truncate').rejects();
 
+      return should(adminController.resetSecurity(request)).fulfilled();
     });
   });
 
@@ -216,9 +202,10 @@ describe('AdminController', () => {
     it('should call loadSecurities from the secutiry module', async () => {
       await adminController.loadSecurities(request);
 
-      should(kuzzle.repositories.loadSecurities)
+      should(kuzzle.ask)
         .be.calledOnce()
         .be.calledWith(
+          'core:security:load',
           { gordon: { freeman: [] } },
           { onExistingUsers: 'overwrite', user: null, force: false });
     });
