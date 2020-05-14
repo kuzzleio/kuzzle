@@ -7,6 +7,7 @@ class FunctionalTestPlugin {
     this.controllers = {};
     this.routes = [];
     this.pipes = {};
+    this.hooks = {};
 
     // context.constructor.ESClient related declarations =======================
 
@@ -40,6 +41,15 @@ class FunctionalTestPlugin {
     this.pipes['generic:document:afterGet'] = (...args) => this.genericDocumentEvent('afterGet', ...args);
     this.pipes['generic:document:beforeDelete'] = (...args) => this.genericDocumentEvent('beforeDelete', ...args);
     this.pipes['generic:document:afterDelete'] = (...args) => this.genericDocumentEvent('afterDelete', ...args);
+
+    // hooks related declarations ==============================================
+
+    this.hooks['server:afterNow'] = async () => {
+      await this.context.accessors.sdk.realtime.publish(
+        'functionnal-test',
+        'hooks',
+        { event: 'server:afterNow' });
+    }
   }
 
   init (config, context) {

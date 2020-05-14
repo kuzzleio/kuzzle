@@ -288,3 +288,13 @@ Feature: Plugin Events
     When I delete the document "bus-3"
     Then I should receive a "string" result equals to "confidential"
     Then The document "bus-3-vn" should not exist
+
+  # hooks ======================================================================
+
+  @realtime
+  Scenario: Listen to events with hooks
+    Given I subscribe to "functionnal-test":"hooks" notifications
+    When I successfully call the route "server":"now"
+    Then I should receive realtime notifications for "functionnal-test":"hooks" matching:
+      | result._source.event |
+      | "server:afterNow"    |
