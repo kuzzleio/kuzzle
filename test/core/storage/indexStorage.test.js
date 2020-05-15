@@ -1,16 +1,14 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  InternalIndexBootstrap = require('../../../lib/core/storage/bootstrap/internalIndexBootstrap'),
-  IndexStorage = require('../../../lib/core/storage/indexStorage');
+const should = require('should');
+const sinon = require('sinon');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const InternalIndexBootstrap = require('../../../lib/core/storage/bootstrap/internalIndexBootstrap');
+const IndexStorage = require('../../../lib/core/storage/indexStorage');
 
 describe('IndexStorage', () => {
-  let
-    indexStorage,
-    kuzzle;
+  let indexStorage;
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();

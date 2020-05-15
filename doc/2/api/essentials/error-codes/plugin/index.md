@@ -35,7 +35,6 @@ description: error codes definitions
 | ------ | -----------------| ------------------ | ------------------ |
 | plugin.runtime.failed_init<br/><pre>0x04020001</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | An exception was thrown by a plugin's init function |
 | plugin.runtime.unexpected_error<br/><pre>0x04020002</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Embeds an unexpected plugin error into a standardized KuzzleError object |
-| plugin.runtime.pipe_timeout<br/><pre>0x04020003</pre> | [GatewayTimeoutError](/core/2/api/essentials/error-handling#gatewaytimeouterror) <pre>(504)</pre> | A pipe function execution took more than the configured server limit |
 | plugin.runtime.too_many_pipes<br/><pre>0x04020004</pre> | [ServiceUnavailableError](/core/2/api/essentials/error-handling#serviceunavailableerror) <pre>(503)</pre> | The number of running pipes exceeds the configured capacity (see configuration files). This may be caused by pipes being too slow, or by an insufficient number of Kuzzle nodes. |
 
 ---
@@ -114,7 +113,6 @@ description: error codes definitions
 | plugin.context.invalid_callback<br/><pre>0x04060004</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A non-function callback has been provided |
 | plugin.context.missing_request<br/><pre>0x04060005</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A Request object is required, but none was supplied |
 | plugin.context.missing_request_data<br/><pre>0x04060006</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A Request object and/or request data must be provided |
-| plugin.context.invalid_event<br/><pre>0x04060007</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Invalid event name (colons are not allowed in event names) |
 | plugin.context.missing_authenticator<br/><pre>0x04060008</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Missing "strategy.config.authenticator" property |
 
 ---
