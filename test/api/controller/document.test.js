@@ -728,6 +728,7 @@ describe('DocumentController', () => {
 
   describe('#delete', () => {
     it('should call publicStorage delete method and notify', async () => {
+      request.input.args.refresh = 'wait_for';
       documentController.publicStorage.get.resolves({
         _id: 'foobar',
         _source: '_source'
@@ -739,7 +740,8 @@ describe('DocumentController', () => {
       should(documentController.publicStorage.delete).be.calledWith(
         index,
         collection,
-        'foobar');
+        'foobar',
+        { refresh: 'wait_for' });
 
       should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
         request,
