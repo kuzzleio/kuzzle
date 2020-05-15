@@ -23,7 +23,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { domains } = require(`${__dirname}/../lib/config/error-codes/`);
+const { domains } = require(`${__dirname}/../lib/kerror/codes/`);
 const { errors } = require('kuzzle-common-objects');
 
 function getHeader(title) {

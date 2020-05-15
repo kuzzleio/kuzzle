@@ -7,7 +7,7 @@ const Notifier = require('../../../../lib/core/realtime/notifier');
 const {
   DocumentNotification,
   UserNotification,
-} = require('../../../../lib/models/notification');
+} = require('../../../../lib/model/notification');
 
 describe('notify methods', () => {
   let
