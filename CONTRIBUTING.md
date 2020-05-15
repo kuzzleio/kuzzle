@@ -39,14 +39,16 @@ git submodule init
 git submodule update
 
 # start kuzzle with development tools enabled
-docker-compose -f docker-compose/dev.yml up
+docker-compose up
 ```
 
-You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebSocket and Socket.io APIs
+You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebSocket and MQTT APIs
 
 Everytime a modification is detected in the source files, the server is automatically restarted and a new debug URL is provided.
 
 ### Kuzzle over SSL
+
+[See our complete guide](https://docs.kuzzle.io/core/2/guides/essentials/ssl-support/)
 
 The development stack include a endpoint to access Kuzzle API through SSL on port `7443`.  
 
@@ -67,24 +69,30 @@ NODE_EXTRA_CA_CERTS=/path/to/certificate/kuzzleCA.crt wscat -c wss://localhost:7
 
 ## Create a plugin
 
-See our [plugins documentation](https://docs.kuzzle.io/plugins/1)
+See our [plugins documentation](https://docs.kuzzle.io/core/2/plugins/)
 
 ## Running Tests
    
-### With a running Kuzzle inside a docker container
+### Using docker, with Kuzzle running in Docker
 
-Because functional tests need a running Kuzzle environment, if you're using docker to run Kuzzle, then they can only be started from inside a Kuzzle container.
+```bash
+$ docker-compose up -d
 
-    $ docker exec -ti <kuzzle docker image> npm test
+# wait for Kuzzle stack to be up
 
-### Using docker, without any Kuzzle instance running
+$ docker-compose exec kuzzle npm run test:lint
+$ docker-compose exec kuzzle npm run test:unit
+$ docker-compose exec kuzzle npm run test:functional
+```
 
-A docker-compose script is available to run tests on a non-running Kuzzle. This script will pop a Kuzzle stack using Docker, automatically run tests, and exit once done.
+### Locally, with Kuzzle running in Docker
 
-    $ docker-compose -f docker-compose/test.yml up
+```bash
+$ docker-compose up -d
 
-### With a manually installed and running Kuzzle
+# wait for Kuzzle stack to be up
 
-From the Kuzzle source directory, launch the following command line:
-
-    $ npm test
+$ npm run test:lint
+$ npm run test:unit
+$ npm run test:functional
+```

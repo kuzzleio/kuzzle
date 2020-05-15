@@ -40,3 +40,20 @@ Then('I should receive a bulk error matching:', function (dataTable) {
     should(actionBody(errorAction)).match(actionBody(expectedError[i]));
   }
 });
+
+Then('I perform a bulk deleteByQuery with the query:', async function (rawQuery) {
+  const query = JSON.parse(rawQuery);
+
+  const request = {
+    controller: 'bulk',
+    action: 'deleteByQuery',
+    index: this.props.index,
+    collection: this.props.collection,
+    refresh: 'wait_for',
+    body: { query }
+  };
+
+  const { result } = await this.sdk.query(request);
+
+  this.props.result = result;
+});
