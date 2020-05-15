@@ -6,9 +6,8 @@ title: core:shutdown
 
 # core:shutdown
 
-Triggered when the current node starts a graceful shutdown.  
-All new API requests are rejected, and the node halts once all pending requests have been played.
+<DeprecatedBadge version="2.2.0" />
 
-:::info
-Pipes cannot listen to that event, only hooks can.
-:::
+This event is deprecated and is now an alias for [kuzzle:shutdown](/core/2/plugins/guides/events/kuzzle-shutdown).
+
+It will be removed in a future version.

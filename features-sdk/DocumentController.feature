@@ -85,6 +85,7 @@ Feature: Document Controller
     Then The document "document-1" should exist
     When I "delete" the following document ids:
       | "document-1" |
+    And I refresh the collection
     Then The document "document-1" should not exist
 
   # document:mCreate ===========================================================

@@ -99,9 +99,6 @@
     //   * pipeWarnTime:
     //        Warning time threshold (in milliseconds)
     //        on a pipe plugin action
-    //   * pipeTimeout:
-    //        Maximum execution time (in milliseconds)
-    //        of a pipe plugin action
     //   * initTimeout:
     //        Maximum execution time (in milliseconds)
     //        of a plugin initialization
@@ -120,7 +117,6 @@
     "common": {
       "bootstrapLockTimeout": 5000,
       "pipeWarnTime": 40,
-      "pipeTimeout": 250,
       "initTimeout": 2000,
       "maxConcurrentPipes": 50,
       "pipesBufferSize": 50000
