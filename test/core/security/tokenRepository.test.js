@@ -194,7 +194,7 @@ describe('Test: security/tokenRepository', () => {
           kuzzle.config.security.jwt.secret,
           {
             algorithm: kuzzle.config.security.jwt.algorithm,
-            expiresIn: ms(kuzzle.config.security.jwt.expiresIn)
+            expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000
           });
       user._id = 'userInCache';
       const persistForUserSpy = sinon.spy(tokenRepository, 'persistForUser');
@@ -281,10 +281,6 @@ describe('Test: security/tokenRepository', () => {
         { expiresIn: 'ehh' });
 
       await should(promise).be.rejectedWith(KuzzleInternalError);
-    });
-
-    it('should call #persistForUser', () => {
-
     });
   });
 
