@@ -31,7 +31,7 @@ You can restrict the scroll session maximum duration under the `services.storage
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_search[?from=<int>][&size=<int>][&scroll=<time to live>]
+URL: http://kuzzle:7512/<index>/<collection>/_search[?from=<int>][&size=<int>][&scroll=<time to live>][&verb=string]
 Method: POST
 Body:
 ```
@@ -53,9 +53,11 @@ Body:
 You can also access this route with the `GET` verb:
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_search?query=...
+URL: http://kuzzle:7512/<index>/<collection>/_search[?query=<string>][?from=<int>][&size=<int>][&scroll=<time to live>][&verb=<string>]
 Method: GET
 ```
+
+'/nyc-open-data/yellow-taxi/
 
 ### Other protocols
 
