@@ -38,7 +38,7 @@ this.hooks = {
     this.context.accessors.error(`${pluginName} hook on ${event} failed: ${error.message}`)
   },
 
-  // Each call to document:create will trigger this method who throws an error
+  // Each call to document:create will trigger this method, throwing an error
   'document:beforeCreate': async request => {
     throw new Error('The cake is a lie');
   }   
