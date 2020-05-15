@@ -35,7 +35,7 @@ Consider a plugin with the following hooks:
 this.hooks = {
   // Each errored hook will trigger this method
   'hook:onError': (pluginName, event, error) => {
-    this.context.accessors.error(`${pluginName} hook on ${event} fail: ${error.message}`)
+    this.context.accessors.error(`${pluginName} hook on ${event} failed: ${error.message}`)
   },
 
   // Each call to document:create will trigger this method who throws an error
