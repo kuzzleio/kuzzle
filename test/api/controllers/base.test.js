@@ -634,6 +634,33 @@ describe('#base/native controller', () => {
       should(searchBody).be.eql({ query: { foo: 'bar' } });
     });
 
+    it('should extract search params', () => {
+      request.input.args.verb = '"GET"';
+      request.input.args.query = '{"foo":"bar"}';
+      const
+        { from, size, scrollTTL, query, searchBody } = nativeController.getSearchParams(request);
+
+      should(from).be.eql(1);
+      should(size).be.eql(11);
+      should(scrollTTL).be.eql('10m');
+      should(query).be.eql({ foo: 'bar' });
+      should(searchBody).be.eql({ query: { foo: 'bar' } });
+    });
+
+    it('should extract searchBody param', () => {
+      request.input.args.verb = '"GET"';
+      request.input.args.query = '{"foo":"bar"}';
+      const searchBody = nativeController.getSearchBody(request);
+
+      should(searchBody).be.eql({ query: { foo: 'bar' } });
+    });
+
+    it('should extract searchBody param', () => {
+      const searchBody = nativeController.getSearchBody(request);
+
+      should(searchBody).be.eql({ query: { foo: 'bar' } });
+    });
+
     it('should have have default value', () => {
       request.input.args = {};
       request.input.body = {};

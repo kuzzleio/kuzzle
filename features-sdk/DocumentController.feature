@@ -45,6 +45,26 @@ Feature: Document Controller
     Then I should receive a "hits" array of objects matching:
       | _id          | highlight                            |
       | "document-1" | { "name": [ "<em>document1</em>" ] } |
+    When I search documents with the following query:
+      """
+      {
+        "match": {
+          "name": "document1"
+        }
+      }
+      """
+    And with the following highlights:
+      """
+      {
+        "fields": {
+          "name": {}
+        }
+      }
+      """
+    And I execute the search query with verb "GET"
+    Then I should receive a "hits" array of objects matching:
+      | _id          | highlight                            |
+      | "document-1" | { "name": [ "<em>document1</em>" ] } |
 
   @mappings
   Scenario: Search with search_after

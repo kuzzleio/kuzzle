@@ -50,6 +50,13 @@ Body:
 }
 ```
 
+You can also access this route with the `GET` verb:
+
+```http
+URL: http://kuzzle:7512/<index>/<collection>/_search?query=...
+Method: GET
+```
+
 ### Other protocols
 
 ```js
