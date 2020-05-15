@@ -153,7 +153,7 @@ Then(/I execute the search query( with verb "(.*?)")?/, async function (verb) {
   if (verb) {
     options.verb = verb;
   }
-  
+
   this.props.result = await this.sdk.document.search(
     this.props.index,
     this.props.collection,

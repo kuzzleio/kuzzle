@@ -634,7 +634,7 @@ describe('#base/native controller', () => {
     });
 
     it('should extract search params', () => {
-      request.input.args.verb = '"GET"';
+      request.input.args.verb = 'GET';
       request.input.args.query = '{"foo":"bar"}';
       const
         { from, size, scrollTTL, query, searchBody } = nativeController.getSearchParams(request);
@@ -647,7 +647,7 @@ describe('#base/native controller', () => {
     });
 
     it('should extract searchBody param', () => {
-      request.input.args.verb = '"GET"';
+      request.input.args.verb = 'GET';
       request.input.args.query = '{"foo":"bar"}';
       const searchBody = nativeController.getSearchBody(request);
 
