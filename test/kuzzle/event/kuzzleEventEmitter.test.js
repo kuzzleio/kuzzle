@@ -2,7 +2,13 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const Emitter = require('../../../lib/kuzzle/event/kuzzleEventEmitter');
+const {
+  errors: {
+    InternalError: KuzzleInternalError
+  }
+} = require('kuzzle-common-objects');
 
 describe('#KuzzleEventEmitter', () => {
   let emitter;
@@ -290,8 +296,10 @@ describe('#KuzzleEventEmitter', () => {
         'Cannot add a listener to the ask event "foo:bar": event has already an answerer');
     });
 
-    it('should resolve to undefined if no answerer listens to an event', async () => {
-      should(await emitter.ask('foo:bar')).be.undefined();
+    it('should reject if no answerer listens to an event', async () => {
+      await should(emitter.ask('foo:bar')).rejectedWith(KuzzleInternalError, {
+        id: 'core.fatal.orphan_ask_event'
+      });
     });
 
     it('should resolve to the answerer result when one is registered', async () => {

@@ -43,5 +43,6 @@ description: error codes definitions
 | api.process.incompatible_sdk_version<br/><pre>0x02020006</pre> | [BadRequestError](/core/2/api/essentials/error-handling#badrequesterror) <pre>(400)</pre> | SDK is incompatible with the current Kuzzle version |
 | api.process.shutting_down<br/><pre>0x02020007</pre> | [ServiceUnavailableError](/core/2/api/essentials/error-handling#serviceunavailableerror) <pre>(503)</pre> | This Kuzzle node is shutting down and refuses new requests |
 | api.process.too_many_requests<br/><pre>0x02020008</pre> | [TooManyRequestsError](/core/2/api/essentials/error-handling#toomanyrequestserror) <pre>(429)</pre> | The request has been refused because a rate limit has been exceeded for this user |
+| api.process.admin_exists<br/><pre>0x02020009</pre> | [PreconditionError](/core/2/api/essentials/error-handling#preconditionerror) <pre>(412)</pre> | Attempted to create the first administrator, when one already exists |
 
 ---
