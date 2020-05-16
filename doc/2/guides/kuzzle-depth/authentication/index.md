@@ -18,7 +18,7 @@ In the diagram below, we highlighted components of Kuzzle's server [architecture
 
 - The Auth Controller: to manage the authentication process.
 - The Passport Wrapper: to interface between Kuzzle and the Passport.js library.
-- The User and Token [Repositories](https://github.com/kuzzleio/kuzzle/tree/master/lib/core/models/repositories): to store user data.
+- The User and Token [Repositories](https://github.com/kuzzleio/kuzzle/tree/master/lib/core/security): to store user data.
 - The Auth Strategy: to identify and validate a user's credential using a [dedicated plugin](/core/2/plugins/guides/strategies).
 
 ---
