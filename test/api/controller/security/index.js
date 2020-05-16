@@ -21,11 +21,10 @@ const {
 const kerror = require('../../../../lib/kerror');
 
 describe('/api/controller/security', () => {
-  let
-    securityController,
-    funnelController,
-    sandbox = sinon.createSandbox(),
-    kuzzle;
+  let securityController;
+  let funnelController;
+  let sandbox = sinon.createSandbox();
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();

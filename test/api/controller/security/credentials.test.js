@@ -66,7 +66,9 @@ describe('Test: security controller - credentials', () => {
         _id: 'someUserId',
       });
 
-      kuzzle.repositories.user.load.resolves(null);
+      kuzzle.ask
+        .withArgs('core:security:user:get', 'someUserId')
+        .resolves(null);
 
       return should(securityController.createCredentials(request))
         .rejectedWith(NotFoundError, { id: 'security.user.not_found' });
@@ -118,7 +120,10 @@ describe('Test: security controller - credentials', () => {
         _id: 'someUserId',
       });
 
-      kuzzle.repositories.user.load.resolves(null);
+      kuzzle.ask
+        .withArgs('core:security:user:get', 'someUserId')
+        .resolves(null);
+
       return should(securityController.updateCredentials(request))
         .rejectedWith(NotFoundError, { id: 'security.user.not_found' });
     });

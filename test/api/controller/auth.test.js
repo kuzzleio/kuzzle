@@ -116,7 +116,7 @@ describe('Test the auth controller', () => {
       });
 
       createTokenStub.resolves(token);
-      kuzzle.tokenManager.getConnectedUserToken.resolves(existingToken);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
 
       await authController.login(request);
 
@@ -127,7 +127,7 @@ describe('Test the auth controller', () => {
     it('should modify the result according to auth:strategyAuthenticated pipe events', async () => {
       kuzzle.pipe
         .withArgs('auth:strategyAuthenticated')
-        .returns({strategy: 'foobar', content: {foo: 'bar'}});
+        .resolves({strategy: 'foobar', content: {foo: 'bar'}});
 
       const response = await authController.login(request);
 
@@ -155,15 +155,16 @@ describe('Test the auth controller', () => {
         result: response,
         headers: {Location: 'http://github.com'}
       });
-      should(kuzzle.ask)
+      should(kuzzle.ask
         .withArgs(
           'core:security:token:create',
-          sinon.match.string,
-          sinon.match.object)
+          sinon.match.any,
+          sinon.match.any))
         .not.be.called();
     });
 
     it('should call passport.authenticate with input body and query string', async () => {
+      createTokenStub.resolves(new Token());
       await authController.login(request);
 
       should(kuzzle.passport.authenticate)
@@ -174,7 +175,7 @@ describe('Test the auth controller', () => {
         });
     });
 
-    it('should throw if no strategy is specified', () => {
+    it('should reject if no strategy is specified', () => {
       delete request.input.args.strategy;
 
       return should(authController.login(request))
@@ -205,9 +206,11 @@ describe('Test the auth controller', () => {
         expiresAt: 4567,
         ttl: 1234
       });
-      should(createTokenStub).be.calledWith(request.context.connection.id, {
-        expiresIn: '1s'
-      });
+
+      should(createTokenStub).be.calledWith(
+        'core:security:token:create',
+        request.context.connection.id,
+        { expiresIn: '1s' });
     });
 
     it('should reject if authentication fails', () => {
@@ -253,8 +256,7 @@ describe('Test the auth controller', () => {
       const response = await authController.logout(request);
 
       should(kuzzle.ask)
-        .withArgs('core:security:token:delete')
-        .calledWith(request.context.token);
+        .calledWith('core:security:token:delete', request.context.token);
 
       should(response.responseObject).be.instanceof(Object);
     });
@@ -264,9 +266,7 @@ describe('Test the auth controller', () => {
 
       await authController.logout(request);
 
-      should(kuzzle.ask)
-        .withArgs('core:security:token:deleteByUser', sinon.match.string)
-        .calledWith('foo');
+      should(kuzzle.ask).calledWith('core:security:token:deleteByUser', 'foo');
     });
 
     it('should emit an error if the token cannot be expired', () => {
@@ -335,9 +335,9 @@ describe('Test the auth controller', () => {
     });
 
     it('should return a valid response if the token is valid', async () => {
-      const verifyStub = kuzzle.ask.withArgs(
-        'core:security:token:verify',
-        request.input.body.token);
+      const verifyStub = kuzzle.ask
+        .withArgs('core:security:token:verify', request.input.body.token)
+        .resolves(testToken);
 
       const response = await authController.checkToken(request);
 
@@ -365,7 +365,7 @@ describe('Test the auth controller', () => {
     it('should return a rejected promise if an error occurs', () => {
       const error = new KuzzleInternalError('Foobar');
       kuzzle.ask
-        .withArgs('core:security:token:verfy', request.input.body.token)
+        .withArgs('core:security:token:verify', request.input.body.token)
         .rejects(error);
 
       return should(authController.checkToken(request)).be.rejectedWith(error);
@@ -383,18 +383,7 @@ describe('Test the auth controller', () => {
           {id: 'security.rights.unauthorized'});
     });
 
-    it('should reject if the token has already been refreshed', () => {
-      return should(authController.refreshToken(new Request(
-        {},
-        {
-          token: {userId: 'foo', _id: 'bar', refreshed: true},
-          user: {_id: 'bar'}
-        }
-      )))
-        .rejectedWith(UnauthorizedError, {id: 'security.token.invalid' });
-    });
-
-    it('should provide a new jwt and expire the current one after the grace period', async () => {
+    it('should provide a new jwt and expire the current one ', async () => {
       const newToken = {
         _id: '_id',
         jwt: 'new-token',
@@ -416,8 +405,12 @@ describe('Test the auth controller', () => {
           }
         }
       );
-      const createTokenStub = kuzzle.ask
-        .withArgs('core:security:token:create', 'user', { expiresIn: '42h' })
+
+      kuzzle.ask
+        .withArgs(
+          'core:security:token:refresh',
+          sinon.match.any,
+          sinon.match.any)
         .resolves(newToken);
 
       const response = await authController.refreshToken(req);
@@ -429,48 +422,37 @@ describe('Test the auth controller', () => {
         ttl: 'ttl'
       });
 
-      should(req.context.token.refreshed).be.true();
-
-      should(
-        kuzzle.ask.withArgs(
-          'core:security:token:refresh',
-          request.context.token,
-          request.input.args.expiresIn)).calledOnce();
-
-      should(createTokenStub).calledOnce();
-
-      should(kuzzle.tokenManager.refresh)
-        .calledWith(req.context.token, newToken);
+      should(kuzzle.ask).calledWith(
+        'core:security:token:refresh',
+        req.context.token,
+        req.input.args.expiresIn);
     });
-
   });
 
   describe('#updateSelf', () => {
-    const opts = {database: {method: 'update'}};
-
     it('should return a valid response', async () => {
-      request = new Request(
+      const r = new Request(
         {body: {foo: 'bar'}},
         {
           token: {userId: 'admin', _id: 'admin'},
           user: {_id: 'admin'}
         }
       );
-      const response = await authController.updateSelf(request);
+      kuzzle.ask.resolves(user);
+
+      const response = await authController.updateSelf(r);
 
       should(response).be.instanceof(Object);
 
-      should(
-        kuzzle.ask.withArgs(
-          'core:security:user:update',
-          request.context.user._id,
-          request.input.body,
-          {
-            refresh: null,
-            retryOnConflict: 10,
-            userId: request.context.user._id
-          }))
-        .be.calledOnce();
+      should(kuzzle.ask).calledWith(
+        'core:security:user:update',
+        r.context.user._id,
+        r.input.body,
+        {
+          refresh: 'false',
+          retryOnConflict: 10,
+          userId: r.context.user._id,
+        });
     });
 
     it('should reject an error if profile is specified', () => {
