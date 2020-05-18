@@ -424,6 +424,22 @@ Feature: Document Controller
     Then The document "document-2" should exist
 
   @mappings
+  Scenario: Delete document and retrieve its source
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+    When I successfully call the route "document":"delete" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "document-1"           |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id     | "document-1"            |
+      | _source | { "name": "document1" } |
+    Then The document "document-1" should not exist
+
+  @mappings
   Scenario: updateByQuery
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
