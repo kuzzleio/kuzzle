@@ -747,9 +747,29 @@ describe('DocumentController', () => {
         request,
         [{ _id: 'foobar', _source: '_source' }]);
 
-      should(response).match({
-        _id: 'foobar'
+      should(response).be.eql({ _id: 'foobar' });
+    });
+
+    it('should call publicStorage delete method, notify and retrieve document source', async () => {
+      documentController.publicStorage.get.resolves({
+        _id: 'foobar',
+        _source: '_source'
       });
+      request.input.resource._id = 'foobar';
+      request.input.args.source = true;
+
+      const response = await documentController.delete(request);
+
+      should(documentController.publicStorage.delete).be.calledWith(
+        index,
+        collection,
+        'foobar');
+
+      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+        request,
+        [{ _id: 'foobar', _source: '_source' }]);
+
+      should(response).be.eql({ _id: 'foobar', _source: '_source'});
     });
   });
 
