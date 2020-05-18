@@ -4,7 +4,7 @@ const rewire = require('rewire');
 const sinon = require('sinon');
 const should = require('should');
 const Bluebird = require('bluebird');
-const FunnelController = require('../../../../lib/api/funnel');
+
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const { NativeController } = require('../../../../lib/api/controller/base');
 const SecurityController = rewire('../../../../lib/api/controller/security');
@@ -21,16 +21,15 @@ const {
 const kerror = require('../../../../lib/kerror');
 
 describe('/api/controller/security', () => {
-  let securityController;
-  let funnelController;
-  let sandbox = sinon.createSandbox();
   let kuzzle;
+  let request;
+  let securityController;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnelController = new FunnelController(kuzzle);
-    sandbox.spy(kerror, 'get');
+    sinon.spy(kerror, 'get');
     securityController = new SecurityController(kuzzle);
+    request = new Request({ controller: 'security' });
   });
 
   afterEach(() => {
@@ -44,22 +43,17 @@ describe('/api/controller/security', () => {
   });
 
   describe('#refresh', () => {
-    let request;
+    it('should call refresh the allowed collections', async () => {
+      for (const collection of ['users', 'roles', 'profiles']) {
+        request.input.resource.collection = collection;
 
-    beforeEach(() => {
-      request = new Request({ controller: 'security' });
-      securityController.internalIndex = 'kuzzle';
-      securityController.internalCollections = ['users', 'roles'];
-    });
+        const response = await securityController.refresh(request);
 
-    it('should call the storageEngine', async () => {
-      request.input.resource.collection = 'users';
-
-      const response = await securityController.refresh(request);
-
-      should(response).be.null();
-      should(kuzzle.storageEngine.internal.refreshCollection)
-        .be.calledWith('kuzzle', 'users');
+        should(response).be.null();
+        should(kuzzle.storageEngine.internal.refreshCollection).calledWith(
+          kuzzle.config.services.storageEngine.internalIndex.name,
+          collection);
+      }
     });
 
     it('should raise an error with unknown collection', async () => {
