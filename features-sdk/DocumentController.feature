@@ -457,6 +457,27 @@ Feature: Document Controller
       | age | 21 |
 
   @mappings
+  Scenario: deleteByQuery and retrieve sources
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id | body                               |
+      | -   | { "name": "document1", "age": 42 } |
+      | -   | { "name": "document2", "age": 84 } |
+      | -   | { "name": "document2", "age": 21 } |
+    And I refresh the collection
+    When I successfully call the route "document":"deleteByQuery" with args:
+      | index      | "nyc-open-data"                                   |
+      | collection | "yellow-taxi"                                     |
+      | source     | true                                              |
+      | body       | { "query": { "range": { "age": { "gt": 21 } } } } |
+    Then I should receive a "documents" array of objects matching:
+      | _source                            |
+      | { "name": "document1", "age": 42 } |
+      | { "name": "document2", "age": 84 } |
+    And I count 1 documents matching:
+      | age | 21 |
+
+  @mappings
   Scenario: updateByQuery
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
