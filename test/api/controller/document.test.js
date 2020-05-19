@@ -868,6 +868,33 @@ describe('DocumentController', () => {
 
       should(response).be.eql({ ids: ['id1', 'id2'] });
     });
+
+    it('should call publicStorage deleteByQuery method, notify the changes and retrieve all sources', async () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.source = true;
+
+      const response = await documentController.deleteByQuery(request);
+
+      should(documentController.publicStorage.deleteByQuery).be.calledWith(
+        index,
+        collection,
+        { foo: 'bar' },
+        { refresh: 'wait_for' });
+
+      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+        request,
+        [
+          { _id: 'id1', _source: '_source1' },
+          { _id: 'id2', _source: '_source2' }
+        ]);
+
+      should(response).be.eql({
+        documents: [
+          { _id: 'id1', _source: '_source1' },
+          { _id: 'id2', _source: '_source2' }
+        ]});
+    });
   });
 
   describe('#validate', () => {
