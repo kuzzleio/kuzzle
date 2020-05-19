@@ -1,6 +1,5 @@
 'use strict';
 
-const rewire = require('rewire');
 const Bluebird = require('bluebird');
 const should = require('should');
 const sinon = require('sinon');
@@ -15,7 +14,8 @@ const {
     PreconditionError
   }
 } = require('kuzzle-common-objects');
-const SecurityController = rewire('../../../../lib/api/controller/security');
+const SecurityController = require('../../../../lib/api/controller/security');
+const User = require('../../../../lib/model/security/user');
 
 describe('Test: security controller - users', () => {
   let kuzzle;
@@ -26,8 +26,171 @@ describe('Test: security controller - users', () => {
     kuzzle = new KuzzleMock();
     securityController = new SecurityController(kuzzle);
     request = new Request({controller: 'security'});
-    kuzzle.internalIndex.getMapping.resolves({internalIndex: {mappings: {users: {properties: {}}}}});
+    kuzzle.internalIndex.getMapping.resolves({
+      internalIndex: {
+        mappings: {
+          users: {
+            properties: {}
+          }
+        }
+      }
+    });
     kuzzle.internalIndex.get.resolves({});
+  });
+
+  describe('#persistUser', () => {
+    const createEvent = 'core:security:user:create';
+    const deleteEvent = 'core:security:user:delete';
+    const content = { foo: 'bar' };
+    let fakeUser;
+    let profileIds;
+    let createStub;
+    let deleteStub;
+    let strategyCreateStub;
+    let strategyExistsStub;
+    let strategyValidateStub;
+
+    beforeEach(() => {
+      profileIds = ['foo' ];
+      request.input.resource._id = 'test';
+      request.input.body = {
+        content: {name: 'John Doe', profileIds},
+        credentials: {someStrategy: {some: 'credentials'}}
+      };
+      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+
+      fakeUser = new User();
+      createStub = kuzzle.ask
+        .withArgs(
+          createEvent,
+          request.input.resource._id,
+          profileIds,
+          content,
+          sinon.match.object)
+        .resolves(fakeUser);
+      deleteStub = kuzzle.ask
+        .withArgs(deleteEvent, request.input.resource._id, sinon.match.object)
+        .resolves();
+
+      strategyCreateStub = sinon.stub().resolves();
+      strategyExistsStub = sinon.stub().resolves(false);
+      strategyValidateStub = sinon.stub().resolves();
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('foo', 'create')
+        .returns(strategyCreateStub);
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('foo', 'exists')
+        .returns(strategyExistsStub);
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('foo', 'validate')
+        .returns(strategyValidateStub);
+    });
+
+    it('should reject if a strategy is unknown', async () => {
+      kuzzle.pluginsManager.listStrategies.returns(['oops']);
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .be.rejectedWith(BadRequestError, {
+          id: 'security.credentials.unknown_strategy'
+        });
+
+      should(createStub).not.called();
+      should(deleteStub).not.called();
+    });
+
+    it('should reject if credentials already exist on the provided user id', async () => {
+      strategyExistsStub.resolves(false);
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .be.rejectedWith(PluginImplementationError, {
+          id: 'security.credentials.database_inconsistency'
+        });
+
+      should(createStub).not.called();
+      should(deleteStub).not.called();
+    });
+
+    it('should rollback if credentials don\'t validate the strategy', async () => {
+      strategyValidateStub.rejects(new Error('error'));
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .be.rejectedWith(BadRequestError, {
+          id: 'security.credentials.rejected'
+        });
+
+      should(kuzzle.ask).calledWithMatch(
+        createEvent,
+        request.input.resource._id,
+        profileIds,
+        content,
+        { refresh: 'wait_for' });
+
+      should(kuzzle.ask).calledWithMatch(
+        deleteEvent,
+        request.input.resource._id,
+        { refresh: 'false' });
+    });
+
+    it('should reject and rollback if credentials don\'t create properly', async () => {
+      strategyCreateStub.rejects(new Error('some error'));
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .rejectedWith(PluginImplementationError, {
+          id: 'plugin.runtime.unexpected_error',
+        });
+
+      should(kuzzle.ask).calledWithMatch(
+        deleteEvent,
+        request.input.resource._id,
+        { refresh: 'false' });
+    });
+
+    it('should not create credentials if user creation fails', async () => {
+      const error = new Error('error');
+      createStub.rejects(error);
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .rejectedWith(error);
+
+      should(strategyCreateStub).not.called();
+    });
+
+    it('should intercept errors during deletion of a rollback phase', done => {
+      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'validate')
+        .returns(sinon.stub().resolves());
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'exists')
+        .returns(sinon.stub().resolves(false));
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'create')
+        .returns(sinon.stub().rejects(new Error('some error')));
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'delete')
+        .returns(sinon.stub().rejects(new Error('some error')));
+
+      securityController.createUser(request)
+        .then(() => done('Expected promise to fail'))
+        .catch(error => {
+          try {
+            should(error).be.instanceof(PluginImplementationError);
+            should(error.id).eql('plugin.runtime.unexpected_error');
+            should(kuzzle.repositories.user.delete)
+              .calledOnce()
+              .calledWithMatch({ _id: 'test' });
+
+            done();
+          }
+          catch (e) {
+            done(e);
+          }
+        });
+    });
   });
 
   describe('#updateUserMapping', () => {
@@ -429,173 +592,6 @@ describe('Test: security controller - users', () => {
     });
   });
 
-  describe('#persistUserAndCredentials', () => {
-    beforeEach(() => {
-      request = new Request({
-        _id: 'test',
-        body: {
-          content: {name: 'John Doe', profileIds: ['anonymous']},
-          credentials: {someStrategy: {some: 'credentials'}}
-        }
-      });
-    });
-
-    it('should reject an error if a strategy is unknown', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
-      request.input.body.credentials = {unknownStrategy: {some: 'credentials'}};
-
-      return should(securityController.createUser(request))
-        .be.rejectedWith(BadRequestError, {
-          id: 'security.credentials.unknown_strategy'
-        });
-    });
-
-    it('should reject an error if credentials don\'t validate the strategy', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'exists')
-        .returns(sinon.stub().resolves(false));
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'validate')
-        .returns(sinon.stub().rejects(new Error('error')));
-
-      return should(securityController.createUser(request))
-        .be.rejectedWith(BadRequestError, { id: 'security.credentials.rejected'});
-    });
-
-    it('should reject if credentials already exist on the provided user id', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'exists')
-        .returns(sinon.stub().resolves(true));
-
-      return should(securityController.createUser(request))
-        .be.rejectedWith(PluginImplementationError, {
-          id: 'security.credentials.database_inconsistency'
-        });
-    });
-
-    it('should throw an error and rollback if credentials don\'t create properly', done => {
-      const
-        validateStub = sinon.stub().resolves(),
-        existsStub = sinon.stub().resolves(false),
-        createStub = sinon.stub().rejects(new Error('some error')),
-        deleteStub = sinon.stub().resolves();
-
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'validate')
-        .returns(validateStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'exists')
-        .returns(existsStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'create')
-        .returns(createStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'delete')
-        .returns(deleteStub);
-
-      securityController.createUser(request)
-        .then(() => done('Expected promise to fail'))
-        .catch(error => {
-          try {
-            should(error).be.instanceof(PluginImplementationError);
-            should(error.id).eql('plugin.runtime.unexpected_error');
-            should(kuzzle.repositories.user.delete)
-              .calledOnce()
-              .calledWithMatch({_id: 'test'});
-
-            done();
-          }
-          catch (e) {
-            done(e);
-          }
-        });
-    });
-
-    it('should intercept errors during deletion of a recovery phase', done => {
-      const
-        validateStub = sinon.stub().resolves(),
-        existsStub = sinon.stub().resolves(false),
-        createStub = sinon.stub().rejects(new Error('some error')),
-        deleteStub = sinon.stub().rejects(new Error('some error'));
-
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'validate')
-        .returns(validateStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'exists')
-        .returns(existsStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'create')
-        .returns(createStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'delete')
-        .returns(deleteStub);
-
-      securityController.createUser(request)
-        .then(() => done('Expected promise to fail'))
-        .catch(error => {
-          try {
-            should(error).be.instanceof(PluginImplementationError);
-            should(error.id).eql('plugin.runtime.unexpected_error');
-            should(kuzzle.repositories.user.delete)
-              .calledOnce()
-              .calledWithMatch({ _id: 'test' });
-
-            done();
-          }
-          catch (e) {
-            done(e);
-          }
-        });
-    });
-
-    it('should not create credentials if user creation fails', done => {
-      const
-        error = new Error('foobar'),
-        validateStub = sinon.stub().resolves(),
-        existsStub = sinon.stub().resolves(false),
-        createStub = sinon.stub().resolves();
-
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-      kuzzle.repositories.user.persist.rejects(error);
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'validate')
-        .returns(validateStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'exists')
-        .returns(existsStub);
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'create')
-        .returns(createStub);
-
-      securityController.createUser(request)
-        .then(() => done('Expected promise to fail'))
-        .catch(err => {
-          should(err).be.eql(error);
-          should(kuzzle.repositories.user.delete).not.be.called();
-          should(createStub).not.be.called();
-          done();
-        });
-    });
-  });
-
   describe('#createRestrictedUser', () => {
     it('should return a valid response', () => {
       kuzzle.repositories.user.load.resolves(null);
@@ -907,6 +903,76 @@ describe('Test: security controller - users', () => {
       return should(securityController.revokeTokens(new Request({
         _id: 'test'
       }))).be.rejectedWith(NotFoundError, { id: 'security.user.not_found' });
+    });
+  });
+
+  describe('#createFirstAdmin', () => {
+    it('should reject if an admin already exists', () => {
+      const request = new Request(
+        {
+          controller: 'security',
+          action: 'createFirstAdmin',
+          _id: 'toto',
+          body: {content: {password: 'pwd'}}
+        });
+
+      kuzzle.adminExists.resolves(true);
+
+      return should(securityController.createFirstAdmin(request))
+        .be.rejectedWith(PreconditionError, {id: 'api.process.admin_exists'});
+    });
+
+    it('should create the admin user and not reset roles & profiles if not asked to', async () => {
+      const request = new Request({
+        _id: 'toto',
+        action: 'createFirstAdmin',
+        controller: 'security',
+      });
+
+      kuzzle.adminExists.resolves(false);
+
+      await securityController.createFirstAdmin(request);
+
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request, ['admin'], {});
+      should(resetRolesStub).not.called();
+      should(resetProfilesStub).not.called();
+      should(kuzzle.internalIndex.refreshCollection).not.called();
+    });
+
+    it('should create the admin user and reset roles & profiles if asked to', async () => {
+      const request = new Request({
+        _id: 'toto',
+        action: 'createFirstAdmin',
+        body: {content: {foo: 'bar'}},
+        controller: 'security',
+        reset: true,
+      });
+
+      kuzzle.adminExists.resolves(false);
+
+      await securityController.createFirstAdmin(request);
+
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request, ['admin'], request.body.content);
+
+      for (const [key, content] of kuzzle.config.security.standard.roles) {
+        should(resetRolesStub).calledWithMatch(
+          'core:security:role:createOrReplace',
+          key,
+          content);
+      }
+
+      for (const [key, content] of kuzzle.config.security.standard.profiles) {
+        should(resetRolesStub).calledWithMatch(
+          'core:security:profile:createOrReplace',
+          key,
+          content);
+      }
+
+      should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
     });
   });
 });
