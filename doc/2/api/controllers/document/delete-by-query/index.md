@@ -6,7 +6,7 @@ title: deleteByQuery
 
 # deleteByQuery
 
-Deletes documents matching the provided search query. 
+Deletes documents matching the provided search query.
 
 Documents removed that way trigger real-time notifications.
 
@@ -31,7 +31,7 @@ To remove all documents from a collection, use [collection:truncate](/core/2/api
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for][&source]
 Method: DELETE
 Body:
 ```
@@ -71,7 +71,7 @@ Body:
 ### Optional
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are removed from the search indexes
-
+- `source`: if set to `true` Kuzzle will return each deleted document body in the response.
 ---
 
 ## Body properties
@@ -82,7 +82,10 @@ Body:
 
 ## Response
 
-Returns a `ids` array containing the list of deleted document identifiers.
+Returns information about the deleted documents:
+
+- `ids`: an array containing the list of deleted documents identifier. Present only if `source` is either not set or set to false.
+- `documents`: an array containing the list of deleted documents source. Present only if `source` is set to `true`.
 
 ```js
 {
@@ -94,11 +97,21 @@ Returns a `ids` array containing the list of deleted document identifiers.
   "action": "deleteByQuery",
   "requestId": "<unique request identifier>",
   "result": {
+    // Present only if 'source' parameter is not set, or set to false.
     "ids": [
       "id 1",
       "id 2",
       "id ...",
       "id n"
+    ],
+    // Present only if 'source' parameter is set to true.
+    "documents": [
+     {
+      "_id": "<deleted document unique identifier>",
+      "_source": {
+        // document content
+      }
+     }
     ]
   }
 }
