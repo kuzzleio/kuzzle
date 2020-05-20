@@ -13,7 +13,7 @@ Plugin can automatically emit event. All those event are prefixed by the plugin 
 
 ## hook error
 
-When a hook function returns a rejected promise or throw an error, the event `hook:onError` is emitted.  
+When a plugin's hook function returns a rejected promise or throws an error, the event `hook:onError` is emitted.  
 
 Handlers attached to this event will receive the following arguments:
 
