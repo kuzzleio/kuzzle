@@ -11,7 +11,7 @@ order: 200
 
 ## hook error
 
-When a hook function returns a rejected promise or throw an error, the event `hook:onError` is emitted.  
+When a plugin's hook function returns a rejected promise or throws an error, the event `hook:onError` is emitted.  
 
 Handlers attached to this event will receive the following arguments:
 
@@ -22,7 +22,7 @@ Handlers attached to this event will receive the following arguments:
 | `error`      | `Error`  | Error object                                  |
 
 ::: info
-If a hook attached to the `hook:onError` event fail, it will not trigger another event to prevent infinite loop
+To prevent infinite loops, if a hook attached to the `hook:onError` event fails, it won't trigger any other events.
 :::
 
 ### Example
@@ -33,10 +33,10 @@ Consider a plugin with the following hooks:
 this.hooks = {
   // Each errored hook will trigger this method
   'hook:onError': (pluginName, event, error) => {
-    this.context.accessors.error(`${pluginName} hook on ${event} fail: ${error.message}`)
+    this.context.accessors.error(`${pluginName} hook on ${event} failed: ${error.message}`)
   },
 
-  // Each call to document:create will trigger this method who throws an error
+  // Each call to document:create will trigger this method, throwing an error
   'document:beforeCreate': async request => {
     throw new Error('The cake is a lie');
   }   
