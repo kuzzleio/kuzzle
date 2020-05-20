@@ -7,8 +7,6 @@ order: 200
 
 # Plugin Events
 
-Plugin can automatically emit event. All those event are prefixed by the plugin name.
-
 # Error Events
 
 ## hook error
