@@ -24,7 +24,7 @@ Handlers attached to this event will receive the following arguments:
 | `error`      | `Error`  | Error object                                  |
 
 ::: info
-If a hook attached to the `hook:onError` event fail, it will not trigger another event to prevent infinite loop
+To prevent infinite loops, if a hook attached to the `hook:onError` event fails, it won't trigger any other events.
 :::
 
 ### Example
