@@ -82,10 +82,12 @@ Body:
 
 ## Response
 
-Returns information about the deleted documents:
+Returns an object containing information about the deleted documents:
 
-- `ids`: an array containing the list of deleted documents identifier. Present only if `source` is either not set or set to false.
-- `documents`: an array containing the list of deleted documents source. Present only if `source` is set to `true`.
+<DeprecatedBadge version="2.2.1">
+- `ids`: an array containing the list of each deleted documents identifier.
+</DeprecatedBadge>
+- `documents` an array of the deleted documents. These contain their respective contents if the `source` is set to `true`.
 
 ```js
 {
@@ -97,21 +99,20 @@ Returns information about the deleted documents:
   "action": "deleteByQuery",
   "requestId": "<unique request identifier>",
   "result": {
-    // Present only if 'source' parameter is not set, or set to false.
+    "documents": [
+     {
+      "_id": "<deleted document unique identifier>",
+      "_source": {
+        // Document content, Present only if 'source' parameter is set to true.
+      }
+     }
+    ],
+    // Deprecated since 2.2.1, use the documents array instead.
     "ids": [
       "id 1",
       "id 2",
       "id ...",
       "id n"
-    ],
-    // Present only if 'source' parameter is set to true.
-    "documents": [
-     {
-      "_id": "<deleted document unique identifier>",
-      "_source": {
-        // document content
-      }
-     }
     ]
   }
 }
