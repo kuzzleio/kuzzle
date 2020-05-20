@@ -834,7 +834,7 @@ describe('DocumentController', () => {
     });
   });
 
-  describe('#deleteByQuery', () => {
+  describe.only('#deleteByQuery', () => {
     beforeEach(() => {
       documentController.publicStorage.deleteByQuery.resolves(({
         documents: [
@@ -862,11 +862,15 @@ describe('DocumentController', () => {
       should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
         request,
         [
-          { _id: 'id1', _source: '_source1' },
-          { _id: 'id2', _source: '_source2' }
+          { _id: 'id1', _source: undefined },
+          { _id: 'id2', _source: undefined }
         ]);
 
-      should(response).be.eql({ ids: ['id1', 'id2'] });
+      should(response).match({
+        documents: [
+          { _id: 'id1', _source: undefined },
+          { _id: 'id2', _source: undefined }
+        ]});
     });
 
     it('should call publicStorage deleteByQuery method, notify the changes and retrieve all sources', async () => {
@@ -889,7 +893,7 @@ describe('DocumentController', () => {
           { _id: 'id2', _source: '_source2' }
         ]);
 
-      should(response).be.eql({
+      should(response).match({
         documents: [
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }

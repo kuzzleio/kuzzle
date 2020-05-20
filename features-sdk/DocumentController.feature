@@ -452,7 +452,7 @@ Feature: Document Controller
       | index      | "nyc-open-data"                                   |
       | collection | "yellow-taxi"                                     |
       | body       | { "query": { "range": { "age": { "gt": 21 } } } } |
-    Then I should receive a "ids" array containing 2 elements
+    Then I should receive a "documents" array containing 2 elements
     And I count 1 documents matching:
       | age | 21 |
 
