@@ -57,8 +57,6 @@ URL: http://kuzzle:7512/<index>/<collection>/_search[?query=<string>][?from=<int
 Method: GET
 ```
 
-'/nyc-open-data/yellow-taxi/
-
 ### Other protocols
 
 ```js
