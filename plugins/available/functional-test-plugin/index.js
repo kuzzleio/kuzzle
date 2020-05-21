@@ -79,6 +79,9 @@ class FunctionalTestPlugin {
 
     this.pipes['plugin-functional-test-plugin:testPipesReturn'] =
       async name => `Hello, ${name}`;
+
+    // Pipe declared with a function name
+    this.pipes['server:afterNow'] = 'afterNowPipe';
   }
 
   init (config, context) {
@@ -115,10 +118,9 @@ class FunctionalTestPlugin {
   // pipes related methods =====================================================
 
   async pipesManage (request) {
-    const
-      payload = request.input.body,
-      state = request.input.args.state,
-      event = request.input.args.event;
+    const payload = request.input.body;
+    const state = request.input.args.state;
+    const event = request.input.args.event;
 
     this.activatedPipes[event] = {
       payload,
@@ -151,6 +153,17 @@ class FunctionalTestPlugin {
     }
 
     return documents;
+  }
+
+  async afterNowPipe (request) {
+    const pipe = this.activatedPipes['server:afterNow'];
+
+    if (pipe && pipe.state !== 'off') {
+      const response = request.response.result;
+      response.lyrics = 'The distant future, The year 2000. The humans are dead.';
+    }
+
+    return request;
   }
 
   /**
