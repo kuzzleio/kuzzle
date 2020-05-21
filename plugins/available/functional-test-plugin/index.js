@@ -1,6 +1,7 @@
-const
-  should = require('should'),
-   _ = require('lodash');
+'use strict';
+
+const should = require('should');
+const _ = require('lodash');
 
 class FunctionalTestPlugin {
   constructor () {
@@ -12,38 +13,72 @@ class FunctionalTestPlugin {
 
     this.controllers.constructors = { ESClient: 'testConstructorsESClient' };
 
-    this.routes.push({ verb: 'post', url: '/constructors/esclient/:index', controller: 'constructors', action: 'ESClient' });
+    this.routes.push({
+      action: 'ESClient',
+      controller: 'constructors',
+      url: '/constructors/esclient/:index',
+      verb: 'post',
+    });
 
     // context.secrets related declarations ====================================
 
     this.controllers.secrets = { test: 'testSecrets' };
 
-    this.routes.push({ verb: 'post', url: '/secrets', controller: 'secrets', action: 'test' })
+    this.routes.push({
+      action: 'test',
+      controller: 'secrets',
+      url: '/secrets',
+      verb: 'post',
+    });
 
     // pipes related declarations ==============================================
 
     this.activatedPipes = {};
 
     this.controllers.pipes = {
-      manage: 'pipesManage',
       deactivateAll: 'pipesDeactivateAll',
-      testReturn: 'pipesTestReturn'
+      manage: 'pipesManage',
+      testReturn: 'pipesTestReturn',
     };
 
-    this.routes.push({ verb: 'post', url: '/pipes/:event/:state', controller: 'pipes', action: 'manage' });
-    this.routes.push({ verb: 'delete', url: '/pipes', controller: 'pipes', action: 'deactivateAll' });
-    this.routes.push({ verb: 'post', url: '/pipes/test-return/:name', controller: 'pipes', action: 'testReturn' });
+    this.routes.push({
+      action: 'manage',
+      controller: 'pipes',
+      url: '/pipes/:event/:state',
+      verb: 'post',
+    });
+    this.routes.push({
+      action: 'deactivateAll',
+      controller: 'pipes',
+      url: '/pipes',
+      verb: 'delete',
+    });
+    this.routes.push({
+      action: 'testReturn',
+      controller: 'pipes',
+      url: '/pipes/test-return/:name',
+      verb: 'post',
+    });
 
-    this.pipes['generic:document:beforeWrite'] = (...args) => this.genericDocumentEvent('beforeWrite', ...args);
-    this.pipes['generic:document:afterWrite'] = (...args) => this.genericDocumentEvent('afterWrite', ...args);
-    this.pipes['generic:document:beforeUpdate'] = (...args) => this.genericDocumentEvent('beforeUpdate', ...args);
-    this.pipes['generic:document:afterUpdate'] = (...args) => this.genericDocumentEvent('afterUpdate', ...args);
-    this.pipes['generic:document:beforeGet'] = (...args) => this.genericDocumentEvent('beforeGet', ...args);
-    this.pipes['generic:document:afterGet'] = (...args) => this.genericDocumentEvent('afterGet', ...args);
-    this.pipes['generic:document:beforeDelete'] = (...args) => this.genericDocumentEvent('beforeDelete', ...args);
-    this.pipes['generic:document:afterDelete'] = (...args) => this.genericDocumentEvent('afterDelete', ...args);
+    this.pipes['generic:document:beforeWrite'] =
+      (...args) => this.genericDocumentEvent('beforeWrite', ...args);
+    this.pipes['generic:document:afterWrite'] =
+      (...args) => this.genericDocumentEvent('afterWrite', ...args);
+    this.pipes['generic:document:beforeUpdate'] =
+      (...args) => this.genericDocumentEvent('beforeUpdate', ...args);
+    this.pipes['generic:document:afterUpdate'] =
+      (...args) => this.genericDocumentEvent('afterUpdate', ...args);
+    this.pipes['generic:document:beforeGet'] =
+      (...args) => this.genericDocumentEvent('beforeGet', ...args);
+    this.pipes['generic:document:afterGet'] =
+      (...args) => this.genericDocumentEvent('afterGet', ...args);
+    this.pipes['generic:document:beforeDelete'] =
+      (...args) => this.genericDocumentEvent('beforeDelete', ...args);
+    this.pipes['generic:document:afterDelete'] =
+      (...args) => this.genericDocumentEvent('afterDelete', ...args);
 
-    this.pipes['plugin-functional-test-plugin:testPipesReturn'] = async name => `Hello, ${name}`;
+    this.pipes['plugin-functional-test-plugin:testPipesReturn'] =
+      async name => `Hello, ${name}`;
   }
 
   init (config, context) {
@@ -57,9 +92,9 @@ class FunctionalTestPlugin {
     const
       client = new this.context.constructors.ESClient(),
       esRequest = {
+        body: request.input.body,
         id: request.input.resource._id,
         index: request.input.resource.index,
-        body: request.input.body
       };
 
     const { body } = await client.index(esRequest);
@@ -86,8 +121,8 @@ class FunctionalTestPlugin {
       event = request.input.args.event;
 
     this.activatedPipes[event] = {
+      payload,
       state,
-      payload
     };
 
     return null;
@@ -101,7 +136,7 @@ class FunctionalTestPlugin {
     return null;
   }
 
-  async genericDocumentEvent (event, documents, request) {
+  async genericDocumentEvent (event, documents) {
     const pipe = this.activatedPipes[`generic:document:${event}`];
 
     if (!pipe || pipe.state === 'off') {
@@ -110,6 +145,7 @@ class FunctionalTestPlugin {
 
     for (const document of documents) {
       for (const [field, value] of Object.entries(pipe.payload)) {
+        /* eslint-disable-next-line no-eval */
         _.set(document, field, eval(value));
       }
     }
@@ -118,7 +154,8 @@ class FunctionalTestPlugin {
   }
 
   /**
-   * Tests that the context.accessors.trigger method returns the results of the pipe chain
+   * Tests that the context.accessors.trigger method returns the results of the
+   * pipe chain
    */
   async pipesTestReturn (request) {
     const helloName = await this.context.accessors.trigger(
