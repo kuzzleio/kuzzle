@@ -834,7 +834,7 @@ describe('DocumentController', () => {
     });
   });
 
-  describe.only('#deleteByQuery', () => {
+  describe('#deleteByQuery', () => {
     beforeEach(() => {
       documentController.publicStorage.deleteByQuery.resolves(({
         documents: [
