@@ -1,16 +1,17 @@
-const mappings = require('./mappings.json');
+// const mappings = require('./mappings.json');
 const { Application, errors } = require('../index');
 
 const app = new Application('omniscient');
 
-app.mappings = mappings;
-app.securities = './securities.json';
+// app.mappings = mappings;
+// app.securities = './securities.json';
 
 app.pipes = {
-  'server:afterNow': () => {
-    app.context.log.info(`Server INFO: ${app.config.name}`);
+  'server:afterNow': async request => {
+    app.context.log.info(`Server INFO: ${app.name}`);
 
-    return (new Date()).toUTCString();
+    request.result.now = (new Date()).toUTCString()
+    return request;
   },
   'auth:beforeLogin': () => {
     throw errors.BadRequestError('Invalid');
@@ -31,7 +32,7 @@ app.controllers = {
   }
 };
 
-app.context // null until app has started
-
 app.start()
-  .then(() => console.log('Application started'))
+  .then(() => {
+    console.log('Application started')
+  })
