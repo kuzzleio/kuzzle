@@ -623,6 +623,7 @@ describe('#base/native controller', () => {
     });
 
     it('should extract search params', () => {
+      request.context = {connection: {protocol:'http', misc:{verb:'GET'}}};
       const
         { from, size, scrollTTL, query, searchBody } = nativeController.getSearchParams(request);
 
@@ -634,8 +635,8 @@ describe('#base/native controller', () => {
     });
 
     it('should extract search params', () => {
-      request.input.args.verb = 'GET';
-      request.input.args.query = '{"foo":"bar"}';
+      request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
+      request.input.args.query = '{"query":{"foo":"bar"}}';
       const
         { from, size, scrollTTL, query, searchBody } = nativeController.getSearchParams(request);
 
@@ -647,14 +648,15 @@ describe('#base/native controller', () => {
     });
 
     it('should extract searchBody param', () => {
-      request.input.args.verb = 'GET';
-      request.input.args.query = '{"foo":"bar"}';
+      request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
+      request.input.args.query = '{"query":{"foo":"bar"}}';
       const searchBody = nativeController.getSearchBody(request);
 
       should(searchBody).be.eql({ query: { foo: 'bar' } });
     });
 
     it('should extract searchBody param', () => {
+      request.context = { connection: { protocol: 'http', misc: { verb: 'POST' } } };
       const searchBody = nativeController.getSearchBody(request);
 
       should(searchBody).be.eql({ query: { foo: 'bar' } });
@@ -663,6 +665,7 @@ describe('#base/native controller', () => {
     it('should have have default value', () => {
       request.input.args = {};
       request.input.body = {};
+      request.context = { connection: { protocol: 'http', misc: { verb: 'POST' } } };
 
       const
         { from, size, scrollTTL, query, searchBody } = nativeController.getSearchParams(request);
