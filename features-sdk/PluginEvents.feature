@@ -288,3 +288,11 @@ Feature: Plugin Events
     When I delete the document "bus-3"
     Then I should receive a "string" result equals to "confidential"
     Then The document "bus-3-vn" should not exist
+
+  # pipes declared with a function name
+  @events
+  Scenario: Trigger a pipe declared with a function name
+    Given I "activate" the pipe on "server:afterNow" without changes
+    When I successfully call the route "server":"now"
+    Then I should receive a result matching:
+      | lyrics     | "_STRING_"    |
