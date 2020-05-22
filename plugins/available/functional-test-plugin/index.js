@@ -1,9 +1,11 @@
-const
-  should = require('should'),
-   _ = require('lodash');
+const should = require('should');
+const _ = require('lodash');
 
 class FunctionalTestPlugin {
   constructor () {
+    this.name = 'functional-test-plugin';
+    this.kuzzleVersion = '>= 2.0.0';
+
     this.controllers = {};
     this.routes = [];
     this.pipes = {};

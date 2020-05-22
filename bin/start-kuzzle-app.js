@@ -1,10 +1,16 @@
-// const mappings = require('./mappings.json');
 const { Application, errors } = require('../index');
 
 const app = new Application('omniscient');
 
-// app.mappings = mappings;
-// app.securities = './securities.json';
+app.version = '1.42.3'
+
+app.mappings = {
+  'nyc-open-data': {
+    'green-taxi': {
+      'dynamic': false
+    }
+  }
+};
 
 app.pipes = {
   'server:afterNow': async request => {
@@ -24,6 +30,8 @@ app.hooks = {
   }
 };
 
+app.config.realtime.pcreSupport = true
+
 app.controllers = {
   'customer': {
     'create': async request => {
@@ -35,4 +43,4 @@ app.controllers = {
 app.start()
   .then(() => {
     console.log('Application started')
-  })
+  });
