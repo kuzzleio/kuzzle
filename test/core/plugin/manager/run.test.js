@@ -8,7 +8,6 @@ const ElasticsearchClientMock = require(`${root}/test/mocks/service/elasticsearc
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
 const sinon = require('sinon');
 const {
-  Request,
   errors: {
     KuzzleError,
     PluginImplementationError,
@@ -159,14 +158,16 @@ describe('PluginsManager.run', () => {
       kuzzle.pluginsManager = pluginsManager;
     });
 
-    it('should attach pipes event with method name', async () => {
+    it('should attach pipes bound to the plugin object using method names', async () => {
       plugin.object.pipes = {
         'foo:bar': 'foo',
         'bar:foo': 'bar',
       };
 
-      plugin.object.foo = sinon.stub().callsArgWith(1, null, new Request({}));
-      plugin.object.bar = sinon.stub().callsArgWith(1, null, new Request({}));
+      plugin.object.foo = sinon.stub().callsFake(async function () {
+        should(this).be.eql(plugin.object);
+      });
+      plugin.object.bar = sinon.stub();
 
       await pluginsManager.run();
       await kuzzle.pipe('foo:bar');
@@ -175,9 +176,9 @@ describe('PluginsManager.run', () => {
       should(plugin.object.bar).not.be.called();
     });
 
-    it('should attach pipes event with function', async () => {
-      const bar = sinon.stub().callsArgWith(1, null, new Request({}));
-      const foo = sinon.stub().callsArgWith(1, null, new Request({}));
+    it('should attach pipes event with a function', async () => {
+      const bar = sinon.stub().resolves();
+      const foo = sinon.stub().callsArgWith(1, null);
 
       plugin.object.pipes = {
         'foo:bar': foo,
@@ -197,8 +198,8 @@ describe('PluginsManager.run', () => {
         'bar:foo': 'bar',
       };
 
-      plugin.object.foo = sinon.stub().callsArgWith(1, null, new Request({}));
-      plugin.object.bar = sinon.stub().callsArgWith(1, null, new Request({}));
+      plugin.object.foo = sinon.stub().resolves();
+      plugin.object.bar = sinon.stub().callsArgWith(1, null);
 
       await pluginsManager.run();
       await kuzzle.pipe('foo:bar');
@@ -213,35 +214,39 @@ describe('PluginsManager.run', () => {
         'bar:foo': ['bar'],
       };
 
-      plugin.object.foo = sinon.stub().callsArgWith(1, null, new Request({}));
-      plugin.object.bar = sinon.stub().callsArgWith(1, null, new Request({}));
-      plugin.object.baz = sinon.stub().callsArgWith(1, null, new Request({}));
+      plugin.object.foo = sinon.stub().callsFake(async function () {
+        should(this).eql(plugin.object);
+      });
+      plugin.object.bar = sinon.stub().resolves();
+      plugin.object.baz = sinon.stub().callsFake(function (arg, cb) {
+        should(this).eql(plugin.object);
+        cb(null);
+      });
 
       await pluginsManager.run();
       await kuzzle.pipe('foo:bar');
 
       should(plugin.object.foo).be.calledOnce();
-      should(plugin.object.bar).not.be.called();
       should(plugin.object.baz).be.calledOnce();
+      should(plugin.object.bar).not.be.called();
     });
 
-    it('should attach multi-target event to pipes with function', () => {
-      const bar = sinon.stub().callsArgWith(1, null, new Request({}));
-      const foo = sinon.stub().callsArgWith(1, null, new Request({}));
-      const baz = sinon.stub().callsArgWith(1, null, new Request({}));
+    it('should attach multi-target event to pipes with function', async () => {
+      const bar = sinon.stub().resolves();
+      const foo = sinon.stub().resolves();
+      const baz = sinon.stub().resolves();
 
       plugin.object.pipes = {
         'foo:bar': [foo, baz],
         'bar:foo': [bar],
       };
 
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(() => {
-          should(foo).be.calledOnce();
-          should(baz).be.calledOnce();
-          should(bar).not.be.called();
-        });
+      await pluginsManager.run();
+      await kuzzle.pipe('foo:bar');
+
+      should(foo).be.calledOnce();
+      should(baz).be.calledOnce();
+      should(bar).not.be.called();
     });
 
     it('should throw if a pipe target is not a function and not a method name', () => {
@@ -295,7 +300,7 @@ describe('PluginsManager.run', () => {
       kuzzle.config.plugins.common.pipeWarnTime = 10;
 
       const fooStub = sinon.stub(plugin.object, 'foo').callsFake((ev, cb) => {
-        setTimeout(() => cb(null, new Request({})), 11);
+        setTimeout(() => cb(null), 11);
       });
 
       await pluginsManager.run();
@@ -308,35 +313,18 @@ describe('PluginsManager.run', () => {
       kuzzle.config.plugins.common.pipeWarnTime = warnTime;
     });
 
-    it('should accept promises for pipes', () => {
-      plugin.object.pipes = {
-        'foo:bar': 'foo'
-      };
-      const request = new Request({});
-
-      plugin.object.foo = sinon.stub().resolves(request);
-
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(response => {
-          should(plugin.object.foo).be.calledOnce();
-          should(response.internalId).eql(request.internalId);
-        });
-    });
-
-    it('should accept promises that resolve to anything for pipes', () => {
+    it('should accept promises for pipes', async () => {
       plugin.object.pipes = {
         'foo:bar': 'foo'
       };
 
-      plugin.object.foo = sinon.stub().resolves({ result: 'flavie' });
+      plugin.object.foo = sinon.stub().resolves('foobar');
 
-      return pluginsManager.run()
-        .then(() => kuzzle.pipe('foo:bar'))
-        .then(response => {
-          should(plugin.object.foo).be.calledOnce();
-          should(response.result).eql('flavie');
-        });
+      await pluginsManager.run();
+      const response = await kuzzle.pipe('foo:bar');
+
+      should(plugin.object.foo).be.calledOnce();
+      should(response).eql('foobar');
     });
   });
 
