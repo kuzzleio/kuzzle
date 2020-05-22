@@ -77,15 +77,15 @@ describe('Test: security controller - users', () => {
       strategyValidateStub = sinon.stub().resolves();
 
       kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('foo', 'create')
+        .withArgs('someStrategy', 'create')
         .returns(strategyCreateStub);
 
       kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('foo', 'exists')
+        .withArgs('someStrategy', 'exists')
         .returns(strategyExistsStub);
 
       kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('foo', 'validate')
+        .withArgs('someStrategy', 'validate')
         .returns(strategyValidateStub);
     });
 
@@ -158,263 +158,271 @@ describe('Test: security controller - users', () => {
       should(strategyCreateStub).not.called();
     });
 
-    it('should intercept errors during deletion of a rollback phase', done => {
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+    it('should intercept errors during deletion of a rollback phase', async () => {
+      kuzzle.pluginsManager.listStrategies.returns(['foo', 'someStrategy']);
 
+      // "foo" should be created before "someStrategy": we make the stub
+      // succeeds when the "create" method is invoked, and fail when its
+      // "delete" one is invoked
+      const fooDeleteStub = sinon.stub().rejects(new Error('foo delete error'));
       kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'validate')
+        .withArgs('foo', 'validate')
         .returns(sinon.stub().resolves());
       kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'exists')
+        .withArgs('foo', 'exists')
         .returns(sinon.stub().resolves(false));
       kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'create')
-        .returns(sinon.stub().rejects(new Error('some error')));
+        .withArgs('foo', 'create')
+        .returns(sinon.stub().resolves());
       kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'delete')
-        .returns(sinon.stub().rejects(new Error('some error')));
+        .withArgs('foo', 'delete')
+        .returns(fooDeleteStub);
 
-      securityController.createUser(request)
-        .then(() => done('Expected promise to fail'))
-        .catch(error => {
-          try {
-            should(error).be.instanceof(PluginImplementationError);
-            should(error.id).eql('plugin.runtime.unexpected_error');
-            should(kuzzle.repositories.user.delete)
-              .calledOnce()
-              .calledWithMatch({ _id: 'test' });
+      strategyCreateStub.rejects(new Error('oh noes'));
 
-            done();
-          }
-          catch (e) {
-            done(e);
-          }
+      request.input.body.credentials.foo = { firstname: 'X Æ A-12' };
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .rejectedWith(PluginImplementationError, {
+          id: 'plugin.runtime.unexpected_error',
+          message: /.*ohnoes\nfoo delete error.*/,
         });
+
+      should(fooDeleteStub).calledWithMatch(
+        request,
+        request.input.resource._id,
+        'foo');
     });
   });
 
   describe('#updateUserMapping', () => {
     const foo = {foo: 'bar'};
 
-    it('should throw a BadRequestError if the body is missing', () => {
-      return should(() => {
-        securityController.updateUserMapping(request);
-      }).throw(BadRequestError, { id: 'api.assert.body_required'});
+    it('should reject if the body is missing', () => {
+      return should(securityController.updateUserMapping(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required'});
     });
 
-    it('should update the user mapping', () => {
+    it('should update the user mapping', async () => {
       request.input.body = foo;
       kuzzle.internalIndex.updateMapping.resolves(foo);
 
-      return securityController.updateUserMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.updateMapping)
-            .be.calledOnce()
-            .be.calledWith('users', request.input.body);
+      const response = await securityController.updateUserMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(kuzzle.internalIndex.updateMapping)
+        .be.calledOnce()
+        .be.calledWith('users', request.input.body);
+
+      should(response).eql(foo);
     });
   });
 
   describe('#getUserMapping', () => {
-    it('should fulfill with a response object', () => {
+    it('should fulfill with a response object', async () => {
       kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
 
-      return securityController.getUserMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.getMapping)
-            .be.calledOnce()
-            .be.calledWith('users');
+      const response = await securityController.getUserMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match({ mapping: { foo: 'bar' } });
-        });
+      should(kuzzle.internalIndex.getMapping)
+        .be.calledOnce()
+        .be.calledWith('users');
+
+      should(response).match({ mapping: { foo: 'bar' } });
     });
   });
 
   describe('#getUser', () => {
-    it('should throw an error if no id is given', () => {
-      return should(() => {
-        securityController.getUser(new Request({}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.missing_argument',
-        message: 'Missing argument "_id".'});
+    it('should reject if no id is given', () => {
+      return should(securityController.getUser(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should reject with NotFoundError when the user is not found', () => {
-      kuzzle.repositories.user.load.resolves(null);
+    it('should load and return the requested user', async () => {
+      const user = new User();
 
-      return should(securityController.getUser(new Request({_id: 'i.dont.exist'})))
-        .be.rejectedWith(NotFoundError, { id: 'security.user.not_found'});
+      user._id = 'foo';
+      user._source = { bar: 'baz' };
+
+      request.input.resource._id = 'foo';
+
+      kuzzle.ask
+        .withArgs('core:security:user:get', request.input.resource._id)
+        .resolves(user);
+
+      const response = await securityController.getUser(request);
+
+      should(response).match({
+        _id: 'foo',
+        _source: {bar: 'baz'},
+      });
+    });
+
+    it('should forward errors from the security module', () => {
+      request.input.resource._id = 'foo';
+
+      const error = new Error('oh noes');
+
+      kuzzle.ask
+        .withArgs('core:security:user:get', request.input.resource._id)
+        .rejects(error);
+
+      return should(securityController.get(request)).rejectedWith(error);
     });
   });
 
   describe('#mGetUsers', () => {
-    it('should throw an error if no ids are given', () => {
-      return should(() => securityController.mGetUsers(new Request({}))
-        .throw(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "ids".'}));
-    });
+    it('should forward to the generic _mDelete method', async () => {
+      sinon.stub(securityController, '_mDelete').resolves('foobar');
 
-    it('should not throw if ids are given as a body array', () => {
-      kuzzle.repositories.user.loadMultiFromDatabase.resolves([
-        {_id: 'test', profileIds: ['profile1']}
-      ]);
+      await should(securityController.mGetUsers(request)).fulfilledWith('foobar');
 
-      should(securityController.mGetUsers(new Request({
-        body: {
-          ids: ['user1', 'user2']
-        }
-      }))).not.throw();
-    });
-
-    it('should not throw if ids are given as string', () => {
-      kuzzle.repositories.user.loadMultiFromDatabase.resolves([
-        { _id: 'test', profileIds: ['profile1'] }
-      ]);
-
-      should(securityController.mGetUsers(new Request({
-        ids: 'user1,user2'
-      }
-      ))).not.throw();
+      should(securityController._mDelete).calledWith('user', request);
     });
   });
 
   describe('#searchUsers', () => {
-    it('should return a valid responseObject', () => {
-      request = new Request({
-        body: { query: {foo: 'bar' }},
-        from: 13,
-        size: 42,
-        scroll: 'foo'
-      });
+    const searchEvent = 'core:security:user:search';
+    let searchStub;
 
-      kuzzle.repositories.user.search.resolves({
-        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
-        total: 2,
-        scrollId: 'foobar'
-      });
+    beforeEach(() => {
+      request.input.body = { query: {foo: 'bar' } };
+      request.input.args.from = 13;
+      request.input.args.size = 42;
+      request.input.args.scroll = 'foo';
 
-      return securityController.searchUsers(request)
-        .then(response => {
-          should(kuzzle.repositories.user.search).be.calledWithMatch({query: {foo: 'bar'}}, {from: 13, size: 42, scroll: 'foo'});
-          should(response).be.instanceof(Object);
-          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
+      searchStub = kuzzle.ask
+        .withArgs(searchEvent, sinon.match.any, sinon.match.object)
+        .resolves({
+          hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
+          total: 2,
+          scrollId: 'foobar'
         });
     });
 
-    it('should handle empty body requests', () => {
-      kuzzle.repositories.user.search.resolves({
-        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
-        total: 2,
-        scrollId: 'foobar'
-      });
+    it('should return a valid responseObject', async () => {
+      const response = await securityController.searchUsers(request);
 
-      return securityController.searchUsers(new Request({}))
-        .then(response => {
-          should(kuzzle.repositories.user.search).be.calledWithMatch({}, {});
-          should(response).be.instanceof(Object);
-          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
-        });
+      should(searchStub).be.calledWithMatch(
+        searchEvent,
+        request.input.body,
+        {from: 13, size: 42, scroll: 'foo'});
+
+      should(response).match({
+        hits: [{_id: 'admin'}],
+        scrollId: 'foobar',
+        total: 2,
+      });
     });
 
-    it('should pass allowed `aggregations` and `highlight` arguments', () => {
-      kuzzle.repositories.user.search.resolves({
-        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
-        total: 2,
-        scrollId: 'foobar'
-      });
+    it('should handle empty body requests', async () => {
+      request.input.body = null;
 
-      request = new Request({
+      const response = await securityController.searchUsers(new Request({}));
+
+      should(searchStub).be.calledWithMatch(searchEvent, {}, {});
+
+      should(response).match({
+        hits: [{_id: 'admin'}],
+        scrollId: 'foobar',
+        total: 2,
+      });
+    });
+
+    it('should allow `aggregations` and `highlight` arguments', async () => {
+      request.input.body.aggregations = 'aggregations';
+
+      await securityController.searchUsers(new Request({
+        body: { aggregations: 'aggregations' }
+      }));
+
+      should(searchStub).be.calledWithMatch(
+        searchEvent,
+        { aggregations: 'aggregations' },
+        { from: 0, size: 10, scroll: undefined });
+
+      // highlight only
+      searchStub.resetHistory();
+      await securityController.searchUsers(new Request({
         body: {
-          aggregations: 'aggregations'
+          highlight: 'highlight'
         }
-      });
+      }));
 
-      return securityController.searchUsers(request)
-        .then(() => {
-          should(kuzzle.repositories.user.search)
-            .be.calledWithMatch({ aggregations: 'aggregations' });
+      should(searchStub).be.calledWithMatch(
+        searchEvent,
+        { highlight: 'highlight' },
+        { from: 0, size: 10, scroll: undefined });
 
-          // highlight only
-          return securityController.searchUsers(new Request({
-            body: {
-              highlight: 'highlight'
-            }
-          }));
-        })
-        .then(() => {
-          should(kuzzle.repositories.user.search)
-            .be.calledWithMatch({ highlight: 'highlight' });
+      // all in one
+      searchStub.resetHistory();
+      await securityController.searchUsers(new Request({
+        body: {
+          query: { match_all: {} },
+          aggregations: 'aggregations',
+          highlight: 'highlight'
+        }
+      }));
 
-          // all in one
-          return securityController.searchUsers(new Request({
-            body: {
-              query: { match_all: {} },
-              aggregations: 'aggregations',
-              highlight: 'highlight'
-            }
-          }));
-        })
-        .then(() => {
-          should(kuzzle.repositories.user.search).be.calledWithMatch(
-            {
-              aggregations: 'aggregations',
-              highlight: 'highlight',
-              query: { match_all: {} },
-            });
+      should(searchStub).be.calledWithMatch(
+        searchEvent,
+        {
+          aggregations: 'aggregations',
+          highlight: 'highlight',
+          query: { match_all: {} },
+        },
+        { from: 0, size: 10, scroll: undefined });
+    });
+
+    it('should reject if the number of documents per page exceeds server limits', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+      request = new Request({ size: 10 });
+
+      return should(securityController.searchUsers(request))
+        .rejectedWith(SizeLimitError, {
+          id: 'services.storage.get_limit_exceeded'
         });
     });
 
-    it('should throw an error if the number of documents per page exceeds server limits', () => {
-      kuzzle.config.limits.documentsFetchCount = 1;
-
-      request = new Request({
-        body: {policies: ['role1']},
-        from: 0,
-        size: 10
-      });
-
-      return should(() => securityController.searchUsers(request))
-        .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
-    });
-
-    it('should reject an error in case of error', () => {
+    it('should forward a security module exception', () => {
       const error = new Error('Mocked error');
-      kuzzle.repositories.user.search.rejects(error);
+      searchStub.rejects(error);
 
-      return should(securityController.searchUsers(new Request({body: {}})))
+      return should(securityController.searchUsers(request))
         .be.rejectedWith(error);
     });
   });
 
   describe('#scrollUsers', () => {
-    it('should throw if no scrollId is provided', () => {
-      should(() => securityController.scrollUsers(new Request({controller: 'security', action: 'scrollUsers'})))
-        .throw(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "scrollId".'
+    const scrollEvent = 'core:security:user:scroll';
+    let scrollStub;
+
+    beforeEach(() => {
+      request.input.args.scrollId = 'foobar';
+      scrollStub = kuzzle.ask
+        .withArgs(scrollEvent, sinon.match.string, sinon.match.string)
+        .resolves({
+          hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
+          total: 2,
+          scrollId: 'foobar'
         });
     });
 
-    it('should reformat search results correctly', () => {
-      request = new Request({scrollId: 'foobar'});
+    it('should reject if no scrollId is provided', () => {
+      request.input.args.scrollId = null;
 
-      kuzzle.repositories.user.scroll.resolves({
-        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
+      return should(securityController.scrollUsers(request))
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+    });
+
+    it('should reformat search results correctly', async () => {
+      const response = await securityController.scrollUsers(request);
+
+      should(scrollStub).be.calledWith(scrollEvent, 'foobar', undefined);
+      should(response).match({
+        hits: [{_id: 'admin'}],
+        scrollId: 'foobar',
         total: 2,
-        scrollId: 'foobar'
       });
-
-      return securityController.scrollUsers(request)
-        .then(response => {
-          should(kuzzle.repositories.user.scroll).be.calledWithMatch('foobar', undefined);
-          should(response).be.instanceof(Object);
-          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
-        });
     });
 
     it('should handle the scroll argument', () => {
