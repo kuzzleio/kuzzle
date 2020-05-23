@@ -1,6 +1,5 @@
 'use strict';
 
-const Bluebird = require('bluebird');
 const should = require('should');
 const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
@@ -8,7 +7,6 @@ const {
   Request,
   errors: {
     BadRequestError,
-    NotFoundError,
     PluginImplementationError,
     SizeLimitError,
     PreconditionError
@@ -24,20 +22,18 @@ describe('Test: security controller - users', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
     securityController = new SecurityController(kuzzle);
-    request = new Request({controller: 'security'});
-    kuzzle.internalIndex.getMapping.resolves({
-      internalIndex: {
-        mappings: {
-          users: {
-            properties: {}
-          }
-        }
-      }
-    });
-    kuzzle.internalIndex.get.resolves({});
+    request = new Request(
+      {controller: 'security'},
+      {user: new User()});
+
+    // Random number chosen by fair dice roll. Guaranteed to be random.
+    // (xkcd #221)
+    request.context.user._id = '4';
   });
 
+  // aka "The Big One"
   describe('#persistUser', () => {
     const createEvent = 'core:security:user:create';
     const deleteEvent = 'core:security:user:delete';
@@ -425,562 +421,555 @@ describe('Test: security controller - users', () => {
       });
     });
 
-    it('should handle the scroll argument', () => {
-      request = new Request({scrollId: 'foobar', scroll: 'qux'});
+    it('should handle the scroll argument', async () => {
+      request.input.args.scroll = 'qux';
 
-      kuzzle.repositories.user.scroll.resolves({
-        hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
+      const response = await securityController.scrollUsers(request);
+
+      should(scrollStub).be.calledWith(scrollEvent, 'foobar', 'qux');
+      should(response).match({
+        hits: [{_id: 'admin'}],
+        scrollId: 'foobar',
         total: 2,
-        scrollId: 'foobar'
       });
-
-      return securityController.scrollUsers(request)
-        .then(response => {
-          should(kuzzle.repositories.user.scroll).be.calledWithMatch('foobar', 'qux');
-          should(response).be.instanceof(Object);
-          should(response).match({hits: [{_id: 'admin'}], total: 2, scrollId: 'foobar'});
-        });
     });
   });
 
   describe('#deleteUser', () => {
-    it('should return a valid response', () => {
-      kuzzle.repositories.user.delete.resolves({_id: 'test'});
+    const deleteEvent = 'core:security:user:delete';
+    let deleteStub;
 
-      return securityController.deleteUser(new Request({ _id: 'test' }))
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response._id).be.exactly('test');
-        });
+    beforeEach(() => {
+      deleteStub = kuzzle.ask
+        .withArgs(deleteEvent, sinon.match.string, sinon.match.object)
+        .resolves();
+
+      request.input.resource._id = 'test';
     });
 
-    it('should throw an error when no id is given', async () => {
-      const promise = securityController.deleteUser(new Request({}));
+    it('should return a valid response', async () => {
+      const response = await securityController.deleteUser(request);
 
-      await should(promise).be.rejectedWith(BadRequestError, {
-        id: 'api.assert.missing_argument',
-        message: 'Missing argument "_id".'
+      should(deleteStub).calledWithMatch(deleteEvent, 'test', {
+        refresh: 'wait_for',
       });
+
+      should(response._id).be.exactly('test');
     });
 
-    it('should reject an error in case of error', () => {
+    it('should reject if no id is given', async () => {
+      await should(securityController.deleteUser(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "_id".'
+        });
+
+      should(deleteStub).not.called();
+    });
+
+    it('should forward exceptions from the security module', () => {
       const error = new Error('Mocked error');
-      kuzzle.repositories.user.delete.rejects(error);
+      deleteStub.rejects(error);
 
       return should(securityController.deleteUser(new Request({_id: 'test'})))
         .be.rejectedWith(error);
     });
 
-    it('should delete user credentials', () => {
-      const
-        existsMethod = sinon.stub().resolves(true),
-        deleteMethod = sinon.stub().resolves();
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-      kuzzle.repositories.user.delete.resolves({_id: 'test'});
+    it('should handle the refresh option', async () => {
+      request.input.args.refresh = false;
 
-      kuzzle.pluginsManager.getStrategyMethod
-        .onFirstCall().returns(existsMethod)
-        .onSecondCall().returns(deleteMethod);
+      await securityController.deleteUser(request);
 
-      return securityController.deleteUser(new Request({ _id: 'test' }))
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response._id).be.exactly('test');
-        });
-    });
-
-    it('should forward refresh option', () => {
-      kuzzle.repositories.user.delete.resolves({_id: 'test'});
-
-      return securityController.deleteUser(new Request({ _id: 'test', refresh: 'wait_for' }))
-        .then(() => {
-          const options = kuzzle.repositories.user.delete.firstCall.args[1];
-          should(options).match({
-            refresh: 'wait_for'
-          });
-        });
-
+      should(deleteStub).calledWithMatch(deleteEvent, 'test', {
+        refresh: 'false',
+      });
     });
   });
 
   describe('#createUser', () => {
-    it('should return a valid response', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
-      kuzzle.repositories.user.hydrate.resolves();
+    // api.security._persistUser has its own extensive tests above
+    const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
 
-      return securityController.createUser(new Request({
-        _id: 'test',
-        body: {
-          content: {name: 'John Doe', profileIds: ['anonymous']}
-        }
-      }))
-        .then(response => {
-          should(kuzzle.repositories.user.persist).be.calledOnce();
-          should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
-          should(response).be.instanceof(Object);
-          should(response).be.match({ _id: 'test', _source: {} });
+    beforeEach(() => {
+      sinon.stub(securityController, '_persistUser');
+      request.input.resource._id = 'test';
+      request.input.body = {
+        content: { name: 'John Doe', profileIds: ['default'] }
+      };
+    });
+
+    it('should return a valid response', async () => {
+      const response = await securityController.createUser(request);
+
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request, ['default'], { name: 'John Doe' });
+
+      should(securityController._persistUser.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
+    });
+
+    it('should reject if no body is provided', async () => {
+      request.input.body = null;
+
+      await should(securityController.createUser(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
+
+      should(securityController._persistUser).not.called();
+    });
+
+    it('should reject if no profileId is given', async () => {
+      delete request.input.body.content.profileIds;
+
+      await should(securityController.createUser(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "body.content.profileIds".'
         });
+
+      should(securityController._persistUser).not.called();
     });
 
-    it('should compute a user id if none is provided', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.repositories.user.fromDTO.callsFake((...args) => Bluebird.resolve(args[0]));
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
+    it('should reject if profileIds is not an array', async () => {
+      request.input.body.content.profileIds = {};
 
-      return securityController.createUser(new Request({
-        body: {
-          content: {
-            name: 'John Doe',
-            profileIds: ['anonymous']
-          }
-        }
-      }))
-        .then(response => {
-          should(kuzzle.repositories.user.persist)
-            .be.calledOnce();
-          should(kuzzle.repositories.user.persist.firstCall.args[0]._id)
-            .match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-
-          should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {} });
-          should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
+      await should(securityController.createUser(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.invalid_type',
+          message: 'Wrong type for argument "body.content.profileIds" (expected: array)'
         });
-    });
 
-    it('should reject an error if user already exists', () => {
-      kuzzle.repositories.user.load.resolves({_id: 'test'});
-
-      return should(securityController.createUser(new Request({
-        _id: 'test',
-        body: {
-          content: {name: 'John Doe', profileIds: ['anonymous']}
-        }
-      }))).be.rejectedWith(PreconditionError, { id: 'security.user.already_exists'});
-    });
-
-    it('should throw an error if no profile is given', () => {
-      return should(() => {
-        securityController.createUser(new Request({body: {content: {}}}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.missing_argument',
-        message: 'Missing argument "body.content.profileIds".'
-      });
-    });
-
-    it('should throw an error if profileIds is not an array', () => {
-      return should(() => {
-        securityController.createUser(new Request({body: {content: {profileIds: 'notAnArray'}}}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.invalid_type',
-        message: 'Wrong type for argument "body.content.profileIds" (expected: array)'
-      });
-    });
-
-    it('should forward refresh option', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
-      kuzzle.repositories.user.hydrate.resolves();
-
-      return securityController.createUser(new Request({
-        _id: 'test',
-        body: {
-          content: {name: 'John Doe', profileIds: ['anonymous']}
-        },
-        refresh: 'wait_for'
-      }))
-        .then(() => {
-          const options = kuzzle.repositories.user.persist.firstCall.args[1];
-          should(options).match({
-            database: {
-              refresh: 'wait_for'
-            }
-          });
-        });
+      should(securityController._persistUser).not.called();
     });
   });
 
   describe('#createRestrictedUser', () => {
-    it('should return a valid response', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
-      kuzzle.repositories.user.hydrate.resolves();
+    // api.security._persistUser has its own extensive tests above
+    const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
 
-      return securityController.createRestrictedUser(new Request({
-        body: {content: {_id: 'test', name: 'John Doe'}}
-      }), {})
-        .then(response => {
-          should(kuzzle.repositories.user.persist).be.calledOnce();
-          should(response.userContext).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {} });
-          should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
-        });
+    beforeEach(() => {
+      sinon.stub(securityController, '_persistUser');
+      request.input.resource._id = 'test';
+      request.input.body = {
+        content: { name: 'John Doe' }
+      };
+
+      kuzzle.config.security.restrictedProfileIds = [ 'foo', 'bar' ];
     });
 
-    it('should compute a user id if none is provided', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
-      kuzzle.repositories.user.fromDTO.callsFake((...args) => Bluebird.resolve(args[0]));
+    it('should return a valid response', async () => {
+      const response = await securityController.createRestrictedUser(request);
 
-      return securityController.createRestrictedUser(new Request({ body: { content: { name: 'John Doe' } } }))
-        .then(response => {
-          should(kuzzle.repositories.user.persist).be.calledOnce();
-          should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {} });
-          should(kuzzle.repositories.user.persist.firstCall.args[0]._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-          should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'create'}});
-        });
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(
+          request,
+          kuzzle.config.security.restrictedProfileIds,
+          { name: 'John Doe' });
+
+      should(securityController._persistUser.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
     });
 
-    it('should throw an error if a profile is given', () => {
-      return should(() => {
-        securityController.createRestrictedUser(new Request({ body: { content: { profileIds: ['foo'] } } }));
-      }).throw(BadRequestError, {
-        id: 'api.assert.forbidden_argument',
-        message: 'The argument "body.content.profileIds" is not allowed by this API action.'
-      });
+    it('should reject if profileIds are given', async () => {
+      request.input.body.profileIds = [ 'ohnoes' ];
+
+      await should(securityController.createRestrictedUser(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.forbidden_argument',
+          message: 'The argument "body.content.profileIds" is not allowed by this API action.'
+        });
+
+      should(securityController._persistUser).not.called();
     });
 
-    it('should forward refresh option', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
-      kuzzle.repositories.user.hydrate.resolves();
+    it('should allow the request to not have a body content', async () => {
+      request.input.body = null;
 
-      return securityController.createRestrictedUser(new Request({
-        body: {content: {_id: 'test', name: 'John Doe'}},
-        refresh: 'wait_for'
-      }))
-        .then(() => {
-          const options = kuzzle.repositories.user.persist.firstCall.args[1];
-          should(options).match({
-            database: {
-              refresh: 'wait_for'
-            }
-          });
-        });
+      const response = await securityController.createRestrictedUser(request);
+
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(
+          request,
+          kuzzle.config.security.restrictedProfileIds,
+          {});
+
+      should(securityController._persistUser.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
     });
   });
 
   describe('#updateUser', () => {
-    it('should return a valid response', () => {
-      kuzzle.repositories.user.toDTO.returns({_id: 'test'});
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
+    const updateEvent = 'core:security:user:update';
+    let updateStub;
+    let updatedUser;
 
-      return securityController.updateUser(new Request({ _id: 'test', body: { foo: 'bar' } }))
-        .then(response => {
-          should(kuzzle.repositories.user.persist).be.calledOnce();
-          should(response).be.instanceof(Object);
-          should(response).be.match({_id: 'test', _source: {} });
-          should(kuzzle.repositories.user.persist.firstCall.args[1]).match({database: {method: 'update'}});
+    beforeEach(() => {
+      request.input.resource._id = 'test';
+      request.input.body = { foo: 'bar' };
+
+      updatedUser = new User();
+      updatedUser._id = request.input.resource._id;
+      updatedUser._source = {foo: 'bar', baz: 'qux'};
+
+      updateStub = kuzzle.ask
+        .withArgs(
+          updateEvent,
+          request.input.resource._id,
+          sinon.match.object,
+          sinon.match.any)
+        .resolves(updatedUser);
+
+    });
+
+    it('should return a valid response and use default options', async () => {
+      const response = await securityController.updateUser(request);
+
+      should(updateStub).calledWithMatch(
+        updateEvent,
+        'test',
+        { foo: 'bar' },
+        {
+          refresh: 'wait_for',
+          retryOnConflict: 10,
+          userId: request.context.user._id,
+        });
+
+      should(response).be.an.Object().and.not.instanceof(User);
+      should(response).match({
+        _id: updatedUser._id,
+        _source: updatedUser._source,
+      });
+    });
+
+    it('should reject if no id is given', async () => {
+      request.input.resource._id = null;
+
+      await should(securityController.updateUser(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "_id".'
+        });
+
+      should(updateStub).not.called();
+    });
+
+    it('should reject if no body is provided', async () => {
+      request.input.body = null;
+
+      await should(securityController.update(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
+
+      should(updateStub).not.called();
+    });
+
+    it('should forward the provided options to the security module', async () => {
+      request.input.args.refresh = false;
+      request.input.args.retryOnConflict = 123;
+
+      await securityController.update(request);
+
+      should(updateStub).calledWithMatch(
+        updateEvent,
+        'test',
+        { foo: 'bar' },
+        {
+          refresh: 'false',
+          retryOnConflict: 123,
+          userId: request.context.user._id,
         });
     });
 
-    it('should throw an error if no id is given', () => {
-      return should(() => {
-        securityController.updateUser(new Request({body: {}}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.missing_argument',
-        message: 'Missing argument "_id".'
-      });
-    });
+    it('should reject if the security module throws', async () => {
+      const error = new Error('foo');
+      updateStub.rejects(error);
 
-    it('should update the profile correctly', () => {
-      kuzzle.repositories.user.fromDTO.callsFake((...args) => Bluebird.resolve(args[0]));
-      kuzzle.repositories.user.toDTO.returns({
-        _id: 'test',
-        profileIds: ['anonymous'],
-        foo: 'bar',
-        bar: 'baz'
-      });
-      kuzzle.repositories.user.persist.callsFake((...args) => Bluebird.resolve(args[0]));
-
-      return securityController.updateUser(new Request({
-        _id: 'test',
-        body: {profileIds: ['anonymous'], foo: 'bar'}
-      }))
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response._id).be.exactly('test');
-          should(response._source.profile).be.an.instanceOf(Object);
-          should(response._source.foo).be.exactly('bar');
-          should(response._source.bar).be.exactly('baz');
-        });
-    });
-
-    it('should reject the promise if the user cannot be found in the database', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      return should(securityController.updateUser(new Request({
-        _id: 'badId',
-        body: {},
-        action: 'updateProfile'
-      }))).be.rejectedWith(NotFoundError, { id: 'security.profile.not_found'});
-    });
-
-    it('should return an error if an unknown profile is provided', () => {
-      return should(() => {
-        securityController.updateUser(new Request({
-          _id: 'test',
-          body: {profileIds: ['foobar']}
-        })).throw(NotFoundError, { id: 'security.profile.not_found' });
-      });
-    });
-
-    it('should forward refresh option', () => {
-      kuzzle.repositories.user.fromDTO.callsFake((...args) => Bluebird.resolve(args[0]));
-      kuzzle.repositories.user.toDTO.returns({});
-      kuzzle.repositories.user.persist.resolves({_id: 'test'});
-      kuzzle.repositories.profile.load.resolves({
-        _id: 'anonymous',
-        _source: {}
-      });
-
-      return securityController
-        .updateUser(
-          new Request({ _id: 'test', body: { foo: 'bar' }, refresh: 'wait_for' }))
-        .then(() => {
-          const options = kuzzle.repositories.user.persist.firstCall.args[1];
-          should(options).match({
-            database: {
-              refresh: 'wait_for'
-            }
-          });
-        });
-
+      await should(securityController.update(request)).rejectedWith(error);
     });
   });
 
   describe('#replaceUser', () => {
-    it('should return an error if the request is invalid', () => {
-      return should(securityController.replaceUser(new Request({_id: 'test'})))
+    const replaceEvent = 'core:security:user:replace';
+    let replaceStub;
+    let replacedUser;
+
+    beforeEach(() => {
+      request.input.resource._id = 'test';
+      request.input.body = { foo: 'bar' };
+
+      replacedUser = new User();
+      replacedUser._id = request.input.resource._id;
+      replacedUser._source = { foo: 'bar', baz: 'qux' };
+
+      replaceStub = kuzzle.ask
+        .withArgs(
+          replaceEvent,
+          request.input.resource._id,
+          sinon.match.object,
+          sinon.match.any)
+        .resolves(replacedUser);
+    });
+
+    it('should reject if the request does not have a body', async () => {
+      request.input.body = null;
+
+      await should(securityController.replaceUser(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
+
+      should(replaceStub).not.called();
     });
 
-    it('should replace the user correctly', () => {
-      kuzzle.repositories.user.persist.resolves({
-        _id: 'test',
-        profileIds: ['anonymous'],
-        foo: 'bar'
-      });
-      kuzzle.repositories.user.load = userId => Bluebird.resolve({
-        _id: userId,
-        _source: {}
-      });
+    it('should reject if there is no id provided', async () => {
+      request.input.resource._id = null;
 
-      return securityController
-        .replaceUser(
-          new Request({
-            _id: 'test',
-            body: { profileIds: ['anonymous'], foo: 'bar' }
-          }),
-          {})
-        .then(response => {
-          should(response).be.instanceOf(Object);
-          should(response).match({
-            _id: 'test',
-            _source: {profileIds: ['anonymous']}
-          });
+      await should(securityController.replaceUser(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
+
+      should(replaceStub).not.called();
+    });
+
+    it('should reject if the security module throws', async () => {
+      const error = new Error('foo');
+
+      replaceStub.rejects(error);
+
+      await should(securityController.replaceUser(request)).rejectedWith(error);
+    });
+
+    it('should correctly process the request', async () => {
+      const response = await securityController.replaceUser(request);
+
+      should(replaceStub).calledWithMatch(
+        replaceEvent,
+        request.input.resource._id,
+        request.input.body,
+        {
+          refresh: 'wait_for',
+          userId: request.context.user._id,
         });
+
+      should(response).be.an.Object().and.not.instanceof(User);
+      should(response).match({
+        _id: replacedUser._id,
+        _source: replacedUser._source,
+      });
     });
 
-    it('should return an error if the user is not found', () => {
-      kuzzle.repositories.user.load.resolves(null);
+    it('should handle request options', async () => {
+      request.input.args.refresh = false;
 
-      return should(securityController.replaceUser(new Request({
-        _id: 'i.dont.exist',
-        body: { profileIds: ['anonymous'] }
-      }))).be.rejectedWith(NotFoundError, { id: 'security.user.not_found'});
-    });
+      await securityController.replaceUser(request);
 
-    it('should forward refresh option', () => {
-      kuzzle.repositories.user.persist.resolves({
-        _id: 'test',
-        profileIds: ['anonymous'],
-        foo: 'bar'
-      });
-
-      kuzzle.repositories.user.load = userId => Bluebird.resolve({
-        _id: userId,
-        _source: {}
-      });
-
-      return securityController.replaceUser(new Request({
-        _id: 'test',
-        body: {profileIds: ['anonymous'], foo: 'bar'},
-        refresh: 'wait_for'
-      }))
-        .then(() => {
-          const options = kuzzle.repositories.user.persist.firstCall.args[1];
-
-          should(options).match({
-            database: {
-              refresh: 'wait_for'
-            }
-          });
+      should(replaceStub).calledWithMatch(
+        replaceEvent,
+        request.input.resource._id,
+        request.input.body,
+        {
+          refresh: 'false',
+          userId: request.context.user._id,
         });
     });
   });
 
   describe('#getUserRights', () => {
-    it('should resolve to an object on a getUserRights call', () => {
-      kuzzle.repositories.user.load = userId => {
-        return Bluebird.resolve({
-          _id: userId,
-          _source: {},
-          getRights: () => {
-            return {
-              rights1: {
-                controller: 'read', action: 'get', index: 'foo', collection: 'bar',
-                value: 'allowed'
-              },
-              rights2: {
-                controller: 'write', action: 'delete', index: '*', collection: '*',
-                value: 'conditional'
-              }
-            };
-          }
-        });
+    const getEvent = 'core:security:user:get';
+    let getStub;
+    let returnedUser;
+
+    beforeEach(() => {
+      request.input.resource._id = 'test';
+
+      returnedUser = new User();
+      returnedUser._id = request.input.resource._id;
+      sinon.stub(returnedUser, 'getRights');
+
+      getStub = kuzzle.ask
+        .withArgs(getEvent, request.input.resource._id)
+        .resolves(returnedUser);
+    });
+
+    it('should resolve to an object on a getUserRights call', async () => {
+      const rights = {
+        rights1: {
+          action: 'action',
+          collection: 'foo',
+          controller: 'controller',
+          index: 'index',
+          value: true,
+        },
+        rights2: {
+          action: 'action',
+          collection: 'collection',
+          controller: 'bar',
+          index: 'index',
+          value: false,
+        }
       };
 
-      return securityController.getUserRights(new Request({_id: 'test'}))
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.hits).be.an.Array();
-          should(response.hits).length(2);
+      returnedUser.getRights.returns(rights);
 
-          let filteredItem = response.hits.filter(item => {
-            return item.controller === 'read' &&
-                    item.action === 'get' &&
-                    item.index === 'foo' &&
-                    item.collection === 'bar';
-          });
-          should(filteredItem).length(1);
-          should(filteredItem[0].value).be.equal('allowed');
+      const response = await securityController.getUserRights(request);
 
-          filteredItem = response.hits.filter(item => {
-            return item.controller === 'write' &&
-                   item.action === 'delete' &&
-                   item.index === '*' &&
-                   item.collection === '*';
-          });
-          should(filteredItem).length(1);
-          should(filteredItem[0].value).be.equal('conditional');
-        });
+      should(getStub).calledWith(getEvent, request.input.resource._id);
+
+      should(response).be.an.Object().and.not.empty();
+      should(response.hits).be.an.Array().and.have.length(2);
+      should(response.total).eql(2);
+
+      should(response.hits.includes(rights.rights1)).be.true();
+      should(response.hits.includes(rights.rights2)).be.true();
     });
 
-    it('should throw an error on a getUserRights call without id', () => {
-      return should(() => {
-        securityController.getUserRights(new Request({_id: ''}));
-      }).throw(BadRequestError, {
-        id: 'api.assert.missing_argument',
-        message: 'Missing argument "_id".'
-      });
+    it('should reject if no id is provided', async () => {
+      request.input.resource._id = null;
+
+      await should(securityController.getUserRights(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "_id".'
+        });
+
+      should(getStub).not.called();
     });
 
-    it('should reject NotFoundError on a getUserRights call with a bad id', () => {
-      kuzzle.repositories.user.load.resolves(null);
+    it('should forward a security module exception', () => {
+      const error = new Error('foo');
 
-      return securityController.getUserRights(new Request({ _id: 'i.dont.exist' }))
-        .catch((e) => {
-          should(e).be.instanceOf(NotFoundError);
-        });
+      getStub.rejects(error);
+
+      return should(securityController.getUserRights(request))
+        .rejectedWith(error);
     });
   });
 
   describe('#mDeleteUser', () => {
-    it('should forward its args to mDelete', () => {
-      securityController.mDelete = sinon.spy();
-      securityController.mDeleteUsers(request);
+    it('should forward its args to mDelete', async () => {
+      sinon.stub(securityController, '_mDelete').resolves('foobar');
 
-      should(securityController.mDelete)
+      await should(securityController.mDeleteUsers(request))
+        .fulfilledWith('foobar');
+
+      should(securityController._mDelete)
         .be.calledOnce()
         .be.calledWith('user', request);
     });
   });
 
   describe('#revokeTokens', () => {
-    it('should revoke all tokens related to a given user', () => {
-
-      return securityController.revokeTokens((new Request({ _id: 'test', })))
-        .then(() => {
-          should(kuzzle.repositories.token.deleteByUserId).be.calledOnce().be.calledWith('test');
-        });
+    beforeEach(() => {
+      request.input.resource._id = 'test';
     });
 
-    it('should reject an error if the user doesn\'t exists.', () => {
-      kuzzle.repositories.user.load.resolves(null);
-      return should(securityController.revokeTokens(new Request({
-        _id: 'test'
-      }))).be.rejectedWith(NotFoundError, { id: 'security.user.not_found' });
+    it('should revoke all tokens related to a given user', async () => {
+      await securityController.revokeTokens(request);
+
+      should(kuzzle.ask).calledWithMatch(
+        'core:security:token:deleteById',
+        request.input.resource._id);
+    });
+
+    it('should reject if no id is provided', async () => {
+      request.input.resource._id = null;
+
+      await should(securityController.revokeTokens(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
+    });
+
+    it('should forward security module exceptions', () => {
+      const error = new Error('foo');
+
+      kuzzle.ask
+        .withArgs('core:security:token:deleteById', request.input.resource._id)
+        .rejects(error);
+
+      return should(securityController.revokeTokens(request))
+        .rejectedWith(error);
     });
   });
 
   describe('#createFirstAdmin', () => {
-    it('should reject if an admin already exists', () => {
-      const request = new Request(
-        {
-          controller: 'security',
-          action: 'createFirstAdmin',
-          _id: 'toto',
-          body: {content: {password: 'pwd'}}
-        });
+    const createOrReplaceRoleEvent = 'core:security:role:createOrReplace';
+    const createOrReplaceProfileEvent = 'core:security:profile:createOrReplace';
+    let createOrReplaceRoleStub;
+    let createOrReplaceProfileStub;
 
+    beforeEach(() => {
+      sinon.stub(securityController, '_persistUser');
+
+      request.input.resource._id = 'test';
+
+      kuzzle.adminExists.resolves(false);
+
+      createOrReplaceRoleStub = kuzzle.ask
+        .withArgs(
+          createOrReplaceRoleEvent,
+          sinon.match.string,
+          sinon.match.object,
+          sinon.match.object);
+
+      createOrReplaceProfileStub = kuzzle.ask
+        .withArgs(
+          createOrReplaceProfileEvent,
+          sinon.match.string,
+          sinon.match.object,
+          sinon.match.object);
+    });
+
+    it('should reject if an admin already exists', async () => {
       kuzzle.adminExists.resolves(true);
 
-      return should(securityController.createFirstAdmin(request))
+      await should(securityController.createFirstAdmin(request))
         .be.rejectedWith(PreconditionError, {id: 'api.process.admin_exists'});
+
+      should(securityController._persistUser).not.called();
+      should(createOrReplaceRoleStub).not.called();
+      should(createOrReplaceProfileStub).not.called();
     });
 
     it('should create the admin user and not reset roles & profiles if not asked to', async () => {
-      const request = new Request({
-        _id: 'toto',
-        action: 'createFirstAdmin',
-        controller: 'security',
-      });
+      request.input.body = { content: { foo: 'bar' } };
 
-      kuzzle.adminExists.resolves(false);
+      await securityController.createFirstAdmin(request);
+
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request, ['admin'], request.input.body.content);
+
+      should(createOrReplaceRoleStub).not.called();
+      should(createOrReplaceProfileStub).not.called();
+    });
+
+    it('should create the admin user and reset roles & profiles if asked to', async () => {
+      request.input.args.reset = true;
 
       await securityController.createFirstAdmin(request);
 
       should(securityController._persistUser)
         .calledOnce()
         .calledWithMatch(request, ['admin'], {});
-      should(resetRolesStub).not.called();
-      should(resetProfilesStub).not.called();
-      should(kuzzle.internalIndex.refreshCollection).not.called();
-    });
-
-    it('should create the admin user and reset roles & profiles if asked to', async () => {
-      const request = new Request({
-        _id: 'toto',
-        action: 'createFirstAdmin',
-        body: {content: {foo: 'bar'}},
-        controller: 'security',
-        reset: true,
-      });
-
-      kuzzle.adminExists.resolves(false);
-
-      await securityController.createFirstAdmin(request);
-
-      should(securityController._persistUser)
-        .calledOnce()
-        .calledWithMatch(request, ['admin'], request.body.content);
 
       for (const [key, content] of kuzzle.config.security.standard.roles) {
-        should(resetRolesStub).calledWithMatch(
-          'core:security:role:createOrReplace',
+        should(createOrReplaceRoleStub).calledWithMatch(
+          createOrReplaceRoleEvent,
           key,
-          content);
+          content,
+          { refresh: 'false', userId: request.context.user._id });
       }
 
       for (const [key, content] of kuzzle.config.security.standard.profiles) {
-        should(resetRolesStub).calledWithMatch(
-          'core:security:profile:createOrReplace',
+        should(createOrReplaceProfileStub).calledWithMatch(
+          createOrReplaceProfileEvent,
           key,
-          content);
+          content,
+          { refresh: 'false', userId: request.context.user._id });
       }
-
-      should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
     });
   });
 });
