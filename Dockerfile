@@ -1,17 +1,13 @@
 ################################################################################
-# Plugin development image
+# Plugin development build image
 ################################################################################
-FROM node:12.16.3-stretch-slim as plugin-dev
-
-LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
-LABEL description="Develop new plugin or protocol for Kuzzle with ease"
+FROM node:12.16.3-stretch-slim as plugin-dev-build
 
 ADD . /var/app
 
 WORKDIR /var/app
 
 RUN  set -x \
-  \
   && apt-get update && apt-get install -y \
        bash-completion \
        build-essential \
@@ -25,17 +21,14 @@ RUN  set -x \
        libzmq3-dev \
        procps \
        wget \
-  && mkdir -p /var/app \
   && npm set progress=false \
-  && npm install -g --unsafe-perm nodemon kourou \
   && rm -rf /var/lib/apt/lists/* \
-  && echo "alias ll=\"ls -lahF --color\"" >> ~/.bashrc \
 
-# Some cleaning
   && npm install --unsafe-perm \
   && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done \
   && for plugin in plugins/available/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done \
 
+  # Cleaning
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash -s -- -b /usr/local/bin \
   && /usr/local/bin/node-prune \
   && for plugin in plugins/enabled/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
@@ -46,10 +39,39 @@ RUN  set -x \
   && strip node_modules/re2/build/Release/obj.target/re2.node \
   && find node_modules/ -name "*.o" | xargs rm \
 
-  && rm -rf /usr/local/lib/node_modules/npm/docs/ \
-  && rm -rf /usr/local/lib/node_modules/npm/man/ \
-  && rm -rf /usr/local/lib/node_modules/npm/changelogs/ \
-  && rm -rf /opt/yarn-*/
+  && rm -rf doc/
+
+################################################################################
+# Plugin development image
+################################################################################
+FROM node:12.16.3-stretch-slim as plugin-dev
+
+LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
+LABEL description="Develop new plugin or protocol for Kuzzle with ease"
+
+COPY --from=plugin-dev-build /var/app/ /var/app/
+
+WORKDIR /var/app
+
+RUN  set -x \
+  && apt-get update && apt-get install -y \
+       bash-completion \
+       build-essential \
+       curl \
+       g++ \
+       gdb \
+       git \
+       python \
+       libfontconfig \
+       libkrb5-dev \
+       libzmq3-dev \
+       procps \
+       wget \
+  && npm set progress=false \
+  && npm install -g --unsafe-perm --production \
+    nodemon \
+    kourou \
+  && rm -rf /var/lib/apt/lists/*
 
 ################################################################################
 # Production build image
