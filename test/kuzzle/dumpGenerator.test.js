@@ -101,32 +101,6 @@ describe('Test: kuzzle/dumpGenerator', () => {
     should(fsStub.copyFileSync.getCall(0).args[1]).be.exactly(baseDumpPath.concat('/node'));
   });
 
-  it('should copy pm2 logs and error files if any', async () => {
-    const baseDumpPath = `/tmp/${(new Date()).getFullYear()}-${suffix}`;
-    process.env.pm_err_log_path = '/foo/bar/baz.log';
-
-    fsStub.readdirSync.returns(['baz.log', 'baz-42.log', 'bar.log']);
-
-    fsStub.stat.yields(new Error('test'));
-    fsStub.stat.onFirstCall().yields(null, { ctime: 42 });
-    fsStub.stat.onSecondCall().yields(null, { ctime: 0 });
-    fsStub.stat.onThirdCall().yields(null, { ctime: 3 });
-
-    await dumpGenerator.dump(suffix);
-
-    try {
-      should(fsStub.createReadStream)
-        .be.calledWith('/foo/bar/baz.log')
-        .be.calledWith('/foo/bar/bar.log');
-      should(fsStub.createWriteStream)
-        .be.calledWith(baseDumpPath + '/logs/baz.gz')
-        .be.calledWith(baseDumpPath + '/logs/bar.gz');
-    }
-    finally {
-      delete process.env.pm_err_log_path;
-    }
-  });
-
   it('should do nothing if the dump path is not reachable', async () => {
     fsStub.accessSync.throws(new Error('foobar'));
 

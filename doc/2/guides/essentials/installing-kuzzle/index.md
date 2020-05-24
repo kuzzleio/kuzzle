@@ -77,6 +77,8 @@ curl "http://localhost:7512?pretty"
 
 ## AWS Marketplace
 
+<DeprecatedBadge since="2.0.0">
+
 ::: info
 To create a new Kuzzle stack on Amazon, you need a valid AWS account.
 :::
@@ -127,6 +129,8 @@ Associated password is your unique instance ID. You can get it from the EC2 AWS 
 
 ---
 
+</DeprecatedBadge>
+
 ## Manual Installation
 
 In this section we will perform a manual installation of Kuzzle on a Linux distribution. We choose Linux because all Kuzzle components work natively on it.
@@ -135,14 +139,14 @@ In this section we will perform a manual installation of Kuzzle on a Linux distr
 By default, Kuzzle expects all the components to be running on localhost but you can [change](/core/2/guides/essentials/configuration)'ll be able to select which [Kuzzle](/core/2/guides/essentials/admin-console#connect-to-kuzzle) installation that you want to manage. this behavior.
 :::
 
-We will run Kuzzle using [pm2](http://pm2.keymetrics.io), a process management tool used to monitor Node.js applications.
+We will run Kuzzle using [nodemon](https://nodemon.io/), a process management tool used to reload Node.js applications on code changes.
 
 ### Supported operating systems
 
 The following operating systems are actively supported (64-bit versions only):
 
-- Ubuntu: 14.04+
-- Debian: 7+
+- Ubuntu: 18.04+
+- Debian: 8+
 
 ### Prerequisites
 
@@ -208,78 +212,46 @@ Kuzzle uses Elasticsearch and Redis as a persistent and key-value store, respect
 
 Please refer to the [configuration section](/core/2/guides/essentials/configuration) for more details.
 
-### Setup PM2
+### Setup Nodemon
 
-Now that you have installed Kuzzle and loaded its plugins, lets install pm2. Run the following command to install pm2 using NPM as a global package so that it can be run from anywhere on your machine:
+Now that you have installed Kuzzle and loaded its plugins, lets install nodemon. Run the following command to install nodemon using NPM as a global package so that it can be run from anywhere on your machine:
 
 ```bash
-sudo npm install -g pm2
+sudo npm install -g nodemon
 ```
 
-Now create a [pm2 configuration file](http://pm2.keymetrics.io/docs/usage/application-declaration#process-file) that sets the application and environment details. We will create the `KUZZLE_BACKEND_INSTALL_DIR` environment variable to store the location of our Kuzzle installation:
+Nodemon will automatically reload Kuzzle when it detects changes in the code.  
+
+Now we are gonna run Kuzzle, don't forget to add the Node.js debugger entrypoint if you want to debug either the Chrome inspector or your IDE.
+
+Run the following commands:
 
 ```bash
-export KUZZLE_BACKEND_INSTALL_DIR="~/kuzzle/kuzzle"
-```
-
-Then create the pm2 configuration file:
-
-```bash
-echo "apps:
-   - name: KuzzleServer
-     script: ${KUZZLE_BACKEND_INSTALL_DIR}/bin/start-kuzzle-server
-     env:
-       NODE_ENV: production
-  " > ~/kuzzle/pm2.conf.yml
-```
-
-Finally we are ready to run Kuzzle. Run the following commands:
-
-```bash
-pm2 start ~/kuzzle/pm2.conf.yml
+nodemon --inspect=0.0.0.0:9229 bin/start-kuzzle-server
 ```
 
 You should then see the following display on your terminal:
 
 ```
-[PM2][WARN] Applications KuzzleServer not running, starting...
-[PM2] App [KuzzleServer] launched (1 instances)
-┌───────────────┬────┬──────┬───────┬────────┬─────────┬────────┬─────┬───────────┬──────┬──────────┐
-│ App name      │ id │ mode │ pid   │ status │ restart │ uptime │ cpu │ mem       │ user │ watching │
-├───────────────┼────┼──────┼───────┼────────┼─────────┼────────┼─────┼───────────┼──────┼──────────┤
-│ KuzzleServer │ 0  │ fork │ 27825 │ online │ 0       │ 0s     │ 49% │ 19.0 MB   │ root │ disabled │
-└───────────────┴────┴──────┴───────┴────────┴─────────┴────────┴─────┴───────────┴──────┴──────────┘
+[2020-21-42 09:40:48+00:00] - Starting Kuzzle...
+[nodemon] 2.0.4
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,json
+[nodemon] starting `node --inspect=0.0.0.0:9229  bin/start-kuzzle-server`
+[ℹ] Starting Kuzzle server
+
+[...]
+
 ```
 
-Check the logs to make sure Kuzzle is running:
+You should see the following message if Kuzzle successfully started (it may take a few seconds):
 
 ```bash
-pm2 logs
-```
-
-You should see the following message (it may take a few seconds):
-
-```bash
-# kuzzle_1         | [✔] Kuzzle server ready
+[✔] Kuzzle server ready
 ```
 
 Kuzzle can now be reached at the following URL, using either HTTP or WebSocket: `http://localhost:7512/`
-
-#### PM2 cheatsheet
-
-Below is a list of useful commands to help you manage your Kuzzle installation running with pm2:
-
-```bash
-# Display Kuzzle logs:
-pm2 logs
-
-# Start, restart or stop Kuzzle:
-pm2 "<start|stop|restart>" KuzzleServer
-```
-
-::: success
-Now that Kuzzle is up and running you can [install](/core/2/guides/essentials/admin-console) the <strong>Kuzzle Admin Console</strong>.
-:::
 
 ### Troubleshooting
 
@@ -353,26 +325,6 @@ If you see the following message make sure that you have installed Redis and tha
     at Object.exports._errnoException (util.js:1020:11)
     at exports._exceptionWithHostPort (util.js:1043:20)
     at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1090:14)
-```
-
-If you see the following message when running `pm2 logs`, then make sure that your `pm2.conf.yml` file was created correctly.
-To recreate that file:
-
-- delete the current version from pm2: `pm2 delete KuzzleServer`
-- follow the instructions above to recreate it
-
-```
-PM2        |     at onErrorNT (internal/child_process.js:376:16)
-PM2        |     at _combinedTickCallback (internal/process/next_tick.js:80:11)
-PM2        |     at process._tickDomainCallback (internal/process/next_tick.js:128:9)
-PM2        | 2018-01-12 15:50:54: Starting execution sequence in -fork mode- for app name:KuzzleServer id:0
-PM2        | 2018-01-12 15:50:54: App name:KuzzleServer id:0 online
-PM2        | 2018-01-12 15:50:54: Error: spawn node ENOENT
-PM2        |     at exports._errnoException (util.js:1020:11)
-PM2        |     at Process.ChildProcess._handle.onexit (internal/child_process.js:197:32)
-PM2        |     at onErrorNT (internal/child_process.js:376:16)
-PM2        |     at _combinedTickCallback (internal/process/next_tick.js:80:11)
-PM2        |     at process._tickDomainCallback (internal/process/next_tick.js:128:9)
 ```
 
 ---
