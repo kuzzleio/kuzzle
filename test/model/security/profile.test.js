@@ -1,37 +1,32 @@
 'use strict';
 
+const sinon = require('sinon');
 const should = require('should');
-const Bluebird = require('bluebird');
-const Kuzzle = require('../../mocks/kuzzle.mock');
-const Profile = require('../../../lib/model/security/profile');
-const Role = require('../../../lib/model/security/role');
 const {
   Request,
   errors: { BadRequestError }
 } = require('kuzzle-common-objects');
 
+const Kuzzle = require('../../mocks/kuzzle.mock');
+const Profile = require('../../../lib/model/security/profile');
+const Role = require('../../../lib/model/security/role');
+
 const _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: model/security/profile', () => {
-  const
-    context = {connectionId: null, userId: null},
-    request = new Request(
-      {
-        index: 'index',
-        collection: 'collection',
-        controller: 'controller',
-        action: 'action'
-      },
-      context);
-  let
-    kuzzle;
+  const context = {connectionId: null, userId: null};
+  const request = new Request(
+    {
+      index: 'index',
+      collection: 'collection',
+      controller: 'controller',
+      action: 'action'
+    },
+    context);
+  let kuzzle;
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
-
-    // Replace the KuzzleMock stub by an empty function,
-    // as we need to stub this one in the following tests
-    kuzzle.repositories.role.loadRole = () => {};
   });
 
   it('should disallow any action when no role be found', () => {
@@ -40,13 +35,12 @@ describe('Test: model/security/profile', () => {
     return should(profile.isActionAllowed(request)).be.fulfilledWith(false);
   });
 
-  it('should allow the action if one of the roles allows it', () => {
-    const
-      profile = new Profile(),
-      roles = {
-        denyRole: new Role(),
-        allowRole: new Role()
-      };
+  it('should allow the action if one of the roles allows it', async () => {
+    const profile = new Profile();
+    const roles = {
+      denyRole: new Role(),
+      allowRole: new Role()
+    };
 
     roles.denyRole._id = 'denyRole';
     roles.denyRole.controllers = {
@@ -69,36 +63,31 @@ describe('Test: model/security/profile', () => {
       roles[roleId][_kuzzle] = kuzzle;
     }
 
-    profile.policies = [{roleId: 'denyRole' }];
+    profile.policies = [{roleId: 'denyRole'}];
 
-    kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
+    kuzzle.ask
+      .withArgs('core:security:role:get', sinon.match.id)
+      .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;
-    return profile.isActionAllowed(request)
-      .then(isAllowed => {
-        should(isAllowed).be.false();
 
-        profile.policies.push({roleId: 'allowRole' });
-        return profile.isActionAllowed(request);
-      })
-      .then(isAllowed => {
-        should(isAllowed).be.true();
+    should(await profile.isActionAllowed(request)).be.false();
 
-        profile.policies = [
-          {roleId: 'denyRole' },
-          {
-            roleId: 'allowRole',
-            restrictedTo: [
-              {index: 'index1' },
-              {index: 'index2', collections: ['collection1']},
-              {index: 'index3', collections: ['collection1', 'collection2']}
-            ]
-          }
-        ];
+    profile.policies.push({roleId: 'allowRole'});
+    should(await profile.isActionAllowed(request)).be.true();
 
-        return profile.isActionAllowed(request);
-      })
-      .then(isAllowed => should(isAllowed).be.false());
+    profile.policies = [
+      {roleId: 'denyRole'},
+      {
+        roleId: 'allowRole',
+        restrictedTo: [
+          {index: 'index1' },
+          {index: 'index2', collections: ['collection1']},
+          {index: 'index3', collections: ['collection1', 'collection2']}
+        ]
+      }
+    ];
+    should(await profile.isActionAllowed(request)).be.false();
   });
 
   it('should retrieve the correct rights list', async () => {
@@ -149,7 +138,9 @@ describe('Test: model/security/profile', () => {
 
     profile.policies.push({roleId: role3._id});
 
-    kuzzle.repositories.role.load.callsFake(id => Bluebird.resolve(roles[id]));
+    kuzzle.ask
+      .withArgs('core:security:role:get', sinon.match.id)
+      .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;
 

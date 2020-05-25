@@ -7,10 +7,10 @@ const Token = require('../../../lib/model/security/token');
 const TokenManager = require('../../../lib/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
-  let
-    kuzzle,
-    token,
-    tokenManager;
+  const anonymousToken = new Token({ _id: '-1' });
+  let kuzzle;
+  let token;
+  let tokenManager;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -21,8 +21,9 @@ describe('Test: token manager core component', () => {
       jwt: 'bar',
       expiresAt: Date.now()+1000
     });
-  });
 
+    kuzzle.ask('core:security:user:anonymous').resolves(anonymousToken);
+  });
 
   afterEach(() => {
     if (tokenManager.timer) {
@@ -32,7 +33,7 @@ describe('Test: token manager core component', () => {
 
   describe('#link', () => {
     it('should not add a link to an anonymous token', () => {
-      tokenManager.link(kuzzle.repositories.token.anonymous(), 'foo', 'bar');
+      tokenManager.link(anonymousToken, 'foo', 'bar');
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
     });
 
@@ -132,27 +133,24 @@ describe('Test: token manager core component', () => {
     });
 
     it('should do nothing if the provided token is from the anonymous user', () => {
-      const
-        anon = kuzzle.repositories.token.anonymous(),
-        // manually insert the anonymous token in the manager
-        // should never happen in real-life scenarios (see UTs above)
-        fakeEntry = {
-          idx: `${anon.expiresAt};${anon._id}`,
-          connectionId: 'foo',
-          expiresAt: anon.expiresAt,
-          userId: anon.userId,
-          rooms: new Set(['bar'])
-        };
+      // manually insert the anonymous token in the manager
+      // should never happen in real-life scenarios (see UTs above)
+      const fakeEntry = {
+        idx: `${anonymousToken.expiresAt};${anonymousToken._id}`,
+        connectionId: 'foo',
+        expiresAt: anonymousToken.expiresAt,
+        userId: anonymousToken.userId,
+        rooms: new Set(['bar'])
+      };
 
       tokenManager.tokens.insert(fakeEntry);
 
-      tokenManager.expire(anon);
+      tokenManager.expire(anonymousToken);
 
       should(tokenManager.tokens.array)
         .be.an.Array()
         .and.match([fakeEntry])
         .and.have.length(1);
-
     });
 
     it('should do nothing if the provided token has not been previously registered', () => {
@@ -315,21 +313,19 @@ describe('Test: token manager core component', () => {
 
   describe('#unlink', () => {
     it('should not try to unlink an anonymous token', () => {
-      const
-        anon = kuzzle.repositories.token.anonymous(),
-        // manually insert the anonymous token in the manager
-        // should never happen in real-life scenarios (see UTs above)
-        fakeEntry = {
-          idx: `${anon.expiresAt};${anon._id}`,
-          connectionId: 'foo',
-          expiresAt: anon.expiresAt,
-          userId: anon.userId,
-          rooms: new Set(['bar'])
-        };
+      // manually insert the anonymous token in the manager
+      // should never happen in real-life scenarios (see UTs above)
+      const fakeEntry = {
+        idx: `${anonymousToken.expiresAt};${anonymousToken._id}`,
+        connectionId: 'foo',
+        expiresAt: anonymousToken.expiresAt,
+        userId: anonymousToken.userId,
+        rooms: new Set(['bar'])
+      };
 
       tokenManager.tokens.insert(fakeEntry);
 
-      tokenManager.unlink(anon, 'bar');
+      tokenManager.unlink(anonymousToken, 'bar');
 
       should(tokenManager.tokens.array)
         .be.an.Array()

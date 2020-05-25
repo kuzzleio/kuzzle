@@ -1,7 +1,6 @@
 'use strict';
 
 const should = require('should');
-const Bluebird = require('bluebird');
 const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
@@ -460,107 +459,147 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#updateRole', () => {
-    it('should return a valid response', () => {
-      kuzzle.repositories.role.load.resolves({_id: 'test'});
-      kuzzle.repositories.role.roles = [];
+    const updateEvent = 'core:security:role:update';
+    let updateStub;
 
-      kuzzle.repositories.role.validateAndSaveRole = role => {
-        if (role._id === 'alreadyExists') {
-          return Bluebird.reject();
-        }
+    beforeEach(() => {
+      request.input.resource._id = 'test';
+      request.input.body = { foo: 'bar' };
 
-        return Bluebird.resolve(role);
-      };
+      updateStub = kuzzle.ask.withArgs(
+        updateEvent,
+        sinon.match.string,
+        sinon.match.any,
+        sinon.match.any);
+    });
 
-      return securityController.updateRole(new Request({ _id: 'test', body: { foo: 'bar' } }))
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response._id).be.exactly('test');
+    it('should return a valid response and use default options', async () => {
+      const updatedRole = new Role();
+      updatedRole._id = 'test';
+      updatedRole._source = {foo: 'bar', baz: 'qux'};
+
+      updateStub.resolves(updatedRole);
+
+      const response = await securityController.updateRole(request);
+
+      should(updateStub).calledWithMatch(
+        updateEvent,
+        request.resource._id,
+        request.resource.body,
+        {
+          force: false,
+          refresh: 'wait_for',
+          retryOnConflict: 10,
+          userId: request.context.user._id,
         });
+
+      should(response).be.an.Object().and.not.instanceof(Role);
+      should(response).match({
+        _id: updatedRole._id,
+        _source: updatedRole._source
+      });
     });
 
-    it('should throw an error if no id is given', () => {
-      return should(() => {
-        securityController.updateRole(new Request({body: {}}));
-      }).throw(BadRequestError, { id: 'api.assert.missing_argument' });
+    it('should reject if no id is given', async () => {
+      request.input.resource._id = null;
+
+      await should(securityController.updateRole(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
+
+      should(updateStub).not.called();
     });
 
-    it('should reject the promise if the role cannot be found in the database', () => {
-      kuzzle.repositories.role.load.resolves(null);
-      return should(securityController.updateRole(new Request({_id: 'badId', body: {}, context: {action: 'updateRole'}}))).be.rejected();
+    it('should reject if no body is provided', async () => {
+      request.input.body = null;
+
+      await should(securityController.updateRole(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
+
+      should(updateStub).not.called();
     });
 
-    it('should forward refresh option', () => {
-      kuzzle.repositories.role.load.resolves({_id: 'test'});
-      kuzzle.repositories.role.roles = [];
+    it('should forward an exception thrown by the security module', () => {
+      const error = new Error('foo');
 
-      kuzzle.repositories.role.validateAndSaveRole = sinon.stub().returnsArg(0);
+      updateStub.rejects(error);
 
-      return securityController.updateRole(new Request({
-        _id: 'test',
-        body: {
-          foo: 'bar'
-        },
-        refresh: 'wait_for'
-      }))
-        .then(() => {
-          const options = kuzzle.repositories.role.validateAndSaveRole.firstCall.args[1];
-          should(options).match({
-            refresh: 'wait_for'
-          });
+      return should(securityController.updateRole(request)).rejectedWith(error);
+    });
+
+    it('should forward request options', async () => {
+      request.input.args.force = true;
+      request.input.args.refresh = false;
+      request.input.args.retryOnConflict = 123;
+
+      await securityController.updateRole(request);
+
+      should(updateStub).calledWithMatch(
+        updateEvent,
+        request.resource._id,
+        request.resource.body,
+        {
+          force: true,
+          refresh: 'false',
+          retryOnConflict: 123,
+          userId: request.context.user._id,
         });
     });
   });
 
   describe('#deleteRole', () => {
-    it('should return response with on deleteRole call', done => {
-      const role = {_id: 'role'};
+    const deleteEvent = 'core:security:role:delete';
+    let deleteStub;
 
-      kuzzle.repositories.role.load.resolves(role);
-      kuzzle.repositories.role.delete.resolves();
+    beforeEach(() => {
+      request.input.resource._id = 'test';
 
-      securityController.deleteRole(new Request({ _id: 'test', body: {} }))
-        .then(() => {
-          should(kuzzle.repositories.role.delete.calledWith(role)).be.true();
-          done();
-        });
+      deleteStub = kuzzle.ask.withArgs(
+        deleteEvent,
+        sinon.match.string,
+        sinon.match.any);
     });
 
-    it('should reject the promise if attempting to delete one of the core roles', () => {
-      kuzzle.repositories.role.delete
-        .rejects(new Error('admin is one of the basic roles of Kuzzle, you cannot delete it, but you can edit it.'));
-      return should(securityController.deleteRole(new Request({_id: 'admin',body: {}}))).be.rejected();
+    it('should return a valid response and handle default options', async () => {
+      const response = await securityController.deleteRole(request);
+
+      should(deleteStub).calledWithMatch(
+        deleteEvent,
+        request.input.resource._id,
+        { refresh: 'wait_for' });
+
+      should(response).match({ _id: request.input.resource._id });
     });
 
-    it('should forward refresh option', () => {
-      const role = {_id: 'role'};
+    it('should reject if no id is provided', async () => {
+      request.input.resource._id = null;
 
-      kuzzle.repositories.role.load.resolves(role);
-      kuzzle.repositories.role.getRoleFromRequest.resolves(role);
-      kuzzle.repositories.role.delete.resolves();
+      await should(securityController.deleteRole(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
 
-      return securityController.deleteRole(new Request({
-        _id: 'test',
-        body: {},
-        refresh: 'wait_for'
-      }))
-        .then(() => {
-          const options = kuzzle.repositories.role.delete.firstCall.args[1];
+      should(deleteStub).not.called();
+    });
 
-          should(options).match({
-            refresh: 'wait_for'
-          });
-        });
+    it('should forward request options', async () => {
+      request.input.args.refresh = false;
+
+      await securityController.deleteRole(request);
+
+      should(deleteStub).calledWithMatch(
+        deleteEvent,
+        request.input.resource._id,
+        { refresh: 'false' });
     });
   });
 
   describe('#mDeleteRoles', () => {
-    it('should forward its args to mDelete', () => {
-      securityController.mDelete = sinon.spy();
-      securityController.mDeleteRoles(request);
-      should(securityController.mDelete)
-        .be.calledOnce()
-        .be.calledWith('role', request);
+    it('should forward to _mDelete and return its response', async () => {
+      sinon.stub(securityController, '_mDelete');
+      securityController._mDelete.resolves('foobar');
+
+      const response = await securityController.mDeleteRoles(request);
+
+      should(securityController._mDelete).calledWith('role', request);
+      should(response).eql('foobar');
     });
   });
 });

@@ -6,8 +6,7 @@ const {
   Request,
   errors: {
     BadRequestError,
-    NotFoundError,
-    SizeLimitError
+    SizeLimitError,
   }
 } = require('kuzzle-common-objects');
 

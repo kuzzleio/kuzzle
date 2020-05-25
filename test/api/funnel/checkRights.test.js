@@ -1,79 +1,129 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  {
-    Request,
-    errors: {
-      ForbiddenError,
-      UnauthorizedError
-    }
-  } = require('kuzzle-common-objects'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  FunnelController = require('../../../lib/api/funnel');
+const should = require('should');
+const sinon = require('sinon');
+const {
+  Request,
+  errors: {
+    ForbiddenError,
+    UnauthorizedError
+  }
+} = require('kuzzle-common-objects');
 
-describe('funnel.processRequest', () => {
-  let
-    kuzzle,
-    funnel;
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const FunnelController = require('../../../lib/api/funnel');
+const Token = require('../../../lib/model/security/token');
+const User = require('../../../lib/model/security/user');
+
+describe('funnel.checkRights', () => {
+  const getUserEvent = 'core:security:user:get';
+  const verifyTokenEvent = 'core:security:token:verify';
+  let kuzzle;
+  let funnel;
+  let verifiedToken;
+  let loadedUser;
+  let request;
+  let verifyTokenStub;
+  let getUserStub;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController(kuzzle);
+
+    request = new Request({
+      controller: 'document',
+      action: 'get',
+      jwt: 'hashed JWT'
+    });
+
+    loadedUser = new User();
+    loadedUser._id = 'foo';
+    loadedUser._source = { bar: 'qux' };
+
+    verifiedToken = new Token({
+      _id: 'token',
+      expiresAt: 123,
+      jwt: 'hash',
+      refreshed: false,
+      ttl: 456,
+      userId: loadedUser._id,
+    });
+
+    verifyTokenStub = kuzzle.ask
+      .withArgs(verifyTokenEvent, request.input.jwt)
+      .resolves(verifiedToken);
+
+    getUserStub = kuzzle.ask
+      .withArgs(getUserEvent, verifiedToken.userId)
+      .resolves(loadedUser);
   });
 
-  it('should reject the promise with UnauthorizedError if an anonymous user is not allowed to execute the action', () => {
-    let request = new Request({controller: 'document', index: '@test', action: 'get'});
-    kuzzle.repositories.user.load.resolves({
-      _id: -1,
-      isActionAllowed: sinon.stub().resolves(false)
-    });
-    kuzzle.repositories.token.verifyToken.resolves({userId: -1});
+  it('should reject with an UnauthorizedError if an anonymous user is not allowed to execute the action', async () => {
+    loadedUser._id = '-1';
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(false);
 
-    return funnel.checkRights(request)
-      .then(() => should.fail('fulfilled promise', 'rejected promise'))
-      .catch(err => {
-        should(err).be.instanceof(UnauthorizedError);
-        should(kuzzle.pipe.calledWithMatch('request:onAuthorized', request)).be.false();
-        should(kuzzle.pipe.calledWithMatch('request:onUnauthorized', request)).be.true();
-      });
+    await should(funnel.checkRights(request)).rejectedWith(UnauthorizedError, {
+      id: 'security.rights.unauthorized',
+    });
+
+    should(verifyTokenStub).calledOnce();
+    should(getUserEvent).calledOnce();
+
+    should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
+    should(kuzzle.pipe).calledWith('request:onUnauthorized', request);
   });
 
-  it('should reject the promise with UnauthorizedError if an authenticated user is not allowed to execute the action', () => {
-    let request = new Request({controller: 'document', index: '@test', action: 'get'});
-    kuzzle.repositories.user.load.resolves({
-      _id: 'user',
-      isActionAllowed: sinon.stub().resolves(false)
-    });
-    kuzzle.repositories.token.verifyToken.resolves({user: 'user'});
+  it('should with a ForbiddenError if an authenticated user is not allowed to execute the action', async () => {
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(false);
 
-    return funnel.checkRights(request)
-      .then(() => should.fail('fulfilled promise', 'rejected promise'))
-      .catch(err => {
-        should(err).be.instanceof(ForbiddenError);
-        should(kuzzle.pipe.calledWithMatch('request:onAuthorized', request)).be.false();
-        should(kuzzle.pipe.calledWithMatch('request:onUnauthorized', request)).be.true();
-      });
+    await should(funnel.checkRights(request)).rejectedWith(ForbiddenError, {
+      id: 'security.rights.forbidden',
+    });
+
+    should(verifyTokenStub).calledOnce();
+    should(getUserEvent).calledOnce();
+
+    should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
+    should(kuzzle.pipe).calledWith('request:onUnauthorized', request);
   });
 
-  it('should resolve the promise ', () => {
-    const request = new Request({
-      requestId: 'requestId',
-      controller: 'index',
-      action: 'list'
-    });
+  it('should forward a token:verify exception', async () => {
+    const error = new Error('foo');
 
-    kuzzle.repositories.user.load.resolves({
-      _id: 'user',
-      isActionAllowed: sinon.stub().resolves(true)
-    });
-    kuzzle.repositories.token.verifyToken.resolves({user: 'user'});
+    verifyTokenStub.rejects(error);
 
-    return funnel.checkRights(request)
-      .then(() => {
-        should(kuzzle.pipe.calledWithMatch('request:onAuthorized', request)).be.true();
-        should(kuzzle.pipe.calledWithMatch('request:onUnauthorized', request)).be.false();
-      });
+    await should(funnel.checkRights(request)).rejectedWith(error);
+
+    should(verifyTokenStub).calledOnce();
+    should(getUserEvent).not.called();
+
+    should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
+    should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
+  });
+
+  it('should forward a user:get exception', async () => {
+    const error = new Error('foo');
+
+    getUserStub.rejects(error);
+
+    await should(funnel.checkRights(request)).rejectedWith(error);
+
+    should(verifyTokenStub).calledOnce();
+    should(getUserEvent).calledOnce();
+
+    should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
+    should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
+  });
+
+  it('should resolve if rights are correct', async () => {
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(verifyTokenStub).calledOnce();
+    should(getUserEvent).calledOnce();
+
+    should(kuzzle.pipe).calledWith('request:onAuthorized', request);
+    should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
   });
 });

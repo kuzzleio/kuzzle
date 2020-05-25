@@ -22,9 +22,16 @@ describe('Test: security/userRepository', () => {
   let userInDB;
   let userInvalidProfile;
   let repositoryLoadStub;
+  let profileRepositoryMock;
 
   beforeEach(() => {
     const encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a';
+
+    profileRepositoryMock = {
+      loadProfiles: sinon
+        .stub()
+        .callsFake(async (...args) => args[0].map(id => ({_id: id}))),
+    };
 
     repositoryLoadStub = sinon.stub(Repository.prototype, 'load');
 
@@ -44,21 +51,18 @@ describe('Test: security/userRepository', () => {
       profileIds: ['notfound']
     };
 
-    repositoryLoadStub.returns(Bluebird.resolve(null));
-    repositoryLoadStub
-      .withArgs('userInCache')
-      .returns(Bluebird.resolve(userInCache));
-    repositoryLoadStub
-      .withArgs('userInDB')
-      .returns(Bluebird.resolve(userInDB));
+    repositoryLoadStub.resolves(null);
+    repositoryLoadStub.withArgs('userInCache').resolves(userInCache);
+    repositoryLoadStub.withArgs('userInDB').resolves(userInDB);
     repositoryLoadStub
       .withArgs('userInvalidProfile')
-      .returns(Bluebird.resolve(userInvalidProfile));
+      .resolves(userInvalidProfile);
 
     kuzzle = new KuzzleMock();
-    kuzzle.repositories.profile.loadProfiles.callsFake((...args) => Bluebird.resolve(args[0].map(id => ({_id: id}))));
 
-    userRepository = new UserRepository(kuzzle);
+    userRepository = new UserRepository(kuzzle, {
+      profile: profileRepositoryMock,
+    });
 
     return userRepository.init({ indexStorage: kuzzle.internalIndex });
   });
@@ -97,7 +101,7 @@ describe('Test: security/userRepository', () => {
     });
 
     it('should reject if the profile cannot be found', () => {
-      kuzzle.repositories.profile.loadProfiles.resolves([null]);
+      profileRepositoryMock.loadProfiles.resolves([null]);
 
       return should(userRepository.fromDTO(userInvalidProfile))
         .be.rejectedWith(KuzzleInternalError, {
@@ -123,22 +127,20 @@ describe('Test: security/userRepository', () => {
         });
     });
 
-    it('should resolve to user if good credentials are given', () => {
-      kuzzle.repositories.profile.loadProfiles.resolves([
+    it('should resolve to user if good credentials are given', async () => {
+      profileRepositoryMock.loadProfiles.resolves([
         {_id: userInCache.profileIds[0]}
       ]);
 
-      return userRepository.load('userInCache')
-        .then(user => {
-          should(user._id).be.exactly('userInCache');
-          should(user.name).be.exactly('Johnny Cash');
-          should(user.profileIds).be.an.Array();
-          should(user.profileIds[0]).be.exactly('userincacheprofile');
-        });
+      const user = await userRepository.load('userInCache');
+
+      should(user._id).be.exactly('userInCache');
+      should(user.name).be.exactly('Johnny Cash');
+      should(user.profileIds).be.an.Array();
+      should(user.profileIds[0]).be.exactly('userincacheprofile');
     });
 
     it('should resolve to "null" if username is not found', () => {
-
       return userRepository.load('unknownUser')
         .then(user => should(user).be.null());
     });

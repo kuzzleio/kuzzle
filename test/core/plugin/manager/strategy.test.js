@@ -475,8 +475,11 @@ describe('PluginsManager: strategy management', () => {
     });
 
     it('should reject if the plugin returns an invalid kuid', done => {
-      kuzzle.repositories.user.load.resolves(null);
       plugin.object.verifyFunction.resolves({kuid: 'Waldo'});
+
+      kuzzle.ask
+        .withArgs('core:security:user:get', 'Waldo')
+        .rejects({id: 'security.user.not_found'});
 
       verifyAdapter((err, res, msg) => {
         try {

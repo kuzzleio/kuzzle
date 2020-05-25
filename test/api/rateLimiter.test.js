@@ -1,19 +1,18 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  { Request } = require('kuzzle-common-objects'),
-  KuzzleMock = require('../mocks/kuzzle.mock'),
-  RateLimiter = require('../../lib/api/rateLimiter');
+const should = require('should');
+const sinon = require('sinon');
+const { Request } = require('kuzzle-common-objects');
+const KuzzleMock = require('../mocks/kuzzle.mock');
+const RateLimiter = require('../../lib/api/rateLimiter');
 
 describe('#api.rateLimiter', () => {
-  let
-    kuzzle,
-    request,
-    rateLimiter,
-    clock,
-    profiles;
+  let kuzzle;
+  let request;
+  let rateLimiter;
+  let clock;
+  let profiles;
+  let mGetProfilesStub;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -35,7 +34,9 @@ describe('#api.rateLimiter', () => {
       {_id: 'baz', rateLimit: 200}
     ];
 
-    kuzzle.repositories.profile.loadProfiles.resolves(profiles);
+    mGetProfilesStub = kuzzle.ask
+      .withArgs('core:security:profile:mGet', sinon.match.array)
+      .resolves(profiles);
   });
 
   afterEach(() => {
@@ -75,24 +76,24 @@ describe('#api.rateLimiter', () => {
 
       should(await rateLimiter.isAllowed(request)).be.true();
       should(rateLimiter.frame.foobar).be.eql(1);
-      should(kuzzle.repositories.profile.loadProfiles).not.called();
+      should(mGetProfilesStub).not.called();
 
       should(await rateLimiter.isAllowed(request)).be.false();
       should(rateLimiter.frame.foobar).be.eql(2);
-      should(kuzzle.repositories.profile.loadProfiles).not.called();
+      should(mGetProfilesStub).not.called();
 
       request.context.connection.id ='barfoo';
       should(await rateLimiter.isAllowed(request)).be.true();
       should(rateLimiter.frame.barfoo).be.eql(1);
       should(rateLimiter.frame.foobar).be.eql(2);
-      should(kuzzle.repositories.profile.loadProfiles).not.called();
+      should(mGetProfilesStub).not.called();
 
       clock.tick(1000);
 
       request.context.connection.id = 'foobar';
       should(await rateLimiter.isAllowed(request)).be.true();
       should(rateLimiter.frame.foobar).be.eql(1);
-      should(kuzzle.repositories.profile.loadProfiles).not.called();
+      should(mGetProfilesStub).not.called();
     });
 
     it('should handle non-logout requests', async () => {
@@ -105,16 +106,14 @@ describe('#api.rateLimiter', () => {
       for (let i = 0; i < 200; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
         should(rateLimiter.frame.foo).be.eql(i+1);
-        should(kuzzle.repositories.profile.loadProfiles.callCount).eql(i+1);
-        should(kuzzle.repositories.profile.loadProfiles)
-          .alwaysCalledWithMatch(['bar', 'baz']);
+        should(mGetProfilesStub.callCount).eql(i+1);
+        should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
       }
 
       should(await rateLimiter.isAllowed(request)).be.false();
       should(rateLimiter.frame.foo).be.eql(201);
-      should(kuzzle.repositories.profile.loadProfiles.callCount).eql(201);
-      should(kuzzle.repositories.profile.loadProfiles)
-        .alwaysCalledWithMatch(['bar', 'baz']);
+      should(mGetProfilesStub.callCount).eql(201);
+      should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
 
       clock.tick(1000);
       should(await rateLimiter.isAllowed(request)).be.true();
@@ -130,7 +129,7 @@ describe('#api.rateLimiter', () => {
       for (let i = 0; i < 9001; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
         should(rateLimiter.frame.foo).be.undefined();
-        should(kuzzle.repositories.profile.loadProfiles.callCount).eql(i+1);
+        should(mGetProfilesStub.callCount).eql(i+1);
       }
     });
 
@@ -144,7 +143,7 @@ describe('#api.rateLimiter', () => {
       for (let i = 0; i < 50; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
         should(rateLimiter.frame.foo).be.undefined();
-        should(kuzzle.repositories.profile.loadProfiles).not.called();
+        should(mGetProfilesStub).not.called();
       }
     });
 
@@ -158,16 +157,14 @@ describe('#api.rateLimiter', () => {
       for (let i = 0; i < 50; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
         should(rateLimiter.frame['-1']).be.eql(i+1);
-        should(kuzzle.repositories.profile.loadProfiles.callCount).eql(i+1);
-        should(kuzzle.repositories.profile.loadProfiles)
-          .alwaysCalledWithMatch(['bar', 'baz']);
+        should(mGetProfilesStub.callCount).eql(i+1);
+        should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
       }
 
       should(await rateLimiter.isAllowed(request)).be.false();
       should(rateLimiter.frame['-1']).be.eql(51);
-      should(kuzzle.repositories.profile.loadProfiles.callCount).eql(51);
-      should(kuzzle.repositories.profile.loadProfiles)
-        .alwaysCalledWithMatch(['bar', 'baz']);
+      should(mGetProfilesStub.callCount).eql(51);
+      should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
 
       clock.tick(1000);
       should(await rateLimiter.isAllowed(request)).be.true();

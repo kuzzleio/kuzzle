@@ -15,13 +15,20 @@ const {
 } = require('kuzzle-common-objects');
 
 describe('Test: security/roleRepository', () => {
-  let
-    kuzzle,
-    roleRepository;
+  let kuzzle;
+  let roleRepository;
+  let profileRepositoryMock;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    roleRepository = new RoleRepository(kuzzle);
+
+    profileRepositoryMock = {
+      searchProfiles: sinon.stub(),
+    };
+
+    roleRepository = new RoleRepository(kuzzle, {
+      profile: profileRepositoryMock,
+    });
 
     return roleRepository.init();
   });
@@ -234,47 +241,35 @@ describe('Test: security/roleRepository', () => {
         });
     });
 
-    it('should reject and not trigger any event if a profile uses the role about to be deleted', done => {
-      kuzzle.repositories.profile.searchProfiles.resolves({
+    it('should reject and not trigger any event if a profile uses the role about to be deleted', async () => {
+      profileRepositoryMock.searchProfiles.resolves({
         total: 1,
-        hits: [
-          'test'
-        ]
+        hits: ['test']
       });
 
-      roleRepository.delete({_id: 'test'})
-        .then(() => {
-          done(new Error('The promise is not rejected'));
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(PreconditionError);
-          should(e.id).eql('security.role.in_use');
-          should(kuzzle.emit).not.be.called();
-          done();
-        })
-        .catch(e => {
-          done(e);
-        });
+      await should(roleRepository.delete({_id: 'test'}))
+        .rejectedWith(PreconditionError, { id: 'security.role.in_use' });
+
+      should(kuzzle.emit).not.be.called();
     });
 
-    it('should call deleteFromDatabase, remove the role from memory and trigger a "core:roleRepository:delete" event', () => {
+    it('should call deleteFromDatabase, remove the role from memory and trigger a "core:roleRepository:delete" event', async () => {
       const role = new Role();
       role._id = 'foo';
 
-      kuzzle.repositories.profile.searchProfiles.resolves({total: 0});
+      profileRepositoryMock.searchProfiles.resolves({total: 0});
       roleRepository.deleteFromDatabase = sinon.stub().resolves(null);
       roleRepository.roles.set('foo', true);
 
-      return roleRepository.delete(role)
-        .then(() => {
-          should(roleRepository.deleteFromDatabase)
-            .be.calledOnce()
-            .be.calledWith('foo');
-          should(roleRepository.roles).not.have.key('foo');
-          should(kuzzle.emit)
-            .be.calledOnce()
-            .be.calledWith('core:roleRepository:delete', {_id: 'foo'});
-        });
+      await roleRepository.delete(role);
+
+      should(roleRepository.deleteFromDatabase)
+        .be.calledOnce()
+        .be.calledWith('foo');
+      should(roleRepository.roles).not.have.key('foo');
+      should(kuzzle.emit)
+        .be.calledOnce()
+        .be.calledWith('core:roleRepository:delete', {_id: 'foo'});
     });
   });
 

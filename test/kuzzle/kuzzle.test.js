@@ -18,7 +18,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'gc',
     'pluginsManager',
     'adminController',
-    'repositories',
     'services',
     'statistics',
     'validation',
@@ -74,7 +73,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.internalIndex.init,
         kuzzle.log.info, // storageEngine init
         kuzzle.validation.init,
-        kuzzle.repositories.init,
         kuzzle.funnel.init,
         kuzzle.storageEngine.public.loadMappings,
         kuzzle.storageEngine.public.loadFixtures,
@@ -82,15 +80,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.pluginsManager.run,
         kuzzle.log.info, // core components loaded
         kuzzle.log.info, // load default rights
-        kuzzle.repositories.loadSecurities,
+        kuzzle.ask.withArgs('core:security:load', sinon.match.object),
         kuzzle.log.info, // default rights loaded
         kuzzle.router.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.repositories.role.sanityCheck,
-        kuzzle.pipe, // kuzzle:start
+        kuzzle.ask.withArgs('core:security:verify'),
+        kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.entryPoints.init,
-        kuzzle.emit // core:kuzzleStart
+        kuzzle.emit.withArgs('core:kuzzleStart', sinon.match.any)
       );
     });
 
