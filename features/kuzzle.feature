@@ -1685,6 +1685,26 @@ Feature: Kuzzle functional tests
       """
     Then The ms result should match the json ["Agrigento", "Palermo"]
 
+  @redis
+  Scenario: memory storage - transactions
+      When I call the mexecute method of the memory storage with arguments
+      """
+      { "body": {
+          "actions": [
+              { "action": "set", "args": ["a", 1] },
+              { "action": "get", "args": ["a"] },
+              { "action": "del", "args": ["a"] }
+          ]
+      }}
+      """
+    Then The ms result should match the json [[null,"OK"],[null,"1"],[null,1]]
+    When I call the mexecute method of the memory storage with arguments
+    """
+    { "body": {
+        "actions": []
+    }}
+    """
+    Then The ms result should match the json []
 
   @validation
   Scenario: Validation - getSpecification & updateSpecification
