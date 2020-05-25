@@ -19,6 +19,7 @@ describe('MemoryStorageController', () => {
   let extractArgumentsFromRequestForSort;
   let extractArgumentsFromRequestForZAdd;
   let extractArgumentsFromRequestForZInterstore;
+  let extractArgumentsFromRequestForMExecute;
   let request;
   let testMapping;
   let origMapping;
@@ -68,12 +69,14 @@ describe('MemoryStorageController', () => {
     extractArgumentsFromRequestForSort = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestForSort'));
     extractArgumentsFromRequestForZAdd = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestForZAdd'));
     extractArgumentsFromRequestForZInterstore = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestForZInterstore'));
+    extractArgumentsFromRequestForMExecute = wrapped(MemoryStorageController.__get__('extractArgumentsFromRequestForMExecute'));
 
     MemoryStorageController.__set__({
       extractArgumentsFromRequestForSet: extractArgumentsFromRequestForSet,
       extractArgumentsFromRequestForSort: extractArgumentsFromRequestForSort,
       extractArgumentsFromRequestForZAdd: extractArgumentsFromRequestForZAdd,
-      extractArgumentsFromRequestForZInterstore: extractArgumentsFromRequestForZInterstore
+      extractArgumentsFromRequestForZInterstore: extractArgumentsFromRequestForZInterstore,
+      extractArgumentsFromRequestForMExecute: extractArgumentsFromRequestForMExecute
     });
 
     kuzzle = new KuzzleMock();
@@ -631,6 +634,32 @@ describe('MemoryStorageController', () => {
     });
 
 
+  });
+
+  describe('#extractArgumentsFromRequestForMExecute', () => {
+    beforeEach(() => {
+      MemoryStorageController.__set__({mapping: origMapping});
+    });
+
+    it('should be called from extractArgumentsFromRequest when calling "mexecute"', () => {
+      request.input.body.actions = [
+        { 'action': 'set', 'args': ['a', 1] }];
+      extractArgumentsFromRequest('mexecute', request);
+
+      should(called.extractArgumentsFromRequestForMExecute.called).be.true();
+      should(called.extractArgumentsFromRequestForMExecute.args).be.eql([request]);
+    });
+
+    it('should throw when there is an invalid command', () => {
+      request.input.body.actions = [
+        { 'action': 'mexecute', 'args': ['actions', []] }];
+      should(() => extractArgumentsFromRequestForMExecute(request))
+        .throw(BadRequestError, { id: 'api.assert.forbidden_argument' });
+
+      request.input.body.actions = [{ 'action': 'exec' }];
+      should(() => extractArgumentsFromRequestForMExecute(request))
+        .throw(BadRequestError, { id: 'api.assert.forbidden_argument' });
+    });
   });
 
   describe('#generated functions', () => {
