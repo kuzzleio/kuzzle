@@ -3,7 +3,7 @@
 ################################################################################
 FROM node:12.16.3-stretch-slim as plugin-dev-build
 
-ADD . /var/app
+ADD . /var/app/
 
 WORKDIR /var/app
 
@@ -13,33 +13,35 @@ RUN  set -x \
        build-essential \
        curl \
        g++ \
-       gdb \
        git \
        python \
        libfontconfig \
-       libkrb5-dev \
        libzmq3-dev \
        procps \
        wget \
   && npm set progress=false \
-  && rm -rf /var/lib/apt/lists/* \
+  && npm install -g --unsafe-perm --production \
+    nodemon \
+    kourou \
+  && rm -rf /var/lib/apt/lists/*
 
-  && npm install --unsafe-perm \
+  RUN npm install --unsafe-perm \
   && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done \
+  && for plugin in plugins/available/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done
 
   # Cleaning
-  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash -s -- -b /usr/local/bin \
-  && /usr/local/bin/node-prune \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
-  && rm /usr/local/bin/node-prune \
 
-  && strip node_modules/re2/build/Release/re2.node \
+  RUN strip node_modules/re2/build/Release/re2.node \
   && strip node_modules/re2/build/Release/obj.target/re2.node \
   && find node_modules/ -name "*.o" | xargs rm \
+  && npm prune --production \
+  && for plugin in plugins/enabled/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
+  && for plugin in plugins/available/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
 
   && rm -rf doc/
+
+  RUN  tar cfa /lib-node_modules.tar.lzma /usr/local/lib/node_modules \
+    && tar cfa /app.tar.lzma /var/app
 
 ################################################################################
 # Plugin development image
@@ -49,9 +51,8 @@ FROM node:12.16.3-stretch-slim as plugin-dev
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
-COPY --from=plugin-dev-build /var/app/ /var/app/
-
-WORKDIR /var/app
+COPY --from=plugin-dev-build /app.tar.lzma /app.tar.lzma
+COPY --from=plugin-dev-build /lib-node_modules.tar.lzma /lib-node_modules.tar.lzma
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
@@ -62,15 +63,10 @@ RUN  set -x \
        gdb \
        git \
        python \
-       libfontconfig \
-       libkrb5-dev \
        libzmq3-dev \
        procps \
        wget \
   && npm set progress=false \
-  && npm install -g --unsafe-perm --production \
-    nodemon \
-    kourou \
   && rm -rf /var/lib/apt/lists/*
 
 ################################################################################
@@ -97,7 +93,13 @@ COPY --from=plugin-dev /var/app/default.config.js /var/app/default.config.js
 
 WORKDIR /var/app
 
-RUN npm prune --production \
+RUN curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash -s -- -b /usr/local/bin \
+  && /usr/local/bin/node-prune \
+  && for plugin in plugins/enabled/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
+  && for plugin in plugins/available/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
+  && rm /usr/local/bin/node-prune \
+
+  && npm prune --production \
   && for plugin in plugins/enabled/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
   && for plugin in plugins/available/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
 
@@ -107,7 +109,9 @@ RUN npm prune --production \
   && rm -rf node_modules/rxjs/ \
   && rm -rf node_modules/boost-geospatial-index/include/ \
 
-  && cd / && tar cfJ app.tar.xz /var/app
+  && find / \( -name "*.md" -o -name "*.ts*" -o -name "*.txt" \) | xargs rm
+
+  && cd / && tar cfa app.tar.lzma /var/app
 
 ################################################################################
 # Production image
@@ -121,7 +125,7 @@ ENV NODE_ENV=production
 
 COPY --from=kuzzle-build /var/app/docker-compose/scripts/run.sh /usr/local/bin/kuzzle
 
-COPY --from=kuzzle-build /app.tar.xz /app.tar.xz
+COPY --from=kuzzle-build /app.tar.lzma /app.tar.lzma
 
 RUN  apk update \
   && apk add --no-cache curl \

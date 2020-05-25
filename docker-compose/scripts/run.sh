@@ -4,7 +4,7 @@ set -e
 
 echo "Decompressing Kuzzle.."
 
-tar xf app.tar.xz
+tar xf app.tar.lzma
 
 cd /var/app
 

@@ -2,6 +2,11 @@
 
 set -e
 
+echo "Decompressing Kuzzle.."
+
+tar xf lib-node_modules.tar.lzma &
+tar xf app.tar.lzma
+
 if [ ! -z "$WITHOUT_KUZZLE" ]; then
   exit 0
 fi
