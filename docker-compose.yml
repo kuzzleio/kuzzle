@@ -8,15 +8,15 @@ services:
     ports:
       - "7443:7443"
     volumes:
-      - ./docker-compose/nginx:/etc/nginx/conf.d
+      - ./docker/nginx:/etc/nginx/conf.d
 
   kuzzle:
     image: kuzzleio/core-dev:2
     command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
     volumes:
       - ".:/var/app"
-      - "./docker-compose/scripts/run-dev.sh:/run-dev.sh"
-      - "./docker-compose/fixtures:/fixtures"
+      - "./docker/scripts/run-dev.sh:/run-dev.sh"
+      - "./docker/fixtures:/fixtures"
     cap_add:
       - SYS_PTRACE
     ulimits:
@@ -49,7 +49,6 @@ services:
       - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
       - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features-sdk/fixtures/secrets.enc.json}
       # Variables used by the development scripts
-      - NODE_12_VERSION=12.13.0
       - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
       - REBUILD # Force a rebuild of npm modules
 
@@ -59,7 +58,7 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.4.0
+    image: kuzzleio/elasticsearch:7
     ports:
       - "9200:9200"
     ulimits:

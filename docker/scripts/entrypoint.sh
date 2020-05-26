@@ -2,4 +2,6 @@
 
 set -e
 
+/bin/extract
+
 exec "$@"

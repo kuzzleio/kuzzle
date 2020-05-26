@@ -15,5 +15,5 @@ plugins/enabled/functional-test-plugin
 plugins/enabled/dummy
 
 .git/
-Dockerfile
+**Dockerfile
 doc/
