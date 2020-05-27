@@ -14,9 +14,9 @@ init_promises () {
   catch_mode=$1
 
   promises=0
-  rm -rf /tmp/promise_*
-  rm -rf /tmp/resolve_*
-  rm -rf /tmp/reject_*
+
+  rm -rf /tmp/bash-promise/
+  mkdir -p /tmp/bash-promise/
 }
 
 # Run a command in a subprocess
@@ -28,27 +28,50 @@ promise_run () {
   local command=$@
 
   local identifier=$promises
-  local lockfile=/tmp/promise_$identifier
-  local resolve=/tmp/resolve_$identifier
-  local reject=/tmp/reject_$identifier
+  local promise_dir=/tmp/bash-promise/$identifier
+  local lockfile=$promise_dir/lock
+  local pidfile=$promise_dir/pid
+  local resolve=$promise_dir/resolve
+  local reject=$promise_dir/reject
 
-  test -f $lockfile && rm $lockfile
+  test -d $promise_dir && rm -rf $promise_dir
+  mkdir -p $promise_dir
+
   eval $command \
     && [[ $? -eq 0 ]] \
     && (test -f $resolve && eval "$(cat $resolve)" && touch $lockfile || touch $lockfile) \
-    || (test -f $reject && eval "$(cat $reject)" && touch $lockfile || touch $lockfile) \
+    || ([[ $catch_mode = "strict" ]] && _promise_exit || test -f $reject && eval "$(cat $reject)" \
+      && touch $lockfile || touch $lockfile) \
     &
+
+  echo $! > $pidfile
 
   promises=$((promises+1))
 
   return $identifier
 }
 
+_promise_exit () {
+  local parent_pid=$$
+
+  for pidfile in $(find /tmp/bash-promise/ -name pid);
+  do
+    pid=$(cat $pidfile)
+    pid_lines=$(ps $pid | wc -l)
+    if [[ ! $pid_lines = "1" ]];
+    then
+      kill $pid
+    fi
+  done
+
+  kill $parent_pid
+}
+
 promise_then () {
   local identifier=$?
   local command=$@
 
-  local resolve=/tmp/resolve_$identifier
+  local resolve=/tmp/bash-promise/$identifier/resolve
 
   echo "$command" > $resolve
 
@@ -59,7 +82,7 @@ promise_catch () {
   local identifier=$?
   local command=$@
 
-  local reject=/tmp/reject_$identifier
+  local reject=/tmp/bash-promise/$identifier/reject
 
   echo "$command" > $reject
 
@@ -77,7 +100,7 @@ await_promises () {
     i=0
     while [ $i -ne $promises ]
     do
-      test -f /tmp/promise_$i && resolved=$((resolved+1))
+      test -f /tmp/bash-promise/$i/lock && resolved=$((resolved+1))
       i=$((i+1))
     done
 
@@ -87,7 +110,7 @@ await_promises () {
 
 # Wait for the last executed promise to be fulfilled
 await_promise () {
-  local lockfile=/tmp/promise_$?
+  local lockfile=/tmp/bash-promise/$?/lock
   local resolved=0
 
   until [ $resolved -eq 1 ]

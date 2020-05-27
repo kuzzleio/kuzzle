@@ -65,9 +65,13 @@ RUN  set -x \
 ################################################################################
 FROM node:12.16.3-stretch-slim as minifier
 
+COPY --from=builder /usr/bin/strip /bin/strip
 COPY --from=builder /var/app /var/app
 
-RUN  strip /usr/local/bin/node \
+RUN  apt-get update && apt-get install -y binutils  \
+  && rm -rf /var/lib/apt/lists/* \
+  && /bin/strip /usr/local/bin/node \
+  && apt-get remove -y binutils \
   && tar cfJ /lib.tar.xz /lib \
   && tar cfJ /usr.tar.xz /usr \
   && tar cfJ /app.tar.xz /var/app
