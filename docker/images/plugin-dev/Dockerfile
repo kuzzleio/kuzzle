@@ -73,18 +73,19 @@ FROM debian:stretch-slim as plugin-dev
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
-COPY --from=builder /usr/bin/xz /bin/xz
 ADD ./docker/scripts/promises.sh /promises.sh
+ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
+ADD ./docker/scripts/extract.sh /bin/extract
+ADD ./docker/scripts/run-plugin.sh /bin/run-plugin
+
+COPY --from=builder /usr/bin/xz /bin/xz
 COPY --from=builder /lib.tar.xz /everest/lib.tar.xz
 COPY --from=builder /usr.tar.xz /everest/usr.tar.xz
-COPY --from=builder /var/app/docker/scripts/entrypoint.sh /bin/entrypoint
-COPY --from=builder /var/app/docker/scripts/extract.sh /bin/extract
-COPY --from=builder /var/app/docker/scripts/run-plugin.sh /bin/run-plugin
 COPY --from=builder /app.tar.xz /everest/app.tar.xz
 
-RUN  apt-get update \
+RUN  set -x \
+  && apt-get update \
   && apt-get install xz-utils \
-  && rm -rf /var/lib/apt/lists/* \
   && rm /bin/sh \
   && ln -s /bin/bash /bin/sh \
   && chmod a+x /bin/extract \

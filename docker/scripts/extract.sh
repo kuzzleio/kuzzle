@@ -2,41 +2,38 @@
 
 source /promises.sh
 
-if [ -f /everest/lib.tar.xz ] && [ -f /everest/usr.tar.xz ] && [ -f /everest/app.tar.xz ]; then
-    init_promises "strict"
+init_promises "strict"
 
-    echo "[ℹ] Decompressing system.."
-    cd /everest
+cd /everest
 
-    promise_run tar xf lib.tar.xz
-      promise_then cp -r lib/* ../lib/.
+files=$(ls -I app.tar.xz *.tar.xz)
 
-    promise_run tar xf usr.tar.xz
-      promise_then  cp -r usr/* ../usr/.
+echo "[ℹ] Decompressing system.."
+for file in $files;
+do
+  basename="${file%.tar.xz}"
 
-    echo "[ℹ] Decompressing Kuzzle.."
-    cd /everest
-    promise_run tar xf app.tar.xz
+  promise_run tar xf $file
+    promise_then cp -r $basename/* /$basename/.
+done
 
-    await_promises
+echo "[ℹ] Decompressing Kuzzle.."
 
-    echo "[ℹ] Copying Kuzzle.."
-    mkdir -p /var/app
-    for file in bin config default.config.js docker lib node_modules package-lock.json package.json; do
-      promise_run cp -r var/app/$file ../var/app/$file
-    done
+promise_run tar xf app.tar.xz
 
-    mkdir -p /var/app/plugins/enabled
-    mkdir -p /var/app/plugins/available
-    promise_run cp -r var/app/plugins/available/* ../var/app/plugins/available/.
-    promise_run cp -r var/app/plugins/enabled/* ../var/app/plugins/enabled/.
+await_promises
 
-    await_promises
+echo "[ℹ] Copying Kuzzle.."
+mkdir -p /var/app
+for file in bin config default.config.js docker lib node_modules package-lock.json package.json; do
+  promise_run cp -r var/app/$file ../var/app/$file
+done
 
-    echo "[✔] System ready"
-else
+mkdir -p /var/app/plugins/enabled
+mkdir -p /var/app/plugins/available
+promise_run cp -r var/app/plugins/available/* ../var/app/plugins/available/.
+promise_run cp -r var/app/plugins/enabled/* ../var/app/plugins/enabled/.
 
-  echo "[x] Missing /system/system.tar.xz and /everest/app.tar.xz"
-  exit 1
+await_promises
 
-fi
+echo "[✔] System ready"

@@ -5,7 +5,6 @@ FROM node:12.16.3-stretch-slim as builder
 
 ADD ./bin /var/app/bin
 ADD ./config /var/app/config
-ADD ./docker /var/app/docker
 
 ADD ./lib /var/app/lib
 
@@ -68,7 +67,8 @@ FROM node:12.16.3-stretch-slim as minifier
 COPY --from=builder /usr/bin/strip /bin/strip
 COPY --from=builder /var/app /var/app
 
-RUN  apt-get update && apt-get install -y binutils  \
+RUN  set -x \
+  && apt-get update && apt-get install -y binutils  \
   && rm -rf /var/lib/apt/lists/* \
   && /bin/strip /usr/local/bin/node \
   && apt-get remove -y binutils \
@@ -87,11 +87,12 @@ LABEL description="Run your Kuzzle backend in production mode"
 ENV NODE_ENV=production
 
 ADD ./docker/scripts/promises.sh /promises.sh
+ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
+ADD ./docker/scripts/extract.sh /bin/extract
+ADD ./docker/scripts/run.sh /bin/kuzzle
+
 COPY --from=minifier /lib.tar.xz /everest/lib.tar.xz
 COPY --from=minifier /usr.tar.xz /everest/usr.tar.xz
-COPY --from=builder /var/app/docker/scripts/entrypoint.sh /bin/entrypoint
-COPY --from=builder /var/app/docker/scripts/extract.sh /bin/extract
-COPY --from=builder /var/app/docker/scripts/run.sh /bin/kuzzle
 COPY --from=minifier /app.tar.xz /everest/app.tar.xz
 
 RUN  chmod a+x /bin/extract \

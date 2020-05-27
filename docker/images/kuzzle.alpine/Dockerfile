@@ -5,7 +5,6 @@ FROM node:12.16.3-alpine3.11 as builder
 
 ADD ./bin /var/app/bin
 ADD ./config /var/app/config
-ADD ./docker /var/app/docker
 
 ADD ./lib /var/app/lib
 
@@ -23,7 +22,8 @@ WORKDIR /var/app
 
 ENV NODE_ENV=production
 
-RUN  apk add --no-cache \
+RUN  set -x \
+  && apk add --no-cache \
       curl \
       python \
       make \
@@ -66,7 +66,8 @@ FROM node:12.16.3-alpine3.11 as minifier
 
 COPY --from=builder /var/app /var/app
 
-RUN  apk add --no-cache \
+RUN  set -x \
+  && apk add --no-cache \
         xz \
         binutils \
   && strip /usr/local/bin/node \
@@ -86,11 +87,12 @@ LABEL description="Run your Kuzzle backend in production mode"
 ENV NODE_ENV=production
 
 ADD ./docker/scripts/promises.sh /promises.sh
+ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
+ADD ./docker/scripts/extract.sh /bin/extract
+ADD ./docker/scripts/run.sh /bin/kuzzle
+
 COPY --from=minifier /lib.tar.xz /everest/lib.tar.xz
 COPY --from=minifier /usr.tar.xz /everest/usr.tar.xz
-COPY --from=builder /var/app/docker/scripts/entrypoint.sh /bin/entrypoint
-COPY --from=builder /var/app/docker/scripts/extract.sh /bin/extract
-COPY --from=builder /var/app/docker/scripts/run.sh /bin/kuzzle
 COPY --from=minifier /app.tar.xz /everest/app.tar.xz
 
 RUN  chmod a+x /bin/extract \
