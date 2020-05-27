@@ -31,8 +31,8 @@ RUN  apk add --no-cache \
       xz \
       zeromq-dev \
       binutils \
-    && rm -rf /var/cache/apk/* \
-    && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
+  && rm -rf /var/cache/apk/* \
+  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   # Install dependencies
   && npm install --production \
   # Remove useless JS related files
@@ -71,7 +71,8 @@ RUN  apk add --no-cache \
         binutils \
   && strip /usr/local/bin/node \
   && apk del binutils \
-  && tar cfJ /system.tar.xz /lib /usr \
+  && tar cfJ /lib.tar.xz /lib \
+  && tar cfJ /usr.tar.xz /usr \
   && tar cfJ /app.tar.xz /var/app
 
 ################################################################################
@@ -84,7 +85,9 @@ LABEL description="Run your Kuzzle backend in production mode"
 
 ENV NODE_ENV=production
 
-COPY --from=minifier /system.tar.xz /everest/system.tar.xz
+ADD ./docker/scripts/promises.sh /promises.sh
+COPY --from=minifier /lib.tar.xz /everest/lib.tar.xz
+COPY --from=minifier /usr.tar.xz /everest/usr.tar.xz
 COPY --from=builder /var/app/docker/scripts/entrypoint.sh /bin/entrypoint
 COPY --from=builder /var/app/docker/scripts/extract.sh /bin/extract
 COPY --from=builder /var/app/docker/scripts/run.sh /bin/kuzzle

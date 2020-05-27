@@ -1,5 +1,5 @@
 ################################################################################
-# Plugin development build image
+# Production build image
 ################################################################################
 FROM node:12.16.3-stretch-slim as builder
 
@@ -21,6 +21,8 @@ ADD ./default.config.js /var/app/default.config.js
 
 WORKDIR /var/app
 
+ENV NODE_ENV=production
+
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
@@ -30,15 +32,10 @@ RUN  set -x \
        python \
        libzmq3-dev \
   && npm set progress=false \
-  && npm install -g --unsafe-perm --production \
-    nodemon \
-    kourou \
-  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   && rm -rf /var/lib/apt/lists/* \
-  # Install NPM dependencies
-  && npm install --production --unsafe-perm \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --production --unsafe-perm; cd /var/app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; npm install --production -unsafe-perm; cd /var/app; done \
+  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
+  # Install dependencies
+  && npm install --production \
   # Remove useless JS related files
   &&  /usr/local/bin/node-prune \
   && for plugin in plugins/enabled/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
@@ -51,35 +48,52 @@ RUN  set -x \
   # Remove git repositories
   && for plugin in plugins/enabled/*; do cd "$plugin"; rm -rf .git/; cd /var/app; done \
   && for plugin in plugins/available/*; do cd "$plugin"; rm -rf .git/; cd /var/app; done \
+  # Remove useless leftover dependencies
+  && rm -rf node_modules/rxjs/ \
+  && rm -rf node_modules/boost-geospatial-index/include/ \
   # Remove useless text and object files
   && find / \( -name "*.md" -o -name "*.ts*" -o -name "*.txt" -o -name "*.o" \) | xargs rm \
   && rm -rf /usr/local/lib/node_modules/npm/changelogs/ \
   && rm -rf /usr/local/lib/node_modules/npm/man/ \
   && rm -rf /usr/local/lib/node_modules/npm/docs/ \
   # Strip binaries
-  && strip /usr/local/bin/node \
   && strip node_modules/re2/build/Release/re2.node \
-  && strip node_modules/re2/build/Release/obj.target/re2.node \
-  # Create system and app archives
+  && strip node_modules/re2/build/Release/obj.target/re2.node
+
+################################################################################
+# Production build 2 image
+################################################################################
+FROM node:12.16.3-stretch-slim as minifier
+
+COPY --from=builder /var/app /var/app
+
+RUN  strip /usr/local/bin/node \
   && tar cfJ /lib.tar.xz /lib \
   && tar cfJ /usr.tar.xz /usr \
   && tar cfJ /app.tar.xz /var/app
 
 ################################################################################
-# Plugin development image
+# Production image
 ################################################################################
-FROM debian:stretch-slim as plugin-dev
+FROM bitnami/minideb:stretch as kuzzle
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
-LABEL description="Develop new plugin or protocol for Kuzzle with ease"
+LABEL description="Run your Kuzzle backend in production mode"
 
-# COPY --from=builder /usr/bin/xz /bin/xz
+ENV NODE_ENV=production
+
 ADD ./docker/scripts/promises.sh /promises.sh
 COPY --from=minifier /lib.tar.xz /everest/lib.tar.xz
 COPY --from=minifier /usr.tar.xz /everest/usr.tar.xz
-COPY --from=builder /var/app/docker/scripts/prepare.sh /bin/prepare
-COPY --from=builder /var/app/docker/scripts/run-plugin.sh /bin/run-plugin
-COPY --from=builder /app.tar.xz /everest/app.tar.xz
+COPY --from=builder /var/app/docker/scripts/entrypoint.sh /bin/entrypoint
+COPY --from=builder /var/app/docker/scripts/extract.sh /bin/extract
+COPY --from=builder /var/app/docker/scripts/run.sh /bin/kuzzle
+COPY --from=minifier /app.tar.xz /everest/app.tar.xz
 
-RUN  chmod a+x /bin/prepare \
-  && chmod a+x /bin/run-plugin
+RUN  chmod a+x /bin/extract \
+  && chmod a+x /bin/kuzzle
+
+ENTRYPOINT ["/bin/entrypoint"]
+
+CMD ["kuzzle", "start"]
+
