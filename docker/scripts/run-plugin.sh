@@ -17,4 +17,5 @@ cd /var/app
 
 nodemon \
     --inspect=0.0.0.0:9229 \
-    bin/start-kuzzle-server
+    bin/start-kuzzle-server \
+    $@
