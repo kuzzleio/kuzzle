@@ -12,11 +12,10 @@ services:
 
   kuzzle:
     image: kuzzleio/core-dev:2
-    command: sh -c 'chmod 755 /run.sh && /run.sh'
+    command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
     volumes:
       - ".:/var/app"
-      - "./docker-compose/scripts/run-dev.sh:/run.sh"
-      - "./docker-compose/config/pm2-dev.json:/config/pm2.json"
+      - "./docker-compose/scripts/run-dev.sh:/run-dev.sh"
       - "./docker-compose/fixtures:/fixtures"
     cap_add:
       - SYS_PTRACE
