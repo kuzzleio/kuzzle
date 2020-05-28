@@ -310,10 +310,11 @@ describe('funnelController.execute', () => {
   });
 
   describe('#kuzzle:shutdown', () => {
-    it('should reject any new request after the kuzzle:shutdown event has been triggered', done => {
+    it('should reject any new request after the kuzzle:shutdown event has been triggered', async () => {
       funnel.controllers.clear();
       sinon.stub(funnel.rateLimiter, 'init');
-      funnel.init();
+
+      await funnel.init();
 
       should(funnel.shuttingDown).be.false();
 
@@ -323,16 +324,18 @@ describe('funnelController.execute', () => {
       // gives some time for the event to propagate
       should(funnel.shuttingDown).be.true();
 
-      funnel.execute(request, (err, res) => {
-        try {
-          should(err).be.instanceOf(ServiceUnavailableError);
-          should(res.status).be.exactly(503);
-          should(err.id).be.eql('api.process.shutting_down');
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
+      await new Promise((resolve, reject) => {
+        funnel.execute(request, (err, res) => {
+          try {
+            should(err).be.instanceOf(ServiceUnavailableError);
+            should(res.status).be.exactly(503);
+            should(err.id).be.eql('api.process.shutting_down');
+            resolve();
+          }
+          catch (e) {
+            reject(e);
+          }
+        });
       });
     });
   });

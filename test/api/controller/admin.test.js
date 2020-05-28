@@ -39,22 +39,19 @@ describe('AdminController', () => {
       request.input.action = 'resetCache';
     });
 
-    it('should flush the cache for the specified database', done => {
+    it('should flush the cache for the specified database', async () => {
       kuzzle.cacheEngine.public.flushdb = flushdbStub.returns();
       request.input.args.database = 'memoryStorage';
 
-      adminController.resetCache(request)
-        .then(() => {
-          should(flushdbStub).be.calledOnce();
-          done();
-        })
-        .catch(error => done(error));
+      await adminController.resetCache(request);
+
+      should(flushdbStub).be.calledOnce();
     });
 
     it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
 
-      should(() => adminController.resetCache(request)).throw(
+      return should(adminController.resetCache(request)).rejectedWith(
         NotFoundError,
         { id: 'services.cache.database_not_found' });
     });

@@ -16,12 +16,12 @@ const ServerController = require('../../../lib/api/controller/server');
 const AdminController = require('../../../lib/api/controller/admin');
 
 describe('funnel.init', () => {
-  it('should initialize API and plugins controller', () => {
+  it('should initialize API and plugins controller', async () => {
     const kuzzle = new KuzzleMock();
     const funnel = new Funnel(kuzzle);
 
     sinon.stub(funnel.rateLimiter, 'init');
-    funnel.init();
+    await funnel.init();
 
     should(funnel.rateLimiter.init).calledOnce();
     should(funnel.controllers.size).be.eql(11);

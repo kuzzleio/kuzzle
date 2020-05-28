@@ -407,7 +407,7 @@ describe('Test: security controller - users', () => {
       request.input.args.scrollId = null;
 
       return should(securityController.scrollUsers(request))
-        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reformat search results correctly', async () => {

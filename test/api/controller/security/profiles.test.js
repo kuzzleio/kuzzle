@@ -11,7 +11,7 @@ const {
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const Profile = require('../../../../lib/models/security/profile');
+const Profile = require('../../../../lib/model/security/profile');
 const SecurityController = require('../../../../lib/api/controller/security');
 
 describe('Test: security controller - profiles', () => {
@@ -210,7 +210,7 @@ describe('Test: security controller - profiles', () => {
     it('should resolve to a formatted object', async () => {
       createStub.resolves(fakeProfile);
 
-      const response = await should(securityController.createProfile(request));
+      const response = await securityController.createProfile(request);
 
       should(createStub).calledWithMatch(
         createEvent,
@@ -227,7 +227,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject if the profile to create is invalid', async () => {
-      request = new Request({});
+      request = new Request({_id: 'foo'});
       await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
 
@@ -240,7 +240,7 @@ describe('Test: security controller - profiles', () => {
       should(createStub).not.called();
 
       request = new Request({_id: 'foo', body: {policies: 'foobar'}});
-      should(securityController.createProfile(request))
+      await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "body.policies" (expected: array)'
@@ -248,7 +248,7 @@ describe('Test: security controller - profiles', () => {
       should(createStub).not.called();
 
       request = new Request({body: {policies: []}});
-      should(securityController.createProfile(request))
+      await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
@@ -256,7 +256,7 @@ describe('Test: security controller - profiles', () => {
       should(createStub).not.called();
 
       request = new Request({_id: '_foobar', body: {policies: []}});
-      should(securityController.createProfile(request))
+      await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.invalid_id' });
       should(createStub).not.called();
     });
@@ -277,35 +277,35 @@ describe('Test: security controller - profiles', () => {
       }
     });
 
-    it('should throw if an invalid profile format is provided', () => {
+    it('should throw if an invalid profile format is provided', async () => {
       request = new Request({});
-      should(() => securityController.createProfile(request))
-        .throw(BadRequestError, { id: 'api.assert.body_required' });
+      await should(securityController.createProfile(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
 
       request = new Request({body: {}});
-      should(() => securityController.createProfile(request))
-        .throw(BadRequestError, {
+      await should(securityController.createProfile(request))
+        .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
           message: 'Missing argument "body.policies".'
         });
 
       request = new Request({body: {policies: 'foobar'}});
-      should(() => securityController.createProfile(request))
-        .throw(BadRequestError, {
+      await should(securityController.createProfile(request))
+        .rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "body.policies" (expected: array)'
         });
 
       request = new Request({body: {policies: []}});
-      should(() => securityController.createProfile(request))
-        .throw(BadRequestError, {
+      await should(securityController.createProfile(request))
+        .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
         });
 
       request = new Request({_id: '_foobar', body: {policies: []}});
-      should(() => securityController.createProfile(request))
-        .throw(BadRequestError, { id: 'api.assert.invalid_id' });
+      await should(securityController.createProfile(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.invalid_id' });
     });
   });
 
