@@ -2,6 +2,6 @@
 
 set -e
 
-/bin/extract
+/bin/everest-extract
 
 exec "$@"

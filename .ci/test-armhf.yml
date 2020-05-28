@@ -5,7 +5,7 @@ services:
     image: kuzzleio/core-dev-armhf:2
     command: sh -c 'chmod 755 /run-test-arm.sh && /run-test-arm.sh'
     volumes:
-      - "..:/var/app"
+      - "..:/app"
       - "./scripts/run-test-arm.sh:/run-test-arm.sh"
     cap_add:
       - SYS_PTRACE
@@ -23,7 +23,7 @@ services:
       - kuzzle_limits__loginsPerSecond=50
       - NODE_ENV=production
       - DEBUG=
-      - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
+      - KUZZLE_SECRETS_FILE=/app/features-sdk/fixtures/secrets.enc.json
       - KUZZLE_VAULT_KEY=secret-password
       # Travis env var must be propagated into the container
       - TRAVIS

@@ -10,8 +10,8 @@ ARG SSH_KEY
 ENV GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
 ENV NODE_ENV=production
 
-WORKDIR /var/app
-COPY . /var/app
+WORKDIR /app
+COPY . /app
 
 RUN  set -x \
   \
@@ -46,12 +46,12 @@ RUN  set -x \
   && npm i git://${repo}#${sha1} \
   \
   && echo "Replace cluster with its last security version" \
-  && rm -rf /var/app/plugins/available/kuzzle-plugin-cluster \
+  && rm -rf /app/plugins/available/kuzzle-plugin-cluster \
   && git clone --recursive \
     -b ${CLUSTER_BRANCH} \
     git@github.com:kuzzleio/cluster-security-patch.git \
-    /var/app/plugins/available/kuzzle-plugin-cluster \
-  && rm -rf /var/app/plugins/available/kuzzle-plugin-cluster/.git \
+    /app/plugins/available/kuzzle-plugin-cluster \
+  && rm -rf /app/plugins/available/kuzzle-plugin-cluster/.git \
   \
   && npm ci \
   && for plugin in plugins/available/*/; do  \
@@ -62,17 +62,17 @@ RUN  set -x \
 # -----------------------------------------------------------------------------
 FROM node:${NODE_TAG}
 
-WORKDIR /var/app
+WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=dependencies /var/app/ /var/app/
+COPY --from=dependencies /app/ /app/
 
-RUN  ln -s /var/app/docker/scripts/run.sh /usr/local/bin/kuzzle \
+RUN  ln -s /app/docker/scripts/run.sh /usr/local/bin/kuzzle \
   && chmod a+x /usr/local/bin/kuzzle \
-  && chmod a+x /var/app/docker/scripts/docker-entrypoint.sh
+  && chmod a+x /app/docker/scripts/docker-entrypoint.sh
 
-ENTRYPOINT ["/var/app/docker/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/app/docker/scripts/docker-entrypoint.sh"]
 
 CMD ["kuzzle", "start"]
 

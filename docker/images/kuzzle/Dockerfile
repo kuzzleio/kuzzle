@@ -3,22 +3,14 @@
 ################################################################################
 FROM node:12.16.3-stretch-slim as builder
 
-ADD ./bin /var/app/bin
-ADD ./config /var/app/config
+ADD ./bin /app/bin
+ADD ./config /app/config
+ADD ./lib /app/lib
+ADD ./package.json /app/package.json
+ADD ./package-lock.json /app/package-lock.json
+ADD ./default.config.js /app/default.config.js
 
-ADD ./lib /var/app/lib
-
-ADD ./plugins/available/kuzzle-plugin-auth-passport-local /var/app/plugins/available/kuzzle-plugin-auth-passport-local
-# @todo remove when cluster is integrated
-ADD ./plugins/available/kuzzle-plugin-cluster /var/app/plugins/available/kuzzle-plugin-cluster
-ADD ./plugins/available/kuzzle-plugin-logger /var/app/plugins/available/kuzzle-plugin-logger
-ADD ./plugins/enabled /var/app/plugins/enabled
-
-ADD ./package.json /var/app/package.json
-ADD ./package-lock.json /var/app/package-lock.json
-ADD ./default.config.js /var/app/default.config.js
-
-WORKDIR /var/app
+WORKDIR /app
 
 ENV NODE_ENV=production
 
@@ -30,31 +22,30 @@ RUN  set -x \
        g++ \
        python \
        libzmq3-dev \
-  && npm set progress=false \
-  && rm -rf /var/lib/apt/lists/* \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
+  && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
+  && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/ \
   # Install dependencies
-  && npm install --production \
-  # Remove useless JS related files
-  &&  /usr/local/bin/node-prune \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
-  && rm /usr/local/bin/node-prune \
-  # Remove non-production dependencies
-  && npm prune --production \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
-  # Remove git repositories
-  && for plugin in plugins/enabled/*; do cd "$plugin"; rm -rf .git/; cd /var/app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; rm -rf .git/; cd /var/app; done \
+  && npm install --production
+
+ADD ./docker/scripts/everest-clean-node.sh /usr/bin/everest-clean-node
+
+ADD ./plugins/available/ /app/plugins/available/
+
+RUN  set -x \
+  # Link default plugins
+  && mkdir -p /app/plugins/enabled/ \
+  && ln -s /app/plugins/available/kuzzle-plugin-auth-passport-local /app/plugins/enabled/kuzzle-plugin-auth-passport-local \
+  && ln -s /app/plugins/available/kuzzle-plugin-logger /app/plugins/enabled/kuzzle-plugin-logger \
+  # Install plugins dependencies
+  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --production; cd /app; done \
+  && for plugin in plugins/available/*; do cd "$plugin"; npm install --production; cd /app; done \
+  # Clean Node.js related useless files
+  && everest-clean-node \
+  && for plugin in plugins/enabled/*; do cd "$plugin"; echo "$plugin"; everest-clean-node; cd /app; done \
+  && for plugin in plugins/available/*; do cd "$plugin"; echo "$plugin"; everest-clean-node; cd /app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
-  && rm -rf node_modules/boost-geospatial-index/include/ \
-  # Remove useless text and object files
-  && find / \( -name "*.md" -o -name "*.ts*" -o -name "*.txt" -o -name "*.o" \) | xargs rm \
-  && rm -rf /usr/local/lib/node_modules/npm/changelogs/ \
-  && rm -rf /usr/local/lib/node_modules/npm/man/ \
-  && rm -rf /usr/local/lib/node_modules/npm/docs/ \
   # Strip binaries
   && strip node_modules/re2/build/Release/re2.node \
   && strip node_modules/re2/build/Release/obj.target/re2.node
@@ -62,19 +53,22 @@ RUN  set -x \
 ################################################################################
 # Production build 2 image
 ################################################################################
-FROM node:12.16.3-stretch-slim as minifier
+FROM node:12.16.3-stretch-slim as everest-minifier
 
-COPY --from=builder /usr/bin/strip /bin/strip
-COPY --from=builder /var/app /var/app
+ENV NODE_ENV=production
+
+ADD ./docker/scripts/everest-compress.sh /usr/bin/everest-compress
+
+COPY --from=builder /app /app
 
 RUN  set -x \
-  && apt-get update && apt-get install -y binutils  \
-  && rm -rf /var/lib/apt/lists/* \
-  && /bin/strip /usr/local/bin/node \
-  && apt-get remove -y binutils \
-  && tar cfJ /lib.tar.xz /lib \
-  && tar cfJ /usr.tar.xz /usr \
-  && tar cfJ /app.tar.xz /var/app
+  && apt-get update && apt-get install -y xz-utils binutils \
+  && strip /usr/local/bin/node \
+  && apt-get remove -y binutils xz-utils \
+  && apt-get clean autoclean \
+  && apt-get autoremove --yes \
+  && rm -rf /var/lib/{apt,dpkg,cache,log}/ \
+  && everest-compress lib usr app
 
 ################################################################################
 # Production image
@@ -88,15 +82,10 @@ ENV NODE_ENV=production
 
 ADD ./docker/scripts/promises.sh /promises.sh
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
-ADD ./docker/scripts/extract.sh /bin/extract
+ADD ./docker/scripts/everest-extract.sh /bin/everest-extract
 ADD ./docker/scripts/run.sh /bin/kuzzle
 
-COPY --from=minifier /lib.tar.xz /everest/lib.tar.xz
-COPY --from=minifier /usr.tar.xz /everest/usr.tar.xz
-COPY --from=minifier /app.tar.xz /everest/app.tar.xz
-
-RUN  chmod a+x /bin/extract \
-  && chmod a+x /bin/kuzzle
+COPY --from=everest-minifier /everest /everest
 
 ENTRYPOINT ["/bin/entrypoint"]
 

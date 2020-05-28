@@ -24,15 +24,15 @@ promise_run tar xf app.tar.xz
 await_promises
 
 echo "[ℹ] Copying Kuzzle.."
-mkdir -p /var/app
+mkdir -p /app
 for file in bin config default.config.js lib node_modules package.json; do
-  promise_run cp -r var/app/$file ../var/app/$file
+  promise_run cp -r app/$file ../app/$file
 done
 
-mkdir -p /var/app/plugins/enabled
-mkdir -p /var/app/plugins/available
-promise_run cp -r var/app/plugins/available/* ../var/app/plugins/available/.
-promise_run cp -r var/app/plugins/enabled/* ../var/app/plugins/enabled/.
+mkdir -p /app/plugins/enabled
+mkdir -p /app/plugins/available
+promise_run cp -r app/plugins/enabled/* ../app/plugins/enabled/.
+promise_run cp -r app/plugins/available/* ../app/plugins/available/.
 
 await_promises
 
