@@ -2,16 +2,23 @@
 
 set -e
 
-if [ -z "$PLUGIN_NAME" ]; then
-  echo "PLUGIN_NAME environment variable is not set"
-  exit 1
-fi
+working_dir="/var/app"
+plugins_dir="plugins/enabled"
 
-plugin_name=$PLUGIN_NAME
+cd "$working_dir"
 
-echo "[$(date)] - Installing plugin $plugin_name dependencies"
+# npm install plugins
+for target in ${plugins_dir}/* ; do
+  if [ -d "$target" ]; then
+    echo 'Installing dependencies for ' $(basename "$target")
+    cd "$target"
+    npm install --unsafe-perm --force
 
-cd /app/plugins/enabled/$plugin_name && npm install --unsafe-perm && chmod 777 node_modules/
+    # This is dirty but we are in a development environment, who cares
+    chmod 777 node_modules/
+    cd "$working_dir"
+  fi
+done
 
 cd /app
 

@@ -68,6 +68,8 @@ RUN  set -x \
   && apt-get clean autoclean \
   && apt-get autoremove --yes \
   && rm -rf /var/lib/{apt,dpkg,cache,log}/ \
+  # Create system archives
+  && cd / \
   && everest-compress lib usr app
 
 ################################################################################

@@ -87,6 +87,8 @@ RUN  set -x \
     /usr/bin/xzdiff \
     /usr/bin/xzdec \
     /usr/bin/ldd \
+  # Create system archives
+  && cd / \
   && everest-compress usr app
 
 ################################################################################

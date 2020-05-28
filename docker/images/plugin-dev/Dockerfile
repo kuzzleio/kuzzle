@@ -43,8 +43,8 @@ RUN  set -x \
   && for plugin in plugins/available/*; do cd "$plugin"; npm install --production -unsafe-perm; cd /app; done \
   # Clean Node.js related useless files
   && everest-clean-node \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; echo "$plugin"; everest-clean-node; cd /app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; echo "$plugin"; everest-clean-node; cd /app; done \
+  && for plugin in plugins/enabled/*; do cd "$plugin"; echo "$plugin"; bash everest-clean-node; cd /app; done \
+  && for plugin in plugins/available/*; do cd "$plugin"; echo "$plugin"; bash everest-clean-node; cd /app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
@@ -52,6 +52,7 @@ RUN  set -x \
   && strip node_modules/re2/build/Release/re2.node \
   && strip node_modules/re2/build/Release/obj.target/re2.node \
   # Create system archives
+  && cd / \
   && everest-compress lib usr app
 
 ################################################################################
