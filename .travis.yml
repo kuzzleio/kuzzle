@@ -175,7 +175,7 @@ jobs:
       language: minimal
       services: docker
       script:
-        - MODE=production bash build-docker-images.sh
+        - MODE=production bash docker/build-docker-images.sh
 
     - <<: *doc-deploy
       name: Documentation to next-docs.kuzzle.io

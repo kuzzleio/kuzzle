@@ -214,7 +214,7 @@ Please refer to the [configuration section](/core/2/guides/essentials/configurat
 
 ### Setup Nodemon
 
-Now that you have installed Kuzzle and loaded its plugins, lets install nodemon. Run the following command to install nodemon using NPM as a global package so that it can be run from anywhere on your machine:
+Now that you have installed Kuzzle and loaded its plugins, let's install nodemon. Run the following command to install nodemon using NPM as a global package so that it can be run from anywhere on your machine:
 
 ```bash
 sudo npm install -g nodemon
