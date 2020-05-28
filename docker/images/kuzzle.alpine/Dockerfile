@@ -31,12 +31,11 @@ RUN  set -x \
       xz \
       zeromq-dev \
       binutils \
-  && rm -rf /var/cache/apk/* \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   # Install dependencies
   && npm install --production \
   # Remove useless JS related files
-  &&  /usr/local/bin/node-prune \
+  && /usr/local/bin/node-prune \
   && for plugin in plugins/enabled/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
   && for plugin in plugins/available/*; do cd "$plugin"; /usr/local/bin/node-prune; cd /var/app; done \
   && rm /usr/local/bin/node-prune \
@@ -45,19 +44,22 @@ RUN  set -x \
   && for plugin in plugins/enabled/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
   && for plugin in plugins/available/*; do cd "$plugin"; npm prune --production; cd /var/app; done \
   # Remove git repositories
-  && for plugin in plugins/enabled/*; do cd "$plugin"; rm -rf .git/; cd /var/app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; rm -rf .git/; cd /var/app; done \
+  # @todo remove tests dir
+  && for plugin in plugins/enabled/*; do cd "$plugin"; rm -rf .git/ test/; cd /var/app; done \
+  && for plugin in plugins/available/*; do cd "$plugin"; rm -rf .git/ test/; cd /var/app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
-  && rm -rf node_modules/boost-geospatial-index/include/ \
-  # Remove useless text and object files
-  && find / \( -name "*.md" -o -name "*.ts*" -o -name "*.txt" -o -name "*.o" \) | xargs rm \
-  && rm -rf /usr/local/lib/node_modules/npm/changelogs/ \
-  && rm -rf /usr/local/lib/node_modules/npm/man/ \
-  && rm -rf /usr/local/lib/node_modules/npm/docs/ \
+  # Remove useless files
+  && find . -type d \( -name "man" -o \) | xargs rm -rf \
+  && find . -type f \( -name "*.o"  -o -name "*.h" -o -name "package-lock.json" -o -name "*.mk" -o -name "*Makefile*" -o -name "*.c" -o -name "*.cpp" -o -name "*.hpp" \) | xargs rm \
   # Strip binaries
   && strip node_modules/re2/build/Release/re2.node \
-  && strip node_modules/re2/build/Release/obj.target/re2.node
+  && strip node_modules/re2/build/Release/obj.target/re2.node \
+  # Minify JS & JSON
+  && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
+  && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /tmp \
+  && for file in $(find . \( -name "*.json" -o -name "*.js" \)); do /tmp/minify $file -o $file; done
+
 
 ################################################################################
 # Production build 2 image
@@ -72,14 +74,32 @@ RUN  set -x \
         binutils \
   && strip /usr/local/bin/node \
   && apk del binutils \
-  && tar cfJ /lib.tar.xz /lib \
+  && rm -rf \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/include/node/ \
+    /usr/local/share \
+    /usr/local/*.md \
+    /usr/share \
+    /usr/bin/getent \
+    /usr/bin/lzmainfo \
+    /usr/bin/ssl_client \
+    /usr/bin/scanelf \
+    /usr/bin/iconv \
+    /usr/bin/getconf \
+    /usr/bin/lzmadec \
+    /usr/bin/xzmore \
+    /usr/bin/xzless \
+    /usr/bin/xzgrep \
+    /usr/bin/xzdiff \
+    /usr/bin/xzdec \
+    /usr/bin/ldd \
   && tar cfJ /usr.tar.xz /usr \
   && tar cfJ /app.tar.xz /var/app
 
 ################################################################################
 # Production image
 ################################################################################
-FROM alpine:3.11.6 as kuzzle
+FROM scratch as kuzzle
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
@@ -91,12 +111,16 @@ ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/extract.sh /bin/extract
 ADD ./docker/scripts/run.sh /bin/kuzzle
 
-COPY --from=minifier /lib.tar.xz /everest/lib.tar.xz
+COPY --from=minifier /etc /etc
+COPY --from=minifier /bin /bin
+COPY --from=minifier /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
+
 COPY --from=minifier /usr.tar.xz /everest/usr.tar.xz
 COPY --from=minifier /app.tar.xz /everest/app.tar.xz
 
 RUN  chmod a+x /bin/extract \
-  && chmod a+x /bin/kuzzle
+  && chmod a+x /bin/kuzzle \
+  && ln -s /lib/ld-musl-x86_64.so.1 /lib/libc.musl-x86_64.so.1
 
 ENTRYPOINT ["/bin/entrypoint"]
 

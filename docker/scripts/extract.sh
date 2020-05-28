@@ -6,15 +6,15 @@ init_promises "strict"
 
 cd /everest
 
-files=$(ls -I app.tar.xz *.tar.xz)
+files=$(ls *.tar.xz | grep -v app.tar.xz)
 
 echo "[ℹ] Decompressing system.."
 for file in $files;
 do
-  basename="${file%.tar.xz}"
-
+  dirname="${file%.tar.xz}"
+  mkdir -p /$dirname
   promise_run tar xf $file
-    promise_then cp -r $basename/* /$basename/.
+    promise_then cp -r $dirname/* /$dirname/.
 done
 
 echo "[ℹ] Decompressing Kuzzle.."
@@ -25,7 +25,7 @@ await_promises
 
 echo "[ℹ] Copying Kuzzle.."
 mkdir -p /var/app
-for file in bin config default.config.js docker lib node_modules package-lock.json package.json; do
+for file in bin config default.config.js lib node_modules package.json; do
   promise_run cp -r var/app/$file ../var/app/$file
 done
 
