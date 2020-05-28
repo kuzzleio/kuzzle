@@ -24,38 +24,10 @@
 'use strict';
 
 const fs = require('fs');
-const { Client: ESClient } = require('@elastic/elasticsearch');
 const yargs = require('yargs');
 
 const Kuzzle = require('../lib/kuzzle');
-
-async function waitForEs (esConfig, maxSeconds = 120) {
-  const client = new ESClient(esConfig);
-  const spinner = '|/-\\';
-  let i = 0;
-  let seconds = 0;
-
-  console.log(`[ℹ] Trying to connect to Elasticsearch at "${esConfig.node}"`);
-
-  while (seconds <= maxSeconds) {
-    try {
-      // Wait for all shards to be initialized
-      await client.cluster.health({ wait_for_no_initializing_shards: true });
-
-      return;
-    }
-    catch (error) {}
-
-    process.stdout.write(`[${spinner.charAt(i)}] Still trying to connect to Elasticsearch (${seconds}s)...`);
-    process.stdout.write('\r');
-
-    i = i === 3 ? 0 : i + 1;
-    seconds++;
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-
-  throw new Error(`Timeout after ${seconds}s: cannot connect to Elasticsearch at "${esConfig.node}"`);
-}
+const waitForEs = require('./wait-elasticsearch');
 
 function loadJson (filePath) {
   const rawData = fs.readFileSync(filePath, 'utf8');
@@ -87,7 +59,7 @@ async function startKuzzle (options = {}) {
   }
 
   try {
-    await waitForEs(kuzzle.config.services.storageEngine.client)
+    await waitForEs();
 
     console.log('[ℹ] Starting Kuzzle server');
     await kuzzle.start(kuzzleParams)
