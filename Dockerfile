@@ -31,7 +31,7 @@ RUN  set -x \
   && mkdir -p /var/app \
   && npm install -g npm \
   && npm set progress=false \
-  && npm install -g --unsafe-perm nodemon kourou \
+  && npm install -g --unsafe-perm nodemon kourou pm2 \
   && rm -rf /var/lib/apt/lists/* \
   && echo "alias ll=\"ls -lahF --color\"" >> ~/.bashrc
 
