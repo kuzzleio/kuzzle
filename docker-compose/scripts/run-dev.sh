@@ -46,5 +46,10 @@ fi
 
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
-pm2 start /config/pm2.json
-pm2 logs --lines 2
+nodemon \
+    --inspect=0.0.0.0:9229 \
+    bin/start-kuzzle-server \
+    --mappings /fixtures/mappings.json \
+    --fixtures /fixtures/fixtures.json \
+    --securities /fixtures/securities.json \
+    --enable-plugins functional-test-plugin \
