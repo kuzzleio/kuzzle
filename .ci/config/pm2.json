@@ -1,8 +1,0 @@
-{
-  "apps": [{
-    "name"         : "KuzzleServer",
-    "script"       : "bin/start-kuzzle-server",
-    "args"         : [],
-    "kill_timeout" : 15000
-  }]
-}

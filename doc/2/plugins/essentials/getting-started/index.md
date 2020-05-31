@@ -25,10 +25,9 @@ docker-compose -f docker/docker-compose.yml up
 // the Kuzzle stack will automaticaly restart to include your modifications
 ```
 
-The provided `docker-compose.yml` file launches a Kuzzle stack with the `pm2` module, with the following features:
+The provided `docker-compose.yml` file launches a Kuzzle stack with the `nodemon` module, with the following features:
 
 - Automated Kuzzle restart every time a change is detected in the plugin code
-- Configurable through the parameters set in that `pm2.json` file
 
 The main Plugin class is defined in the `index.js`. You can start edit it adding:
 
