@@ -128,7 +128,7 @@
           "class": "BadRequestError"
         },
         "no_profile": {
-          "description": "Database inconsistency error: a user do not have profiles associated to it",
+          "description": "Database inconsistency error: a user does not have profiles associated to it",
           "code": 7,
           "message": "Cannot load user \"%s\": there is no security profiles associated to it",
           "class": "InternalError"

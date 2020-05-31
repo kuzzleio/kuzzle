@@ -66,7 +66,7 @@ describe('Test: model/security/profile', () => {
     profile.policies = [{roleId: 'denyRole'}];
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.id)
+      .withArgs('core:security:role:get', sinon.match.string)
       .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;
@@ -139,7 +139,7 @@ describe('Test: model/security/profile', () => {
     profile.policies.push({roleId: role3._id});
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.id)
+      .withArgs('core:security:role:get', sinon.match.string)
       .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;

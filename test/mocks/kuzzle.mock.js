@@ -232,6 +232,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.tokenManager = {
+      init: sinon.stub().resolves(),
       expire: sinon.stub(),
       getConnectedUserToken: sinon.stub(),
       link: sinon.stub(),

@@ -4,11 +4,12 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
-const Kuzzle = rewire('../../lib/kuzzle/kuzzle');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
+  let Kuzzle;
+  let coreModuleStub;
 
   const mockedProperties = [
     'entryPoints',
@@ -30,6 +31,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'dump',
     'shutdown',
     'pipe',
+    'ask',
+    'tokenManager',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
@@ -44,6 +47,14 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
+    coreModuleStub = {
+      init: sinon.stub().resolves(),
+    };
+
+    mockrequire('../../lib/core', coreModuleStub);
+    mockrequire.reRequire('../../lib/kuzzle/kuzzle');
+    Kuzzle = rewire('../../lib/kuzzle/kuzzle');
+
     kuzzle = _mockKuzzle(Kuzzle);
   });
 

@@ -23,6 +23,7 @@ describe('Test: security/userRepository', () => {
   let userInvalidProfile;
   let repositoryLoadStub;
   let profileRepositoryMock;
+  let tokenRepositoryMock;
 
   beforeEach(() => {
     const encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a';
@@ -31,6 +32,10 @@ describe('Test: security/userRepository', () => {
       loadProfiles: sinon
         .stub()
         .callsFake(async (...args) => args[0].map(id => ({_id: id}))),
+    };
+
+    tokenRepositoryMock = {
+      deleteByUserId: sinon.stub().resolves(),
     };
 
     repositoryLoadStub = sinon.stub(Repository.prototype, 'load');
@@ -62,6 +67,7 @@ describe('Test: security/userRepository', () => {
 
     userRepository = new UserRepository(kuzzle, {
       profile: profileRepositoryMock,
+      token: tokenRepositoryMock,
     });
 
     return userRepository.init({ indexStorage: kuzzle.internalIndex });
@@ -71,18 +77,12 @@ describe('Test: security/userRepository', () => {
     repositoryLoadStub.restore();
   });
 
-  describe('#constructor', () => {
-    it('should take into account the options given', () => {
-      const repository = new UserRepository(kuzzle, { ttl: 1000 });
-
-      should(repository.ttl).be.exactly(1000);
-    });
-  });
-
   describe('#anonymous', () => {
-    it('should return a valid anonymous user', () => {
-      return userRepository.anonymous()
-        .then(user => assertIsAnonymous(user));
+    it('should return a valid anonymous user', async () => {
+      kuzzle.ask.restore();
+
+      const user = await kuzzle.ask('core:security:user:anonymous');
+      assertIsAnonymous(user);
     });
   });
 
@@ -159,37 +159,47 @@ describe('Test: security/userRepository', () => {
 
   describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
-      return userRepository.anonymous()
-        .then(user => {
-          const result = userRepository.serializeToCache(user);
+      const result = userRepository
+        .serializeToCache(userRepository.anonymousUser);
 
-          should(result).not.be.an.instanceOf(User);
-          should(result).be.an.Object();
-          should(result._id).be.exactly('-1');
-          should(result.profileIds).be.an.Array();
-          should(result.profileIds[0]).be.exactly('anonymous');
-        });
+      should(result).not.be.an.instanceOf(User);
+      should(result).be.an.Object();
+      should(result._id).be.exactly('-1');
+      should(result.profileIds).be.an.Array();
+      should(result.profileIds[0]).be.exactly('anonymous');
     });
   });
 
   describe('#persist', () => {
-    it('should compute a user id if not set', () => {
-      const user = new User();
-      user.name = 'John Doe';
-      user.profileIds = ['a profile'];
+    beforeEach(() => {
+      sinon.stub(userRepository, 'persistToDatabase').resolves();
+      sinon.stub(userRepository, 'persistToCache').resolves();
+    });
 
-      userRepository.persist(user);
+    it('should persist in both the db and the cache with default options', async () => {
+      const user = {_id: 'foo', profileIds: ['bar']};
 
-      should(user._id).not.be.empty();
-      should(user._id).match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      await userRepository.persist(user);
+
+      should(userRepository.persistToDatabase).calledWith(user, {});
+      should(userRepository.persistToCache).calledWith(user, {});
+    });
+
+    it('should persist in both the db and the cache and forward options', async () => {
+      const user = {_id: 'foo', profileIds: ['bar']};
+      const opts = {
+        cache: {baz: 'qux'},
+        database: {foo: 'bar'},
+      };
+
+      await userRepository.persist(user, opts);
+
+      should(userRepository.persistToDatabase).calledWith(user, opts.database);
+      should(userRepository.persistToCache).calledWith(user, opts.cache);
     });
 
     it('should reject if we try to remove the anonymous profile from the anonymous user', () => {
-      return should(userRepository.anonymous()
-        .then(user => {
-          user.profileIds = ['test'];
-          return userRepository.persist(user);
-        }))
+      return should(userRepository.persist({_id: '-1', profileIds: ['test']}))
         .be.rejectedWith(BadRequestError, {
           id: 'security.user.anonymous_profile_required'
         });
@@ -223,22 +233,32 @@ describe('Test: security/userRepository', () => {
       should(deleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
     });
 
-    it('should delete user credentials', () => {
-      const
-        user = { _id: 'kleiner' },
-        existsMethod = sinon.stub().resolves(true),
-        deleteMethod = sinon.stub().resolves();
+    it('should delete user credentials', async () => {
+      const user = { _id: 'kleiner' };
+      const existsMethod = sinon.stub().resolves(true);
+      const deleteMethod = sinon.stub().resolves();
+
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
 
       kuzzle.pluginsManager.getStrategyMethod
         .onFirstCall().returns(existsMethod)
         .onSecondCall().returns(deleteMethod);
 
-      return userRepository.delete(user)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response._id).be.exactly('kleiner');
-        });
+      await userRepository.delete(user);
+
+      should(existsMethod)
+        .calledOnce()
+        .calledWithMatch(
+          { input: { resource: { _id: 'kleiner' } } },
+          'kleiner',
+          'someStrategy');
+
+      should(deleteMethod)
+        .calledOnce()
+        .calledWithMatch(
+          { input: { resource: { _id: 'kleiner' } } },
+          'kleiner',
+          'someStrategy');
     });
 
     it('should delete associated ApiKey', async () => {
