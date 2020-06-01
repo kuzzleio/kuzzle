@@ -4,13 +4,8 @@ const ms = require('ms');
 const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
 const should = require('should');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
 const sinon = require('sinon');
-const Token = require('../../../lib/model/security/token');
-const User = require('../../../lib/model/security/user');
-const TokenRepository = require('../../../lib/core/security/tokenRepository');
 const {
-  models: { RequestContext },
   errors: {
     BadRequestError,
     InternalError: KuzzleInternalError,
@@ -18,12 +13,15 @@ const {
   }
 } = require('kuzzle-common-objects');
 
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const Token = require('../../../lib/model/security/token');
+const User = require('../../../lib/model/security/user');
+const TokenRepository = require('../../../lib/core/security/tokenRepository');
+
 describe('Test: security/tokenRepository', () => {
-  const
-    context = new RequestContext({connection: {id: 'papagayo'}});
-  let
-    kuzzle,
-    tokenRepository;
+  let kuzzle;
+  let tokenRepository;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -39,13 +37,9 @@ describe('Test: security/tokenRepository', () => {
 
       should(repository.ttl).be.exactly(1000);
     });
-  });
 
-  describe('#anonymous', () => {
-    it('should return a valid anonymous token', () => {
-      const anonymous = tokenRepository.anonymous();
-
-      assertIsAnonymous(anonymous);
+    it('should define a valid anonymous token', () => {
+      assertIsAnonymous(tokenRepository.anonymousToken);
     });
   });
 
@@ -160,55 +154,27 @@ describe('Test: security/tokenRepository', () => {
         });
     });
 
-    it('should reject the promise if the connectionId is null', () => {
+    it('should resolve to a token signed with the provided username', async () => {
       const user = new User();
-
-      user._id = 'foobar';
-
-      return should(tokenRepository.generateToken(user, null))
-        .be.rejectedWith(KuzzleInternalError, {
-          id: 'security.token.unknown_connection'
+      const checkToken = jwt.sign(
+        { _id: 'userInCache' },
+        kuzzle.config.security.jwt.secret,
+        {
+          algorithm: kuzzle.config.security.jwt.algorithm,
+          expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000
         });
-    });
 
-    it('should reject the promise if an error occurred while generating the token', () => {
-      const user = new User();
-      user._id = 'foobar';
-
-      const promise = tokenRepository.generateToken(
-        user,
-        context.connection.id,
-        { expiresIn: 'foo' });
-
-      return should(promise)
-        .be.rejectedWith(KuzzleInternalError, {
-          id: 'security.token.generation_failed'
-        });
-    });
-
-    it('should resolve to a token signed with the provided username', () => {
-      const
-        user = new User(),
-        checkToken = jwt.sign(
-          { _id: 'userInCache' },
-          kuzzle.config.security.jwt.secret,
-          {
-            algorithm: kuzzle.config.security.jwt.algorithm,
-            expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000
-          });
       user._id = 'userInCache';
-      const persistForUserSpy = sinon.spy(tokenRepository, 'persistForUser');
 
-      return tokenRepository.generateToken(user, 'connectionId')
-        .then(token => {
-          should(token).be.an.instanceOf(Token);
-          should(token.jwt).be.exactly(checkToken);
-          should(token._id).be.exactly(user._id + '#' + checkToken);
-          should(persistForUserSpy).be.calledWith(
-            checkToken,
-            user._id,
-            3600000);
-        });
+      sinon.spy(tokenRepository, 'persistForUser');
+
+      const token = await tokenRepository.generateToken(user);
+
+      should(token).be.an.instanceOf(Token);
+      should(token.jwt).be.exactly(checkToken);
+      should(token._id).be.exactly(`${user._id}#${checkToken}`);
+      should(tokenRepository.persistForUser)
+        .be.calledWith(checkToken, user._id, 3600000);
     });
 
     it('should return an internal error if an error occurs when generating token', () => {
@@ -218,32 +184,34 @@ describe('Test: security/tokenRepository', () => {
 
       tokenRepository.cacheEngine.setex.rejects(new Error('error'));
 
-      return should(tokenRepository.generateToken(user, 'connectionId'))
+      return should(tokenRepository.generateToken(user))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'services.cache.write_failed'
         });
     });
 
-    it('should allow a big ttl if no maxTTL is set', () => {
+    it('should allow a big ttl if no maxTTL is set', async () => {
       const user = new User();
       user._id = 'id';
 
-      return tokenRepository.generateToken(user, 'connectionId', {expiresIn: '1000y'})
-        .then(token => {
-          should(token).be.an.instanceOf(Token);
-        });
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '1000y'
+      });
+
+      should(token).be.an.instanceOf(Token);
     });
 
-    it('should allow a ttl lower than the maxTTL', () => {
+    it('should allow a ttl lower than the maxTTL', async () => {
       const user = new User();
       user._id = 'id';
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      return tokenRepository.generateToken(user, 'connectionId', {expiresIn: '30s'})
-        .then(token => {
-          should(token).be.an.instanceOf(Token);
-        });
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '30s'
+      });
+
+      should(token).be.an.instanceOf(Token);
     });
 
     it('should reject if the ttl exceeds the maxTTL', () => {
@@ -252,35 +220,28 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      return should(tokenRepository.generateToken(user, 'connectionId', {expiresIn: '1m'}))
-        .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
+      return should(tokenRepository.generateToken(user, {expiresIn: '1m'}))
+        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
     });
 
-    it('should reject if the ttl is infinite and the maxTTL is finite', async () => {
+    it('should reject if the ttl is infinite and the maxTTL is finite', () => {
       const user = new User();
       user._id = 'id';
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      const promise = tokenRepository.generateToken(
-        user,
-        'connectionId',
-        { expiresIn: -1 });
-
-      await should(promise)
-        .be.rejectedWith(BadRequestError, {message: 'expiresIn value exceeds maximum allowed value'});
+      return should(tokenRepository.generateToken(user, { expiresIn: -1 }))
+        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
     });
 
-    it('should reject if the ttl not ms-compatible or not a number', async () => {
+    it('should reject if the ttl is not ms-compatible or not a number', () => {
       const user = new User();
       user._id = 'id';
 
-      const promise = tokenRepository.generateToken(
-        user,
-        'connectionId',
-        { expiresIn: 'ehh' });
-
-      await should(promise).be.rejectedWith(KuzzleInternalError);
+      return should(tokenRepository.generateToken(user, { expiresIn: 'ehh' }))
+        .be.rejectedWith(KuzzleInternalError, {
+          id: 'security.token.generation_failed'
+        });
     });
   });
 
@@ -313,14 +274,13 @@ describe('Test: security/tokenRepository', () => {
 
   describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
-      const
-        token = tokenRepository.anonymous(),
-        result = tokenRepository.serializeToCache(token);
+      const token = new Token({userId: 'foo'});
+      const result = tokenRepository.serializeToCache(token);
 
       should(result).not.be.an.instanceOf(Token);
       should(result).be.an.Object();
       should(result._id).be.exactly(null);
-      should(result.userId).be.exactly('-1');
+      should(result.userId).be.exactly('foo');
     });
   });
 

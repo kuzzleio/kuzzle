@@ -2,12 +2,7 @@
 
 const sinon = require('sinon');
 const should = require('should');
-const Role = require('../../../lib/model/security/role');
-const Profile = require('../../../lib/model/security/profile');
-const ProfileRepository = require('../../../lib/core/security/profileRepository');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
-  Request,
   errors: {
     BadRequestError,
     PreconditionError,
@@ -15,6 +10,12 @@ const {
     InternalError
   }
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const Role = require('../../../lib/model/security/role');
+const Profile = require('../../../lib/model/security/profile');
+const ProfileRepository = require('../../../lib/core/security/profileRepository');
 
 const _kuzzle = Symbol.for('_kuzzle');
 
@@ -53,22 +54,6 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#load', () => {
-    it('should reject if no profileid is given', () => {
-      return should(profileRepository.load())
-        .be.rejectedWith(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "profileId".'
-        });
-    });
-
-    it('should reject if the profile id is not a string', () => {
-      return should(profileRepository.load({}))
-        .be.rejectedWith(BadRequestError, {
-          id: 'api.assert.invalid_type',
-          message: 'Wrong type for argument "profileId" (expected: string)'
-        });
-    });
-
     it('should return a profile from memory cache', () => {
       const p = {foo: 'bar'};
       profileRepository.profiles.set('foo', p);
@@ -110,14 +95,6 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#loadProfiles', () => {
-    it('should reject if no profileIds are given', () => {
-      return should(profileRepository.loadProfiles())
-        .be.rejectedWith(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "profileIds".'
-        });
-    });
-
     it('should reject if profileIds is not an array of strings', () => {
       return should(profileRepository.loadProfiles(['a string', {foo: 'bar'}]))
         .be.rejectedWith(BadRequestError, {
@@ -189,19 +166,6 @@ describe('Test: security/profileRepository', () => {
     });
   });
 
-  describe('#getProfileFromRequest', () => {
-    it('should resolve to a valid Profile when a valid object is provided', async () => {
-      const profile = { foo: 'bar' };
-      const request = new Request({_id: 'foo', body: profile});
-
-      roleRepositoryMock.loadRoles.resolves([{_id: 'default'}]);
-
-      const result = await profileRepository.getProfileFromRequest(request);
-
-      should(result).match(profile);
-    });
-  });
-
   describe('#initialize', () => {
     it('should throw if the profile contains unexisting roles', () => {
       roleRepositoryMock.loadRoles.resolves([null]);
@@ -226,27 +190,6 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#delete', () => {
-    it('should reject and not trigger any event when no id is provided', done => {
-      const invalidProfileObject = new Request({
-        body: {
-          _id: ''
-        }
-      });
-
-      profileRepository.delete(invalidProfileObject)
-        .then(() => {
-          done(new Error('The promise is not rejected'));
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.emit).not.be.called();
-          done();
-        })
-        .catch(e => {
-          done(e);
-        });
-    });
-
     it('should reject and not trigger any event if a user uses the profile about to be deleted', async () => {
       userRepositoryMock.search.resolves({ total: 1 });
 
@@ -256,76 +199,19 @@ describe('Test: security/profileRepository', () => {
       should(kuzzle.emit).not.be.called();
     });
 
-    it('should reject and not trigger any event when trying to delete admin', done => {
-      const profile = {
-        _id: 'admin',
-        policies: [ {roleId: 'admin'} ]
-      };
+    it('should reject and not trigger any event when trying to delete a reserved profile', async () => {
+      const profile = new Profile();
 
-      profileRepository.delete(profile)
-        .then(() => {
-          done(new Error('The promise is not rejected'));
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.emit).not.be.called();
-          done();
-        })
-        .catch(e => {
-          done(e);
-        });
-    });
+      for (const id of ['anonymous', 'default', 'admin']) {
+        profile._id = id;
 
-    it('should reject and not trigger any event when trying to delete default', done => {
-      const profile = {
-        _id: 'default',
-        policies: [ {roleId: 'default'} ]
-      };
+        await should(profileRepository.delete(profile))
+          .rejectedWith(BadRequestError, {
+            id: 'security.profile.cannot_delete'
+          });
 
-      profileRepository.delete(profile)
-        .then(() => {
-          done(new Error('The promise is not rejected'));
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.emit).not.be.called();
-          done();
-        })
-        .catch(e => {
-          done(e);
-        });
-    });
-
-    it('should reject and not trigger any event when trying to delete anonymous', done => {
-      const profile = {
-        _id: 'anonymous',
-        policies: [ {roleId: 'anonymous'} ]
-      };
-
-      profileRepository.delete(profile)
-        .then(() => {
-          done(new Error('The promise is not rejected'));
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError);
-          should(kuzzle.emit).not.be.called();
-          done();
-        })
-        .catch(e => {
-          done(e);
-        });
-    });
-
-    it('should return a raw delete response after deleting', async () => {
-      const response = {_id: 'testprofile'};
-
-      userRepositoryMock.search.resolves({});
-      profileRepository.deleteFromCache = sinon.stub().resolves();
-      profileRepository.deleteFromDatabase = sinon.stub().resolves(response);
-
-      const r = await profileRepository.delete(testProfile);
-
-      should(r).be.exactly(response);
+        should(kuzzle.emit).not.be.called();
+      }
     });
 
     it('should call deleteFromDatabase, remove the profile from memory and trigger a "core:profileRepository:delete" event', async () => {
@@ -392,38 +278,18 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#validateAndSaveProfile', () => {
-    it('should reject and not trigger any event when no id is provided', done => {
-      const invalidProfile = new Profile();
-      invalidProfile._id = '';
-
-      profileRepository.validateAndSaveProfile(invalidProfile)
-        .then(() => {
-          done(new Error('The promise is not rejected'));
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError).and.match({
-            id: 'api.assert.missing_argument',
-            message: 'Missing argument "profileId".'
-          });
-          should(kuzzle.emit).not.be.called();
-          done();
-        })
-        .catch(e => {
-          done(e);
-        });
-    });
-
-    it('should throw a NotFoundError when trying to write unexisting role in profile. ', () => {
+    it('should throw if roles cannot be loaded', () => {
       const invalidProfile = new Profile();
       invalidProfile._id = 'awesomeProfile';
       invalidProfile.policies = [{roleId: 'notSoAwesomeRole'}];
 
-      roleRepositoryMock.loadRoles = sinon.stub().rejects();
+      const error = new Error('foo');
+      roleRepositoryMock.loadRoles
+        .withArgs(['notSoAwesomeRole'])
+        .rejects(error);
 
       return should(profileRepository.validateAndSaveProfile(invalidProfile))
-        .be.rejectedWith(InternalError, {
-          id: 'security.profile.cannot_hydrate'
-        });
+        .be.rejectedWith(error);
     });
 
     it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {

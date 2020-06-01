@@ -2,17 +2,17 @@
 
 const sinon = require('sinon');
 const should = require('should');
-const Role = require('../../../lib/model/security/role');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Funnel = require('../../../lib/api/funnel');
-const RoleRepository = require('../../../lib/core/security/roleRepository');
 const {
-  Request,
   errors: {
     BadRequestError,
     PreconditionError
   }
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const Role = require('../../../lib/model/security/role');
+const RoleRepository = require('../../../lib/core/security/roleRepository');
 
 describe('Test: security/roleRepository', () => {
   let kuzzle;
@@ -83,11 +83,7 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#loadRole', () => {
-    it('should return a bad request error when no _id is provided', () => {
-      return should(roleRepository.load({})).rejectedWith(BadRequestError);
-    });
-
-    it('should load the role directly from memory if it\'s in memory', () => {
+    it('should load the role directly from memory if it is in memory', () => {
       const role = {foo: 'bar'};
 
       roleRepository.roles.set('foo', role);
@@ -113,7 +109,7 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#searchRole', () => {
-    it('should filter the role list with the given controllers', () => {
+    it('should filter the role list with the given controllers', async () => {
       const roles = {
         default: {
           _id: 'default',
@@ -162,7 +158,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      roleRepository.search = sinon.stub().resolves({
+      sinon.stub(roleRepository, 'search').resolves({
         total: 4,
         hits: [
           roles.default,
@@ -172,52 +168,49 @@ describe('Test: security/roleRepository', () => {
         ]
       });
 
-      return roleRepository.searchRole(['foo'])
-        .then(result => {
-          should(result.total).be.exactly(3);
-          should(result.hits.length).be.exactly(3);
-          should(result.hits).match([roles.default, roles.foo, roles.foobar]);
-          return roleRepository.searchRole(['bar']);
-        })
-        .then(result => {
-          should(result.total).be.exactly(3);
-          should(result.hits.length).be.exactly(3);
-          should(result.hits).match([roles.default, roles.bar, roles.foobar]);
-          return roleRepository.searchRole(['foo', 'bar']);
-        })
-        .then(result => {
-          should(result.total).be.exactly(4);
-          should(result.hits.length).be.exactly(4);
-          should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
-          return roleRepository.searchRole(['baz']);
-        })
-        .then(result => {
-          should(result.total).be.exactly(1);
-          should(result.hits.length).be.exactly(1);
-          should(result.hits).match([roles.default]);
-          return roleRepository.searchRole(['foo'], 1);
-        })
-        .then(result => {
-          should(result.total).be.exactly(3);
-          should(result.hits.length).be.exactly(2);
-          should(result.hits).match([roles.foo, roles.foobar]);
-          should(result.hits).not.match([roles.default]);
-          return roleRepository.searchRole(['foo'], 0, 2);
-        })
-        .then(result => {
-          should(result.total).be.exactly(3);
-          should(result.hits.length).be.exactly(2);
-          should(result.hits).match([roles.default, roles.foo]);
-          should(result.hits).not.match([roles.foobar]);
-          return roleRepository.searchRole(['foo', 'bar'], 1, 2);
-        })
-        .then(result => {
-          should(result.total).be.exactly(4);
-          should(result.hits.length).be.exactly(2);
-          should(result.hits).match([roles.foo, roles.bar]);
-          should(result.hits).not.match([roles.default]);
-          should(result.hits).not.match([roles.foobar]);
-        });
+      let result;
+
+      result = await roleRepository.searchRole(['foo']);
+      should(result.total).be.exactly(3);
+      should(result.hits.length).be.exactly(3);
+      should(result.hits).match([roles.default, roles.foo, roles.foobar]);
+
+      result = await roleRepository.searchRole(['bar']);
+      should(result.total).be.exactly(3);
+      should(result.hits.length).be.exactly(3);
+      should(result.hits).match([roles.default, roles.bar, roles.foobar]);
+
+      result = await roleRepository.searchRole(['foo', 'bar']);
+      should(result.total).be.exactly(4);
+      should(result.hits.length).be.exactly(4);
+      should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
+
+      result = await roleRepository.searchRole(['baz']);
+      should(result.total).be.exactly(1);
+      should(result.hits.length).be.exactly(1);
+      should(result.hits).match([roles.default]);
+
+      result = await roleRepository.searchRole(['foo'], {from: 1});
+      should(result.total).be.exactly(3);
+      should(result.hits.length).be.exactly(2);
+      should(result.hits).match([roles.foo, roles.foobar]);
+      should(result.hits).not.match([roles.default]);
+
+      result = await roleRepository.searchRole(['foo'], {size: 2});
+      should(result.total).be.exactly(3);
+      should(result.hits.length).be.exactly(2);
+      should(result.hits).match([roles.default, roles.foo]);
+      should(result.hits).not.match([roles.foobar]);
+
+      result = await roleRepository.searchRole(['foo', 'bar'], {
+        from: 1,
+        size: 2
+      });
+      should(result.total).be.exactly(4);
+      should(result.hits.length).be.exactly(2);
+      should(result.hits).match([roles.foo, roles.bar]);
+      should(result.hits).not.match([roles.default]);
+      should(result.hits).not.match([roles.foobar]);
     });
   });
 
@@ -298,35 +291,6 @@ describe('Test: security/roleRepository', () => {
       should(result.controllers).match(controllers);
       should(result).not.have.property('_id');
       should(result).not.have.property('restrictedTo');
-    });
-  });
-
-  describe('#getRoleFromRequest', () => {
-    it('should build a valid role object', () => {
-      const
-        controllers = {
-          controller: {
-            actions: {
-              action: true
-            }
-          }
-        },
-        request = new Request({
-          collection: 'collection',
-          controller: 'controller',
-          action: 'action',
-          _id: 'roleId',
-          body: {
-            controllers: controllers
-          }
-        });
-
-      return roleRepository.getRoleFromRequest(request)
-        .then(role => {
-          should(role._id).be.exactly('roleId');
-          should(role.controllers).be.eql(controllers);
-        });
-
     });
   });
 
@@ -451,12 +415,6 @@ describe('Test: security/roleRepository', () => {
     });
   });
   describe('#checkRoleNativeRights', () => {
-    beforeEach(async () => {
-      kuzzle.funnel = new Funnel(kuzzle);
-      kuzzle.funnel.rateLimiter = { init: sinon.stub() };
-      await kuzzle.funnel.init();
-    });
-
     it('should throw if a role contains invalid action.', () => {
       const controllers = {
           '*': {
