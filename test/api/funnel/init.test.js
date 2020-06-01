@@ -2,7 +2,9 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const Funnel = require('../../../lib/api/funnel');
 const AuthController = require('../../../lib/api/controller/auth');
 const BulkController = require('../../../lib/api/controller/bulk');
@@ -18,6 +20,9 @@ const AdminController = require('../../../lib/api/controller/admin');
 describe('funnel.init', () => {
   it('should initialize API and plugins controller', async () => {
     const kuzzle = new KuzzleMock();
+
+    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
+
     const funnel = new Funnel(kuzzle);
 
     sinon.stub(funnel.rateLimiter, 'init');

@@ -3,10 +3,13 @@
 const should = require('should');
 const sinon = require('sinon');
 const { Request } = require('kuzzle-common-objects');
+
 const KuzzleMock = require('../mocks/kuzzle.mock');
+
 const RateLimiter = require('../../lib/api/rateLimiter');
 
 describe('#api.rateLimiter', () => {
+  const mGetProfilesEvent = 'core:security:profile:mGet';
   let kuzzle;
   let request;
   let rateLimiter;
@@ -35,7 +38,7 @@ describe('#api.rateLimiter', () => {
     ];
 
     mGetProfilesStub = kuzzle.ask
-      .withArgs('core:security:profile:mGet', sinon.match.array)
+      .withArgs(mGetProfilesEvent, sinon.match.array)
       .resolves(profiles);
   });
 
@@ -106,14 +109,13 @@ describe('#api.rateLimiter', () => {
       for (let i = 0; i < 200; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
         should(rateLimiter.frame.foo).be.eql(i+1);
-        should(mGetProfilesStub.callCount).eql(i+1);
-        should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
       }
 
       should(await rateLimiter.isAllowed(request)).be.false();
       should(rateLimiter.frame.foo).be.eql(201);
       should(mGetProfilesStub.callCount).eql(201);
-      should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
+      should(mGetProfilesStub)
+        .alwaysCalledWithMatch(mGetProfilesEvent, ['bar', 'baz']);
 
       clock.tick(1000);
       should(await rateLimiter.isAllowed(request)).be.true();
@@ -157,14 +159,13 @@ describe('#api.rateLimiter', () => {
       for (let i = 0; i < 50; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
         should(rateLimiter.frame['-1']).be.eql(i+1);
-        should(mGetProfilesStub.callCount).eql(i+1);
-        should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
       }
 
       should(await rateLimiter.isAllowed(request)).be.false();
       should(rateLimiter.frame['-1']).be.eql(51);
       should(mGetProfilesStub.callCount).eql(51);
-      should(mGetProfilesStub).alwaysCalledWithMatch(['bar', 'baz']);
+      should(mGetProfilesStub)
+        .alwaysCalledWithMatch(mGetProfilesEvent, ['bar', 'baz']);
 
       clock.tick(1000);
       should(await rateLimiter.isAllowed(request)).be.true();

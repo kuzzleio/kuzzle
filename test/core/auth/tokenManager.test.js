@@ -14,6 +14,11 @@ describe('Test: token manager core component', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
+    kuzzle.ask
+      .withArgs('core:security:user:anonymous')
+      .resolves({_id: '-1'});
+
     tokenManager = new TokenManager(kuzzle);
     token = new Token({
       _id: 'foo#bar',
@@ -22,7 +27,7 @@ describe('Test: token manager core component', () => {
       expiresAt: Date.now()+1000
     });
 
-    kuzzle.ask('core:security:user:anonymous').resolves(anonymousToken);
+    return tokenManager.init();
   });
 
   afterEach(() => {
@@ -418,7 +423,6 @@ describe('Test: token manager core component', () => {
         expiresAt: token.expiresAt,
         ttl: null,
         userId: token.userId,
-        connectionId: 'foo',
         jwt: token.jwt
       });
     });

@@ -11,6 +11,7 @@ const {
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const FunnelController = require('../../../lib/api/funnel');
 const Token = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
@@ -59,7 +60,12 @@ describe('funnel.checkRights', () => {
   });
 
   it('should reject with an UnauthorizedError if an anonymous user is not allowed to execute the action', async () => {
-    loadedUser._id = '-1';
+    verifiedToken.userId = '-1';
+
+    const getAnonStub = kuzzle.ask
+      .withArgs(getUserEvent, '-1')
+      .resolves(loadedUser);
+
     sinon.stub(loadedUser, 'isActionAllowed').resolves(false);
 
     await should(funnel.checkRights(request)).rejectedWith(UnauthorizedError, {
@@ -67,7 +73,7 @@ describe('funnel.checkRights', () => {
     });
 
     should(verifyTokenStub).calledOnce();
-    should(getUserEvent).calledOnce();
+    should(getAnonStub).calledOnce();
 
     should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).calledWith('request:onUnauthorized', request);
@@ -81,7 +87,7 @@ describe('funnel.checkRights', () => {
     });
 
     should(verifyTokenStub).calledOnce();
-    should(getUserEvent).calledOnce();
+    should(getUserStub).calledOnce();
 
     should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).calledWith('request:onUnauthorized', request);
@@ -109,7 +115,7 @@ describe('funnel.checkRights', () => {
     await should(funnel.checkRights(request)).rejectedWith(error);
 
     should(verifyTokenStub).calledOnce();
-    should(getUserEvent).calledOnce();
+    should(getUserStub).calledOnce();
 
     should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
@@ -121,7 +127,7 @@ describe('funnel.checkRights', () => {
     await funnel.checkRights(request);
 
     should(verifyTokenStub).calledOnce();
-    should(getUserEvent).calledOnce();
+    should(getUserStub).calledOnce();
 
     should(kuzzle.pipe).calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);

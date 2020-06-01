@@ -1,31 +1,33 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  {
-    Request,
-    errors: {
-      BadRequestError,
-      ServiceUnavailableError,
-      TooManyRequestsError
-    }
-  } = require('kuzzle-common-objects'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  rewire = require('rewire'),
-  FunnelController = rewire('../../../lib/api/funnel');
+const should = require('should');
+const sinon = require('sinon');
+const rewire = require('rewire');
+const {
+  Request,
+  errors: {
+    BadRequestError,
+    ServiceUnavailableError,
+    TooManyRequestsError
+  }
+} = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const FunnelController = rewire('../../../lib/api/funnel');
 
 describe('funnelController.execute', () => {
-  let
-    now = Date.now(),
-    clock,
-    kuzzle,
-    funnel,
-    request;
+  let now = Date.now();
+  let clock;
+  let kuzzle;
+  let funnel;
+  let request;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
     kuzzle.config.limits.requestsBufferWarningThreshold = -1;
+    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
 
     request = new Request({
       controller: 'foo',
