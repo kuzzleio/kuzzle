@@ -3,11 +3,10 @@ version: '3'
 services:
   kuzzle:
     image: kuzzleio/core-dev-aarch64:2
-    command: sh -c 'chmod 755 /run.sh && /run.sh'
+    command: sh -c 'chmod 755 /run-test-arm.sh && /run-test-arm.sh'
     volumes:
       - "..:/var/app"
-      - "./scripts/run-test-arm.sh:/run.sh"
-      - "./config/pm2.json:/config/pm2.json"
+      - "./scripts/run-test-arm.sh:/run-test-arm.sh"
     cap_add:
       - SYS_PTRACE
     depends_on:
