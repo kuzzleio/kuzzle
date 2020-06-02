@@ -6,7 +6,7 @@ FROM debian:stretch-slim as plugin-dev
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
-ENV NODE_VERSION=12.16.1
+ENV NODE_VERSION=12.16.3
 ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 
 ADD https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz /tmp/
@@ -31,9 +31,7 @@ RUN  set -x \
   && mkdir -p /var/app \
   && npm install -g npm \
   && npm set progress=false \
-  && npm install -g --unsafe-perm\
-    pm2 kourou \
-  && echo "" > /opt/node-v$NODE_VERSION-linux-x64/lib/node_modules/pm2/lib/keymetrics \
+  && npm install -g --unsafe-perm nodemon kourou \
   && rm -rf /var/lib/apt/lists/* \
   && echo "alias ll=\"ls -lahF --color\"" >> ~/.bashrc
 
@@ -54,7 +52,7 @@ FROM debian:stretch-slim as kuzzle
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
-ENV NODE_VERSION=12.16.1
+ENV NODE_VERSION=12.16.3
 ENV NODE_ENV=production
 ENV PATH=/opt/node-v$NODE_VERSION-linux-x64/bin:$PATH
 
@@ -68,8 +66,7 @@ RUN  apt-get update \
 COPY --from=plugin-dev /var/app /var/app
 COPY --from=plugin-dev /opt/node-v$NODE_VERSION-linux-x64 /opt/node-v$NODE_VERSION-linux-x64
 
-RUN  npm remove -g \
-      pm2
+RUN  npm remove -g nodemon kourou
 
 RUN  ln -s /var/app/docker-compose/scripts/run.sh /usr/local/bin/kuzzle \
   && chmod a+x /usr/local/bin/kuzzle \
