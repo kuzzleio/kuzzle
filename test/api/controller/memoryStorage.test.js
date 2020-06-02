@@ -643,7 +643,9 @@ describe('MemoryStorageController', () => {
 
     it('should be called from extractArgumentsFromRequest when calling "mexecute"', () => {
       request.input.body.actions = [
-        { 'action': 'set', 'args': ['a', 1] }];
+        { 'action': 'set', 'args': { '_id': 'x', 'body': { 'value': 1 } } },
+        { 'action': 'get', 'args': { '_id': 'x' } },
+        { 'action': 'del', 'args': { 'body': { 'keys': ['list:a'] } } }];
       extractArgumentsFromRequest('mexecute', request);
 
       should(called.extractArgumentsFromRequestForMExecute.called).be.true();
@@ -652,11 +654,11 @@ describe('MemoryStorageController', () => {
 
     it('should throw when there is an invalid command', () => {
       request.input.body.actions = [
-        { 'action': 'mexecute', 'args': ['actions', []] }];
+        { 'action': 'set', 'args': {} }];
       should(() => extractArgumentsFromRequestForMExecute(request))
-        .throw(BadRequestError, { id: 'api.assert.forbidden_argument' });
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
 
-      request.input.body.actions = [{ 'action': 'exec' }];
+      request.input.body.actions = [{ 'action': 'exec', 'args': {} }];
       should(() => extractArgumentsFromRequestForMExecute(request))
         .throw(BadRequestError, { id: 'api.assert.forbidden_argument' });
     });
