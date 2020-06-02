@@ -33,9 +33,9 @@ Body:
 ```js
 {
   "actions": [
-    {"action": "command", "args": ["arg", 42, 42]},
-    {"action": "command", "args": ["arg"]},
-    {"action": "...", "args": [...]}
+    {"action": "command", "args": {"_id": "x", "body": {"value": 1}},
+    {"action": "command", "args": {"_id": "x"}},
+    {"action": "...", "args": {...}}
   ]
 }
 ```
@@ -48,9 +48,9 @@ Body:
   "action": "mexecute",
   "body": {
     "actions": [
-      {"action": "command", "args": ["arg", 42, 42]},
-      {"action": "command", "args": ["arg"]},
-      {"action": "...", "args": [...]}
+        {"action": "command", "args": {"_id": "x", "body": {"value": 1}},
+        {"action": "command", "args": {"_id": "x"}},
+        {"action": "...", "args": {...}}
     ]
   }
 }
@@ -62,7 +62,7 @@ Body:
 
 - `actions`: an array of objects. Each object describes an action to be executed, using the following properties:
   - `action`: action name
-  - `args`: an array of arguments
+  - `args`: an object containing all required arguments
 
 ---
 
