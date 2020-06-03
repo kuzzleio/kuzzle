@@ -79,6 +79,18 @@ describe('Test: sdk/funnelProtocol', () => {
         });
     });
 
+    it('should allows a POJO as user object', () => {
+      funnel.executePluginRequest.resolvesArg(0);
+      const user = { _id: 'gordon' };
+
+      funnelProtocol = new FunnelProtocol(funnel, user);
+
+      return funnelProtocol.query(request)
+        .then(response => {
+          should(response.result.context.user._id).be.eql('gordon');
+        });
+    });
+
     it('should reject if trying to call forbidden methods from realtime controller', () => {
       return Promise.resolve()
         .then(() => {
