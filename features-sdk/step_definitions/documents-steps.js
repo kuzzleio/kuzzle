@@ -149,7 +149,6 @@ Then('with the following highlights:', function (highlightsRaw) {
 });
 
 Then('I execute the search query', async function () {
-
   this.props.result = await this.sdk.document.search(
     this.props.index,
     this.props.collection,
@@ -157,14 +156,21 @@ Then('I execute the search query', async function () {
 });
 
 Then('I execute the search query with verb "GET"', async function () {
-  const { result } = await this.sdk.query(
-    {
-      action: 'search',
-      controller: 'document',
-      index: this.props.index,
-      collection: this.props.collection,
-      searchBody: JSON.stringify(this.props.searchBody)
-    }, {verb: 'GET'});
+  const request = {
+    action: 'search',
+    controller: 'document',
+    index: this.props.index,
+    collection: this.props.collection,
+  };
+  const options = {};
+  
+  if (this.kuzzleConfig.PROTOCOL === 'http') {
+    request.searchBody = JSON.stringify(this.props.searchBody);
+    options.verb = 'GET';
+  } else {
+    request.body = this.props.searchBody;
+  }
+  const { result } = await this.sdk.query(request, options);
   this.props.result = result;
 });
 
