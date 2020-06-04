@@ -148,16 +148,24 @@ Then('with the following highlights:', function (highlightsRaw) {
   this.props.searchBody.highlight = highlights;
 });
 
-Then(/I execute the search query( with verb "(.*?)")?/, async function (verb) {
-  const options = {};
-  if (verb) {
-    options.verb = verb;
-  }
+Then('I execute the search query', async function () {
 
   this.props.result = await this.sdk.document.search(
     this.props.index,
     this.props.collection,
-    this.props.searchBody, options);
+    this.props.searchBody);
+});
+
+Then('I execute the search query with verb "GET"', async function () {
+  const { result } = await this.sdk.query(
+    {
+      action: 'search',
+      controller: 'document',
+      index: this.props.index,
+      collection: this.props.collection,
+      searchBody: JSON.stringify(this.props.searchBody)
+    }, {verb: 'GET'});
+  this.props.result = result;
 });
 
 Then('I delete the document {string}', async function (id) {
