@@ -266,7 +266,7 @@ describe('Test the auth controller', () => {
 
       await authController.logout(request);
 
-      should(kuzzle.ask).calledWith('core:security:token:deleteByUser', 'foo');
+      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo');
     });
 
     it('should emit an error if the token cannot be expired', () => {
