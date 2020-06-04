@@ -614,7 +614,8 @@ describe('#base/native controller', () => {
       request.input.args = {
         from: 1,
         size: 11,
-        scroll: '10m'
+        scroll: '10m',
+        searchBody: '{"query":{"foo":"bar"}}'
       };
 
       request.input.body = {
@@ -623,7 +624,7 @@ describe('#base/native controller', () => {
     });
 
     it('should extract search params', () => {
-      request.context = {connection: {protocol:'http', misc:{verb:'GET'}}};
+      request.context = { connection: { protocol: 'http', misc: { verb: 'POST' } } };
       const
         { from, size, scrollTTL, query, searchBody } = nativeController.getSearchParams(request);
 
@@ -634,22 +635,22 @@ describe('#base/native controller', () => {
       should(searchBody).be.eql({ query: { foo: 'bar' } });
     });
 
-    it('should extract search params', () => {
+    it('should extract search params when invoking the route with GET', () => {
       request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
-      request.input.args.query = '{"query":{"foo":"bar"}}';
+      request.input.body = null;
       const
-        { from, size, scrollTTL, query, searchBody } = nativeController.getSearchParams(request);
+        { from, query, scrollTTL, searchBody, size } = nativeController.getSearchParams(request);
 
       should(from).be.eql(1);
       should(size).be.eql(11);
       should(scrollTTL).be.eql('10m');
-      should(query).be.eql({ foo: 'bar' });
+      should(query).be.eql({});
       should(searchBody).be.eql({ query: { foo: 'bar' } });
     });
 
-    it('should extract searchBody param', () => {
+    it('should extract searchBody param when the route is invoked using GET', () => {
       request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
-      request.input.args.query = '{"query":{"foo":"bar"}}';
+      request.input.body = null;
       const searchBody = nativeController.getSearchBody(request);
 
       should(searchBody).be.eql({ query: { foo: 'bar' } });
@@ -660,6 +661,26 @@ describe('#base/native controller', () => {
       const searchBody = nativeController.getSearchBody(request);
 
       should(searchBody).be.eql({ query: { foo: 'bar' } });
+    });
+
+    it('should throw when the route is invoked with GET and invalid search body is provided', () => {
+      request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
+      request.input.body = null;
+      request.input.args.searchBody = {};
+
+      should(() => {
+        nativeController.getSearchBody(request);
+      }).throw({ id: 'api.assert.invalid_type', message: 'Wrong type for argument "searchBody" (expected: string)' });
+    });
+
+    it('should throw when the route is invoked with GET and no search body is provided', () => {
+      request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
+      request.input.body = null;
+      delete request.input.args.searchBody;
+
+      should(() => {
+        nativeController.getSearchBody(request);
+      }).throw({ id: 'api.assert.missing_argument', message: 'Missing argument "searchBody".' });
     });
 
     it('should have have default value', () => {
