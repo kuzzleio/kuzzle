@@ -350,7 +350,7 @@ describe('Plugin Context', () => {
 
       it('should throw a PluginImplementationError if the user is an invalid User object', () => {
         should(() => {
-          context.accessors.sdk.as({ name: 'gordon'  });
+          context.accessors.sdk.as({ name: 'gordon' });
         }).throw(PluginImplementationError, { errorName: 'plugin.context.invalid_user' });
       });
     });
