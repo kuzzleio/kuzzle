@@ -6,32 +6,24 @@ const app = new Application('omniscient');
 app.version = '1.42.21'
 
 // Loguer toutes les actions réalisées pour la déclaration de l'app
-app.fixture.import()
-app.fixture.add({
-  // ...
-})
+// app.fixture.import()
+// app.fixture.add({
+//   // ...
+// })
 
-const idx = await sdk.index.list()
 
-for (const index of idx) {
-  if (!index.startsWith('customer'))
-    continue
-  const count = await sdk.document.count(index, 'asset-locations')
-  console.log(index, count)
-}
+// app.right.import()
+// app.user.import('./users.json')
 
-app.right.import()
-app.user.import('./users.json')
-
-app.index.import('./indexes.json')
-app.index.add({
-  'nyc-open-data': {
-    'green-taxi': {
-      'dynamic': false
-    },
-    'yellow-taxi': {}
-  }
-})
+// app.index.import('./indexes.json')
+// app.index.add({
+//   'nyc-open-data': {
+//     'green-taxi': {
+//       'dynamic': false
+//     },
+//     'yellow-taxi': {}
+//   }
+// })
 
 app.pipe.add('server:afterNow', async request => {
   app.context.log.info(`Server INFO: ${app.name}`);
@@ -44,9 +36,9 @@ app.hook.add('server:beforeNow', () => {
   console.log('server before now');
 })
 
-app.api.add('asset', {
-  url: '/asset' // /_/asset
-})
+// app.api.add('asset', {
+//   url: '/asset' // /_/asset
+// })
 
 const redisHost = await getRedisHostFromK8S()
 app.config.set('services.redis.host', redisHost)

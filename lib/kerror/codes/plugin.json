@@ -93,6 +93,12 @@
           "code": 4,
           "message": "Request discarded: maximum number of executing pipe functions reached.",
           "class": "ServiceUnavailableError"
+        },
+        "already_started": {
+          "description": "Features definition can not be changed after startup",
+          "code": 5,
+          "message": "Cannot add new %s definition after startup",
+          "class": "PluginImplementationError"
         }
       }
     },

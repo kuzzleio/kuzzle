@@ -24,7 +24,12 @@
 'use strict';
 
 const { Application } = require('../index');
+const App = require('../lib/core/framework/app')
 
+
+const app = new App('Hey')
+
+console.log(app.hello('gordon'))
 const yargs = require('yargs');
 
 async function startKuzzle (options = {}) {

@@ -77,8 +77,8 @@
     "codecov": "^3.6.5",
     "cucumber": "^6.0.5",
     "eslint": "^6.8.0",
-    "minimist": "1.2.5",
     "kuzdoc": "^1.2.2",
+    "minimist": "1.2.5",
     "mocha": "^7.1.1",
     "mock-require": "^3.0.3",
     "mqtt": "^3.0.0",
@@ -89,7 +89,9 @@
     "should": "13.2.3",
     "should-sinon": "0.0.6",
     "sinon": "^9.0.2",
-    "strip-json-comments": "^3.1.0"
+    "strip-json-comments": "^3.1.0",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.3"
   },
   "engines": {
     "node": ">= 12.13.0"
