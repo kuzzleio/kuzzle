@@ -8,15 +8,17 @@ app.version = '1.42.21';
 app.plugin.use(new FunctionalTestPlugin());
 
 app.controller.register('email', {
-  get: {
-    handler: async request => console.log(request.input)
-  },
-  send: {
-    handler: async request => console.log(request.input),
-    http: [
-      { verb: 'post', url: '/email/send' }
-    ]
-  },
+  actions: {
+    get: {
+      handler: async request => console.log(request.input)
+    },
+    send: {
+      handler: async request => console.log(request.input),
+      http: [
+        { verb: 'post', url: '/email/send' }
+      ]
+    },
+  }
 });
 
 app.pipe.register('server:afterNow', async request => {

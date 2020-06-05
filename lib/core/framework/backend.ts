@@ -148,12 +148,14 @@ class ConfigManager {
 
 // @todo move this
 interface ControllerDefinition {
-  [action: string]: {
-    handler: (request: any) => Promise<any>,
-    http?: Array<{
-      verb: string,
-      url: string
-    }>
+  actions: {
+    [action: string]: {
+      handler: (request: any) => Promise<any>,
+      http?: Array<{
+        verb: string,
+        url: string
+      }>
+    }
   }
 }
 
@@ -183,11 +185,9 @@ class ControllerManager {
    * @param definition - Controller definition
    */
   register (name: string, definition: ControllerDefinition) {
-    const controller = { actions: definition };
-
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, controller);
+    Plugin.checkControllerDefinition(name, definition);
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -196,7 +196,7 @@ class ControllerManager {
         'A controller with this name already exists');
     }
 
-    this._application._controllers[name] = controller;
+    this._application._controllers[name] = definition;
   }
 }
 
