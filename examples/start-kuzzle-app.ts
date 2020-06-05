@@ -1,7 +1,7 @@
 import { Backend } from '../index';
 import * as FunctionalTestPlugin from '../plugins/available/functional-test-plugin'
 
-const app = new Backend('omniscient');
+const app = new Backend('black-mesa');
 
 app.version = '1.42.21';
 

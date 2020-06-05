@@ -38,7 +38,7 @@ async function startKuzzle (options = {}) {
 
     for (const additionalPlugin of additionalPlugins) {
       const PluginClass = require(`../plugins/available/${additionalPlugin}`);
-      app.plugins.push(PluginClass);
+      app.plugin.use(new PluginClass());
     }
   }
 

@@ -183,9 +183,11 @@ class ControllerManager {
    * @param definition - Controller definition
    */
   register (name: string, definition: ControllerDefinition) {
+    const controller = { actions: definition };
+
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, definition);
+    Plugin.checkControllerDefinition(name, controller);
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -194,7 +196,7 @@ class ControllerManager {
         'A controller with this name already exists');
     }
 
-    this._application._controllers[name] = definition;
+    this._application._controllers[name] = controller;
   }
 }
 

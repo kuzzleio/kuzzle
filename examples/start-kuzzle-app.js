@@ -1,7 +1,7 @@
 const { Backend } = require('../index');
 const FunctionalTestPlugin = require('../plugins/available/functional-test-plugin')
 
-const app = new Backend('omniscient');
+const app = new Backend('black-mesa');
 
 app.version = '1.42.21';
 
