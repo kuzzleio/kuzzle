@@ -181,8 +181,10 @@ class ControllerManager {
    * @example
    * register('greeting', {
    *   sayHello: {
-   *     handler: async request => `Hello, ${request.input.args.name}`,
-   *     http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
+   *     actions: {
+   *       handler: async request => `Hello, ${request.input.args.name}`,
+   *       http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
+   *     }
    *   }
    * })
    *
