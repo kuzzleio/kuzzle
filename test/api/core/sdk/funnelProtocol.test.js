@@ -34,7 +34,7 @@ describe('Test: sdk/funnelProtocol', () => {
   describe('#constructor', () => {
     it('should throw an InternalError if the funnel is instantiated without a valid User object', () => {
       should(() => {
-        new FunnelProtocol(funnel, { _id: 'gordon' });
+        new FunnelProtocol(funnel, { name: 'gordon' });
       }).throw(PluginImplementationError, { errorName: 'plugin.context.invalid_user' });
     });
   });
@@ -76,6 +76,18 @@ describe('Test: sdk/funnelProtocol', () => {
       return funnelProtocol.query(request)
         .then(response => {
           should(response.result.context.user).be.eql(user);
+        });
+    });
+
+    it('should allows a POJO as user object', () => {
+      funnel.executePluginRequest.resolvesArg(0);
+      const user = { _id: 'gordon' };
+
+      funnelProtocol = new FunnelProtocol(funnel, user);
+
+      return funnelProtocol.query(request)
+        .then(response => {
+          should(response.result.context.user._id).be.eql('gordon');
         });
     });
 

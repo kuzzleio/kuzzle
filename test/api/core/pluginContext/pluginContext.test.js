@@ -348,9 +348,9 @@ describe('Plugin Context', () => {
         should(sdk.auth._kuzzle.protocol.user).be.eql(user);
       });
 
-      it('should throw a PluginImplementationError if the user is not a User object', () => {
+      it('should throw a PluginImplementationError if the user is an invalid User object', () => {
         should(() => {
-          context.accessors.sdk.as({ _id: 'gordon' });
+          context.accessors.sdk.as({ name: 'gordon' });
         }).throw(PluginImplementationError, { errorName: 'plugin.context.invalid_user' });
       });
     });
