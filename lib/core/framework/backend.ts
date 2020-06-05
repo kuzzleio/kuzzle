@@ -128,6 +128,10 @@ class ConfigManager {
    * @param value - Value for the configuraiton key
    */
   set (path: string, value: any) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'config');
+    }
+
     _.set(this._application.kuzzle.config, path, value);
   }
 
@@ -137,7 +141,10 @@ class ConfigManager {
    * @param config - Configuration object to merge
    */
   merge (config: ObjectWithStringKey) {
-    if (! _.isPlainObject())
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'config');
+    }
+
     this._application.kuzzle.config = _.merge(
       this._application.kuzzle.config,
       config);
@@ -185,6 +192,10 @@ class ControllerManager {
    * @param definition - Controller definition
    */
   register (name: string, definition: ControllerDefinition) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'controller');
+    }
+
     // Check definition here to throw error early
     // with the corresponding line number
     Plugin.checkControllerDefinition(name, definition);
@@ -215,6 +226,10 @@ class Vault {
    * Secret key to decrypt encrypted secrets.
    */
   set key (key: string) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'vault');
+    }
+
     this._application._vaultKey = key;
   }
 
@@ -222,6 +237,10 @@ class Vault {
    * File containing encrypted secrets
    */
   set file (file: string) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'vault');
+    }
+
     this._application._secretsFile = file;
   }
 
@@ -239,6 +258,7 @@ class Vault {
 
 /* PluginManager class ============================================================== */
 
+// @todo move this
 interface BasePlugin {
   init: (config: ObjectWithStringKey, context: any) => Promise<void> | void
 }
@@ -266,6 +286,10 @@ class PluginManager {
    * @param options - Additionnal options
    */
   use (plugin: BasePlugin, options: usePluginOptions = {}) : void {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'plugin');
+    }
+
     if (typeof plugin.constructor !== 'function' && ! options.name) {
       throw assertionError.get('no_name_provided');
     }
@@ -413,6 +437,10 @@ export class Backend {
    * Starts the Kuzzle application with the defined features
    */
   async start () : Promise<void> {
+    if (this.started) {
+      throw runtimeError.get('already_started', 'start');
+    }
+
     const application = new Plugin(
       this.instanceProxy,
       { name: this.name, application: true });
@@ -428,7 +456,7 @@ export class Backend {
       securities: this.securities,
     };
 
-    await this.kuzzle.start(application, options)
+    await this.kuzzle.start(application, options);
 
     this.started = true;
   }
@@ -439,19 +467,21 @@ export class Backend {
   get name () { return this._name; }
 
   /**
+   * Internal SDK
+   */
+  get sdk () { return this.context.accessors.sdk; }
+
+  /**
    * Application context object
    */
   get context () {
     if (! this.started) {
-      throw runtimeError.get('only_after_startup', 'context');
+      throw runtimeError.get('unavailable_before_start', 'context');
     }
 
     return this._context;
   }
 
-  get sdk () {
-    return this.context.accessors.sdk;
-  }
 
 }
 

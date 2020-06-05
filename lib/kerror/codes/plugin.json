@@ -109,10 +109,10 @@
         "already_started": {
           "description": "Features definition can not be changed after startup.",
           "code": 5,
-          "message": "Cannot add new %s definition after startup",
+          "message": "Cannot use Backend.%s when application is already running",
           "class": "PluginImplementationError"
         },
-        "only_after_startup": {
+        "unavailable_before_start": {
           "description": "The property is only accessible after application startup.",
           "code": 6,
           "message": "Cannot use property \"%s\" before application startup",
