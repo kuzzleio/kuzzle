@@ -23,17 +23,12 @@
 
 'use strict';
 
-const { Application } = require('../index');
-const App = require('../lib/core/framework/app')
+const { Backend } = require('../index');
 
-
-const app = new App('Hey')
-
-console.log(app.hello('gordon'))
 const yargs = require('yargs');
 
 async function startKuzzle (options = {}) {
-  const app = new Application('application');
+  const app = new Backend('kuzzle');
 
   if (options.enablePlugins) {
     const additionalPlugins = options.enablePlugins
@@ -53,15 +48,15 @@ async function startKuzzle (options = {}) {
 
   app.securities = options.securities;
 
-  app.vaultKey = options.vaultKey;
+  app.vault.key = options.vaultKey
 
-  app.secretsFile = options.secretsFile;
+  app.vault.file = options.secretsFile;
 
   app.version = '1.0.0';
 
   await app.start();
 
-  const { total: admins } = await app.context.accessors.sdk.security.searchUsers({
+  const { total: admins } = await app.sdk.security.searchUsers({
     query: { term: { profileIds: 'admin' } }
   });
 

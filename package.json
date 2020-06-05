@@ -73,6 +73,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.155",
     "async": "^3.2.0",
     "codecov": "^3.6.5",
     "cucumber": "^6.0.5",

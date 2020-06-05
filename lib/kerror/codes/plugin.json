@@ -19,13 +19,13 @@
         "invalid_hook": {
           "description": "A hook must point to either a function named directly exposed by the plugin, or a function. This error is thrown when a hook property is configured with neither of these values",
           "code": 3,
-          "message": "Unable to configure a hook for the event \"%s\": \"%s\" should be a plugin method name, or a function. %s",
+          "message": "Unable to configure a hook for the event \"%s\": \"%s\" should be a function. %s",
           "class": "PluginImplementationError"
         },
         "invalid_pipe": {
           "description": "A pipe must point to either a function named directly exposed by the plugin, or a function. This error is thrown when a hook property is configured with neither of these values",
           "code": 4,
-          "message": "Unable to configure a pipe for the event \"%s\": \"%s\" should be a plugin method name, or a function. %s",
+          "message": "Unable to configure a pipe for the event \"%s\": \"%s\" should be a function. %s",
           "class": "PluginImplementationError"
         },
         "init_not_found": {
@@ -59,9 +59,21 @@
           "class": "PluginImplementationError"
         },
         "invalid_plugin_name": {
-          "description": "The plugin name in the manifest is invalid. Plugin can only contain lowercase letters and dash.",
+          "description": "The plugin name in is invalid. Plugin can only contain lowercase letters and dash.",
           "code": 10,
           "message": "Plugin name \"%s\" is invalid. Plugin can only contain lowercase letters and dash.",
+          "class": "PluginImplementationError"
+        },
+        "no_name_provided": {
+          "description": "The plugin does not have a constructor method and no name has been provided.",
+          "code": 11,
+          "message": "Cannot infer plugin name. No constructor method and no name provided",
+          "class": "PluginImplementationError"
+        },
+        "invalid_controller_definition": {
+          "description": "The controller definition is incorrect.",
+          "code": 12,
+          "message": "Incorrect \"%s\" controller definition: %s",
           "class": "PluginImplementationError"
         }
       }
@@ -95,9 +107,15 @@
           "class": "ServiceUnavailableError"
         },
         "already_started": {
-          "description": "Features definition can not be changed after startup",
+          "description": "Features definition can not be changed after startup.",
           "code": 5,
           "message": "Cannot add new %s definition after startup",
+          "class": "PluginImplementationError"
+        },
+        "only_after_startup": {
+          "description": "The property is only accessible after application startup.",
+          "code": 6,
+          "message": "Cannot use property \"%s\" before application startup",
           "class": "PluginImplementationError"
         }
       }

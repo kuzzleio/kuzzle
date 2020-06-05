@@ -10,10 +10,10 @@ title: sdk
 
 Accessor to the embedded SDK.
 
-The embedded SDK is a custom version of our [Javascript SDK](/sdk/js/6) that uses a custom protocol plugged directly into Kuzzle core.
+The embedded SDK is a custom version of our [Javascript SDK](/sdk/js/7) that uses a custom protocol plugged directly into Kuzzle core.
 
 All the documented controllers can be used, except the `realtime` one.
-Also, the low-level [query](/sdk/js/6/core-classes/kuzzle/query) method is available for use.
+Also, the low-level [query](/sdk/js/7/core-classes/kuzzle/query) method is available for use.
 
 ::: info
 The embedded SDK methods do not trigger [API events](/core/2/plugins/guides/events/api-events) or [request:on* events](/core/2/plugins/guides/events/request-on-authorized).
@@ -35,21 +35,21 @@ When the complete original context is needed to execute your request, plugin dev
 
 The following controllers are available in the embedded SDK:
 
-- [auth](/sdk/js/6/controllers/auth)
-- [bulk](/sdk/js/6/controllers/bulk)
-- [collection](/sdk/js/6/controllers/collection)
-- [document](/sdk/js/6/controllers/document)
-- [index](/sdk/js/6/controllers/index)
-- [memoryStorage (ms)](/sdk/js/6/controllers/ms)
-- [security](/sdk/js/6/controllers/security)
-- [server](/sdk/js/6/controllers/server)
+- [auth](/sdk/js/7/controllers/auth)
+- [bulk](/sdk/js/7/controllers/bulk)
+- [collection](/sdk/js/7/controllers/collection)
+- [document](/sdk/js/7/controllers/document)
+- [index](/sdk/js/7/controllers/index)
+- [memoryStorage (ms)](/sdk/js/7/controllers/ms)
+- [security](/sdk/js/7/controllers/security)
+- [server](/sdk/js/7/controllers/server)
 
 <SinceBadge version="1.9.1" />
 
 The following controllers and methods are partially available in the embedded SDK:
-  - [realtime](/sdk/js/6/controllers/realtime)
-    - [count](/sdk/js/6/controllers/realtime/count)
-    - [publish](/sdk/js/6/controllers/realtime/count)
+  - [realtime](/sdk/js/7/controllers/realtime)
+    - [count](/sdk/js/7/controllers/realtime/count)
+    - [publish](/sdk/js/7/controllers/realtime/count)
 
 ### Example
 
@@ -75,7 +75,7 @@ async myAwesomePipe (request) {
 
 <SinceBadge version="1.6.0" />
 
-Accessor to the [query method](/sdk/js/6/core-classes/kuzzle/query).
+Accessor to the [query method](/sdk/js/7/core-classes/kuzzle/query).
 This can be useful to call plugins custom controller action.
 
 ### Example
