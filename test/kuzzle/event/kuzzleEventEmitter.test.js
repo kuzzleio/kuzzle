@@ -26,9 +26,9 @@ describe('#KuzzleEventEmitter', () => {
       emitter.on('foo:*', wildcard);
       emitter.on('foo:before*', before);
       emitter.on('foo:beforeBarQux', exact);
-      emitter.registerPluginHook('foo:*', wildcard);
-      emitter.registerPluginHook('foo:before*', before);
-      emitter.registerPluginHook('foo:beforeBarQux', exact);
+      emitter.registerPluginHook('plugin-foobar', 'foo:*', wildcard);
+      emitter.registerPluginHook('plugin-foobar', 'foo:before*', before);
+      emitter.registerPluginHook('plugin-foobar', 'foo:beforeBarQux', exact);
 
       emitter.emit('foo:beforeBarQux');
 
@@ -45,9 +45,9 @@ describe('#KuzzleEventEmitter', () => {
       emitter.on('foo:*', wildcard);
       emitter.on('foo:after*', before);
       emitter.on('foo:afterBarQux', exact);
-      emitter.registerPluginHook('foo:*', wildcard);
-      emitter.registerPluginHook('foo:after*', before);
-      emitter.registerPluginHook('foo:afterBarQux', exact);
+      emitter.registerPluginHook('plugin-foobar', 'foo:*', wildcard);
+      emitter.registerPluginHook('plugin-foobar', 'foo:after*', before);
+      emitter.registerPluginHook('plugin-foobar', 'foo:afterBarQux', exact);
 
       emitter.emit('foo:afterBarQux');
 
@@ -62,8 +62,8 @@ describe('#KuzzleEventEmitter', () => {
 
       emitter.on('fooafterBar', exact);
       emitter.on('*', globalWildcard);
-      emitter.registerPluginHook('fooafterBar', exact);
-      emitter.registerPluginHook('*', globalWildcard);
+      emitter.registerPluginHook('plugin-foobar', 'fooafterBar', exact);
+      emitter.registerPluginHook('plugin-foobar', '*', globalWildcard);
 
       emitter.emit('fooafterBar');
 
@@ -71,14 +71,50 @@ describe('#KuzzleEventEmitter', () => {
       should(globalWildcard).not.called();
     });
 
-    it('should wrap exception thrown by plugins', () => {
-      const throws = sinon.stub().throws();
+    it('should catch errors thrown by hook and emit hook:onError', done => {
+      const exception = new Error('exception');
+      const rejection = new Error('rejection');
+      const hookOnError = sinon.stub();
+      const throws = sinon.stub().throws(exception);
+      const rejects = sinon.stub().rejects(rejection);
 
-      emitter.registerPluginHook('foo:bar', throws);
+      emitter.on('hook:onError', hookOnError);
+      emitter.registerPluginHook('plugin-foobar', 'foo:throw', throws);
+      emitter.registerPluginHook('plugin-foobar', 'foo:reject', rejects);
 
-      should(() => emitter.emit('foo:bar')).throw({
-        id: 'plugin.runtime.unexpected_error',
-        name: 'PluginImplementationError',
+      emitter.emit('foo:throw');
+      emitter.emit('foo:reject');
+
+      setImmediate(() => {
+        should(hookOnError)
+          .be.calledWith({
+            pluginName: 'plugin-foobar',
+            event: 'foo:throw',
+            error: exception
+          })
+          .be.calledWith({
+            pluginName: 'plugin-foobar',
+            event: 'foo:reject',
+            error: rejection
+          });
+
+        done();
+      });
+    });
+
+    it('should not loop on hook:onError event', done => {
+      const infiniteLoopHook = sinon.stub();
+      const hookOnError = sinon.stub().throws(new Error('exception'));
+
+      emitter.on('plugin:hook:loop-error', infiniteLoopHook);
+      emitter.registerPluginHook('plugin-foobar', 'hook:onError', hookOnError);
+
+      emitter.emit('hook:onError', 'plugin-foobar', 'foo:bar', new Error('error'));
+
+      setImmediate(() => {
+        should(hookOnError).be.calledOnce();
+        should(infiniteLoopHook).be.calledOnce();
+        done();
       });
     });
 
@@ -87,8 +123,8 @@ describe('#KuzzleEventEmitter', () => {
 
       emitter.on('foo:bar', exact);
       emitter.on('foo:bar', exact);
-      emitter.registerPluginHook('foo:bar', exact);
-      emitter.registerPluginHook('foo:bar', exact);
+      emitter.registerPluginHook('plugin-foobar', 'foo:bar', exact);
+      emitter.registerPluginHook('plugin-foobar', 'foo:bar', exact);
 
       emitter.emit('foo:bar');
 

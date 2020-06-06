@@ -8,6 +8,7 @@ class FunctionalTestPlugin {
     this.controllers = {};
     this.routes = [];
     this.pipes = {};
+    this.hooks = {};
 
     // context.constructor.ESClient related declarations =======================
 
@@ -82,6 +83,15 @@ class FunctionalTestPlugin {
 
     // Pipe declared with a function name
     this.pipes['server:afterNow'] = 'afterNowPipe';
+
+    // hooks related declarations ==============================================
+
+    this.hooks['server:afterNow'] = async () => {
+      await this.context.accessors.sdk.realtime.publish(
+        'functionnal-test',
+        'hooks',
+        { event: 'server:afterNow' });
+    };
   }
 
   init (config, context) {
@@ -89,7 +99,7 @@ class FunctionalTestPlugin {
     this.context = context;
   }
 
-  // context.constructor.ESClient related methods ============================
+  // context.constructor.ESClient related methods ==============================
 
   async testConstructorsESClient (request) {
     const
