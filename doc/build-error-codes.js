@@ -65,13 +65,9 @@ function clearCodeDirectories (target) {
   }
 }
 
-function getDeprecatedBadge (deprecated) {
-  if (deprecated) {
-    return `<DeprecatedBadge version="${deprecated}"/>`;
-  }
-
-  return '';
- }
+function deprecatedBadge (deprecated) {
+  return deprecated ? `<DeprecatedBadge version="${deprecated}"/>` : '';
+}
 
 function buildErrorCodes (name) {
   const domain = domains[name];
@@ -95,7 +91,7 @@ function buildErrorCodes (name) {
       doc += `<DeprecatedBadge version="${subdomain.deprecated}">\n`;
     }
 
-    doc += '| id / code | class / status | message | description |\n'
+    doc += '| id / code | class / status | message | description |\n';
     doc += '| --------- | -------------- | --------| ----------- |\n';
 
     for (const [errname, error] of Object.entries(subdomain.errors)) {
@@ -105,7 +101,7 @@ function buildErrorCodes (name) {
       buffer.writeUInt32BE(
         domain.code << 24 | subdomain.code << 16 | error.code,
         0);
-      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${getDeprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/essentials/error-handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
+      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${deprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/essentials/error-handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
     }
     doc += '\n---\n';
     if (subdomain.deprecated) {
