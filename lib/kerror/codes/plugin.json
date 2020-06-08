@@ -349,9 +349,9 @@
           "class": "PluginImplementationError"
         },
         "unavailable_realtime": {
-          "description": "Due to technical limitations, plugins have limited access to the realtime API controller",
+          "description": "Due to technical limitations, subscribe and unsubscribe method are only available in the embedded SDK.",
           "code": 2,
-          "message": "The method \"realtime:%s\" is unavailable in plugins. Use a plugin hook instead.",
+          "message": "The method \"realtime:%s\" is unavailable with execute(). Use the embedded SDK instead.",
           "class": "PluginImplementationError"
         },
         "invalid_user": {

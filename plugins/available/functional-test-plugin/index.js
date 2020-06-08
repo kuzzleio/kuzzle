@@ -60,6 +60,18 @@ class FunctionalTestPlugin {
       verb: 'post',
     });
 
+    this.controllers.test = {
+      test: async () => {
+        // await this.sdk.realtime.publish('index', 'collection', {hello: 'adrien'})
+      }
+    }
+    this.routes.push({
+      action: 'test',
+      controller: 'test',
+      url: '/test',
+      verb: 'post'
+    });
+
     this.pipes['generic:document:beforeWrite'] =
       (...args) => this.genericDocumentEvent('beforeWrite', ...args);
     this.pipes['generic:document:afterWrite'] =
@@ -84,9 +96,15 @@ class FunctionalTestPlugin {
     this.pipes['server:afterNow'] = 'afterNowPipe';
   }
 
-  init (config, context) {
+  async init (config, context) {
     this.config = config;
     this.context = context;
+    this.sdk = context.accessors.sdk;
+    this.roomId = await this.sdk.realtime.subscribe('index', 'collection', {}, async notif => {
+      console.log('HELLO BABE');
+      console.log(notif);
+      await this.sdk.realtime.unsubscribe(this.roomId)
+    })
   }
 
   // context.constructor.ESClient related methods ============================
