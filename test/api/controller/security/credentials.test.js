@@ -3,11 +3,10 @@
 const rewire = require('rewire');
 const should = require('should');
 const sinon = require('sinon');
+const { Request } = require('kuzzle-common-objects');
+
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const {
-  Request,
-  errors: { NotFoundError }
-} = require('kuzzle-common-objects');
+
 const SecurityController = rewire('../../../../lib/api/controller/security');
 
 describe('Test: security controller - credentials', () => {
@@ -55,7 +54,7 @@ describe('Test: security controller - credentials', () => {
         });
     });
 
-    it('should fail if the user does not already exist', () => {
+    it('should throw if the user does not already exist', () => {
       request = new Request({
         controller: 'security',
         action: 'createCredentials',
@@ -66,12 +65,13 @@ describe('Test: security controller - credentials', () => {
         _id: 'someUserId',
       });
 
+      const error = new Error('foo');
       kuzzle.ask
         .withArgs('core:security:user:get', 'someUserId')
-        .resolves(null);
+        .rejects(error);
 
       return should(securityController.createCredentials(request))
-        .rejectedWith(NotFoundError, { id: 'security.user.not_found' });
+        .rejectedWith(error);
     });
   });
 
@@ -109,7 +109,7 @@ describe('Test: security controller - credentials', () => {
         });
     });
 
-    it('should fail if the user does not already exist', () => {
+    it('should throw if the user does not already exist', () => {
       request = new Request({
         controller: 'security',
         action: 'updateCredentials',
@@ -120,12 +120,13 @@ describe('Test: security controller - credentials', () => {
         _id: 'someUserId',
       });
 
+      const error = new Error('foo');
       kuzzle.ask
         .withArgs('core:security:user:get', 'someUserId')
-        .resolves(null);
+        .rejects(error);
 
       return should(securityController.updateCredentials(request))
-        .rejectedWith(NotFoundError, { id: 'security.user.not_found' });
+        .rejectedWith(error);
     });
   });
 

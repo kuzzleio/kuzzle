@@ -4,10 +4,6 @@ const sinon = require('sinon');
 const should = require('should');
 const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
-const AuthController = require('../../../lib/api/controller/auth');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Token = require('../../../lib/model/security/token');
-const User = require('../../../lib/model/security/user');
 const {
   Request,
   errors: {
@@ -17,6 +13,12 @@ const {
     PluginImplementationError
   }
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const AuthController = require('../../../lib/api/controller/auth');
+const Token = require('../../../lib/model/security/token');
+const User = require('../../../lib/model/security/user');
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('Test the auth controller', () => {
@@ -195,6 +197,7 @@ describe('Test the auth controller', () => {
       });
 
       createTokenStub.resolves(token);
+      kuzzle.passport.authenticate.resolves(user);
 
       request.input.args.expiresIn = '1s';
 
@@ -209,7 +212,7 @@ describe('Test the auth controller', () => {
 
       should(createTokenStub).be.calledWith(
         'core:security:token:create',
-        request.context.connection.id,
+        user,
         { expiresIn: '1s' });
     });
 
@@ -424,6 +427,7 @@ describe('Test the auth controller', () => {
 
       should(kuzzle.ask).calledWith(
         'core:security:token:refresh',
+        req.context.user,
         req.context.token,
         req.input.args.expiresIn);
     });

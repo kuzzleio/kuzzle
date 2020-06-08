@@ -300,7 +300,7 @@ describe('Test: security/tokenRepository', () => {
   });
 
   describe('#deleteByUserId', () => {
-    it('should delete the tokens associated to a user identifier', () => {
+    it('should delete the tokens associated to a user identifier', async () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.resolves([
         'repos/kuzzle/token/foo#foo',
@@ -316,29 +316,20 @@ describe('Test: security/tokenRepository', () => {
       tokenRepository.cacheEngine.get.onThirdCall().resolves(
         JSON.stringify({ userId: 'foo', _id: 'baz', expiresAt: 3 }));
 
-      return tokenRepository.deleteByUserId('foo')
-        .then(() => {
-          should(tokenRepository.cacheEngine.expire)
-            .calledWith('repos/kuzzle/token/foo', -1);
+      await tokenRepository.deleteByKuid('foo');
 
-          should(tokenRepository.cacheEngine.expire)
-            .calledWith('repos/kuzzle/token/bar', -1);
+      should(tokenRepository.cacheEngine.expire)
+        .calledWith('repos/kuzzle/token/foo', -1)
+        .calledWith('repos/kuzzle/token/bar', -1)
+        .calledWith('repos/kuzzle/token/baz', -1);
 
-          should(tokenRepository.cacheEngine.expire)
-            .calledWith('repos/kuzzle/token/baz', -1);
-
-          should(kuzzle.tokenManager.expire)
-            .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});
-
-          should(kuzzle.tokenManager.expire)
-            .calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2});
-
-          should(kuzzle.tokenManager.expire)
-            .calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 3});
-        });
+      should(kuzzle.tokenManager.expire)
+        .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
+        .calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2})
+        .calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 3});
     });
 
-    it('should not delete tokens if the internal cache return a false positive', () => {
+    it('should not delete tokens if the internal cache return a false positive', async () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.returns(Promise.resolve([
         'repos/kuzzle/token/foo#foo',
@@ -346,21 +337,25 @@ describe('Test: security/tokenRepository', () => {
         'repos/kuzzle/token/foo#baz'
       ]));
 
-      tokenRepository.cacheEngine.get.onFirstCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1})));
-      tokenRepository.cacheEngine.get.onSecondCall().returns(Promise.resolve(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 2})));
+      tokenRepository.cacheEngine.get
+        .onFirstCall()
+        .resolves(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1}));
+      tokenRepository.cacheEngine.get
+        .onSecondCall()
+        .resolves(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 2}));
 
-      return tokenRepository.deleteByUserId('foo')
-        .then(() => {
-          should(tokenRepository.cacheEngine.get.callCount).be.eql(2);
-          should(tokenRepository.cacheEngine.expire.callCount).be.eql(2);
-          should(tokenRepository.cacheEngine.expire).calledWith('repos/kuzzle/token/foo', -1);
-          should(tokenRepository.cacheEngine.expire).calledWith('repos/kuzzle/token/baz', -1);
+      await tokenRepository.deleteByKuid('foo');
 
-          should(kuzzle.tokenManager.expire.callCount).be.eql(2);
-          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1});
-          should(kuzzle.tokenManager.expire).calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 2});
+      should(tokenRepository.cacheEngine.get.callCount).be.eql(2);
+      should(tokenRepository.cacheEngine.expire.callCount).be.eql(2);
+      should(tokenRepository.cacheEngine.expire)
+        .calledWith('repos/kuzzle/token/foo', -1)
+        .calledWith('repos/kuzzle/token/baz', -1);
 
-        });
+      should(kuzzle.tokenManager.expire.callCount).be.eql(2);
+      should(kuzzle.tokenManager.expire)
+        .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
+        .calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 2});
     });
   });
 });

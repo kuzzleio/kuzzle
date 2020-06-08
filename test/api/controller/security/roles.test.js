@@ -2,7 +2,6 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
   errors: {
@@ -10,6 +9,9 @@ const {
     SizeLimitError
   }
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+
 const SecurityController = require('../../../../lib/api/controller/security');
 const Role = require('../../../../lib/model/security/role');
 
@@ -66,26 +68,26 @@ describe('Test: security controller - roles', () => {
   describe('#createOrReplaceRole', () => {
     const createOrReplaceEvent = 'core:security:role:createOrReplace';
     let createOrReplaceStub;
+    let createdRole;
 
     beforeEach(() => {
       request.input.resource._id = 'test';
       request.input.body = { foo: 'bar' };
+
+      createdRole = new Role();
+      createdRole._id = request.input.resource._id;
+      Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       createOrReplaceStub = kuzzle.ask
         .withArgs(
           createOrReplaceEvent,
           request.input.resource._id,
           sinon.match.object,
-          sinon.match.object);
+          sinon.match.object)
+        .resolves(createdRole);
     });
 
     it('should create a role using default options', async () => {
-      let createdRole = new Role();
-      createdRole._id = request.input.resource._id;
-      createdRole._source = request.input.body;
-
-      createOrReplaceStub.resolves(createdRole);
-
       const response = await securityController.createOrReplaceRole(request);
 
       should(createOrReplaceStub).calledWithMatch(
@@ -99,8 +101,13 @@ describe('Test: security controller - roles', () => {
         });
 
       should(response).be.an.Object().and.not.instanceof(Role);
-      should(response._id).eql(createdRole._id);
-      should(response._source).match(createdRole._source);
+      should(response).match({
+        _id: createdRole._id,
+        _source: {
+          controllers: createdRole.controllers,
+          foo: 'bar',
+        },
+      });
     });
 
     it('should forward a security module exception', () => {
@@ -123,8 +130,8 @@ describe('Test: security controller - roles', () => {
         request.input.resource._id,
         request.input.body,
         {
-          force: false,
-          refresh: 'wait_for',
+          force: true,
+          refresh: 'false',
           userId: request.context.user._id,
         });
     });
@@ -151,26 +158,26 @@ describe('Test: security controller - roles', () => {
   describe('#createRole', () => {
     const createEvent = 'core:security:role:create';
     let createStub;
+    let createdRole;
 
     beforeEach(() => {
       request.input.resource._id = 'test';
       request.input.body = { foo: 'bar' };
+
+      createdRole = new Role();
+      createdRole._id = request.input.resource._id;
+      Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       createStub = kuzzle.ask
         .withArgs(
           createEvent,
           request.input.resource._id,
           sinon.match.object,
-          sinon.match.object);
+          sinon.match.object)
+        .resolves(createdRole);
     });
 
     it('should create a role using default options', async () => {
-      let createdRole = new Role();
-      createdRole._id = request.input.resource._id;
-      createdRole._source = request.input.body;
-
-      createStub.resolves(createdRole);
-
       const response = await securityController.createRole(request);
 
       should(createStub).calledWithMatch(
@@ -184,8 +191,13 @@ describe('Test: security controller - roles', () => {
         });
 
       should(response).be.an.Object().and.not.instanceof(Role);
-      should(response._id).eql(createdRole._id);
-      should(response._source).match(createdRole._source);
+      should(response).match({
+        _id: createdRole._id,
+        _source: {
+          controllers: createdRole.controllers,
+          foo: 'bar',
+        },
+      });
     });
 
     it('should forward a security module exception', () => {
@@ -208,8 +220,8 @@ describe('Test: security controller - roles', () => {
         request.input.resource._id,
         request.input.body,
         {
-          force: false,
-          refresh: 'wait_for',
+          force: true,
+          refresh: 'false',
           userId: request.context.user._id,
         });
     });
@@ -245,7 +257,7 @@ describe('Test: security controller - roles', () => {
     it('should resolve to an object on a getRole call', async () => {
       let returnedRole = new Role();
       returnedRole._id = 'foo';
-      returnedRole._source = { bar: 'qux' };
+      Object.assign(returnedRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       getStub.resolves(returnedRole);
 
@@ -256,7 +268,10 @@ describe('Test: security controller - roles', () => {
       should(response).be.Object().and.not.instanceof(Role);
       should(response).match({
         _id: returnedRole._id,
-        _source: returnedRole._source,
+        _source: {
+          controllers: returnedRole.controllers,
+          foo: 'bar',
+        },
       });
     });
 
@@ -334,7 +349,7 @@ describe('Test: security controller - roles', () => {
 
       mGetStub.resolves([role1, role2, role3]);
 
-      const response = securityController.mGetRoles(request);
+      const response = await securityController.mGetRoles(request);
 
       should(mGetStub).calledWithMatch(mGetEvent, request.input.body.ids);
 
@@ -351,31 +366,32 @@ describe('Test: security controller - roles', () => {
   describe('#searchRoles', () => {
     const searchEvent = 'core:security:role:search';
     let searchStub;
+    let searchedRole;
 
     beforeEach(() => {
       request.input.body = { controllers: 'foobar'.split('') };
 
-      searchStub = kuzzle.ask.withArgs(
-        searchEvent,
-        sinon.match.array,
-        sinon.match.object);
+      searchedRole = new Role();
+      searchedRole._id = 'foo';
+      Object.assign(searchedRole, {controllers: {ctrl: true}, foo: 'bar'});
+
+      searchStub = kuzzle.ask
+        .withArgs(searchEvent, sinon.match.array, sinon.match.object)
+        .resolves({ hits: [searchedRole], total: 1 });
     });
 
     it('should return response with an array of roles on searchRole call', async () => {
-      const role = new Role();
-      role._id = 'foo';
-      role._source = {foo: 'bar'};
-
-      searchStub.resolves({ hits: [role], total: 1 });
-
       const response = await securityController.searchRoles(request);
 
       should(response).be.an.Object();
       should(response.hits).be.an.Array().and.have.length(1);
 
       should(response.hits[0]).not.instanceof(Role).and.match({
-        _id: role._id,
-        _source: role._source,
+        _id: searchedRole._id,
+        _source: {
+          controllers: searchedRole.controllers,
+          foo: 'bar',
+        }
       });
 
       should(searchStub).calledWithMatch(
@@ -400,7 +416,7 @@ describe('Test: security controller - roles', () => {
       request.input.body.controllers = 'foo';
 
       await should(securityController.searchRoles(request))
-        .rejectedWith(SizeLimitError, {
+        .rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
         });
 
@@ -412,7 +428,7 @@ describe('Test: security controller - roles', () => {
         request.input.args.from = from;
 
         await should(securityController.searchRoles(request))
-          .rejectedWith(SizeLimitError, {
+          .rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_type',
           });
 
@@ -425,7 +441,7 @@ describe('Test: security controller - roles', () => {
         request.input.args.size = size;
 
         await should(securityController.searchRoles(request))
-          .rejectedWith(SizeLimitError, {
+          .rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_type',
           });
 
@@ -461,31 +477,32 @@ describe('Test: security controller - roles', () => {
   describe('#updateRole', () => {
     const updateEvent = 'core:security:role:update';
     let updateStub;
+    let updatedRole;
 
     beforeEach(() => {
       request.input.resource._id = 'test';
       request.input.body = { foo: 'bar' };
 
-      updateStub = kuzzle.ask.withArgs(
-        updateEvent,
-        sinon.match.string,
-        sinon.match.any,
-        sinon.match.any);
+      updatedRole = new Role();
+      updatedRole._id = 'test';
+      Object.assign(updatedRole, {controllers: { ctrl: true }, foo: 'bar'});
+
+      updateStub = kuzzle.ask
+        .withArgs(
+          updateEvent,
+          sinon.match.string,
+          sinon.match.any,
+          sinon.match.any)
+        .resolves(updatedRole);
     });
 
     it('should return a valid response and use default options', async () => {
-      const updatedRole = new Role();
-      updatedRole._id = 'test';
-      updatedRole._source = {foo: 'bar', baz: 'qux'};
-
-      updateStub.resolves(updatedRole);
-
       const response = await securityController.updateRole(request);
 
       should(updateStub).calledWithMatch(
         updateEvent,
-        request.resource._id,
-        request.resource.body,
+        request.input.resource._id,
+        request.input.body,
         {
           force: false,
           refresh: 'wait_for',
@@ -496,7 +513,10 @@ describe('Test: security controller - roles', () => {
       should(response).be.an.Object().and.not.instanceof(Role);
       should(response).match({
         _id: updatedRole._id,
-        _source: updatedRole._source
+        _source: {
+          controllers: updatedRole.controllers,
+          foo: 'bar',
+        }
       });
     });
 
@@ -535,8 +555,8 @@ describe('Test: security controller - roles', () => {
 
       should(updateStub).calledWithMatch(
         updateEvent,
-        request.resource._id,
-        request.resource.body,
+        request.input.resource._id,
+        request.input.body,
         {
           force: true,
           refresh: 'false',

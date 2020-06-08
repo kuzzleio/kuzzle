@@ -7,7 +7,9 @@ const {
   Request,
   errors: { PreconditionError, NotFoundError }
 } = require('kuzzle-common-objects');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const AdminController = rewire('../../../lib/api/controller/admin');
 const { NativeController } = require('../../../lib/api/controller/base');
 
@@ -83,13 +85,13 @@ describe('AdminController', () => {
       );
     });
 
-    it('should unlock the action even if the promise reject', async () => {
+    it('should unlock the action even if the promise rejects', async () => {
       request.input.args.refresh = 'wait_for';
       kuzzle.ask.withArgs('core:security:user:truncate').rejects();
 
       await should(adminController.resetSecurity(request)).be.rejected();
 
-      kuzzle.ask.withArgs('core:security:user:truncate').rejects();
+      kuzzle.ask.withArgs('core:security:user:truncate').resolves();
 
       return should(adminController.resetSecurity(request)).fulfilled();
     });
