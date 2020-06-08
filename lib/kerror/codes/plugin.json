@@ -58,10 +58,10 @@
           "message": "A plugin named %s already exists",
           "class": "PluginImplementationError"
         },
-        "invalid_plugin_name": {
-          "description": "The plugin name in is invalid. Plugin can only contain lowercase letters and dash.",
+        "invalid_application_name": {
+          "description": "The application name is invalid. Application names can only contain lowercase letters and dash.",
           "code": 10,
-          "message": "Plugin name \"%s\" is invalid. Plugin can only contain lowercase letters and dash.",
+          "message": "Application name \"%s\" is invalid. Application names must be in kebab-case.",
           "class": "PluginImplementationError"
         },
         "no_name_provided": {

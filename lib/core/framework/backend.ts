@@ -298,7 +298,7 @@ class PluginManager {
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
     if (! Plugin.checkName(name)) {
-      throw assertionError.get('invalid_plugin_name', name)
+      throw assertionError.get('invalid_application_name', name)
     }
 
     if (this._application._plugins[name]) {
