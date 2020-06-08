@@ -60,18 +60,6 @@ class FunctionalTestPlugin {
       verb: 'post',
     });
 
-    this.controllers.test = {
-      test: async () => {
-        // await this.sdk.realtime.publish('index', 'collection', {hello: 'adrien'})
-      }
-    }
-    this.routes.push({
-      action: 'test',
-      controller: 'test',
-      url: '/test',
-      verb: 'post'
-    });
-
     this.pipes['generic:document:beforeWrite'] =
       (...args) => this.genericDocumentEvent('beforeWrite', ...args);
     this.pipes['generic:document:afterWrite'] =
