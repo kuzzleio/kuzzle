@@ -37,7 +37,7 @@ class FakeMqttProtocol extends FakeProtocol {
   constructor () { super('mqtt'); }
 }
 
-describe('lib/core/core/network/index', () => {
+describe('lib/core/core/network/entryPoint', () => {
   let kuzzle;
   let HttpMock;
   let WebSocketMock;

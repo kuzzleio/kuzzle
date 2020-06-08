@@ -60,7 +60,7 @@ class KuzzleMock extends Kuzzle {
       getFilterIds: sinon.stub().returns([])
     };
 
-    this.entryPoints = {
+    this.entryPoint = {
       dispatch: sinon.spy(),
       entryPoints: [
         {

@@ -89,7 +89,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.validation.curateSpecification,
         kuzzle.repositories.role.sanityCheck,
         kuzzle.pipe, // kuzzle:start
-        kuzzle.entryPoints.init,
+        kuzzle.entryPoint.init,
         kuzzle.emit // core:kuzzleStart
       );
     });

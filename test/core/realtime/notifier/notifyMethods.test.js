@@ -56,7 +56,7 @@ describe('notify methods', () => {
       return notifier
         .notifyDocument([], request, 'scope', 'action', { some: 'content'})
         .then(() => {
-          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.entryPoint.dispatch).not.be.called();
           should(kuzzle.emit).not.be.called();
         });
     });
@@ -72,7 +72,7 @@ describe('notify methods', () => {
           'action',
           content)
         .then(() => {
-          const dispatch = kuzzle.entryPoints.dispatch;
+          const dispatch = kuzzle.entryPoint.dispatch;
 
           should(dispatch).calledOnce();
           should(dispatch.firstCall.args[0]).be.eql('broadcast');
@@ -137,7 +137,7 @@ describe('notify methods', () => {
           'action',
           content)
         .then(() => {
-          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.entryPoint.dispatch).not.be.called();
         });
     });
   });
@@ -146,14 +146,14 @@ describe('notify methods', () => {
     it('should ignore non-existing rooms', () => {
       return notifier.notifyUser('IAMERROR', request, 'all', {})
         .then(() => {
-          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.entryPoint.dispatch).not.be.called();
         });
     });
 
     it('should not notify if no channel match the provided arguments', () => {
       return notifier.notifyUser('nonMatching', request, 'all', {})
         .then(() => {
-          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.entryPoint.dispatch).not.be.called();
         });
     });
 
@@ -162,7 +162,7 @@ describe('notify methods', () => {
 
       return notifier.notifyUser('matchingSome', request, 'out' , content)
         .then(() => {
-          const dispatch = kuzzle.entryPoints.dispatch;
+          const dispatch = kuzzle.entryPoint.dispatch;
 
           should(dispatch).calledOnce();
 
@@ -215,7 +215,7 @@ describe('notify methods', () => {
     it('should do nothing if the provided rooms list is empty', () => {
       return notifier.notifyServer([], 'foobar', 'type', 'message')
         .then(() => {
-          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.entryPoint.dispatch).not.be.called();
           should(kuzzle.pipe).not.be.called();
         });
     });
@@ -223,7 +223,7 @@ describe('notify methods', () => {
     it('should ignore non-existing rooms', () => {
       return notifier.notifyServer(['IAMERROR'], 'foobar', 'type', 'message')
         .then(() => {
-          should(kuzzle.entryPoints.dispatch).not.be.called();
+          should(kuzzle.entryPoint.dispatch).not.be.called();
           should(kuzzle.pipe).not.be.called();
         });
     });
@@ -233,7 +233,7 @@ describe('notify methods', () => {
         .notifyServer(
           ['nonMatching', 'alwaysMatching'], 'foobar', 'type', 'message')
         .then(() => {
-          const dispatch = kuzzle.entryPoints.dispatch;
+          const dispatch = kuzzle.entryPoint.dispatch;
           should(dispatch).calledOnce();
 
           should(dispatch.firstCall.args[0]).be.eql('notify');
