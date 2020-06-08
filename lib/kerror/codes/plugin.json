@@ -107,7 +107,7 @@
           "class": "ServiceUnavailableError"
         },
         "already_started": {
-          "description": "Features definition can not be changed after startup.",
+          "description": "Features definition cannot be changed after startup.",
           "code": 5,
           "message": "Cannot use Backend.%s when application is already running",
           "class": "PluginImplementationError"
