@@ -82,7 +82,8 @@ class KuzzleMock extends Kuzzle {
       processRequest: this.sandbox.stub().resolves(),
       checkRights: this.sandbox.stub(),
       getEventName: this.sandbox.spy(),
-      executePluginRequest: this.sandbox.stub().resolves()
+      executePluginRequest: this.sandbox.stub().resolves(),
+      remainingRequests: 0
     };
 
     this.gc = {
