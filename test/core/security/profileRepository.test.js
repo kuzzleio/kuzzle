@@ -16,10 +16,11 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const Role = require('../../../lib/model/security/role');
 const Profile = require('../../../lib/model/security/profile');
 const ProfileRepository = require('../../../lib/core/security/profileRepository');
+const Repository = require('../../../lib/core/shared/repository');
 
 const _kuzzle = Symbol.for('_kuzzle');
 
-describe('Test: security/profileRepository', () => {
+describe.only('Test: security/profileRepository', () => {
   let kuzzle;
   let profileRepository;
   let testProfile;
@@ -51,6 +52,71 @@ describe('Test: security/profileRepository', () => {
     ];
 
     return profileRepository.init({ indexStorage: kuzzle.internalIndex });
+  });
+
+  describe('#events', () => {
+    beforeEach(() => {
+      kuzzle.ask.restore();
+      sinon.stub(profileRepository);
+    });
+
+    it('should register a "create" event', async () => {
+      await kuzzle.ask('core:security:profile:create', 'foo', 'bar', 'baz');
+
+      should(profileRepository.create).calledWith('foo', 'bar', 'baz');
+    });
+
+    it('should register a "createOrReplace" event', async () => {
+      await kuzzle.ask(
+        'core:security:profile:createOrReplace',
+        'foo',
+        'bar',
+        'baz');
+
+      should(profileRepository.createOrReplace).calledWith('foo', 'bar', 'baz');
+    });
+
+    it('should register a "delete" event', async () => {
+      await kuzzle.ask('core:security:profile:delete', 'foo', 'bar');
+
+      should(profileRepository.deleteById).calledWith('foo', 'bar');
+    });
+
+    it('should register a "get" event', async () => {
+      await kuzzle.ask('core:security:profile:get', 'foo');
+
+      should(profileRepository.load).calledWith('foo');
+    });
+
+    it('should register a "mGet" event', async () => {
+      await kuzzle.ask('core:security:profile:mGet', 'foo');
+
+      should(profileRepository.loadProfiles).calledWith('foo');
+    });
+
+    it('should register a "scroll" event', async () => {
+      await kuzzle.ask('core:security:profile:scroll', 'foo', 'bar');
+
+      should(profileRepository.scroll).calledWith('foo', 'bar');
+    });
+
+    it('should register a "search" event', async () => {
+      await kuzzle.ask('core:security:profile:search', 'foo', 'bar');
+
+      should(profileRepository.searchProfiles).calledWith('foo', 'bar');
+    });
+
+    it('should register a "truncate" event', async () => {
+      await kuzzle.ask('core:security:profile:truncate', 'foo');
+
+      should(profileRepository.truncate).calledWith('foo');
+    });
+
+    it('should register a "update" event', async () => {
+      await kuzzle.ask('core:security:profile:update', 'foo', 'bar', 'baz');
+
+      should(profileRepository.update).calledWith('foo', 'bar', 'baz');
+    });
   });
 
   describe('#load', () => {
@@ -166,7 +232,7 @@ describe('Test: security/profileRepository', () => {
     });
   });
 
-  describe('#initialize', () => {
+  describe('#fromDTO', () => {
     it('should throw if the profile contains unexisting roles', () => {
       roleRepositoryMock.loadRoles.resolves([null]);
 
@@ -337,4 +403,120 @@ describe('Test: security/profileRepository', () => {
     });
   });
 
+  describe('#loadOneFromDatabase', () => {
+    beforeEach(() => {
+      sinon.stub(Repository.prototype, 'loadOneFromDatabase');
+    });
+
+    afterEach(() => {
+      Repository.prototype.loadOneFromDatabase.restore();
+    });
+
+    it('should invoke its super function', async () => {
+      Repository.prototype.loadOneFromDatabase.resolves('foo');
+
+      await should(profileRepository.loadOneFromDatabase('bar'))
+        .fulfilledWith('foo');
+
+      should(Repository.prototype.loadOneFromDatabase)
+        .calledWith('bar');
+    });
+
+    it('should wrap generic 404s into profile dedicated errors', () => {
+      const error = new Error('foo');
+      error.status = 404;
+
+      Repository.prototype.loadOneFromDatabase.rejects(error);
+
+      return should(profileRepository.loadOneFromDatabase('foo'))
+        .rejectedWith(NotFoundError, { id: 'security.profile.not_found' });
+    });
+
+    it('should re-throw non-404 errors as is', () => {
+      const error = new Error('foo');
+
+      Repository.prototype.loadOneFromDatabase.rejects(error);
+
+      return should(profileRepository.loadOneFromDatabase('foo'))
+        .rejectedWith(error);
+    });
+  });
+
+  describe('#create', () => {
+    beforeEach(() => {
+      sinon.stub(profileRepository, 'validateAndSaveProfile');
+      roleRepositoryMock.loadRoles.resolves([]);
+    });
+
+    it('should pass the right configuration to validateAndSaveProfile', async () => {
+      const content = {
+        _id: 'ohnoes',
+        _kuzzle_info: 'nope',
+        bar: 'bar',
+        foo: 'foo',
+      };
+
+      await profileRepository.create('foobar', content, {
+        refresh: 'refresh',
+        userId: 'userId',
+      });
+
+      should(profileRepository.validateAndSaveProfile)
+        .calledWithMatch(sinon.match.object, {
+          method: 'create',
+          refresh: 'refresh'
+        });
+
+      const profile = profileRepository.validateAndSaveProfile.firstCall.args[0];
+      should(profile).instanceOf(Profile);
+      should(profile._id).eql('foobar');
+      should(profile.bar).eql('bar');
+      should(profile.foo).eql('foo');
+      should(profile._kuzzle_info).match({
+        author: 'userId',
+        updatedAt: null,
+        updater: null,
+      });
+      should(profile._kuzzle_info.createdAt).approximately(Date.now(), 1000);
+    });
+  });
+
+  describe('#createOrReplace', () => {
+    beforeEach(() => {
+      sinon.stub(profileRepository, 'validateAndSaveProfile');
+      roleRepositoryMock.loadRoles.resolves([]);
+    });
+
+    it('should pass the right configuration to validateAndSaveProfile', async () => {
+      const content = {
+        _id: 'ohnoes',
+        _kuzzle_info: 'nope',
+        bar: 'bar',
+        foo: 'foo',
+      };
+
+      await profileRepository.createOrReplace('foobar', content, {
+        refresh: 'refresh',
+        userId: 'userId',
+      });
+
+      should(profileRepository.validateAndSaveProfile)
+        .calledWithMatch(sinon.match.object, {
+          method: 'createOrReplace',
+          refresh: 'refresh'
+        });
+
+      const profile = profileRepository.validateAndSaveProfile.firstCall.args[0];
+      should(profile).instanceOf(Profile);
+      should(profile._id).eql('foobar');
+      should(profile.bar).eql('bar');
+      should(profile.foo).eql('foo');
+      should(profile._kuzzle_info).match({
+        author: 'userId',
+        updatedAt: null,
+        updater: null,
+      });
+      should(profile._kuzzle_info.createdAt).approximately(Date.now(), 1000);
+    });
+  });
 });
