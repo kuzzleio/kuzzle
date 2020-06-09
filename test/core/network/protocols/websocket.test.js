@@ -6,7 +6,7 @@ const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
 const { IncomingMessage } = require('http');
-const { EntryPoint } = require(`${root}/lib/core/network/entryPoint`);
+const EntryPoint = require(`${root}/lib/core/network/entryPoint`);
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
 const errorMatcher = require(`${root}/test/util/errorMatcher`);
 

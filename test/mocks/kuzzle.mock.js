@@ -37,6 +37,10 @@ class KuzzleMock extends Kuzzle {
     sinon.spy(this, 'registerPluginPipe');
     this.once = sinon.stub();
 
+    this.onAsk = sinon.stub();
+
+    this.ask = sinon.stub();
+
     // ============================
 
 
