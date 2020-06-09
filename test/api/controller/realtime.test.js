@@ -64,6 +64,17 @@ describe('RealtimeController', () => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.addSubscription).be.calledOnce();
           should(kuzzle.hotelClerk.addSubscription).be.calledWith(request);
+          should(request.input.args.cluster).be.true()
+        });
+    });
+
+    it('should handle cluster flag',() => {
+      request.input.args.cluster = false;
+
+      return realtimeController.subscribe(request)
+        .then(result => {
+          const req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
+          should(req.input.args.cluster).be.false()
         });
     });
 
