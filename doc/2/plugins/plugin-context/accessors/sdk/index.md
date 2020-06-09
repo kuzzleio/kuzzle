@@ -145,21 +145,36 @@ The [realtime](/sdk/js/7/controllers/realtime) is entirely available with the [s
 
 Realtime subscription should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:start:before](/core/2/plugins/guides/events/kuzzle-start) event.
 
-Realtime subscription from plugins are automatically replicated on every cluster node since the plugin code is executed on each nodes.  
+Realtime subscription made in a plugin are automatically replicated on every cluster node since the plugin code is executed on each nodes.  
 
 So if you receive a notification, each node will execute the associated callback. You can use the `cluster` option to control weither or not the callback function should be executed on each nodes.
+
+```js
+await context.accessors.sdk.realtime.subscribe(
+  index, 
+  collection, 
+  filters, 
+  notification => {
+    // this callback will be executed only on one node
+  },
+  { cluster: false });
+```
 
 #### cluster: false
 
 With `cluster: false`, the callback function will be executed only on the node receiving a request triggering notification. (only one execution) 
 
+::: info 
 This behavior is suitable for most usage like sending emails, write in the database, call an external API.
+:::
 
 #### cluster: true
 
 With `cluster: true`, the callback function will be executed one each node of the cluster. (n executions)
 
+::: info 
 This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
+:::
 
 #### Example
 
@@ -170,7 +185,7 @@ async init (config, context) {
     'yellow-taxi',
     {},
     notification => {
-      // this callback will be executed only once
+    // this callback will be executed only on one node
     },
     { cluster: false });
 
