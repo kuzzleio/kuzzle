@@ -82,6 +82,17 @@ class FunctionalTestPlugin {
 
     // Pipe declared with a function name
     this.pipes['server:afterNow'] = 'afterNowPipe';
+    this.hooks = {}
+    this.hooks['core:kuzzleStart'] = async () => {
+      console.log('Subscribe!')
+      this.roomId = await this.sdk.realtime.subscribe('index', 'collection', {}, async notif => {
+        console.log('HELLO BABE');
+        console.log(notif);
+      },
+      {
+        cluster: false
+      })
+    }
   }
 
   async init (config, context) {
@@ -91,7 +102,35 @@ class FunctionalTestPlugin {
     this.roomId = await this.sdk.realtime.subscribe('index', 'collection', {}, async notif => {
       console.log('HELLO BABE');
       console.log(notif);
-      await this.sdk.realtime.unsubscribe(this.roomId)
+    },
+    {
+      cluster: false
+    })
+
+    this.controllers.test = {
+      test: async () => {
+        this.roomId2 = await this.sdk.realtime.subscribe('index', 'collection2', {}, async notif => {
+          console.log('SUBSCRIPTION 2');
+        },
+        {
+          cluster: true
+        })
+      },
+      test2: async () => {
+        await this.sdk.realtime.unsubscribe(this.roomId)
+      }
+    }
+    this.routes.push({
+      action: 'test',
+      controller: 'test',
+      url: '/test',
+      verb: 'post',
+    })
+    this.routes.push({
+      action: 'test2',
+      controller: 'test',
+      url: '/test2',
+      verb: 'post',
     })
   }
 
