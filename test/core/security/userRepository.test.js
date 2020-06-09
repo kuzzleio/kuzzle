@@ -35,7 +35,7 @@ describe('Test: security/userRepository', () => {
     };
 
     tokenRepositoryMock = {
-      deleteByUserId: sinon.stub().resolves(),
+      deleteByKuid: sinon.stub().resolves(),
     };
 
     repositoryLoadStub = sinon.stub(Repository.prototype, 'load');

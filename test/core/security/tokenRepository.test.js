@@ -299,7 +299,7 @@ describe('Test: security/tokenRepository', () => {
     });
   });
 
-  describe('#deleteByUserId', () => {
+  describe('#deleteByKuid', () => {
     it('should delete the tokens associated to a user identifier', async () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
       tokenRepository.cacheEngine.searchKeys.resolves([
