@@ -23,6 +23,7 @@ Kuzzle will wait for pipe listeners to return before accepting user requests.
 
 ## kuzzle:start:after
 
+<SinceBadge version="change-me" />
+
 Triggered when Kuzzle is ready to receive user requests
 
-<SinceBadge version="change-me" />

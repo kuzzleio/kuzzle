@@ -165,7 +165,7 @@ await context.accessors.sdk.realtime.subscribe(
 With `cluster: false`, the callback function will be executed only on the node receiving a request triggering notification. (only one execution) 
 
 ::: info 
-This behavior is suitable for most usage like sending emails, write in the database, call an external API.
+This behavior is suitable for most usage like sending emails, write in the database, call an external API, etc.
 :::
 
 #### cluster: true
