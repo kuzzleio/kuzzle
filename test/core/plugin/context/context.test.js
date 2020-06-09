@@ -290,18 +290,6 @@ describe('Plugin Context', () => {
           count: 10
         }
       });
-
-      should(() => {
-        sdk.realtime.subscribe();
-      }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
-
-      should(() => {
-        sdk.realtime.unsubscribe();
-      }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
-
-      should.doesNotThrow(() => {
-        sdk.realtime.count('foo');
-      });
     });
 
     describe('#accessors.sdk.as', () => {
@@ -329,10 +317,7 @@ describe('Plugin Context', () => {
         should(sdk.ms).be.an.Object();
         should(sdk.security).be.an.Object();
         should(sdk.server).be.an.Object();
-
-        should(() => {
-          sdk.realtime.subscribe();
-        }).throw(PluginImplementationError, { id: 'plugin.context.unavailable_realtime' });
+        should(sdk.realtime).be.an.Object();
 
         should(sdk.auth._kuzzle.protocol.user).be.eql(user);
       });

@@ -3,7 +3,8 @@
 const should = require('should');
 const sinon = require('sinon');
 const User = require('../../../lib/model/security/user');
-const FunnelProtocol = require('../../../lib/core/sdk/funnelProtocol');
+const FunnelProtocol = require('../../../lib/core/plugin/funnelProtocol');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
   Request,
   errors: {
@@ -13,27 +14,41 @@ const {
 
 describe('Test: sdk/funnelProtocol', () => {
   let request;
-  let funnel;
+  let kuzzle;
   let funnelProtocol;
 
   beforeEach(() => {
-    funnel = {};
+    kuzzle = new KuzzleMock();
 
-    funnel.executePluginRequest = sinon.stub().resolves('sdk result');
+    kuzzle.funnel.executePluginRequest = sinon.stub().resolves('sdk result');
 
     request = {
       controller: 'foo',
       action: 'bar'
     };
 
-    funnelProtocol = new FunnelProtocol(funnel);
+    funnelProtocol = new FunnelProtocol(kuzzle);
   });
 
   describe('#constructor', () => {
     it('should throw an InternalError if the funnel is instantiated without a valid User object', () => {
       should(() => {
-        new FunnelProtocol(funnel, { id: 42 });
+        new FunnelProtocol(kuzzle, { id: 42 });
       }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
+    });
+
+    it('should forward messages received from the internalProtocol to the SDK', done => {
+      const payload = { room: 'room-id', hello: 'Gordon' };
+
+      funnelProtocol.on('room-id', () => {
+        should(funnelProtocol.kuzzle.on).be.calledOnce();
+        should(funnelProtocol.kuzzle.on.getCall(0).args[0])
+          .be.eql('core:network:internal:message');
+
+        done();
+      });
+
+      kuzzle.emit('core:network:internal:message', payload);
     });
   });
 
@@ -44,16 +59,21 @@ describe('Test: sdk/funnelProtocol', () => {
   });
 
   describe('#query', () => {
+    beforeEach(() => {
+      kuzzle.onAsk('core:network:internal:connectionId', () => 'connection-id');
+    });
+
     it('should call executePluginRequest with the constructed request', () => {
       return funnelProtocol.query(request)
         .then(() => {
-          should(funnel.executePluginRequest).be.calledOnce();
+          should(kuzzle.funnel.executePluginRequest).be.calledOnce();
 
-          const req = funnel.executePluginRequest.firstCall.args[0];
+          const req = kuzzle.funnel.executePluginRequest.firstCall.args[0];
           should(req).be.an.instanceOf(Request);
           should(req.input.controller).be.equal('foo');
           should(req.input.action).be.equal('bar');
           should(req.context.connection.protocol).be.equal('funnel');
+          should(req.context.connection.id).be.eql('connection-id');
         });
     });
 
@@ -65,37 +85,15 @@ describe('Test: sdk/funnelProtocol', () => {
     });
 
     it('should execute the request with the provided User if present', () => {
-      funnel.executePluginRequest.resolvesArg(0);
+      kuzzle.funnel.executePluginRequest.resolvesArg(0);
       const user = new User();
       user._id = 'gordon';
 
-      funnelProtocol = new FunnelProtocol(funnel, user);
+      funnelProtocol = new FunnelProtocol(kuzzle, user);
 
       return funnelProtocol.query(request)
         .then(response => {
           should(response.result.context.user).be.eql(user);
-        });
-    });
-
-    it('should reject if trying to call forbidden methods from realtime controller', () => {
-      return Promise.resolve()
-        .then(() => {
-          return should(funnelProtocol.query({
-            controller: 'realtime',
-            action: 'subscribe'
-          }))
-            .be.rejectedWith(PluginImplementationError, {
-              id: 'plugin.context.unavailable_realtime'
-            });
-        })
-        .then(() => {
-          return should(funnelProtocol.query({
-            controller: 'realtime',
-            action: 'unsubscribe'
-          }))
-            .be.rejectedWith(PluginImplementationError, {
-              id: 'plugin.context.unavailable_realtime'
-            });
         });
     });
   });
