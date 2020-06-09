@@ -1,14 +1,11 @@
 'use strict';
 
-const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
-const { IncomingMessage } = require('http');
 
 const EntryPoint = require('../../../../lib/core/network/entryPoint');
 const InternalProtocol = require('../../../../lib/core/network/protocols/internal');
 const KuzzleMock = require('../../../../test/mocks/kuzzle.mock');
-const errorMatcher = require('../../../../test/util/errorMatcher');
 
 describe('/lib/core/network/protocols/internal', () => {
   let kuzzle;
@@ -55,7 +52,7 @@ describe('/lib/core/network/protocols/internal', () => {
       protocol.joinChannel('channel-id1');
       protocol.joinChannel('channel-id2');
 
-      protocol.leaveChannel('channel-id2')
+      protocol.leaveChannel('channel-id2');
 
       should(Array.from(protocol.channels)).be.eql(['channel-id1']);
     });
@@ -92,6 +89,6 @@ describe('/lib/core/network/protocols/internal', () => {
       should(kuzzle.emit)
         .be.calledWith('core:network:internal:message', { hello: 'Gordon', room: 'c1' })
         .be.calledWith('core:network:internal:message', { hello: 'Gordon', room: 'c1' });
-    })
-  })
+    });
+  });
 });
