@@ -186,7 +186,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       action: 'join',
       body: {roomId: 'i-exists'}
     }, context);
-    const response = { cluster: false, diff: 'diff', data: 'data'}
+    const response = { cluster: false, diff: 'diff', data: 'data'};
     hotelClerk.rooms.set('i-exists', {});
     hotelClerk._subscribeToRoom = sinon.stub().resolves(response);
 

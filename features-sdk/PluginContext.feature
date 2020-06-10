@@ -27,3 +27,19 @@ Feature: Plugin context
       | name | "Mr Freeman" |
     Then I should receive a result matching:
       | result | "Hello, Mr Freeman" |
+
+  # accessors.sdk.realtime =====================================================
+
+  Scenario: Subscribe and unsubscribe to realtime notifications
+    Given I am listening to notifications on "test":"answer"
+    When I successfully call the route "realtime":"publish" with args:
+      | index      | "test"     |
+      | collection | "question" |
+      | body       | {}         |
+    Then I should have receive "1" notifications
+    # should not be subscribed anymore
+    When I successfully call the route "realtime":"publish" with args:
+      | index      | "test"     |
+      | collection | "question" |
+      | body       | {}         |
+    Then I should have receive "1" notifications

@@ -42,7 +42,7 @@ describe('notify methods', () => {
 
     kuzzle.hotelClerk.rooms.set('nonMatching', {
       channels: {
-        foobar: { cluster: true  }
+        foobar: { cluster: true }
       }
     });
 
@@ -66,11 +66,11 @@ describe('notify methods', () => {
       const content = {some: 'content'};
 
       await notifier.notifyDocument(
-          ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
-          request,
-          'out',
-          'action',
-          content);
+        ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
+        request,
+        'out',
+        'action',
+        content);
 
       should(notifier._notifyDocument).be.calledWith(
         ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
@@ -120,12 +120,12 @@ describe('notify methods', () => {
         const content = {some: 'content'};
 
         await notifier._notifyDocument(
-            ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
-            request,
-            'out',
-            'action',
-            content,
-            { fromCluster: false });
+          ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
+          request,
+          'out',
+          'action',
+          content,
+          { fromCluster: false });
 
         should(notifier._notifyDocument.getCall(0).args[5])
           .be.eql({ fromCluster: false});

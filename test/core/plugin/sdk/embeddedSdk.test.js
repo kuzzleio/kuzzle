@@ -34,12 +34,12 @@ describe('EmbeddedSDK', () => {
       await embeddedSdk.query(request);
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, cluster: false })
+        .be.calledWith({ ...request, cluster: false });
 
       await embeddedSdk.query({ ...request, cluster: true });
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, cluster: true })
-      });
+        .be.calledWith({ ...request, cluster: true });
+    });
   });
 });
