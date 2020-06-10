@@ -240,6 +240,10 @@ describe('lib/core/core/network/entryPoint', () => {
   });
 
   describe('#startListening', () => {
+    beforeEach(async () => {
+      await entrypoint.init();
+    });
+
     it('should call proper methods in order', async () => {
       entrypoint.initLogger = sinon.spy();
       entrypoint.loadMoreProtocols = sinon.stub().resolves();
@@ -269,7 +273,7 @@ describe('lib/core/core/network/entryPoint', () => {
         .then(() => {
           should(entrypoint.protocols.get('http').init).be.calledOnce();
           should(entrypoint.protocols.get('websocket').init).be.calledOnce();
-          should(entrypoint.protocols.get('internal').init).be.calledOnce();
+          should(entrypoint.protocols.get('internal').init).be.calledTwice();
           should(Array.from(entrypoint.protocols.keys())).be.length(3);
           should(entrypoint.protocols.get('mqtt')).be.undefined();
         });
@@ -297,6 +301,7 @@ describe('lib/core/core/network/entryPoint', () => {
   });
 
   describe('#initLogger', () => {
+
     it('should support all available transports', () => {
 
       entrypoint.config.logs.transports = [{
