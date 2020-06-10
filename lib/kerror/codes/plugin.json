@@ -349,7 +349,7 @@
           "class": "PluginImplementationError"
         },
         "unavailable_realtime": {
-          "description": "Due to technical limitations, subscribe and unsubscribe method are only available in the embedded SDK.",
+          "description": "Due to technical limitations, subscribe and unsubscribe methods are only available in the embedded SDK.",
           "code": 2,
           "message": "The method \"realtime:%s\" is unavailable with execute(). Use the embedded SDK instead.",
           "class": "PluginImplementationError"
