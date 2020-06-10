@@ -80,20 +80,20 @@ Realtime subscription should be made in the plugin [init](core/2/plugins/guides/
 When you receive a notification, only one node will execute the associated callback.  
 
 ::: info
-  You can use the `cluster` option if you want your callback function to be executed on each nodes.
+  You can use the `replicate` option if you want your callback function to be executed on each nodes.
 :::
 
-#### cluster: false (default)
+#### replicate: false (default)
 
-With `cluster: false`, the callback function will be executed only on the node receiving a request who triggers a notification. (only one execution) 
+With `replicate: false`, the callback function will be executed only on the node receiving a request who triggers a notification. (only one execution) 
 
 ::: info 
 This behavior is suitable for most usage like sending emails, write in the database, call an external API, etc.
 :::
 
-#### cluster: true
+#### replicate: true
 
-With `cluster: true`, the callback function will be executed one each node of the cluster. (n executions)
+With `replicate: true`, the callback function will be executed one each node of the cluster. (n executions)
 
 ::: info 
 This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
@@ -120,7 +120,7 @@ async init (config, context) {
     notification => {
       // this callback will be executed on each nodes
     },
-    { cluster: true });
+    { replicate: true });
 }
 ```
 

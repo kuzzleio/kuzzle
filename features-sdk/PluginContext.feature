@@ -30,6 +30,7 @@ Feature: Plugin context
 
   # accessors.sdk.realtime =====================================================
 
+  @realtime
   Scenario: Subscribe and unsubscribe to realtime notifications
     Given I subscribe to "test":"answer" notifications
     When I successfully call the route "realtime":"publish" with args:

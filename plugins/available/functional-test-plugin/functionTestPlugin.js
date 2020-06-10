@@ -39,7 +39,7 @@ class FunctionalTestPlugin {
     this.controllers.pipes = {
       deactivateAll: 'pipesDeactivateAll',
       manage: 'pipesManage',
-      testReturn: 'pipesTestReturn',
+      testReturn: 'pipesTestReturn'
     };
 
     this.routes.push({
