@@ -129,3 +129,12 @@ After({ tags: '@login' }, async function () {
     'local',
     { username: 'test-admin', password: 'password' });
 });
+
+// realtime hooks ==============================================================
+
+After({ tags: '@realtime' }, function () {
+  const promises = Object.values(this.props.subscriptions)
+    .map(({ unsubscribe }) => unsubscribe());
+
+  return Promise.all(promises);
+});

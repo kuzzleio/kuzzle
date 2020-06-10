@@ -3,25 +3,46 @@
 const should = require('should');
 const { Then } = require('cucumber');
 
-Then('I am listening to notifications on {string}:{string}', async function (index, collection) {
-  this.props.subscription = {
-    notifications: [],
-    unsubscribe: null
-  };
+Then('I subscribe to {string}:{string} notifications', async function (index, collection) {
+  if (! this.props.subscriptions) {
+    this.props.subscriptions = {};
+  }
 
   const roomId = await this.sdk.realtime.subscribe(
     index,
     collection,
     {},
     notification => {
-      this.props.subscription.notifications.push(notification);
+      this.props.subscriptions[`${index}:${collection}`].notifications.push(notification);
     });
 
-  this.props.subscription.unsubscribe = () => this.sdk.realtime.unsubscribe(roomId);
+  this.props.subscriptions[`${index}:${collection}`] = {
+    unsubscribe: () => this.sdk.realtime.unsubscribe(roomId),
+    notifications: []
+  };
 });
 
-Then('I should have receive {string} notifications', function (rawNumber) {
+Then('I should have receive {string} notifications for {string}:{string}', function (rawNumber, index, collection) {
   const expectedCount = parseInt(rawNumber, 10);
 
-  should(this.props.subscription.notifications).have.length(expectedCount);
+  should(this.props.subscriptions[`${index}:${collection}`].notifications)
+    .have.length(expectedCount);
+});
+
+Then('I should receive realtime notifications for {string}:{string} matching:', function (index, collection, datatable, done) {
+  setTimeout(() => {
+    const expectedNotifications = this.parseObjectArray(datatable);
+
+    should(this.props.subscriptions[`${index}:${collection}`]).not.be.undefined();
+
+    const subscription = this.props.subscriptions[`${index}:${collection}`];
+
+    should(subscription.notifications).be.length(expectedNotifications.length);
+
+    for (let i = 0; i < expectedNotifications.length; i++) {
+      should(subscription.notifications[i]).matchObject(expectedNotifications[i]);
+    }
+
+    done();
+  }, 100);
 });

@@ -95,6 +95,14 @@ class FunctionalTestPlugin {
           await this.sdk.realtime.unsubscribe(roomId);
         });
     }
+
+    // hooks related declarations ==============================================
+    this.hooks['server:afterNow'] = async () => {
+      await this.context.accessors.sdk.realtime.publish(
+        'functionnal-test',
+        'hooks',
+        { event: 'server:afterNow' });
+    };
   }
 
   async init (config, context) {
@@ -103,7 +111,7 @@ class FunctionalTestPlugin {
     this.sdk = context.accessors.sdk;
   }
 
-  // context.constructor.ESClient related methods ============================
+  // context.constructor.ESClient related methods ==============================
 
   async testConstructorsESClient (request) {
     const
