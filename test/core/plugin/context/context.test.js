@@ -5,16 +5,17 @@ const root = '../../../..';
 const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
-const User = require(`${root}/lib/model/security/user`);
+const _ = require('lodash');
 const { Client: ESClient } = require('@elastic/elasticsearch');
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
 const {
   Request,
   errors: {
     PluginImplementationError
   }
 } = require('kuzzle-common-objects');
-const _ = require('lodash');
+
+const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+const EmbeddedSDK = require('../../../../lib/core/plugin/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
   const someCollection = 'someCollection';
@@ -270,63 +271,10 @@ describe('Plugin Context', () => {
       should(strategies.remove).be.a.Function();
     });
 
-    it('should expose a SDK client accessor', () => {
+    it('should expose a EmbeddedSDK in accessors', () => {
       const sdk = context.accessors.sdk;
 
-      should(sdk.as).be.a.Function();
-      should(sdk.query).be.a.Function();
-      should(sdk.auth).be.an.Object();
-      should(sdk.bulk).be.an.Object();
-      should(sdk.collection).be.an.Object();
-      should(sdk.document).be.an.Object();
-      should(sdk.index).be.an.Object();
-      should(sdk.ms).be.an.Object();
-      should(sdk.security).be.an.Object();
-      should(sdk.server).be.an.Object();
-      should(sdk.realtime).be.an.Object();
-
-      sdk.realtime.query = sinon.stub().resolves({
-        result: {
-          count: 10
-        }
-      });
-    });
-
-    describe('#accessors.sdk.as', () => {
-      let
-        request,
-        user;
-
-      beforeEach(() => {
-        user = new User();
-        user._id = 'gordon';
-
-        request = new Request({ controller: 'foo', action: 'bar' }, { user });
-      });
-
-      it('should instantiate a new SDK with the User in the FunnelProtocol', () => {
-        const sdk = context.accessors.sdk.as(request.context.user);
-
-        should(sdk.as).be.undefined();
-        should(sdk.query).be.a.Function();
-        should(sdk.auth).be.an.Object();
-        should(sdk.bulk).be.an.Object();
-        should(sdk.collection).be.an.Object();
-        should(sdk.document).be.an.Object();
-        should(sdk.index).be.an.Object();
-        should(sdk.ms).be.an.Object();
-        should(sdk.security).be.an.Object();
-        should(sdk.server).be.an.Object();
-        should(sdk.realtime).be.an.Object();
-
-        should(sdk.auth._kuzzle.protocol.user).be.eql(user);
-      });
-
-      it('should throw a PluginImplementationError if the user is not a valid User object', () => {
-        should(() => {
-          context.accessors.sdk.as({ not_id: 'gordon' });
-        }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
-      });
+      should(sdk).be.instanceOf(EmbeddedSDK);
     });
 
     describe('#trigger', () => {
