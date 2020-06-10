@@ -11,7 +11,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
 
   const mockedProperties = [
-    'entryPoints',
+    'entryPoint',
     'funnel',
     'router',
     'notifier',
@@ -78,6 +78,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.funnel.init,
         kuzzle.storageEngine.public.loadMappings,
         kuzzle.storageEngine.public.loadFixtures,
+        kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,
         kuzzle.pluginsManager.run,
         kuzzle.log.info, // core components loaded
@@ -89,9 +90,36 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.validation.curateSpecification,
         kuzzle.repositories.role.sanityCheck,
         kuzzle.pipe, // kuzzle:start
-        kuzzle.entryPoint.init,
+        kuzzle.pipe, // kuzzle:start:before
+        kuzzle.entryPoint.startListening,
+        kuzzle.pipe, // kuzzle:start:after
         kuzzle.emit // core:kuzzleStart
       );
+    });
+
+    // @deprecated
+    it('should instantiate Koncorde with PCRE support if asked to', async () => {
+      const Koncorde = sinon.stub();
+      const stubbedKuzzle = Kuzzle.__with__({
+        Koncorde,
+        vault: { load: () => {} }
+      });
+
+      await stubbedKuzzle(async () => {
+        await _mockKuzzle(Kuzzle).start();
+
+        const kuzzleWithPCRE = _mockKuzzle(Kuzzle);
+
+        kuzzleWithPCRE.config =
+          JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
+
+        kuzzleWithPCRE.config.realtime.pcreSupport = true;
+
+        await kuzzleWithPCRE.start();
+      });
+
+      should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2'});
+      should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js'});
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
@@ -102,6 +130,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       return Kuzzle.__with__({
         process: {
+          ...process,
           env: {},
           exit: processExitSpy,
           on: processOnSpy,
@@ -147,31 +176,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       should(kuzzle.internalIndex.count).be.calledWithMatch(
         'users',
         { query: { terms: { profileIds: ['admin'] } } });
-    });
-
-    // @deprecated
-    it('should instantiate Koncorde with PCRE support if asked to', async () => {
-      const Koncorde = sinon.stub();
-      const stubbedKuzzle = Kuzzle.__with__({
-        Koncorde,
-        vault: { load: () => {} }
-      });
-
-      await stubbedKuzzle(async () => {
-        await _mockKuzzle(Kuzzle).start();
-
-        const kuzzleWithPCRE = _mockKuzzle(Kuzzle);
-
-        kuzzleWithPCRE.config =
-          JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
-
-        kuzzleWithPCRE.config.realtime.pcreSupport = true;
-
-        await kuzzleWithPCRE.start();
-      });
-
-      should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2'});
-      should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js'});
     });
   });
 });

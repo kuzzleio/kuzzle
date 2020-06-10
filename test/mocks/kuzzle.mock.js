@@ -65,6 +65,10 @@ class KuzzleMock extends Kuzzle {
 
     this.entryPoint = {
       dispatch: sinon.spy(),
+      init: sinon.stub(),
+      startListening: sinon.spy(),
+      joinChannel: sinon.spy(),
+      leaveChannel: sinon.spy(),
       entryPoints: [
         {
           dispatch: sinon.spy(),
@@ -80,10 +84,7 @@ class KuzzleMock extends Kuzzle {
           leaveChannel: sinon.spy(),
           send: sinon.spy()
         }
-      ],
-      init: sinon.spy(),
-      joinChannel: sinon.spy(),
-      leaveChannel: sinon.spy()
+      ]
     };
 
     this.funnel = {

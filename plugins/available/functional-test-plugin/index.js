@@ -86,7 +86,6 @@ class FunctionalTestPlugin {
     this.hooks['core:kuzzleStart'] = async () => {
       console.log('Subscribe!')
       this.roomId = await this.sdk.realtime.subscribe('index', 'collection', {}, async notif => {
-        console.log('HELLO BABE');
         console.log(notif);
       },
       {
