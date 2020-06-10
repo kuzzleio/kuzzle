@@ -164,13 +164,21 @@ describe('Test: hotelClerk.addSubscription', () => {
   });
 
   it('#join should throw if the room does not exist', () => {
+    const joinRequest = new Request({
+      index: 'foo',
+      collection: 'bar',
+      controller: 'realtime',
+      action: 'join',
+      body: {roomId: 'i-exists'}
+    }, context);
 
-    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError, {
-      id: 'core.realtime.room_not_found'
-    });
+    return should(hotelClerk.join(joinRequest))
+      .be.rejectedWith(NotFoundError, {
+        id: 'core.realtime.room_not_found'
+      });
   });
 
-  it.only('#join should propagate notification only with "cluster" option', async () => {
+  it('#join should propagate notification only with "cluster" option', async () => {
     const joinRequest = new Request({
       index: 'foo',
       collection: 'bar',
