@@ -65,6 +65,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         securities: {}
       };
 
+      should(kuzzle.started).be.false();
+
       await kuzzle.start(params);
 
       sinon.assert.callOrder(
@@ -95,6 +97,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.pipe, // kuzzle:start:after
         kuzzle.emit // core:kuzzleStart
       );
+
+      should(kuzzle.started).be.true();
     });
 
     // @deprecated
