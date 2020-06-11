@@ -77,6 +77,10 @@ The [realtime](/sdk/js/7/controllers/realtime) is entirely available with the [s
 
 Realtime subscription should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:start:before](/core/2/plugins/guides/events/kuzzle-start) event.
 
+::: warning
+If you want to make subscription in hooks, pipes, or controller actions then you should use the `replicate: true` option otherwise your callback will not be executed with every notification.
+:::
+
 When you receive a notification, only one node will execute the associated callback.  
 
 ::: info

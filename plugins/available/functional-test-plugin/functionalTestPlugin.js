@@ -103,6 +103,21 @@ class FunctionalTestPlugin {
         'hooks',
         { event: 'server:afterNow' });
     };
+
+    this.controllers['test'] = {
+      test: async () => {
+        await this.sdk.realtime.subscribe('index', 'collection', {}, n => {
+          console.log(n.result)
+        }, { replicate: true })
+      }
+    };
+
+    this.routes.push({
+      action: 'test',
+      controller: 'test',
+      url: '/test',
+      verb: 'post',
+    })
   }
 
   async init (config, context) {
