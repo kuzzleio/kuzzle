@@ -673,14 +673,22 @@ describe('#base/native controller', () => {
       }).throw({ id: 'api.assert.invalid_type', message: 'Wrong type for argument "searchBody" (expected: string)' });
     });
 
-    it('should throw when the route is invoked with GET and no search body is provided', () => {
+    it('should provide empty body when the route is invoked with GET and no search body is provided', () => {
       request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
       request.input.body = null;
       delete request.input.args.searchBody;
+      const searchBody = nativeController.getSearchBody(request);
 
-      should(() => {
-        nativeController.getSearchBody(request);
-      }).throw({ id: 'api.assert.missing_argument', message: 'Missing argument "searchBody".' });
+      should(searchBody).be.eql({});
+    });
+
+    it('should provide empty body when the route is invoked with GET with a null search body is provided', () => {
+      request.context = { connection: { protocol: 'http', misc: { verb: 'GET' } } };
+      request.input.body = null;
+      request.input.args.searchBody = null;
+      const searchBody = nativeController.getSearchBody(request);
+
+      should(searchBody).be.eql({});
     });
 
     it('should have have default value', () => {
