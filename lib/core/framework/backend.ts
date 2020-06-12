@@ -21,6 +21,7 @@
 
 'use strict';
 
+import * as fs from 'fs';
 import * as _ from 'lodash';
 
 import * as Kuzzle from '../../kuzzle';
@@ -336,7 +337,6 @@ export class Backend {
    */
   public version: string;
 
-
   /**
    * PipeManager definition manager
    *
@@ -433,6 +433,14 @@ export class Backend {
     this.vault = new Vault(this);
     this.controller = new ControllerManager(this);
     this.plugin = new PluginManager(this);
+
+    try {
+      const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+      this.version = info.version;
+    }
+    catch (error) {
+      // Silent if no version can be found
+    }
   }
 
   /**

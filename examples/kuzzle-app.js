@@ -3,8 +3,6 @@ const FunctionalTestPlugin = require('../plugins/available/functional-test-plugi
 
 const app = new Backend('black-mesa');
 
-app.version = '1.42.21';
-
 app.plugin.use(new FunctionalTestPlugin());
 
 app.controller.register('email', {
