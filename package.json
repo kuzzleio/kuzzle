@@ -75,7 +75,7 @@
   },
   "devDependencies": {
     "async": "^3.2.0",
-    "codecov": "^3.6.5",
+    "codecov": "^3.7.0",
     "cucumber": "^6.0.5",
     "eslint": "^6.8.0",
     "kuzdoc": "^1.2.2",
