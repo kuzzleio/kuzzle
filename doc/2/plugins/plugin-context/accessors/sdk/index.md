@@ -116,7 +116,7 @@ async init (config, context) {
     });
 
 
-  // the default value for the "cluster" option is "true"
+  // the default value for the "replicate" option is "true"
   context.accessors.sdk.realtime.subscribe(
     'nyc-open-data',
     'green-taxi',
