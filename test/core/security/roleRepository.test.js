@@ -13,14 +13,20 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const Role = require('../../../lib/model/security/role');
 const RoleRepository = require('../../../lib/core/security/roleRepository');
+const Repository = require('../../../lib/core/shared/repository');
 
-describe('Test: security/roleRepository', () => {
+describe.only('Test: security/roleRepository', () => {
   let kuzzle;
   let roleRepository;
   let profileRepositoryMock;
+  let fakeRole;
 
   beforeEach(() => {
+    fakeRole = new Role();
+    fakeRole._id = 'foo';
+
     kuzzle = new KuzzleMock();
+    kuzzle.ask.restore();
 
     profileRepositoryMock = {
       searchProfiles: sinon.stub(),
@@ -33,27 +39,36 @@ describe('Test: security/roleRepository', () => {
     return roleRepository.init();
   });
 
-  describe('#loadRoles', () => {
-    it('should return in memory roles', () => {
-      const role = {foo: 'bar'};
+  describe('#mGet', () => {
+    const mGetEvent = 'core:security:role:mGet';
 
-      roleRepository.roles.set('foo', role);
-      roleRepository.loadMultiFromDatabase = sinon.stub();
-
-      return roleRepository.loadRoles(['foo'])
-        .then(result => {
-          should(result).be.eql([role]);
-          should(roleRepository.loadMultiFromDatabase)
-            .have.callCount(0);
-        });
+    beforeEach(() => {
+      sinon.stub(roleRepository, 'loadOneFromDatabase');
     });
 
-    it('should load roles from memory & database', () => {
-      const
-        role1 = new Role(),
-        role2 = new Role(),
-        role3 = new Role(),
-        role4 = new Role();
+    it('should register a mGet event', async () => {
+      sinon.stub(roleRepository, 'loadRoles');
+
+      await kuzzle.ask(mGetEvent, 'foo');
+
+      should(roleRepository.loadRoles).calledWith('foo');
+    });
+
+    it('should return in memory roles', async () => {
+      roleRepository.roles.set(fakeRole._id, fakeRole);
+      roleRepository.loadOneFromDatabase = sinon.stub();
+
+      const result = await kuzzle.ask(mGetEvent, [fakeRole._id]);
+
+      should(result).be.eql([fakeRole]);
+      should(roleRepository.loadOneFromDatabase).not.called();
+    });
+
+    it('should load roles from memory & database', async () => {
+      const role1 = new Role();
+      const role2 = new Role();
+      const role3 = new Role();
+      const role4 = new Role();
 
       role1._id = 'role1';
       role2._id = 'role2';
@@ -62,53 +77,75 @@ describe('Test: security/roleRepository', () => {
 
       roleRepository.roles.set('role3', role3);
 
-      roleRepository.loadOneFromDatabase = sinon.stub();
       roleRepository.loadOneFromDatabase.withArgs('role1').resolves(role1);
       roleRepository.loadOneFromDatabase.withArgs('role2').resolves(role2);
       roleRepository.loadOneFromDatabase.withArgs('role4').resolves(role4);
 
-      return roleRepository.loadRoles(['role1', 'role2', 'role3', 'role4'])
-        .then(result => {
-          should(result)
-            .be.an.Array()
-            .match([role1, role2, role3, role4])
-            .have.length(4);
-          should(roleRepository.loadOneFromDatabase).calledWith('role1');
-          should(roleRepository.loadOneFromDatabase).calledWith('role2');
-          should(roleRepository.loadOneFromDatabase).neverCalledWith('role3');
-          should(roleRepository.loadOneFromDatabase).calledWith('role4');
-        });
+      const result = await kuzzle.ask(mGetEvent, [
+        'role1',
+        'role2',
+        'role3',
+        'role4'
+      ]);
+
+      should(result)
+        .be.an.Array()
+        .match([role1, role2, role3, role4])
+        .have.length(4);
+      should(roleRepository.loadOneFromDatabase).calledWith('role1');
+      should(roleRepository.loadOneFromDatabase).calledWith('role2');
+      should(roleRepository.loadOneFromDatabase).neverCalledWith('role3');
+      should(roleRepository.loadOneFromDatabase).calledWith('role4');
     });
 
   });
 
-  describe('#loadRole', () => {
-    it('should load the role directly from memory if it is in memory', () => {
-      const role = {foo: 'bar'};
+  describe('#get', () => {
+    const getEvent = 'core:security:role:get';
 
-      roleRepository.roles.set('foo', role);
-
-      return roleRepository.load('foo')
-        .then(result => {
-          should(result)
-            .be.exactly(role);
-        });
+    beforeEach(() => {
+      sinon.stub(roleRepository, 'loadOneFromDatabase');
     });
 
-    it('should load the role directly from DB if it\'s not in memory', () => {
-      const role = {_id: 'foobar'};
+    it('should register a "get" event', async () => {
+      sinon.stub(roleRepository, 'load');
 
-      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
+      await kuzzle.ask(getEvent, 'foo');
 
-      return roleRepository.load('foo')
-        .then(result => {
-          should(result).be.exactly(role);
-          should(roleRepository.roles).have.key('foobar', role);
-        });
+      should(roleRepository.load).calledWithMatch('foo');
+    });
+
+    it('should load the role directly from the cache, if present', async () => {
+      roleRepository.roles.set(fakeRole._id, fakeRole);
+
+      const result = await kuzzle.ask(getEvent, fakeRole._id);
+
+      should(result).be.exactly(fakeRole);
+    });
+
+    it('should load the role directly from DB if it is not in memory', async () => {
+      roleRepository.loadOneFromDatabase
+        .withArgs(fakeRole._id)
+        .resolves(fakeRole);
+
+      const result = await kuzzle.ask(getEvent, fakeRole._id);
+
+      should(result).be.exactly(fakeRole);
+      should(roleRepository.roles).have.key(fakeRole._id, fakeRole);
     });
   });
 
-  describe('#searchRole', () => {
+  describe('#search', () => {
+    const searchEvent = 'core:security:role:search';
+
+    it('should register a "search" event', async () => {
+      sinon.stub(roleRepository, 'searchRole');
+
+      await kuzzle.ask(searchEvent, 'foo', 'bar');
+
+      should(roleRepository.searchRole).calledWith('foo', 'bar');
+    });
+
     it('should filter the role list with the given controllers', async () => {
       const roles = {
         default: {
@@ -170,39 +207,39 @@ describe('Test: security/roleRepository', () => {
 
       let result;
 
-      result = await roleRepository.searchRole(['foo']);
+      result = await kuzzle.ask(searchEvent, ['foo']);
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(3);
       should(result.hits).match([roles.default, roles.foo, roles.foobar]);
 
-      result = await roleRepository.searchRole(['bar']);
+      result = await kuzzle.ask(searchEvent, ['bar']);
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(3);
       should(result.hits).match([roles.default, roles.bar, roles.foobar]);
 
-      result = await roleRepository.searchRole(['foo', 'bar']);
+      result = await kuzzle.ask(searchEvent, ['foo', 'bar']);
       should(result.total).be.exactly(4);
       should(result.hits.length).be.exactly(4);
       should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
 
-      result = await roleRepository.searchRole(['baz']);
+      result = await kuzzle.ask(searchEvent, ['baz']);
       should(result.total).be.exactly(1);
       should(result.hits.length).be.exactly(1);
       should(result.hits).match([roles.default]);
 
-      result = await roleRepository.searchRole(['foo'], {from: 1});
+      result = await kuzzle.ask(searchEvent, ['foo'], {from: 1});
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.foo, roles.foobar]);
       should(result.hits).not.match([roles.default]);
 
-      result = await roleRepository.searchRole(['foo'], {size: 2});
+      result = await kuzzle.ask(searchEvent, ['foo'], {size: 2});
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.default, roles.foo]);
       should(result.hits).not.match([roles.foobar]);
 
-      result = await roleRepository.searchRole(['foo', 'bar'], {
+      result = await kuzzle.ask(searchEvent, ['foo', 'bar'], {
         from: 1,
         size: 2
       });
@@ -215,75 +252,89 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#delete', () => {
-    it('should reject and not trigger any event if trying to delete a reserved role', done => {
-      let role = new Role();
-      role._id = 'admin';
+    const deleteEvent = 'core:security:role:delete';
 
-      roleRepository.delete(role)
-        .then(() => {
-          done(new Error('The promise is not rejected'));
-        })
-        .catch(e => {
-          should(e).be.an.instanceOf(BadRequestError);
-          should(e.id).eql('security.role.cannot_delete');
-          should(kuzzle.emit).not.be.called();
-          done();
-        })
-        .catch(e => {
-          done(e);
-        });
+    beforeEach(() => {
+      sinon.stub(roleRepository, 'deleteFromDatabase').resolves();
+      sinon.stub(roleRepository, 'load')
+        .withArgs(fakeRole._id)
+        .resolves(fakeRole);
     });
 
-    it('should reject and not trigger any event if a profile uses the role about to be deleted', async () => {
+    it('should register a "delete" event', async () => {
+      sinon.stub(roleRepository, 'deleteById').resolves();
+
+      await kuzzle.ask(deleteEvent, 'foo', 'bar');
+
+      should(roleRepository.deleteById).calledWith('foo', 'bar');
+    });
+
+    it('should reject if trying to delete a reserved role', async () => {
+      for (const id of ['admin', 'default', 'anonymous']) {
+        let role = new Role();
+        role._id = id;
+
+        roleRepository.load.withArgs(id).resolves(role);
+
+        await should(kuzzle.ask(deleteEvent, id))
+          .rejectedWith(BadRequestError, { id: 'security.role.cannot_delete' });
+
+        should(kuzzle.emit).not.be.called();
+        should(roleRepository.deleteFromDatabase).not.called();
+      }
+    });
+
+    it('should reject if a profile uses the role about to be deleted', async () => {
       profileRepositoryMock.searchProfiles.resolves({
         total: 1,
-        hits: ['test']
+        hits: [fakeRole._id]
       });
 
-      await should(roleRepository.delete({_id: 'test'}))
+      await should(kuzzle.ask(deleteEvent, fakeRole._id))
         .rejectedWith(PreconditionError, { id: 'security.role.in_use' });
 
       should(kuzzle.emit).not.be.called();
+      should(roleRepository.deleteFromDatabase).not.called();
     });
 
-    it('should call deleteFromDatabase, remove the role from memory and trigger a "core:roleRepository:delete" event', async () => {
-      const role = new Role();
-      role._id = 'foo';
-
+    it('should call thoroughly delete a role', async () => {
       profileRepositoryMock.searchProfiles.resolves({total: 0});
-      roleRepository.deleteFromDatabase = sinon.stub().resolves(null);
-      roleRepository.roles.set('foo', true);
+      roleRepository.roles.set(fakeRole._id, fakeRole);
 
-      await roleRepository.delete(role);
+      await kuzzle.ask(deleteEvent, fakeRole._id);
 
       should(roleRepository.deleteFromDatabase)
         .be.calledOnce()
-        .be.calledWith('foo');
-      should(roleRepository.roles).not.have.key('foo');
+        .be.calledWith(fakeRole._id);
+      should(roleRepository.roles).not.have.key(fakeRole._id);
       should(kuzzle.emit)
         .be.calledOnce()
-        .be.calledWith('core:roleRepository:delete', {_id: 'foo'});
+        .be.calledWith('core:roleRepository:delete', {_id: fakeRole._id});
+    });
+
+    it('should reject if the role to delete cannot be loaded', async () => {
+      const error = new Error('foo');
+
+      roleRepository.load.withArgs(fakeRole._id).rejects(error);
+
+      return should(kuzzle.ask(deleteEvent, fakeRole._id)).rejectedWith(error);
     });
   });
 
   describe('#serializeToDatabase', () => {
     it('should return a plain flat object', () => {
-      let
-        result,
-        controllers = {
-          controller: {
-            actions: {
-              action: true
-            }
+      let result;
+      let controllers = {
+        controller: {
+          actions: {
+            action: true
           }
-        },
-        role = new Role();
+        }
+      };
 
-      role._id = 'test';
-      role.controllers = controllers;
+      fakeRole.controllers = controllers;
 
-      result = roleRepository.serializeToDatabase(role);
-
+      result = roleRepository.serializeToDatabase(fakeRole);
 
       should(result).not.be.an.instanceOf(Role);
       should(result).be.an.Object();
@@ -296,124 +347,105 @@ describe('Test: security/roleRepository', () => {
 
   describe('#validateAndSaveRole', () => {
     it('should throw if we update the anonymous with a role it cannot log with - case 1', async () => {
-      const
-        bad1 = {
-          controller: {
-            actions: {
-              action: true
-            }
+      const bad1 = {
+        controller: {
+          actions: {
+            action: true
           }
-        },
-        role = new Role();
+        }
+      };
 
-      role._id = 'anonymous';
-      role.controllers = bad1;
+      fakeRole._id = 'anonymous';
+      fakeRole.controllers = bad1;
 
-      try {
-        await roleRepository.validateAndSaveRole(role);
-      }
-      catch (e) {
-        should(e).be.instanceOf(BadRequestError);
-      }
+      await should(roleRepository.validateAndSaveRole(fakeRole))
+        .rejectedWith(BadRequestError, {id: 'security.role.login_required'});
     });
 
     it('should throw if we update the anonymous with a role it cannot log with - case 2', async () => {
-      const
-        bad = {
-          '*': {
-            actions: {
-              '*': false
-            }
+      const bad = {
+        '*': {
+          actions: {
+            '*': false
           }
-        },
-        role = new Role();
+        }
+      };
 
-      role._id = 'anonymous';
-      role.controllers = bad;
+      fakeRole._id = 'anonymous';
+      fakeRole.controllers = bad;
 
-      try {
-        await roleRepository.validateAndSaveRole(role);
-      }
-      catch (e) {
-        should(e).be.instanceOf(BadRequestError);
-      }
+      await should(roleRepository.validateAndSaveRole(fakeRole))
+        .rejectedWith(BadRequestError, {id: 'security.role.login_required'});
     });
 
     it('should throw if we update the anonymous with a role it cannot log with - case 3', async () => {
-      const
-        bad = {
-          auth: {
-            actions: {
-              login: false
-            }
+      const bad = {
+        auth: {
+          actions: {
+            login: false
           }
-        },
-        role = new Role();
+        }
+      };
 
-      role._id = 'anonymous';
-      role.controllers = bad;
+      fakeRole._id = 'anonymous';
+      fakeRole.controllers = bad;
 
-      try {
-        await roleRepository.validateAndSaveRole(role);
-      } catch (e) {
-        should(e).be.instanceOf(BadRequestError);
-      }
+      await should(roleRepository.validateAndSaveRole(fakeRole))
+        .rejectedWith(BadRequestError, {id: 'security.role.login_required'});
     });
 
-    it('should allow updating the anonymous as long as it can log in', () => {
-      const
-        rights = {
-          '*': {
-            actions: {
-              login: true
-            }
+    it('should allow updating the anonymous as long as it can log in', async () => {
+      const rights = {
+        '*': {
+          actions: {
+            login: true
           }
-        },
-        role = new Role();
+        }
+      };
 
-      role._id = 'anonymous';
-      role.controllers = rights;
-      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
-      roleRepository.checkRoleNativeRights = sinon.stub().resolves();
-      roleRepository.checkRolePluginsRights = sinon.stub().resolves();
-      return roleRepository.validateAndSaveRole(role)
-        .then(response => {
-          should(response._id).be.eql('anonymous');
-        });
+      fakeRole._id = 'anonymous';
+      fakeRole.controllers = rights;
+      sinon.stub(roleRepository, 'loadOneFromDatabase').resolves(fakeRole);
+      sinon.stub(roleRepository, 'checkRoleNativeRights').resolves();
+      sinon.stub(roleRepository, 'checkRolePluginsRights').resolves();
+
+      const response = await roleRepository.validateAndSaveRole(fakeRole);
+
+      should(response._id).be.eql('anonymous');
     });
 
-    it('should persist the role to the database and trigger a "core:roleRepository:save" event when ok', () => {
-      const
-        controllers = {
-          controller: {
-            actions: {
-              action: true
-            }
+    it('should correctly persist the role', async () => {
+      const controllers = {
+        controller: {
+          actions: {
+            action: true
           }
-        },
-        role = new Role();
+        }
+      };
 
-      role._id = 'test';
-      role.controllers = controllers;
-      roleRepository.checkRoleNativeRights = sinon.stub().resolves();
-      roleRepository.checkRolePluginsRights = sinon.stub().resolves();
+      fakeRole._id = 'test';
+      fakeRole.controllers = controllers;
+
+      sinon.stub(roleRepository, 'checkRoleNativeRights').resolves();
+      sinon.stub(roleRepository, 'checkRolePluginsRights').resolves();
+      sinon.stub(roleRepository, 'persistToDatabase').resolves();
+      sinon.stub(roleRepository, 'loadOneFromDatabase').resolves(fakeRole);
+
       roleRepository.indexStorage._storageEngine.get.resolves({});
 
-      roleRepository.persistToDatabase = sinon.stub().resolves();
-      roleRepository.loadOneFromDatabase = sinon.stub().resolves(role);
-      return roleRepository.validateAndSaveRole(role)
-        .then(() => {
-          should(roleRepository.persistToDatabase)
-            .be.calledOnce()
-            .be.calledWith(role);
-          should(kuzzle.emit)
-            .be.calledOnce()
-            .be.calledWith(
-              'core:roleRepository:save',
-              { _id: 'test', controllers: controllers });
-        });
+      await roleRepository.validateAndSaveRole(fakeRole);
+
+      should(roleRepository.persistToDatabase)
+        .be.calledOnce()
+        .be.calledWith(fakeRole);
+      should(kuzzle.emit)
+        .be.calledOnce()
+        .be.calledWith(
+          'core:roleRepository:save',
+          { _id: 'test', controllers: controllers });
     });
   });
+
   describe('#checkRoleNativeRights', () => {
     it('should throw if a role contains invalid action.', () => {
       const controllers = {
@@ -556,6 +588,223 @@ describe('Test: security/roleRepository', () => {
       role.controllers = controllers;
       should(roleRepository.checkRolePluginsRights(role)).not.throw();
       should(kuzzle.log.warn).be.not.called();
+    });
+  });
+
+  describe('#create', () => {
+    const createEvent = 'core:security:role:create';
+
+    beforeEach(() => {
+      sinon.stub(roleRepository, 'validateAndSaveRole');
+    });
+
+    it('should register a "create" event', async () => {
+      sinon.stub(roleRepository, 'create');
+
+      await kuzzle.ask(createEvent, 'foo', 'bar', 'baz');
+
+      should(roleRepository.create).calledWith('foo', 'bar', 'baz');
+    });
+
+    it('should pass the right configuration to validateAndSaveRole', async () => {
+      const content = {
+        _id: 'ohnoes',
+        _kuzzle_info: 'nope',
+        bar: 'bar',
+        foo: 'foo',
+      };
+
+      await kuzzle.ask(createEvent, 'foobar', content, {
+        refresh: 'refresh',
+        userId: 'userId',
+      });
+
+      should(roleRepository.validateAndSaveRole)
+        .calledWithMatch(sinon.match.object, {
+          method: 'create',
+          refresh: 'refresh'
+        });
+
+      const role = roleRepository.validateAndSaveRole.firstCall.args[0];
+      should(role).instanceOf(Role);
+      should(role._id).eql('foobar');
+      should(role.bar).eql('bar');
+      should(role.foo).eql('foo');
+      should(role._kuzzle_info).match({
+        author: 'userId',
+        updatedAt: null,
+        updater: null,
+      });
+      should(role._kuzzle_info.createdAt).approximately(Date.now(), 1000);
+    });
+
+    it('should resolve to the validateAndSaveRole result', () => {
+      roleRepository.validateAndSaveRole.resolves('foobar');
+
+      return should(kuzzle.ask(createEvent, 'foo', {}, {}))
+        .fulfilledWith('foobar');
+    });
+  });
+
+  describe('#createOrReplace', () => {
+    const createOrReplaceEvent = 'core:security:role:createOrReplace';
+
+    beforeEach(() => {
+      sinon.stub(roleRepository, 'validateAndSaveRole');
+    });
+
+    it('should register a "createOrReplace" event', async () => {
+      sinon.stub(roleRepository, 'createOrReplace');
+
+      await kuzzle.ask(createOrReplaceEvent, 'foo', 'bar', 'baz');
+
+      should(roleRepository.createOrReplace).calledWith('foo', 'bar', 'baz');
+    });
+
+    it('should pass the right configuration to validateAndSaveRole', async () => {
+      const content = {
+        _id: 'ohnoes',
+        _kuzzle_info: 'nope',
+        bar: 'bar',
+        foo: 'foo',
+      };
+
+      await kuzzle.ask(createOrReplaceEvent, 'foobar', content, {
+        refresh: 'refresh',
+        userId: 'userId',
+      });
+
+      should(roleRepository.validateAndSaveRole)
+        .calledWithMatch(sinon.match.object, {
+          method: 'createOrReplace',
+          refresh: 'refresh'
+        });
+
+      const role = roleRepository.validateAndSaveRole.firstCall.args[0];
+      should(role).instanceOf(Role);
+      should(role._id).eql('foobar');
+      should(role.bar).eql('bar');
+      should(role.foo).eql('foo');
+      should(role._kuzzle_info).match({
+        author: 'userId',
+        updatedAt: null,
+        updater: null,
+      });
+      should(role._kuzzle_info.createdAt).approximately(Date.now(), 1000);
+    });
+
+    it('should resolve to the validateAndSaveRole result', () => {
+      roleRepository.validateAndSaveRole.resolves('foobar');
+
+      return should(kuzzle.ask(createOrReplaceEvent, 'foo', {}, {}))
+        .fulfilledWith('foobar');
+    });
+  });
+
+  describe('#truncate', () => {
+    const truncateEvent = 'core:security:role:truncate';
+
+    beforeEach(() => {
+      sinon.stub(Repository.prototype, 'truncate').resolves();
+    });
+
+    afterEach(() => {
+      Repository.prototype.truncate.restore();
+    });
+
+    it('should register a "truncate" event', async () => {
+      sinon.stub(roleRepository, 'truncate');
+
+      await kuzzle.ask(truncateEvent, 'foo');
+
+      should(roleRepository.truncate).calledWith('foo');
+    });
+
+    it('should clear the RAM cache once the truncate succeeds', async () => {
+      const opts = {foo: 'bar'};
+
+      roleRepository.roles.set('foo', 'bar');
+      roleRepository.roles.set('baz', 'qux');
+
+      await roleRepository.truncate(opts);
+
+      should(Repository.prototype.truncate).calledWith(opts);
+      should(roleRepository.roles).be.empty();
+    });
+
+    it('should clear the RAM cache even if the truncate fails', async () => {
+      const error = new Error('foo');
+
+      Repository.prototype.truncate.rejects(error);
+
+      roleRepository.roles.set('foo', 'bar');
+      roleRepository.roles.set('baz', 'qux');
+
+      await should(roleRepository.truncate()).rejectedWith(error);
+
+      should(roleRepository.roles).be.empty();
+    });
+  });
+
+  describe('#update', () => {
+    const updateEvent = 'core:security:role:update';
+
+    beforeEach(() => {
+      sinon.stub(roleRepository, 'validateAndSaveRole');
+      sinon.stub(roleRepository, 'load').resolves(fakeRole);
+    });
+
+    it('should register a "update" event', async () => {
+      sinon.stub(roleRepository, 'update');
+
+      await kuzzle.ask(updateEvent, 'foo', 'bar', 'baz');
+
+      should(roleRepository.update).calledWith('foo', 'bar', 'baz');
+    });
+
+    it('should reject if the role does not exist', () => {
+      const error = new Error('foo');
+      roleRepository.load.rejects(new Error('foo'));
+
+      return should(kuzzle.ask(updateEvent, 'foo', {}, {}))
+        .rejectedWith(error);
+    });
+
+    it('should pass the right configuration to validateAndSaveRole', async () => {
+      const content = {
+        _id: 'ohnoes',
+        _kuzzle_info: 'nope',
+        bar: 'bar',
+        foo: 'foo',
+      };
+
+      await kuzzle.ask(updateEvent, 'foobar', content, {
+        refresh: 'refresh',
+        userId: 'userId',
+      });
+
+      should(roleRepository.validateAndSaveRole)
+        .calledWithMatch(sinon.match.object, {
+          method: 'update',
+          refresh: 'refresh'
+        });
+
+      const role = roleRepository.validateAndSaveRole.firstCall.args[0];
+      should(role).instanceOf(Role);
+      should(role._id).eql('foobar');
+      should(role.bar).eql('bar');
+      should(role.foo).eql('foo');
+      should(role._kuzzle_info).match({
+        updater: 'userId',
+      });
+      should(role._kuzzle_info.updatedAt).approximately(Date.now(), 1000);
+    });
+
+    it('should resolve to the validateAndSaveRole result', () => {
+      roleRepository.validateAndSaveRole.resolves('foobar');
+
+      return should(kuzzle.ask(updateEvent, 'foo', {}, {}))
+        .fulfilledWith('foobar');
     });
   });
 });

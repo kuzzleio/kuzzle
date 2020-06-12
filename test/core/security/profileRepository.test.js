@@ -20,7 +20,7 @@ const Repository = require('../../../lib/core/shared/repository');
 
 const _kuzzle = Symbol.for('_kuzzle');
 
-describe.only('Test: security/profileRepository', () => {
+describe('Test: security/profileRepository', () => {
   let kuzzle;
   let profileRepository;
   let testProfile;
