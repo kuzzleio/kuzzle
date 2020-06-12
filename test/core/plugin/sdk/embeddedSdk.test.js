@@ -12,6 +12,7 @@ describe('EmbeddedSDK', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    kuzzle.started = true;
 
     embeddedSdk = new EmbeddedSDK(kuzzle);
   });
@@ -27,19 +28,19 @@ describe('EmbeddedSDK', () => {
   });
 
   describe('#query', () => {
-    it('should add default cluster parameter', async () => {
+    it('should add default replicate parameter', async () => {
       const request = { controller: 'realtime', action: 'subscribe' };
       embeddedSdk.protocol.query = sinon.stub().resolves();
 
       await embeddedSdk.query(request);
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, cluster: false });
+        .be.calledWith({ ...request, replicate: false });
 
-      await embeddedSdk.query({ ...request, cluster: true });
+      await embeddedSdk.query({ ...request }, { replicate: true });
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, cluster: true });
+        .be.calledWith({ ...request, replicate: true });
     });
   });
 });
