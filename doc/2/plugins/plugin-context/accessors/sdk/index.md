@@ -87,7 +87,7 @@ By default When you receive a notification, only one node will execute the assoc
 
 #### propagate: false (default)
 
-With `propagate: false`, the callback function will be executed only on the node receiving a request who triggers a notification. (only one execution) 
+With `propagate: false`, the callback function is executed only on the node on which a notification is generated (only one execution).
 
 ::: info 
 This behavior is suitable for most usage like sending emails, write in the database, call an external API, etc.
