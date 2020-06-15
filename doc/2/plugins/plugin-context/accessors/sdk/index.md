@@ -95,7 +95,7 @@ This behavior is suitable for most usage like sending emails, write in the datab
 
 #### propagate: true
 
-With `propagate: true`, the callback function will be executed one each node of the cluster. (n executions)
+With `propagate: true`, notifications are propagated to all nodes of a cluster, executing all callback functions.
 
 ::: info 
 This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
