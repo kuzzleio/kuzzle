@@ -83,20 +83,6 @@ class FunctionalTestPlugin {
 
     // Pipe declared with a function name
     this.pipes['server:afterNow'] = 'afterNowPipe';
-    this.controllers['test'] = {
-      test: async () => {
-        await this.sdk.realtime.subscribe('index', 'collection', {}, notif => {
-          console.log('HEllo')
-        },
-        { propagate: true })
-      }
-    }
-    this.routes.push({
-      action: 'test',
-      controller: 'test',
-      url: '/test',
-      verb: 'post',
-    });
 
     // Embedded SDK realtime
     this.hooks['kuzzle:start:before'] = async () => {
