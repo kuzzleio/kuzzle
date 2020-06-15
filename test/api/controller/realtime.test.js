@@ -64,17 +64,17 @@ describe('RealtimeController', () => {
           should(result).be.match(foo);
           should(kuzzle.hotelClerk.addSubscription).be.calledOnce();
           should(kuzzle.hotelClerk.addSubscription).be.calledWith(request);
-          should(request.input.args.replicate).be.true();
+          should(request.input.args.propagate).be.true();
         });
     });
 
-    it('should handle replicate flag',() => {
-      request.input.args.replicate = false;
+    it('should handle propagate flag',() => {
+      request.input.args.propagate = false;
 
       return realtimeController.subscribe(request)
         .then(() => {
           const req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
-          should(req.input.args.replicate).be.false();
+          should(req.input.args.propagate).be.false();
         });
     });
 

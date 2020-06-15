@@ -28,19 +28,19 @@ describe('EmbeddedSDK', () => {
   });
 
   describe('#query', () => {
-    it('should add default replicate parameter', async () => {
+    it('should add default propagate parameter', async () => {
       const request = { controller: 'realtime', action: 'subscribe' };
       embeddedSdk.protocol.query = sinon.stub().resolves();
 
       await embeddedSdk.query(request);
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, replicate: false });
+        .be.calledWith({ ...request, propagate: false });
 
-      await embeddedSdk.query({ ...request }, { replicate: true });
+      await embeddedSdk.query({ ...request }, { propagate: true });
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, replicate: true });
+        .be.calledWith({ ...request, propagate: true });
     });
   });
 });

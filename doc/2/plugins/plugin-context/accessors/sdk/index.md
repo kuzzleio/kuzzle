@@ -78,26 +78,24 @@ The [realtime](/sdk/js/7/controllers/realtime) is entirely available with the [s
 Realtime subscription should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:start:before](/core/2/plugins/guides/events/kuzzle-start) event.
 
 ::: warning
-If you want to make subscription in hooks, pipes, or controller actions then you should use the `replicate: true` option otherwise your callback will not be executed with every notification.
+You should avoid making subscription at runtime because that can lead to unwanted behavior since the subscriptions will not be replicated on every cluster node.
 :::
 
-When you receive a notification, only one node will execute the associated callback.  
+The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
 
-::: info
-  You can use the `replicate` option if you want your callback function to be executed on each nodes.
-:::
+By default When you receive a notification, only one node will execute the associated callback.  
 
-#### replicate: false (default)
+#### propagate: false (default)
 
-With `replicate: false`, the callback function will be executed only on the node receiving a request who triggers a notification. (only one execution) 
+With `propagate: false`, the callback function will be executed only on the node receiving a request who triggers a notification. (only one execution) 
 
 ::: info 
 This behavior is suitable for most usage like sending emails, write in the database, call an external API, etc.
 :::
 
-#### replicate: true
+#### propagate: true
 
-With `replicate: true`, the callback function will be executed one each node of the cluster. (n executions)
+With `propagate: true`, the callback function will be executed one each node of the cluster. (n executions)
 
 ::: info 
 This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
@@ -116,7 +114,7 @@ async init (config, context) {
     });
 
 
-  // the default value for the "replicate" option is "true"
+  // the default value for the "propagate" option is "true"
   context.accessors.sdk.realtime.subscribe(
     'nyc-open-data',
     'green-taxi',
@@ -124,7 +122,7 @@ async init (config, context) {
     notification => {
       // this callback will be executed on each nodes
     },
-    { replicate: true });
+    { propagate: true });
 }
 ```
 

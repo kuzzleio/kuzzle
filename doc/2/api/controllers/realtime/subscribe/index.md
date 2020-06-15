@@ -33,8 +33,7 @@ Due to the synchronous nature of the HTTP protocol, real-time notifications are 
     // query volatile data
   },
   "scope": "<all|in|out|none>",
-  "users": "<all|in|out|none>",
-  "cluster": true
+  "users": "<all|in|out|none>"
 }
 ```
 
