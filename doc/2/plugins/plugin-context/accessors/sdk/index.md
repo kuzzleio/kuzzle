@@ -75,7 +75,7 @@ async myAwesomePipe (request) {
 
 The [realtime](/sdk/js/7/controllers/realtime) is entirely available with the [subscribe](/sdk/js/7/controllers/realtime/subscribe) and [unsubscribe](/sdk/js/7/controllers/realtime/unsubscribe) methods.  
 
-Realtime subscription should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:start:before](/core/2/plugins/guides/events/kuzzle-start) event.
+Realtime subscriptions should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:start:before](/core/2/plugins/guides/events/kuzzle-start) event.
 
 ::: warning
 You should avoid making subscription at runtime because that can lead to unwanted behavior since the subscriptions will not be replicated on every cluster node.
