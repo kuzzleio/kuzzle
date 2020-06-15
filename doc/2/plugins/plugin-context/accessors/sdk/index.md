@@ -78,7 +78,7 @@ The [realtime](/sdk/js/7/controllers/realtime) is entirely available with the [s
 Realtime subscriptions should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:start:before](/core/2/plugins/guides/events/kuzzle-start) event.
 
 ::: warning
-You should avoid making subscription at runtime because that can lead to unwanted behavior since the subscriptions will not be replicated on every cluster node.
+You should avoid making subscriptions at runtime because that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
 :::
 
 The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
