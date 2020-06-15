@@ -398,6 +398,16 @@ describe('DocumentController', () => {
       });
     });
 
+    it('should reject if users give document with "_source" property', async () => {
+      request.input.body.documents = [
+        { _id: 'doc-1', body: {} },
+        { _id: 'doc-2', _source: {} },
+      ];
+
+      should(documentController._mChanges(request, 'mCreate', true))
+        .be.rejectedWith({ id: 'api.assert.unexpected_argument' })
+    });
+
     it('should reject if the number of documents to edit exceeds server configuration', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
 
