@@ -109,7 +109,7 @@ async init (config, context) {
     'yellow-taxi',
     {},
     notification => {
-      // this callback will be executed only on one node
+      // this callback will be executed only on the node generating a notification
     });
 
   context.accessors.sdk.realtime.subscribe(
