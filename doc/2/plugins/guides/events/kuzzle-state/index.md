@@ -12,7 +12,7 @@ These events allow to hook on Kuzzle startup sequence.
 
 # kuzzle:state:start
 
-This event is triggered when Kuzzle begin it's startup sequence.
+This event is triggered when Kuzzle begins its startup sequence.
 
 # kuzzle:state:live
 
