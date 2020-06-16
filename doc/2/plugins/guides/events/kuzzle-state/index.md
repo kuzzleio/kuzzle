@@ -8,15 +8,15 @@ title: kuzzle:state
 
 <SinceBadge version="change-me" />
 
-These events allows to hooks on Kuzzle startup sequence. They follow [Kubernetes probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/).
+These events allow to hook on Kuzzle startup sequence. 
 
 # kuzzle:state:start
 
-This event is triggered when Kuzzle begin it's startup sequence.
+This event is triggered when Kuzzle begins its startup sequence.
 
 # kuzzle:state:live
 
-This event is triggered when Kuzzle has loaded every internal components but it's not accepting incoming requests.
+This event is triggered when Kuzzle has loaded every internal components but is not yet accepting user requests.
 
 # kuzzle:state:ready
 
