@@ -169,7 +169,7 @@ describe('Test: hotelClerk.addSubscription', () => {
       collection: 'bar',
       controller: 'realtime',
       action: 'join',
-      body: {roomId: 'i-exists'}
+      body: {roomId: 'i-exist'}
     }, context);
 
     return should(hotelClerk.join(joinRequest))
@@ -184,10 +184,10 @@ describe('Test: hotelClerk.addSubscription', () => {
       collection: 'bar',
       controller: 'realtime',
       action: 'join',
-      body: {roomId: 'i-exists'}
+      body: {roomId: 'i-exist'}
     }, context);
     const response = { cluster: false, diff: 'diff', data: 'data'};
-    hotelClerk.rooms.set('i-exists', {});
+    hotelClerk.rooms.set('i-exist', {});
     hotelClerk._subscribeToRoom = sinon.stub().resolves(response);
 
     await hotelClerk.join(joinRequest);

@@ -44,3 +44,5 @@ Feature: Plugin context
       | collection | "question" |
       | body       | {}         |
     Then I should have receive "1" notifications for "test":"answer"
+
+  # @todo add cluster tests
