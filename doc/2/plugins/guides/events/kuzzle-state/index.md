@@ -16,7 +16,7 @@ This event is triggered when Kuzzle begins its startup sequence.
 
 # kuzzle:state:live
 
-This event is triggered when Kuzzle has loaded every internal components but it's not accepting incoming requests.
+This event is triggered when Kuzzle has loaded every internal components but is not yet accepting user requests.
 
 # kuzzle:state:ready
 
