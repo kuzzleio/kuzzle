@@ -8,7 +8,7 @@ title: kuzzle:state
 
 <SinceBadge version="change-me" />
 
-These events allows to hooks on Kuzzle startup sequence. They follow [Kubernetes probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/).
+These events allow to hook on Kuzzle startup sequence. 
 
 # kuzzle:state:start
 
