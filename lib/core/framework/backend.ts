@@ -181,15 +181,16 @@ class ControllerManager {
    *
    * @example
    * register('greeting', {
-   *   sayHello: {
-   *     actions: {
+   *   actions: {
+   *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
    *       http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
    *     }
    *   }
    * })
    *
-   *
+   * Http routes will be auto-generated unless they are provided or an empty array
+   * is provided
    *
    * @param name - Controller name
    * @param definition - Controller definition
@@ -210,13 +211,23 @@ class ControllerManager {
         'A controller with this name already exists');
     }
 
+    this._generateMissingRoutes(name, definition);
+
     this._application._controllers[name] = definition;
+  }
+
+  _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
+    for (const [action, definition] of Object.entries(controllerDefinition)) {
+      if (! definition.http) {
+        definition.http = [{ verb: 'POST', url: `/${name}/${action}` }];
+      }
+    }
   }
 }
 
-/* Vault class ============================================================== */
+/* VaultManager class ======================================================= */
 
-class Vault {
+class VaultManager {
   private _application: any;
 
   constructor (application: any) {
@@ -266,7 +277,7 @@ interface BasePlugin {
   init: (config: ObjectWithStringKey, context: any) => Promise<void> | void
 }
 
-interface usePluginOptions {
+interface UsePluginOptions {
   /**
    * Specify plugin name instead of using the class name.
    */
@@ -288,7 +299,7 @@ class PluginManager {
    * @param plugin - Plugin instance
    * @param options - Additionnal options
    */
-  use (plugin: BasePlugin, options: usePluginOptions = {}) : void {
+  use (plugin: BasePlugin, options: UsePluginOptions = {}) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }
@@ -352,7 +363,7 @@ export class Backend {
   public hook: HookManager;
 
   /**
-   * Kuzzle Vault
+   * VaultManager
    *
    * By default Kuzzle will try to load the following locations:
    *  - local path: ./config/secrets.enc.json
@@ -362,7 +373,7 @@ export class Backend {
    * environment variable:
    *  - KUZZLE_VAULT_KEY
    */
-  public vault: Vault;
+  public vault: VaultManager;
 
   /**
    * Configuration definition manager
@@ -430,7 +441,7 @@ export class Backend {
     this.pipe = new PipeManager(this);
     this.hook = new HookManager(this);
     this.config = new ConfigManager(this);
-    this.vault = new Vault(this);
+    this.vault = new VaultManager(this);
     this.controller = new ControllerManager(this);
     this.plugin = new PluginManager(this);
 
