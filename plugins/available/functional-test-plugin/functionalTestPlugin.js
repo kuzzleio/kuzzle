@@ -103,15 +103,6 @@ class FunctionalTestPlugin {
         'hooks',
         { event: 'server:afterNow' });
     };
-
-
-    this.controllers['test'] = {
-      test: async () => {
-        await this.sdk.realtime.subscribe('index', 'collection', {}, notif => {
-          console.log('JEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')
-        })
-      }
-    }
   }
 
   async init (config, context) {
