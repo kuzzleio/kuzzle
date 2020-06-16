@@ -41,11 +41,16 @@ describe('Test: sdk/funnelProtocol', () => {
       const payload = { room: 'room-id', hello: 'Gordon' };
 
       funnelProtocol.on('room-id', () => {
-        should(funnelProtocol.kuzzle.on).be.calledOnce();
-        should(funnelProtocol.kuzzle.on.getCall(0).args[0])
-          .be.eql('core:network:internal:message');
+        try {
+          should(funnelProtocol.kuzzle.on).be.calledOnce();
+          should(funnelProtocol.kuzzle.on.getCall(0).args[0])
+            .be.eql('core:network:internal:message');
 
-        done();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
       });
 
       kuzzle.emit('core:network:internal:message', payload);
