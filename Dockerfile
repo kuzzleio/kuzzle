@@ -35,10 +35,7 @@ RUN  set -x \
   && rm -rf /var/lib/apt/lists/* \
   && echo "alias ll=\"ls -lahF --color\"" >> ~/.bashrc
 
-ADD ./package.json /var/app/package.json
-ADD ./package-lock.json /var/app/package-lock.json
-ADD ./plugins/enabled /var/app/plugins/enabled
-ADD ./plugins/available /var/app/plugins/available
+ADD . /var/app
 
 WORKDIR /var/app
 
@@ -46,13 +43,6 @@ RUN  npm install --unsafe-perm \
   && npm rebuild all --unsafe-perm \
   && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done \
   && for plugin in plugins/available/*; do cd "$plugin"; npm install --unsafe-perm; cd /var/app; done
-
-ADD ./bin /var/app/bin
-ADD ./config /var/app/config
-ADD ./docker-compose /var/app/docker-compose
-ADD ./lib /var/app/lib
-ADD ./protocols /var/app/protocols
-ADD ./default.config.js /var/app/default.config.js
 
 ################################################################################
 # Production image
