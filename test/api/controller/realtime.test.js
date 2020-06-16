@@ -68,8 +68,8 @@ describe('RealtimeController', () => {
         });
     });
 
-    it('should handle propagate flag only with internal protocol', async () => {
-      request.context.connection.protocol = 'internal';
+    it('should handle propagate flag only with funnel protocol', async () => {
+      request.context.connection.protocol = 'funnel';
       request.input.args.propagate = false;
 
       await realtimeController.subscribe(request);
