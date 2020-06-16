@@ -72,7 +72,7 @@ describe('RealtimeController', () => {
       request.context.connection.protocol = 'internal';
       request.input.args.propagate = false;
 
-      await realtimeController.subscribe(request)
+      await realtimeController.subscribe(request);
 
       let req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
       should(req.input.args.propagate).be.false();
@@ -81,7 +81,7 @@ describe('RealtimeController', () => {
       request.context.connection.protocol = 'http';
       request.input.args.propagate = false;
 
-      await realtimeController.subscribe(request)
+      await realtimeController.subscribe(request);
 
       req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
       should(req.input.args.propagate).be.true();
