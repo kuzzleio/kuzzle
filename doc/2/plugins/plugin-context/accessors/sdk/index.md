@@ -33,7 +33,7 @@ When the complete original context is needed to execute your request, plugin dev
 
 ## Controllers
 
-The following controllers are available in the embedded SDK:
+The following controllers and methods are available in the embedded SDK:
 
 - [auth](/sdk/js/7/controllers/auth)
 - [bulk](/sdk/js/7/controllers/bulk)
@@ -43,13 +43,12 @@ The following controllers are available in the embedded SDK:
 - [memoryStorage (ms)](/sdk/js/7/controllers/ms)
 - [security](/sdk/js/7/controllers/security)
 - [server](/sdk/js/7/controllers/server)
+- [realtime](/sdk/js/7/controllers/realtime)
+  - [count](/sdk/js/7/controllers/realtime/count) <SinceBadge version="1.9.1" />
+  - [publish](/sdk/js/7/controllers/realtime/publish) <SinceBadge version="1.9.1" />
+  - [subscribe](/sdk/js/7/controllers/realtime/subscribe) <SinceBadge version="change-me" />
+  - [unsubscribe](/sdk/js/7/controllers/realtime/unsubscribe) <SinceBadge version="change-me" />
 
-<SinceBadge version="1.9.1" />
-
-The following controllers and methods are partially available in the embedded SDK:
-  - [realtime](/sdk/js/7/controllers/realtime)
-    - [count](/sdk/js/7/controllers/realtime/count)
-    - [publish](/sdk/js/7/controllers/realtime/count)
 
 ### Example
 
@@ -73,9 +72,7 @@ async myAwesomePipe (request) {
 
 <SinceBadge version="change-me" />
 
-The [realtime](/sdk/js/7/controllers/realtime) is entirely available with the [subscribe](/sdk/js/7/controllers/realtime/subscribe) and [unsubscribe](/sdk/js/7/controllers/realtime/unsubscribe) methods.  
-
-Realtime subscriptions should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:state:live](/core/2/plugins/guides/events/kuzzle-state) event.
+Realtime subscriptions should be made using the [realtime controller](/sdk/js/7/controllers/realtime) in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:state:live](/core/2/plugins/guides/events/kuzzle-state) event.
 
 ::: warning
 You should avoid making subscriptions at runtime because that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
