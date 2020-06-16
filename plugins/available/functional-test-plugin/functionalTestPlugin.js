@@ -85,7 +85,7 @@ class FunctionalTestPlugin {
     this.pipes['server:afterNow'] = 'afterNowPipe';
 
     // Embedded SDK realtime
-    this.hooks['kuzzle:start:before'] = async () => {
+    this.hooks['kuzzle:state:live'] = async () => {
       const roomId = await this.sdk.realtime.subscribe(
         'test',
         'question',

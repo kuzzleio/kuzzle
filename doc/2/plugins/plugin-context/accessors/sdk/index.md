@@ -75,15 +75,13 @@ async myAwesomePipe (request) {
 
 The [realtime](/sdk/js/7/controllers/realtime) is entirely available with the [subscribe](/sdk/js/7/controllers/realtime/subscribe) and [unsubscribe](/sdk/js/7/controllers/realtime/unsubscribe) methods.  
 
-Realtime subscriptions should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:start:before](/core/2/plugins/guides/events/kuzzle-start) event.
+Realtime subscriptions should be made in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:state:live](/core/2/plugins/guides/events/kuzzle-state) event.
 
 ::: warning
 You should avoid making subscriptions at runtime because that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
 :::
 
 The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
-
-By default When you receive a notification, only one node will execute the associated callback.  
 
 #### propagate: false (default)
 
@@ -105,6 +103,7 @@ This behavior is suitable for synchronizing RAM cache amongst cluster nodes for 
 
 ```js
 async init (config, context) {
+  // the default value for the "propagate" option is "false"
   context.accessors.sdk.realtime.subscribe(
     'nyc-open-data',
     'yellow-taxi',
@@ -113,8 +112,6 @@ async init (config, context) {
       // this callback will be executed only on one node
     });
 
-
-  // the default value for the "propagate" option is "true"
   context.accessors.sdk.realtime.subscribe(
     'nyc-open-data',
     'green-taxi',

@@ -68,14 +68,23 @@ describe('RealtimeController', () => {
         });
     });
 
-    it('should handle propagate flag',() => {
+    it('should handle propagate flag only with internal protocol', async () => {
+      request.context.connection.protocol = 'internal';
       request.input.args.propagate = false;
 
-      return realtimeController.subscribe(request)
-        .then(() => {
-          const req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
-          should(req.input.args.propagate).be.false();
-        });
+      await realtimeController.subscribe(request)
+
+      let req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
+      should(req.input.args.propagate).be.false();
+
+
+      request.context.connection.protocol = 'http';
+      request.input.args.propagate = false;
+
+      await realtimeController.subscribe(request)
+
+      req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
+      should(req.input.args.propagate).be.true();
     });
 
     it('should return nothing if the connection is dead', async () => {

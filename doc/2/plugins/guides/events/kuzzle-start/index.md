@@ -8,22 +8,9 @@ title: kuzzle:start
 
 <DeprecatedBadge version="change-me" />
 
-Triggered when Kuzzle has finished its startup sequence, and is about to accept network connections.
-
-Kuzzle will wait for pipe listeners to return before accepting user requests.
-
-
-## kuzzle:start:before
-
-<SinceBadge version="change-me" />
+This event is deprecated, and may be removed in a future version of Kuzzle.
+Use [kuzzle:state:ready](/core/2/plugins/guides/events/kuzzle-state) instead.
 
 Triggered when Kuzzle has finished its startup sequence, and is about to accept network connections.
 
 Kuzzle will wait for pipe listeners to return before accepting user requests.
-
-## kuzzle:start:after
-
-<SinceBadge version="change-me" />
-
-Triggered when Kuzzle is ready to receive user requests
-

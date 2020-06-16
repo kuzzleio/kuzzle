@@ -70,6 +70,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       await kuzzle.start(params);
 
       sinon.assert.callOrder(
+        kuzzle.pipe, // kuzzle:state:start
         kuzzle.cacheEngine.init,
         kuzzle.log.info, // cacheEngine init
         kuzzle.storageEngine.init,
@@ -92,9 +93,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.validation.curateSpecification,
         kuzzle.repositories.role.sanityCheck,
         kuzzle.pipe, // kuzzle:start
-        kuzzle.pipe, // kuzzle:start:before
+        kuzzle.pipe, // kuzzle:state:live
         kuzzle.entryPoint.startListening,
-        kuzzle.pipe, // kuzzle:start:after
+        kuzzle.pipe, // kuzzle:state:ready
         kuzzle.emit // core:kuzzleStart
       );
 
