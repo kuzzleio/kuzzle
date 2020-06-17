@@ -15,7 +15,7 @@ const Role = require('../../../lib/model/security/role');
 const RoleRepository = require('../../../lib/core/security/roleRepository');
 const Repository = require('../../../lib/core/shared/repository');
 
-describe.only('Test: security/roleRepository', () => {
+describe('Test: security/roleRepository', () => {
   let kuzzle;
   let roleRepository;
   let profileRepositoryMock;

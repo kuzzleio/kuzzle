@@ -26,8 +26,8 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
     hotelClerk.customers.clear();
     hotelClerk.rooms.set('roomId', {
       channels: {
-        ch1: true,
-        ch2: true
+        ch1: { cluster: true },
+        ch2: { cluster: true }
       },
       customers: new Set(['connectionId'])
     });
@@ -128,27 +128,49 @@ describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {
       });
   });
 
-  it('should remove a customer and notify other users in the room', () => {
+  it('should remove a customer and notify other users in the room', async () => {
     hotelClerk.customers.set('connectionId', new Map([
       [ 'roomId', null ]
     ]));
     hotelClerk.customers.set('foobar', new Map([
       [ 'roomId', null ]
     ]));
-
     hotelClerk.rooms.get('roomId').customers.add('foobar');
 
-    return hotelClerk._removeRoomForCustomer(requestContext, 'roomId')
-      .then(() => {
-        should(hotelClerk.rooms).have.key('roomId');
-        should(hotelClerk.rooms.get('roomId').customers.size).be.eql(1);
-        should(hotelClerk.rooms.get('roomId').customers.has('foobar')).be.true();
-        should(hotelClerk.rooms.get('roomId').customers.has(requestContext.connectionId))
-          .be.false();
+    await hotelClerk._removeRoomForCustomer(requestContext, 'roomId');
 
-        should(hotelClerk.roomsCount).be.eql(1);
-        should(kuzzle.notifier.notifyUser).calledWithMatch(
-          'roomId', sinon.match.instanceOf(Request), 'out', {count: 1});
-      });
+    should(hotelClerk.rooms).have.key('roomId');
+    should(hotelClerk.rooms.get('roomId').customers.size).be.eql(1);
+    should(hotelClerk.rooms.get('roomId').customers.has('foobar')).be.true();
+    should(hotelClerk.rooms.get('roomId').customers.has(requestContext.connectionId))
+      .be.false();
+
+    should(hotelClerk.roomsCount).be.eql(1);
+    should(kuzzle.notifier.notifyUser).calledWithMatch(
+      'roomId', sinon.match.instanceOf(Request), 'out', {count: 1});
+
+    should(kuzzle.pipe).be.calledWith(
+      'core:hotelClerk:removeRoomForCustomer',
+      { requestContext, room: hotelClerk.rooms.get('roomId') });
+  });
+
+  it('should only propagate channels with the "cluster" option', async () => {
+    hotelClerk.customers.set('connectionId', new Map([
+      [ 'roomId', null ]
+    ]));
+    hotelClerk.customers.set('foobar', new Map([
+      [ 'roomId', null ]
+    ]));
+    hotelClerk.rooms.get('roomId').channels.ch1.cluster = false;
+    const expectedRoom = {
+      channels: { ch2: { cluster: true } },
+      customers: new Set()
+    };
+
+    await hotelClerk._removeRoomForCustomer(requestContext, 'roomId');
+
+    should(kuzzle.pipe).be.calledWith(
+      'core:hotelClerk:removeRoomForCustomer',
+      { requestContext, room: expectedRoom });
   });
 });

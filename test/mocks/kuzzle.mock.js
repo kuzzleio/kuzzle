@@ -33,11 +33,13 @@ class KuzzleMock extends Kuzzle {
     });
 
     sinon.stub(this, 'ask').resolves();
+    sinon.stub(this, 'once');
     sinon.spy(this, 'emit');
     sinon.spy(this, 'registerPluginHook');
     sinon.spy(this, 'registerPluginPipe');
-    this.once = sinon.stub();
 
+    sinon.spy(this, 'onAsk');
+    sinon.spy(this, 'on');
     // ============================
 
 
@@ -61,25 +63,10 @@ class KuzzleMock extends Kuzzle {
       getFilterIds: sinon.stub().returns([])
     };
 
-    this.entryPoints = {
+    this.entryPoint = {
       dispatch: sinon.spy(),
-      entryPoints: [
-        {
-          dispatch: sinon.spy(),
-          init: sinon.stub().resolves(),
-          joinChannel: sinon.spy(),
-          leaveChannel: sinon.spy(),
-          send: sinon.spy()
-        },
-        {
-          dispatch: sinon.spy(),
-          init: sinon.stub().resolves(),
-          joinChannel: sinon.spy(),
-          leaveChannel: sinon.spy(),
-          send: sinon.spy()
-        }
-      ],
-      init: sinon.spy(),
+      init: sinon.stub(),
+      startListening: sinon.spy(),
       joinChannel: sinon.spy(),
       leaveChannel: sinon.spy()
     };
