@@ -1,38 +1,5 @@
 version: '3.4'
 
-x-kuzzle-volumes: &kuzzle-volumes
-  - "..:/var/app"
-  - "./scripts/run-dev.sh:/run-dev.sh"
-  - "./fixtures:/fixtures"
-
-
-x-kuzzle-environment: &kuzzle-environment
-  - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
-  - kuzzle_services__storageEngine__commonMapping__dynamic=true
-  - kuzzle_services__internalCache__node__host=redis
-  - kuzzle_services__memoryStorage__node__host=redis
-  - kuzzle_server__protocols__mqtt__enabled=true
-  - kuzzle_server__protocols__mqtt__developmentMode=false
-  - kuzzle_limits__loginsPerSecond=50
-  - NODE_ENV=${NODE_ENV:-development}
-  - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:events*,-kuzzle:entry-point:protocols:websocket,-kuzzle:funnel,-kuzzle:entry-point:protocols:http,-kuzzle:http:router,-kuzzle:plugins,-kuzzle:services:elasticsearch}
-  # - DEBUG=${DEBUG:-none}
-  - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
-  - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
-  - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
-  - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
-  - DEBUG_COLORS=${DEBUG_COLORS:-on}
-  - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
-  - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features-sdk/fixtures/secrets.enc.json}
-  # Variables used by the development scripts
-  - NODE_12_VERSION=12.13.0
-  - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
-  - REBUILD # Force a rebuild of npm modules
-  # cluster
-  - kuzzle_plugins__cluster__privileged=true
-  - KUZZLE_PLUGINS=kuzzle-plugin-cluster
-
-
 services:
   nginx:
     image: nginx:1.15-alpine
@@ -89,8 +56,40 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.4.0
+    image: kuzzleio/elasticsearch:7
     ports:
       - "9200:9200"
     ulimits:
       nofile: 65536
+
+
+x-kuzzle-volumes: &kuzzle-volumes
+  - "..:/var/app"
+  - "./scripts/run-dev.sh:/run-dev.sh"
+  - "./fixtures:/fixtures"
+
+x-kuzzle-environment: &kuzzle-environment
+  - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+  - kuzzle_services__storageEngine__commonMapping__dynamic=true
+  - kuzzle_services__internalCache__node__host=redis
+  - kuzzle_services__memoryStorage__node__host=redis
+  - kuzzle_server__protocols__mqtt__enabled=true
+  - kuzzle_server__protocols__mqtt__developmentMode=false
+  - kuzzle_limits__loginsPerSecond=50
+  - NODE_ENV=${NODE_ENV:-development}
+  - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:entry-point:protocols:websocket}
+  # - DEBUG=${DEBUG:-none}
+  - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
+  - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
+  - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
+  - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
+  - DEBUG_COLORS=${DEBUG_COLORS:-on}
+  - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
+  - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features-sdk/fixtures/secrets.enc.json}
+  # Variables used by the development scripts
+  - NODE_12_VERSION=12.13.0
+  - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
+  - REBUILD # Force a rebuild of npm modules
+  # cluster
+  - kuzzle_plugins__cluster__privileged=true
+  - KUZZLE_PLUGINS=kuzzle-plugin-cluster
