@@ -55,7 +55,7 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `retryOnConflict`: conflicts may occur if the same document gets updated multiple times within a short timespan, in a database cluster. You can set the `retryOnConflict` optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error.
-- `source`: if set to `true` Kuzzle will return the updated document body in the response.
+- `source`: if set to `true` Kuzzle will return the entire updated document body in the response.
 ---
 
 ## Body properties
@@ -70,7 +70,7 @@ Returns information about the updated documents:
 
 - `_id`: document unique identifier
 - `_version`: updated document version
-- `_source`: updated document, only if option `source` is set to `true`
+- `_source`: contains only changes or the full document if `source` is set to `true`
 
 ```js
 {
@@ -84,7 +84,7 @@ Returns information about the updated documents:
   "result": {
     "_id": "<documentId>",
     "_version": 2,
-    "_source": "<updated document>" // If `source` option is set to true
+    "_source": "<partial or entire document>"
   }
 }
 ```
