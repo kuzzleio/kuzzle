@@ -46,8 +46,8 @@ The following controllers and methods are available in the embedded SDK:
 - [realtime](/sdk/js/7/controllers/realtime)
   - [count](/sdk/js/7/controllers/realtime/count) <SinceBadge version="1.9.1" />
   - [publish](/sdk/js/7/controllers/realtime/publish) <SinceBadge version="1.9.1" />
-  - [subscribe](/sdk/js/7/controllers/realtime/subscribe) <SinceBadge version="change-me" />
-  - [unsubscribe](/sdk/js/7/controllers/realtime/unsubscribe) <SinceBadge version="change-me" />
+  - [subscribe](/sdk/js/7/controllers/realtime/subscribe) <SinceBadge version="2.3.0" />
+  - [unsubscribe](/sdk/js/7/controllers/realtime/unsubscribe) <SinceBadge version="2.3.0" />
 
 
 ### Example
@@ -70,7 +70,7 @@ async myAwesomePipe (request) {
 
 ## Realtime notifications
 
-<SinceBadge version="change-me" />
+<SinceBadge version="2.3.0" />
 
 Realtime subscriptions should be made using the [realtime controller](/sdk/js/7/controllers/realtime) in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:state:live](/core/2/plugins/guides/events/kuzzle-state) event.
 

@@ -6,7 +6,7 @@ title: kuzzle:state
 
 # kuzzle:state
 
-<SinceBadge version="change-me" />
+<SinceBadge version="2.3.0" />
 
 These events allow to hook on Kuzzle startup sequence. 
 
