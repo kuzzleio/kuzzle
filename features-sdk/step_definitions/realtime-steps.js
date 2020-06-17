@@ -4,18 +4,29 @@ const should = require('should');
 const { Then } = require('cucumber');
 
 Then('I subscribe to {string}:{string} notifications', async function (index, collection) {
-  const roomId = await this.sdk.realtime.subscribe(index, collection, {}, notification => {
-    this.props.subscriptions[`${index}:${collection}`].notifications.push(notification);
-  });
-
   if (! this.props.subscriptions) {
     this.props.subscriptions = {};
   }
+
+  const roomId = await this.sdk.realtime.subscribe(
+    index,
+    collection,
+    {},
+    notification => {
+      this.props.subscriptions[`${index}:${collection}`].notifications.push(notification);
+    });
 
   this.props.subscriptions[`${index}:${collection}`] = {
     unsubscribe: () => this.sdk.realtime.unsubscribe(roomId),
     notifications: []
   };
+});
+
+Then('I should have receive {string} notifications for {string}:{string}', function (rawNumber, index, collection) {
+  const expectedCount = parseInt(rawNumber, 10);
+
+  should(this.props.subscriptions[`${index}:${collection}`].notifications)
+    .have.length(expectedCount);
 });
 
 Then('I should receive realtime notifications for {string}:{string} matching:', function (index, collection, datatable, done) {
