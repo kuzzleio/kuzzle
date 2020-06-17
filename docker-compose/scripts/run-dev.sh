@@ -46,10 +46,17 @@ fi
 
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
+if [ -n "$KUZZLE_PLUGINS" ];
+then
+  ENABLED_PLUGINS="$KUZZLE_PLUGINS,functional-test-plugin"
+else
+  ENABLED_PLUGINS=functional-test-plugin
+fi
+
 nodemon \
     --inspect=0.0.0.0:9229 \
     bin/start-kuzzle-server \
     --mappings /fixtures/mappings.json \
     --fixtures /fixtures/fixtures.json \
     --securities /fixtures/securities.json \
-    --enable-plugins functional-test-plugin \
+    --enable-plugins $ENABLED_PLUGINS \

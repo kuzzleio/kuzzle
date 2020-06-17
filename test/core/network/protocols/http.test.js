@@ -4,7 +4,7 @@ const root = '../../../..';
 
 const mockrequire = require('mock-require');
 const HttpFormDataStream = require(`${root}/lib/core/network/service/httpFormDataStream`);
-const EntryPoint = require(`${root}/lib/core/network`);
+const EntryPoint = require(`${root}/lib/core/network/entryPoint`);
 const ClientConnection = require(`${root}/lib/core/network/clientConnection`);
 const { HttpMessage } = require(`${root}/lib/core/network/protocols/http`);
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);

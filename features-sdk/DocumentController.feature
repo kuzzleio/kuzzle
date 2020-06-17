@@ -45,6 +45,26 @@ Feature: Document Controller
     Then I should receive a "hits" array of objects matching:
       | _id          | highlight                            |
       | "document-1" | { "name": [ "<em>document1</em>" ] } |
+    When I search documents with the following query:
+      """
+      {
+        "match": {
+          "name": "document1"
+        }
+      }
+      """
+    And with the following highlights:
+      """
+      {
+        "fields": {
+          "name": {}
+        }
+      }
+      """
+    And I execute the search query with verb "GET"
+    Then I should receive a "hits" array of objects matching:
+      | _id          | highlight                            |
+      | "document-1" | { "name": [ "<em>document1</em>" ] } |
 
   @mappings
   Scenario: Search with search_after
@@ -422,6 +442,60 @@ Feature: Document Controller
     Then I should receive a "string" result equals to "document-1"
     Then The document "document-1" should not exist
     Then The document "document-2" should exist
+
+  @mappings
+  Scenario: Delete document and retrieve its source
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+    When I successfully call the route "document":"delete" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "document-1"           |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id     | "document-1"            |
+      | _source | { "name": "document1" } |
+    Then The document "document-1" should not exist
+
+  @mappings
+  Scenario: deleteByQuery
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id | body                               |
+      | -   | { "name": "document1", "age": 42 } |
+      | -   | { "name": "document2", "age": 84 } |
+      | -   | { "name": "document2", "age": 21 } |
+    And I refresh the collection
+    When I successfully call the route "document":"deleteByQuery" with args:
+      | index      | "nyc-open-data"                                   |
+      | collection | "yellow-taxi"                                     |
+      | body       | { "query": { "range": { "age": { "gt": 21 } } } } |
+    Then I should receive a "documents" array containing 2 elements
+    And I count 1 documents matching:
+      | age | 21 |
+
+  @mappings
+  Scenario: deleteByQuery and retrieve sources
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id | body                               |
+      | -   | { "name": "document1", "age": 42 } |
+      | -   | { "name": "document2", "age": 84 } |
+      | -   | { "name": "document2", "age": 21 } |
+    And I refresh the collection
+    When I successfully call the route "document":"deleteByQuery" with args:
+      | index      | "nyc-open-data"                                   |
+      | collection | "yellow-taxi"                                     |
+      | source     | true                                              |
+      | body       | { "query": { "range": { "age": { "gt": 21 } } } } |
+    Then I should receive a "documents" array of objects matching:
+      | _source                            |
+      | { "name": "document1", "age": 42 } |
+      | { "name": "document2", "age": 84 } |
+    And I count 1 documents matching:
+      | age | 21 |
 
   @mappings
   Scenario: updateByQuery
