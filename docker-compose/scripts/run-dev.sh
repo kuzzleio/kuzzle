@@ -46,7 +46,7 @@ fi
 
 echo "[$(date --rfc-3339 seconds)] - Starting Kuzzle..."
 
-if [ ! -z "$KUZZLE_PLUGINS" ];
+if [ -n "$KUZZLE_PLUGINS" ];
 then
   ENABLED_PLUGINS="$KUZZLE_PLUGINS,functional-test-plugin"
 else
