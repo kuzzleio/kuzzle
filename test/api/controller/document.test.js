@@ -398,13 +398,13 @@ describe('DocumentController', () => {
       });
     });
 
-    it('should reject if users give document with "_source" property', async () => {
+    it('should reject if users give document with "_source" property', () => {
       request.input.body.documents = [
         { _id: 'doc-1', body: {} },
         { _id: 'doc-2', _source: {} },
       ];
 
-      should(documentController._mChanges(request, 'mCreate', true))
+      return should(documentController._mChanges(request, 'mCreate', true))
         .be.rejectedWith({ id: 'api.assert.unexpected_argument' });
     });
 
