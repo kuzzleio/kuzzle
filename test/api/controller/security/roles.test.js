@@ -248,16 +248,15 @@ describe('Test: security controller - roles', () => {
   });
 
   describe('#deleteRole', () => {
-    it('should return response with on deleteRole call', done => {
-      const role = {_id: 'role'};
+    it('should return a valid response', () => {
 
-      kuzzle.repositories.role.load.resolves(role);
-      kuzzle.repositories.role.delete.resolves();
+      kuzzle.repositories.role.load.resolves({ _id: 'test' });
+      kuzzle.repositories.role.delete.resolves({ _id: 'test' });
 
-      securityController.deleteRole(new Request({ _id: 'test', body: {} }))
-        .then(() => {
-          should(kuzzle.repositories.role.delete.calledWith(role)).be.true();
-          done();
+      return securityController.deleteRole(new Request({ _id: 'test', body: {} }))
+        .then(response => {
+          should(response).be.instanceOf(Object);
+          should(response._id).be.exactly('test');
         });
     });
 
