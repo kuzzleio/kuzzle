@@ -1,10 +1,5 @@
 #!/bin/bash
 
-source docker/scripts/promises.sh
-
-# Exit directly with an error code if a promise fail (set -e)
-init_promise "strict"
-
 KUZZLE_LATEST_MAJOR=2
 
 if [ -z "$MODE" ]; then

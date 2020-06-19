@@ -29,7 +29,6 @@ RUN  set -x \
   && npm install --production
 
 ADD ./docker/scripts/everest-clean-node.sh /usr/bin/everest-clean-node
-ADD ./docker/scripts/everest-compress.sh /usr/bin/everest-compress
 
 ADD ./plugins/available/ /app/plugins/available/
 
@@ -49,11 +48,7 @@ RUN  set -x \
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
   && strip /usr/local/bin/node \
-  && strip node_modules/re2/build/Release/re2.node \
-  && strip node_modules/re2/build/Release/obj.target/re2.node \
-  # Create system archives
-  && cd / \
-  && everest-compress lib usr app
+  && strip node_modules/re2/build/Release/re2.node
 
 ################################################################################
 # Plugin development image
@@ -63,17 +58,14 @@ FROM debian:stretch-slim as plugin-dev
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
-ADD ./docker/scripts/promises.sh /promises.sh
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
-ADD ./docker/scripts/everest-extract.sh /bin/everest-extract
 ADD ./docker/scripts/run-plugin.sh /bin/run-plugin
 
-COPY --from=builder /usr/bin/xz /bin/xz
-COPY --from=builder /everest /everest
+COPY --from=builder /lib /lib
+COPY --from=builder /usr /usr
+COPY --from=builder /app /var/app
 
 RUN  set -x \
-  # && apt-get update && apt-get install -y xz-utils \
-  # && rm -rf /var/lib/apt/lists/* \
   && rm /bin/sh \
   && ln -s /bin/bash /bin/sh
 

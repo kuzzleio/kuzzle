@@ -82,7 +82,6 @@ COPY --from=minifier /app /var/app
 
 ENV NODE_ENV=production
 
-ADD ./docker/scripts/promises.sh /promises.sh
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 

@@ -1,9 +1,5 @@
 #!/bin/sh
 
-source /promises.sh
-
-init_promises "strict"
-
 cd /everest
 
 files=$(ls *.tar.xz | grep -v app.tar.xz)
@@ -13,27 +9,26 @@ for file in $files;
 do
   dirname="${file%.tar.xz}"
   mkdir -p /$dirname
-  promise_run tar xf $file
-    promise_then cp -r $dirname/* /$dirname/.
+  tar xf $file && cp -r $dirname/* /$dirname/. &
 done
 
 echo "[ℹ] Decompressing Kuzzle.."
 
-promise_run tar xf app.tar.xz
+tar xf app.tar.xz &
 
-await_promises
+wait
 
 echo "[ℹ] Copying Kuzzle.."
 mkdir -p /app
 for file in bin config default.config.js lib node_modules package.json; do
-  promise_run cp -r app/$file ../app/$file
+  cp -r app/$file ../app/$file &
 done
 
 mkdir -p /app/plugins/enabled
 mkdir -p /app/plugins/available
-promise_run cp -r app/plugins/enabled/* ../app/plugins/enabled/.
-promise_run cp -r app/plugins/available/* ../app/plugins/available/.
+cp -r app/plugins/enabled/* ../app/plugins/enabled/. &
+cp -r app/plugins/available/* ../app/plugins/available/. &
 
-await_promises
+wait
 
 echo "[✔] System ready"

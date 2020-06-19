@@ -101,10 +101,9 @@ LABEL description="Run your Kuzzle backend in production mode"
 
 ENV NODE_ENV=production
 
-ADD ./docker/scripts/promises.sh /promises.sh
-ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
+ADD ./docker/scripts/everest-entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/everest-extract.sh /bin/everest-extract
-ADD ./docker/scripts/run.sh /bin/kuzzle
+ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 
 COPY --from=everest-minifier /etc /etc
 COPY --from=everest-minifier /bin /bin
