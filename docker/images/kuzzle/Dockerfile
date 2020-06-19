@@ -30,7 +30,7 @@ RUN  set -x \
   && npm install -g --unsafe-perm --production \
     pm2 \
 
-ADD ./docker/scripts/everest-clean-node.sh /usr/bin/everest-clean-node
+ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 
 ADD ./plugins/available/ /app/plugins/available/
 
@@ -42,8 +42,8 @@ RUN  set -x \
   # Install plugins dependencies
   && for plugin in plugins/*/*; do npm install --production --prefix "$plugin"; done \
   # Clean Node.js related useless files
-  && everest-clean-node \
-  && for plugin in plugins/*/*; do cd "$plugin"; echo "$plugin"; everest-clean-node; cd /app; done \
+  && clean-node \
+  && for plugin in plugins/*/*; do cd "$plugin"; echo "$plugin"; clean-node; cd /app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
