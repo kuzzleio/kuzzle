@@ -12,7 +12,7 @@ spinner="/"
 counter=0
 while ! curl -f -s -o /dev/null http://$kuzzle_host:$kuzzle_port
 do
-    if [[ "$counter" == "$max_tries" ]];
+    if [ "$counter" == "$max_tries" ];
     then
         echo "Kuzzle is still not up after $max_tries seconds. Exiting."
         exit 1
