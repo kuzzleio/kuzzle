@@ -79,7 +79,7 @@ Returns a serverInfo object with the following properties:
           "kuzzle-plugin-auth-passport-local": {
             "manifest": {
               "name": "kuzzle-plugin-auth-passport-local",
-              "path": "/app/plugins/enabled/kuzzle-plugin-auth-passport-local",
+              "path": "/var/app/plugins/enabled/kuzzle-plugin-auth-passport-local",
               "kuzzleVersion": ">=2.0.0 <3.0.0"
             },
             "hooks": [],

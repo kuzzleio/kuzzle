@@ -10,11 +10,14 @@ echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
 npm install --silent --unsafe-perm
-chmod -R 777 node_modules/
+ls
+pwd
 ./docker/scripts/install-plugins.sh
-
-node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
 
 echo "[$(date)] - Starting Kuzzle..."
 
-npm run test:functional
+node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
+
+./bin/wait-kuzzle
+
+npm run $KUZZLE_FUNCTIONAL_TESTS

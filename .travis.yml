@@ -118,8 +118,16 @@ jobs:
     # ---------------------------------------
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12
+      name: Node.js 12 - Functional tests legacy
       env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests sdk
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
         - *integration-tests-env
 
     # ---------------------------------------

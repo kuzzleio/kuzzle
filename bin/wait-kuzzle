@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "[$(date)] - Waiting for Kuzzle to be up at $kuzzle_host:$kuzzle_port..."
+
+kuzzle_host=${KUZZLE_HOST:-localhost}
+kuzzle_port=${KUZZLE_PORT:-7512}
+max_tries=${MAX_TRIES:-60}
+
+spinner="/"
+counter=0
+while ! curl -f -s -o /dev/null http://$kuzzle_host:$kuzzle_port
+do
+    if [[ "$counter" == "$max_tries" ]];
+    then
+        echo "Kuzzle is still not up after $max_tries seconds. Exiting."
+        exit 1
+    fi
+
+    printf '\r'
+    echo -n "[$(date)] - Still trying to connect to Kuzzle [$spinner]"
+
+    if [ "$spinner" = "/" ]; then spinner="\\";  else spinner="/" ; fi
+
+    sleep 1
+    counter=$((counter+1))
+done

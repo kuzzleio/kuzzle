@@ -2,7 +2,7 @@
 
 set -e
 
-cd /app
+cd /var/app
 
 if [ -n "$KUZZLE_PLUGINS" ]; then
   enable_plugins="--enable-plugins $KUZZLE_PLUGINS"

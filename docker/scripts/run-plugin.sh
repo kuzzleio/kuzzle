@@ -33,7 +33,7 @@ else
   done
 fi
 
-cd /app
+cd /var/app
 
 nodemon \
     --inspect=0.0.0.0:9229 \
