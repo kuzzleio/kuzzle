@@ -130,6 +130,7 @@ jobs:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
         - *integration-tests-env
 
+
     # ---------------------------------------
     # Cross-platform tests
     # ---------------------------------------
