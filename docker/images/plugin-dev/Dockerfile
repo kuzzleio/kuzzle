@@ -23,6 +23,7 @@ RUN  set -x \
   && npm install -g --unsafe-perm --production \
     nodemon \
     kourou \
+    pm2 \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   && rm -rf /var/lib/apt/lists/* \
   # Install dependencies
@@ -38,12 +39,10 @@ RUN  set -x \
   && ln -s /app/plugins/available/kuzzle-plugin-auth-passport-local /app/plugins/enabled/kuzzle-plugin-auth-passport-local \
   && ln -s /app/plugins/available/kuzzle-plugin-logger /app/plugins/enabled/kuzzle-plugin-logger \
   # Install plugins dependencies
-  && for plugin in plugins/enabled/*; do cd "$plugin"; npm install --production --unsafe-perm; cd /app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; npm install --production -unsafe-perm; cd /app; done \
+  && for plugin in plugins/*/*; do npm install --production --prefix "$plugin"; done \
   # Clean Node.js related useless files
   && everest-clean-node \
-  && for plugin in plugins/enabled/*; do cd "$plugin"; echo "$plugin"; bash everest-clean-node; cd /app; done \
-  && for plugin in plugins/available/*; do cd "$plugin"; echo "$plugin"; bash everest-clean-node; cd /app; done \
+  && for plugin in plugins/*/*; do cd "$plugin"; echo "$plugin"; everest-clean-node; cd /app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
@@ -58,6 +57,8 @@ FROM debian:stretch-slim as plugin-dev
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
+WORKDIR /var/app
+
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/run-plugin.sh /bin/run-plugin
 
@@ -67,6 +68,9 @@ COPY --from=builder /app /var/app
 
 RUN  set -x \
   && rm /bin/sh \
-  && ln -s /bin/bash /bin/sh
+  && ln -s /bin/bash /bin/sh \
+  && ln -s /var/app /app
 
 ENTRYPOINT ["/bin/entrypoint"]
+
+CMD ["/bin/run-plugin"]

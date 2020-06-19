@@ -1,7 +1,7 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:12.16.3-stretch-slim as builder
+FROM node:12.16.3-alpine3.11 as builder
 
 ADD ./bin /app/bin
 ADD ./config /app/config
@@ -15,20 +15,19 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 RUN  set -x \
-  && apt-get update && apt-get install -y \
-       curl \
-       python \
-       make \
-       g++ \
-       python \
-       libzmq3-dev \
+  && apk add --no-cache \
+      curl \
+      python \
+      make \
+      g++ \
+      xz \
+      zeromq-dev \
+      binutils \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
   && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/ \
   # Install dependencies
-  && npm install --production \
-  && npm install -g --unsafe-perm --production \
-    pm2 \
+  && npm install --production
 
 ADD ./docker/scripts/everest-clean-node.sh /usr/bin/everest-clean-node
 
@@ -47,12 +46,13 @@ RUN  set -x \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
-  && strip node_modules/re2/build/Release/re2.node
+  && strip node_modules/re2/build/Release/re2.node \
+  && strip node_modules/re2/build/Release/obj.target/re2.node
 
 ################################################################################
-# Production build 2 image
+# Production minifier image
 ################################################################################
-FROM node:12.16.3-stretch-slim as minifier
+FROM node:12.16.3-alpine3.11 as everest-minifier
 
 ENV NODE_ENV=production
 
@@ -61,33 +61,58 @@ ADD ./docker/scripts/everest-compress.sh /usr/bin/everest-compress
 COPY --from=builder /app /app
 
 RUN  set -x \
-  && apt-get update && apt-get install -y xz-utils binutils \
+  && apk add --no-cache \
+        xz \
+        binutils \
   && strip /usr/local/bin/node \
-  && apt-get remove -y binutils xz-utils \
-  && apt-get clean autoclean \
-  && apt-get autoremove --yes \
-  && rm -rf /var/lib/{apt,dpkg,cache,log}/
+  && apk del binutils \
+  && rm -rf \
+    /usr/local/lib/node_modules/npm \
+    /usr/local/include/node/ \
+    /usr/local/share \
+    /usr/local/*.md \
+    /usr/share \
+    /usr/bin/getent \
+    /usr/bin/lzmainfo \
+    /usr/bin/ssl_client \
+    /usr/bin/scanelf \
+    /usr/bin/iconv \
+    /usr/bin/getconf \
+    /usr/bin/lzmadec \
+    /usr/bin/xzmore \
+    /usr/bin/xzless \
+    /usr/bin/xzgrep \
+    /usr/bin/xzdiff \
+    /usr/bin/xzdec \
+    /usr/bin/ldd \
+  # Create system archives
+  && cd / \
+  && everest-compress usr app
 
 ################################################################################
 # Production image
 ################################################################################
-FROM bitnami/minideb:stretch as kuzzle
+FROM scratch as kuzzle
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
-LABEL description="Run your Kuzzle backend in production mode"
-
-COPY --from=minifier /lib /lib
-COPY --from=minifier /usr /usr
-COPY --from=minifier /app /var/app
+LABEL description="Run your Kuzzle backend in production mode with everest scratch image"
 
 ENV NODE_ENV=production
 
-ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
+ADD ./docker/scripts/everest-entrypoint.sh /bin/entrypoint
+ADD ./docker/scripts/everest-extract.sh /bin/everest-extract
 ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 
-ENTRYPOINT ["/bin/entrypoint"]
+COPY --from=everest-minifier /etc /etc
+COPY --from=everest-minifier /bin /bin
+COPY --from=everest-minifier /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
 
-RUN ln -s /var/app /app
+COPY --from=everest-minifier /everest /everest/
+
+RUN  ln -s /app /var/app \
+  && ln -s /lib/ld-musl-x86_64.so.1 /lib/libc.musl-x86_64.so.1
+
+ENTRYPOINT ["/bin/entrypoint"]
 
 CMD ["kuzzle", "start"]
 

@@ -1,8 +1,16 @@
 #!/bin/bash
 
-KUZZLE_LATEST_MAJOR=2
+kuzzle_latest_major=2
 
-if [ -z "$MODE" ]; then
+# Arguments
+
+mode=$MODE
+docker_password=$DOCKER_PASSWORD
+# Can be one of the following: *-dev, *-stable, master
+travis_branch=$TRAVIS_BRANCH
+
+
+if [ -z "$mode" ]; then
   echo "This script has three mode that you can use with the variable MODE"
   echo "  - MODE=test (or empty string): Just print the command that will be run in other modes"
   echo "  - MODE=local: Build and tag images locally"
@@ -28,7 +36,7 @@ print_something() {
 run_or_echo () {
   command=$1
 
-  if [ "$MODE" == "production" ] || [ "$MODE" == "local" ]; then
+  if [ "$mode" == "production" ] || [ "$mode" == "local" ]; then
     $command
   else
     echo "> $command"
@@ -61,7 +69,7 @@ docker_push() {
   local image=$1
   local tag=$2
 
-  if [ "$MODE" == "local" ]; then
+  if [ "$mode" == "local" ]; then
     return
   fi
 
@@ -71,66 +79,77 @@ docker_push() {
   run_or_echo "docker push kuzzleio/$image:$tag"
 }
 
-if [ "$MODE" == "production" ]; then
-  if [ -z "$DOCKER_PASSWORD" ]; then
+if [ "$mode" == "production" ]; then
+  if [ -z "$docker_password" ]; then
     echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
     exit 1
   fi
 
-  run_or_echo "docker login -u kuzzleteam -p $DOCKER_PASSWORD"
+  run_or_echo "docker login -u kuzzleteam -p $docker_password"
 fi
 
 if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
   # Build triggered by a merge on branch *-dev
   #   image name example: kuzzleio/kuzzle:2-dev
-  promise_run docker_build 'plugin-dev' $TRAVIS_BRANCH 'plugin-dev'
-    promise_then docker_push 'plugin-dev' $TRAVIS_BRANCH
+  docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
+  docker_push 'plugin-dev' "$TRAVIS_BRANCH"
 
-  promise_run docker_build 'kuzzle' $TRAVIS_BRANCH 'kuzzle'
-    promise_then docker_push 'kuzzle' $TRAVIS_BRANCH
+  docker_build 'kuzzle' "$TRAVIS_BRANCH" 'kuzzle'
+  docker_push 'kuzzle' "$TRAVIS_BRANCH"
 
-  promise_run docker_build 'kuzzle' $TRAVIS_BRANCH-alpine 'kuzzle.alpine'
-    promise_then docker_push 'kuzzle' $TRAVIS_BRANCH-alpine
+  docker_build 'kuzzle' "$TRAVIS_BRANCH-alpine" 'kuzzle.alpine'
+  docker_push 'kuzzle' "$TRAVIS_BRANCH-alpine"
+
+  docker_build 'kuzzle' "$TRAVIS_BRANCH-everest" 'kuzzle.everest'
+  docker_push 'kuzzle' "$TRAVIS_BRANCH-everest"
 
 elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]]; then
-  RELEASE_TAG=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
-  MAJOR_VERSION=$(echo $RELEASE_TAG | cut -d. -f 1)
+  release_tag=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
+  major_version=$(echo $release_tag | cut -d. -f 1)
 
   # Build triggered by a new release
   #   image name example: kuzzleio/kuzzle:1.10.3
-  promise_run docker_build 'plugin-dev' "$RELEASE_TAG" 'plugin-dev'
-    promise_then docker_push 'plugin-dev' "$RELEASE_TAG"
+  docker_build 'plugin-dev' "$release_tag" 'plugin-dev'
+  docker_push 'plugin-dev' "$release_tag"
 
-  promise_run docker_build 'kuzzle' "$RELEASE_TAG" 'kuzzle'
-    promise_then docker_push 'kuzzle' "$RELEASE_TAG"
+  docker_build 'kuzzle' "$release_tag" 'kuzzle'
+  docker_push 'kuzzle' "$release_tag"
 
-  promise_run docker_build 'kuzzle' "$RELEASE_TAG-alpine" 'kuzzle.alpine'
-    promise_then docker_push 'kuzzle' "$RELEASE_TAG-alpine"
+  docker_build 'kuzzle' "$release_tag-alpine" 'kuzzle.alpine'
+  docker_push 'kuzzle' "$release_tag-alpine"
+
+  docker_build 'kuzzle' "$release_tag-everest" 'kuzzle.everest'
+  docker_push 'kuzzle' "$release_tag-everest"
 
 
   # If this is a release of the current major version
   # we can push with the 'latest' tag
   #   image name example: kuzzleio/kuzzle:latest
-  if [[ "$RELEASE_TAG" == "$KUZZLE_LATEST_MAJOR."* ]]; then
-    docker_tag 'plugin-dev' "$RELEASE_TAG" 'latest'
-    docker_tag 'kuzzle' "$RELEASE_TAG" 'latest'
-    docker_tag 'kuzzle' "$RELEASE_TAG-alpine" 'latest-alpine'
+  if [[ "$major_version" == "$kuzzle_latest_major" ]]; then
+    docker_tag 'plugin-dev' "$release_tag" 'latest'
+    docker_tag 'kuzzle' "$release_tag" 'latest'
+    docker_tag 'kuzzle' "$release_tag-alpine" 'latest-alpine'
+    docker_tag 'kuzzle' "$release_tag-everest" 'latest-everest'
 
-    promise_run docker_push 'plugin-dev' 'latest'
-    promise_run docker_push 'kuzzle' 'latest'
+    docker_push 'plugin-dev' 'latest'
+    docker_push 'kuzzle' 'latest'
+    docker_push 'kuzzle' 'latest-alpine'
+    docker_push 'kuzzle' 'latest-everest'
   fi
 
   # Also push the major tag.
   # This tag is a pointer to the latest version of a major version
   #   image name example: kuzzleio/kuzzle:1
-  docker_tag 'plugin-dev' "$RELEASE_TAG" "$MAJOR_VERSION"
-  docker_tag 'kuzzle' "$RELEASE_TAG" "$MAJOR_VERSION"
+  docker_tag 'plugin-dev' "$release_tag" "$major_version"
+  docker_tag 'kuzzle' "$release_tag" "$major_version"
+  docker_tag 'kuzzle' "$release_tag-alpine" "$major_version-alpine"
+  docker_tag 'kuzzle' "$release_tag-everest" "$major_version-everest"
 
-  promise_run docker_push 'plugin-dev' "$MAJOR_VERSION"
-  promise_run docker_push 'kuzzle' "$MAJOR_VERSION"
-
-  await_promises
+  docker_push 'plugin-dev' "$major_version"
+  docker_push 'kuzzle' "$major_version"
+  docker_push 'kuzzle' "$major_version-alpine"
+  docker_push 'kuzzle' "$major_version-everest"
 else
-  echo "Could not find TRAVIS_BRANCH variable. Exiting."
+  echo "Incorrect value for TRAVIS_BRANCH variable ("$TRAVIS_BRANCH"). Exiting."
 fi
 
