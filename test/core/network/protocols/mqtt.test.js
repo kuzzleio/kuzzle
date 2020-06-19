@@ -28,7 +28,7 @@ class FakeClient {
   }
 }
 
-describe('/lib/core/entrypoints/protocols/mqtt', () => {
+describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
   let netMock;
   let entrypoint;
   let kuzzle;

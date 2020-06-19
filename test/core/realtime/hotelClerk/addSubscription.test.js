@@ -169,12 +169,36 @@ describe('Test: hotelClerk.addSubscription', () => {
       collection: 'bar',
       controller: 'realtime',
       action: 'join',
-      body: {roomId: 'no way I can exist'}
+      body: {roomId: 'i-exist'}
     }, context);
 
-    return should(() => hotelClerk.join(joinRequest)).throw(NotFoundError, {
-      id: 'core.realtime.room_not_found'
-    });
+    return should(hotelClerk.join(joinRequest))
+      .be.rejectedWith(NotFoundError, {
+        id: 'core.realtime.room_not_found'
+      });
+  });
+
+  it('#join should propagate notification only with "cluster" option', async () => {
+    const joinRequest = new Request({
+      index: 'foo',
+      collection: 'bar',
+      controller: 'realtime',
+      action: 'join',
+      body: {roomId: 'i-exist'}
+    }, context);
+    const response = { cluster: false, diff: 'diff', data: 'data'};
+    hotelClerk.rooms.set('i-exist', {});
+    hotelClerk._subscribeToRoom = sinon.stub().resolves(response);
+
+    await hotelClerk.join(joinRequest);
+
+    should(kuzzle.pipe).not.be.called();
+
+    response.cluster = true;
+
+    await hotelClerk.join(joinRequest);
+
+    should(kuzzle.pipe).be.calledWith('core:hotelClerk:join', 'diff');
   });
 
   it('should reject the subscription if the given scope argument is incorrect', () => {

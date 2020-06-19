@@ -2,6 +2,4 @@
 
 set -e
 
-/bin/everest-extract
-
 exec "$@"

@@ -47,13 +47,12 @@ RUN  set -x \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
-  && strip node_modules/re2/build/Release/re2.node \
-  && strip node_modules/re2/build/Release/obj.target/re2.node
+  && strip node_modules/re2/build/Release/re2.node
 
 ################################################################################
 # Production build 2 image
 ################################################################################
-FROM node:12.16.3-stretch-slim as everest-minifier
+FROM node:12.16.3-stretch-slim as minifier
 
 ENV NODE_ENV=production
 
@@ -67,10 +66,7 @@ RUN  set -x \
   && apt-get remove -y binutils xz-utils \
   && apt-get clean autoclean \
   && apt-get autoremove --yes \
-  && rm -rf /var/lib/{apt,dpkg,cache,log}/ \
-  # Create system archives
-  && cd / \
-  && everest-compress lib usr app
+  && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 ################################################################################
 # Production image
@@ -80,16 +76,19 @@ FROM bitnami/minideb:stretch as kuzzle
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
+COPY --from=minifier /lib /lib
+COPY --from=minifier /usr /usr
+COPY --from=minifier /app /var/app
+
 ENV NODE_ENV=production
 
 ADD ./docker/scripts/promises.sh /promises.sh
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
-ADD ./docker/scripts/everest-extract.sh /bin/everest-extract
-ADD ./docker/scripts/run.sh /bin/kuzzle
-
-COPY --from=everest-minifier /everest /everest
+ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 
 ENTRYPOINT ["/bin/entrypoint"]
+
+RUN ln -s /var/app /app
 
 CMD ["kuzzle", "start"]
 

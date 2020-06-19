@@ -276,20 +276,19 @@ describe('ClientAdapter', () => {
     const mappings = require('../../mocks/mappings.json');
 
     beforeEach(() => {
-      sinon.stub(clientAdapter, 'indexExists');
       sinon.stub(clientAdapter, 'createIndex');
       sinon.stub(clientAdapter, 'createCollection');
     });
 
-    it('create index and collection that does not exists', async () => {
-      clientAdapter.indexExists.onCall(0).resolves(false);
-      clientAdapter.indexExists.onCall(1).resolves(true);
-      clientAdapter.indexExists.onCall(2).resolves(false);
+    it('create index and collection and ignore index already exists errors', async () => {
+      clientAdapter.createIndex
+        .onCall(0).resolves()
+        .onCall(1).rejects({ id: 'services.storage.index_already_exists' })
+        .onCall(2).resolves();
 
       await clientAdapter.loadMappings(mappings);
 
-      should(clientAdapter.indexExists.callCount).be.eql(3);
-      should(clientAdapter.createIndex.callCount).be.eql(2);
+      should(clientAdapter.createIndex.callCount).be.eql(3);
       should(clientAdapter.createIndex.getCall(0).args[0]).be.eql('nyc-open-data');
 
       should(clientAdapter.createCollection.callCount).be.eql(3);
