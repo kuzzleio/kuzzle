@@ -5,7 +5,8 @@ const should = require('should');
 const {
   errors: {
     BadRequestError,
-    PreconditionError
+    NotFoundError,
+    PreconditionError,
   }
 } = require('kuzzle-common-objects');
 
@@ -15,7 +16,7 @@ const Role = require('../../../lib/model/security/role');
 const RoleRepository = require('../../../lib/core/security/roleRepository');
 const Repository = require('../../../lib/core/shared/repository');
 
-describe('Test: security/roleRepository', () => {
+describe.only('Test: security/roleRepository', () => {
   let kuzzle;
   let roleRepository;
   let profileRepositoryMock;
@@ -38,6 +39,46 @@ describe('Test: security/roleRepository', () => {
 
     return roleRepository.init();
   });
+
+  describe('#loadOneFromDatabase', () => {
+    beforeEach(() => {
+      sinon.stub(Repository.prototype, 'loadOneFromDatabase');
+    });
+
+    afterEach(() => {
+      Repository.prototype.loadOneFromDatabase.restore();
+    });
+
+    it('should invoke its super function', async () => {
+      Repository.prototype.loadOneFromDatabase.resolves('foo');
+
+      await should(roleRepository.loadOneFromDatabase('bar'))
+        .fulfilledWith('foo');
+
+      should(Repository.prototype.loadOneFromDatabase)
+        .calledWith('bar');
+    });
+
+    it('should wrap generic 404s into profile dedicated errors', () => {
+      const error = new Error('foo');
+      error.status = 404;
+
+      Repository.prototype.loadOneFromDatabase.rejects(error);
+
+      return should(roleRepository.loadOneFromDatabase('foo'))
+        .rejectedWith(NotFoundError, { id: 'security.role.not_found' });
+    });
+
+    it('should re-throw non-404 errors as is', () => {
+      const error = new Error('foo');
+
+      Repository.prototype.loadOneFromDatabase.rejects(error);
+
+      return should(roleRepository.loadOneFromDatabase('foo'))
+        .rejectedWith(error);
+    });
+  });
+
 
   describe('#mGet', () => {
     const mGetEvent = 'core:security:role:mGet';
@@ -97,7 +138,6 @@ describe('Test: security/roleRepository', () => {
       should(roleRepository.loadOneFromDatabase).neverCalledWith('role3');
       should(roleRepository.loadOneFromDatabase).calledWith('role4');
     });
-
   });
 
   describe('#get', () => {
@@ -447,65 +487,139 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#checkRoleNativeRights', () => {
-    it('should throw if a role contains invalid action.', () => {
-      const controllers = {
-          '*': {
-            actions: {
-              iDontExist: true
-            }
-          }
-        },
-        role = new Role();
-      role._id = 'test';
-      role.controllers = controllers;
-      should(() => {
-        roleRepository.checkRoleNativeRights(role);
-      }).throwError({ id: 'security.role.unknown_action' });
+    const { NativeController } = require('../../../lib/api/controller/base');
+
+    beforeEach(() => {
+      kuzzle.funnel.controllers.set('document', new NativeController(kuzzle, [
+        'create',
+        'delete'
+      ]));
+
+      kuzzle.funnel.isNativeController
+        .callsFake(ctrl => kuzzle.funnel.controllers.has(ctrl));
     });
 
-    it('should not throw when a role contains valid controller and action.', () => {
-      const
-        controllers = {
-          document: {
-            actions: {
-              create: true
-            }
-          }
-        },
-        role = new Role();
-      role._id = 'test';
-      role.controllers = controllers;
+    it('should skip if the tested role does not concern native controllers', () => {
+      const role = new Role();
 
-      should(roleRepository.checkRoleNativeRights(role)).not.throw();
+      role.controllers = { 'foo': 'trolololo' };
+
+      should(() => roleRepository.checkRoleNativeRights(role)).not.throw();
+    });
+
+    it('should throw if a role contains an unknown action', () => {
+      const role = new Role();
+
+      role._id = 'test';
+      role.controllers = {
+        document: {
+          actions: {
+            create: true,
+            delete: false,
+            iDontExist: true,
+          }
+        }
+      };
+
+      should(() => roleRepository.checkRoleNativeRights(role)).throw({
+        id: 'security.role.unknown_action'
+      });
+    });
+
+    it('should validate if a role contains known actions', () => {
+      const role = new Role();
+      role._id = 'test';
+      role.controllers = {
+        document: {
+          actions: {
+            create: true,
+            delete: false,
+          }
+        }
+      };
+
+      should(() => roleRepository.checkRoleNativeRights(role)).not.throw();
+    });
+
+    it('should validate if a role contains a wildcarded action', () => {
+      const role = new Role();
+
+      role._id = 'test';
+      role.controllers = {
+        document: {
+          actions: {
+            '*': true,
+            create: true,
+            delete: false,
+          }
+        }
+      };
+
+      should(() => roleRepository.checkRoleNativeRights(role)).not.throw();
+    });
+
+    it('should validate if a wildcarded role contains specific actions', () => {
+      const role = new Role();
+
+      role._id = 'test';
+      role.controllers = {
+        '*': {
+          actions: {
+            '*': true,
+            create: true,
+            delete: false,
+          }
+        }
+      };
+
+      should(() => roleRepository.checkRoleNativeRights(role)).throw({
+        id: 'security.role.unknown_action'
+      });
     });
   });
 
   describe('#checkRolePluginsRights', () => {
-    const plugin_test = {
-      object: {
-        routes: [{
-          verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
-        }],
-        controllers: {
-          foobar: { publicMethod: 'function' }
+    let plugin_test;
+
+    beforeEach(() => {
+      plugin_test = {
+        object: {
+          controllers: {
+            foobar: { publicMethod: 'function' }
+          }
         }
-      }
-    };
+      };
+
+      kuzzle.pluginsManager.plugins = { plugin_test };
+    });
+
+    it('should skip non-plugins or wildcarded controllers', () => {
+      kuzzle.pluginsManager.isController.returns(false);
+
+      const role = new Role();
+      role.controllers = { '*': 123 };
+
+      kuzzle.funnel.isNativeController.returns(false);
+      should(() => roleRepository.checkRolePluginsRights(role)).not.throw();
+
+      role.controllers = { 'foo': 0 };
+
+      kuzzle.funnel.isNativeController.returns(true);
+      should(() => roleRepository.checkRolePluginsRights(role)).not.throw();
+    });
 
     it('should warn if we force a role having an invalid plugin controller.', () => {
-      kuzzle.pluginsManager.plugins = { plugin_test };
-      kuzzle.pluginsManager.isController = sinon.stub().returns(false);
-      const
-        controllers = {
-          'invalid_controller': {
-            actions: {
-              publicMethod: true
-            }
-          }
-        },
-        role = new Role();
+      kuzzle.pluginsManager.isController.returns(false);
+      const role = new Role();
+
       role._id = 'test';
-      role.controllers = controllers;
+      role.controllers = {
+        'invalid_controller': {
+          actions: {
+            publicMethod: true
+          }
+        }
+      };
 
       roleRepository.checkRolePluginsRights(role, {force: true});
 
@@ -513,29 +627,26 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should throw if we try to write a role with an invalid plugin controller.', () => {
-      kuzzle.pluginsManager.plugins = { plugin_test };
-      kuzzle.pluginsManager.isController = sinon.stub().returns(false);
+      kuzzle.pluginsManager.isController.returns(false);
       kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
-      const
-        controllers = {
-          'invalid_controller': {
-            actions: {
-              publicMethod: true
-            }
-          }
-        },
-        role = new Role();
-      role._id = 'test';
-      role.controllers = controllers;
-      roleRepository.checkRolePluginsRights(role, {force: true});
 
-      should(() => {
-        roleRepository.checkRolePluginsRights(role);
-      }).throwError({ id: 'security.role.unknown_controller' });
+      const role = new Role();
+
+      role._id = 'test';
+      role.controllers = {
+        'invalid_controller': {
+          actions: {
+            publicMethod: true
+          }
+        }
+      };
+
+      should(() => roleRepository.checkRolePluginsRights(role)).throw({
+        id: 'security.role.unknown_controller'
+      });
     });
 
     it('should warn if we force a role having an invalid plugin action.', () => {
-      kuzzle.pluginsManager.plugins = { plugin_test };
       kuzzle.pluginsManager.isController = sinon.stub().returns(true);
       kuzzle.pluginsManager.isAction = sinon.stub().returns(false);
       const controllers = {
@@ -553,41 +664,44 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should throw if we try to write a role with an invalid plugin action.', () => {
-      kuzzle.pluginsManager.plugins = { plugin_test };
-      kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
-      const controllers = {
-          'foobar': {
-            actions: {
-              iDontExist: true
-            }
-          }
-        },
-        role = new Role();
-      role._id = 'test';
-      role.controllers = controllers;
+      kuzzle.pluginsManager.isController.returns(true);
+      kuzzle.pluginsManager.getActions.returns(['foobar']);
+      const role = new Role();
 
-      should(() => {
-        roleRepository.checkRolePluginsRights(role);
-      }).throwError({ id: 'security.role.unknown_controller' });
+      role._id = 'test';
+      role.controllers = {
+        'foobar': {
+          actions: {
+            iDontExist: true
+          }
+        }
+      };
+
+      should(() => roleRepository.checkRolePluginsRights(role)).throw({
+        id: 'security.role.unknown_action'
+      });
     });
 
     it('should not warn nor throw when a role contains valid controller and action.', () => {
-      kuzzle.pluginsManager.plugins = { plugin_test };
-      kuzzle.pluginsManager.isController = sinon.stub().returns(true);
-      kuzzle.pluginsManager.isAction = sinon.stub().returns(true);
-      const
-        controllers = {
-          'foobar': {
-            actions: {
-              publicMethod: true
-            }
-          }
-        },
-        role = new Role();
+      kuzzle.pluginsManager.isController.returns(true);
+      kuzzle.pluginsManager.isAction.returns(true);
+
+      const role = new Role();
+
       role._id = 'test';
-      role.controllers = controllers;
-      should(roleRepository.checkRolePluginsRights(role)).not.throw();
+      role.controllers = {
+        'foobar': {
+          actions: {
+            publicMethod: true
+          }
+        }
+      };
+
+      should(() => roleRepository.checkRolePluginsRights(role)).not.throw();
       should(kuzzle.log.warn).be.not.called();
+    });
+
+    it('should throw on an unknown plugin action, if not forced', () => {
     });
   });
 
@@ -805,6 +919,37 @@ describe('Test: security/roleRepository', () => {
 
       return should(kuzzle.ask(updateEvent, 'foo', {}, {}))
         .fulfilledWith('foobar');
+    });
+  });
+
+  describe('#sanityCheck', () => {
+    const sanityCheckEvent = 'core:security:verify';
+
+    it('should register a "verify" event', async () => {
+      sinon.stub(roleRepository, 'sanityCheck');
+
+      await kuzzle.ask(sanityCheckEvent);
+
+      should(roleRepository.sanityCheck).calledOnce();
+    });
+
+    it('should perform a check on all plugin roles', async () => {
+      const role1 = new Role();
+      const role2 = new Role();
+      const role3 = new Role();
+
+      sinon.stub(roleRepository, 'search').resolves({
+        hits: [ role1, role2, role3 ],
+      });
+
+      sinon.stub(roleRepository, 'checkRolePluginsRights');
+
+      await kuzzle.ask(sanityCheckEvent);
+
+      should(roleRepository.checkRolePluginsRights)
+        .calledWithMatch(role1, { force: true })
+        .calledWithMatch(role2, { force: true })
+        .calledWithMatch(role3, { force: true });
     });
   });
 });

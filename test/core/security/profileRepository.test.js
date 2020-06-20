@@ -98,7 +98,6 @@ describe('Test: security/profileRepository', () => {
       should(profile).be.exactly(testProfile);
       should(profileRepository.profiles).have.value('foo', testProfile);
     });
-
   });
 
   describe('#mGet', () => {
