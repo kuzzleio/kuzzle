@@ -57,23 +57,22 @@ describe('Test: hotelClerk.removeCustomerFromAllRooms', () => {
       });
   });
 
-  it('should clean up customers, rooms object', () => {
-    return hotelClerk.removeCustomerFromAllRooms(context)
-      .then(() => {
-        should(kuzzle.koncorde.remove).be.calledOnce();
+  it('should clean up customers, rooms object', async () => {
+    await hotelClerk.removeCustomerFromAllRooms(context);
 
-        should(hotelClerk.rooms).have.value('foo', {
-          customers: new Set(['a', 'b']),
-          index,
-          collection,
-          channels: ['foobar']
-        });
-        should(hotelClerk.rooms).not.have.key('bar');
+    should(kuzzle.koncorde.remove).be.calledOnce();
 
-        should(hotelClerk.customers.get('a')).have.value('foo', null);
-        should(hotelClerk.customers.get('b')).have.value('foo', null);
-        should(hotelClerk.roomsCount).be.eql(1);
-      });
+    should(hotelClerk.rooms).have.value('foo', {
+      customers: new Set(['a', 'b']),
+      index,
+      collection,
+      channels: ['foobar']
+    });
+    should(hotelClerk.rooms).not.have.key('bar');
+
+    should(hotelClerk.customers.get('a')).have.value('foo', null);
+    should(hotelClerk.customers.get('b')).have.value('foo', null);
+    should(hotelClerk.roomsCount).be.eql(1);
   });
 
   it('should notify the unsubscriptions', () => {

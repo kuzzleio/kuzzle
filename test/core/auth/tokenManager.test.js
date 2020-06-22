@@ -31,6 +31,11 @@ describe('Test: token manager core component', () => {
   });
 
   describe('#link', () => {
+    it('should do nothing if the token is not set', () => {
+      tokenManager.link(null, 'foo', 'bar');
+      should(tokenManager.tokens.array).be.an.Array().and.be.empty();
+    });
+
     it('should not add a link to an anonymous token', () => {
       tokenManager.link(kuzzle.repositories.token.anonymous(), 'foo', 'bar');
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
