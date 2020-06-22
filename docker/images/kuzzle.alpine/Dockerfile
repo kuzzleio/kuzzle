@@ -1,7 +1,7 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:12.16.3-alpine3.11 as builder
+FROM node:12.18.1-alpine3.11 as builder
 
 ADD ./bin /app/bin
 ADD ./config /app/config
@@ -52,7 +52,7 @@ RUN  set -x \
 ################################################################################
 # Production image
 ################################################################################
-FROM node:12.16.3-alpine3.11 as kuzzle
+FROM node:12.18.1-alpine3.11 as kuzzle
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with alpine"

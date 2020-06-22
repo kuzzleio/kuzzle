@@ -1,7 +1,7 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:12.16.3-alpine3.11 as builder
+FROM node:12.18.1-alpine3.11 as builder
 
 ADD ./bin /app/bin
 ADD ./config /app/config
@@ -52,7 +52,7 @@ RUN  set -x \
 ################################################################################
 # Production minifier image
 ################################################################################
-FROM node:12.16.3-alpine3.11 as everest-minifier
+FROM node:12.18.1-alpine3.11 as everest-minifier
 
 ENV NODE_ENV=production
 

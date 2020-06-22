@@ -1,7 +1,7 @@
 ################################################################################
 # Plugin development build image
 ################################################################################
-FROM node:12.16.3-stretch-slim as builder
+FROM node:12.18.1-stretch-slim as builder
 
 ADD ./bin /app/bin
 ADD ./config /app/config

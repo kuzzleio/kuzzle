@@ -1,7 +1,7 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:12.16.3-stretch-slim as builder
+FROM node:12.18.1-stretch-slim as builder
 
 ADD ./bin /app/bin
 ADD ./config /app/config
@@ -52,7 +52,7 @@ RUN  set -x \
 ################################################################################
 # Production build 2 image
 ################################################################################
-FROM node:12.16.3-stretch-slim as minifier
+FROM node:12.18.1-stretch-slim as minifier
 
 ENV NODE_ENV=production
 
