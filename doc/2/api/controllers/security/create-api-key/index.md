@@ -9,7 +9,7 @@ title: createApiKey
 Creates a new API key for a user. 
 
 ::: info
-API keys are just authentication token.
+API keys are just authentication tokens.
 You can use your API key the same way you use your authentication token by adding it to the `Authorization` header (with the value `Bearer <YourApiKeyHere>`)
 :::
 
