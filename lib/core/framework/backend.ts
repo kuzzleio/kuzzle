@@ -29,7 +29,11 @@ import * as Plugin from '../plugin/plugin';
 import * as kerror from '../../kerror';
 import { kebabCase } from '../../util/inflector';
 
-import { ObjectWithStringKey } from '../../util/interfaces';
+import {
+  JSONObject,
+  ControllerDefinition,
+  BasePlugin
+} from '../../util/interfaces';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -112,7 +116,7 @@ class ConfigManager {
   /**
    * Configuration content
    */
-  public content: ObjectWithStringKey;
+  public content: JSONObject;
 
   constructor (application: any) {
     Reflect.defineProperty(this, '_application', {
@@ -141,7 +145,7 @@ class ConfigManager {
    *
    * @param config - Configuration object to merge
    */
-  merge (config: ObjectWithStringKey) {
+  merge (config: JSONObject) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'config');
     }
@@ -153,19 +157,6 @@ class ConfigManager {
 }
 
 /* ControllerManager class ================================================== */
-
-// @todo move this
-interface ControllerDefinition {
-  actions: {
-    [action: string]: {
-      handler: (request: any) => Promise<any>,
-      http?: Array<{
-        verb: string,
-        url: string
-      }>
-    }
-  }
-}
 
 class ControllerManager {
   private _application: any;
@@ -261,7 +252,7 @@ class VaultManager {
   /**
    * Decrypted secrets
    */
-  get secrets () : ObjectWithStringKey {
+  get secrets () : JSONObject {
     if (! this._application.started) {
       throw runtimeError.get('only_after_startup', 'vault.secrets');
     }
@@ -271,11 +262,6 @@ class VaultManager {
 }
 
 /* PluginManager class ============================================================== */
-
-// @todo move this
-interface BasePlugin {
-  init: (config: ObjectWithStringKey, context: any) => Promise<void> | void
-}
 
 interface UsePluginOptions {
   /**
@@ -400,17 +386,17 @@ export class Backend {
   /**
    * @deprecated
    */
-  public mappings: ObjectWithStringKey;
+  public mappings: JSONObject;
 
   /**
    * @deprecated
    */
-  public securities: ObjectWithStringKey;
+  public securities: JSONObject;
 
   /**
    * @deprecated
    */
-  public fixtures: ObjectWithStringKey;
+  public fixtures: JSONObject;
 
   /**
    * Instantiates a new Kuzzle application

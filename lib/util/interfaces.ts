@@ -24,6 +24,22 @@
 /**
  * An interface representing an object with string key and any value
  */
-export interface ObjectWithStringKey {
-  [key: string]: ObjectWithStringKey | any
+export interface JSONObject {
+  [key: string]: JSONObject | any
+}
+
+export interface ControllerDefinition {
+  actions: {
+    [action: string]: {
+      handler: (request: any) => Promise<any>,
+      http?: Array<{
+        verb: string,
+        url: string
+      }>
+    }
+  }
+}
+
+export interface BasePlugin {
+  init: (config: JSONObject, context: any) => Promise<void> | void
 }

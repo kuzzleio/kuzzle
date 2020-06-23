@@ -72,3 +72,9 @@ doc/framework
 
 # version upgrades
 upgrade-*.report
+
+# JS generated files
+lib/**/*.d.ts
+lib/**/*.js.map
+lib/core/framework/backend.js
+lib/util/interfaces.js
