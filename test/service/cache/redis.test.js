@@ -125,6 +125,34 @@ describe('Redis', () => {
     should(keys).be.eql(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
   });
 
+  it('should allow executing multiple commands', async () => {
+    await redis.init();
+
+    const commands = [
+      ['set', 'a', 1],
+      ['get', 'a'],
+      ['del', 'a']];
+    const wanted = [
+      [null,'OK'],
+      [null,'1'],
+      [null,1]];
+
+    sinon.stub(redis._client, 'multi').returns( { exec: () => {
+      return wanted;
+    }});
+
+    const result = await redis.mexecute(commands);
+
+    should(redis._client.multi).be.calledWithMatch(commands);
+    should(result).match(wanted);
+  });
+
+  it('should do nothing when attempting to execute a list of empty commands', () => {
+    const promise = redis.mexecute([]);
+
+    return should(promise).be.fulfilledWith([]);
+  });
+
   it('#set should set a single value', async () => {
     await redis.init();
 

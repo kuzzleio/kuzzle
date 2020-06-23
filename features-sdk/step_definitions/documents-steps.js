@@ -155,6 +155,25 @@ Then('I execute the search query', async function () {
     this.props.searchBody);
 });
 
+Then('I execute the search query with verb "GET"', async function () {
+  const request = {
+    action: 'search',
+    controller: 'document',
+    index: this.props.index,
+    collection: this.props.collection,
+  };
+  const options = {};
+  
+  if (this.kuzzleConfig.PROTOCOL === 'http') {
+    request.searchBody = JSON.stringify(this.props.searchBody);
+    options.verb = 'GET';
+  } else {
+    request.body = this.props.searchBody;
+  }
+  const { result } = await this.sdk.query(request, options);
+  this.props.result = result;
+});
+
 Then('I delete the document {string}', async function (id) {
   this.props.result = await this.sdk.document.delete(
     this.props.index,

@@ -22,6 +22,8 @@ const Bluebird = require('bluebird');
 class FakeProtocol {
   constructor (name) {
     this.name = name;
+    this.joinChannel = sinon.stub();
+    this.leaveChannel = sinon.stub();
   }
 }
 
@@ -37,11 +39,16 @@ class FakeMqttProtocol extends FakeProtocol {
   constructor () { super('mqtt'); }
 }
 
-describe('lib/core/core/network/index', () => {
+class FakeInternalProtocol extends FakeProtocol {
+  constructor () { super('internal'); }
+}
+
+describe('lib/core/core/network/entryPoint', () => {
   let kuzzle;
   let HttpMock;
   let WebSocketMock;
   let MqttMock;
+  let InternalMock;
   let httpMock;
   let EntryPoint;
   let entrypoint;
@@ -67,6 +74,7 @@ describe('lib/core/core/network/index', () => {
     HttpMock = FakeHttpProtocol;
     WebSocketMock = FakeWebSocketProtocol;
     MqttMock = FakeMqttProtocol;
+    InternalMock = FakeInternalProtocol;
 
     httpMock = {
       createServer: sinon.stub().returns({
@@ -78,10 +86,11 @@ describe('lib/core/core/network/index', () => {
     winstonTransportFile = sinon.spy();
     winstonTransportSyslog = sinon.spy();
 
-    const entryPointPath = `${root}/lib/core/network`;
-    mockrequire(`${entryPointPath}/protocols/http`, { HttpProtocol: HttpMock});
-    mockrequire(`${entryPointPath}/protocols/websocket`, WebSocketMock);
-    mockrequire(`${entryPointPath}/protocols/mqtt`, MqttMock);
+    const network = `${root}/lib/core/network`;
+    mockrequire(`${network}/protocols/http`, { HttpProtocol: HttpMock});
+    mockrequire(`${network}/protocols/websocket`, WebSocketMock);
+    mockrequire(`${network}/protocols/mqtt`, MqttMock);
+    mockrequire(`${network}/protocols/internal`, InternalMock);
 
     mockrequire('http', httpMock);
     mockrequire('winston', {
@@ -114,7 +123,7 @@ describe('lib/core/core/network/index', () => {
       all: Bluebird.all
     });
 
-    EntryPoint = mockrequire.reRequire(entryPointPath);
+    EntryPoint = mockrequire.reRequire(`${network}/entryPoint`);
 
     entrypoint = new EntryPoint(kuzzle);
 
@@ -127,7 +136,7 @@ describe('lib/core/core/network/index', () => {
       }
     });
 
-    for (const Class of [HttpMock, WebSocketMock, MqttMock]) {
+    for (const Class of [HttpMock, WebSocketMock, MqttMock, InternalMock]) {
       Class.prototype.init = sinon.stub().resolves(true);
     }
 
@@ -223,44 +232,56 @@ describe('lib/core/core/network/index', () => {
   });
 
   describe('#init', () => {
-    it('should call proper methods in order', () => {
+    it('should init the internal protocol', async () => {
+      await entrypoint.init();
+
+      should(entrypoint.protocols.get('internal').init).be.calledOnce();
+    });
+  });
+
+  describe('#startListening', () => {
+    beforeEach(async () => {
+      await entrypoint.init();
+    });
+
+    it('should call proper methods in order', async () => {
       entrypoint.initLogger = sinon.spy();
       entrypoint.loadMoreProtocols = sinon.stub().resolves();
       kuzzle.config.server.port = -42;
 
-      return entrypoint.init()
-        .then(() => {
-          should(entrypoint.initLogger).be.calledOnce();
+      await entrypoint.startListening();
 
-          should(entrypoint.httpServer).be.an.Object();
-          should(httpMock.createServer).be.calledOnce();
-          should(httpMock.createServer.firstCall.returnValue.listen)
-            .be.calledOnce()
-            .be.calledWith(kuzzle.config.server.port, kuzzle.config.server.host);
+      should(entrypoint.initLogger).be.calledOnce();
 
-          should(entrypoint.protocols.http.init).be.calledOnce();
-          should(entrypoint.protocols.websocket.init).be.calledOnce();
-          should(entrypoint.protocols.mqtt.init).be.calledOnce();
-          should(entrypoint.loadMoreProtocols).be.calledOnce();
-          should(Object.keys(entrypoint.protocols)).be.length(3);
-        });
+      should(entrypoint.httpServer).be.an.Object();
+      should(httpMock.createServer).be.calledOnce();
+      should(httpMock.createServer.firstCall.returnValue.listen)
+        .be.calledOnce()
+        .be.calledWith(kuzzle.config.server.port, kuzzle.config.server.host);
+
+      should(entrypoint.protocols.get('http').init).be.calledOnce();
+      should(entrypoint.protocols.get('websocket').init).be.calledOnce();
+      should(entrypoint.protocols.get('mqtt').init).be.calledOnce();
+      should(entrypoint.loadMoreProtocols).be.calledOnce();
+      should(Array.from(entrypoint.protocols.keys())).be.length(4);
     });
 
     it('should not load disabled protocols', () => {
       MqttMock.prototype.init = sinon.stub().resolves(false);
 
-      return entrypoint.init()
+      return entrypoint.startListening()
         .then(() => {
-          should(entrypoint.protocols.http.init).be.calledOnce();
-          should(entrypoint.protocols.websocket.init).be.calledOnce();
-          should(Object.keys(entrypoint.protocols)).be.length(2);
-          should(entrypoint.protocols.mqtt).be.undefined();
+          should(entrypoint.protocols.get('http').init).be.calledOnce();
+          should(entrypoint.protocols.get('websocket').init).be.calledOnce();
+          should(entrypoint.protocols.get('internal').init).be.calledTwice();
+          should(Array.from(entrypoint.protocols.keys())).be.length(3);
+          should(entrypoint.protocols.get('mqtt')).be.undefined();
         });
     });
 
     it('should throw if the provided port is not an integer', () => {
       kuzzle.config.server.port = 'foobar';
-      should(() => entrypoint.init())
+      should(() => entrypoint.startListening())
         .throw(KuzzleInternalError, {message: 'Invalid network port number: foobar.'});
     });
 
@@ -269,7 +290,7 @@ describe('lib/core/core/network/index', () => {
 
       entrypoint.loadMoreProtocols = sinon.stub().throws(error);
 
-      return entrypoint.init()
+      return entrypoint.startListening()
         .then(() => {
           throw new Error('should not happen');
         })
@@ -280,6 +301,7 @@ describe('lib/core/core/network/index', () => {
   });
 
   describe('#initLogger', () => {
+
     it('should support all available transports', () => {
 
       entrypoint.config.logs.transports = [{
@@ -428,21 +450,20 @@ describe('lib/core/core/network/index', () => {
   describe('#joinChannel', () => {
     it('should do nothing if the client is unknown', () => {
       entrypoint.joinChannel('channel', 'connectionId');
-      for (const protoKey of Object.keys(entrypoint.protocols)) {
-        const protocol = entrypoint.protocols[protoKey];
-        should(protocol.leaveChannel)
-          .have.callCount(0);
+
+      for (const protocol of entrypoint.protocols.values()) {
+        should(protocol.joinChannel).not.be.called();
       }
     });
 
     it('should call the connection protocol joinChannel method', () => {
       entrypoint._clients.set('connectionId', { protocol: 'protocol' });
-      entrypoint.protocols.protocol = {
+      entrypoint.protocols.set('protocol', {
         joinChannel: sinon.spy()
-      };
+      });
 
       entrypoint.joinChannel('channel', 'connectionId');
-      should(entrypoint.protocols.protocol.joinChannel)
+      should(entrypoint.protocols.get('protocol').joinChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
     });
@@ -451,12 +472,12 @@ describe('lib/core/core/network/index', () => {
       const error = new Error('test');
 
       entrypoint._clients.set('connectionId', { protocol: 'protocol' });
-      entrypoint.protocols.protocol = {
+      entrypoint.protocols.set('protocol', {
         joinChannel: sinon.stub().throws(error)
-      };
+      });
 
       entrypoint.joinChannel('channel', 'connectionId');
-      should(entrypoint.protocols.protocol.joinChannel)
+      should(entrypoint.protocols.get('protocol').joinChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
       should(kuzzle.log.error)
@@ -467,21 +488,21 @@ describe('lib/core/core/network/index', () => {
   describe('#leaveChannel', () => {
     it('should do nothing if the client is unknown', () => {
       entrypoint.leaveChannel('channel', 'connectionId');
-      for (const protoKey of Object.keys(entrypoint.protocols)) {
-        const protocol = entrypoint.protocols[protoKey];
-        should(protocol.leaveChannel)
-          .have.callCount(0);
+
+      for (const protocol of entrypoint.protocols.values()) {
+        should(protocol.leaveChannel).not.be.called();
       }
     });
 
     it('should call the connection protocol leaveChannel method', () => {
       entrypoint._clients.set('connectionId', { protocol: 'protocol' });
-      entrypoint.protocols.protocol = {
+      entrypoint.protocols.set('protocol', {
         leaveChannel: sinon.spy()
-      };
+      });
 
       entrypoint.leaveChannel('channel', 'connectionId');
-      should(entrypoint.protocols.protocol.leaveChannel)
+
+      should(entrypoint.protocols.get('protocol').leaveChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
     });
@@ -490,12 +511,13 @@ describe('lib/core/core/network/index', () => {
       const error = new Error('test');
 
       entrypoint._clients.set('connectionId', { protocol: 'protocol' });
-      entrypoint.protocols.protocol = {
+      entrypoint.protocols.set('protocol', {
         leaveChannel: sinon.stub().throws(error)
-      };
+      });
 
       entrypoint.leaveChannel('channel', 'connectionId');
-      should(entrypoint.protocols.protocol.leaveChannel)
+
+      should(entrypoint.protocols.get('protocol').leaveChannel)
         .be.calledOnce()
         .be.calledWith('channel', 'connectionId');
       should(kuzzle.log.error)
@@ -506,7 +528,7 @@ describe('lib/core/core/network/index', () => {
 
   describe('#loadMoreProtocols', () => {
     const protocolDir = path.join(__dirname, `${root}/protocols/enabled`);
-    const entryPointDir = `${root}/lib/core/network`;
+    const entryPointDir = `${root}/lib/core/network/entryPoint`;
 
     it('should load plugins as Node.js modules', () => {
       mockrequire('fs', {
@@ -874,25 +896,25 @@ describe('lib/core/core/network/index', () => {
     it('should call underlying protocols and log errors', () => {
       const error = new KuzzleInternalError('test');
 
-      entrypoint.protocols = {
-        one: {
+      entrypoint.protocols = new Map([
+        ['one', {
           broadcast: sinon.spy()
-        },
-        two: {
+        }],
+        ['two', {
           broadcast: sinon.spy()
-        },
-        three: {
+        }],
+        ['three', {
           broadcast: sinon.stub().throws(error)
-        }
-      };
+        }]
+      ]);
 
       entrypoint._broadcast('data');
 
-      should(entrypoint.protocols.one.broadcast)
+      should(entrypoint.protocols.get('one').broadcast)
         .be.calledOnce()
         .be.calledWith('data');
 
-      should(entrypoint.protocols.two.broadcast)
+      should(entrypoint.protocols.get('two').broadcast)
         .be.calledOnce()
         .be.calledWith('data');
 
@@ -905,25 +927,25 @@ describe('lib/core/core/network/index', () => {
       entrypoint._clients.set('connectionId', { protocol: 'protocol' });
       const error = new KuzzleInternalError('test');
 
-      entrypoint.protocols = {
-        protocol: {
+      entrypoint.protocols = new Map([
+        ['protocol', {
           notify: sinon.stub()
-        }
-      };
+        }]
+      ]);
 
       entrypoint._notify({
         connectionId: 'connectionId',
         content: 'data'
       });
 
-      should(entrypoint.protocols.protocol.notify)
+      should(entrypoint.protocols.get('protocol').notify)
         .be.calledOnce()
         .be.calledWith({
           connectionId: 'connectionId',
           content: 'data'
         });
 
-      entrypoint.protocols.protocol.notify.throws(error);
+      entrypoint.protocols.get('protocol').notify.throws(error);
       entrypoint._notify({
         connectionId: 'connectionId',
         content: 'data'
