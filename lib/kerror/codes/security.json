@@ -167,21 +167,21 @@
           "code": 6,
           "message": "Invalid rights for role \"%s\" (path: \"%s\"): %s",
           "class": "BadRequestError",
-          "deprecated": true
+          "deprecated": "2.2.0"
         },
         "closure_exec_failed": {
           "description": "Execution failed on the provided closure",
           "code": 7,
           "message": "Invalid definition for [%s, %s]: %s",
           "class": "BadRequestError",
-          "deprecated": true
+          "deprecated": "2.2.0"
         },
         "closure_missing_test": {
           "description": "Closures must specify a \"test\" attribute",
           "code": 8,
           "message": "Missing or malformed \"test\" attribute  for role %s (%s) : %s",
           "class": "BadRequestError",
-          "deprecated": true
+          "deprecated": "2.2.0"
         },
         "unknown_controller": {
           "description": "Trying to set a role with a non-existing controller",
