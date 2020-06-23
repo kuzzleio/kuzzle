@@ -2,11 +2,11 @@
 
 set -e
 
-if [ ! -z "$WITHOUT_KUZZLE" ]; then
+if [ -n "$WITHOUT_KUZZLE" ]; then
   exit 0
 fi
 
-if [ ! -z "$TRAVIS" ] || [ ! -z "$REBUILD" ]; then
+if [ -n "$TRAVIS" ] || [ -n "$REBUILD" ]; then
     npm ci --unsafe-perm
     chmod -R 777 node_modules/
     npm rebuild all --unsafe-perm
