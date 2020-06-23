@@ -28,7 +28,7 @@ const
   inquirer = require('./inquirerExtended'),
   Logger = require('./logger'),
   { version: currentVersion } = require('../../../package.json'),
-  defaultConfiguration = require('../../../default.config');
+  defaultConfiguration = require('../../../lib/config/default.config');
 
 class Version {
   constructor() {

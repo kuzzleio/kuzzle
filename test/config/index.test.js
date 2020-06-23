@@ -4,7 +4,7 @@ const
   rewire = require('rewire'),
   should = require('should'),
   Config = rewire('../../lib/config'),
-  defaultConfig = require('../../default.config'),
+  defaultConfig = require('../../lib/config/default.config'),
   {
     errors: {
       InternalError: KuzzleInternalError
