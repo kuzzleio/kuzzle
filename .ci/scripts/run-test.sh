@@ -1,8 +1,7 @@
 #!/bin/sh
 
 set -e
-
-elastic_host=${kuzzle_services__storageEngine__client__node:-http://elasticsearch:9200}
+set -x
 
 NODE_VERSION=$NODE_12_VERSION
 

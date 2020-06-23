@@ -27,7 +27,7 @@ services:
       - kuzzle_limits__loginsPerSecond=50
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DEBUG
       - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
       - KUZZLE_VAULT_KEY=secret-password
