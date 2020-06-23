@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 cd /everest
 
 files=$(ls *.tar.xz | grep -v app.tar.xz)

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 kuzzle_latest_major=2
 
 # Arguments

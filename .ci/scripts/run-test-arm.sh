@@ -1,7 +1,6 @@
 #!/bin/sh
 
-set -e
-set -x
+set -ex
 
 NODE_VERSION=$NODE_12_VERSION
 
