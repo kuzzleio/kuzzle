@@ -123,7 +123,10 @@ class ConfigManager {
       value: application
     });
 
-    this.content = this._application.kuzzle.config;
+    Reflect.defineProperty(this, 'content', {
+      enumerable: true,
+      value: this._application.kuzzle.config
+    })
   }
 
   /**
@@ -181,7 +184,7 @@ class ControllerManager {
    * })
    *
    * Http routes will be auto-generated unless they are provided or an empty array
-   * is provided
+   * is provided.
    *
    * @param name - Controller name
    * @param definition - Controller definition
@@ -210,7 +213,7 @@ class ControllerManager {
   _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
-        definition.http = [{ verb: 'POST', url: `/${name}/${action}` }];
+        definition.http = [{ verb: 'POST', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
       }
     }
   }
@@ -254,7 +257,7 @@ class VaultManager {
    */
   get secrets () : JSONObject {
     if (! this._application.started) {
-      throw runtimeError.get('only_after_startup', 'vault.secrets');
+      throw runtimeError.get('unavailable_before_start', 'vault.secrets');
     }
 
     return this._application.kuzzle.vault.secrets;
@@ -290,7 +293,11 @@ class PluginManager {
       throw runtimeError.get('already_started', 'plugin');
     }
 
-    if (typeof plugin.constructor !== 'function' && ! options.name) {
+    // Avoid plain objects
+    if ((typeof plugin.constructor !== 'function'
+      || plugin.constructor.name === 'Object')
+      && ! options.name
+    ) {
       throw assertionError.get('no_name_provided');
     }
 
