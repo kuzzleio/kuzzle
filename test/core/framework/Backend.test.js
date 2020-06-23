@@ -3,26 +3,89 @@
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
-const mockRequire = require('mock-require');
+
+const { Backend } = require('../../../lib/core/framework/backend.ts');
 
 describe('Backend', () => {
-  let Backend;
   let application;
-  let fsMock;
 
   beforeEach(() => {
-    fsMock = {
-      ...require('fs'),
-      readFileSync: sinon.stub()
-    };
-
-    mockRequire('fs', fsMock);
-    const mod = mockRequire.reRequire('../../../lib/core/framework/backend.ts');
-    Backend = mod.Backend;
     application = new Backend('black-mesa');
   });
 
+  describe('#instanceProxy', () => {
+    it('should returns plugin definition and an init function', () => {
+      application._pipes = 'pipes';
+      application._hooks = 'hooks';
+      application._controllers = 'controllers';
 
+      const instance = application.instanceProxy;
+      instance.init(null, 'context');
+
+      should(instance.pipes).be.eql('pipes');
+      should(instance.hooks).be.eql('hooks');
+      should(instance.api).be.eql('controllers');
+
+      should(application._context).be.eql('context');
+    });
+  });
+
+  describe('#context', () => {
+    it('should returns the application context', () => {
+      application.started = true
+      application._context = 'context';
+
+      should(application.context).be.eql('context');
+    });
+
+    it('should throws an error if the application is not started', () => {
+      should(() => {
+        application.context
+      }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
+    });
+  });
+
+  describe('#sdk', () => {
+    it('should returns the embedded sdk from context', () => {
+      application.started = true
+      application._context = {
+        accessors: { sdk: 'sdk' }
+      };
+
+      should(application.sdk).be.eql('sdk');
+    });
+
+    it('should throws an error if the application is not started', () => {
+      should(() => {
+        application.sdk
+      }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
+    });
+  });
+
+  describe('#start', () => {
+    it('should calls kuzzle.start with an instantiated plugin and options', async () => {
+      application.kuzzle.start = sinon.stub();
+      application.version = '42.21.84';
+      application._vaultKey = 'vaultKey';
+      application._secretsFile = 'secretsFile';
+      application._plugins = 'plugins';
+
+      await application.start();
+
+      should(application.kuzzle.start).be.calledOnce();
+
+      const [plugin, options] = application.kuzzle.start.getCall(0).args;
+
+      should(plugin.application).be.true();
+      should(plugin.name).be.eql('black-mesa');
+      should(plugin.version).be.eql('42.21.84');
+      should(plugin.instance).be.eql(application.instanceProxy);
+
+      should(options.secretsFile).be.eql(application._secretsFile);
+      should(options.vaultKey).be.eql(application._vaultKey);
+      should(options.plugins).be.eql(application._plugins);
+    });
+  });
 
   describe('PipeManager#register', () => {
     it('should registers a new pipe', () => {

@@ -391,21 +391,6 @@ export class Backend {
   public plugin: PluginManager;
 
   /**
-   * @deprecated
-   */
-  public mappings: JSONObject;
-
-  /**
-   * @deprecated
-   */
-  public securities: JSONObject;
-
-  /**
-   * @deprecated
-   */
-  public fixtures: JSONObject;
-
-  /**
    * Instantiates a new Kuzzle application
    *
    * @param name - Your application name
@@ -451,10 +436,7 @@ export class Backend {
     const options = {
       secretsFile: this._secretsFile,
       vaultKey: this._vaultKey,
-      plugins: this._plugins,
-      mappings: this.mappings,
-      fixtures: this.fixtures,
-      securities: this.securities,
+      plugins: this._plugins
     };
 
     await this.kuzzle.start(application, options);
@@ -470,7 +452,13 @@ export class Backend {
   /**
    * Internal SDK
    */
-  get sdk () { return this.context.accessors.sdk; }
+  get sdk () {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'sdk');
+    }
+
+    return this.context.accessors.sdk;
+  }
 
   /**
    * Application context object
