@@ -217,7 +217,7 @@ class ControllerManager {
   }
 
   _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
-    for (const [action, definition] of Object.entries(controllerDefinition)) {
+    for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
         definition.http = [{ verb: 'POST', url: `/${name}/${action}` }];
       }
@@ -330,7 +330,6 @@ class PluginManager {
 
 export class Backend {
   private kuzzle: any;
-  private instanceProxy: any;
   private _context: any = null;
   private _name: string;
 
@@ -425,19 +424,6 @@ export class Backend {
       value: new Kuzzle()
     });
 
-    Reflect.defineProperty(this, 'instanceProxy', {
-      get () {
-        return {
-          pipes: this._pipes,
-          hooks: this._hooks,
-          api: this._controllers,
-          init: (_, context) => {
-            this._context = context;
-          }
-        };
-      }
-    })
-
     this.pipe = new PipeManager(this);
     this.hook = new HookManager(this);
     this.config = new ConfigManager(this);
@@ -463,6 +449,7 @@ export class Backend {
     }
 
     const application = new Plugin(
+      this.kuzzle,
       this.instanceProxy,
       { name: this.name, application: true });
 
@@ -503,6 +490,16 @@ export class Backend {
     return this._context;
   }
 
+  get instanceProxy () {
+    return {
+      pipes: this._pipes,
+      hooks: this._hooks,
+      api: this._controllers,
+      init: (_, context) => {
+        this._context = context;
+      }
+    };
+  }
 
 }
 
