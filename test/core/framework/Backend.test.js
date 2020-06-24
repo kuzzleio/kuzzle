@@ -69,6 +69,11 @@ describe('Backend', () => {
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
       application._plugins = 'plugins';
+      application._support = {
+        mappings: 'mappings',
+        fixtures: 'fixtures',
+        securities: 'securities',
+      };
 
       await application.start();
 
@@ -84,6 +89,9 @@ describe('Backend', () => {
       should(options.secretsFile).be.eql(application._secretsFile);
       should(options.vaultKey).be.eql(application._vaultKey);
       should(options.plugins).be.eql(application._plugins);
+      should(options.mappings).be.eql(application._support.mappings);
+      should(options.fixtures).be.eql(application._support.fixtures);
+      should(options.securities).be.eql(application._support.securities);
     });
   });
 

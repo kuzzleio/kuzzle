@@ -391,6 +391,15 @@ export class Backend {
   public plugin: PluginManager;
 
   /**
+   * Support for old features available before Kuzzle as a framework
+   * to avoid breaking existing deployments.
+   *
+   * Do not use this property unless you know exactly what you are doing,
+   * this property can be removed in future releases.
+   */
+  public _support: JSONObject = {};
+
+  /**
    * Instantiates a new Kuzzle application
    *
    * @param name - Your application name
@@ -436,7 +445,10 @@ export class Backend {
     const options = {
       secretsFile: this._secretsFile,
       vaultKey: this._vaultKey,
-      plugins: this._plugins
+      plugins: this._plugins,
+      mappings: this._support.mappings,
+      fixtures: this._support.fixtures,
+      securities: this._support.securities,
     };
 
     await this.kuzzle.start(application, options);

@@ -38,15 +38,17 @@ async function startKuzzle (options = {}) {
 
     for (const additionalPlugin of additionalPlugins) {
       const PluginClass = require(`../plugins/available/${additionalPlugin}`);
-      app.plugin.use(new PluginClass());
+      const manifest = require(`../plugins/available/${additionalPlugin}/manifest.json`);
+
+      app.plugin.use(new PluginClass(), { name: manifest.name });
     }
   }
 
-  app.mappings = options.mappings;
+  app._support.mappings = options.mappings;
 
-  app.fixtures = options.fixtures;
+  app._support.fixtures = options.fixtures;
 
-  app.securities = options.securities;
+  app._support.securities = options.securities;
 
   app.vault.key = options.vaultKey
 
