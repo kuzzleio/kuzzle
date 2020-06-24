@@ -26,9 +26,9 @@ describe('PluginsManager.run', () => {
     kuzzle = new KuzzleMock();
 
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire(`${root}/lib/core/plugin/context`);
+    mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
     mockrequire.reRequire(`${root}/lib/core/plugin/privilegedContext`);
-    PluginsManager = mockrequire.reRequire(`${root}/lib/core/plugin/manager`);
+    PluginsManager = mockrequire.reRequire(`${root}/lib/core/plugin/pluginManager`);
 
     pluginsManager = new PluginsManager(kuzzle);
 

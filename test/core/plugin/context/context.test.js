@@ -23,7 +23,7 @@ describe('Plugin Context', () => {
   let PluginContext;
 
   beforeEach(() => {
-    PluginContext = mockrequire.reRequire(`${root}/lib/core/plugin/context`);
+    PluginContext = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');

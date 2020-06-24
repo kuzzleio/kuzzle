@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const PluginsManager = require('../../../../lib/core/plugin/manager');
+const PluginsManager = require('../../../../lib/core/plugin/pluginManager');
 const {
   errors: {
     NotFoundError,

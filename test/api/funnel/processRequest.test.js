@@ -29,9 +29,9 @@ describe('funnel.processRequest', () => {
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire('../../../lib/core/plugin/context');
+    mockrequire.reRequire('../../../lib/core/plugin/pluginContext');
     mockrequire.reRequire('../../../lib/core/plugin/privilegedContext');
-    const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/manager');
+    const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/pluginManager');
 
     kuzzle = new KuzzleMock();
     funnel = new Funnel(kuzzle);

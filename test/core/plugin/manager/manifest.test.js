@@ -20,7 +20,7 @@ describe('Plugins manifest class', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     mockrequire('../../../../lib/core/shared/abstractManifest', AbstractManifestStub);
-    Manifest = mockrequire.reRequire('../../../../lib/core/plugin/manifest');
+    Manifest = mockrequire.reRequire('../../../../lib/core/plugin/pluginManifest');
   });
 
   afterEach(() => {
