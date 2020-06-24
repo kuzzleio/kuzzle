@@ -219,7 +219,7 @@
           "code": 39,
           "message": "An index or a collection name cannot contain the character \"%s\"",
           "class": "BadRequestError",
-          "deprecated": true
+          "deprecated": "2.0.1"
         },
         "invalid_search_query": {
           "description": "A forbidden argument has been provided in the search query",
