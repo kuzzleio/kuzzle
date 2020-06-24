@@ -3,12 +3,12 @@
 ################################################################################
 FROM node:12.18.1-alpine3.11 as builder
 
-ADD ./bin /app/bin
-ADD ./config /app/config
-ADD ./lib /app/lib
-ADD ./package.json /app/package.json
-ADD ./package-lock.json /app/package-lock.json
-ADD ./default.config.js /app/default.config.js
+ADD ./bin /var/app/bin
+ADD ./config /var/app/config
+ADD ./lib /var/app/lib
+ADD ./package.json /var/app/package.json
+ADD ./package-lock.json /var/app/package-lock.json
+ADD ./default.config.js /var/app/default.config.js
 
 WORKDIR /var/app
 
@@ -31,18 +31,18 @@ RUN  set -x \
 
 ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 
-ADD ./plugins/available/ /app/plugins/available/
+ADD ./plugins/available/ /var/app/plugins/available/
 
 RUN  set -x \
   # Link default plugins
-  && mkdir -p /app/plugins/enabled/ \
-  && ln -s /app/plugins/available/kuzzle-plugin-auth-passport-local /app/plugins/enabled/kuzzle-plugin-auth-passport-local \
-  && ln -s /app/plugins/available/kuzzle-plugin-logger /app/plugins/enabled/kuzzle-plugin-logger \
+  && mkdir -p /var/app/plugins/enabled/ \
+  && ln -s /var/app/plugins/available/kuzzle-plugin-auth-passport-local /var/app/plugins/enabled/kuzzle-plugin-auth-passport-local \
+  && ln -s /var/app/plugins/available/kuzzle-plugin-logger /var/app/plugins/enabled/kuzzle-plugin-logger \
   # Install plugins dependencies
   && for plugin in plugins/*/*; do npm install --production --prefix "$plugin"; done \
   # Clean Node.js related useless files
   && clean-node \
-  && for plugin in plugins/*/*; do cd "$plugin"; echo "$plugin"; clean-node; cd /app; done \
+  && for plugin in plugins/*/*; do cd "$plugin"; echo "$plugin"; clean-node; cd /var/app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
@@ -84,6 +84,8 @@ RUN  set -x \
     /usr/bin/xzdec \
     /usr/bin/ldd
 
+RUN tar czf /app.tar.gz /var/app
+
 ################################################################################
 # Production image
 ################################################################################
@@ -100,7 +102,7 @@ ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 COPY --from=minifier /etc /etc
 COPY --from=minifier /bin /bin
 COPY --from=minifier /usr /usr
-COPY --from=minifier /bin /bin
+COPY --from=minifier /app.tar.gz /app.tar.gz
 COPY --from=minifier /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
 
 RUN ln -s /lib/ld-musl-x86_64.so.1 /lib/libc.musl-x86_64.so.1
