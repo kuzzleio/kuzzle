@@ -199,7 +199,10 @@ class KuzzleMock extends Kuzzle {
       hasStrategyMethod: sinon.stub().returns(false),
       strategies: {},
       registerStrategy: sinon.stub(),
-      unregisterStrategy: sinon.stub()
+      unregisterStrategy: sinon.stub(),
+      application: {
+        info: sinon.stub()
+      }
     };
 
     this.repositories = {
