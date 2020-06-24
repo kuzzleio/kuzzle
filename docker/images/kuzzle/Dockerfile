@@ -56,8 +56,6 @@ FROM node:12.18.1-stretch-slim as minifier
 
 ENV NODE_ENV=production
 
-ADD ./docker/scripts/everest-compress.sh /usr/bin/everest-compress
-
 COPY --from=builder /app /app
 
 RUN  set -x \

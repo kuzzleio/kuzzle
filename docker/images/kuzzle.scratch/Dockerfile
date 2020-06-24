@@ -10,7 +10,7 @@ ADD ./package.json /app/package.json
 ADD ./package-lock.json /app/package-lock.json
 ADD ./default.config.js /app/default.config.js
 
-WORKDIR /app
+WORKDIR /var/app
 
 ENV NODE_ENV=production
 
@@ -52,13 +52,11 @@ RUN  set -x \
 ################################################################################
 # Production minifier image
 ################################################################################
-FROM node:12.18.1-alpine3.11 as everest-minifier
+FROM node:12.18.1-alpine3.11 as minifier
 
 ENV NODE_ENV=production
 
-ADD ./docker/scripts/everest-compress.sh /usr/bin/everest-compress
-
-COPY --from=builder /app /app
+COPY --from=builder /var/app /var/app
 
 RUN  set -x \
   && apk add --no-cache \
@@ -84,10 +82,7 @@ RUN  set -x \
     /usr/bin/xzgrep \
     /usr/bin/xzdiff \
     /usr/bin/xzdec \
-    /usr/bin/ldd \
-  # Create system archives
-  && cd / \
-  && everest-compress usr app
+    /usr/bin/ldd
 
 ################################################################################
 # Production image
@@ -95,22 +90,20 @@ RUN  set -x \
 FROM scratch as kuzzle
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
-LABEL description="Run your Kuzzle backend in production mode with everest scratch image"
+LABEL description="Run your Kuzzle backend in production mode with scratch image"
 
 ENV NODE_ENV=production
 
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
-ADD ./docker/scripts/everest-extract.sh /bin/everest-extract
 ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 
-COPY --from=everest-minifier /etc /etc
-COPY --from=everest-minifier /bin /bin
-COPY --from=everest-minifier /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
+COPY --from=minifier /etc /etc
+COPY --from=minifier /bin /bin
+COPY --from=minifier /usr /usr
+COPY --from=minifier /bin /bin
+COPY --from=minifier /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
 
-COPY --from=everest-minifier /everest /everest/
-
-RUN  ln -s /app /var/app \
-  && ln -s /lib/ld-musl-x86_64.so.1 /lib/libc.musl-x86_64.so.1
+RUN ln -s /lib/ld-musl-x86_64.so.1 /lib/libc.musl-x86_64.so.1
 
 ENTRYPOINT ["/bin/entrypoint"]
 

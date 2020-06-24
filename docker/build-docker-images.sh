@@ -102,8 +102,8 @@ if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
   docker_build 'kuzzle' "$TRAVIS_BRANCH-alpine" 'kuzzle.alpine'
   docker_push 'kuzzle' "$TRAVIS_BRANCH-alpine"
 
-  docker_build 'kuzzle' "$TRAVIS_BRANCH-everest" 'kuzzle.everest'
-  docker_push 'kuzzle' "$TRAVIS_BRANCH-everest"
+  docker_build 'kuzzle' "$TRAVIS_BRANCH-scratch" 'kuzzle.scratch'
+  docker_push 'kuzzle' "$TRAVIS_BRANCH-scratch"
 
 elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]]; then
   release_tag=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
@@ -120,8 +120,8 @@ elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]];
   docker_build 'kuzzle' "$release_tag-alpine" 'kuzzle.alpine'
   docker_push 'kuzzle' "$release_tag-alpine"
 
-  docker_build 'kuzzle' "$release_tag-everest" 'kuzzle.everest'
-  docker_push 'kuzzle' "$release_tag-everest"
+  docker_build 'kuzzle' "$release_tag-scratch" 'kuzzle.scratch'
+  docker_push 'kuzzle' "$release_tag-scratch"
 
 
   # If this is a release of the current major version
@@ -131,12 +131,12 @@ elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]];
     docker_tag 'plugin-dev' "$release_tag" 'latest'
     docker_tag 'kuzzle' "$release_tag" 'latest'
     docker_tag 'kuzzle' "$release_tag-alpine" 'latest-alpine'
-    docker_tag 'kuzzle' "$release_tag-everest" 'latest-everest'
+    docker_tag 'kuzzle' "$release_tag-scratch" 'latest-scratch'
 
     docker_push 'plugin-dev' 'latest'
     docker_push 'kuzzle' 'latest'
     docker_push 'kuzzle' 'latest-alpine'
-    docker_push 'kuzzle' 'latest-everest'
+    docker_push 'kuzzle' 'latest-scratch'
   fi
 
   # Also push the major tag.
@@ -145,12 +145,12 @@ elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]];
   docker_tag 'plugin-dev' "$release_tag" "$major_version"
   docker_tag 'kuzzle' "$release_tag" "$major_version"
   docker_tag 'kuzzle' "$release_tag-alpine" "$major_version-alpine"
-  docker_tag 'kuzzle' "$release_tag-everest" "$major_version-everest"
+  docker_tag 'kuzzle' "$release_tag-scratch" "$major_version-scratch"
 
   docker_push 'plugin-dev' "$major_version"
   docker_push 'kuzzle' "$major_version"
   docker_push 'kuzzle' "$major_version-alpine"
-  docker_push 'kuzzle' "$major_version-everest"
+  docker_push 'kuzzle' "$major_version-scratch"
 else
   echo "Incorrect value for TRAVIS_BRANCH variable ("$TRAVIS_BRANCH"). Exiting."
 fi
