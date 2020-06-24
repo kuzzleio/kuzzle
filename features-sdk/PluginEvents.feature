@@ -289,10 +289,21 @@ Feature: Plugin Events
     Then I should receive a "string" result equals to "confidential"
     Then The document "bus-3-vn" should not exist
 
+  # hooks ======================================================================
+
+  @realtime
+  Scenario: Listen to events with hooks
+    Given I subscribe to "functionnal-test":"hooks" notifications
+    When I successfully call the route "server":"now"
+    Then I should receive realtime notifications for "functionnal-test":"hooks" matching:
+      | result._source.event |
+      | "server:afterNow"    |
+
   # pipes declared with a function name
+
   @events
   Scenario: Trigger a pipe declared with a function name
     Given I "activate" the pipe on "server:afterNow" without changes
     When I successfully call the route "server":"now"
     Then I should receive a result matching:
-      | lyrics     | "_STRING_"    |
+      | lyrics | "_STRING_" |

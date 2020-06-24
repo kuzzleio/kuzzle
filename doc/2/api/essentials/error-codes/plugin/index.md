@@ -109,7 +109,7 @@ description: error codes definitions
 | Id | Error Type (Status Code)             | Message           |
 | ------ | -----------------| ------------------ | ------------------ |
 | plugin.context.missing_collection<br/><pre>0x04060001</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | The 'collection' argument is required, but none was provided |
-| plugin.context.unavailable_realtime<br/><pre>0x04060002</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Due to technical limitations, plugins have limited access to the realtime API controller |
+| plugin.context.unavailable_realtime<br/><pre>0x04060002</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Due to technical limitations, subscribe and unsubscribe methods are only available through the embedded SDK. |
 | plugin.context.invalid_user<br/><pre>0x04060003</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | The user object provided to the sdk.as() method is not a valid user with a least an '_id' property |
 | plugin.context.invalid_callback<br/><pre>0x04060004</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A non-function callback has been provided |
 | plugin.context.missing_request<br/><pre>0x04060005</pre> | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A Request object is required, but none was supplied |

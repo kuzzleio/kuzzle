@@ -398,6 +398,16 @@ describe('DocumentController', () => {
       });
     });
 
+    it('should reject if users give document with "_source" property', () => {
+      request.input.body.documents = [
+        { _id: 'doc-1', body: {} },
+        { _id: 'doc-2', _source: {} },
+      ];
+
+      return should(documentController._mChanges(request, 'mCreate', true))
+        .be.rejectedWith({ id: 'api.assert.unexpected_argument' });
+    });
+
     it('should reject if the number of documents to edit exceeds server configuration', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
 
@@ -497,7 +507,8 @@ describe('DocumentController', () => {
 
       documentController.publicStorage.update.resolves({
         _id: '_id',
-        _version: '_version'
+        _version: '_version',
+        _source: { ...content, name: 'gordon' }
       });
 
       request.input.resource._id = 'foobar';
@@ -523,7 +534,8 @@ describe('DocumentController', () => {
         request);
       should(response).match({
         _id: '_id',
-        _version: '_version'
+        _version: '_version',
+        _source: content
       });
     });
 
@@ -536,6 +548,17 @@ describe('DocumentController', () => {
         'foobar',
         content,
         { userId: null, refresh: 'false', retryOnConflict: undefined });
+    });
+
+    it('should returns the entire document with source: true', async () => {
+      request.input.args.source = true;
+      const response = await documentController.update(request);
+
+      should(response).be.eql({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...content, name: 'gordon' }
+      });
     });
   });
 

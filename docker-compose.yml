@@ -59,7 +59,7 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.4.0
+    image: kuzzleio/elasticsearch:7
     ports:
       - "9200:9200"
     ulimits:

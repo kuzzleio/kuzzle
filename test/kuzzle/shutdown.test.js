@@ -27,7 +27,7 @@ describe('#kuzzle/shutdown', () => {
     try {
       shutdown(kuzzle);
 
-      should(kuzzle.entryPoints.dispatch).calledOnce().calledWith('shutdown');
+      should(kuzzle.entryPoint.dispatch).calledOnce().calledWith('shutdown');
       should(kuzzle.emit).calledWith('kuzzle:shutdown');
 
       // @deprecated

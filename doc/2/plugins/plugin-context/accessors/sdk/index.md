@@ -12,7 +12,7 @@ Accessor to the embedded SDK.
 
 The embedded SDK is a custom version of our [Javascript SDK](/sdk/js/7) that uses a custom protocol plugged directly into Kuzzle core.
 
-All the documented controllers can be used, except the `realtime` one.
+All the documented controllers can be used.
 Also, the low-level [query](/sdk/js/7/core-classes/kuzzle/query) method is available for use.
 
 ::: info
@@ -31,9 +31,9 @@ When the complete original context is needed to execute your request, plugin dev
 
 ---
 
-## controllers
+## Controllers
 
-The following controllers are available in the embedded SDK:
+The following controllers and methods are available in the embedded SDK:
 
 - [auth](/sdk/js/7/controllers/auth)
 - [bulk](/sdk/js/7/controllers/bulk)
@@ -43,13 +43,12 @@ The following controllers are available in the embedded SDK:
 - [memoryStorage (ms)](/sdk/js/7/controllers/ms)
 - [security](/sdk/js/7/controllers/security)
 - [server](/sdk/js/7/controllers/server)
+- [realtime](/sdk/js/7/controllers/realtime)
+  - [count](/sdk/js/7/controllers/realtime/count) <SinceBadge version="1.9.1" />
+  - [publish](/sdk/js/7/controllers/realtime/publish) <SinceBadge version="1.9.1" />
+  - [subscribe](/sdk/js/7/controllers/realtime/subscribe) <SinceBadge version="2.3.0" />
+  - [unsubscribe](/sdk/js/7/controllers/realtime/unsubscribe) <SinceBadge version="2.3.0" />
 
-<SinceBadge version="1.9.1" />
-
-The following controllers and methods are partially available in the embedded SDK:
-  - [realtime](/sdk/js/7/controllers/realtime)
-    - [count](/sdk/js/7/controllers/realtime/count)
-    - [publish](/sdk/js/7/controllers/realtime/count)
 
 ### Example
 
@@ -68,6 +67,58 @@ async myAwesomePipe (request) {
 **Notes:**
 
 - The created document will have the `author` metadata property set to `null`.
+
+## Realtime notifications
+
+<SinceBadge version="2.3.0" />
+
+Realtime subscriptions should be made using the [realtime controller](/sdk/js/7/controllers/realtime) in the plugin [init](core/2/plugins/guides/manual-setup/init-function) method or in a hook on the [kuzzle:state:live](/core/2/plugins/guides/events/kuzzle-state) event.
+
+::: warning
+You should avoid making subscriptions at runtime because that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
+:::
+
+The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
+
+#### propagate: false (default)
+
+With `propagate: false`, the callback function is executed only on the node on which a notification is generated (only one execution).
+
+::: info 
+This behavior is suitable for most usage like sending emails, write in the database, call an external API, etc.
+:::
+
+#### propagate: true
+
+With `propagate: true`, notifications are propagated to all nodes of a cluster, executing all callback functions.
+
+::: info 
+This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
+:::
+
+#### Example
+
+```js
+async init (config, context) {
+  // the default value for the "propagate" option is "false"
+  context.accessors.sdk.realtime.subscribe(
+    'nyc-open-data',
+    'yellow-taxi',
+    {},
+    notification => {
+      // this callback will be executed only on the node generating a notification
+    });
+
+  context.accessors.sdk.realtime.subscribe(
+    'nyc-open-data',
+    'green-taxi',
+    {},
+    notification => {
+      // this callback will be executed on each nodes
+    },
+    { propagate: true });
+}
+```
 
 ---
 
@@ -113,7 +164,7 @@ as(user);
 
 | Arguments | Type            | Description       |
 | --------- | --------------- | ----------------- |
-| `user`    | <pre>User</pre> | Valid User object |
+| `user`    | <pre>User</pre> | User object containing at least a string `_id` property |
 
 ### Example
 
@@ -136,3 +187,5 @@ async myAwesomePipe (request) {
 ### Return
 
 Returns the embedded SDK contextualized with the provided user.
+
+---
