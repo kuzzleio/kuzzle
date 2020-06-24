@@ -23,9 +23,15 @@
 
 'use strict';
 
-const { Backend } = require('../index');
+const fs = require('fs');
 
 const yargs = require('yargs');
+
+const { Backend } = require('../index');
+
+function loadJson (path) {
+  return JSON.parse(fs.readFileSync(path, 'utf8'));
+}
 
 async function startKuzzle (options = {}) {
   const app = new Backend('kuzzle');
@@ -44,11 +50,11 @@ async function startKuzzle (options = {}) {
     }
   }
 
-  app._support.mappings = options.mappings;
+  app._support.mappings = loadJson(options.mappings);
 
-  app._support.fixtures = options.fixtures;
+  app._support.fixtures = loadJson(options.fixtures);
 
-  app._support.securities = options.securities;
+  app._support.securities = loadJson(options.securities);
 
   app.vault.key = options.vaultKey
 
