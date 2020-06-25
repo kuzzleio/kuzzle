@@ -3,6 +3,18 @@
 ################################################################################
 FROM node:12.18.1-stretch-slim as builder
 
+RUN  set -x \
+  && apt-get update && apt-get install -y \
+       curl \
+       python \
+       make \
+       g++ \
+       python \
+       libzmq3-dev \
+  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
+  && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
+  && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/
+
 ADD ./bin /app/bin
 ADD ./config /app/config
 ADD ./lib /app/lib
@@ -14,21 +26,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN  set -x \
-  && apt-get update && apt-get install -y \
-       curl \
-       python \
-       make \
-       g++ \
-       python \
-       libzmq3-dev \
-  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
-  && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
-  && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/ \
-  # Install dependencies
-  && npm install --production \
+# Install dependencies
+RUN  npm install --production \
   && npm install -g --unsafe-perm --production \
-    pm2 \
+      pm2 \
 
 ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 

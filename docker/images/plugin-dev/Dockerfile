@@ -3,15 +3,6 @@
 ################################################################################
 FROM node:12.18.1-stretch-slim as builder
 
-ADD ./bin /app/bin
-ADD ./config /app/config
-ADD ./lib /app/lib
-ADD ./package.json /app/package.json
-ADD ./package-lock.json /app/package-lock.json
-ADD ./default.config.js /app/default.config.js
-
-WORKDIR /app
-
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
@@ -24,10 +15,19 @@ RUN  set -x \
     nodemon \
     kourou \
     pm2 \
-  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
-  && rm -rf /var/lib/apt/lists/* \
-  # Install dependencies
-  && npm install --production
+  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin
+
+ADD ./bin /app/bin
+ADD ./config /app/config
+ADD ./lib /app/lib
+ADD ./package.json /app/package.json
+ADD ./package-lock.json /app/package-lock.json
+ADD ./default.config.js /app/default.config.js
+
+WORKDIR /app
+
+# Install dependencies
+RUN  npm install --production
 
 ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 

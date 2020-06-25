@@ -3,17 +3,6 @@
 ################################################################################
 FROM node:12.18.1-alpine3.11 as builder
 
-ADD ./bin /var/app/bin
-ADD ./config /var/app/config
-ADD ./lib /var/app/lib
-ADD ./package.json /var/app/package.json
-ADD ./package-lock.json /var/app/package-lock.json
-ADD ./default.config.js /var/app/default.config.js
-
-WORKDIR /var/app
-
-ENV NODE_ENV=production
-
 RUN  set -x \
   && apk add --no-cache \
       curl \
@@ -25,9 +14,21 @@ RUN  set -x \
       binutils \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
-  && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/ \
-  # Install dependencies
-  && npm install --production
+  && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/
+
+ADD ./bin /var/app/bin
+ADD ./config /var/app/config
+ADD ./lib /var/app/lib
+ADD ./package.json /var/app/package.json
+ADD ./package-lock.json /var/app/package-lock.json
+ADD ./default.config.js /var/app/default.config.js
+
+WORKDIR /var/app
+
+ENV NODE_ENV=production
+
+# Install dependencies
+RUN  npm install --production
 
 ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 
