@@ -303,7 +303,7 @@ class PluginManager {
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
     if (! Plugin.checkName(name)) {
-      throw assertionError.get('invalid_application_name', name)
+      throw assertionError.get('invalid_plugin_name', name)
     }
 
     if (this._application._plugins[name]) {
@@ -405,6 +405,10 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
+    if (! Plugin.checkName(name)) {
+      throw assertionError.get('invalid_application_name', name)
+    }
+
     this._name = name;
 
     Reflect.defineProperty(this, 'kuzzle', {

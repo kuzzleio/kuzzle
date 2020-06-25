@@ -58,10 +58,10 @@
           "message": "A plugin named %s already exists",
           "class": "PluginImplementationError"
         },
-        "invalid_application_name": {
-          "description": "The application name is invalid. Application names can only contain lowercase letters and dash.",
+        "invalid_plugin_name": {
+          "description": "The plugin name is invalid. Plugin names can only contain lowercase letters and dash.",
           "code": 10,
-          "message": "Application name \"%s\" is invalid. Application names must be in kebab-case.",
+          "message": "Plugin name \"%s\" is invalid. Plugin names must be in kebab-case.",
           "class": "PluginImplementationError"
         },
         "no_name_provided": {
@@ -74,6 +74,12 @@
           "description": "The controller definition is incorrect.",
           "code": 12,
           "message": "Incorrect \"%s\" controller definition: %s",
+          "class": "PluginImplementationError"
+        },
+        "invalid_application_name": {
+          "description": "The application name is invalid. Application names can only contain lowercase letters and dash.",
+          "code": 13,
+          "message": "Application name \"%s\" is invalid. Application names must be in kebab-case.",
           "class": "PluginImplementationError"
         }
       }
