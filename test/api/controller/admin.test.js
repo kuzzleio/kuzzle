@@ -137,8 +137,8 @@ describe('AdminController', () => {
 
       await adminController.dump(request);
 
-      should(kuzzle.dump).be.calledOnce();
-      should(kuzzle.dump.getCall(0).args[0]).be.eql('dump-me-master');
+      should(kuzzle.dumpGenerator.dump).be.calledOnce();
+      should(kuzzle.dumpGenerator.dump.getCall(0).args[0]).be.eql('dump-me-master');
     });
   });
 

@@ -28,7 +28,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'internalIndex',
     'cacheEngine',
     'storageEngine',
-    'dump',
+    'dumpGenerator',
     'shutdown',
     'pipe',
   ];
@@ -181,6 +181,14 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       should(kuzzle.internalIndex.count).be.calledWithMatch(
         'users',
         { query: { terms: { profileIds: ['admin'] } } });
+    });
+  });
+
+  describe('#dump', () => {
+    it('should calls dumpGenerator.dump', async () => {
+      await kuzzle.dump();
+
+      should(kuzzle.dumpGenerator.dump).be.calledOnce();
     });
   });
 });
