@@ -29,7 +29,7 @@ ENV NODE_ENV=production
 # Install dependencies
 RUN  npm install --production \
   && npm install -g --unsafe-perm --production \
-      pm2 \
+      pm2
 
 ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 
