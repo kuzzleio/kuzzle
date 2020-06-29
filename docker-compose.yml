@@ -14,7 +14,7 @@ services:
     image: kuzzleio/core-dev:2
     command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
     volumes:
-      - ".:/app"
+      - ".:/var/app"
       - "./docker/scripts/run-dev.sh:/run-dev.sh"
       - "./docker/fixtures:/fixtures"
     cap_add:
