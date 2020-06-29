@@ -1,13 +1,7 @@
 'use strict';
 
-const Bluebird = require('bluebird');
 const should = require('should');
-const sinon = require('sinon').createSandbox();
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Repository = require('../../../lib/core/shared/repository');
-const User = require('../../../lib/model/security/user');
-const ApiKey = require('../../../lib/model/storage/apiKey');
-const UserRepository = require('../../../lib/core/security/userRepository');
+const sinon = require('sinon');
 const {
   errors: {
     BadRequestError,
@@ -15,19 +9,20 @@ const {
   }
 } = require('kuzzle-common-objects');
 
-describe('Test: security/userRepository', () => {
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const Repository = require('../../../lib/core/shared/repository');
+const User = require('../../../lib/model/security/user');
+const ApiKey = require('../../../lib/model/storage/apiKey');
+const UserRepository = require('../../../lib/core/security/userRepository');
+
+describe.only('Test: security/userRepository', () => {
   let kuzzle;
   let userRepository;
-  let userInCache;
-  let userInDB;
-  let userInvalidProfile;
-  let repositoryLoadStub;
   let profileRepositoryMock;
   let tokenRepositoryMock;
 
   beforeEach(() => {
-    const encryptedPassword = '5c4ec74fd64bb57c05b4948f3a7e9c7d450f069a';
-
     profileRepositoryMock = {
       loadProfiles: sinon
         .stub()
@@ -38,32 +33,8 @@ describe('Test: security/userRepository', () => {
       deleteByKuid: sinon.stub().resolves(),
     };
 
-    repositoryLoadStub = sinon.stub(Repository.prototype, 'load');
-
-    userInCache = {
-      _id: 'userInCache',
-      name: 'Johnny Cash',
-      profileIds: ['userincacheprofile'],
-      password: encryptedPassword
-    };
-    userInDB = {
-      _id: 'userInDB',
-      name: 'Debbie Jones',
-      profileIds: ['userindbprofile']
-    };
-    userInvalidProfile = {
-      _id: 'userInvalidProfile',
-      profileIds: ['notfound']
-    };
-
-    repositoryLoadStub.resolves(null);
-    repositoryLoadStub.withArgs('userInCache').resolves(userInCache);
-    repositoryLoadStub.withArgs('userInDB').resolves(userInDB);
-    repositoryLoadStub
-      .withArgs('userInvalidProfile')
-      .resolves(userInvalidProfile);
-
     kuzzle = new KuzzleMock();
+    kuzzle.ask.restore();
 
     userRepository = new UserRepository(kuzzle, {
       profile: profileRepositoryMock,
@@ -73,14 +44,8 @@ describe('Test: security/userRepository', () => {
     return userRepository.init({ indexStorage: kuzzle.internalIndex });
   });
 
-  afterEach(() => {
-    repositoryLoadStub.restore();
-  });
-
   describe('#anonymous', () => {
     it('should return a valid anonymous user', async () => {
-      kuzzle.ask.restore();
-
       const user = await kuzzle.ask('core:security:user:anonymous');
       assertIsAnonymous(user);
     });
@@ -103,7 +68,7 @@ describe('Test: security/userRepository', () => {
     it('should reject if the profile cannot be found', () => {
       profileRepositoryMock.loadProfiles.resolves([null]);
 
-      return should(userRepository.fromDTO(userInvalidProfile))
+      return should(userRepository.fromDTO({_id: 'foo', profileIds: ['nope']}))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'security.user.cannot_hydrate'
         });
@@ -116,44 +81,41 @@ describe('Test: security/userRepository', () => {
     });
   });
 
-  describe('#load', () => {
-    it('should return the anonymous user when the anonymous or -1 id is given', () => {
-      return Bluebird.all([
-        userRepository.load('-1'),
-        userRepository.load('anonymous')
-      ])
-        .then(users => {
-          users.every(user => { assertIsAnonymous(user); });
-        });
+  describe('#get', () => {
+    const getEvent = 'core:security:user:get';
+
+    beforeEach(() => {
+      sinon.stub(Repository.prototype, 'load').resolves();
     });
 
-    it('should resolve to user if good credentials are given', async () => {
-      profileRepositoryMock.loadProfiles.resolves([
-        {_id: userInCache.profileIds[0]}
-      ]);
-
-      const user = await userRepository.load('userInCache');
-
-      should(user._id).be.exactly('userInCache');
-      should(user.name).be.exactly('Johnny Cash');
-      should(user.profileIds).be.an.Array();
-      should(user.profileIds[0]).be.exactly('userincacheprofile');
+    afterEach(() => {
+      Repository.prototype.load.restore();
     });
 
-    it('should resolve to "null" if username is not found', () => {
-      return userRepository.load('unknownUser')
-        .then(user => should(user).be.null());
+    it('should register a "get" event', async () => {
+      sinon.stub(userRepository, 'load');
+
+      await kuzzle.ask(getEvent, 'foo');
+
+      should(userRepository.load).calledWith('foo');
     });
 
-    it('should reject the promise if an error occurred while fetching the user', () => {
-      userRepository.load = () => Bluebird.reject(new KuzzleInternalError('Error'));
+    it('should return the anonymous user when its id is requested', async () => {
+      for (const id of ['-1', 'anonymous']) {
+        const user = await kuzzle.ask(getEvent, id);
+        assertIsAnonymous(user);
+        should(Repository.prototype.load).not.called();
+      }
+    });
 
-      return should(userRepository.load('userInCache')
-        .catch(err => {
-          delete userRepository.load;
+    it('should invoke the parent load method', async () => {
+      const fakeUser = new User();
+      Repository.prototype.load.resolves(fakeUser);
 
-          return Bluebird.reject(err);
-        })).be.rejectedWith(KuzzleInternalError);
+      const user = await kuzzle.ask(getEvent, 'foo');
+
+      should(user).eql(fakeUser);
+      should(Repository.prototype.load).calledWith('foo');
     });
   });
 
@@ -207,34 +169,47 @@ describe('Test: security/userRepository', () => {
   });
 
   describe('#delete', () => {
-    let deleteByUserStub;
+    const deleteEvent = 'core:security:user:delete';
+    let fakeUser;
 
     beforeEach(() => {
-      deleteByUserStub = sinon.stub(ApiKey, 'deleteByUser');
+      sinon.stub(ApiKey, 'deleteByUser');
+      sinon.stub(Repository.prototype, 'delete').resolves();
+
+      fakeUser = new User();
+      fakeUser._id = 'foo';
+      sinon.stub(userRepository, 'load').resolves(fakeUser);
     });
 
     afterEach(() => {
-      deleteByUserStub.restore();
+      ApiKey.deleteByUser.restore();
+      Repository.prototype.delete.restore();
     });
 
-    it('should delete user from both cache and database', async () => {
-      const user = { _id: 'alyx' };
+    it('should register a "delete" event', async () => {
+      sinon.stub(userRepository, 'deleteById');
 
-      await userRepository.delete(user, { refresh: 'wait_for' });
+      await kuzzle.ask(deleteEvent, 'foo', 'bar');
 
-      should(userRepository.cacheEngine.del)
-        .calledOnce()
-        .calledWith(userRepository.getCacheKey('alyx'));
+      should(userRepository.deleteById).calledWith('foo', 'bar');
+    });
 
-      should(userRepository.indexStorage.delete)
-        .calledOnce()
-        .calledWith(userRepository.collection, 'alyx', { refresh: 'wait_for' });
+    it('should load and delete the provided user', async () => {
+      sinon.stub(userRepository, '_removeUserStrategies');
 
-      should(deleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
+      await kuzzle.ask(deleteEvent, 'foo');
+
+      should(userRepository.load).calledWith('foo');
+
+      should(userRepository._removeUserStrategies).calledWith(fakeUser);
+      should(ApiKey.deleteByUser).calledWithMatch(fakeUser, {refresh: 'false'});
+      should(tokenRepositoryMock.deleteByKuid).calledWith('foo');
+      should(Repository.prototype.delete).calledWithMatch(fakeUser, {
+        refresh: 'false'
+      });
     });
 
     it('should delete user credentials', async () => {
-      const user = { _id: 'kleiner' };
       const existsMethod = sinon.stub().resolves(true);
       const deleteMethod = sinon.stub().resolves();
 
@@ -244,40 +219,105 @@ describe('Test: security/userRepository', () => {
         .onFirstCall().returns(existsMethod)
         .onSecondCall().returns(deleteMethod);
 
-      await userRepository.delete(user);
+      await kuzzle.ask(deleteEvent, 'foo');
 
       should(existsMethod)
         .calledOnce()
         .calledWithMatch(
-          { input: { resource: { _id: 'kleiner' } } },
-          'kleiner',
+          { input: { resource: { _id: 'foo' } } },
+          'foo',
           'someStrategy');
 
       should(deleteMethod)
         .calledOnce()
         .calledWithMatch(
-          { input: { resource: { _id: 'kleiner' } } },
-          'kleiner',
+          { input: { resource: { _id: 'foo' } } },
+          'foo',
           'someStrategy');
     });
 
-    it('should delete associated ApiKey', async () => {
-      const user = { _id: 'alyx' };
+    it('should forward refresh option', async () => {
+      sinon.stub(userRepository, '_removeUserStrategies');
 
-      await userRepository.delete(user, { refresh: 'wait_for' });
+      await kuzzle.ask(deleteEvent, 'foo', {refresh: 'wait_for'});
 
-      should(deleteByUserStub).be.calledWith(user, { refresh: 'wait_for' });
+      should(userRepository.load).calledWith('foo');
+
+      should(userRepository._removeUserStrategies).calledWith(fakeUser);
+      should(ApiKey.deleteByUser).calledWithMatch(fakeUser, {
+        refresh: 'wait_for'
+      });
+      should(tokenRepositoryMock.deleteByKuid).calledWith('foo');
+      should(Repository.prototype.delete).calledWithMatch(fakeUser, {
+        refresh: 'wait_for'
+      });
+    });
+  });
+
+  describe('#mGet', () => {
+    it('should register a mGet event and forward it to the parent class', async () => {
+      sinon.stub(Repository.prototype, 'loadMultiFromDatabase').resolves();
+
+      try {
+        await kuzzle.ask('core:security:user:mGet', 'foo');
+
+        should(Repository.prototype.loadMultiFromDatabase).calledWith('foo');
+      }
+      finally {
+        Repository.prototype.loadMultiFromDatabase.restore();
+      }
+    });
+  });
+
+  describe('#create', () => {
+    const createEvent = 'core:security:user:create';
+    let fakeUser;
+
+    beforeEach(() => {
+      sinon.stub(userRepository, 'persist').resolves();
+      sinon.stub(userRepository, 'fromDTO').resolves(fakeUser);
     });
 
-    it('should forward refresh option', () => {
-      const
-        user = { _id: 'mossman' },
-        options = { refresh: 'wait_for' };
+    it('should register a "create" event', async () => {
+      sinon.stub(userRepository, 'create');
 
-      return userRepository.delete(user, options)
-        .then(() => {
-          should(userRepository.indexStorage.delete.firstCall.args[2]).match(options);
-        });
+      await kuzzle.ask(createEvent, 'id', 'profiles', 'content', 'opts');
+
+      should(userRepository.create)
+        .calledWith('id', 'profiles', 'content', 'opts');
+    });
+
+    it('should pass handle default options', async () => {
+      const content = {
+        _id: 'nope',
+        _kuzzle_info: 'nope',
+        foo: 'foo',
+        profileIds: ['nope'],
+      };
+      const profiles = ['foo', 'bar'];
+
+      await kuzzle.ask(createEvent, 'id', profiles, content, {userId: 'userId'});
+
+      should(userRepository.fromDTO).calledWithMatch({
+        foo: 'foo',
+        profileIds: ['foo', 'bar'],
+        _id: 'id',
+        _kuzzle_info: {
+          author: 'userId',
+          updatedAt: null,
+          updater: null,
+        },
+      });
+
+      should(userRepository.fromDTO.firstCall.args[0]._kuzzle_info.createdAt)
+        .approximately(Date.now(), 1000);
+
+      should(userRepository.persist).calledWith(fakeUser, {
+        database: {
+          method: 'create',
+          refresh: 'false',
+        }
+      });
     });
   });
 });
