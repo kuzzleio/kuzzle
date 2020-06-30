@@ -568,9 +568,6 @@ describe('Test: security controller - users', () => {
         .calledOnce()
         .calledWithMatch(request, ['default'], { name: 'John Doe' });
 
-      should(securityController._persistUser.firstCall.args[2])
-        .not.have.ownProperty('profileIds');
-
       should(response).eql(createdUser);
     });
 
@@ -685,6 +682,7 @@ describe('Test: security controller - users', () => {
         .withArgs(
           updateEvent,
           request.input.resource._id,
+          sinon.match.any,
           sinon.match.object,
           sinon.match.any)
         .resolves(updatedUser);
@@ -701,6 +699,7 @@ describe('Test: security controller - users', () => {
       should(updateStub).calledWithMatch(
         updateEvent,
         'test',
+        null,
         { foo: 'bar' },
         {
           refresh: 'wait_for',
@@ -745,6 +744,7 @@ describe('Test: security controller - users', () => {
       should(updateStub).calledWithMatch(
         updateEvent,
         'test',
+        null,
         { foo: 'bar' },
         {
           refresh: 'false',
@@ -776,6 +776,7 @@ describe('Test: security controller - users', () => {
         .withArgs(
           replaceEvent,
           request.input.resource._id,
+          sinon.match.array,
           sinon.match.object,
           sinon.match.any)
         .resolves(replacedUser);
@@ -838,6 +839,7 @@ describe('Test: security controller - users', () => {
       should(replaceStub).calledWithMatch(
         replaceEvent,
         request.input.resource._id,
+        request.input.body.profileIds,
         request.input.body,
         {
           refresh: 'wait_for',
@@ -859,6 +861,7 @@ describe('Test: security controller - users', () => {
       should(replaceStub).calledWithMatch(
         replaceEvent,
         request.input.resource._id,
+        request.input.body.profileIds,
         request.input.body,
         {
           refresh: 'false',

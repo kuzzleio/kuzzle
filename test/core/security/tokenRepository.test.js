@@ -19,7 +19,7 @@ const Token = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 const TokenRepository = require('../../../lib/core/security/tokenRepository');
 
-describe('Test: security/tokenRepository', () => {
+describe.only('Test: security/tokenRepository', () => {
   let kuzzle;
   let tokenRepository;
 

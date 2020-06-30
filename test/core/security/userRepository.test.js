@@ -5,7 +5,9 @@ const sinon = require('sinon');
 const {
   errors: {
     BadRequestError,
-    InternalError: KuzzleInternalError
+    InternalError: KuzzleInternalError,
+    NotFoundError,
+    PreconditionError,
   }
 } = require('kuzzle-common-objects');
 
@@ -16,7 +18,7 @@ const User = require('../../../lib/model/security/user');
 const ApiKey = require('../../../lib/model/storage/apiKey');
 const UserRepository = require('../../../lib/core/security/userRepository');
 
-describe.only('Test: security/userRepository', () => {
+describe('Test: security/userRepository', () => {
   let kuzzle;
   let userRepository;
   let profileRepositoryMock;
@@ -274,7 +276,7 @@ describe.only('Test: security/userRepository', () => {
     let fakeUser;
 
     beforeEach(() => {
-      sinon.stub(userRepository, 'persist').resolves();
+      sinon.stub(userRepository, 'persist').resolves(fakeUser);
       sinon.stub(userRepository, 'fromDTO').resolves(fakeUser);
     });
 
@@ -287,7 +289,7 @@ describe.only('Test: security/userRepository', () => {
         .calledWith('id', 'profiles', 'content', 'opts');
     });
 
-    it('should pass handle default options', async () => {
+    it('should handle default options', async () => {
       const content = {
         _id: 'nope',
         _kuzzle_info: 'nope',
@@ -318,6 +320,328 @@ describe.only('Test: security/userRepository', () => {
           refresh: 'false',
         }
       });
+    });
+
+    it('should handle the refresh option', async () => {
+      await kuzzle.ask(createEvent, 'id', [], {}, {
+        refresh: 'wait_for',
+        userId: 'userId',
+      });
+
+      should(userRepository.persist).calledWith(fakeUser, {
+        database: {
+          method: 'create',
+          refresh: 'wait_for',
+        }
+      });
+    });
+
+    it('should return the created user object', async () => {
+      const ret = await kuzzle.ask(createEvent, 'id', [], {}, {userId: 'userId'});
+
+      should(ret).eql(fakeUser);
+    });
+
+    it('should replace generic failure exceptions with a security dedicated one', async () => {
+      const error = new Error('foo');
+
+      userRepository.persist.rejects(error);
+
+      await should(kuzzle.ask(createEvent, 'id', [], {}, {}))
+        .rejectedWith(error);
+
+      error.id = 'services.storage.document_already_exists';
+
+      await should(kuzzle.ask(createEvent, 'id', [], {}, {}))
+        .rejectedWith(PreconditionError, { id: 'security.user.already_exists' });
+    });
+  });
+
+  describe('#replace', () => {
+    const replaceEvent = 'core:security:user:replace';
+    let fakeUser;
+
+    beforeEach(() => {
+      fakeUser = new User();
+
+      sinon.stub(userRepository, 'load').resolves();
+      sinon.stub(userRepository, 'persist').resolves(fakeUser);
+      sinon.stub(userRepository, 'fromDTO').resolves(fakeUser);
+    });
+
+    it('should register a "replace" event', async () => {
+      sinon.stub(userRepository, 'replace');
+
+      await kuzzle.ask(replaceEvent, 'id', 'profiles', 'content', 'opts');
+
+      should(userRepository.replace).calledWith('id', 'profiles', 'content', 'opts');
+    });
+
+    it('should handle default options', async () => {
+      const content = {
+        _id: 'nope',
+        _kuzzle_info: 'nope',
+        foo: 'foo',
+        profileIds: 'nope',
+      };
+
+      await kuzzle.ask(replaceEvent, 'id', ['foo', 'bar'], content, {
+        userId: 'userId'
+      });
+
+      should(userRepository.fromDTO).calledWithMatch({
+        foo: 'foo',
+        profileIds: ['foo', 'bar'],
+        _id: 'id',
+        _kuzzle_info: {
+          author: 'userId',
+          updatedAt: null,
+          updater: null,
+        },
+      });
+
+      should(userRepository.fromDTO.firstCall.args[0]._kuzzle_info.createdAt)
+        .approximately(Date.now(), 1000);
+
+      should(userRepository.persist).calledWith(fakeUser, {
+        database: {
+          method: 'replace',
+          refresh: 'false',
+        }
+      });
+    });
+
+    it('should handle the refresh option', async () => {
+      await kuzzle.ask(replaceEvent, 'id', [], {}, {
+        refresh: 'wait_for',
+        userId: 'userId',
+      });
+
+      should(userRepository.persist).calledWith(fakeUser, {
+        database: {
+          method: 'replace',
+          refresh: 'wait_for',
+        }
+      });
+    });
+
+    it('should return the created user object', async () => {
+      const ret = await kuzzle.ask(replaceEvent, 'id', [], {}, {
+        userId: 'userId'
+      });
+
+      should(ret).eql(fakeUser);
+    });
+
+    it('should throw if the user does not exist', async () => {
+      const error = new Error('does not exist');
+      userRepository.load.withArgs('id').rejects(error);
+
+      await should(kuzzle.ask(replaceEvent, 'id', [], {}, {}))
+        .rejectedWith(error);
+    });
+  });
+
+  describe('#update', () => {
+    const updateEvent = 'core:security:user:update';
+    let fakeUser;
+
+    beforeEach(() => {
+      fakeUser = new User();
+      fakeUser._id = 'foo';
+      fakeUser.profileIds = ['foo', 'bar'];
+
+      sinon.stub(userRepository, 'load').resolves(fakeUser);
+      sinon.stub(userRepository, 'persist').resolves(fakeUser);
+      sinon.stub(userRepository, 'fromDTO').resolves(fakeUser);
+    });
+
+    it('should register a "update" event', async () => {
+      sinon.stub(userRepository, 'update');
+
+      await kuzzle.ask(updateEvent, 'id', 'profiles', 'content', 'opts');
+
+      should(userRepository.update).calledWith('id', 'profiles', 'content', 'opts');
+    });
+
+    it('should handle default options', async () => {
+      const content = {
+        _id: 'nope',
+        _kuzzle_info: 'nope',
+        foo: 'foo',
+        profileIds: 'nope',
+      };
+
+      await kuzzle.ask(updateEvent, 'id', ['baz', 'qux'], content);
+
+      should(userRepository.fromDTO).calledWithMatch({
+        foo: 'foo',
+        profileIds: ['baz', 'qux'],
+        _id: 'id',
+        _kuzzle_info: {
+          updater: undefined,
+        },
+      });
+
+      should(userRepository.fromDTO.firstCall.args[0]._kuzzle_info.updatedAt)
+        .approximately(Date.now(), 1000);
+
+      should(userRepository.persist).calledWith(fakeUser, {
+        database: {
+          method: 'update',
+          refresh: 'false',
+          retryOnConflict: 10,
+        }
+      });
+    });
+
+    it('should keep the previous version profiles if not updated', async () => {
+      const content = {
+        _id: 'nope',
+        _kuzzle_info: 'nope',
+        foo: 'foo',
+        profileIds: 'nope',
+      };
+
+      await kuzzle.ask(updateEvent, 'id', null, content, {
+        userId: 'userId'
+      });
+
+      should(userRepository.fromDTO).calledWithMatch({
+        foo: 'foo',
+        profileIds: ['foo', 'bar'],
+        _id: 'id',
+        _kuzzle_info: {
+          updater: 'userId',
+        },
+      });
+
+      should(userRepository.fromDTO.firstCall.args[0]._kuzzle_info.updatedAt)
+        .approximately(Date.now(), 1000);
+
+      should(userRepository.persist).calledWith(fakeUser, {
+        database: {
+          method: 'update',
+          refresh: 'false',
+          retryOnConflict: 10,
+        }
+      });
+    });
+
+    it('should handle options', async () => {
+      await kuzzle.ask(updateEvent, 'id', [], {}, {
+        refresh: 'wait_for',
+        retryOnConflict: 123,
+        userId: 'userId',
+      });
+
+      should(userRepository.persist).calledWith(fakeUser, {
+        database: {
+          method: 'update',
+          refresh: 'wait_for',
+          retryOnConflict: 123,
+        }
+      });
+    });
+
+    it('should return the updated user object', async () => {
+      const ret = await kuzzle.ask(updateEvent, 'id', [], {}, {
+        userId: 'userId'
+      });
+
+      should(ret).eql(fakeUser);
+    });
+
+    it('should throw if the user does not exist', async () => {
+      const error = new Error('does not exist');
+      userRepository.load.withArgs('id').rejects(error);
+
+      await should(kuzzle.ask(updateEvent, 'id', [], {}, {}))
+        .rejectedWith(error);
+    });
+  });
+
+  describe('#scroll', () => {
+    it('should register a scroll event and forward it to the parent class', async () => {
+      sinon.stub(Repository.prototype, 'scroll').resolves();
+
+      try {
+        await kuzzle.ask('core:security:user:scroll', 'foo', 'bar');
+
+        should(Repository.prototype.scroll).calledWith('foo', 'bar');
+      }
+      finally {
+        Repository.prototype.scroll.restore();
+      }
+    });
+  });
+
+  describe('#search', () => {
+    it('should register a search event and forward it to the parent class', async () => {
+      sinon.stub(Repository.prototype, 'search').resolves();
+
+      try {
+        await kuzzle.ask('core:security:user:search', 'foo', 'bar');
+
+        should(Repository.prototype.search).calledWith('foo', 'bar');
+      }
+      finally {
+        Repository.prototype.search.restore();
+      }
+    });
+  });
+
+  describe('#truncate', () => {
+    it('should register a truncate event and forward it to the parent class', async () => {
+      sinon.stub(Repository.prototype, 'truncate').resolves();
+
+      try {
+        await kuzzle.ask('core:security:user:truncate', 'foo');
+
+        should(Repository.prototype.truncate).calledWith('foo');
+      }
+      finally {
+        Repository.prototype.truncate.restore();
+      }
+    });
+  });
+
+  describe('#loadOneFromDatabase', () => {
+    beforeEach(() => {
+      sinon.stub(Repository.prototype, 'loadOneFromDatabase');
+    });
+
+    afterEach(() => {
+      Repository.prototype.loadOneFromDatabase.restore();
+    });
+
+    it('should invoke its super function', async () => {
+      Repository.prototype.loadOneFromDatabase.resolves('foo');
+
+      await should(userRepository.loadOneFromDatabase('bar'))
+        .fulfilledWith('foo');
+
+      should(Repository.prototype.loadOneFromDatabase)
+        .calledWith('bar');
+    });
+
+    it('should wrap generic 404s into profile dedicated errors', () => {
+      const error = new Error('foo');
+      error.status = 404;
+
+      Repository.prototype.loadOneFromDatabase.rejects(error);
+
+      return should(userRepository.loadOneFromDatabase('foo'))
+        .rejectedWith(NotFoundError, { id: 'security.user.not_found' });
+    });
+
+    it('should re-throw non-404 errors as is', () => {
+      const error = new Error('foo');
+
+      Repository.prototype.loadOneFromDatabase.rejects(error);
+
+      return should(userRepository.loadOneFromDatabase('foo'))
+        .rejectedWith(error);
     });
   });
 });
