@@ -1,5 +1,6 @@
 'use strict';
 
+const sinon = require('sinon');
 const should = require('should');
 const { errors: { BadRequestError } } = require('kuzzle-common-objects');
 
@@ -8,13 +9,23 @@ const securities = require('../../mocks/securities.json');
 
 const SecurityLoader = require('../../../lib/core/security/securityLoader');
 
-describe('security/securityLoader', () => {
+describe.only('security/securityLoader', () => {
   let loader;
   let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    kuzzle.ask.restore();
     loader = new SecurityLoader(kuzzle);
+    return loader.init();
+  });
+
+  it('should register a global "security:load" event', async () => {
+    sinon.stub(loader, 'load');
+
+    await kuzzle.ask('core:security:load', 'json', 'opts');
+
+    should(loader.load).calledWith('json', 'opts');
   });
 
   it('should create or replace roles', async () => {
