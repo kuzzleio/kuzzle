@@ -47,7 +47,7 @@ services:
       - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
       - DEBUG_COLORS=${DEBUG_COLORS:-on}
       - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
-      - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/app/features-sdk/fixtures/secrets.enc.json}
+      - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features-sdk/fixtures/secrets.enc.json}
       # Variables used by the development scripts
       - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
       - REBUILD # Force a rebuild of npm modules
