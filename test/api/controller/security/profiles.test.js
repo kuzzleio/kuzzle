@@ -174,11 +174,6 @@ describe('Test: security controller - profiles', () => {
           message: 'Missing argument "_id".'
         });
       should(createOrReplaceStub).not.called();
-
-      request.input.resource._id = '_foobar';
-      should(securityController.createOrReplaceProfile(request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.invalid_id' });
-      should(createOrReplaceStub).not.called();
     });
   });
 
@@ -256,11 +251,6 @@ describe('Test: security controller - profiles', () => {
           message: 'Missing argument "_id".'
         });
       should(createStub).not.called();
-
-      request.input.resource._id = '_foobar';
-      await should(securityController.createProfile(request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.invalid_id' });
-      should(createStub).not.called();
     });
 
     it('should forward refresh option', async () => {
@@ -303,10 +293,6 @@ describe('Test: security controller - profiles', () => {
           id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
         });
-
-      request.input.resource._id = '_foobar';
-      await should(securityController.createProfile(request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.invalid_id' });
     });
   });
 
