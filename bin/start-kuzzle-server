@@ -24,8 +24,10 @@
 'use strict';
 
 const fs = require('fs');
-const Kuzzle = require('../lib/kuzzle');
 const yargs = require('yargs');
+
+const Kuzzle = require('../lib/kuzzle');
+const waitForEs = require('./wait-elasticsearch');
 
 function loadJson (filePath) {
   const rawData = fs.readFileSync(filePath, 'utf8');
@@ -36,8 +38,6 @@ function loadJson (filePath) {
 async function startKuzzle (options = {}) {
   const kuzzle = new Kuzzle();
   const kuzzleParams = {};
-
-  console.log('[ℹ] Starting Kuzzle server');
 
   if (options.mappings) {
     kuzzleParams.mappings = loadJson(options.mappings);
@@ -59,6 +59,9 @@ async function startKuzzle (options = {}) {
   }
 
   try {
+    await waitForEs();
+
+    console.log('[ℹ] Starting Kuzzle server');
     await kuzzle.start(kuzzleParams)
     console.log(`[✔] Kuzzle server ${require('../package.json').version} ready`);
 
@@ -71,7 +74,7 @@ async function startKuzzle (options = {}) {
     }
   }
   catch (error) {
-    console.error(`[x] [ERROR] ${error.stack}`);
+    console.error(`[x] ${error.stack}`);
     process.exit(1);
   }
 }

@@ -6,7 +6,12 @@ title: createApiKey
 
 # createApiKey
 
-Creates a new API key for the currently loggued user.
+Creates a new API key for the currently logged user.
+
+::: info
+API keys are just authentication tokens.
+You can use your API key the same way you use your authentication token by adding it to the `Authorization` header (with the value `Bearer <YourApiKeyHere>`)
+:::
 
 ---
 

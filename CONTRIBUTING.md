@@ -24,7 +24,7 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 
 ## Tools
 
-For development only, we built a specific docker-compose file: `docker-compose/dev.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
+For development only, we built a specific docker-compose file: `docker-compose.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
 Check the logs at the start of Kuzzle using the development docker image to get the appropriate debug URL.
 
 How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
@@ -52,14 +52,14 @@ Everytime a modification is detected in the source files, the server is automati
 
 The development stack include a endpoint to access Kuzzle API through SSL on port `7443`.  
 
-The certificates are privately signed, using provided [CA certificate](docker-compose/nginx/kuzzleCA.crt).  
+The certificates are privately signed, using provided [CA certificate](docker/nginx/kuzzleCA.crt).  
 Domains accepted:
 - localhost
 - *.kuzzle.loc
 
 You'll need to import the CA certificate to your browser and possibly your system local authorities to make it verified.
 Once done, your browser should not complain when reaching https://localhost:7443.  
-The CA certificate is here: [docker-compose/nginx/kuzzleCA.crt](docker-compose/nginx/kuzzleCA.crt)
+The CA certificate is here: [docker/nginx/kuzzleCA.crt](docker/nginx/kuzzleCA.crt)
 
 Using node.js, for instance when using the sdk, you'll need to pass the CA cert using the `NODE_EXTRA_CA_CERTS` environment variable:
 
