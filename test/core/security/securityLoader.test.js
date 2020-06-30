@@ -9,7 +9,7 @@ const securities = require('../../mocks/securities.json');
 
 const SecurityLoader = require('../../../lib/core/security/securityLoader');
 
-describe.only('security/securityLoader', () => {
+describe('security/securityLoader', () => {
   let loader;
   let kuzzle;
 
