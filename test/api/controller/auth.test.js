@@ -451,6 +451,7 @@ describe('Test the auth controller', () => {
       should(kuzzle.ask).calledWith(
         'core:security:user:update',
         r.context.user._id,
+        null,
         r.input.body,
         {
           refresh: 'false',
