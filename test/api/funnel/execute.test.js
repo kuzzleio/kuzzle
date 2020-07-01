@@ -146,6 +146,22 @@ describe('funnelController.execute', () => {
         }
       });
     });
+
+    it('should run the request in asyncStore.run context and set the request in async storage', done => {
+      funnel.execute(request, (err, res) => {
+        try {
+          should(err).be.null();
+          should(res).be.instanceOf(Request);
+          should(kuzzle.asyncStore.run).be.calledOnce();
+          should(kuzzle.asyncStore.set).be.calledWith('REQUEST', request);
+
+          done();
+        }
+        catch (error) {
+          done(error);
+        }
+      });
+    });
   });
 
   describe('#core:overload hook', () => {
