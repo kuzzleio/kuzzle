@@ -1,10 +1,10 @@
 **/node_modules
 dump
 index-dump
-vagrant
+vagrant/
 Vagrantfile
 **/.git
-/.ci
+.ci
 .idea
 .nyc_output
 .sonar
@@ -13,3 +13,7 @@ sonar-project.properties
 plugins/available/functional-test-plugin
 plugins/enabled/functional-test-plugin
 plugins/enabled/dummy
+
+.git/
+**Dockerfile
+doc/

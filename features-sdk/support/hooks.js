@@ -43,6 +43,7 @@ BeforeAll(({ timeout: 10 * 1000 }), async function () {
     controller: 'admin',
     action: 'loadSecurities',
     body: testSecurities,
+    onExistingUsers: 'overwrite',
     refresh: 'wait_for'
   });
 
@@ -90,7 +91,7 @@ After({ tags: '@firstAdmin', timeout: 60 * 1000 }, async function () {
 
 // security hooks ==============================================================
 
-Before({ tags: '@security', timeout: 60 * 1000 }, async function () {
+After({ tags: '@security', timeout: 60 * 1000 }, async function () {
   await resetSecurityDefault(this.sdk);
 });
 
@@ -127,4 +128,13 @@ After({ tags: '@login' }, async function () {
   await this.sdk.auth.login(
     'local',
     { username: 'test-admin', password: 'password' });
+});
+
+// realtime hooks ==============================================================
+
+After({ tags: '@realtime' }, function () {
+  const promises = Object.values(this.props.subscriptions)
+    .map(({ unsubscribe }) => unsubscribe());
+
+  return Promise.all(promises);
 });

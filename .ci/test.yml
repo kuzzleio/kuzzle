@@ -3,11 +3,10 @@ version: '3'
 services:
   kuzzle:
     image: kuzzleio/core-dev:2
-    command: sh -c 'chmod 755 /run.sh && /run.sh'
+    command: /run-test.sh
     volumes:
       - "..:/var/app"
-      - "./scripts/run-test.sh:/run.sh"
-      - "./config/pm2.json:/config/pm2.json"
+      - "./scripts/run-test.sh:/run-test.sh"
     cap_add:
       - SYS_PTRACE
     ulimits:
@@ -28,10 +27,11 @@ services:
       - kuzzle_limits__loginsPerSecond=50
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DEBUG
       - KUZZLE_SECRETS_FILE=/var/app/features-sdk/fixtures/secrets.enc.json
       - KUZZLE_VAULT_KEY=secret-password
+      - KUZZLE_FUNCTIONAL_TESTS=${KUZZLE_FUNCTIONAL_TESTS:-test:functional}
       # Travis env var must be propagated into the container
       - TRAVIS
       - TRAVIS_COMMIT
@@ -45,6 +45,6 @@ services:
     image: redis:5
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7.4.0
+    image: kuzzleio/elasticsearch:7
     ulimits:
       nofile: 65536

@@ -1,14 +1,13 @@
 'use strict';
 
-const
-  _ = require('lodash'),
-  sinon = require('sinon'),
-  Kuzzle = require('../../lib/kuzzle'),
-  Bluebird = require('bluebird'),
-  config = require('../../lib/config'),
-  IndexStorageMock = require('./indexStorage.mock'),
-  ClientAdapterMock = require('./clientAdapter.mock'),
-  foo = { foo: 'bar' };
+const _ = require('lodash');
+const sinon = require('sinon');
+const Kuzzle = require('../../lib/kuzzle');
+const Bluebird = require('bluebird');
+const config = require('../../lib/config');
+const IndexStorageMock = require('./indexStorage.mock');
+const ClientAdapterMock = require('./clientAdapter.mock');
+const foo = { foo: 'bar' };
 
 let _instance;
 
@@ -21,6 +20,8 @@ class KuzzleMock extends Kuzzle {
     // we need a deep copy here
     this.config = _.merge({}, config);
 
+    // ========== EVENTS ==========
+
     // emit + pipe mocks
     sinon.stub(this, 'pipe').callsFake((...args) => {
       if (typeof args[args.length - 1] !== 'function') {
@@ -32,6 +33,15 @@ class KuzzleMock extends Kuzzle {
     });
 
     sinon.spy(this, 'emit');
+    sinon.spy(this, 'registerPluginHook');
+    sinon.spy(this, 'registerPluginPipe');
+    this.once = sinon.stub();
+
+    sinon.spy(this, 'ask');
+    sinon.spy(this, 'onAsk');
+    sinon.spy(this, 'on');
+    // ============================
+
 
     this.log = {
       error: sinon.stub(),
@@ -53,26 +63,10 @@ class KuzzleMock extends Kuzzle {
       getFilterIds: sinon.stub().returns([])
     };
 
-
-    this.entryPoints = {
+    this.entryPoint = {
       dispatch: sinon.spy(),
-      entryPoints: [
-        {
-          dispatch: sinon.spy(),
-          init: sinon.stub().resolves(),
-          joinChannel: sinon.spy(),
-          leaveChannel: sinon.spy(),
-          send: sinon.spy()
-        },
-        {
-          dispatch: sinon.spy(),
-          init: sinon.stub().resolves(),
-          joinChannel: sinon.spy(),
-          leaveChannel: sinon.spy(),
-          send: sinon.spy()
-        }
-      ],
-      init: sinon.spy(),
+      init: sinon.stub(),
+      startListening: sinon.spy(),
       joinChannel: sinon.spy(),
       leaveChannel: sinon.spy()
     };
@@ -92,16 +86,6 @@ class KuzzleMock extends Kuzzle {
       isNativeController : sinon.stub()
     };
 
-    this.gc = {
-      init: sinon.spy(),
-      run: sinon.spy()
-    };
-
-
-    this.hooks = {
-      init: sinon.spy()
-    };
-
     this.hotelClerk = {
       rooms: new Map(),
       customers: new Map(),
@@ -114,13 +98,8 @@ class KuzzleMock extends Kuzzle {
       listSubscriptions: sinon.stub().resolves(foo),
     };
 
-    this.janitor = {
-      dump: sinon.stub().resolves(),
-      shutdown: sinon.stub(),
-      loadMappings: sinon.stub().resolves(),
-      loadFixtures: sinon.stub().resolves(),
-      loadSecurities: sinon.stub().resolves()
-    };
+    this.dump = sinon.stub().resolves();
+    this.shutdown = sinon.stub();
 
     this.storageEngine = {
       init: sinon.stub().resolves(),
@@ -170,8 +149,6 @@ class KuzzleMock extends Kuzzle {
       createInitialSecurities: sinon.stub().resolves()
     };
 
-    this.once = sinon.stub();
-
     this.notifier = {
       init: sinon.spy(),
       notifyUser: sinon.stub().resolves(),
@@ -199,7 +176,6 @@ class KuzzleMock extends Kuzzle {
       plugins: {},
       run: sinon.stub().resolves(),
       getPluginsDescription: sinon.stub().returns({}),
-      pipe: sinon.stub().callsFake((...args) => Bluebird.resolve(args[1])),
       listStrategies: sinon.stub().returns([]),
       getActions: sinon.stub(),
       getControllerNames: sinon.stub(),
@@ -272,7 +248,8 @@ class KuzzleMock extends Kuzzle {
         persistToCache: sinon.stub().resolves(),
         persistForUser: sinon.stub().resolves(),
         loadForUser: sinon.stub().resolves()
-      }
+      },
+      loadSecurities: sinon.stub().resolves(),
     };
 
     this.rootPath = '/kuzzle';
@@ -333,11 +310,10 @@ class KuzzleMock extends Kuzzle {
     this.adminExists = sinon.stub().resolves();
 
     {
-      const
-        mockProto = Object.getPrototypeOf(this),
-        kuzzleProto = Object.getPrototypeOf(mockProto);
+      const mockProto = Object.getPrototypeOf(this);
+      const kuzzleProto = Object.getPrototypeOf(mockProto);
 
-      for (let name of Object.getOwnPropertyNames(kuzzleProto)) {
+      for (const name of Object.getOwnPropertyNames(kuzzleProto)) {
         if (['constructor', 'adminExists'].includes(name)) {
           continue;
         }

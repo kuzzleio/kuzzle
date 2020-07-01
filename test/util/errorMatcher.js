@@ -1,9 +1,8 @@
 'use strict';
 
-const
-  errorsManager = require('../../lib/util/errors'),
-  stableStringify = require('json-stable-stringify'),
-  { Request } = require('kuzzle-common-objects');
+const kerror = require('../../lib/kerror');
+const stableStringify = require('json-stable-stringify');
+const { Request } = require('kuzzle-common-objects');
 
 /**
  * Returns a sinon matcher tailored-made to match error API responses depending
@@ -73,7 +72,7 @@ ${comparedStr}
 }
 
 function fromMessage (domain, subdomain, id, message) {
-  const error = errorsManager.get(domain, subdomain, id, message);
+  const error = kerror.get(domain, subdomain, id, message);
 
   return fromError(error);
 }

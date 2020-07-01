@@ -23,7 +23,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { domains } = require(`${__dirname}/../lib/config/error-codes/`);
+const { domains } = require(`${__dirname}/../lib/kerror/codes/`);
 const { errors } = require('kuzzle-common-objects');
 
 function getHeader(title) {
@@ -31,7 +31,7 @@ function getHeader(title) {
 code: true
 type: page
 title: "${title}"
-description: error codes definitions
+description: Error codes definitions
 ---
 
 [//]: # (This documentation is auto-generated)
@@ -65,6 +65,10 @@ function clearCodeDirectories (target) {
   }
 }
 
+function deprecatedBadge (deprecated) {
+  return deprecated ? `<DeprecatedBadge version="${deprecated}"/>` : '';
+}
+
 function buildErrorCodes (name) {
   const domain = domains[name];
 
@@ -78,27 +82,31 @@ function buildErrorCodes (name) {
   let doc = getHeader(`0x${buffer.toString('hex', 3)}: ${name}`);
 
   for (const [subname, subdomain] of Object.entries(domain.subdomains)) {
-    if (subdomain.deprecated) {
-      continue;
-    }
 
     buffer.writeUInt16BE(domain.code << 8 | subdomain.code, 2);
 
     doc += `\n\n### Subdomain: 0x${buffer.toString('hex', 2)}: ${subname}\n\n`;
-    doc += '| Id | Error Type (Status Code)             | Message           |\n| ------ | -----------------| ------------------ | ------------------ |\n';
+
+    if (subdomain.deprecated) {
+      doc += `<DeprecatedBadge version="${subdomain.deprecated}">\n`;
+    }
+
+    doc += '| id / code | class / status | message | description |\n';
+    doc += '| --------- | -------------- | --------| ----------- |\n';
 
     for (const [errname, error] of Object.entries(subdomain.errors)) {
-      if (!error.deprecated) {
-        const fullName = `${name}.${subname}.${errname}`;
-        const status = (new errors[error.class]()).status;
+      const fullName = `${name}.${subname}.${errname}`;
+      const status = (new errors[error.class]()).status;
 
-        buffer.writeUInt32BE(
-          domain.code << 24 | subdomain.code << 16 | error.code,
-          0);
-        doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> | [${error.class}](/core/2/api/essentials/error-handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.description} |\n`;
-      }
+      buffer.writeUInt32BE(
+        domain.code << 24 | subdomain.code << 16 | error.code,
+        0);
+      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${deprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/essentials/error-handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
     }
     doc += '\n---\n';
+    if (subdomain.deprecated) {
+      doc += '</DeprecatedBadge>\n';
+    }
   }
 
   return doc;

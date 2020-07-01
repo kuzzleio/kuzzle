@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable sort-keys */
+
 /**
  * /!\ DO NOT MODIFY THIS FILE
  *
@@ -67,7 +69,6 @@ module.exports = {
     common: {
       bootstrapLockTimeout: 5000,
       pipeWarnTime: 500,
-      pipeTimeout: 5000,
       initTimeout: 10000,
       maxConcurrentPipes: 50,
       pipesBufferSize: 50000

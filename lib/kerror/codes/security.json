@@ -1,0 +1,242 @@
+{
+  "code": 7,
+  "subdomains": {
+    "token": {
+      "code": 1,
+      "errors": {
+        "invalid": {
+          "description": "Invalid authentication token.",
+          "code": 1,
+          "message": "Invalid token.",
+          "class": "UnauthorizedError"
+        },
+        "unknown_user": {
+          "description": "Missing user or missing user identifier",
+          "code": 2,
+          "message": "Unknown User : cannot generate token",
+          "class": "InternalError"
+        },
+        "unknown_connection": {
+          "description": "Missing connection identifier",
+          "code": 3,
+          "message": "Unknown connection : cannot generate token",
+          "class": "InternalError"
+        },
+        "ttl_exceeded": {
+          "description": "An authentication token was requested with a TTL larger than the configured maximum value",
+          "code": 4,
+          "message": "expiresIn value exceeds maximum allowed value",
+          "class": "BadRequestError"
+        },
+        "generation_failed": {
+          "description": "Unable to generate the requested authentication token",
+          "code": 5,
+          "message": "Error while generating token: %s",
+          "class": "InternalError"
+        },
+        "expired": {
+          "description": "The provided authentication token has expired",
+          "code": 6,
+          "message": "Token expired",
+          "class": "UnauthorizedError"
+        },
+        "verification_error": {
+          "description": "An unexpected error occured while verifying an authentication token",
+          "code": 7,
+          "message": "Error verifying token: %s",
+          "class": "InternalError"
+        }
+      }
+    },
+    "credentials": {
+      "code": 2,
+      "errors": {
+        "unknown_strategy": {
+          "description": "Unknown authentication strategy",
+          "code": 1,
+          "message": "Unknown authentication strategy \"%s\"",
+          "class": "BadRequestError"
+        },
+        "database_inconsistency": {
+          "description": "Inconsistency detected: credentials were found on a non-existing user",
+          "code": 2,
+          "message": "Internal database inconsistency detected: existing credentials found on non-existing user %s.",
+          "class": "PluginImplementationError"
+        },
+        "rejected": {
+          "description": "User's credentials were rejected during",
+          "code": 3,
+          "message": "Credentials rejected: %s",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "rights": {
+      "code": 3,
+      "errors": {
+        "unauthorized": {
+          "description": "Authentication required to execute this action",
+          "code": 1,
+          "message": "Unauthorized: authentication required to execute the action \"%s:%s\".",
+          "class": "UnauthorizedError"
+        },
+        "forbidden": {
+          "description": "Insufficient permissions to execute this action",
+          "code": 2,
+          "message": "Insufficient permissions to execute the action \"%s:%s\" (User \"%s\").",
+          "class": "ForbiddenError"
+        }
+      }
+    },
+    "user": {
+      "code": 4,
+      "errors": {
+        "already_exists": {
+          "description": "Cannot create the user as it already exists",
+          "code": 1,
+          "message": "User %s already exists.",
+          "class": "PreconditionError"
+        },
+        "not_found": {
+          "description": "Attempted to access to a non-existing user",
+          "code": 2,
+          "message": "User \"%s\" not found.",
+          "class": "NotFoundError"
+        },
+        "anonymous_profile_required": {
+          "description": "The anonymous user must be assigned to the anonymous profile",
+          "code": 3,
+          "message": "The anonymous user must be assigned to the anonymous profile",
+          "class": "BadRequestError"
+        },
+        "cannot_hydrate": {
+          "description": "Database inconsistency error: a user is referencing non-existing profiles",
+          "code": 4,
+          "message": "Unable to hydrate the user \"%s\": missing profile(s) in the database",
+          "class": "InternalError"
+        },
+        "uninitialized": {
+          "description": "Attempted to access to an unitialized User object",
+          "code": 5,
+          "message": "Cannot get profiles for uninitialized user \"%s\"",
+          "class": "InternalError"
+        },
+        "prevent_overwrite": {
+          "description": "Attempted to overwrite existing users. Change \"onExistingUsers\" params to modify this method behavior.",
+          "code": 6,
+          "message": "Cannot overwrite existing users.",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "role": {
+      "code": 5,
+      "errors": {
+        "not_found": {
+          "description": "Attempted to access to a non-existing role",
+          "code": 1,
+          "message": "Role \"%s\" not found.",
+          "class": "NotFoundError"
+        },
+        "login_required": {
+          "description": "Cannot remove the \"login\" action from the anonymous role",
+          "code": 2,
+          "message": "Cannot remove the \"login\" action from the anonymous role.",
+          "class": "BadRequestError"
+        },
+        "cannot_delete": {
+          "description": "Attempted to delete a base role (anonymous, default, admin)",
+          "code": 3,
+          "message": "The following roles are protected and cannot be deleted: anonymous, default, admin",
+          "class": "BadRequestError"
+        },
+        "in_use": {
+          "description": "A role still assigned to profiles cannot be deleted",
+          "code": 4,
+          "message": "The role \"%s\" is still used and cannot be deleted.",
+          "class": "PreconditionError"
+        },
+        "uninitialized": {
+          "description": "Attempted to access to an unitialized Role object",
+          "code": 5,
+          "message": "Cannot check permissions on the uninitialized role \"%s\"",
+          "class": "InternalError"
+        },
+        "invalid_rights": {
+          "description": "Invalid rights",
+          "code": 6,
+          "message": "Invalid rights for role \"%s\" (path: \"%s\"): %s",
+          "class": "BadRequestError",
+          "deprecated": "2.2.0"
+        },
+        "closure_exec_failed": {
+          "description": "Execution failed on the provided closure",
+          "code": 7,
+          "message": "Invalid definition for [%s, %s]: %s",
+          "class": "BadRequestError",
+          "deprecated": "2.2.0"
+        },
+        "closure_missing_test": {
+          "description": "Closures must specify a \"test\" attribute",
+          "code": 8,
+          "message": "Missing or malformed \"test\" attribute  for role %s (%s) : %s",
+          "class": "BadRequestError",
+          "deprecated": "2.2.0"
+        },
+        "unknown_controller": {
+          "description": "Trying to set a role with a non-existing controller",
+          "code": 9,
+          "message": "Trying to set role %s with a non-existing controller '%s'. %s",
+          "class": "BadRequestError"
+        },
+        "unknown_action": {
+          "description": "Trying to set a role with a non-existing controller action",
+          "code": 10,
+          "message": "Trying to set role %s with a non-existing action '%s' in controller '%s'. %s",
+          "class": "BadRequestError"
+        }
+      }
+    },
+    "profile": {
+      "code": 6,
+      "errors": {
+        "not_found": {
+          "description": "Attempted to access to a non-existing profile",
+          "code": 1,
+          "message": "Profile \"%s\" not found.",
+          "class": "NotFoundError"
+        },
+        "cannot_delete": {
+          "description": "Attempted to delete a base profile (anonymous, default, admin)",
+          "code": 2,
+          "message": "The following profiles are protected and cannot be deleted: anonymous, default, admin",
+          "class": "BadRequestError"
+        },
+        "in_use": {
+          "description": "A profile still assigned to users cannot be deleted",
+          "code": 3,
+          "message": "The profile \"%s\" is still used and cannot be deleted.",
+          "class": "PreconditionError"
+        },
+        "cannot_hydrate": {
+          "description": "Database inconsistency error: a profile is referencing non-existing roles",
+          "code": 4,
+          "message": "Unable to hydrate the profile \"%s\": missing role(s) in the database",
+          "class": "InternalError"
+        },
+        "missing_anonymous_role": {
+          "description": "The anonymous profile must include the anonymous role",
+          "code": 5,
+          "message": "The anonymous profile must include the anonymous role",
+          "class": "BadRequestError"
+        },
+        "uninitialized": {
+          "description": "Attempted to access to an unitialized Profile object",
+          "code": 6,
+          "message": "Cannot get roles for uninitialized profile \"%s\"",
+          "class": "InternalError"
+        }
+      }
+    }
+  }
+}

@@ -24,7 +24,7 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 
 ## Tools
 
-For development only, we built a specific docker-compose file: `docker-compose/dev.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
+For development only, we built a specific docker-compose file: `docker-compose.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
 Check the logs at the start of Kuzzle using the development docker image to get the appropriate debug URL.
 
 How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
@@ -39,25 +39,27 @@ git submodule init
 git submodule update
 
 # start kuzzle with development tools enabled
-docker-compose -f docker-compose/dev.yml up
+docker-compose up
 ```
 
-You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebSocket and Socket.io APIs
+You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebSocket and MQTT APIs
 
 Everytime a modification is detected in the source files, the server is automatically restarted and a new debug URL is provided.
 
 ### Kuzzle over SSL
 
+[See our complete guide](https://docs.kuzzle.io/core/2/guides/essentials/ssl-support/)
+
 The development stack include a endpoint to access Kuzzle API through SSL on port `7443`.  
 
-The certificates are privately signed, using provided [CA certificate](docker-compose/nginx/kuzzleCA.crt).  
+The certificates are privately signed, using provided [CA certificate](docker/nginx/kuzzleCA.crt).  
 Domains accepted:
 - localhost
 - *.kuzzle.loc
 
 You'll need to import the CA certificate to your browser and possibly your system local authorities to make it verified.
 Once done, your browser should not complain when reaching https://localhost:7443.  
-The CA certificate is here: [docker-compose/nginx/kuzzleCA.crt](docker-compose/nginx/kuzzleCA.crt)
+The CA certificate is here: [docker/nginx/kuzzleCA.crt](docker/nginx/kuzzleCA.crt)
 
 Using node.js, for instance when using the sdk, you'll need to pass the CA cert using the `NODE_EXTRA_CA_CERTS` environment variable:
 
@@ -67,24 +69,30 @@ NODE_EXTRA_CA_CERTS=/path/to/certificate/kuzzleCA.crt wscat -c wss://localhost:7
 
 ## Create a plugin
 
-See our [plugins documentation](https://docs.kuzzle.io/plugins/1)
+See our [plugins documentation](https://docs.kuzzle.io/core/2/plugins/)
 
 ## Running Tests
    
-### With a running Kuzzle inside a docker container
+### Using docker, with Kuzzle running in Docker
 
-Because functional tests need a running Kuzzle environment, if you're using docker to run Kuzzle, then they can only be started from inside a Kuzzle container.
+```bash
+$ docker-compose up -d
 
-    $ docker exec -ti <kuzzle docker image> npm test
+# wait for Kuzzle stack to be up
 
-### Using docker, without any Kuzzle instance running
+$ docker-compose exec kuzzle npm run test:lint
+$ docker-compose exec kuzzle npm run test:unit
+$ docker-compose exec kuzzle npm run test:functional
+```
 
-A docker-compose script is available to run tests on a non-running Kuzzle. This script will pop a Kuzzle stack using Docker, automatically run tests, and exit once done.
+### Locally, with Kuzzle running in Docker
 
-    $ docker-compose -f docker-compose/test.yml up
+```bash
+$ docker-compose up -d
 
-### With a manually installed and running Kuzzle
+# wait for Kuzzle stack to be up
 
-From the Kuzzle source directory, launch the following command line:
-
-    $ npm test
+$ npm run test:lint
+$ npm run test:unit
+$ npm run test:functional
+```

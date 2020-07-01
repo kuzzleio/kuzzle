@@ -8,6 +8,11 @@ title: createApiKey
 
 Creates a new API key for a user. 
 
+::: info
+API keys are just authentication tokens.
+You can use your API key the same way you use your authentication token by adding it to the `Authorization` header (with the value `Bearer <YourApiKeyHere>`)
+:::
+
 ---
 
 ## Query Syntax
@@ -77,6 +82,7 @@ Returns an object containing the newly created API key:
   - `expiresAt`: expiration date in UNIX micro-timestamp format (`-1` if the token never expires)
   - `ttl`: original ttl
   - `description`: description
+  - `fingerprint`: SHA256 hash of the authentication token
   - `token`: authentication token associated with this API key
 
 ::: warning
@@ -97,6 +103,7 @@ The authentication token `token` will never be returned by Kuzzle again. If you 
       "expiresAt": -1,
       "ttl": -1,
       "description": "Sigfox callback authentication token",
+      "fingerprint": "4ee98cb8c614e99213e7695f822e42325d86c93cfaf39cb40e860939e784c8e6",
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJNeSIsImlhdCI6MTU3MzE4NTkzNSwiZXhwIjoxNTczMTg1OTM0fQ.08qAnSD03V0N1OcviGVUAZEjjv4DxULTgoQQwojn1PA"
     }
   }

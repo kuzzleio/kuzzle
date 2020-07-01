@@ -1,11 +1,10 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  Token = require('../../../lib/core/models/security/token'),
-  TokenManager = require('../../../lib/core/auth/tokenManager');
+const should = require('should');
+const sinon = require('sinon');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const Token = require('../../../lib/model/security/token');
+const TokenManager = require('../../../lib/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
   let
@@ -32,6 +31,11 @@ describe('Test: token manager core component', () => {
   });
 
   describe('#link', () => {
+    it('should do nothing if the token is not set', () => {
+      tokenManager.link(null, 'foo', 'bar');
+      should(tokenManager.tokens.array).be.an.Array().and.be.empty();
+    });
+
     it('should not add a link to an anonymous token', () => {
       tokenManager.link(kuzzle.repositories.token.anonymous(), 'foo', 'bar');
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
@@ -177,7 +181,7 @@ describe('Test: token manager core component', () => {
     let clock;
 
     beforeEach(() => {
-      clock = sinon.useFakeTimers();
+      clock = sinon.useFakeTimers(new Date());
     });
 
     afterEach(() => {
@@ -268,6 +272,30 @@ describe('Test: token manager core component', () => {
 
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]._id).be.eql('bar');
+      should(runTimerStub).be.calledOnce();
+    });
+
+    it('should not expire API key', async () => {
+      const runTimerStub = sinon.stub(tokenManager, 'runTimer');
+
+      kuzzle.hotelClerk.customers.clear();
+
+      tokenManager.link(
+        new Token({_id: 'api-key-1', expiresAt: -1}),
+        'connectionId1',
+        'roomId1');
+
+      runTimerStub.resetHistory();
+
+      await tokenManager.checkTokensValidity();
+
+      clock.runAll();
+
+      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
+      should(kuzzle.notifier.notifyServer).not.be.called();
+
+      should(tokenManager.tokens.array.length).be.eql(1);
+      should(tokenManager.tokens.array[0]._id).be.eql('api-key-1');
       should(runTimerStub).be.calledOnce();
     });
 
