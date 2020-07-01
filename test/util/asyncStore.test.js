@@ -32,7 +32,7 @@ describe('AsyncStore', () => {
 
         should(asyncStore._asyncLocalStorage.run).be.calledOnce();
 
-        const args = asyncStore._asyncLocalStorage.run.getCall(0).args
+        const args = asyncStore._asyncLocalStorage.run.getCall(0).args;
         should(args[0]).be.instanceOf(Map);
         should(args[1]).be.eql('callback');
       });
@@ -92,7 +92,7 @@ describe('AsyncStore', () => {
       asyncStore.run(callback);
       should(callback).be.calledOnce();
 
-      should(asyncStore.exists()).be.false()
+      should(asyncStore.exists()).be.false();
     });
   }
 });
