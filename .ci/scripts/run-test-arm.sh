@@ -3,6 +3,7 @@
 set -ex
 
 if [ -z "$NODE_VERSION" ];
+then
   echo "Missing NODE_VERSION, use default NODE_12_VERSION"
   NODE_VERSION=$NODE_12_VERSION
 fi
