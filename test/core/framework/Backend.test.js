@@ -337,7 +337,7 @@ describe('Backend', () => {
 
       should(() => {
         application.plugin.use(new DummyPlugin(), { name: 'DummyPlugin' });
-      }).throwError({ id: 'plugin.assert.invalid_application_name' });
+      }).throwError({ id: 'plugin.assert.invalid_plugin_name' });
 
       should(() => {
         application.plugin.use(new DummyPlugin());

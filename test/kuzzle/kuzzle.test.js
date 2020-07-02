@@ -4,11 +4,15 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
+
 const Kuzzle = rewire('../../lib/kuzzle/kuzzle');
 const KuzzleMock = require('../mocks/kuzzle.mock');
+const Plugin = require('../../lib/core/plugin/plugin');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
+  let application;
+  let consoleSave;
 
   const mockedProperties = [
     'entryPoint',
@@ -45,11 +49,18 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
+    Kuzzle.__set__('console', { log: () => {} });
+
     kuzzle = _mockKuzzle(Kuzzle);
+    application = new Plugin(
+      kuzzle,
+      { init: sinon.stub() },
+      { name: 'application', application: true });
   });
 
   afterEach(() => {
     mockrequire.stopAll();
+    Kuzzle.__set__('console', console);
   });
 
   it('should build a kuzzle server object with emit and listen event', done => {
@@ -67,31 +78,25 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.started).be.false();
 
-      await kuzzle.start(params);
+      await kuzzle.start(application, params);
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
         kuzzle.cacheEngine.init,
-        kuzzle.log.info, // cacheEngine init
         kuzzle.storageEngine.init,
         kuzzle.internalIndex.init,
-        kuzzle.log.info, // storageEngine init
         kuzzle.validation.init,
         kuzzle.repositories.init,
         kuzzle.funnel.init,
-        kuzzle.storageEngine.public.loadMappings,
-        kuzzle.storageEngine.public.loadFixtures,
-        kuzzle.entryPoint.init,
-        kuzzle.pluginsManager.init,
-        kuzzle.pluginsManager.run,
-        kuzzle.log.info, // core components loaded
-        kuzzle.log.info, // load default rights
-        kuzzle.repositories.loadSecurities,
-        kuzzle.log.info, // default rights loaded
-        kuzzle.router.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
+        kuzzle.storageEngine.public.loadMappings,
+        kuzzle.storageEngine.public.loadFixtures,
+        kuzzle.repositories.loadSecurities,
         kuzzle.repositories.role.sanityCheck,
+        kuzzle.pluginsManager.init,
+        kuzzle.entryPoint.init,
+        kuzzle.router.init,
         kuzzle.pipe, // kuzzle:start
         kuzzle.pipe, // kuzzle:state:live
         kuzzle.entryPoint.startListening,
@@ -168,19 +173,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
           should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
         });
-    });
-  });
-
-  describe('#adminExists', () => {
-    it('should resolves to true if an admin exists', async () => {
-      kuzzle.internalIndex.count.resolves(42);
-
-      const exists = await kuzzle.adminExists();
-
-      should(exists).be.true();
-      should(kuzzle.internalIndex.count).be.calledWithMatch(
-        'users',
-        { query: { terms: { profileIds: ['admin'] } } });
     });
   });
 });

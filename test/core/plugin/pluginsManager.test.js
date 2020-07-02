@@ -406,8 +406,8 @@ describe('Plugin', () => {
     });
   });
 
-  describe.only('strategy management', () => {
-    let pluginManagerStrategy;
+  describe('strategy management', () => {
+    let pluginsManagerStrategy;
 
     beforeEach(() => {
       plugin._instance = {
@@ -453,7 +453,7 @@ describe('Plugin', () => {
         }
       };
 
-      pluginManagerStrategy = {
+      pluginsManagerStrategy = {
         strategy: plugin.instance.strategies.someStrategy,
         methods: {
           exists: plugin.instance.existsFunction,
@@ -468,7 +468,7 @@ describe('Plugin', () => {
         owner: plugin.name
       };
 
-      pluginsManager.strategies.someStrategy = pluginManagerStrategy;
+      pluginsManager.strategies.someStrategy = pluginsManagerStrategy;
       pluginsManager._plugins.set(plugin.name, plugin);
       sinon.resetHistory();
     });
