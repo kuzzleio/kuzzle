@@ -90,7 +90,7 @@ RUN tar czf /app.tar.gz /var/app
 ################################################################################
 # Production image
 ################################################################################
-FROM scratch as kuzzle
+FROM scratch
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with scratch image"
@@ -107,6 +107,10 @@ COPY --from=minifier /app.tar.gz /app.tar.gz
 COPY --from=minifier /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
 
 RUN ln -s /lib/ld-musl-x86_64.so.1 /lib/libc.musl-x86_64.so.1
+
+WORKDIR /var/app
+
+ENV PATH=$PATH:/var/app/bin
 
 ENTRYPOINT ["/bin/entrypoint"]
 

@@ -60,7 +60,10 @@ ENV NODE_ENV=production
 COPY --from=builder /app /app
 
 RUN  set -x \
-  && apt-get update && apt-get install -y xz-utils binutils \
+  && apt-get update && apt-get install -y
+    xz-utils \
+    binutils \
+    curl \
   && strip /usr/local/bin/node \
   && apt-get remove -y binutils xz-utils \
   && apt-get clean autoclean \
@@ -70,7 +73,7 @@ RUN  set -x \
 ################################################################################
 # Production image
 ################################################################################
-FROM bitnami/minideb:stretch as kuzzle
+FROM bitnami/minideb:stretch
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
@@ -84,9 +87,13 @@ ENV NODE_ENV=production
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 
-ENTRYPOINT ["/bin/entrypoint"]
-
 RUN ln -s /var/app /app
+
+WORKDIR /var/app
+
+ENV PATH=$PATH:/var/app/bin
+
+ENTRYPOINT ["/bin/entrypoint"]
 
 CMD ["kuzzle", "start"]
 
