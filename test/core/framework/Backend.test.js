@@ -32,7 +32,7 @@ describe('Backend', () => {
 
   describe('#context', () => {
     it('should returns the application context', () => {
-      application.started = true
+      application.started = true;
       application._context = 'context';
 
       should(application.context).be.eql('context');
@@ -40,14 +40,15 @@ describe('Backend', () => {
 
     it('should throws an error if the application is not started', () => {
       should(() => {
-        application.context
+        /* eslint-disable-next-line no-unused-expressions */
+        application.context;
       }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
     });
   });
 
   describe('#sdk', () => {
     it('should returns the embedded sdk from context', () => {
-      application.started = true
+      application.started = true;
       application._context = {
         accessors: { sdk: 'sdk' }
       };
@@ -57,7 +58,8 @@ describe('Backend', () => {
 
     it('should throws an error if the application is not started', () => {
       should(() => {
-        application.sdk
+        /* eslint-disable-next-line no-unused-expressions */
+        application.sdk;
       }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
     });
   });
@@ -250,7 +252,7 @@ describe('Backend', () => {
       should(application._controllers.greeting).not.be.undefined();
       should(application._controllers.greeting.actions.sayBye.http)
         .be.eql([
-          { verb: 'POST', url: `/greeting/say-bye` }
+          { verb: 'POST', url: '/greeting/say-bye' }
         ]);
     });
   });
@@ -297,7 +299,8 @@ describe('Backend', () => {
 
     it('should throws an error if the application is not started', () => {
       should(() => {
-        application.vault.secrets
+        /* eslint-disable-next-line no-unused-expressions */
+        application.vault.secrets;
       }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
     });
   });

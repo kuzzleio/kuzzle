@@ -1,11 +1,8 @@
 'use strict';
 
-const _ = require('lodash');
 const should = require('should');
 const mockrequire = require('mock-require');
-const rewire = require('rewire');
 const sinon = require('sinon');
-const path = require('path');
 const {
   errors: {
     KuzzleError,
@@ -25,20 +22,20 @@ describe('Plugin', () => {
   let PluginsManager;
   let pluginsManager;
 
-  const createPlugin = (name, application = false) => {
+  const createPlugin = (name, app = false) => {
     const instance = {
       init: sinon.stub().resolves(),
       config: {}
     };
 
-    return new Plugin(kuzzle, instance, { name, application });
+    return new Plugin(kuzzle, instance, { name, application: app });
   };
   const createApplication = name => createPlugin(name, true);
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    plugin = createPlugin('test-plugin')
+    plugin = createPlugin('test-plugin');
     application = createApplication('lambda-core');
 
     mockrequire.reRequire('../../../lib/core/plugin/pluginContext');
@@ -86,7 +83,7 @@ describe('Plugin', () => {
 
   describe('#getPluginsDescription', () => {
     it('should returns plugins descriptions', () => {
-      const otherPlugin = createPlugin('other-plugin')
+      const otherPlugin = createPlugin('other-plugin');
       otherPlugin.info = sinon.stub().returns('other-plugin');
       plugin.info = sinon.stub().returns('plugin');
       pluginsManager._plugins.set(plugin.name, plugin);
@@ -113,7 +110,7 @@ describe('Plugin', () => {
     });
 
     it('should loads plugins with existing plugins', async () => {
-      const otherPlugin = createPlugin('other-plugin')
+      const otherPlugin = createPlugin('other-plugin');
       pluginsManager.loadPlugins.returns(new Map([[otherPlugin.name, otherPlugin]]));
       pluginsManager._plugins.set(plugin.name, plugin);
 
@@ -472,7 +469,7 @@ describe('Plugin', () => {
       };
 
       pluginsManager.strategies.someStrategy = pluginManagerStrategy;
-      pluginsManager._plugins.set(plugin.name, plugin)
+      pluginsManager._plugins.set(plugin.name, plugin);
       sinon.resetHistory();
     });
 
@@ -667,6 +664,7 @@ describe('Plugin', () => {
           for (const value of [[], {}, 123, false]) {
             clone.instance.strategies.someStrategy.methods[methodName] = value;
 
+            /* eslint-disable-next-line no-loop-func */
             should(() => pluginsManager._initStrategies(clone))
               .throw(PluginImplementationError, {
                 id: 'plugin.strategy.invalid_method_type'

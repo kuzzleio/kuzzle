@@ -1,10 +1,8 @@
 'use strict';
 
-const _ = require('lodash');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
-const sinon = require('sinon');
 const path = require('path');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -64,7 +62,7 @@ describe('Plugin', () => {
       should(plugin._kuzzle).be.eql(kuzzle);
       should(plugin.name).be.eql('lambda-core');
       should(plugin._application).be.true();
-    })
+    });
   });
 
   describe('#init', () => {
@@ -104,7 +102,7 @@ describe('Plugin', () => {
         api: 'api',
         hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler'},
         pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler'},
-      }
+      };
       plugin = new Plugin(kuzzle, instance, options);
       plugin.version = 'version';
 
@@ -129,7 +127,7 @@ describe('Plugin', () => {
         strategies: { ldap: 'LDAP' },
         hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler'},
         pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler'},
-      }
+      };
       plugin = new Plugin(kuzzle, instance, options);
       plugin.version = 'version';
       plugin.manifest = 'manifest';
@@ -154,11 +152,11 @@ describe('Plugin', () => {
     it('should instantiates plugin class from disk and wrap it in Kuzzle Plugin', () => {
       fsMock.existsSync.returns(true);
 
-      const plugin = Plugin.loadFromDirectory(kuzzle, 'testPlugin');
+      const loadedPlugin = Plugin.loadFromDirectory(kuzzle, 'testPlugin');
 
-      should(plugin.manifest.raw).be.eql(manifest);
+      should(loadedPlugin.manifest.raw).be.eql(manifest);
       should(fsMock.existsSync).be.calledWith('testPlugin/package.json');
-      should(plugin.version).be.eql(packageJson.version);
+      should(loadedPlugin.version).be.eql(packageJson.version);
     });
 
     it('should throws an error if the path is not a directory', () => {
@@ -172,19 +170,19 @@ describe('Plugin', () => {
     it('should properly load customs errors from manifest.json', () => {
       const errors = require('../../../lib/kerror/codes');
       manifest.errors = {
-          'some_error': {
-            'description': 'foo',
-            'code': 1,
-            'message': 'Some error occured %s',
-            'class': 'BadRequestError'
-          },
-          'some_other_error': {
-            'description': 'bar',
-            'code': 2,
-            'message': 'Some other error occured %s',
-            'class': 'ForbiddenError'
-          }
-        };
+        'some_error': {
+          'description': 'foo',
+          'code': 1,
+          'message': 'Some error occured %s',
+          'class': 'BadRequestError'
+        },
+        'some_other_error': {
+          'description': 'bar',
+          'code': 2,
+          'message': 'Some other error occured %s',
+          'class': 'ForbiddenError'
+        }
+      };
 
       plugin = Plugin.loadFromDirectory(kuzzle, 'testPlugin');
 
