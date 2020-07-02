@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -ex
+
 working_dir=$(pwd)
 plugins_dir="plugins/enabled"
 protocols_dir="protocols/enabled"

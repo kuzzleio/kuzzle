@@ -28,8 +28,14 @@ const fs = require('fs');
 const yargs = require('yargs');
 
 const { Backend } = require('../index');
+const waitForEs = require('./wait-elasticsearch');
+
 
 function loadJson (path) {
+  if (! path) {
+    return {};
+  }
+
   return JSON.parse(fs.readFileSync(path, 'utf8'));
 }
 
@@ -38,9 +44,9 @@ async function startKuzzle (options = {}) {
 
   if (options.enablePlugins) {
     const additionalPlugins = options.enablePlugins
-    .trim()
-    .split(',')
-    .map(x => x.trim().replace(/(^")|("$)/g, ''));
+      .trim()
+      .split(',')
+      .map(x => x.trim().replace(/(^")|("$)/g, ''));
 
     for (const additionalPlugin of additionalPlugins) {
       const PluginClass = require(`../plugins/available/${additionalPlugin}`);
@@ -62,6 +68,8 @@ async function startKuzzle (options = {}) {
 
   app.version = '1.0.0';
 
+  await waitForEs();
+
   await app.start();
 
   const { total: admins } = await app.sdk.security.searchUsers({
@@ -70,7 +78,7 @@ async function startKuzzle (options = {}) {
 
   if (admins.length === 0) {
     console.log('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');
-    console.log('[ℹ] You can use the CLI or the admin console to create the first administrator user.');
+    console.log('[ℹ]  You can use the CLI or the admin console to create the first administrator user.');
     console.log('    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/');
   }
 }

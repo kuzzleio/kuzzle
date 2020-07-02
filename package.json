@@ -23,7 +23,7 @@
     "doc-dev": "kuzdoc repo:dev -d /core/2/ -v 2",
     "doc-build": "kuzdoc repo:build -d /core/2/ -v 2",
     "doc-upload": "kuzdoc repo:deploy -d /core/2/ -v 2",
-    "doc-cloudfront": "kuzdoc repo:cloudfront -d /core/2/",
+    "doc-cloudfront": "kuzdoc repo:cloudfront -d /core/2/*",
     "doc-deploy": "npm run doc-upload && npm run doc-cloudfront",
     "doc-netlify": "npm run doc-prepare && kuzdoc repo:build -d / -v 2",
     "doc-error-codes": "node doc/build-error-codes"

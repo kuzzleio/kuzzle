@@ -68,11 +68,11 @@ ENV NODE_ENV=production
 
 COPY --from=dependencies /var/app/ /var/app/
 
-RUN  ln -s /var/app/docker-compose/scripts/run.sh /usr/local/bin/kuzzle \
+RUN  ln -s /var/app/docker/scripts/run.sh /usr/local/bin/kuzzle \
   && chmod a+x /usr/local/bin/kuzzle \
-  && chmod a+x /var/app/docker-compose/scripts/docker-entrypoint.sh
+  && chmod a+x /var/app/docker/scripts/docker-entrypoint.sh
 
-ENTRYPOINT ["/var/app/docker-compose/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/var/app/docker/scripts/docker-entrypoint.sh"]
 
 CMD ["kuzzle", "start"]
 
