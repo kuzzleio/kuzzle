@@ -7,20 +7,20 @@ const AbstractManifest = require('../../../../lib/core/shared/abstractManifest')
 const { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
 
 class AbstractManifestStub extends AbstractManifest {
-  load() {}
+  loadFromDisk() {}
 }
 
 describe('Plugins manifest class', () => {
-  const
-    pluginPath = 'foo/bar';
-  let
-    kuzzle,
-    Manifest;
+  const pluginPath = 'foo/bar';
+  let kuzzle;
+  let Manifest;
+  let manifest;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     mockrequire('../../../../lib/core/shared/abstractManifest', AbstractManifestStub);
     Manifest = mockrequire.reRequire('../../../../lib/core/plugin/pluginManifest');
+    manifest = new Manifest(kuzzle, pluginPath);
   });
 
   afterEach(() => {
@@ -28,11 +28,9 @@ describe('Plugins manifest class', () => {
   });
 
   it('should throw if the provided name contains invalid characters', () => {
-    const
-      manifest = new Manifest(kuzzle, pluginPath);
-
     for (const name of ['foo$Bar', 'foobâr', 'foobar!']) {
       manifest.name = name;
+
       should(() => manifest.load())
         .throw(PluginImplementationError, {
           id: 'plugin.manifest.invalid_name'
@@ -41,9 +39,6 @@ describe('Plugins manifest class', () => {
   });
 
   it('should throw if an invalid privileged value is provided', () => {
-    const
-      manifest = new Manifest(kuzzle, pluginPath);
-
     manifest.raw = {privileged: 123};
     should(() => manifest.load()).throw(PluginImplementationError, {
       id: 'plugin.manifest.invalid_privileged'
@@ -51,8 +46,6 @@ describe('Plugins manifest class', () => {
   });
 
   it('should properly set its privileged value according to the manifest.json one', () => {
-    const manifest = new Manifest(kuzzle, pluginPath);
-
     should(manifest.privileged).be.false();
     manifest.raw = {privileged: true};
     manifest.load();
