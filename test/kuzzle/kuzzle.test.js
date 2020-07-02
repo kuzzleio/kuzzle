@@ -12,7 +12,6 @@ const Plugin = require('../../lib/core/plugin/plugin');
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
   let application;
-  let consoleSave;
 
   const mockedProperties = [
     'entryPoint',
