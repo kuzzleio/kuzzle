@@ -21,7 +21,7 @@ class WrongPlugin {
   constructor () {}
 }
 
-describe('core/plugin/plugin', () => {
+describe('Plugin', () => {
   let kuzzle;
   let Plugin;
   let plugin;

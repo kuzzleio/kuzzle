@@ -15,7 +15,7 @@ const {
 } = require('kuzzle-common-objects');
 const { BaseController } = require(`${root}/lib/api/controller/base`);
 
-describe('PluginsManager.run', () => {
+describe('PluginsManager', () => {
   let plugin;
   let pluginMock;
   let kuzzle;
@@ -34,7 +34,7 @@ describe('PluginsManager.run', () => {
 
     plugin = {
       path: '',
-      object: {
+      instance: {
         init: () => {},
       },
       config: {},
@@ -44,8 +44,7 @@ describe('PluginsManager.run', () => {
       }
     };
 
-    pluginMock = sinon.mock(plugin.object);
-    pluginsManager.plugins = {testPlugin: plugin};
+    pluginMock = sinon.mock(plugin.instance);
   });
 
   describe('#hook', () => {
