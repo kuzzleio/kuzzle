@@ -28,6 +28,8 @@ const { Client: ESClient } = require('@elastic/elasticsearch');
 
 const Kuzzle = require('../lib/kuzzle');
 
+const sleep = seconds => new Promise(resolve => setTimeout(() => resolve(), seconds * 1000))
+
 async function waitForEs (maxSeconds = 120) {
   const kuzzle = new Kuzzle();
   const esConfig = kuzzle.config.services.storageEngine;
@@ -47,14 +49,15 @@ async function waitForEs (maxSeconds = 120) {
 
       return;
     }
-    catch (error) {}
+    catch (e) {}
 
     process.stdout.write(`[${spinner.charAt(i)}] Still trying to connect to Elasticsearch (${seconds}s)...`);
     process.stdout.write('\r');
 
     i = i === 3 ? 0 : i + 1;
     seconds++;
-    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await sleep(1);
   }
 
   throw new Error(`Timeout after ${seconds}s: cannot connect to Elasticsearch at "${esConfig.node}"`);
