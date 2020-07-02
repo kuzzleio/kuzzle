@@ -23,6 +23,12 @@ As with other API events, generic ones are triggered before and after documents 
 
 All generic events share the same payload signature, and pipes plugged to them must resolve to the updated (or not) array of documents received in their parameters.
 
+::: info
+
+"before" actions are only triggered on queries asking for specific documents. API routes such as `search`, `deleteByQuery` or `updateByQuery` cannot trigger "before" events, they only trigger "after" ones.
+
+:::
+
 ---
 
 ## generic:document:afterDelete
@@ -153,6 +159,7 @@ class PipePlugin {
 
 - [document:update](/core/2/api/controllers/document/update)
 - [document:mUpdate](/core/2/api/controllers/document/m-update)
+- [document:updateByQuery](/core/2/api/controllers/document/update-by-query)
 
 ---
 
