@@ -61,14 +61,9 @@ COPY --from=builder /app /app
 
 RUN  set -x \
   && apt-get update && apt-get install -y
-    xz-utils \
-    binutils \
     curl \
-  && strip /usr/local/bin/node \
-  && apt-get remove -y binutils xz-utils \
   && apt-get clean autoclean \
-  && apt-get autoremove --yes \
-  && rm -rf /var/lib/{apt,dpkg,cache,log}/
+  && apt-get autoremove --yes
 
 ################################################################################
 # Production image
