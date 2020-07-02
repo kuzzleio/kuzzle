@@ -20,11 +20,12 @@ Example:
       "code": 1,
       "message": "An error occurred: %s",
       "class": "BadRequestError"
-	},
+	  },
     "some_other_error": {
       "code": 2,
       "message": "An other error occurred: %s",
       "class": "ForbiddenError"
+    }
 	}
 }
 ```
