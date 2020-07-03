@@ -3,9 +3,6 @@
 const should = require('should');
 const sinon = require('sinon');
 const ms = require('ms');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
-const ES = require('../../../lib/service/storage/elasticsearch');
 const {
   errors: {
     BadRequestError,
@@ -13,6 +10,11 @@ const {
     SizeLimitError,
   }
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
+
+const ES = require('../../../lib/service/storage/elasticsearch');
 
 describe('Test: ElasticSearch service', () => {
   let kuzzle;
@@ -2182,15 +2184,12 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if client fails', () => {
+    it('should return a rejected promise if client fails', async () => {
       elasticsearch._client.cat.indices.rejects(esClientError);
 
-      const promise = elasticsearch.listCollections(index);
+      await should(elasticsearch.listCollections(index)).be.rejected();
 
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
-        });
+      should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
   });
 
@@ -2236,15 +2235,12 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if client fails', () => {
+    it('should return a rejected promise if client fails', async () => {
       elasticsearch._client.cat.indices.rejects(esClientError);
 
-      const promise = elasticsearch.listIndexes();
+      await should(elasticsearch.listIndexes()).be.rejected();
 
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
-        });
+      should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
   });
 
@@ -2252,59 +2248,50 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       elasticsearch._client.cat.aliases.resolves({
         body: [
-          { alias: 'alias-mehry', index: '&nepali.mehry' },
-          { alias: 'alias-liia', index: '&nepali.liia' },
-          { alias: 'alias-taxi', index: '&nyc-open-data.taxi' }
+          { index: 'mehry', alias: '&nepali.mehry' },
+          { index: 'liia', alias: '&nepali.liia' },
+          { index: 'taxi', alias: '&nyc-open-data.taxi' }
         ]
       });
     });
 
-    it('should allow listing all available aliases', () => {
-      const promise = elasticsearch.listAliases();
+    it('should allow listing all available aliases', async () => {
+      const result = await elasticsearch.listAliases();
 
-      return promise
-        .then(result => {
-          should(elasticsearch._client.cat.aliases).be.calledWithMatch({
-            format: 'json'
-          });
+      should(elasticsearch._client.cat.aliases).be.calledWithMatch({
+        format: 'json'
+      });
 
-          should(result).match([
-            { name: 'alias-mehry', index: 'nepali', collection: 'mehry' },
-            { name: 'alias-liia', index: 'nepali', collection: 'liia' },
-            { name: 'alias-taxi', index: 'nyc-open-data', collection: 'taxi' },
-          ]);
-        });
+      should(result).match([
+        { name: 'mehry', index: 'nepali', collection: 'mehry' },
+        { name: 'liia', index: 'nepali', collection: 'liia' },
+        { name: 'taxi', index: 'nyc-open-data', collection: 'taxi' },
+      ]);
     });
 
-    it('should not list unauthorized aliases', () => {
+    it('should not list unauthorized aliases', async () => {
       elasticsearch._client.cat.aliases.resolves({
         body: [
-          { alias: 'alias-mehry', index: '%nepali.mehry' },
-          { alias: 'alias-liia', index: '%nepali.liia' },
-          { alias: 'alias-taxi', index: '%nyc-open-data.taxi' },
-          { alias: 'alias-lfiduras', index: '&vietnam.lfiduras' }
+          { index: 'alias-mehry', alias: '%nepali.mehry' },
+          { index: 'alias-liia', alias: '%nepali.liia' },
+          { index: 'alias-taxi', alias: '%nyc-open-data.taxi' },
+          { index: 'alias-lfiduras', alias: '&vietnam.lfiduras' }
         ]
       });
 
-      const promise = elasticsearch.listAliases();
+      const result = await elasticsearch.listAliases();
 
-      return promise
-        .then(result => {
-          should(result).match([
-            { name: 'alias-lfiduras', index: 'vietnam', collection: 'lfiduras' },
-          ]);
-        });
+      should(result).match([
+        { name: 'alias-lfiduras', index: 'vietnam', collection: 'lfiduras' },
+      ]);
     });
 
-    it('should return a rejected promise if client fails', () => {
+    it('should return a rejected promise if client fails', async () => {
       elasticsearch._client.cat.aliases.rejects(esClientError);
 
-      const promise = elasticsearch.listAliases();
+      await should(elasticsearch.listAliases()).be.rejected();
 
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
-        });
+      should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
   });
 
@@ -2312,59 +2299,51 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       elasticsearch._client.cat.aliases.resolves({
         body: [
-          { alias: 'alias-mehry', index: '&nepali.mehry' },
-          { alias: 'alias-liia', index: '&nepali.liia' },
-          { alias: 'alias-taxi', index: '&nyc-open-data.taxi' }
+          { index: 'mehry', alias: '&nepali.mehry' },
+          { index: 'liia', alias: '&nepali.liia' },
+          { index: 'taxi', alias: '&nyc-open-data.taxi' }
         ]
       });
     });
 
-    it('should allow listing all available aliases', () => {
-      const promise = elasticsearch.listAliases();
+    it('should allow listing all available aliases', async () => {
+      const result = await elasticsearch.listAliases();
 
-      return promise
-        .then(result => {
-          should(elasticsearch._client.cat.aliases).be.calledWithMatch({
-            format: 'json'
-          });
+      should(elasticsearch._client.cat.aliases).be.calledWithMatch({
+        format: 'json'
+      });
 
-          should(result).match([
-            { name: 'alias-mehry', index: 'nepali', collection: 'mehry' },
-            { name: 'alias-liia', index: 'nepali', collection: 'liia' },
-            { name: 'alias-taxi', index: 'nyc-open-data', collection: 'taxi' },
-          ]);
-        });
+      should(result).match([
+        { name: 'mehry', index: 'nepali', collection: 'mehry' },
+        { name: 'liia', index: 'nepali', collection: 'liia' },
+        { name: 'taxi', index: 'nyc-open-data', collection: 'taxi' },
+      ]);
     });
 
-    it('should not list unauthorized aliases', () => {
+    it('should not list unauthorized aliases', async () => {
       elasticsearch._client.cat.aliases.resolves({
         body: [
-          { alias: 'alias-mehry', index: '%nepali.mehry' },
-          { alias: 'alias-liia', index: '%nepali.liia' },
-          { alias: 'alias-taxi', index: '%nyc-open-data.taxi' },
-          { alias: 'alias-lfiduras', index: '&vietnam.lfiduras' }
+          { index: 'mehry', alias: '%nepali.mehry' },
+          { index: 'liia', alias: '%nepali.liia' },
+          { index: 'taxi', alias: '%nyc-open-data.taxi' },
+          { index: 'lfiduras', alias: '&vietnam.lfiduras' }
         ]
       });
 
-      const promise = elasticsearch.listAliases();
+      const result = await elasticsearch.listAliases();
 
-      return promise
-        .then(result => {
-          should(result).match([
-            { name: 'alias-lfiduras', index: 'vietnam', collection: 'lfiduras' },
-          ]);
-        });
+      should(result).match([
+        { name: 'lfiduras', index: 'vietnam', collection: 'lfiduras' },
+      ]);
     });
 
-    it('should return a rejected promise if client fails', () => {
+    it('should return a rejected promise if client fails', async () => {
       elasticsearch._client.cat.aliases.rejects(esClientError);
 
       const promise = elasticsearch.listAliases();
 
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
-        });
+      await should(promise).be.rejected();
+      should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
   });
 
@@ -2415,15 +2394,11 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if client fails', () => {
+    it('should return a rejected promise if client fails', async () => {
       elasticsearch._client.cat.indices.rejects(esClientError);
 
-      const promise = elasticsearch.listIndexes();
-
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
-        });
+      await should(elasticsearch.listIndexes()).be.rejected();
+      should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
   });
 
