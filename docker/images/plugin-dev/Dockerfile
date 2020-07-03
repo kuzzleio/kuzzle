@@ -52,7 +52,7 @@ RUN  set -x \
 ################################################################################
 # Plugin development image
 ################################################################################
-FROM debian:stretch-slim as plugin-dev
+FROM debian:stretch-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
@@ -70,6 +70,10 @@ RUN  set -x \
   && rm /bin/sh \
   && ln -s /bin/bash /bin/sh \
   && ln -s /var/app /app
+
+WORKDIR /var/app
+
+ENV PATH=$PATH:/var/app/bin
 
 ENTRYPOINT ["/bin/entrypoint"]
 

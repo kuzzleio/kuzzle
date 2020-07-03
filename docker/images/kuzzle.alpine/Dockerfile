@@ -53,7 +53,7 @@ RUN  set -x \
 ################################################################################
 # Production image
 ################################################################################
-FROM node:12.18.1-alpine3.11 as kuzzle
+FROM node:12.18.1-alpine3.11
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with alpine"
@@ -64,6 +64,10 @@ ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/run-prod.sh /bin/kuzzle
 
 COPY --from=builder /app /var/app
+
+WORKDIR /var/app
+
+ENV PATH=$PATH:/var/app/bin
 
 ENTRYPOINT ["/bin/entrypoint"]
 
