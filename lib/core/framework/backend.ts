@@ -213,7 +213,7 @@ class ControllerManager {
   _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
-        definition.http = [{ verb: 'POST', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
+        definition.http = [{ verb: 'GET', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
       }
     }
   }
@@ -474,6 +474,17 @@ export class Backend {
     }
 
     return this.context.accessors.sdk;
+  }
+
+  /**
+   * Logger
+   */
+  get log () {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'log');
+    }
+
+    return this.context.log;
   }
 
   /**

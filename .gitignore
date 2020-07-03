@@ -66,6 +66,7 @@ bin/commands/node6/*
 
 #doc framework
 doc/framework
+frontmatter-errors.json
 
 #vscode
 .vscode

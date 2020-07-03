@@ -17,11 +17,11 @@ Une API est disponible pour permettre aux développeurs d'étendre les fonctionn
 
 ## Controllers
 
-Les contrôleurs permettent de déclarer de nouvelles méthodes d'API.  
+Les contrôleurs permettent de déclarer de nouvelles actions d'API.  
 
-Ces méthodes sont simplement des fonctions recevant une requête en paramètre et retournant un résultat.
+Ces actions sont simplement des fonctions recevant une requête en paramètre et retournant un résultat.
 
-Les méthodes d'API ainsi déclarées sont disponibles via les protocols actuellement activés (Http, WebSocket, MQTT, etc.)
+Les actions d'API ainsi déclarées sont disponibles via les protocols actuellement activés (Http, WebSocket, MQTT, etc.)
 
 [Consulter la documentation des Controlers]
 
@@ -29,7 +29,7 @@ Les méthodes d'API ainsi déclarées sont disponibles via les protocols actuell
 
 Dans Kuzzle, chaque action génère un évènement auquel il est possible de réagir.
 
-Ces actions peuvent être la réception d'une requête, le début de l'exécution d'une méthode d'API, une erreur, etc.  
+Ces actions peuvent être la réception d'une requête, le début de l'exécution d'une action d'API, une erreur, etc.  
 
 [Consulter la liste des évènements]
 

@@ -3,7 +3,7 @@ code: false
 type: page
 title: Key Concepts
 description: Key concepts for application development
-order: 0
+order: 2
 ---
 
 _this page is a work in progress_
@@ -20,4 +20,4 @@ _this page is a work in progress_
 
 ### Response
 
-## Interact with Kuzzle API from your application
+## Use the Embedded SDK to interact with Kuzzle API
