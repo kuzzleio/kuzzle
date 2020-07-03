@@ -72,13 +72,16 @@ const { Backend } = require('kuzzle');
 
 const app = new Backend('yoga-app');
 
-app.start()
-  .then(() => {
-    app.log.info(`Application "${app.name}" successfully started!`);
-  })
-  .catch(error => {
-    app.log.error(`Error starting "${app.name}": ${error})`);
-  });
+const run = async () => {
+  try {
+    console.log(`Application "${app.name}" successfully started!`);
+  }
+  catch (error) {
+    console.log(`Error starting "${app.name}": ${error})`);
+  }
+};
+
+run();
 ```
 
 We can now run our application:
@@ -91,7 +94,7 @@ $ node index.js
 [✔] Successfully loaded 2 plugins: kuzzle-plugin-auth-passport-local, kuzzle-plugin-logger
 [✔] Core components loaded
 [✔] Kuzzle 2.3.0 is ready
-{"level":"info","message":"2020-07-03T11:45:47+02:00 [LOG:INFO] [\"[yoga-app]: Application \\\"yoga-app\\\" successfully started!\"]"}
+[yoga-app]: Application "yoga-app" successfully started!
 ```
 
 You can check it by opening the following url in your browser: [http://localhost:7512](http://localhost:7512)
@@ -200,3 +203,44 @@ Going further:
  - [Events list]
  - [Request Input]
  - [Request class]
+
+## Final application
+
+```js
+const { Backend } = require('../index');
+
+const app = new Backend('lambda-core');
+
+app.controller.register('greetings', {
+  actions: {
+    // declare an action called "hello"
+    helloWorld: {
+      handler: async request => {
+        return `Hello, ${request.input.args.name}`;
+      }
+    }
+  }
+});
+
+app.pipe.register('server:afterNow', async request => {
+  // Returns date in UTC format instead of timestamp
+  request.result.now = (new Date()).toUTCString();
+
+  return request;
+});
+
+app.hook.register('server:beforeNow', request => {
+  app.log.info('Someone is accessing the "server:now" action');
+});
+
+const run = async () => {
+  try {
+    console.log(`Application "${app.name}" successfully started!`);
+  }
+  catch (error) {
+    console.log(`Error starting "${app.name}": ${error})`);
+  }
+};
+
+run();
+```
