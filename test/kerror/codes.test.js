@@ -1,11 +1,11 @@
 'use strict';
 
 const should = require('should');
+const { errors: kuzzleObjectErrors } = require('kuzzle-common-objects');
 
-const { checkDomains, loadPluginsErrors } = require('../../lib/kerror/codes');
-const pluginDomain = require('../../lib/kerror/codes/plugin.json');
+const { checkDomains } = require('../../lib/kerror/codes');
 
-describe.only('kerror: error codes loader', () => {
+describe('kerror: error codes loader', () => {
   let domains;
 
   beforeEach(() => {
@@ -120,9 +120,8 @@ describe.only('kerror: error codes loader', () => {
     });
 
     it('should default plugin subdomains code to 0 if not set', () => {
-      domains.bar.code = pluginDomain.code;
       delete domains.bar.subdomains.sub1.code;
-      should(() => checkDomains(domains)).not.throw();
+      should(() => checkDomains(domains, {plugin: true})).not.throw();
       should(domains.bar.subdomains.sub1.code).eql(0);
     });
 
@@ -144,15 +143,13 @@ describe.only('kerror: error codes loader', () => {
     it('should not throw if a plugin subdomain contains multiple defaulted codes', () => {
       delete domains.foo.subdomains.sub1;
       delete domains.foo.subdomains.sub2;
-      domains.foo.code = pluginDomain.code;
-      should(() => checkDomains(domains)).not.throw();
+      should(() => checkDomains(domains, {plugin: true})).not.throw();
     });
 
     it('should throw if a plugin subdomain contain duplicates, non-default, codes', () => {
       domains.foo.subdomains.sub1.code = 42;
       domains.foo.subdomains.sub2.code = 42;
-      domains.foo.code = pluginDomain.code;
-      should(() => checkDomains(domains)).throw(/code .* is not unique/i);
+      should(() => checkDomains(domains, {plugin: true})).throw(/code .* is not unique/i);
     });
 
     it('should throw if a subdomain code exceeds the allowed range', () => {
@@ -223,12 +220,12 @@ describe.only('kerror: error codes loader', () => {
       should(() => checkDomains(domains)).throw(/missing required 'message' field/i);
     });
 
-    it('should throw if an error message is not a string', () => {
-      for (const message of [null, undefined, [], {}, 3.14, false, true]) {
+    it('should throw if an error message is not a non-empty string', () => {
+      for (const message of [null, undefined, [], {}, 3.14, false, true, '']) {
         domains.foo.subdomains.sub2.errors.err1.message = message;
 
         /* eslint-disable-next-line no-loop-func -- false positive */
-        should(() => checkDomains(domains)).throw(/field 'message' must be a string/i);
+        should(() => checkDomains(domains)).throw(/field 'message' must be a non-empty string/i);
       }
     });
 
@@ -244,6 +241,47 @@ describe.only('kerror: error codes loader', () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(/field 'class' must be a string/i);
+      }
+    });
+
+    it('should throw if an error class name does not match a known KuzzleError class', () => {
+      domains.foo.subdomains.sub2.errors.err1.class = 'foo';
+
+      should(() => checkDomains(domains)).throw(/field 'class' must target a known KuzzleError object/i);
+
+      for (const name of Object.keys(kuzzleObjectErrors)) {
+        domains.foo.subdomains.sub2.errors.err1.class = name;
+
+        /* eslint-disable-next-line no-loop-func -- false positive */
+        should(() => checkDomains(domains)).not.throw();
+      }
+    });
+
+    it('should throw if a native error does not contain a description', () => {
+      delete domains.foo.subdomains.sub2.errors.err1.description;
+
+      should(() => checkDomains(domains)).throw(/field 'description' must be a non-empty string/i);
+
+      for (const description of [null, undefined, [], {}, 3.14, false, true, '']) {
+        domains.foo.subdomains.sub2.errors.err1.description = description;
+
+        /* eslint-disable-next-line no-loop-func -- false positive */
+        should(() => checkDomains(domains)).throw(/field 'description' must be a non-empty string/i);
+      }
+    });
+
+    it('should not throw if a plugin error does not contain a description', () => {
+      delete domains.foo.subdomains.sub2.errors.err1.description;
+
+      should(() => checkDomains(domains, {plugin: true})).not.throw();
+    });
+
+    it('should throw if a deprecated field is present and not a non-empty string', () => {
+      for (const deprecated of [[], {}, 3.14, false, true, '']) {
+        domains.foo.subdomains.sub2.errors.err1.deprecated = deprecated;
+
+        /* eslint-disable-next-line no-loop-func -- false positive */
+        should(() => checkDomains(domains)).throw(/field 'deprecated' must be a non-empty string/i);
       }
     });
   });
