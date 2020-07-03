@@ -334,7 +334,7 @@ describe('#KuzzleEventEmitter', () => {
 
     it('should reject if no answerer listens to an event', async () => {
       await should(emitter.ask('foo:bar')).rejectedWith(KuzzleInternalError, {
-        id: 'core.fatal.orphan_ask_event'
+        id: 'core.fatal.assertion_failed'
       });
     });
 
