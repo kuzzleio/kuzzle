@@ -8,26 +8,26 @@ order: 1
 
 # Getting Started
 
-Dans ce tutoriel, nous allons voir comment se lancer dans le développement de notre première application avec Kuzzle.
+In this tutorial, we will see how to start developing our first application with Kuzzle.
 
-Sommaire:
- - [Mise en place de l'environnement]
- - [Lancer son application Kuzzle]
- - [Étendre l'API avec une nouvelle action]
- - [Modifier une action existante avec un pipe]
- - [Exécuter un traitement en parallèle avec un hook]
+Summary:
+ - [Setting up the environment]
+ - [Running Kuzzle application]
+ - [Extend the API with a new action]
+ - [Modifying an existing action with a pipe]
+ - [Running parallel processing with a hook]
 
 Before proceeding, please make sure your system has the following requirement:
- - Node.js version 12 ou supérieur
+ - Node.js 12.x or higher
  - Docker
 
-## Mise en place de l'environnement
+## Setting up the environment
 
-Nous allons voir comment mettre en place un environnement de développement adapté à Kuzzle
+We are going to set up a development environment adapted to Kuzzle
 
-Tout d'abord, il va falloir avoir à disposition une instance Redis et Elasticsearch.
+First of all, we will need to have a Redis and Elasticsearch instances available.
 
-Nous allons utiliser Docker et lancer les conteneurs suivants:
+We will use Docker and launch the following containers:
 
 ```bash
 $ docker run -d -p 6379:6379 redis:5
@@ -35,10 +35,10 @@ $ docker run -d -p 9200:9200 kuzzleio/elasticsearch:7
 ```
 
 ::: info
-Elasticsearch peut mettre quelques secondes à se lancer.
+Elasticsearch may take a few seconds to start.
 :::
 
-Ensuite nous allons créer un répertoire pour notre application, initialiser un module NPM et installer Kuzzle:
+Then we will create a directory for our application, initialize an NPM module and install Kuzzle:
 
 ```bash
 $ mkdir kuzzle
@@ -47,13 +47,13 @@ $ npm init
 $ npm install kuzzle
 ```
 
-Tout est maintenant en place pour que nous puissions commencer à développer.
+Everything is now ready for us to start developing.
 
-## Lancer son application Kuzzle
+## Running Kuzzle application
 
-Nous allons maintenant créer un fichier `index.js` qui contiendra le code de notre application.
+We will now create an `index.js` file that will contain the code for our application.
 
-La première étape est d'importer la classe [Backend] depuis le paquet [kuzzle] et d'initialiser notre application.
+The first step is to import the [Backend] class from the [kuzzle] package and initialize our application.
 
 ```js
 const { Backend } = require('kuzzle');
@@ -61,11 +61,11 @@ const { Backend } = require('kuzzle');
 const app = new Backend('lambda-core');
 ```
 
-L'argument passé au constructeur est le nom de votre application.
+The argument passed to the constructor is the name of your application.
 
-Nous allons ensuite appeller la méthode [Backend.start] pour démarrer notre application.
+We will then call the [Backend.start] method to start our application.
 
-Pour l'instant nous n'avons ajouté aucune fonctionnalité mais les fonctionnalités de base de Kuzzle seront tout de même disponibles.
+For the moment we haven't added any functionality but the basic features of Kuzzle will still be available.
 
 ```js
 const { Backend } = require('kuzzle');
@@ -81,35 +81,36 @@ app.start()
   });
 ```
 
-Nous pouvons à présent lancer notre application:
+We can now run our application:
 
 ```bash
 $ node index.js
 Application "lambda-core" successfully started!
 ```
 
-Vous pouvez le vérifier en ouvrant l'url suivante dans votre navigateur: http://localhost:7512
+You can check it by opening the following url in your browser: http://localhost:7512
 
 ::: warning
-A chaque fois que nous allons rajouter des fonctionnalités il sera nécessaire de relancer l'application.
+Each time we will add new features it will be necessary to restart the application.
 :::
 
-Pour aller plus loin:
+Going further:
  - [Application Boilerplate]
 
-## Étendre l'API avec une nouvelle action
+## Extend the API with a new action
 
-Les nouvelles actions d'API se déclarent au moyen d'une structure nommée contrôleur.
+New API actions are declared by using a structure called a controller.
 
-Chaque contrôleur doit être enregistré via la méthode [Backend.controller.register].  
+Each controller must be registered using the [Backend.controller.register] method.  
 
-Le premier paramètre est le nom du contrôleur et le deuxième est la description de ses actions.
+The first parameter is the name of the controller and the second is the description of its actions.
 
-Chaque action doit définir un `handler`, c'est à dire une fonction qui sera executée à chaque fois que cette action est appellée via l'API.
+Each action must define a "handler", i.e. a function that will be executed each time the action is called via the API.
 
 ::: info
-Le handler d'une action doit retourner une promesse. Le résultat de cette promesse sera envoyé dans la réponse à l'intérieur du champ `result`.
+The handler of an action must return a promise. The result of this promise will be sent in the response within the `result' field.
 :::
+
 
 ```js
 // register a controller named "greetings"
@@ -125,29 +126,30 @@ app.controller.register('greetings', {
 });
 ```
 
-Par défault, Kuzzle génère une route Http de la forme suivante pour vos actions: `GET /_/<controller>/<action>`.
-Les noms de contrôleurs et d'actions seront convertis en kebab-case.
+By default, Kuzzle generates an Http route for your actions in the following form: `GET /_/<controller>/<action>`.
+Controller and action names will be converted to kebab-case.
 
-Pour tester notre action nous pouvons donc visiter l'url suivante: http://localhost:7512/_/greetings/hello-world
+To test our action we can visit the following url: http://localhost:7512/_/greetings/hello-world
 
-Pour aller plus loin:
+Going further:
  - [Request Input]
  - [Rights management]
 
-## Modifier une action existante avec un pipe
+## Modifying an existing action with a pipe
 
-Nous allons maintenant utiliser un pipe branché sur un évènement de Kuzzle pour modifier une action existante.
+We will now use a pipe connected to a Kuzzle event to modify the behavior of an existing action.
 
-Un pipe est une fonction qui sera executée à chaque fois que l'évènement correspondant est déclenché.
+A pipe is a function that will be executed each time the corresponding event is triggered.
 
-Les pipes doivent être enregistrés avec la méthode [Backend.pipe.register].  
-Le premier paramètre est le [nom de l'évènement] et le deuxième est la fonction qui sera exécutée.
+Pipes must be registered with the [Backend.pipe.register] method.  
+The first parameter is the event name and the second is the function that will be executed.
 
-Nous allons enregistrer un pipe sur l'évènement [server:afterNow] qui est déclenché après l'action [server:now].
+We will register a pipe on the [server:afterNow] event that is triggered after the [server:now] action.
 
 ::: info
-La fonction enregistrée doit retourner une promise résolvant la requête passé en paramètre pour que celle-ci soit ensuite passée aux éventuels pipes suivant ou Kuzzle.
+The registered function must return a promise resolving the request passed in parameter so that it is then passed to the next pipes or to Kuzzle.
 :::
+
 
 ```js
 app.pipe.register('server:afterNow', async request => {
@@ -158,6 +160,7 @@ app.pipe.register('server:afterNow', async request => {
 });
 ```
 
-Appellons maintenant l'action [server:now] en ouvrant l'URL suivante dans notre navigateur: http://localhost:7512/_now
+Let's now call the action [server:now] by opening the following URL in our browser: http://localhost:7512/_now
 
-## Exécuter un traitement en parallèle avec un hook
+## Running parallel processing with a hook
+

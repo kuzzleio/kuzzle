@@ -8,65 +8,66 @@ order: 0
 
 # Introduction
 
-Kuzzle propose de nombreuses fonctionnalités prêtes à l'emploi.  
-Cependant la plupart du temps vous aurez besoin de développer vos propres fonctionnalités adaptées à votre métier.
+Kuzzle offers many ready-to-use features.  
+However most of the time you will need to develop your own features adapted to your business logic.
 
-Une API est disponible pour permettre aux développeurs d'étendre les fonctionnalités de Kuzzle en créant une application.  
+An API is available to allow developers to extend the functionality of Kuzzle by creating an application.  
 
-[Voir les Key Concepts]
+[See Key Concepts]
 
 ## Controllers
 
-Les contrôleurs permettent de déclarer de nouvelles actions d'API.  
+Controllers are used to declare new API actions.  
 
-Ces actions sont simplement des fonctions recevant une requête en paramètre et retournant un résultat.
+These actions are simply functions receiving a [Request object] and returning a result.
 
-Les actions d'API ainsi déclarées sont disponibles via les protocols actuellement activés (Http, WebSocket, MQTT, etc.)
+The API actions thus declared are available via the currently activated protocols (Http, WebSocket, MQTT, etc.).
 
-[Consulter la documentation des Controlers]
+[Controllers documentation].
 
 ## Internal Events
 
-Dans Kuzzle, chaque action génère un évènement auquel il est possible de réagir.
+WIth Kuzzle, almost every interactions generates an event to which it is possible to react.
 
-Ces actions peuvent être la réception d'une requête, le début de l'exécution d'une action d'API, une erreur, etc.  
+These actions can be the reception of a request, the beginning of the execution of an API action, an error, etc.  
 
-[Consulter la liste des évènements]
+[Complete list of Kuzzle events]
 
-Les Pipes et les Hooks sont les deux manières d'intéragir avec ces évènements.
+Pipes and Hooks are the two ways to interact with these events.
 
 ### Pipes
 
-Les pipes sur les évènements permettent de modifier le flux d'exécution d'une requête.
+Event pipes allow to modify the execution flow of a request.
 
-Concrètement les pipes sont simplement des fonctions recevant en paramètre une requête ou un autre type de payload et devant le retourner afin que Kuzzle poursuive le cycle d'exécution.
+Pipes are simply functions receiving a request or another type of payload as a parameter and having to return it so that Kuzzle continues the execution cycle.
 
-Si un pipe lèvent une exception alors le cycle d'exécution sera interrompu et la requête sera retournée avec l'erreur correspondante.
+If a pipe raises an exception then the execution cycle will be interrupted and Kuzzle will respond to the original request with the corresponding error.
 
-L'enrichissement de données avant stockage ou une gestion plus fine des droits utilisateur sont de bons exemples d'utilisation de pipes.
+Data enrichment before storage or a finer management of user rights are good examples of using pipes.
 
-[Consulter la documentation des pipes]
+[Pipe documentation]
 
 ### Hooks
 
-Les hooks sur les évènements permettent de réagir à l'exécution d'une requête.
+Event hooks allow you to react to the execution of a request.
 
-Tout comme les pipes, les hooks sont des fonctions recevant en paramètre une requête ou un autre type de payload.
+Like pipes, hooks are functions that receive a [Request object] or another type of payload as a parameter.
 
-Leur exécution se fait en parallèle du cycle d'exécution de la requête. Les hooks ne peuvent donc pas intervenir sur le cycle d'exécution.
+Their execution is done in parallel with the execution cycle of the request. Hooks cannot therefore intervene on the execution cycle.
 
-Les hooks peuvent être utilisés pour l'exécution de tâches pouvant ralentir le temps de réponse de la requête sans qu'elles soient nécessaires à son exécution.
+Hooks can be used for the execution of tasks that can slow down the response time of the request without being necessary for its execution.
 
-L'envoi d'emails ou de notifications vers un service externes sont de bons exemples d'utilisation de hooks.
+Sending emails or notifications to an external service are good examples of hooks usage.
 
-[Consulter la documentation des hooks]
+[Hooks documentation]
 
 ## Plugins
 
-Les plugins sont des modules Node.js apportant de nouvelles fonctionnalités à votre application.
+Plugins are Node.js modules bringing new features to your application.
 
-Ils peuvent être distribué via NPM mais ils sont aussi installable depuis le filesystem.
+They can be distributed via NPM but they can also be installed from the filesystem.
 
-Les plugins offrent sensiblement les mêmes possibilités d'extension des fonctionnalités de Kuzzle qu'une application sauf qu'ils sont généralement pensés pour être réutilisables entre plusieurs projets.
+Plugins offer about the same possibilities to extend the functionality of Kuzzle as an application except that they are generally designed to be reusable between several projects.
 
-[Consulter la documentation des plugins]
+[Plugins documentation]
+
