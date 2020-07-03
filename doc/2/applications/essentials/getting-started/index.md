@@ -133,11 +133,12 @@ To test our action we can visit the following url: http://localhost:7512/_/greet
 
 Going further:
  - [Request Input]
+ - [Request class]
  - [Rights management]
 
 ## Modifying an existing action with a pipe
 
-We will now use a pipe connected to a Kuzzle event to modify the behavior of an existing action.
+We will now use a pipe registered to a Kuzzle event to modify the behavior of an existing action.
 
 A pipe is a function that will be executed each time the corresponding event is triggered.
 
@@ -150,7 +151,6 @@ We will register a pipe on the [server:afterNow] event that is triggered after t
 The registered function must return a promise resolving the request passed in parameter so that it is then passed to the next pipes or to Kuzzle.
 :::
 
-
 ```js
 app.pipe.register('server:afterNow', async request => {
   // Returns date in UTC format instead of timestamp
@@ -162,5 +162,35 @@ app.pipe.register('server:afterNow', async request => {
 
 Let's now call the action [server:now] by opening the following URL in our browser: http://localhost:7512/_now
 
+Going further:
+ - [Pipes documentation]
+ - [Events list]
+ - [Request Input]
+ - [Request class]
+
 ## Running parallel processing with a hook
 
+We will use a hook registered on a Kuzzle event to perform parallel processing.
+
+A hook is a function that will be executed each time the corresponding event is triggered.
+
+Hooks must be registered with the [Backend.hook.register] method.  
+The first parameter is the event name and the second is the function that will be executed.
+
+We will register a hook on the [server:beforeNow] event that is triggered before the [server:now] action.
+
+```js
+app.hook.register('server:beforeNow', request => {
+  app.log.info('Someone is accessing the "server:now" action');
+});
+```
+
+Let's now call the action [server:now] by opening the following URL in our browser: http://localhost:7512/_now
+
+You should see the message in your application logs.
+
+Going further:
+ - [Hooks documentation]
+ - [Events list]
+ - [Request Input]
+ - [Request class]
