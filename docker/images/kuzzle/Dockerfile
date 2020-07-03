@@ -60,7 +60,7 @@ ENV NODE_ENV=production
 COPY --from=builder /app /app
 
 RUN  set -x \
-  && apt-get update && apt-get install -y
+  && apt-get update && apt-get install -y \
     curl \
   && apt-get clean autoclean \
   && apt-get autoremove --yes
