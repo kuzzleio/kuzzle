@@ -91,4 +91,3 @@ ENV PATH=$PATH:/var/app/bin
 ENTRYPOINT ["/bin/entrypoint"]
 
 CMD ["kuzzle", "start"]
-
