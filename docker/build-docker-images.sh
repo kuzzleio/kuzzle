@@ -50,11 +50,9 @@ docker_build() {
   local kuzzle_tag=$2
   local dockerfile_path="./docker/images/$3/Dockerfile"
 
-  local build_stage=$image
+  print_something "Build image kuzzleio/$image:$kuzzle_tag"
 
-  print_something "Build image kuzzleio/$image:$kuzzle_tag with stage $build_stage of Dockerfile"
-
-  run_or_echo "docker build -f $dockerfile_path --target $build_stage -t kuzzleio/$image:$kuzzle_tag ."
+  run_or_echo "docker build -f $dockerfile_path -t kuzzleio/$image:$kuzzle_tag ."
 }
 
 docker_tag() {
