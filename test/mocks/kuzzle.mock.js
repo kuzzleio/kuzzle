@@ -313,6 +313,8 @@ class KuzzleMock extends Kuzzle {
 
     this.adminExists = sinon.stub().resolves();
 
+    this.dump = sinon.stub().resolves();
+
     {
       const mockProto = Object.getPrototypeOf(this);
       const kuzzleProto = Object.getPrototypeOf(mockProto);
