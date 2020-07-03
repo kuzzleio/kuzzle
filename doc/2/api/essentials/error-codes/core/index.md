@@ -20,7 +20,8 @@ description: Error codes definitions
 | core.fatal.service_unavailable<br/><pre>0x00000002</pre>  | [ExternalServiceError](/core/2/api/essentials/error-handling#externalserviceerror) <pre>(500)</pre> | Service unavailable: %s. | An external service is unavailable |
 | core.fatal.service_timeout<br/><pre>0x00000003</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | [FATAL] Service "%s": initialization timeout | Service initialization timeout |
 | core.fatal.unreadable_log_dir<br/><pre>0x00000004</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Cannot read log directory '%s' : %s. | Cannot read the content of the log directory |
-| core.fatal.orphan_ask_event<br/><pre>0x00000005</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Cannot answer to event '%s': no answerer registered | Internal error: the requested 'ask' event doesn't have an answerer |
+| core.fatal.assertion_failed<br/><pre>0x00000005</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Runtime assertion failed: %s | A runtime assertion has failed. Please contact support. |
+| core.fatal.orphan_ask_event<br/><pre>0x00000006</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Cannot answer to event '%s': no answerer registered | Internal error: the requested 'ask' event doesn't have an answerer |
 
 ---
 

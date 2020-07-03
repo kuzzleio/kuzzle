@@ -28,9 +28,15 @@
           "message": "Cannot read log directory '%s' : %s.",
           "class": "InternalError"
         },
+        "assertion_failed": {
+          "description": "A runtime assertion has failed. Please contact support.",
+          "code": 5,
+          "message": "Runtime assertion failed: %s",
+          "class": "InternalError"
+        },
         "orphan_ask_event": {
           "description": "Internal error: the requested 'ask' event doesn't have an answerer",
-          "code": 5,
+          "code": 6,
           "message": "Cannot answer to event '%s': no answerer registered",
           "class": "InternalError"
         }
