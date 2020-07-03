@@ -58,7 +58,7 @@ The first step is to import the [Backend] class from the [kuzzle] package and in
 ```js
 const { Backend } = require('kuzzle');
 
-const app = new Backend('lambda-core');
+const app = new Backend('yoga-app');
 ```
 
 The argument passed to the constructor is the name of your application.
@@ -70,14 +70,14 @@ For the moment we haven't added any functionality but the basic features of Kuzz
 ```js
 const { Backend } = require('kuzzle');
 
-const app = new Backend('lambda-core');
+const app = new Backend('yoga-app');
 
 app.start()
   .then(() => {
-    app.context.log.info(`Application "${app.name}" successfully started!`);
+    app.log.info(`Application "${app.name}" successfully started!`);
   })
   .catch(error => {
-    app.context.log.error(`Error starting "${app.name}": ${error})`);
+    app.log.error(`Error starting "${app.name}": ${error})`);
   });
 ```
 
@@ -85,10 +85,16 @@ We can now run our application:
 
 ```bash
 $ node index.js
-Application "lambda-core" successfully started!
+[ℹ] Starting Kuzzle 2.3.0 ...
+[✔] Cache engine initialized
+[✔] Storage engine initialized
+[✔] Successfully loaded 2 plugins: kuzzle-plugin-auth-passport-local, kuzzle-plugin-logger
+[✔] Core components loaded
+[✔] Kuzzle 2.3.0 is ready
+{"level":"info","message":"2020-07-03T11:45:47+02:00 [LOG:INFO] [\"[yoga-app]: Application \\\"yoga-app\\\" successfully started!\"]"}
 ```
 
-You can check it by opening the following url in your browser: http://localhost:7512
+You can check it by opening the following url in your browser: [http://localhost:7512](http://localhost:7512)
 
 ::: warning
 Each time we will add new features it will be necessary to restart the application.
@@ -129,7 +135,7 @@ app.controller.register('greetings', {
 By default, Kuzzle generates an Http route for your actions in the following form: `GET /_/<controller>/<action>`.
 Controller and action names will be converted to kebab-case.
 
-To test our action we can visit the following url: http://localhost:7512/_/greetings/hello-world
+To test our action we can visit the following url: [http://localhost:7512/_/greetings/hello-world?name=Queen%20May](http://localhost:7512/_/greetings/hello-world?name=Queen%20May)
 
 Going further:
  - [Request Input]
@@ -160,7 +166,7 @@ app.pipe.register('server:afterNow', async request => {
 });
 ```
 
-Let's now call the action [server:now] by opening the following URL in our browser: http://localhost:7512/_now
+Let's now call the action [server:now] by opening the following URL in our browser: [http://localhost:7512/_now](http://localhost:7512/_now)
 
 Going further:
  - [Pipes documentation]
