@@ -1636,7 +1636,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#updateCollection', () => {
+  describe('#updateCollection', () => {
     let
       oldSettings,
       settings,
