@@ -3,9 +3,11 @@
 const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const BaseModel = require('../../../lib/model/storage/baseModel');
 const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+
+const BaseModel = require('../../../lib/model/storage/baseModel');
 
 describe('StorageEngine', () => {
   let StorageEngine;
@@ -85,7 +87,7 @@ describe('StorageEngine', () => {
       await storageEngine.init();
 
       should(storageEngine._indexes.get('barfoo').collections)
-        .have.keys('barlection', 'barlection-alias');
+        .have.keys('barlection');
     });
   });
 
