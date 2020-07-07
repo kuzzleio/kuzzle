@@ -31,9 +31,11 @@ describe('ApiKey', () => {
   });
 
   describe('ApiKey.create', () => {
+    const createTokenEvent = 'core:security:token:create';
     let saveStub;
     let user;
     let token;
+    let createTokenStub;
 
     beforeEach(() => {
       user = {
@@ -46,7 +48,10 @@ describe('ApiKey', () => {
         expiresAt: 42
       };
 
-      BaseModel.kuzzle.repositories.token.generateToken.resolves(token);
+      createTokenStub = BaseModel.kuzzle.ask
+        .withArgs(createTokenEvent, sinon.match.object, sinon.match.any)
+        .resolves(token);
+
       sinon.stub(BaseModel.kuzzle.constructor, 'hash').returns('hashed-jwt-token');
 
       saveStub = sinon.stub(ApiKey.prototype, 'save').resolves();
@@ -64,9 +69,9 @@ describe('ApiKey', () => {
         'Sigfox API key',
         { creatorId: 'aschen', refresh: 'wait_for' });
 
-      should(BaseModel.kuzzle.repositories.token.generateToken).be.calledWith(
+      should(createTokenStub).be.calledWith(
+        createTokenEvent,
         user,
-        'connectionId',
         { expiresIn: 'expiresIn', bypassMaxTTL: true });
 
       should(saveStub)
@@ -122,12 +127,14 @@ describe('ApiKey', () => {
     it('should delete the corresponding token', async () => {
       const token = { _id: 'token-id' };
       const apiKey = new ApiKey({ token: 'encrypted-token', userId: 'userId' });
-      kuzzle.repositories.token.loadForUser.resolves(token);
+      const getTokenStub = kuzzle.ask
+        .withArgs('core:security:token:get', 'userId', 'encrypted-token')
+        .resolves(token);
 
       await apiKey._afterDelete();
 
-      should(kuzzle.repositories.token.loadForUser).be.calledWith('userId', 'encrypted-token');
-      should(kuzzle.repositories.token.expire).be.calledWith(token);
+      should(getTokenStub).calledOnce();
+      should(kuzzle.ask).be.calledWith('core:security:token:delete', token);
     });
   });
 

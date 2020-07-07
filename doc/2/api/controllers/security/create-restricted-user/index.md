@@ -27,8 +27,8 @@ Body:
 
 ```js
 {
+  // user additional information (optional)
   "content": {
-    // user additional information (optional)
     "fullname": "John Doe"
   },
   "credentials": {
@@ -48,6 +48,7 @@ Body:
   "controller": "security",
   "action": "createRestrictedUser",
   "body": {
+    // optional
     "content": {
       "fullname": "John Doe"
     },
@@ -70,7 +71,7 @@ Body:
 
 ## Arguments
 
-### Optional:
+### Optional
 
 - `_id`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier). An error is returned if the provided identifier already exists. If not provided, a random kuid is automatically generated.
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created user is indexed (default: `"wait_for"`)
@@ -79,7 +80,7 @@ Body:
 
 ## Body properties
 
-- `content`: user additional information. Can be left empty.
+- `content`: optional user additional information.
 - `credentials`: describe how the new user can be authenticated. This object contains any number of properties, named after the target authentication strategy to use. Each one of these properties are objects containing the credentials information, corresponding to that authentication strategy. If left empty, the new user is created but cannot be authenticated.
 
 ---

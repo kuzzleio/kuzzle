@@ -2,13 +2,18 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const ServerController = require('../../../lib/api/controller/server');
 const {
   Request,
   errors: { ExternalServiceError }
 } = require('kuzzle-common-objects');
-const { BaseController, NativeController } = require('../../../lib/api/controller/base');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const ServerController = require('../../../lib/api/controller/server');
+const {
+  BaseController,
+  NativeController
+} = require('../../../lib/api/controller/base');
 
 describe('ServerController', () => {
   let serverController;
@@ -73,17 +78,21 @@ describe('ServerController', () => {
 
   describe('#adminExists', () => {
     it('should call search with right query', async () => {
-      kuzzle.repositories.user.search.resolves({ total: 0 });
+      kuzzle.ask
+        .withArgs('core:security:user:search', sinon.match.object)
+        .resolves({ total: 0 });
+
       const query = { term: { profileIds: 'admin' } };
 
       await serverController.adminExists();
 
-      should(kuzzle.repositories.user.search)
-        .be.calledWith({ query });
+      should(kuzzle.ask).be.calledWith('core:security:user:search', { query });
     });
 
     it('should return false if there is no result', async () => {
-      kuzzle.repositories.user.search.resolves({ total: 0 });
+      kuzzle.ask
+        .withArgs('core:security:user:search', sinon.match.object)
+        .resolves({ total: 0 });
 
       const response = await serverController.adminExists();
 
@@ -91,7 +100,9 @@ describe('ServerController', () => {
     });
 
     it('should return true if there is result', async () => {
-      kuzzle.repositories.user.search.resolves({ total: 42 });
+      kuzzle.ask
+        .withArgs('core:security:user:search', sinon.match.object)
+        .resolves({ total: 42 });
 
       const response = await serverController.adminExists();
 
@@ -311,7 +322,7 @@ describe('ServerController', () => {
 
   describe('#publicApi', () => {
     it('should build the api definition', () => {
-      const nativeController = new NativeController();
+      const nativeController = new NativeController(kuzzle);
       nativeController._addAction('publicMethod', function () {});
       nativeController._addAction('baz', function () {});
 
@@ -351,7 +362,7 @@ describe('ServerController', () => {
 
   describe('#_buildApiDefinition', () => {
     it('should return api definition for the provided controllers', () => {
-      const nativeController = new NativeController();
+      const nativeController = new NativeController(kuzzle);
       nativeController._addAction('publicMethod', function () {});
       nativeController._addAction('baz', function () {});
 

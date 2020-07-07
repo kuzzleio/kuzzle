@@ -191,9 +191,12 @@ describe('InternalIndexBootstrap', () => {
       await internalIndexBootstrap._loadApiKeys();
 
       should(batchExecuteStub).be.calledWith({ match_all: {} });
-      should(kuzzle.repositories.token.persistForUser)
-        .be.calledWith('encoded-token-1', 'user-id-1', 42)
-        .be.calledWith('encoded-token-2', 'user-id-2', -1);
+
+      const tokenAssignEvent = 'core:security:token:assign';
+
+      should(kuzzle.ask)
+        .be.calledWith(tokenAssignEvent, 'encoded-token-1', 'user-id-1', 42)
+        .be.calledWith(tokenAssignEvent, 'encoded-token-2', 'user-id-2', -1);
     });
   });
 });

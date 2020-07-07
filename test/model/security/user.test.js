@@ -2,28 +2,22 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const Bluebird = require('bluebird');
-const Kuzzle = require('../../mocks/kuzzle.mock');
-const Profile = require('../../../lib/model/security/profile');
-const User = require('../../../lib/model/security/user');
 const {
   errors: { InternalError },
   Request,
 } = require('kuzzle-common-objects');
 
-const
-  _kuzzle = Symbol.for('_kuzzle');
+const Kuzzle = require('../../mocks/kuzzle.mock');
+const Profile = require('../../../lib/model/security/profile');
+const User = require('../../../lib/model/security/user');
+
+const _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: model/security/user', () => {
-  let
-    kuzzle,
-    profile,
-    profile2,
-    user;
-
-  before(() => {
-    sinon.usingPromise(Bluebird);
-  });
+  let kuzzle;
+  let profile;
+  let profile2;
+  let user;
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
@@ -40,12 +34,9 @@ describe('Test: model/security/user', () => {
     user[_kuzzle] = kuzzle;
     user.profileIds = ['profile', 'profile2'];
 
-    kuzzle.repositories = {
-      profile: {
-        loadProfile: sinon.stub().resolves(profile),
-        loadProfiles: sinon.stub().resolves([profile, profile2])
-      }
-    };
+    kuzzle.ask
+      .withArgs('core:security:profile:mGet', sinon.match.array)
+      .resolves([profile, profile2]);
   });
 
   it('should retrieve the good rights list', () => {
