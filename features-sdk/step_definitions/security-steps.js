@@ -59,7 +59,7 @@ Then('I am able to find {int} roles by searching controller:', async function (c
 Then('I am able to mGet roles and get {int} roles with the following ids:', async function (count, dataTable) {
   const data = this.parseObject(dataTable);
   const roleIds = [];
-  for (const role of Object.entries(data.ids)) {
+  for (const role of Object.values(data.ids)) {
     roleIds.push(role);
   }
 

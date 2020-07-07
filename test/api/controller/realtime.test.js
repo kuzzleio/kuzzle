@@ -1,7 +1,6 @@
 'use strict';
 
 const should = require('should');
-const sinon = require('sinon');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const RealtimeController = require('../../../lib/api/controller/realtime');
 const {
@@ -11,11 +10,10 @@ const {
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('RealtimeController', () => {
-  let
-    kuzzle,
-    request,
-    realtimeController,
-    foo = {foo: 'bar'};
+  let kuzzle;
+  let request;
+  let realtimeController;
+  let foo = {foo: 'bar'};
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -26,8 +24,6 @@ describe('RealtimeController', () => {
       controller: 'realtime',
       body: {}
     }, {user: {_id: '42'}});
-
-    kuzzle.repositories.user.anonymous = sinon.stub();
   });
 
   describe('#constructor', () => {
@@ -182,15 +178,10 @@ describe('RealtimeController', () => {
   });
 
   describe('#list', () => {
-    it('should call the proper hotelClerk method',() => {
-      kuzzle.repositories.user.anonymous.returns({_id: '-1'});
-
-      return realtimeController.list(request)
-        .then(result => {
-          should(result).be.match(foo);
-          should(kuzzle.hotelClerk.listSubscriptions).be.calledOnce();
-          should(kuzzle.hotelClerk.listSubscriptions).be.calledWith(request);
-        });
+    it('should call the proper hotelClerk method', async () => {
+      await realtimeController.list(request);
+      should(kuzzle.hotelClerk.listSubscriptions).be.calledOnce();
+      should(kuzzle.hotelClerk.listSubscriptions).be.calledWith(request);
     });
   });
 

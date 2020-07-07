@@ -1,34 +1,37 @@
 'use strict';
 
+const sinon = require('sinon');
 const should = require('should');
 const { errors: { BadRequestError } } = require('kuzzle-common-objects');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Repositories = require('../../../lib/core/security');
 
-/*
- /!\ In these tests, the promise returned by shutdown
- do not mark the function as "finished".
- The promise is resolved before halting Kuzzle in case
- the shutdown is initiated using the CLI, to allow it
- to finish and exit while Kuzzle is shutting down.
- */
-describe('security/loadSecurities', () => {
-  const securities = require('../../mocks/securities.json');
-  let repositories;
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const securities = require('../../mocks/securities.json');
+
+const SecurityLoader = require('../../../lib/core/security/securityLoader');
+
+describe('security/securityLoader', () => {
+  let loader;
   let kuzzle;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+    kuzzle.ask.restore();
+    loader = new SecurityLoader(kuzzle);
+    return loader.init();
+  });
 
-    repositories = new Repositories(kuzzle);
+  it('should register a global "security:load" event', async () => {
+    sinon.stub(loader, 'load');
+
+    await kuzzle.ask('core:security:load', 'json', 'opts');
+
+    should(loader.load).calledWith('json', 'opts');
   });
 
   it('should create or replace roles', async () => {
     kuzzle.funnel.processRequest.resolves(true);
 
-    await repositories.loadSecurities(
-      { roles: securities.roles },
-      { force: true });
+    await loader.load({ roles: securities.roles }, { force: true });
 
     should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
@@ -41,7 +44,7 @@ describe('security/loadSecurities', () => {
   it('should create or replace profiles', async () => {
     kuzzle.funnel.processRequest.resolves(true);
 
-    await repositories.loadSecurities({ profiles: securities.profiles });
+    await loader.load({ profiles: securities.profiles });
 
     should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
@@ -57,7 +60,7 @@ describe('security/loadSecurities', () => {
       .onCall(0).resolves({ result: { hits: [{ _id: 'gfreeman' }] } })
       .onCall(1).resolves();
 
-    return should(repositories.loadSecurities({ users: securities.users }))
+    return should(loader.load({ users: securities.users }))
       .be.rejectedWith(BadRequestError, {
         id: 'security.user.prevent_overwrite'
       });
@@ -68,7 +71,7 @@ describe('security/loadSecurities', () => {
       .onCall(0).resolves({ result: { hits: [{ _id: 'gfreeman' }] } })
       .onCall(1).resolves();
 
-    await repositories.loadSecurities(
+    await loader.load(
       { users: securities.users },
       { onExistingUsers: 'skip' });
 
@@ -92,7 +95,7 @@ describe('security/loadSecurities', () => {
       .onCall(0).resolves({ result: { hits: [{ _id: 'gfreeman' }] } })
       .onCall(1).resolves();
 
-    await repositories.loadSecurities(
+    await loader.load(
       { users: securities.users },
       { onExistingUsers: 'overwrite' });
 
@@ -117,7 +120,7 @@ describe('security/loadSecurities', () => {
   });
 
   it('should reject if the securities object is null', () => {
-    return should(repositories.loadSecurities(null))
+    return should(loader.load(null))
       .rejectedWith(BadRequestError, {
         id: 'api.assert.invalid_argument',
         message: 'Invalid argument "null". Expected: object'
@@ -125,7 +128,7 @@ describe('security/loadSecurities', () => {
   });
 
   it('should reject if roles contains non-object properties', () => {
-    return should(repositories.loadSecurities({
+    return should(loader.load({
       roles: { foo: 123 },
       profiles: securities.profiles,
       users: securities.users
@@ -137,7 +140,7 @@ describe('security/loadSecurities', () => {
   });
 
   it('should reject if profiles contains non-object properties', () => {
-    return should(repositories.loadSecurities({
+    return should(loader.load({
       roles: securities.roles,
       profiles: { foo: 123 },
       users: securities.users
@@ -151,7 +154,7 @@ describe('security/loadSecurities', () => {
   it('should reject if users contains non-object properties', () => {
     kuzzle.funnel.processRequest.resolves({ result: { hits: [] } });
 
-    return should(repositories.loadSecurities({
+    return should(loader.load({
       roles: {},
       profiles: {},
       users: { foo: 123 },

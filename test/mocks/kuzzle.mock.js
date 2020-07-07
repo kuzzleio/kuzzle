@@ -32,12 +32,12 @@ class KuzzleMock extends Kuzzle {
       cb(null, ...args.slice(1));
     });
 
+    sinon.stub(this, 'ask').resolves();
+    sinon.stub(this, 'once');
     sinon.spy(this, 'emit');
     sinon.spy(this, 'registerPluginHook');
     sinon.spy(this, 'registerPluginPipe');
-    this.once = sinon.stub();
 
-    sinon.spy(this, 'ask');
     sinon.spy(this, 'onAsk');
     sinon.spy(this, 'on');
     // ============================
@@ -193,68 +193,6 @@ class KuzzleMock extends Kuzzle {
       unregisterStrategy: sinon.stub()
     };
 
-    this.repositories = {
-      init: sinon.stub().resolves(),
-      profile: {
-        fromDTO: sinon.stub().resolves(),
-        initialize: sinon.stub().resolves(),
-        load: sinon.stub().resolves(),
-        loadMultiFromDatabase: sinon.stub().resolves(),
-        loadProfiles: sinon.stub().resolves(),
-        searchProfiles: sinon.stub().resolves(),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
-        validateAndSaveProfile: sinon.stub(),
-        delete: sinon.stub(),
-        getProfileFromRequest: sinon.stub(),
-        truncate: sinon.stub().resolves()
-      },
-      role: {
-        delete: sinon.stub().resolves(),
-        fromDTO: sinon.stub().resolves(),
-        getRoleFromRequest: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-        load: sinon.stub().resolves(),
-        loadMultiFromDatabase: sinon.stub().resolves(),
-        loadRoles: sinon.stub().resolves(),
-        searchRole: sinon.stub().resolves(),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
-        validateAndSaveRole: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0])),
-        truncate: sinon.stub().resolves(),
-        sanityCheck: sinon.stub()
-      },
-      user: {
-        anonymous: sinon.stub().resolves({
-          _id: '-1',
-          name: 'Anonymous',
-          profileIds: ['anonymous']
-        }),
-        delete: sinon.stub().usingPromise(Bluebird).resolves(),
-        fromDTO: sinon.stub().resolves(),
-        load: sinon.stub().resolves(foo),
-        ObjectConstructor: sinon.stub().returns({}),
-        hydrate: sinon.stub().resolves(),
-        persist: sinon.stub().resolves({}),
-        loadMultiFromDatabase: sinon.stub().resolves(),
-        search: sinon.stub().resolves(),
-        scroll: sinon.stub().resolves(),
-        toDTO: sinon.stub(),
-        truncate: sinon.stub().resolves()
-      },
-      token: {
-        anonymous: sinon.stub().returns({_id: 'anonymous'}),
-        verifyToken: sinon.stub().resolves(),
-        generateToken: sinon.stub().resolves({}),
-        expire: sinon.stub().resolves(),
-        deleteByUserId: sinon.stub().resolves(),
-        truncate: sinon.stub().resolves(),
-        persistToCache: sinon.stub().resolves(),
-        persistForUser: sinon.stub().resolves(),
-        loadForUser: sinon.stub().resolves()
-      },
-      loadSecurities: sinon.stub().resolves(),
-    };
-
     this.rootPath = '/kuzzle';
 
     this.router = {
@@ -284,6 +222,7 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.tokenManager = {
+      init: sinon.stub().resolves(),
       expire: sinon.stub(),
       getConnectedUserToken: sinon.stub(),
       link: sinon.stub(),
@@ -313,6 +252,11 @@ class KuzzleMock extends Kuzzle {
     this.adminExists = sinon.stub().resolves();
 
     this.dump = sinon.stub().resolves();
+
+    this.asyncStore = {
+      run: sinon.stub().yields(),
+      set: sinon.stub()
+    };
 
     {
       const mockProto = Object.getPrototypeOf(this);
