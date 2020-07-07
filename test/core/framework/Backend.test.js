@@ -368,7 +368,7 @@ describe('Backend', () => {
   });
 
   it('should exposes ESClient', () => {
-    application._kuzzle.storageEngine.config.client.node = 'http://es:9200/';
+    application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
     should(application.ESClient).be.a.Function();
 
     const client = new application.ESClient();
