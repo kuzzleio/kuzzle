@@ -98,7 +98,10 @@ class KuzzleMock extends Kuzzle {
       listSubscriptions: sinon.stub().resolves(foo),
     };
 
-    this.dump = sinon.stub().resolves();
+    this.dumpGenerator = {
+      dump: sinon.stub().resolves()
+    };
+
     this.shutdown = sinon.stub();
 
     this.storageEngine = {
@@ -247,6 +250,8 @@ class KuzzleMock extends Kuzzle {
     };
 
     this.adminExists = sinon.stub().resolves();
+
+    this.dump = sinon.stub().resolves();
 
     this.asyncStore = {
       run: sinon.stub().yields(),
