@@ -322,7 +322,7 @@ class PluginManager {
 
 
 export class Backend {
-  private kuzzle: any;
+  private _kuzzle: any;
   private _context: any = null;
   private _name: string;
 
@@ -411,8 +411,12 @@ export class Backend {
 
     this._name = name;
 
-    Reflect.defineProperty(this, 'kuzzle', {
+    Reflect.defineProperty(this, '_kuzzle', {
       value: new Kuzzle()
+    });
+
+    Reflect.defineProperty(this, '_context', {
+      writable: true
     });
 
     this.pipe = new PipeManager(this);
@@ -440,7 +444,7 @@ export class Backend {
     }
 
     const application = new Plugin(
-      this.kuzzle,
+      this._kuzzle,
       this.instanceProxy,
       { name: this.name, application: true });
 
@@ -455,7 +459,7 @@ export class Backend {
       securities: this._support.securities,
     };
 
-    await this.kuzzle.start(application, options);
+    await this._kuzzle.start(application, options);
 
     this.started = true;
   }
@@ -468,12 +472,12 @@ export class Backend {
   /**
    * Internal SDK
    */
-  get sdk () {
+  get sdk (): any {
     if (! this.started) {
       throw runtimeError.get('unavailable_before_start', 'sdk');
     }
 
-    return this.context.accessors.sdk;
+    return this._context.accessors.sdk;
   }
 
   /**
@@ -484,18 +488,7 @@ export class Backend {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
 
-    return this.context.log;
-  }
-
-  /**
-   * Application context object
-   */
-  get context () {
-    if (! this.started) {
-      throw runtimeError.get('unavailable_before_start', 'context');
-    }
-
-    return this._context;
+    return this._context.log;
   }
 
   get instanceProxy () {
