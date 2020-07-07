@@ -23,11 +23,14 @@
 
 import * as fs from 'fs';
 import * as _ from 'lodash';
+import { Client } from '@elastic/elasticsearch';
 
 import * as Kuzzle from '../../kuzzle';
 import * as Plugin from '../plugin/plugin';
 import * as kerror from '../../kerror';
 import { kebabCase } from '../../util/inflector';
+import EmbeddedSDK from '../shared/sdk/embeddedSdk';
+import Elasticsearch from '../../service/storage/elasticsearch';
 
 import {
   JSONObject,
@@ -264,7 +267,7 @@ class VaultManager {
   }
 }
 
-/* PluginManager class ============================================================== */
+/* PluginManager class ====================================================== */
 
 interface UsePluginOptions {
   /**
@@ -318,13 +321,68 @@ class PluginManager {
   }
 }
 
+/* Logger class ============================================================= */
+
+class Logger {
+  private _application: any;
+
+  constructor (application: any) {
+    Reflect.defineProperty(this, '_application', {
+      value: application
+    });
+  }
+
+  /**
+   * Logs a debug message
+   */
+  debug (message: string): void {
+    this._log('debug', message);
+  }
+
+  /**
+   * Logs an info message
+   */
+  info (message: string): void {
+    this._log('info', message);
+  }
+
+  /**
+   * Logs a warn message
+   */
+  warn (message: string): void {
+    this._log('warn', message);
+  }
+
+  /**
+   * Logs an error message
+   */
+  error (message: string): void {
+    this._log('error', message);
+  }
+
+  /**
+   * Logs a verbose message
+   */
+  verbose (message: string): void {
+    this._log('verbose', message);
+  }
+
+  _log (level: string, message: string) {
+    if (! this._application.started) {
+      throw runtimeError.get('unavailable_before_start', 'log');
+    }
+
+    this._application._kuzzle.log[level](`[${this._application.name}]: ${message}`);
+  }
+}
+
 /* Backend class ======================================================== */
 
 
 export class Backend {
   private _kuzzle: any;
-  private _context: any = null;
   private _name: string;
+  private _sdk: EmbeddedSDK;
 
   protected started = false;
 
@@ -339,6 +397,17 @@ export class Backend {
    * Application version
    */
   public version: string;
+
+  /**
+   * Errors manager
+   * @todo add type
+   */
+  public kerror: any;
+
+  /**
+   * Elasticsearch client constructor
+   */
+  public ESClient: () => Client;
 
   /**
    * PipeManager definition manager
@@ -391,6 +460,17 @@ export class Backend {
   public plugin: PluginManager;
 
   /**
+   * Logger
+   *
+   * @method debug
+   * @method info
+   * @method warn
+   * @method error
+   * @method verbose
+   */
+  public logger: Logger;
+
+  /**
    * Support for old features available before Kuzzle as a framework
    * to avoid breaking existing deployments.
    *
@@ -415,7 +495,7 @@ export class Backend {
       value: new Kuzzle()
     });
 
-    Reflect.defineProperty(this, '_context', {
+    Reflect.defineProperty(this, '_sdk', {
       writable: true
     });
 
@@ -425,6 +505,12 @@ export class Backend {
     this.vault = new VaultManager(this);
     this.controller = new ControllerManager(this);
     this.plugin = new PluginManager(this);
+
+    this.kerror = kerror;
+
+    this.ESClient = function ESClient () {
+      return Elasticsearch.buildClient(this._kuzzle.storageEngine.config.client) as Client;
+    };
 
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
@@ -445,7 +531,7 @@ export class Backend {
 
     const application = new Plugin(
       this._kuzzle,
-      this.instanceProxy,
+      this._instanceProxy,
       { name: this.name, application: true });
 
     application.version = this.version;
@@ -461,44 +547,47 @@ export class Backend {
 
     await this._kuzzle.start(application, options);
 
+    this._sdk = new EmbeddedSDK(this._kuzzle);
+
     this.started = true;
+  }
+
+  /**
+   * Triggers an event
+   *
+   * @param {String} - Event name
+   * @param {any} - Event payload
+   *
+   * @returns {Promise<any>}
+   */
+  trigger (event: string, payload: any): Promise<any> {
+    return this._kuzzle.pipe(event, payload);
   }
 
   /**
    * Application Name
    */
-  get name () { return this._name; }
+  get name (): string { return this._name; }
 
   /**
    * Internal SDK
+   *
+   * @type {EmbeddedSDK}
    */
-  get sdk (): any {
+  get sdk (): EmbeddedSDK {
     if (! this.started) {
       throw runtimeError.get('unavailable_before_start', 'sdk');
     }
 
-    return this._context.accessors.sdk;
+    return this._sdk;
   }
 
-  /**
-   * Logger
-   */
-  get log () {
-    if (! this.started) {
-      throw runtimeError.get('unavailable_before_start', 'log');
-    }
-
-    return this._context.log;
-  }
-
-  get instanceProxy () {
+  get _instanceProxy () {
     return {
       pipes: this._pipes,
       hooks: this._hooks,
       api: this._controllers,
-      init: (_, context) => {
-        this._context = context;
-      }
+      init: () => {}
     };
   }
 

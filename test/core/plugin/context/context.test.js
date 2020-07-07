@@ -15,7 +15,7 @@ const {
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
-const EmbeddedSDK = require('../../../../lib/core/plugin/sdk/embeddedSdk');
+const EmbeddedSDK = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
   const someCollection = 'someCollection';

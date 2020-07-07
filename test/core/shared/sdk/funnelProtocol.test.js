@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 const User = require('../../../../lib/model/security/user');
-const FunnelProtocol = require('../../../../lib/core/plugin/sdk/funnelProtocol');
+const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
