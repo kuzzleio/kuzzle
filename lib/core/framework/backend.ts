@@ -27,10 +27,10 @@ import { Client } from '@elastic/elasticsearch';
 
 import * as Kuzzle from '../../kuzzle';
 import * as Plugin from '../plugin/plugin';
-import * as kerror from '../../kerror';
+import * as EmbeddedSDK from '../shared/sdk/embeddedSdk';
+import * as Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
-import EmbeddedSDK from '../shared/sdk/embeddedSdk';
-import Elasticsearch from '../../service/storage/elasticsearch';
+import * as kerror from '../../kerror';
 
 import {
   JSONObject,
@@ -128,7 +128,7 @@ class ConfigManager {
 
     Reflect.defineProperty(this, 'content', {
       enumerable: true,
-      value: this._application.kuzzle.config
+      value: this._application._kuzzle.config
     })
   }
 
@@ -143,7 +143,7 @@ class ConfigManager {
       throw runtimeError.get('already_started', 'config');
     }
 
-    _.set(this._application.kuzzle.config, path, value);
+    _.set(this._application._kuzzle.config, path, value);
   }
 
   /**
@@ -156,8 +156,8 @@ class ConfigManager {
       throw runtimeError.get('already_started', 'config');
     }
 
-    this._application.kuzzle.config = _.merge(
-      this._application.kuzzle.config,
+    this._application._kuzzle.config = _.merge(
+      this._application._kuzzle.config,
       config);
   }
 }
@@ -263,7 +263,7 @@ class VaultManager {
       throw runtimeError.get('unavailable_before_start', 'vault.secrets');
     }
 
-    return this._application.kuzzle.vault.secrets;
+    return this._application._kuzzle.vault.secrets;
   }
 }
 
@@ -468,7 +468,7 @@ export class Backend {
    * @method error
    * @method verbose
    */
-  public logger: Logger;
+  public log: Logger;
 
   /**
    * Support for old features available before Kuzzle as a framework
@@ -505,11 +505,13 @@ export class Backend {
     this.vault = new VaultManager(this);
     this.controller = new ControllerManager(this);
     this.plugin = new PluginManager(this);
+    this.log = new Logger(this);
 
     this.kerror = kerror;
 
+    let k = this._kuzzle;
     this.ESClient = function ESClient () {
-      return Elasticsearch.buildClient(this._kuzzle.storageEngine.config.client) as Client;
+      return Elasticsearch.buildClient(k.storageEngine.config.client) as Client;
     };
 
     try {

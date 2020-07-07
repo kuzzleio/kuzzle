@@ -3,8 +3,10 @@
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
+const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { Backend } = require('../../../lib/core/framework/backend.ts');
+const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Backend', () => {
   let application;
@@ -13,47 +15,28 @@ describe('Backend', () => {
     application = new Backend('black-mesa');
   });
 
-  describe('#instanceProxy', () => {
+  describe('#_instanceProxy', () => {
     it('should returns plugin definition and an init function', () => {
       application._pipes = 'pipes';
       application._hooks = 'hooks';
       application._controllers = 'controllers';
 
-      const instance = application.instanceProxy;
+      const instance = application._instanceProxy;
       instance.init(null, 'context');
 
       should(instance.pipes).be.eql('pipes');
       should(instance.hooks).be.eql('hooks');
       should(instance.api).be.eql('controllers');
-
-      should(application._context).be.eql('context');
-    });
-  });
-
-  describe('#context', () => {
-    it('should returns the application context', () => {
-      application.started = true;
-      application._context = 'context';
-
-      should(application.context).be.eql('context');
-    });
-
-    it('should throws an error if the application is not started', () => {
-      should(() => {
-        /* eslint-disable-next-line no-unused-expressions */
-        application.context;
-      }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
     });
   });
 
   describe('#sdk', () => {
-    it('should returns the embedded sdk from context', () => {
-      application.started = true;
-      application._context = {
-        accessors: { sdk: 'sdk' }
-      };
+    it('should returns the embedded sdk', async () => {
+      application._kuzzle.start = sinon.stub();
 
-      should(application.sdk).be.eql('sdk');
+      await application.start();
+
+      should(application.sdk).be.instanceOf(EmbeddedSDK);
     });
 
     it('should throws an error if the application is not started', () => {
@@ -66,7 +49,7 @@ describe('Backend', () => {
 
   describe('#start', () => {
     it('should calls kuzzle.start with an instantiated plugin and options', async () => {
-      application.kuzzle.start = sinon.stub();
+      application._kuzzle.start = sinon.stub();
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
@@ -79,14 +62,14 @@ describe('Backend', () => {
 
       await application.start();
 
-      should(application.kuzzle.start).be.calledOnce();
+      should(application._kuzzle.start).be.calledOnce();
 
-      const [plugin, options] = application.kuzzle.start.getCall(0).args;
+      const [plugin, options] = application._kuzzle.start.getCall(0).args;
 
       should(plugin.application).be.true();
       should(plugin.name).be.eql('black-mesa');
       should(plugin.version).be.eql('42.21.84');
-      should(plugin.instance).be.eql(application.instanceProxy);
+      should(plugin.instance).be.eql(application._instanceProxy);
 
       should(options.secretsFile).be.eql(application._secretsFile);
       should(options.vaultKey).be.eql(application._vaultKey);
@@ -292,7 +275,7 @@ describe('Backend', () => {
   describe('VaultManager.secrets', () => {
     it('should exposes Kuzzle vault secrets', () => {
       application.started = true;
-      _.set(application, 'kuzzle.vault.secrets', { beware: 'vortigaunt' });
+      _.set(application, '_kuzzle.vault.secrets', { beware: 'vortigaunt' });
 
       should(application.vault.secrets).be.eql({ beware: 'vortigaunt' });
     });
@@ -356,5 +339,57 @@ describe('Backend', () => {
         application.vault.file = 'xen.bmp';
       }).throwError({ id: 'plugin.runtime.already_started' });
     });
+  });
+
+  describe('Logger', () => {
+    describe('#_log', () => {
+      it('should exposes log methods and call kuzzle ones', () => {
+        application._kuzzle.log = {
+          debug: sinon.stub(),
+          info: sinon.stub(),
+          warn: sinon.stub(),
+          error: sinon.stub(),
+          verbose: sinon.stub(),
+        };
+        application.started = true;
+        application.log.debug('debug');
+        application.log.info('info');
+        application.log.warn('warn');
+        application.log.error('error');
+        application.log.verbose('verbose');
+
+        should(application._kuzzle.log.debug).be.calledWith('[black-mesa]: debug');
+        should(application._kuzzle.log.info).be.calledWith('[black-mesa]: info');
+        should(application._kuzzle.log.warn).be.calledWith('[black-mesa]: warn');
+        should(application._kuzzle.log.error).be.calledWith('[black-mesa]: error');
+        should(application._kuzzle.log.verbose).be.calledWith('[black-mesa]: verbose');
+      });
+    });
+  });
+
+  it('should exposes ESClient', () => {
+    application._kuzzle.storageEngine.config.client.node = 'http://es:9200/';
+    should(application.ESClient).be.a.Function();
+
+    const client = new application.ESClient();
+    should(client).be.instanceOf(ElasticsearchClient);
+    should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
+  });
+
+  it('should exposes kerror', () => {
+    should(application.kerror.get).be.a.Function();
+    should(application.kerror.reject).be.a.Function();
+    should(application.kerror.getFrom).be.a.Function();
+    should(application.kerror.rejectFrom).be.a.Function();
+    should(application.kerror.wrap).be.a.Function();
+  });
+
+  it('should exposes the trigger method', async () => {
+    application._kuzzle.pipe = sinon.stub().resolves('resonance cascade');
+
+    const result = await application.trigger('xen:crystal', 'payload');
+
+    should(application._kuzzle.pipe).be.calledWith('xen:crystal', 'payload');
+    should(result).be.eql('resonance cascade');
   });
 });
