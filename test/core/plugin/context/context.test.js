@@ -216,7 +216,7 @@ describe('Plugin Context', () => {
 
         should(kuzzle.log[level])
           .calledOnce()
-          .calledWithExactly('[plugin-pluginName] test');
+          .calledWithExactly('[pluginName]: test');
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
@@ -230,7 +230,7 @@ describe('Plugin Context', () => {
       process.nextTick(() => {
         should(kuzzle.log.info)
           .be.calledOnce()
-          .be.calledWith('[plugin-pluginName] foobar');
+          .be.calledWith('[pluginName]: foobar');
 
         done();
       });
