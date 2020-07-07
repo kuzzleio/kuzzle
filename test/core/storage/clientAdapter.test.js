@@ -281,9 +281,12 @@ describe('ClientAdapter', () => {
     });
 
     it('create index and collection and ignore index already exists errors', async () => {
+      const error = new Error();
+      error.id = 'services.storage.index_already_exists';
+
       clientAdapter.createIndex
         .onCall(0).resolves()
-        .onCall(1).rejects({ id: 'services.storage.index_already_exists' })
+        .onCall(1).rejects(error)
         .onCall(2).resolves();
 
       await clientAdapter.loadMappings(mappings);

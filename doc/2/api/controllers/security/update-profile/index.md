@@ -17,7 +17,7 @@ Updates a security profile definition.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/profiles/<_id>/_update[?refresh=wait_for]
+URL: http://kuzzle:7512/profiles/<_id>/_update[?refresh=wait_for][&retryOnConflict=10]
 Method: PUT
 Body:
 ```
@@ -77,7 +77,10 @@ Body:
         ]
       }
     ]
-  }
+  },
+  // Optional
+  "refresh": "wait_for",
+  "retryOnConflict": 10
 }
 ```
 
@@ -87,9 +90,10 @@ Body:
 
 - `_id`: profile identifier
 
-### Optional:
+### Optional arguments
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the profile changes are indexed (default: `"wait_for"`)
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the user changes are indexed (default: `"wait_for"`)
+- `retryOnConflict`: in case of an update conflict in Elasticsearch, the number of retries before aborting the operation (default: `10`)
 
 ---
 

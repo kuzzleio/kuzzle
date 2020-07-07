@@ -4,11 +4,13 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
-const Kuzzle = rewire('../../lib/kuzzle/kuzzle');
+
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
+  let Kuzzle;
+  let coreModuleStub;
 
   const mockedProperties = [
     'entryPoint',
@@ -18,7 +20,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'gc',
     'pluginsManager',
     'adminController',
-    'repositories',
     'services',
     'statistics',
     'validation',
@@ -31,6 +32,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'dump',
     'shutdown',
     'pipe',
+    'ask',
+    'tokenManager',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
@@ -45,6 +48,14 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
+    coreModuleStub = {
+      init: sinon.stub().resolves(),
+    };
+
+    mockrequire('../../lib/core', coreModuleStub);
+    mockrequire.reRequire('../../lib/kuzzle/kuzzle');
+    Kuzzle = rewire('../../lib/kuzzle/kuzzle');
+
     kuzzle = _mockKuzzle(Kuzzle);
   });
 
@@ -77,7 +88,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.internalIndex.init,
         kuzzle.log.info, // storageEngine init
         kuzzle.validation.init,
-        kuzzle.repositories.init,
         kuzzle.funnel.init,
         kuzzle.storageEngine.public.loadMappings,
         kuzzle.storageEngine.public.loadFixtures,
@@ -86,17 +96,17 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.pluginsManager.run,
         kuzzle.log.info, // core components loaded
         kuzzle.log.info, // load default rights
-        kuzzle.repositories.loadSecurities,
+        kuzzle.ask.withArgs('core:security:load', sinon.match.object),
         kuzzle.log.info, // default rights loaded
         kuzzle.router.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.repositories.role.sanityCheck,
-        kuzzle.pipe, // kuzzle:start
+        kuzzle.ask.withArgs('core:security:verify'),
+        kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe, // kuzzle:state:live
         kuzzle.entryPoint.startListening,
         kuzzle.pipe, // kuzzle:state:ready
-        kuzzle.emit // core:kuzzleStart
+        kuzzle.emit.withArgs('core:kuzzleStart', sinon.match.any)
       );
 
       should(kuzzle.started).be.true();

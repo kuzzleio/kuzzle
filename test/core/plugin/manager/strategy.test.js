@@ -475,8 +475,14 @@ describe('PluginsManager: strategy management', () => {
     });
 
     it('should reject if the plugin returns an invalid kuid', done => {
-      kuzzle.repositories.user.load.resolves(null);
       plugin.object.verifyFunction.resolves({kuid: 'Waldo'});
+
+      const error = new Error('foo');
+      error.id = 'security.user.not_found';
+
+      kuzzle.ask
+        .withArgs('core:security:user:get', 'Waldo')
+        .rejects(error);
 
       verifyAdapter((err, res, msg) => {
         try {
@@ -484,7 +490,7 @@ describe('PluginsManager: strategy management', () => {
           should(msg).be.undefined();
           should(err)
             .instanceOf(PluginImplementationError)
-            .match({message: /\[some-plugin-name\] Strategy someStrategy: returned an unknown Kuzzle user identifier/});
+            .match({id: 'plugin.strategy.unknown_kuid'});
           done();
         }
         catch (e) {

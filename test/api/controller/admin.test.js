@@ -7,7 +7,9 @@ const {
   Request,
   errors: { PreconditionError, NotFoundError }
 } = require('kuzzle-common-objects');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const AdminController = rewire('../../../lib/api/controller/admin');
 const { NativeController } = require('../../../lib/api/controller/base');
 
@@ -39,22 +41,19 @@ describe('AdminController', () => {
       request.input.action = 'resetCache';
     });
 
-    it('should flush the cache for the specified database', done => {
+    it('should flush the cache for the specified database', async () => {
       kuzzle.cacheEngine.public.flushdb = flushdbStub.returns();
       request.input.args.database = 'memoryStorage';
 
-      adminController.resetCache(request)
-        .then(() => {
-          should(flushdbStub).be.calledOnce();
-          done();
-        })
-        .catch(error => done(error));
+      await adminController.resetCache(request);
+
+      should(flushdbStub).be.calledOnce();
     });
 
     it('should raise an error if database does not exist', () => {
       request.input.args.database = 'city17';
 
-      should(() => adminController.resetCache(request)).throw(
+      return should(adminController.resetCache(request)).rejectedWith(
         NotFoundError,
         { id: 'services.cache.database_not_found' });
     });
@@ -72,43 +71,29 @@ describe('AdminController', () => {
     it('should scroll and delete all registered users, profiles and roles', async () => {
       await adminController.resetSecurity(request);
 
-      should(kuzzle.repositories.user.truncate).be.calledOnce();
-      should(kuzzle.repositories.profile.truncate).be.calledOnce();
-      should(kuzzle.repositories.role.truncate).be.calledOnce();
+      const userSpy = kuzzle.ask.withArgs('core:security:user:truncate');
+      const profileSpy = kuzzle.ask.withArgs('core:security:profile:truncate');
+      const roleSpy = kuzzle.ask.withArgs('core:security:role:truncate');
       should(kuzzle.internalIndex.bootstrap.createInitialSecurities)
         .be.calledOnce();
-      should(kuzzle.repositories.profile.loadProfiles)
-        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
-      should(kuzzle.repositories.role.loadRoles)
-        .be.calledWith(['anonymous', 'default', 'admin'], { resetCache: true });
 
       sinon.assert.callOrder(
-        kuzzle.repositories.user.truncate,
-        kuzzle.repositories.profile.truncate,
-        kuzzle.repositories.role.truncate,
+        userSpy,
+        profileSpy,
+        roleSpy,
         kuzzle.internalIndex.bootstrap.createInitialSecurities,
-        kuzzle.repositories.profile.loadProfiles,
-        kuzzle.repositories.role.loadRoles,
       );
     });
 
-    it('should unlock the action even if the promise reject', done => {
+    it('should unlock the action even if the promise rejects', async () => {
       request.input.args.refresh = 'wait_for';
-      kuzzle.repositories.user.truncate.rejects();
+      kuzzle.ask.withArgs('core:security:user:truncate').rejects();
 
-      adminController.resetSecurity(request)
-        .then(() => {
-          done(new Error('Should reject'));
-        })
-        .catch(error => {
-          should(error).be.instanceOf(Error);
+      await should(adminController.resetSecurity(request)).be.rejected();
 
-          kuzzle.repositories.user.truncate.resolves();
-          return adminController.resetSecurity(request);
-        })
-        .then(() => done())
-        .catch(error => done(error));
+      kuzzle.ask.withArgs('core:security:user:truncate').resolves();
 
+      return should(adminController.resetSecurity(request)).fulfilled();
     });
   });
 
@@ -216,9 +201,10 @@ describe('AdminController', () => {
     it('should call loadSecurities from the secutiry module', async () => {
       await adminController.loadSecurities(request);
 
-      should(kuzzle.repositories.loadSecurities)
+      should(kuzzle.ask)
         .be.calledOnce()
         .be.calledWith(
+          'core:security:load',
           { gordon: { freeman: [] } },
           { onExistingUsers: 'overwrite', user: null, force: false });
     });

@@ -2,6 +2,13 @@
 
 const root = '../../../';
 
+const path = require('path');
+
+const rewire = require('rewire');
+const should = require('should');
+const sinon = require('sinon');
+const Bluebird = require('bluebird');
+const mockrequire = require('mock-require');
 const {
   Request,
   models: { RequestContext },
@@ -11,13 +18,8 @@ const {
     PluginImplementationError
   }
 } = require('kuzzle-common-objects');
-const path = require('path');
+
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
-const mockrequire = require('mock-require');
-const rewire = require('rewire');
-const should = require('should');
-const sinon = require('sinon');
-const Bluebird = require('bluebird');
 
 class FakeProtocol {
   constructor (name) {
@@ -70,6 +72,8 @@ describe('lib/core/core/network/entryPoint', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
+    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
 
     HttpMock = FakeHttpProtocol;
     WebSocketMock = FakeWebSocketProtocol;
@@ -279,29 +283,25 @@ describe('lib/core/core/network/entryPoint', () => {
         });
     });
 
-    it('should throw if the provided port is not an integer', () => {
+    it('should reject if the provided port is not an integer', () => {
       kuzzle.config.server.port = 'foobar';
-      should(() => entrypoint.startListening())
-        .throw(KuzzleInternalError, {message: 'Invalid network port number: foobar.'});
+      return should(entrypoint.startListening())
+        .rejectedWith(KuzzleInternalError, {
+          id: 'network.entrypoint.invalid_port',
+          message: 'Invalid network port number: foobar.',
+        });
     });
 
-    it('should log and reject if an error occured', () => {
+    it('should reject if an error occurs when loading protocols', () => {
       const error = new Error('test');
 
-      entrypoint.loadMoreProtocols = sinon.stub().throws(error);
+      sinon.stub(entrypoint, 'loadMoreProtocols').throws(error);
 
-      return entrypoint.startListening()
-        .then(() => {
-          throw new Error('should not happen');
-        })
-        .catch(() => {
-          should(kuzzle.log.error).calledOnce().calledWith(error);
-        });
+      return should(entrypoint.startListening()).rejectedWith(error);
     });
   });
 
   describe('#initLogger', () => {
-
     it('should support all available transports', () => {
 
       entrypoint.config.logs.transports = [{

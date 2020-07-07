@@ -140,7 +140,7 @@ describe('PluginsManager.run', () => {
       pluginMock.verify();
     });
 
-    it('should throw if a hook target is not a function and not a method name', () => {
+    it('should reject if a hook target is not a function and not a method name', () => {
       plugin.object.hooks = {
         'foo:bar': 'fou',
       };
@@ -249,14 +249,16 @@ describe('PluginsManager.run', () => {
       should(bar).not.be.called();
     });
 
-    it('should throw if a pipe target is not a function and not a method name', () => {
+    it('should reject if a pipe target is not a function and not a method name', () => {
       plugin.object.pipes = {
         'foo:bar': 'fou'
       };
 
       plugin.object.foo = () => {};
 
-      return should(pluginsManager.run()).be.rejectedWith({ message: /Did you mean "foo"/ });
+      return should(pluginsManager.run()).be.rejectedWith({
+        message: /Did you mean "foo"/
+      });
     });
 
     it('should attach pipes event and reject if an attached function return an error', () => {
