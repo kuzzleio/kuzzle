@@ -1,12 +1,8 @@
 ---
 code: false
 type: branch
-title: Kuzzle for Backend
+title: Deep Dive
 description: learn mechanisms of kuzzle
-order: 200
+order: 300
 ---
 
-
-name proposals:
- - Application development
- - Backend business logic
