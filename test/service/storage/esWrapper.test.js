@@ -2,12 +2,16 @@
 
 const should = require('should');
 const { errors: { ExternalServiceError } } = require('kuzzle-common-objects');
+
 const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const ESWrapper = require('../../../lib/service/storage/esWrapper');
 
 describe('Test: ElasticSearch Wrapper', () => {
+  const kuzzle = new KuzzleMock();
   const client = new ESClientMock();
-  const esWrapper = new ESWrapper(client);
+  const esWrapper = new ESWrapper(client, kuzzle);
 
   describe('#formatESError', () => {
     it('should convert any unknown error to a ExternalServiceError instance', () => {
@@ -63,6 +67,41 @@ describe('Test: ElasticSearch Wrapper', () => {
       should(formatted).be.match({
         message: 'Document "mehry" not found in "nyc-open-data":"yellow-taxi".',
         id: 'services.storage.not_found'
+      });
+    });
+
+    it('should log the source error for easier support & debugging', () => {
+      const error = new Error('test');
+      error.meta = {
+        statusCode: 420,
+        meta: {
+          request: {
+            oh: 'noes',
+          }
+        }
+      };
+
+      esWrapper.formatESError(error);
+
+      should(kuzzle.log.info).calledWithMatch({
+        message: `Elasticsearch Client error: ${error.message}`,
+        sourceRequest: error.meta.meta.request,
+        stack: error.stack,
+      });
+    });
+
+    it('should be able to log errors without meta', () => {
+      const error = new Error('test');
+      error.meta = {
+        statusCode: 420,
+      };
+
+      esWrapper.formatESError(error);
+
+      should(kuzzle.log.info).calledWithMatch({
+        message: `Elasticsearch Client error: ${error.message}`,
+        sourceRequest: null,
+        stack: error.stack,
       });
     });
   });
