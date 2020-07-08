@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Creates documents
+title: Document creation
 order: 500
 ---
 

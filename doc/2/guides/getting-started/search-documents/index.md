@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Searches for documents
+title: Find your data
 order: 600
 ---
 
