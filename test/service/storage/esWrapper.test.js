@@ -71,6 +71,8 @@ describe('Test: ElasticSearch Wrapper', () => {
     });
 
     it('should log the source error for easier support & debugging', () => {
+      kuzzle.log.info.resetHistory();
+
       const error = new Error('test');
       error.meta = {
         statusCode: 420,
@@ -91,6 +93,8 @@ describe('Test: ElasticSearch Wrapper', () => {
     });
 
     it('should be able to log errors without meta', () => {
+      kuzzle.log.info.resetHistory();
+
       const error = new Error('test');
       error.meta = {
         statusCode: 420,
