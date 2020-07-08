@@ -1,9 +1,0 @@
-name: guideiot#publish
-description: Publish message with MQTT
-hooks:
-  before:
-  after:
-template: empty
-expected: Success
-sdk: js
-version: 6
