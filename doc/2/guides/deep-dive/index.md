@@ -1,12 +1,12 @@
 ---
 code: false
 type: branch
-title: Kuzzle for Frontend
+title: Kuzzle for Backend
 description: learn mechanisms of kuzzle
-order: 100
+order: 200
 ---
 
 
 name proposals:
- - Kuzzle basics
- - 
+ - Application development
+ - Backend business logic
