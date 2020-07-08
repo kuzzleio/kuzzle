@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Receives realtime database notifications
+title: Realtime notifications
 order: 700
 ---
 

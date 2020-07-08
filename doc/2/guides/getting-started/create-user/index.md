@@ -1,6 +1,6 @@
 ---
 code: false
 type: page
-title: Creates an users and configure some rights
+title: Users and rights
 order: 400
 ---

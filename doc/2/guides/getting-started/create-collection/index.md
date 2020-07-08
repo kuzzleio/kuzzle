@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Creates a collection for your data
+title: A collection for your data
 order: 300
 ---
 
