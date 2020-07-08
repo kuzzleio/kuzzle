@@ -2,13 +2,18 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const ServerController = require('../../../lib/api/controller/server');
 const {
   Request,
   errors: { ExternalServiceError }
 } = require('kuzzle-common-objects');
-const { BaseController, NativeController } = require('../../../lib/api/controller/base');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const ServerController = require('../../../lib/api/controller/server');
+const {
+  BaseController,
+  NativeController
+} = require('../../../lib/api/controller/base');
 
 describe('ServerController', () => {
   let serverController;
@@ -310,7 +315,7 @@ describe('ServerController', () => {
 
   describe('#publicApi', () => {
     it('should build the api definition', () => {
-      const nativeController = new NativeController();
+      const nativeController = new NativeController(kuzzle);
       nativeController._addAction('publicMethod', function () {});
       nativeController._addAction('baz', function () {});
 
@@ -351,7 +356,7 @@ describe('ServerController', () => {
 
   describe('#_buildApiDefinition', () => {
     it('should return api definition for the provided controllers', () => {
-      const nativeController = new NativeController();
+      const nativeController = new NativeController(kuzzle);
       nativeController._addAction('publicMethod', function () {});
       nativeController._addAction('baz', function () {});
 

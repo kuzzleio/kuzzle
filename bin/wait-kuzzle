@@ -31,9 +31,11 @@ const kuzzleHost = process.env.KUZZLE_HOST || 'localhost';
 const kuzzlePort = process.env.KUZZLE_PORT || 7512;
 const maxTries = process.env.MAX_TRIES || 60;
 
+let client = null;
+
 function tryConnect (host, port) {
   return new Promise(resolve => {
-    const client = new net.Socket();
+    client = new net.Socket();
 
     client.on('error', () => resolve(false));
 
@@ -52,7 +54,7 @@ async function waitKuzzle (host, port, maxTries) {
     const connected = await tryConnect(host, port);
 
     if (connected) {
-      console.log(`[✔] Kuzzle is ready`);
+      console.log(`[✔] Kuzzle is up`);
 
       return;
     }
@@ -77,6 +79,11 @@ const run = async () => {
   catch (error) {
     console.error(`[x] ${error.message}`);
     process.exit(1);
+  }
+  finally {
+    if (client) {
+      client.unref();
+    }
   }
 };
 

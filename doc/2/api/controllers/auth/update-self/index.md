@@ -6,8 +6,6 @@ title: updateSelf
 
 # updateSelf
 
-
-
 Updates the currently logged in user information.
 
 This route cannot update the list of associated security profiles. To change a user's security profiles, the route [security:updateUser](/core/2/api/controllers/security/update-user) must be used instead.
@@ -19,7 +17,7 @@ This route cannot update the list of associated security profiles. To change a u
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_updateSelf
+URL: http://kuzzle:7512/_updateSelf[?refresh=wait_for][?retryOnConflict=10]
 Method: PUT
 Headers: Authorization: "Bearer <authentication token>"
 Body:
@@ -42,7 +40,10 @@ Body:
   "body": {
     "foo": "bar",
     "name": "Walter Smith"
-  }
+  },
+  // Optional
+  "refresh": "wait_for",
+  "retryOnConflict": 10
 }
 ```
 
@@ -51,6 +52,11 @@ Body:
 ## Arguments
 
 - `jwt`: valid authentication token (for the HTTP protocol, the token is to be passed to the `Authorization` header instead)
+
+### Optional arguments
+
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the user changes are indexed (default: `"wait_for"`)
+- `retryOnConflict`: in case of an update conflict in Elasticsearch, the number of retries before aborting the operation (default: `10`)
 
 ---
 

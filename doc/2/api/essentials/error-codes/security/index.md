@@ -58,6 +58,7 @@ description: Error codes definitions
 | security.user.cannot_hydrate<br/><pre>0x07040004</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Unable to hydrate the user "%s": missing profile(s) in the database | Database inconsistency error: a user is referencing non-existing profiles |
 | security.user.uninitialized<br/><pre>0x07040005</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Cannot get profiles for uninitialized user "%s" | Attempted to access to an unitialized User object |
 | security.user.prevent_overwrite<br/><pre>0x07040006</pre>  | [BadRequestError](/core/2/api/essentials/error-handling#badrequesterror) <pre>(400)</pre> | Cannot overwrite existing users. | Attempted to overwrite existing users. Change "onExistingUsers" params to modify this method behavior. |
+| security.user.no_profile<br/><pre>0x07040007</pre>  | [InternalError](/core/2/api/essentials/error-handling#internalerror) <pre>(500)</pre> | Cannot load user "%s": there is no security profiles associated to it | Database inconsistency error: a user does not have profiles associated to it |
 
 ---
 

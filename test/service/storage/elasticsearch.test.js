@@ -1666,26 +1666,16 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.updateSettings = sinon.stub().resolves();
       elasticsearch.updateSearchIndex = sinon.stub().resolves();
     });
-    it('should call updateSettings, updateMapping and updateSearchIndex', async () => {
+    it('should call updateSettings, updateMapping', async () => {
       elasticsearch.getMapping = sinon.stub().resolves({dynamic: 'true', properties: { city: { type: 'keyword' }, dynamic: 'false' } });
       await elasticsearch.updateCollection(index, collection, { mappings, settings });
 
       should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
       should(elasticsearch.updateMapping).be.calledWith(index, collection, mappings);
-      should(elasticsearch.updateSearchIndex).be.calledWith(index, collection);
-    });
-
-    it('should call updateSettings, updateMapping and updateSearchIndex', async () => {
-      elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'false', properties: { city: { type: 'keyword' } } });
-      await elasticsearch.updateCollection(index, collection, { mappings, settings });
-
-      should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
-      should(elasticsearch.updateMapping).be.calledWith(index, collection, mappings);
-      should(elasticsearch.updateSearchIndex).be.calledWith(index, collection);
     });
 
     it('should call updateSettings and updateMapping', async () => {
-      elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'true', properties: { city: { type: 'keyword' } } });
+      elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'false', properties: { city: { type: 'keyword' } } });
       await elasticsearch.updateCollection(index, collection, { mappings, settings });
 
       should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
@@ -1709,6 +1699,27 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch.updateSettings.getCall(1).args)
             .be.eql([index, collection, { index: { blocks: { write: false } } }]);
         });
+    });
+
+    it('should calls updateSearchIndex if dynamic change from false to true', async () => {
+      elasticsearch.getMapping = sinon.stub().resolves({
+        properties: {
+          content: {
+            dynamic: 'false'
+          }
+        }
+      });
+      const newMappings = {
+        properties: {
+          content: {
+            dynamic: true
+          }
+        }
+      };
+
+      await elasticsearch.updateCollection(index, collection, { mappings: newMappings });
+
+      should(elasticsearch.updateSearchIndex).be.calledOnce();
     });
   });
 
