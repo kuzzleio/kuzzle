@@ -1,7 +1,7 @@
 ---
 code: false
 type: branch
-title: Getting Started with Kuzzle API
+title: Kuzzle basics
 description: learn mechanisms of kuzzle
 order: 200
 ---
