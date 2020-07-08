@@ -5,5 +5,10 @@ title: Document creation
 order: 500
 ---
 
+with AC
 
-talk about metadata?
+JSON based documents
+
+Kuzzle metadata
+
+update vs createOrReplace

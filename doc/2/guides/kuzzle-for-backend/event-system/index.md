@@ -7,6 +7,9 @@ order: 200
 
 
 prez events
-pipes => find usecase
-hooks => find usecase
+  - api events
+  - generic events
 
+pipes => find usecase
+
+hooks => find usecase
