@@ -87,7 +87,7 @@ describe('Test: ElasticSearch Wrapper', () => {
 
       should(kuzzle.log.info).calledWithMatch({
         message: `Elasticsearch Client error: ${error.message}`,
-        sourceRequest: error.meta.meta.request,
+        meta: error.meta,
         stack: error.stack,
       });
     });
@@ -96,15 +96,12 @@ describe('Test: ElasticSearch Wrapper', () => {
       kuzzle.log.info.resetHistory();
 
       const error = new Error('test');
-      error.meta = {
-        statusCode: 420,
-      };
 
       esWrapper.formatESError(error);
 
       should(kuzzle.log.info).calledWithMatch({
         message: `Elasticsearch Client error: ${error.message}`,
-        sourceRequest: null,
+        meta: null,
         stack: error.stack,
       });
     });
