@@ -53,6 +53,9 @@ Then('I am able to find {int} roles by searching controller:', async function (c
   const controller = this.parseObject(dataTable);
 
   const result = await this.sdk.security.searchRoles(controller);
+
+  should(result.total).eql(count);
+
   this.props.result = result;
 });
 
@@ -188,4 +191,11 @@ Then(/The user "(.*?)"( should not)? exists/, async function (userId, shouldNot)
 Then('I am able to mGet users with the following ids:', async function (dataTable) {
   const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
   this.props.result = await this.sdk.security.mGetUsers(userIds);
+});
+
+Then('I am able to find {int} total users :', async function (count, dataTable) {
+  const controller = this.parseObject(dataTable);
+
+  const result = await this.sdk.security.searchRoles(controller);
+  this.props.result = result;
 });

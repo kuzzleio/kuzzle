@@ -25,7 +25,7 @@ Feature: Security Controller
   # security:createApiKey ======================================================
 
   @security @login
-  Scenario: Create an API key for an user
+  Scenario: Create an API key for a user
     Given I create a user "My" with content:
       | profileIds | ["default"] |
     When I successfully call the route "security":"createApiKey" with args:
@@ -49,7 +49,7 @@ Feature: Security Controller
   # security:searchApiKeys =====================================================
 
   @security
-  Scenario: Search for an user API keys
+  Scenario: Search for a user API keys
     Given I create a user "My" with content:
       | profileIds | ["default"] |
     And I successfully call the route "security":"createApiKey" with args:
@@ -80,7 +80,7 @@ Feature: Security Controller
   # security:deleteApiKey =======================================================
 
   @security
-  Scenario: Delete an API key for an user
+  Scenario: Delete a API key for a user
     Given I successfully call the route "security":"createApiKey" with args:
       | userId    | "test-admin"                     |
       | _id       | "SGN-HCM"                        |
@@ -271,3 +271,16 @@ Feature: Security Controller
       | "test-user"  |
       | "test-user2" |
 
+  Scenario: Search users
+    Given I create a user "test-user" with content:
+      | profileIds | ["default"] |
+    And I create a user "test-user2" with content:
+      | profileIds | ["admin"] |
+    When I successfully call the route "security":"searchUsers" with args:
+      | body | {"query": {"match": {"_id": "test-user"} } } |
+    Then I should receive a "hits" array of objects matching:
+      | _id          |
+      | "test-user"  |
+      | "test-user2" |
+    And I should receive a result matching:
+      | total | 2 |
