@@ -190,10 +190,3 @@ Then('I am able to mGet users with the following ids:', async function (dataTabl
   const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
   this.props.result = await this.sdk.security.mGetUsers(userIds);
 });
-
-Then('I am able to find {int} total users :', async function (count, dataTable) {
-  const controller = this.parseObject(dataTable);
-
-  const result = await this.sdk.security.searchRoles(controller);
-  this.props.result = result;
-});
