@@ -56,6 +56,7 @@ Then(/I (successfully )?call the route "(.*?)":"(.*?)"$/, async function (expect
 Then(/I should receive a ("(.*?)" )?array (of objects )?matching:/, function (name, objects, dataTable) {
   const expected = objects ? this.parseObjectArray(dataTable) : _.flatten(dataTable.rawTable).map(JSON.parse);
   const result = name ? this.props.result[name] : this.props.result;
+
   should(result.length).be.eql(
     expected.length,
     `Array are not the same size: expected ${expected.length} got ${result.length}`);
