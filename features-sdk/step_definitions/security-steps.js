@@ -54,8 +54,6 @@ Then('I am able to find {int} roles by searching controller:', async function (c
 
   const result = await this.sdk.security.searchRoles(controller);
 
-  should(result.total).eql(count);
-
   this.props.result = result;
 });
 
