@@ -1906,16 +1906,17 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#updateSearchIndex', () => {
-    it('should call update_by_query', async () => {
-      elasticsearch._client.update_by_query = sinon.stub().resolves();
+    it('should call updateByQuery', async () => {
+      elasticsearch._client.updateByQuery = sinon.stub().resolves();
 
       await elasticsearch.updateSearchIndex(index, collection);
 
-      should(elasticsearch._client.update_by_query).be.calledWithMatch({
+      should(elasticsearch._client.updateByQuery).be.calledWithMatch({
         body: {},
+        conflicts: 'proceed',
         index: '&nyc-open-data.yellow-taxi',
         refresh: true,
-        conflicts: 'proceed'
+        waitForCompletion: false,
       });
     });
   });
