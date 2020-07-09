@@ -80,7 +80,7 @@ Feature: Security Controller
   # security:deleteApiKey =======================================================
 
   @security
-  Scenario: Delete a API key for a user
+  Scenario: Delete an API key for a user
     Given I successfully call the route "security":"createApiKey" with args:
       | userId    | "test-admin"                     |
       | _id       | "SGN-HCM"                        |
