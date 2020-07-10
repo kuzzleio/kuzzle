@@ -2860,7 +2860,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should passe the limits option to mExecute', async () => {
+    it('should forward the "limits" option to mExecute', async () => {
       await elasticsearch.mCreateOrReplace(
         index,
         collection,
