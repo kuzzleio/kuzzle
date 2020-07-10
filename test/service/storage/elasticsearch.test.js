@@ -3486,7 +3486,7 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it('should not rejects if limit document reached but limits option is false', () => {
+    it('should not reject if the documents limit is reached but the "limits" option is false', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
 
       const promise = elasticsearch._mExecute(
