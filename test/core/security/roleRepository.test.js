@@ -952,4 +952,35 @@ describe('Test: security/roleRepository', () => {
         .calledWithMatch(role3, { force: true });
     });
   });
+
+  describe('#invalidate', () => {
+    const invalidateEvent = 'core:security:role:invalidate';
+
+    it('should register an "invalidate" event', async () => {
+      sinon.stub(roleRepository, 'invalidate');
+
+      await kuzzle.ask(invalidateEvent, 'foo');
+
+      should(roleRepository.invalidate).calledWith('foo');
+    });
+
+    it('should invalidate only the provided role', async () => {
+      roleRepository.roles.set('foo', 'bar');
+      roleRepository.roles.set('baz', 'qux');
+
+      await kuzzle.ask(invalidateEvent, 'baz');
+
+      should(roleRepository.roles).has.key('foo');
+      should(roleRepository.roles).not.has.key('baz');
+    });
+
+    it('should invalidate the entire cache with no argument', async () => {
+      roleRepository.roles.set('foo', 'bar');
+      roleRepository.roles.set('baz', 'qux');
+
+      await kuzzle.ask(invalidateEvent);
+
+      should(roleRepository.roles).be.empty();
+    });
+  });
 });
