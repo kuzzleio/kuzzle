@@ -2,7 +2,7 @@
 
 cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
-set -e
+set -ex
 
 # profiles are defined in the cucumber.js file at the root of this project
 

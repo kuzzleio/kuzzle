@@ -12,7 +12,7 @@ echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
 npm install --silent --unsafe-perm
-ls -la
+
 npm run build
 
 ./docker/scripts/install-plugins.sh

@@ -213,7 +213,7 @@ class ControllerManager {
     this._application._controllers[name] = definition;
   }
 
-  _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
+  private _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
         definition.http = [{ verb: 'GET', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
@@ -367,7 +367,7 @@ class Logger {
     this._log('verbose', message);
   }
 
-  _log (level: string, message: string) {
+  private _log (level: string, message: string) {
     if (! this._application.started) {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
@@ -573,8 +573,6 @@ export class Backend {
 
   /**
    * Internal SDK
-   *
-   * @type {EmbeddedSDK}
    */
   get sdk (): EmbeddedSDK {
     if (! this.started) {
@@ -584,7 +582,7 @@ export class Backend {
     return this._sdk;
   }
 
-  get _instanceProxy () {
+  private get _instanceProxy () {
     return {
       pipes: this._pipes,
       hooks: this._hooks,

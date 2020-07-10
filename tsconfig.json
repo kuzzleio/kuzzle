@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "listEmittedFiles": true,
+    "module": "commonjs",
+    "target": "es2020",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*",
+        "src/types/*"
+      ]
+    }
+  },
+  "rootDir": "lib/",
+  "include": [
+    "lib/core/application/backend.ts",
+    "lib/util/interfaces.ts",
+  ]
+}
