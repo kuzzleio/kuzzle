@@ -3486,6 +3486,18 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
+    it('should not rejects if limit document reached but limits option is false', () => {
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      const promise = elasticsearch._mExecute(
+        esRequest,
+        documents,
+        partialErrors,
+        { limits: false });
+
+      return should(promise).be.fulfilled();
+    });
+
     it('should return a rejected promise if client fails', () => {
       elasticsearch._client.bulk.rejects(esClientError);
 
