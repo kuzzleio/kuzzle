@@ -5,7 +5,7 @@ const should = require('should');
 const sinon = require('sinon');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
-const { Backend } = require('../../../lib/core/framework/backend.ts');
+const { Backend } = require('../../../lib/core/application/backend.ts');
 const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Backend', () => {

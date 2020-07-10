@@ -1,4 +1,4 @@
-const { Backend } = require('./lib/core/framework/backend');
+const { Backend } = require('./lib/core/application/backend');
 
 module.exports = {
   Backend

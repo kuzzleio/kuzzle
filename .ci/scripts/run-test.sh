@@ -9,6 +9,8 @@ n $NODE_VERSION
 
 npm install --silent --unsafe-perm
 
+npm run build
+
 ./docker/scripts/install-plugins.sh
 
 echo "[$(date)] - Starting Kuzzle..."

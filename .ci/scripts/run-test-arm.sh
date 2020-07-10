@@ -10,6 +10,8 @@ export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
 nvm use $NODE_VERSION
 
+npm run build
+
 node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
 
 echo "[$(date)] - Starting Kuzzle..."
