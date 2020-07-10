@@ -6,8 +6,6 @@ title: createFirstAdmin
 
 # createFirstAdmin
 
-
-
 Creates a Kuzzle administrator account, only if none exist.
 
 ---
@@ -25,8 +23,8 @@ Body:
 
 ```js
 {
+  // administrator additional information (optional)
   "content": {
-    // administrator information (optional)
   },
   "credentials": {
     // for example, with the "local" authentication strategy:
@@ -75,7 +73,7 @@ Body:
 
 ## Body properties
 
-- `content`: administrator additional information. Can be left empty.
+- `content`: optional additional information
 - `credentials`: describe how the new administrator can be authenticated. This object must contain one or multiple properties, named after the target authentication strategy to use. Each one of these properties are objects containing the credentials information, corresponding to that authentication strategy
 
 ---

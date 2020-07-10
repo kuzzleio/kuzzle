@@ -35,7 +35,7 @@ function tryConnect (host, port) {
   return new Promise(resolve => {
     const client = new net.Socket();
 
-    client.on('error', error => resolve(false));
+    client.on('error', () => resolve(false));
 
     client.connect(port, host, () => resolve(true));
   });
@@ -70,8 +70,18 @@ async function waitKuzzle (host, port, maxTries) {
   process.exit(1);
 }
 
+const run = async () => {
+  try {
+    await waitKuzzle(kuzzleHost, kuzzlePort, maxTries);
+  }
+  catch (error) {
+    console.error(`[x] ${error.message}`);
+    process.exit(1);
+  }
+};
+
 if (require.main === module) {
-  waitKuzzle(kuzzleHost, kuzzlePort, maxTries);
+  run();
 }
 
 module.exports = waitKuzzle;

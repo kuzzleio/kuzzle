@@ -1,31 +1,33 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  {
-    Request,
-    errors: {
-      BadRequestError,
-      ServiceUnavailableError,
-      TooManyRequestsError
-    }
-  } = require('kuzzle-common-objects'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  rewire = require('rewire'),
-  FunnelController = rewire('../../../lib/api/funnel');
+const should = require('should');
+const sinon = require('sinon');
+const rewire = require('rewire');
+const {
+  Request,
+  errors: {
+    BadRequestError,
+    ServiceUnavailableError,
+    TooManyRequestsError
+  }
+} = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const FunnelController = rewire('../../../lib/api/funnel');
 
 describe('funnelController.execute', () => {
-  let
-    now = Date.now(),
-    clock,
-    kuzzle,
-    funnel,
-    request;
+  let now = Date.now();
+  let clock;
+  let kuzzle;
+  let funnel;
+  let request;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
+
     kuzzle.config.limits.requestsBufferWarningThreshold = -1;
+    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
 
     request = new Request({
       controller: 'foo',
@@ -143,6 +145,22 @@ describe('funnelController.execute', () => {
         }
         catch (e) {
           done(e);
+        }
+      });
+    });
+
+    it('should run the request in asyncStore.run context and set the request in async storage', done => {
+      funnel.execute(request, (err, res) => {
+        try {
+          should(err).be.null();
+          should(res).be.instanceOf(Request);
+          should(kuzzle.asyncStore.run).be.calledOnce();
+          should(kuzzle.asyncStore.set).be.calledWith('REQUEST', request);
+
+          done();
+        }
+        catch (error) {
+          done(error);
         }
       });
     });
@@ -310,10 +328,11 @@ describe('funnelController.execute', () => {
   });
 
   describe('#kuzzle:shutdown', () => {
-    it('should reject any new request after the kuzzle:shutdown event has been triggered', done => {
+    it('should reject any new request after the kuzzle:shutdown event has been triggered', async () => {
       funnel.controllers.clear();
       sinon.stub(funnel.rateLimiter, 'init');
-      funnel.init();
+
+      await funnel.init();
 
       should(funnel.shuttingDown).be.false();
 
@@ -323,16 +342,18 @@ describe('funnelController.execute', () => {
       // gives some time for the event to propagate
       should(funnel.shuttingDown).be.true();
 
-      funnel.execute(request, (err, res) => {
-        try {
-          should(err).be.instanceOf(ServiceUnavailableError);
-          should(res.status).be.exactly(503);
-          should(err.id).be.eql('api.process.shutting_down');
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
+      await new Promise((resolve, reject) => {
+        funnel.execute(request, (err, res) => {
+          try {
+            should(err).be.instanceOf(ServiceUnavailableError);
+            should(res.status).be.exactly(503);
+            should(err.id).be.eql('api.process.shutting_down');
+            resolve();
+          }
+          catch (e) {
+            reject(e);
+          }
+        });
       });
     });
   });

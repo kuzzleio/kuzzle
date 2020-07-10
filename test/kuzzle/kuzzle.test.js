@@ -5,13 +5,14 @@ const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
 
-const Kuzzle = rewire('../../lib/kuzzle/kuzzle');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
+  let Kuzzle;
   let application;
+  let coreModuleStub;
 
   const mockedProperties = [
     'entryPoint',
@@ -21,7 +22,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'gc',
     'pluginsManager',
     'adminController',
-    'repositories',
     'services',
     'statistics',
     'validation',
@@ -31,9 +31,11 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'internalIndex',
     'cacheEngine',
     'storageEngine',
-    'dump',
+    'dumpGenerator',
     'shutdown',
     'pipe',
+    'ask',
+    'tokenManager',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
@@ -48,6 +50,13 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
+    coreModuleStub = {
+      init: sinon.stub().resolves(),
+    };
+
+    mockrequire('../../lib/core', coreModuleStub);
+    mockrequire.reRequire('../../lib/kuzzle/kuzzle');
+    Kuzzle = rewire('../../lib/kuzzle/kuzzle');
     Kuzzle.__set__('console', { log: () => {} });
 
     kuzzle = _mockKuzzle(Kuzzle);
@@ -85,22 +94,22 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.storageEngine.init,
         kuzzle.internalIndex.init,
         kuzzle.validation.init,
-        kuzzle.repositories.init,
+        kuzzle.tokenManager.init,
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
         kuzzle.storageEngine.public.loadMappings,
         kuzzle.storageEngine.public.loadFixtures,
-        kuzzle.repositories.loadSecurities,
-        kuzzle.repositories.role.sanityCheck,
+        kuzzle.ask.withArgs('core:security:load', sinon.match.object),
+        kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.pluginsManager.init,
         kuzzle.entryPoint.init,
         kuzzle.router.init,
-        kuzzle.pipe, // kuzzle:start
-        kuzzle.pipe, // kuzzle:state:live
+        kuzzle.pipe.withArgs('kuzzle:start'),
+        kuzzle.pipe.withArgs('kuzzle:state:live'),
         kuzzle.entryPoint.startListening,
-        kuzzle.pipe, // kuzzle:state:ready
-        kuzzle.emit // core:kuzzleStart
+        kuzzle.pipe.withArgs('kuzzle:state:ready'),
+        kuzzle.emit.withArgs('core:kuzzleStart', sinon.match.any)
       );
 
       should(kuzzle.started).be.true();
@@ -172,6 +181,14 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
           should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
         });
+    });
+  });
+
+  describe('#dump', () => {
+    it('should calls dumpGenerator.dump', async () => {
+      await kuzzle.dump();
+
+      should(kuzzle.dumpGenerator.dump).be.calledOnce();
     });
   });
 });
