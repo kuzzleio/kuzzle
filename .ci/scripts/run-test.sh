@@ -19,7 +19,7 @@ npm run build
 
 echo "[$(date)] - Starting Kuzzle..."
 
-node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
+node -r ts-node/register features-sdk/application/functional-tests-app.ts &
 
 ./bin/wait-kuzzle
 

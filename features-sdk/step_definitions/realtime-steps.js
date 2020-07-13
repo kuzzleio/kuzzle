@@ -47,12 +47,14 @@ Then('I should receive realtime notifications for {string}:{string} matching:', 
   setTimeout(() => {
     try {
       tryAssert();
+
       done();
     }
     catch (error) {
       // retry later
       setTimeout(() => {
-        tryAssert()
+        tryAssert();
+
         done();
       }, 500);
     }

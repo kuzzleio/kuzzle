@@ -50,12 +50,12 @@ Feature: Collection Controller
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
-    When I successfully call the action "collection":"truncate" with args:
+    When I successfully execute the action "collection":"truncate" with args:
       | index      | "nyc-open-data" |
       | collection | "green-taxi"    |
     And The document "document-1" should not exist
     And The document "document-2" should not exist
-    And I successfully call the action "collection":"getMapping" with args:
+    And I successfully execute the action "collection":"getMapping" with args:
       | index             | "nyc-open-data" |
       | collection        | "green-taxi"    |
       | includeKuzzleMeta | true            |
@@ -74,7 +74,7 @@ Feature: Collection Controller
   Scenario: Delete a collection
     Given an index "nyc-open-data"
     And a collection "nyc-open-data":"green-taxi"
-    When I successfully call the action "collection":"delete" with args:
+    When I successfully execute the action "collection":"delete" with args:
       | index      | "nyc-open-data" |
       | collection | "green-taxi"    |
     Then I should not see the collection "nyc-open-data":"green-taxi"
@@ -141,7 +141,7 @@ Feature: Collection Controller
   # Deprecated since 2.1.0
   Scenario: Create a new collection with mappings
     Given an index "nyc-open-data"
-    When I successfully call the action "collection":"create" with args:
+    When I successfully execute the action "collection":"create" with args:
       | index      | "nyc-open-data"                                                          |
       | collection | "green-taxi"                                                             |
       | body       | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
@@ -156,11 +156,11 @@ Feature: Collection Controller
   # Deprecated since 2.1.0
   Scenario: Re-create an existing collection with mappings
     Given an index "nyc-open-data"
-    When I successfully call the action "collection":"create" with args:
+    When I successfully execute the action "collection":"create" with args:
       | index      | "nyc-open-data"                                                          |
       | collection | "green-taxi"                                                             |
       | body       | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
-    And I successfully call the action "collection":"create" with args:
+    And I successfully execute the action "collection":"create" with args:
       | index      | "nyc-open-data"                                                         |
       | collection | "green-taxi"                                                            |
       | body       | { "dynamic": "strict", "properties": { "age": { "type": "integer" } } } |
@@ -187,11 +187,11 @@ Feature: Collection Controller
   Scenario: Test if a collection exists
     Given an index "nyc-open-data"
     And a collection "nyc-open-data":"yellow-taxi"
-    When I successfully call the action "collection":"exists" with args:
+    When I successfully execute the action "collection":"exists" with args:
     | index | "nyc-open-data" |
     | collection | "yellow-taxi" |
     Then The result should be "true"
-    When I successfully call the action "collection":"exists" with args:
+    When I successfully execute the action "collection":"exists" with args:
     | index | "nyc-open-data" |
     | collection | "green-taxi" |
     Then The result should be "false"

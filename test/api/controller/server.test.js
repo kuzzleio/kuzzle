@@ -77,36 +77,17 @@ describe('ServerController', () => {
   });
 
   describe('#adminExists', () => {
-    it('should call search with right query', async () => {
+    const adminExistsEvent = 'core:security:user:adminExists';
+
+    it('should calls "core:security:user:adminExists"', async () => {
       kuzzle.ask
-        .withArgs('core:security:user:search', sinon.match.object)
-        .resolves({ total: 0 });
-
-      const query = { term: { profileIds: 'admin' } };
-
-      await serverController.adminExists();
-
-      should(kuzzle.ask).be.calledWith('core:security:user:search', { query });
-    });
-
-    it('should return false if there is no result', async () => {
-      kuzzle.ask
-        .withArgs('core:security:user:search', sinon.match.object)
-        .resolves({ total: 0 });
-
-      const response = await serverController.adminExists();
-
-      should(response).match({ exists: false });
-    });
-
-    it('should return true if there is result', async () => {
-      kuzzle.ask
-        .withArgs('core:security:user:search', sinon.match.object)
-        .resolves({ total: 42 });
+        .withArgs(adminExistsEvent)
+        .returns(true);
 
       const response = await serverController.adminExists();
 
       should(response).match({ exists: true });
+      should(kuzzle.ask).be.calledWith(adminExistsEvent);
     });
   });
 

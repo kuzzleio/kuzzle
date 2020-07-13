@@ -294,7 +294,7 @@ Feature: Plugin Events
   @realtime
   Scenario: Listen to events with hooks
     Given I subscribe to "functional-test":"hooks" notifications
-    When I successfully call the action "server":"now"
+    When I successfully execute the action "server":"now"
     Then I should receive realtime notifications for "functional-test":"hooks" matching:
       | result._source.event |
       | "server:afterNow"    |
@@ -304,6 +304,6 @@ Feature: Plugin Events
   @events
   Scenario: Trigger a pipe declared with a function name
     Given I "activate" the "plugin" pipe on "server:afterNow" without changes
-    When I successfully call the action "server":"now"
+    When I successfully execute the action "server":"now"
     Then I should receive a result matching:
       | lyrics | "_STRING_" |

@@ -41,6 +41,8 @@ app.controller.register('pipes', {
   }
 });
 
+/* Actual code for tests start here */
+
 // Pipe registration
 app.pipe.register('server:afterNow', async request => {
   const pipe = activatedPipes['server:afterNow'];
@@ -64,7 +66,9 @@ app.controller.register('tests', {
   actions: {
     // Controller registration and http route definition
     sayHello: {
-      handler: async request => `Hello, ${request.input.args.name}`,
+      handler: async request => ({
+        greeting: `Hello, ${request.input.args.name}`
+      }),
       http: [{ verb: 'POST', url: '/hello/:name' }]
     },
 
@@ -85,7 +89,7 @@ app.controller.register('tests', {
     // ESClient constructor
     esClient: {
       handler: async request => {
-        const client = new this.ESClient();
+        const client = new app.ESClient();
         const esRequest = {
           body: request.input.body,
           id: request.input.resource._id,
@@ -101,6 +105,13 @@ app.controller.register('tests', {
 });
 
 app.plugin.use(new FunctionalTestPlugin());
+
+let vaultfile = 'features-sdk/fixtures/secrets.enc.json';
+if (process.env.SECRETS_FILE_PREFIX) {
+  vaultfile = process.env.SECRETS_FILE_PREFIX + vaultfile;
+}
+app.vault.file = vaultfile;
+app.vault.key = 'secret-password';
 
 const run = async () => {
   try {

@@ -208,7 +208,7 @@ class HttpApi {
 
   /**
    * @param options
-   * @return {Promise.<IncomingMessage>}
+   * @returns {Promise.<IncomingMessage>}
    */
   callApi (options) {
     if (!options.headers) {

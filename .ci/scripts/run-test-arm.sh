@@ -16,10 +16,10 @@ nvm use $NODE_VERSION
 
 npm run build
 
-node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
+node -r ts-node/register features-sdk/application/functional-tests-app.ts &
 
 echo "[$(date)] - Starting Kuzzle..."
 
 ./bin/wait-kuzzle
 
-npm run test:functional
+npm run $KUZZLE_FUNCTIONAL_TESTS

@@ -104,7 +104,7 @@ class UpgradeContext {
 
   /**
    * Asks the user the source version to upgrade from
-   * @return {Version}
+   * @returns {Version}
    */
   async getVersions () {
     const version = new Version();
