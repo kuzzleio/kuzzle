@@ -5,6 +5,8 @@ const _ = require('lodash');
 
 class FunctionalTestPlugin {
   constructor () {
+    this.version = require('./package.json').version;
+
     this.controllers = {};
     this.routes = [];
     this.pipes = {};
