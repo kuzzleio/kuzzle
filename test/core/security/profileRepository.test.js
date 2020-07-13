@@ -661,4 +661,35 @@ describe('Test: security/profileRepository', () => {
       should(profileRepository.profiles).be.empty();
     });
   });
+
+  describe('#invalidate', () => {
+    const invalidateEvent = 'core:security:profile:invalidate';
+
+    it('should register an "invalidate" event', async () => {
+      sinon.stub(profileRepository, 'invalidate');
+
+      await kuzzle.ask(invalidateEvent, 'foo');
+
+      should(profileRepository.invalidate).calledWith('foo');
+    });
+
+    it('should invalidate only the provided profile', async () => {
+      profileRepository.profiles.set('foo', 'bar');
+      profileRepository.profiles.set('baz', 'qux');
+
+      await kuzzle.ask(invalidateEvent, 'baz');
+
+      should(profileRepository.profiles).has.key('foo');
+      should(profileRepository.profiles).not.has.key('baz');
+    });
+
+    it('should invalidate the entire cache with no argument', async () => {
+      profileRepository.profiles.set('foo', 'bar');
+      profileRepository.profiles.set('baz', 'qux');
+
+      await kuzzle.ask(invalidateEvent);
+
+      should(profileRepository.profiles).be.empty();
+    });
+  });
 });

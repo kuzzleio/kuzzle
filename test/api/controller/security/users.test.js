@@ -191,6 +191,21 @@ describe('Test: security controller - users', () => {
         request.input.resource._id,
         'someStrategy');
     });
+
+    it('should return the plugin error if it threw a KuzzleError error', async () => {
+      const error = new BadRequestError('foo');
+
+      strategyValidateStub.rejects(error);
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .be.rejectedWith(error);
+
+      strategyValidateStub.resolves();
+      strategyCreateStub.rejects(error);
+
+      await should(securityController._persistUser(request, profileIds, content))
+        .be.rejectedWith(error);
+    });
   });
 
   describe('#updateUserMapping', () => {

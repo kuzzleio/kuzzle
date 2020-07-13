@@ -454,7 +454,7 @@ describe('Test the auth controller', () => {
         null,
         r.input.body,
         {
-          refresh: 'false',
+          refresh: 'wait_for',
           retryOnConflict: 10,
           userId: r.context.user._id,
         });
