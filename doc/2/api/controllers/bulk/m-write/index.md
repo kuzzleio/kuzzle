@@ -11,7 +11,7 @@ title: mWrite
 Create or replace multiple documents directly into the storage engine.
 
 This is a low level route intended to bypass Kuzzle actions on document creation, notably:
-  - check document write limit <SinceBadge version="auto-version" />
+  - check document write limit <SinceBadge version="2.3.3" />
   - check [document validity](/core/2/guides/essentials/data-validation),
   - add [kuzzle metadata](/core/2/guides/essentials/document-metadata),
   - trigger [realtime notifications](/core/2/guides/essentials/real-time) (unless asked otherwise)
