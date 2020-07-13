@@ -407,7 +407,7 @@ export class Backend {
   /**
    * Elasticsearch client constructor
    */
-  public ESClient: () => Client;
+  public ESClient: new () => Client;
 
   /**
    * PipeManager definition manager
@@ -509,10 +509,10 @@ export class Backend {
 
     this.kerror = kerror;
 
-    let k = this._kuzzle;
+    const kuzzle = this._kuzzle;
     this.ESClient = function ESClient () {
-      return Elasticsearch.buildClient(k.storageEngine.config.client) as Client;
-    };
+      return Elasticsearch.buildClient(kuzzle.storageEngine.config.client);
+    } as any;
 
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));

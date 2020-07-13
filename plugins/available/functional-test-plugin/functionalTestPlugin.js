@@ -99,7 +99,7 @@ class FunctionalTestPlugin {
     // hooks related declarations ==============================================
     this.hooks['server:afterNow'] = async () => {
       await this.context.accessors.sdk.realtime.publish(
-        'functionnal-test',
+        'functional-test',
         'hooks',
         { event: 'server:afterNow' });
     };
