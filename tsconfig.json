@@ -16,7 +16,6 @@
   },
   "rootDir": "lib/",
   "include": [
-    "lib/core/application/backend.ts",
-    "lib/util/interfaces.ts",
+    "lib/**/*.ts"
   ]
 }

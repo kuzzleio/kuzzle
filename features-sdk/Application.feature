@@ -5,7 +5,7 @@ Feature: Application
     When I successfully execute the action "tests":"sayHello" with args:
       | name | "Trï" |
     Then I should receive a result matching:
-      | greeting | "Hello, Trï" |
+      | greeting | "Hello, Tri" |
 
   # Pipes registration
 
