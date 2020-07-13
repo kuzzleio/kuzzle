@@ -1,3 +1,5 @@
+'use strict';
+
 import { Backend } from '../../index';
 import * as FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
 
