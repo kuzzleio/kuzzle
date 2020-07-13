@@ -1,5 +1,9 @@
 Feature: Kuzzle functional tests
 
+  Scenario: Http server does not crash on crafted request
+    When I send the crafted HTTP multipart request
+    Then Kuzzle is still up
+
   Scenario: Admin reset database
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
     When I create a collection "kuzzle-test-index-alt":"kuzzle-collection-test-alt"

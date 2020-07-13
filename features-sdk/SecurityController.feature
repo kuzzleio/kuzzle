@@ -25,7 +25,7 @@ Feature: Security Controller
   # security:createApiKey ======================================================
 
   @security @login
-  Scenario: Create an API key for an user
+  Scenario: Create an API key for a user
     Given I create a user "My" with content:
       | profileIds | ["default"] |
     When I successfully execute the action "security":"createApiKey" with args:
@@ -49,7 +49,7 @@ Feature: Security Controller
   # security:searchApiKeys =====================================================
 
   @security
-  Scenario: Search for an user API keys
+  Scenario: Search for a user API keys
     Given I create a user "My" with content:
       | profileIds | ["default"] |
     And I successfully execute the action "security":"createApiKey" with args:
@@ -253,6 +253,7 @@ Feature: Security Controller
     And The property "_source.controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
       | manage | false |
 
+  @security
   Scenario: Get multiple users
     Given I create a user "test-user" with content:
       | profileIds | ["default"] |
@@ -271,3 +272,24 @@ Feature: Security Controller
       | "test-user"  |
       | "test-user2" |
 
+  @security
+  Scenario: Search users
+    Given I create a user "test-user" with content:
+      | profileIds | ["default"] |
+    And I create a user "test-user2" with content:
+      | profileIds | ["admin"] |
+    When I successfully call the route "security":"searchUsers" with args:
+      | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
+    Then I should receive a "hits" array of objects matching:
+      | _id          |
+      | "test-user"  |
+      | "test-user2" |
+    And I should receive a result matching:
+      | total | 2 |
+    When I successfully call the route "security":"searchUsers" with args:
+      | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
+      | from | 2                                                            |
+      | size | 10                                                           |
+    Then I should receive a empty "hits" array
+    And I should receive a result matching:
+      | total | 2 |

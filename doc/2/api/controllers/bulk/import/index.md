@@ -8,7 +8,10 @@ title: import
 
 Creates, updates or deletes large amounts of documents as fast as possible.
 
-This route is faster than the `document:m*` routes family (e.g. [document:mCreate](/core/2/api/controllers/document/m-create)), but no real-time notifications will be generated, even if some of the documents in the import match subscription filters.
+This is a low level route intended to bypass Kuzzle actions on document, notably:
+  - check document write limit <SinceBadge version="auto-version" />
+  - check [document validity](/core/2/guides/essentials/data-validation),
+  - trigger [realtime notifications](/core/2/guides/essentials/real-time)
 
 ---
 

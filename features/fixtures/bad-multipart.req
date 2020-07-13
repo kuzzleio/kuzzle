@@ -1,0 +1,17 @@
+PUT /t/t/t HTTP/1.1
+Host: localhost:7512
+User-Agent: curl/7.70.0
+Accept: */*
+Content-Length: 280
+Content-Type: multipart/form-data; boundary=------------------------59cfb325b8d638cf
+
+--------------------------59cfb325b8d638cf
+Content-Disposition: form-data; name="t"
+
+1
+--------------------------59cfb325b8d638cf
+Content-Disposition: form-data; name="f"; filename="empty"
+Content-Type: application/octet-stream
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
