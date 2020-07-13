@@ -8,7 +8,7 @@ title: updateRole
 
 Updates a security role definition.
 
-**Note:** partial updates are not supported for roles, this API route will replace the entire role content with the provided one.
+**Note:** partial updates are not supported for roles, this API action will replace the entire role content with the provided one.
 
 ---
 
@@ -65,7 +65,7 @@ Body:
 
 ### Optional arguments
 
-- `force`: if set to `true`, updates the role even if it gives access to non-existent plugins API routes (default: `false`)
+- `force`: if set to `true`, updates the role even if it gives access to non-existent plugins API actions (default: `false`)
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the user changes are indexed (default: `"wait_for"`)
 - `retryOnConflict`: in case of an update conflict in Elasticsearch, the number of retries before aborting the operation (default: `10`)
 

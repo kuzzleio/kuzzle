@@ -2,7 +2,7 @@ Feature: Server Controller
 
   # server:info ================================================================
   Scenario: Get server information
-    When I successfully call the route "server":"info"
+    When I successfully call the action "server":"info"
     Then The property "serverInfo.kuzzle" of the result should match:
       | version     | "_STRING_" |
       | api         | "_OBJECT_" |
@@ -21,7 +21,7 @@ Feature: Server Controller
 
   # server:getConfig ===========================================================
   Scenario: Get server configuration
-    When I successfully call the route "server":"getConfig"
+    When I successfully call the action "server":"getConfig"
     Then I should receive a result matching:
       | realtime     | "_OBJECT_"    |
       | dump         | "_OBJECT_"    |
@@ -38,20 +38,20 @@ Feature: Server Controller
 
   # server:healthCheck =========================================================
   Scenario: Get server health
-    When I successfully call the route "server":"healthCheck"
+    When I successfully call the action "server":"healthCheck"
     Then I should receive a result matching:
       | status | "green" |
     Then The property "services" of the result should match:
       | internalCache | "green" |
       | memoryStorage | "green" |
       | storageEngine | "green" |
-    When I successfully call the route "server":"healthCheck" with args:
+    When I successfully call the action "server":"healthCheck" with args:
       | services | "storageEngine" |
     Then I should receive a result matching:
       | status | "green" |
     Then The property "services" of the result should match:
       | storageEngine | "green" |
-    When I successfully call the route "server":"healthCheck" with args:
+    When I successfully call the action "server":"healthCheck" with args:
       | services | "storageEngine,memoryStorage" |
     Then I should receive a result matching:
       | status | "green" |

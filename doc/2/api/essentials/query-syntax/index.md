@@ -16,7 +16,7 @@ Except for HTTP, Kuzzle expects the exact same query format for all communicatio
 
 HTTP queries are split into the four HTTP usual parts: URL, verb, headers and body.
 
-Every API route documentation has a dedicated HTTP section, explaining how to use that route with the HTTP protocol.
+Every API action documentation has a dedicated HTTP section, explaining how to use that action with the HTTP protocol.
 
 ### Optional headers
 
@@ -78,11 +78,11 @@ The following 2 parameters are required by all API requests, as these are direct
 - `controller`: accessed Kuzzle API controller
 - `action`: API controller action to be executed
 
-Depending on the API route executed, other parameters may be required. Those are detailed in the corresponding API sections.
+Depending on the API action executed, other parameters may be required. Those are detailed in the corresponding API sections.
 
 ### Commonly found parameters:
 
-There are 3 parameters that can be provided to all queries, independently to the API route executed:
+There are 3 parameters that can be provided to all queries, independently to the API action executed:
 
 - `jwt`: user's authentification token, obtained through the [login](/core/2/api/controllers/auth/login) method
 - `requestId`: user-defined request identifier. Kuzzle does not guarantee that responses are sent back in the same order than queries are made; use that field to link responses to their query of origin

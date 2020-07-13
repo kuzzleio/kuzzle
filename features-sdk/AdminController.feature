@@ -4,22 +4,22 @@ Feature: Admin Controller
 
   @security
   Scenario: Expire all tokens
-    Given I successfully call the route "auth":"createApiKey" with args:
+    Given I successfully call the action "auth":"createApiKey" with args:
       | expiresIn | -1                                  |
       | refresh   | "wait_for"                          |
       | body      | { "description": "Sigfox API key" } |
     And I save the created API key
-    When I successfully call the route "admin":"resetSecurity"
+    When I successfully call the action "admin":"resetSecurity"
     And I'm logged as the anonymous user
     Then I can not login with the previously created API key
-    And I successfully call the route "auth":"searchApiKeys"
+    And I successfully call the action "auth":"searchApiKeys"
     And I should receive a "hits" array containing 0 elements
 
   # admin:loadSecurities =======================================================
 
   @security
   Scenario: Load roles, profiles and users
-    When I successfully call the route "admin":"loadSecurities" with body:
+    When I successfully call the action "admin":"loadSecurities" with body:
       """
       {
         "roles": {
@@ -64,7 +64,7 @@ Feature: Admin Controller
 
   @security
   Scenario: Rejects on existing users
-    When I call the route "admin":"loadSecurities" with body:
+    When I call the action "admin":"loadSecurities" with body:
       """
       {
         "users": {
