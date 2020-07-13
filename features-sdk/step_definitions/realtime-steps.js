@@ -30,7 +30,7 @@ Then('I should have receive {string} notifications for {string}:{string}', funct
 });
 
 Then('I should receive realtime notifications for {string}:{string} matching:', function (index, collection, datatable, done) {
-  setTimeout(() => {
+  const tryAssert = () => {
     const expectedNotifications = this.parseObjectArray(datatable);
 
     should(this.props.subscriptions[`${index}:${collection}`]).not.be.undefined();
@@ -42,7 +42,19 @@ Then('I should receive realtime notifications for {string}:{string} matching:', 
     for (let i = 0; i < expectedNotifications.length; i++) {
       should(subscription.notifications[i]).matchObject(expectedNotifications[i]);
     }
+  };
 
-    done();
+  setTimeout(() => {
+    try {
+      tryAssert();
+      done();
+    }
+    catch (error) {
+      // retry later
+      setTimeout(() => {
+        tryAssert()
+        done();
+      }, 500);
+    }
   }, 100);
 });

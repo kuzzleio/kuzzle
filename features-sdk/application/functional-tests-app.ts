@@ -53,11 +53,11 @@ app.pipe.register('server:afterNow', async request => {
 });
 
 // Hook registration and embedded SDK realtime publish
-app.hook.register('custom:event', async () => {
-  await this.sdk.realtime.publish(
+app.hook.register('custom:event', async name => {
+  await app.sdk.realtime.publish(
     'app-functional-test',
     'hooks',
-    { event: 'server:afterNow' });
+    { event: 'custom:event', name });
 });
 
 app.controller.register('tests', {
@@ -70,7 +70,11 @@ app.controller.register('tests', {
 
     // Trigger custom event
     triggerEvent: {
-      handler: request => app.trigger('custom:event', request.input.args.name)
+      handler: async request => {
+        await app.trigger('custom:event', request.input.args.name);
+
+        return { trigger: 'custom:event', payload: request.input.args.name }
+      }
     },
 
     // Access Vault secrets
