@@ -53,6 +53,7 @@ Then('I am able to find {int} roles by searching controller:', async function (c
   const controller = this.parseObject(dataTable);
 
   const result = await this.sdk.security.searchRoles(controller);
+
   this.props.result = result;
 });
 

@@ -166,7 +166,7 @@ describe('Test the bulk controller', () => {
         index,
         collection,
         documents,
-        { refresh: 'false', injectKuzzleMeta: false });
+        { refresh: 'false', limits: false, injectKuzzleMeta: false });
 
       should(response).match({
         successes: [

@@ -1906,16 +1906,17 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#updateSearchIndex', () => {
-    it('should call update_by_query', async () => {
-      elasticsearch._client.update_by_query = sinon.stub().resolves();
+    it('should call updateByQuery', async () => {
+      elasticsearch._client.updateByQuery = sinon.stub().resolves();
 
       await elasticsearch.updateSearchIndex(index, collection);
 
-      should(elasticsearch._client.update_by_query).be.calledWithMatch({
+      should(elasticsearch._client.updateByQuery).be.calledWithMatch({
         body: {},
+        conflicts: 'proceed',
         index: '&nyc-open-data.yellow-taxi',
         refresh: true,
-        conflicts: 'proceed'
+        waitForCompletion: false,
       });
     });
   });
@@ -2134,26 +2135,8 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
-    });
-
-    it('should abort if the number of documents exceeds the configured limit', () => {
-      kuzzle.config.limits.documentsWriteCount = 1;
-
-      const promise = elasticsearch.import(
-        index,
-        collection,
-        [
-          { index: { _id: 1, _index: esIndexName } },
-          { body: { foo: 'bar' } },
-          { delete: { _id: 2, _index: esIndexName } }
-        ]);
-
-
-      return should(promise).be.rejectedWith({
-        id: 'services.storage.write_limit_exceeded'
-      });
     });
   });
 
@@ -2877,6 +2860,17 @@ describe('Test: ElasticSearch service', () => {
           should(result).match(mExecuteResult);
         });
     });
+
+    it('should forward the "limits" option to mExecute', async () => {
+      await elasticsearch.mCreateOrReplace(
+        index,
+        collection,
+        documents,
+        { limits: false });
+
+      const options = elasticsearch._mExecute.getCall(0).args[3];
+      should(options.limits).be.false();
+    });
   });
 
   describe('#mUpdate', () => {
@@ -3493,6 +3487,18 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
+    it('should not reject if the documents limit is reached but the "limits" option is false', () => {
+      kuzzle.config.limits.documentsWriteCount = 1;
+
+      const promise = elasticsearch._mExecute(
+        esRequest,
+        documents,
+        partialErrors,
+        { limits: false });
+
+      return should(promise).be.fulfilled();
+    });
+
     it('should return a rejected promise if client fails', () => {
       elasticsearch._client.bulk.rejects(esClientError);
 
@@ -3500,7 +3506,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
     });
 
