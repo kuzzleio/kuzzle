@@ -1,1 +1,7 @@
 !bin/.upgrades
+
+# JS generated files from TS
+lib/**/*.d.ts
+lib/**/*.js.map
+lib/core/application/backend.js
+lib/util/interfaces.js
