@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
 
 import * as fs from 'fs';
 import * as _ from 'lodash';
@@ -129,7 +128,7 @@ class ConfigManager {
     Reflect.defineProperty(this, 'content', {
       enumerable: true,
       value: this._application._kuzzle.config
-    })
+    });
   }
 
   /**
@@ -216,6 +215,7 @@ class ControllerManager {
   private _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
+        // eslint-disable-next-line sort-keys
         definition.http = [{ verb: 'GET', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
       }
     }
@@ -306,7 +306,7 @@ class PluginManager {
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
     if (! Plugin.checkName(name)) {
-      throw assertionError.get('invalid_plugin_name', name)
+      throw assertionError.get('invalid_plugin_name', name);
     }
 
     if (this._application._plugins[name]) {
@@ -486,7 +486,7 @@ export class Backend {
    */
   constructor (name: string) {
     if (! Plugin.checkName(name)) {
-      throw assertionError.get('invalid_application_name', name)
+      throw assertionError.get('invalid_application_name', name);
     }
 
     this._name = name;
@@ -534,17 +534,17 @@ export class Backend {
     const application = new Plugin(
       this._kuzzle,
       this._instanceProxy,
-      { name: this.name, application: true });
+      { application: true, name: this.name });
 
     application.version = this.version;
 
     const options = {
-      secretsFile: this._secretsFile,
-      vaultKey: this._vaultKey,
-      plugins: this._plugins,
-      mappings: this._support.mappings,
       fixtures: this._support.fixtures,
+      mappings: this._support.mappings,
+      plugins: this._plugins,
+      secretsFile: this._secretsFile,
       securities: this._support.securities,
+      vaultKey: this._vaultKey,
     };
 
     await this._kuzzle.start(application, options);
@@ -584,10 +584,11 @@ export class Backend {
 
   private get _instanceProxy () {
     return {
-      pipes: this._pipes,
-      hooks: this._hooks,
       api: this._controllers,
-      init: () => {}
+      hooks: this._hooks,
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      init: () => {},
+      pipes: this._pipes,
     };
   }
 

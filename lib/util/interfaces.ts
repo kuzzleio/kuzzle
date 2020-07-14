@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
 
 /**
  * An interface representing an object with string key and any value
