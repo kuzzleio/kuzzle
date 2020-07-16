@@ -233,7 +233,7 @@ jobs:
         - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
 
     - stage: Deploy latest release on NPM
-      if: type = push AND branch = master
+      if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/
       sudo: false
       language: node_js
       node_js: 12
