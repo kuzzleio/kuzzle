@@ -120,6 +120,8 @@
     "index.js",
     "index.d.ts",
     ".kuzzlerc.sample",
-    "*.md"
+    "LICENSE.md",
+    "CONTRIBUTING.md",
+    "README.md"
   ]
 }
