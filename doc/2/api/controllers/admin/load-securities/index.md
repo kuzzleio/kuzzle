@@ -10,7 +10,7 @@ title: loadSecurities
 
 Load roles, profiles and users into the storage layer.
 
-The roles, profiles and users definitions follow the same structure as in the body parameter of these corresponding API actions:
+The roles, profiles and users definitions follow the same structure as in the body parameter of their corresponding API actions:
 
  - [security:createRole](/core/2/api/controllers/security/create-role)
  - [security:createProfile](/core/2/api/controllers/security/create-profile)
