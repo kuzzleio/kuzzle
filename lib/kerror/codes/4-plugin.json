@@ -59,7 +59,7 @@
           "class": "PluginImplementationError"
         },
         "invalid_plugin_name": {
-          "description": "The plugin name is invalid. Plugin names can only contain lowercase letters and dash.",
+          "description": "The plugin name is invalid. Plugin names can only contain lowercase letters and dashes.",
           "code": 10,
           "message": "Plugin name \"%s\" is invalid. Plugin names must be in kebab-case.",
           "class": "PluginImplementationError"
