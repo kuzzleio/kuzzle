@@ -77,7 +77,7 @@
           "class": "PluginImplementationError"
         },
         "invalid_application_name": {
-          "description": "The application name is invalid. Application names can only contain lowercase letters and dash.",
+          "description": "The application name is invalid. Application names can only contain lowercase letters and dashes.",
           "code": 13,
           "message": "Application name \"%s\" is invalid. Application names must be in kebab-case.",
           "class": "PluginImplementationError"
