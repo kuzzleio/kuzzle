@@ -1,5 +1,9 @@
 Feature: Kuzzle functional tests
 
+  Scenario: Http server does not crash on crafted request
+    When I send the crafted HTTP multipart request
+    Then Kuzzle is still up
+
   Scenario: API method server:publicApi
     When I get the public API
     Then I have the definition of kuzzle and plugins controllers
