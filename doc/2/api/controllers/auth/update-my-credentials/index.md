@@ -16,12 +16,22 @@ Updates the credentials of the currently logged in user.
 
 ### HTTP
 
+<SinceBadge version="auto-version"/>
+```http
+URL: http://kuzzle:7512/_me/credentials/<strategy>/_update
+Method: PUT
+Headers: Authorization: "Bearer <authentication token>"
+Body:
+```
+
+<DeprecatedBadge version="auto-version">
 ```http
 URL: http://kuzzle:7512/credentials/<strategy>/_me/_update
 Method: PUT
 Headers: Authorization: "Bearer <authentication token>"
 Body:
 ```
+</DeprecatedBadge>
 
 ```js
 {
