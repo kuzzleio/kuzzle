@@ -20,12 +20,17 @@ describe('RealtimeController', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     realtimeController = new RealtimeController(kuzzle);
-    request = new Request({
-      index: 'test',
-      collection: 'collection',
-      controller: 'realtime',
-      body: {}
-    }, {user: {_id: '42'}});
+    request = new Request(
+      {
+        index: 'test',
+        collection: 'collection',
+        controller: 'realtime',
+        body: {}
+      },
+      {
+        connection: {id: 'connectionId'},
+        user: {_id: '42'},
+      });
   });
 
   describe('#constructor', () => {
@@ -145,7 +150,7 @@ describe('RealtimeController', () => {
 
       should(result).be.match({ roomId: 'foo' });
       should(kuzzle.ask)
-        .calledWithMatch('core:realtime:unsubscribe', request.context, 'foo');
+        .calledWithMatch('core:realtime:unsubscribe', 'connectionId', 'foo');
     });
   });
 
