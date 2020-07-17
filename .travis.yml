@@ -28,7 +28,6 @@ _doc-deploy: &doc-deploy
   language: node_js
   node_js: 10
   env: &doc-deploy-env
-    - NODE_ENV=production
     - AWS_DEFAULT_REGION=us-west-2
     - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
     # AWS_SECRET_ACCESS_KEY in Travis CI UI
