@@ -2,11 +2,14 @@
 
 const _ = require('lodash');
 const sinon = require('sinon');
-const Kuzzle = require('../../lib/kuzzle');
 const Bluebird = require('bluebird');
-const config = require('../../lib/config');
+
 const IndexStorageMock = require('./indexStorage.mock');
 const ClientAdapterMock = require('./clientAdapter.mock');
+
+const Kuzzle = require('../../lib/kuzzle');
+const config = require('../../lib/config');
+
 const foo = { foo: 'bar' };
 
 let _instance;
@@ -86,18 +89,6 @@ class KuzzleMock extends Kuzzle {
       isNativeController : sinon.stub()
     };
 
-    this.hotelClerk = {
-      rooms: new Map(),
-      customers: new Map(),
-      getRealtimeCollections: sinon.stub(),
-      removeCustomerFromAllRooms: sinon.stub(),
-      addSubscription: sinon.stub().resolves(foo),
-      join: sinon.stub().resolves(foo),
-      removeSubscription: sinon.stub().resolves(foo),
-      countSubscription: sinon.stub().resolves(foo),
-      listSubscriptions: sinon.stub().resolves(foo),
-    };
-
     this.dumpGenerator = {
       dump: sinon.stub().resolves()
     };
@@ -150,20 +141,6 @@ class KuzzleMock extends Kuzzle {
     this.internalIndex._bootstrap = {
       startOrWait: sinon.stub().resolves(),
       createInitialSecurities: sinon.stub().resolves()
-    };
-
-    this.notifier = {
-      init: sinon.spy(),
-      notifyUser: sinon.stub().resolves(),
-      notifyServer: sinon.stub().resolves(),
-      notifyDocument: sinon.stub().resolves(),
-      notifyDocumentCreate: sinon.stub().resolves(),
-      notifyDocumentMDelete: sinon.stub().resolves(),
-      notifyDocumentReplace: sinon.stub().resolves(),
-      notifyDocumentUpdate: sinon.stub().resolves(),
-      publish: sinon.stub().resolves(foo),
-      notifyDocumentMCreate: sinon.stub().resolves(),
-      notifyDocumentMChanges: sinon.stub().resolves()
     };
 
     this.passport = {

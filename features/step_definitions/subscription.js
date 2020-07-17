@@ -78,34 +78,6 @@ Then(/^I unsubscribe(?: socket "([^"]*)")?/, function (socketName, callback) {
     });
 });
 
-/**
- * Remove room subscription
- */
-Then(/^I remove the first room(?: for socket "([^"]*)")?/, function (socketName, callback) {
-  var rooms;
-
-  if (socketName) {
-    rooms = Object.keys(this.api.subscribedRooms[socketName]);
-  }
-  else {
-    socketName = Object.keys(this.api.subscribedRooms)[0];
-    rooms = Object.keys(this.api.subscribedRooms[socketName]);
-  }
-
-  if (rooms.length === 0) {
-    callback(new Error('Cannot unsubscribe: no subscribed rooms'));
-    return false;
-  }
-
-  this.api.removeRooms([rooms[0]])
-    .then(function () {
-      callback();
-    })
-    .catch(function (error) {
-      callback(new Error(error));
-    });
-});
-
 Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
   this.api.countSubscription()
     .then(function (response) {

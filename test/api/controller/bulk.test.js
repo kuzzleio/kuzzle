@@ -1,10 +1,13 @@
 'use strict';
 
 const should = require('should');
-const BulkController = require('../../../lib/api/controller/bulk');
+const sinon = require('sinon');
 const { Request } = require('kuzzle-common-objects');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockAssertions = require('../../mocks/mockAssertions');
+
+const BulkController = require('../../../lib/api/controller/bulk');
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('Test the bulk controller', () => {
@@ -80,9 +83,10 @@ describe('Test the bulk controller', () => {
   });
 
   describe('#write', () => {
-    let
-      content,
-      id;
+    let content;
+    let id;
+    let notifyCreateStub;
+    let notifyReplaceStub;
 
     beforeEach(() => {
       id = 'tolkien';
@@ -96,15 +100,25 @@ describe('Test the bulk controller', () => {
         _id: id,
         _version: 1,
         _source: content,
-        result: 'created'
+        result: 'created',
       });
+
+      notifyCreateStub = kuzzle.ask.withArgs(
+        'core:realtime:notify:created',
+        sinon.match.object,
+        sinon.match.string,
+        sinon.match.object);
+
+      notifyReplaceStub = kuzzle.ask.withArgs(
+        'core:realtime:notify:replaced',
+        sinon.match.object);
     });
 
     it('should createOrReplace the document without injecting meta', async () => {
       const response = await controller.write(request);
 
-      should(kuzzle.notifier.notifyDocumentCreate).not.be.called();
-      should(kuzzle.notifier.notifyDocumentReplace).not.be.called();
+      should(notifyCreateStub).not.called();
+      should(notifyReplaceStub).not.called();
       should(controller.publicStorage.createOrReplace).be.calledWith(
         index,
         collection,
@@ -119,19 +133,43 @@ describe('Test the bulk controller', () => {
       });
     });
 
-    it('should notify if its specified', async () => {
+    it('should send "document created" notifications if asked to', async () => {
+      request.input.args.notify = true;
+
+      controller.publicStorage.createOrReplace.resolves({
+        _id: id,
+        _version: 1,
+        _source: content,
+        result: 'created',
+        created: true,
+      });
+
+      await controller.write(request);
+
+      should(notifyCreateStub).be.calledWith(
+        'core:realtime:notify:created',
+        request,
+        id,
+        content);
+      should(notifyReplaceStub).not.called();
+    });
+
+    it('should send "document replaced" notifications if asked to', async () => {
       request.input.args.notify = true;
 
       await controller.write(request);
 
-      should(kuzzle.notifier.notifyDocumentReplace).be.called();
+      should(notifyCreateStub).not.called();
+      should(notifyReplaceStub).be.calledWith(
+        'core:realtime:notify:replaced',
+        request);
     });
   });
 
   describe('#mWrite', () => {
-    let
-      documents,
-      mCreateOrReplaceResult;
+    let documents;
+    let mCreateOrReplaceResult;
+    let notifyMChangesStub;
 
     beforeEach(() => {
       documents = [
@@ -156,12 +194,18 @@ describe('Test the bulk controller', () => {
         items: mCreateOrReplaceResult,
         errors: []
       });
+
+      notifyMChangesStub = kuzzle.ask.withArgs(
+        'core:realtime:notify:mChanged',
+        sinon.match.object,
+        sinon.match.every(sinon.match.object),
+        sinon.match.bool);
     });
 
     it('should mCreateOrReplace the document without injecting meta', async () => {
       const response = await controller.mWrite(request);
 
-      should(kuzzle.notifier.notifyDocumentMChanges).not.be.called();
+      should(notifyMChangesStub).not.be.called();
       should(controller.publicStorage.mCreateOrReplace).be.calledWith(
         index,
         collection,
@@ -182,8 +226,11 @@ describe('Test the bulk controller', () => {
 
       await controller.mWrite(request);
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
-        request, mCreateOrReplaceResult, true);
+      should(notifyMChangesStub).be.calledWith(
+        'core:realtime:notify:mChanged',
+        request,
+        mCreateOrReplaceResult,
+        true);
     });
   });
 

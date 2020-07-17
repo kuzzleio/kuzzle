@@ -3,7 +3,9 @@
 const should = require('should');
 const sinon = require('sinon');
 const { Request } = require('kuzzle-common-objects');
+
 const Kuzzle = require('../../../mocks/kuzzle.mock');
+
 const Notifier = require('../../../../lib/core/realtime/notifier');
 
 describe('Test: notifier.notifyDocumentUpdate', () => {
@@ -33,7 +35,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     sinon.stub(notifier, 'notifyDocument').resolves();
   });
 
-  it('should notify subscribers when an updated document entered their scope', () => {
+  it('should notify subscribers when an updated document entered their scope', async () => {
     const {_id, index, collection} = request.input.resource;
 
     kuzzle.koncorde.test.returns(['foo']);
@@ -45,49 +47,43 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     kuzzle.cacheEngine.internal.get.resolves(
       JSON.stringify(['foo', 'bar']));
 
-    return notifier.notifyDocumentUpdate(request, {
-      _id,
-      _source: { foo: 'bar' },
-      _updatedFields: ['foo']
-    })
-      .then(() => {
+    await notifier.notifyDocumentUpdate(request, _id, { foo: 'bar' });
 
-        should(kuzzle.koncorde.test)
-          .calledOnce()
-          .calledWith('foo', 'bar', {foo: 'bar'}, _id);
+    should(kuzzle.koncorde.test)
+      .calledOnce()
+      .calledWith('foo', 'bar', {foo: 'bar'}, _id);
 
-        should(notifier.notifyDocument.callCount).be.eql(2);
-        should(notifier.notifyDocument.getCall(0)).calledWith(
-          ['foo'],
-          request,
-          'in',
-          'update',
-          {
-            _id,
-            _source: { foo: 'bar' },
-            _updatedFields: ['foo']
-          });
-
-        should(notifier.notifyDocument.getCall(1)).calledWith(
-          ['bar'], request, 'out', 'update', { _id });
-
-        should(kuzzle.cacheEngine.internal.get)
-          .calledOnce()
-          .calledWith(`{notif/${index}/${collection}}/${_id}`);
-
-        should(kuzzle.cacheEngine.internal.del).not.be.called();
-
-        should(kuzzle.cacheEngine.internal.setex)
-          .calledOnce()
-          .calledWith(
-            `{notif/${index}/${collection}}/${_id}`,
-            kuzzle.config.limits.subscriptionDocumentTTL,
-            JSON.stringify(['foo']));
+    should(notifier.notifyDocument.callCount).be.eql(2);
+    should(notifier.notifyDocument.getCall(0)).calledWith(
+      ['foo'],
+      request,
+      'in',
+      'update',
+      {
+        _id,
+        _source: { foo: 'bar' },
+        _updatedFields: ['foo']
       });
+
+    should(notifier.notifyDocument.getCall(1)).calledWith(
+      ['bar'], request, 'out', 'update', { _id });
+
+    should(kuzzle.cacheEngine.internal.get)
+      .calledOnce()
+      .calledWith(`{notif/${index}/${collection}}/${_id}`);
+
+    should(kuzzle.cacheEngine.internal.del).not.be.called();
+
+    should(kuzzle.cacheEngine.internal.setex)
+      .calledOnce()
+      .calledWith(
+        `{notif/${index}/${collection}}/${_id}`,
+        kuzzle.config.limits.subscriptionDocumentTTL,
+        JSON.stringify(['foo']));
   });
 
   context('with a subscriptionDocumentTTL set to 0', () => {
-    it('should set internalCache with no TTL', () => {
+    it('should set internalCache with no TTL', async () => {
       const {_id, index, collection} = request.input.resource;
 
       kuzzle.config.limits.subscriptionDocumentTTL = 0;
@@ -101,20 +97,15 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       kuzzle.cacheEngine.internal.get.resolves(
         JSON.stringify(['foo', 'bar']));
 
-      return notifier
-        .notifyDocumentUpdate(request, {
-          _id,
-          _source: { foo: 'bar' }
-        })
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.setex).not.be.called();
+      await notifier.notifyDocumentUpdate(request, _id, { foo: 'bar' });
 
-          should(kuzzle.cacheEngine.internal.set)
-            .calledOnce()
-            .calledWith(
-              `{notif/${index}/${collection}}/${_id}`,
-              JSON.stringify(['foo']));
-        });
+      should(kuzzle.cacheEngine.internal.setex).not.be.called();
+
+      should(kuzzle.cacheEngine.internal.set)
+        .calledOnce()
+        .calledWith(
+          `{notif/${index}/${collection}}/${_id}`,
+          JSON.stringify(['foo']));
     });
   });
 });

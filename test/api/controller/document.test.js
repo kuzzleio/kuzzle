@@ -1,8 +1,6 @@
 'use strict';
 
 const should = require('should');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const DocumentController = require('../../../lib/api/controller/document');
 const {
   Request,
   errors: {
@@ -10,21 +8,20 @@ const {
     SizeLimitError
   }
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const DocumentController = require('../../../lib/api/controller/document');
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('DocumentController', () => {
-  let
-    documentController,
-    kuzzle,
-    request,
-    index,
-    collection;
+  const index = 'festivals';
+  const collection = 'huma';
+  let documentController;
+  let kuzzle;
+  let request;
 
   beforeEach(() => {
-    index = 'festivals';
-
-    collection = 'huma';
-
     kuzzle = new KuzzleMock();
     documentController = new DocumentController(kuzzle);
 
@@ -257,13 +254,10 @@ describe('DocumentController', () => {
   });
 
   describe('#create', () => {
-    let content;
+    const content = { foo: 'bar' };
 
     beforeEach(() => {
-      content = { foo: 'bar' };
-
       request.input.body = content;
-
       kuzzle.validation.validate.resolvesArg(0);
 
       documentController.publicStorage.create.resolves({
@@ -288,13 +282,12 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:notify:created',
         request,
-        {
-          _id: '_id',
-          _version: '_version',
-          _source: '_source'
-        });
+        '_id',
+        '_source');
+
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -351,7 +344,8 @@ describe('DocumentController', () => {
         documents,
         { userId: 'aschen', refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:notify:mChanged',
         request,
         items,
         true);
@@ -453,14 +447,9 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(
-        request,
-        {
-          _id: '_id',
-          _version: '_version',
-          _source: '_source',
-          created: true
-        });
+      should(kuzzle.ask)
+        .calledWith('core:realtime:notify:created', request, '_id', '_source');
+
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -479,8 +468,7 @@ describe('DocumentController', () => {
 
       await documentController.createOrReplace(request);
 
-      should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(
-        request);
+      should(kuzzle.ask).calledWith('core:realtime:notify:replaced', request);
     });
 
     it('should have default value for refresh and userId', async () => {
@@ -530,8 +518,12 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentUpdate).be.calledWith(
-        request);
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:notify:updated',
+        request,
+        '_id',
+        content);
+
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -563,14 +555,17 @@ describe('DocumentController', () => {
   });
 
   describe('#updateByQuery', () => {
+    let esResponse;
     beforeEach(() => {
-      documentController.publicStorage.updateByQuery.resolves(({
+      esResponse = {
         successes: [
           { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
           { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
         ],
         errors: []
-      }));
+      };
+
+      documentController.publicStorage.updateByQuery.resolves(esResponse);
     });
 
     it('should call publicStorage updateByQuery method and notify the changes', async () => {
@@ -594,26 +589,12 @@ describe('DocumentController', () => {
         { bar: 'foo'},
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:notify:mChanged',
         request,
-        [
-          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
-          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
-        ]);
+        esResponse.successes);
 
-      should(response).be.eql({
-        successes: [
-          {
-            _id: 'id1',
-            _source: { foo: 'bar', bar: 'foo' }
-          },
-          {
-            _id: 'id2',
-            _source: { foo: 'bar', bar: 'foo' }
-          }
-        ],
-        errors: []
-      });
+      should(response).be.eql(esResponse);
     });
 
     it('should not include documents content in the response of updateByQuery', async () => {
@@ -628,15 +609,6 @@ describe('DocumentController', () => {
       request.input.args.refresh = 'wait_for';
       request.input.args.source = false;
 
-
-      kuzzle.notifier.notifyDocumentMChanges.callsFake((req, documents) => {
-        should(req).be.eql(request);
-        should(documents).be.eql([
-          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
-          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
-        ]);
-      });
-
       const response = await documentController.updateByQuery(request);
 
       should(documentController.publicStorage.updateByQuery).be.calledWith(
@@ -646,21 +618,12 @@ describe('DocumentController', () => {
         { bar: 'foo' },
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledOnce();
+      should(kuzzle.ask).calledWith(
+        'core:realtime:notify:mChanged',
+        request,
+        esResponse.successes);
 
-      should(response).be.eql({
-        successes: [
-          {
-            _id: 'id1',
-            _source: undefined
-          },
-          {
-            _id: 'id2',
-            _source: undefined
-          }
-        ],
-        errors: []
-      });
+      should(response).be.eql(esResponse);
     });
 
     it('should throw if field "query" is missing', () => {
@@ -675,7 +638,9 @@ describe('DocumentController', () => {
       request.input.args.refresh = 'wait_for';
       request.input.args.source = false;
 
-      should(() => documentController.updateByQuery(request).throw(BadRequestError, { message: 'Missing argument "body.changes"' }));
+      return should(documentController.updateByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.missing_argument' });
     });
 
     it('should throw if field "changes" is missing', () => {
@@ -690,7 +655,9 @@ describe('DocumentController', () => {
       request.input.args.refresh = 'wait_for';
       request.input.args.source = false;
 
-      should(() => documentController.updateByQuery(request).throw(BadRequestError, {message: 'Missing argument "body.changes"'}));
+      return should(documentController.updateByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.missing_argument' });
     });
   });
 
@@ -728,8 +695,7 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(
-        request);
+      should(kuzzle.ask).calledWith('core:realtime:notify:replaced', request);
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -766,9 +732,11 @@ describe('DocumentController', () => {
         'foobar',
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:notify:deleted',
         request,
-        [{ _id: 'foobar', _source: '_source' }]);
+        'foobar',
+        '_source');
 
       should(response).be.eql({ _id: 'foobar' });
     });
@@ -788,9 +756,11 @@ describe('DocumentController', () => {
         collection,
         'foobar');
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:notify:deleted',
         request,
-        [{ _id: 'foobar', _source: '_source' }]);
+        'foobar',
+        '_source');
 
       should(response).be.eql({ _id: 'foobar', _source: '_source'});
     });
@@ -829,8 +799,8 @@ describe('DocumentController', () => {
         ids,
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete)
-        .be.calledWith(request, documents);
+      should(kuzzle.ask)
+        .be.calledWith('core:realtime:notify:mDeleted', request, documents);
 
       should(response).match({
         successes: ['id1', 'id2', 'id3'],
@@ -882,7 +852,8 @@ describe('DocumentController', () => {
         { foo: 'bar' },
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:notify:mDeleted',
         request,
         [
           { _id: 'id1', _source: undefined },
@@ -909,7 +880,8 @@ describe('DocumentController', () => {
         { foo: 'bar' },
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:notify:mDeleted',
         request,
         [
           { _id: 'id1', _source: '_source1' },
