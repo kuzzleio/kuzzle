@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 
-const should = require("should");
-const _ = require("lodash");
+const should = require('should');
+const _ = require('lodash');
 
 class FunctionalTestPlugin {
   constructor() {
@@ -13,36 +13,36 @@ class FunctionalTestPlugin {
     // Custom Realtime subscription related declarations =======================
 
     this.controllers.accessors = {
-      registerSubscription: "registerSubscription",
+      registerSubscription: 'registerSubscription',
     };
 
     this.routes.push({
-      action: "registerSubscription",
-      controller: "accessors",
-      url: "/accessors/registerSubscription",
-      verb: "POST",
+      action: 'registerSubscription',
+      controller: 'accessors',
+      url: '/accessors/registerSubscription',
+      verb: 'POST',
     });
 
     // context.constructor.ESClient related declarations =======================
 
-    this.controllers.constructors = { ESClient: "testConstructorsESClient" };
+    this.controllers.constructors = { ESClient: 'testConstructorsESClient' };
 
     this.routes.push({
-      action: "ESClient",
-      controller: "constructors",
-      url: "/constructors/esclient/:index",
-      verb: "post",
+      action: 'ESClient',
+      controller: 'constructors',
+      url: '/constructors/esclient/:index',
+      verb: 'post',
     });
 
     // context.secrets related declarations ====================================
 
-    this.controllers.secrets = { test: "testSecrets" };
+    this.controllers.secrets = { test: 'testSecrets' };
 
     this.routes.push({
-      action: "test",
-      controller: "secrets",
-      url: "/secrets",
-      verb: "post",
+      action: 'test',
+      controller: 'secrets',
+      url: '/secrets',
+      verb: 'post',
     });
 
     // pipes related declarations ==============================================
@@ -50,73 +50,73 @@ class FunctionalTestPlugin {
     this.activatedPipes = {};
 
     this.controllers.pipes = {
-      deactivateAll: "pipesDeactivateAll",
-      manage: "pipesManage",
-      testReturn: "pipesTestReturn",
+      deactivateAll: 'pipesDeactivateAll',
+      manage: 'pipesManage',
+      testReturn: 'pipesTestReturn',
     };
 
     this.routes.push({
-      action: "manage",
-      controller: "pipes",
-      url: "/pipes/:event/:state",
-      verb: "post",
+      action: 'manage',
+      controller: 'pipes',
+      url: '/pipes/:event/:state',
+      verb: 'post',
     });
     this.routes.push({
-      action: "deactivateAll",
-      controller: "pipes",
-      url: "/pipes",
-      verb: "delete",
+      action: 'deactivateAll',
+      controller: 'pipes',
+      url: '/pipes',
+      verb: 'delete',
     });
     this.routes.push({
-      action: "testReturn",
-      controller: "pipes",
-      url: "/pipes/test-return/:name",
-      verb: "post",
+      action: 'testReturn',
+      controller: 'pipes',
+      url: '/pipes/test-return/:name',
+      verb: 'post',
     });
 
-    this.pipes["generic:document:beforeWrite"] = (...args) =>
-      this.genericDocumentEvent("beforeWrite", ...args);
-    this.pipes["generic:document:afterWrite"] = (...args) =>
-      this.genericDocumentEvent("afterWrite", ...args);
-    this.pipes["generic:document:beforeUpdate"] = (...args) =>
-      this.genericDocumentEvent("beforeUpdate", ...args);
-    this.pipes["generic:document:afterUpdate"] = (...args) =>
-      this.genericDocumentEvent("afterUpdate", ...args);
-    this.pipes["generic:document:beforeGet"] = (...args) =>
-      this.genericDocumentEvent("beforeGet", ...args);
-    this.pipes["generic:document:afterGet"] = (...args) =>
-      this.genericDocumentEvent("afterGet", ...args);
-    this.pipes["generic:document:beforeDelete"] = (...args) =>
-      this.genericDocumentEvent("beforeDelete", ...args);
-    this.pipes["generic:document:afterDelete"] = (...args) =>
-      this.genericDocumentEvent("afterDelete", ...args);
+    this.pipes['generic:document:beforeWrite'] = (...args) =>
+      this.genericDocumentEvent('beforeWrite', ...args);
+    this.pipes['generic:document:afterWrite'] = (...args) =>
+      this.genericDocumentEvent('afterWrite', ...args);
+    this.pipes['generic:document:beforeUpdate'] = (...args) =>
+      this.genericDocumentEvent('beforeUpdate', ...args);
+    this.pipes['generic:document:afterUpdate'] = (...args) =>
+      this.genericDocumentEvent('afterUpdate', ...args);
+    this.pipes['generic:document:beforeGet'] = (...args) =>
+      this.genericDocumentEvent('beforeGet', ...args);
+    this.pipes['generic:document:afterGet'] = (...args) =>
+      this.genericDocumentEvent('afterGet', ...args);
+    this.pipes['generic:document:beforeDelete'] = (...args) =>
+      this.genericDocumentEvent('beforeDelete', ...args);
+    this.pipes['generic:document:afterDelete'] = (...args) =>
+      this.genericDocumentEvent('afterDelete', ...args);
 
-    this.pipes["plugin-functional-test-plugin:testPipesReturn"] = async (
+    this.pipes['plugin-functional-test-plugin:testPipesReturn'] = async (
       name
     ) => `Hello, ${name}`;
 
     // Pipe declared with a function name
-    this.pipes["server:afterNow"] = "afterNowPipe";
+    this.pipes['server:afterNow'] = 'afterNowPipe';
 
     // Embedded SDK realtime
-    this.hooks["kuzzle:state:live"] = async () => {
+    this.hooks['kuzzle:state:live'] = async () => {
       const roomId = await this.sdk.realtime.subscribe(
-        "test",
-        "question",
+        'test',
+        'question',
         {},
         async () => {
-          await this.sdk.realtime.publish("test", "answer", {});
+          await this.sdk.realtime.publish('test', 'answer', {});
           await this.sdk.realtime.unsubscribe(roomId);
         }
       );
     };
 
     // hooks related declarations ==============================================
-    this.hooks["server:afterNow"] = async () => {
+    this.hooks['server:afterNow'] = async () => {
       await this.context.accessors.sdk.realtime.publish(
-        "functionnal-test",
-        "hooks",
-        { event: "server:afterNow" }
+        'functionnal-test',
+        'hooks',
+        { event: 'server:afterNow' }
       );
     };
   }
@@ -130,8 +130,8 @@ class FunctionalTestPlugin {
   // accessors.registerSubscription related methods ============================
 
   async registerSubscription(request) {
-    const index = "toto";
-    const collection = "titi";
+    const index = 'toto';
+    const collection = 'titi';
     const filters = {};
     const options = {};
 
@@ -144,7 +144,7 @@ class FunctionalTestPlugin {
     );
 
     return {
-      acknowledged: "OK",
+      acknowledged: 'OK',
       roomId,
     };
   }
@@ -191,7 +191,7 @@ class FunctionalTestPlugin {
 
   async pipesDeactivateAll() {
     for (const pipe of Object.values(this.activatedPipes)) {
-      pipe.state = "off";
+      pipe.state = 'off';
     }
 
     return null;
@@ -200,7 +200,7 @@ class FunctionalTestPlugin {
   async genericDocumentEvent(event, documents) {
     const pipe = this.activatedPipes[`generic:document:${event}`];
 
-    if (!pipe || pipe.state === "off") {
+    if (!pipe || pipe.state === 'off') {
       return documents;
     }
 
@@ -215,12 +215,12 @@ class FunctionalTestPlugin {
   }
 
   async afterNowPipe(request) {
-    const pipe = this.activatedPipes["server:afterNow"];
+    const pipe = this.activatedPipes['server:afterNow'];
 
-    if (pipe && pipe.state !== "off") {
+    if (pipe && pipe.state !== 'off') {
       const response = request.response.result;
       response.lyrics =
-        "The distant future, The year 2000. The humans are dead.";
+        'The distant future, The year 2000. The humans are dead.';
     }
 
     return request;
@@ -232,7 +232,7 @@ class FunctionalTestPlugin {
    */
   async pipesTestReturn(request) {
     const helloName = await this.context.accessors.trigger(
-      "testPipesReturn",
+      'testPipesReturn',
       request.input.args.name
     );
 
