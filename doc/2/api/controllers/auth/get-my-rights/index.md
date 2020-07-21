@@ -18,7 +18,7 @@ Returns the exhaustive list of granted or denied rights for the currently logged
 
 <SinceBadge version="auto-version"/>
 ```http
-URL: http://kuzzle:7512/_me/users/_rights
+URL: http://kuzzle:7512/_me/_rights
 Method: GET
 Headers: Authorization: "Bearer <authentication token>"
 ```
