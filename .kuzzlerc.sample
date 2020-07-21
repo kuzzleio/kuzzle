@@ -148,8 +148,8 @@
   // mechanism
   "security": {
     // [restrictedProfileIds]
-    // The profileIds applied to a user created with the API route
-    // users/_createRestricted
+    // The profileIds applied to a user created with the API action
+    // "security:createRestrictedUser"
     "restrictedProfileIds": ["default"],
     // [jwt]
     // configuration for the npm package jsonwebtoken

@@ -46,7 +46,7 @@ describe('#kerror', () => {
     should(err).match({
       id: 'core.fatal.unexpected_error',
       code: parseInt('00000001', 16),
-      message: 'Caught an unexpected error: {"status":"error"}.'
+      message: 'Caught an unexpected error: api.assert.fake_error.'
     });
   });
 

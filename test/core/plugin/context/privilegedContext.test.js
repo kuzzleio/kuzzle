@@ -10,7 +10,7 @@ describe('Privileged Plugin Context', () => {
     PrivilegedPluginContext;
 
   beforeEach(() => {
-    mockrequire.reRequire('../../../../lib/core/plugin/context');
+    mockrequire.reRequire('../../../../lib/core/plugin/pluginContext');
     PrivilegedPluginContext = mockrequire.reRequire('../../../../lib/core/plugin/privilegedContext');
   });
 
