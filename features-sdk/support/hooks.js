@@ -120,6 +120,11 @@ After({ tags: '@events' }, async function () {
     controller: 'functional-test-plugin/pipes',
     action: 'deactivateAll'
   });
+
+  await this.sdk.query({
+    controller: 'pipes',
+    action: 'deactivateAll'
+  });
 });
 
 // login hooks =================================================================

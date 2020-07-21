@@ -31,7 +31,7 @@ describe('AbstractManifest class', () => {
   it('should throw if no manifest.json is found', () => {
     const manifest = new Manifest(kuzzle, pluginPath);
 
-    should(() => manifest.load()).throw(PluginImplementationError, {
+    should(() => manifest.loadFromDisk()).throw(PluginImplementationError, {
       id: 'plugin.manifest.cannot_load'
     });
   });
@@ -40,7 +40,7 @@ describe('AbstractManifest class', () => {
     const manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion: 123 })(() => {
-      should(() => manifest.load())
+      should(() => manifest.loadFromDisk())
         .throw(PluginImplementationError, { id: 'plugin.manifest.version_mismatch' });
     });
   });
@@ -50,7 +50,7 @@ describe('AbstractManifest class', () => {
       manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar' })(() => {
-      should(() => manifest.load())
+      should(() => manifest.loadFromDisk())
         .throw(PluginImplementationError, { id: 'plugin.manifest.missing_version' });
     });
   });
@@ -61,7 +61,7 @@ describe('AbstractManifest class', () => {
       manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion })(() => {
-      manifest.load();
+      manifest.loadFromDisk();
       should(manifest).match({ name: 'foobar', kuzzleVersion });
     });
   });
@@ -71,7 +71,7 @@ describe('AbstractManifest class', () => {
 
     [123, false, ''].forEach(name => {
       mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
-        should(() => manifest.load()).throw(PluginImplementationError, {
+        should(() => manifest.loadFromDisk()).throw(PluginImplementationError, {
           id: 'plugin.manifest.invalid_name_type'
         });
       });
@@ -83,7 +83,7 @@ describe('AbstractManifest class', () => {
 
     [undefined, null].forEach(name => {
       mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
-        should(() => manifest.load()).throw(PluginImplementationError, {
+        should(() => manifest.loadFromDisk()).throw(PluginImplementationError, {
           id: 'plugin.manifest.missing_name'
         });
       });
@@ -96,7 +96,7 @@ describe('AbstractManifest class', () => {
       manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion })(() => {
-      should(() => manifest.load()).throw(PluginImplementationError, {
+      should(() => manifest.loadFromDisk()).throw(PluginImplementationError, {
         id: 'plugin.manifest.version_mismatch'
       });
     });
@@ -106,7 +106,7 @@ describe('AbstractManifest class', () => {
     const manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion: defaultKuzzleVersion })(() => {
-      manifest.load();
+      manifest.loadFromDisk();
 
       const serialized = JSON.parse(JSON.stringify(manifest));
 

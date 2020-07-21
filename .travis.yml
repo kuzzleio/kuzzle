@@ -138,13 +138,6 @@ jobs:
 
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12 - Functional tests legacy
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
-        - *integration-tests-env
-
-    - <<: *integration-tests
-      stage: Integration tests
       name: Node.js 12.16.3 - Functional tests sdk
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
@@ -153,10 +146,18 @@ jobs:
 
     - <<: *integration-tests
       stage: Integration tests
+      name: Node.js 12 - Functional tests legacy
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
       name: Node.js 12 - Functional tests sdk
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
-        - *integration-tests-env
+       - *integration-tests-env
+
 
 
     # ---------------------------------------
@@ -230,6 +231,36 @@ jobs:
         - *doc-deploy-env
         - S3_BUCKET=docs.kuzzle.io
         - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
+
+    - stage: Deploy latest release on NPM
+      if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/
+      sudo: false
+      language: node_js
+      node_js: 12
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-4.9
+            - g++-4.9
+      before_install:
+        - export CC="gcc-4.9" CXX="g++-4.9"
+      install:
+        - npm install
+      script:
+        - npm run build
+      deploy:
+        provider: npm
+        skip_cleanup: true
+        email: support@kuzzle.io
+        tag: latest
+        api_key:
+          secure: WE+3vUgOvZ2pEKYStsz/9t+VKV7fCYG4ZwC0Xppr4t8M/4EGWa8Pr+cWG4+JuljBYmQry4I4tptfjROR2zNSzGQ0RwwEfvjt/Qbc705qxX2jtF6Dq+sqaha18TfPhjuSSKABSb7NDhzjUdmaJ7ki8DmRsmM/5aqQBHw6TUtHMGejT++jymY3W74SZAHCFw+opsxCrey01UtSTHLussiTP9YntVSwBtNXZ1DQwggZXiPCtPqJcqOOTia8MQt6GA7TLc94drpORKAN7kIShrE7Mg9lpMXT5gDv1cf+9VRyhjZSlPUbBfMN30ZrvPJNboIh31rFLdGLu3WfDG/LHHVzw0aYU9w+RJ63zBlP5DChKWKRgJqqOdW4Z5XT6lImiEQaIICVEN3nCH1uavQICl+O3Z81uEtk4wynRJlbZlfYG0r3vCffiHCeZjj5xy9+XwzpiJysxm+XvIewFiP0jcPjRRl9/un2jQMgeTm6uOMXVnQUgxR3bB5ZAYwKJ3y1rt6pPhKVLXCq1MM6HvaWjBGbLuQbl46OWjG2HNfxTVOqpfovCETrWKKpUUCS3Z+Ho4WUILZs9Jx4HOU02rOcM+gwXN4+WRMKLc1sq6V1gI8D7b/XIDaiDmrdNKSBtlxyfq8wZPcunhSQESHrqbAxquQxD6J8DW4ugjsXXWU89PwT4TY=
+        on:
+          repo: kuzzleio/kuzzle
+          all_branches: true
+
 
 # ------------------------
 # Stages configuration

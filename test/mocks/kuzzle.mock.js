@@ -153,7 +153,7 @@ class KuzzleMock extends Kuzzle {
     this.pluginsManager = {
       controllers: new Map(),
       init: sinon.stub().resolves(),
-      plugins: {},
+      plugins: [],
       run: sinon.stub().resolves(),
       getPluginsDescription: sinon.stub().returns({}),
       listStrategies: sinon.stub().returns([]),
@@ -167,7 +167,10 @@ class KuzzleMock extends Kuzzle {
       hasStrategyMethod: sinon.stub().returns(false),
       strategies: {},
       registerStrategy: sinon.stub(),
-      unregisterStrategy: sinon.stub()
+      unregisterStrategy: sinon.stub(),
+      application: {
+        info: sinon.stub()
+      }
     };
 
     this.rootPath = '/kuzzle';

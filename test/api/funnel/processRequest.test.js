@@ -30,9 +30,9 @@ describe('funnel.processRequest', () => {
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
-    mockrequire.reRequire('../../../lib/core/plugin/context');
+    mockrequire.reRequire('../../../lib/core/plugin/pluginContext');
     mockrequire.reRequire('../../../lib/core/plugin/privilegedContext');
-    const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/manager');
+    const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/pluginsManager');
 
     kuzzle = new KuzzleMock();
     funnel = new Funnel(kuzzle);
@@ -240,9 +240,8 @@ describe('funnel.processRequest', () => {
   it('should update the query documents with alias pipe', async () => {
     kuzzle.pipe.restore();
     kuzzle.storageEngine.public.create.resolves({_id: 'foobar', _source: 'src' });
-
-    pluginsManager.plugins = [{
-      object: {
+    const plugin = {
+      instance: {
         init: () => {},
         pipes: {
           'generic:document:beforeWrite': async function hello(documents) {
@@ -263,7 +262,8 @@ describe('funnel.processRequest', () => {
       manifest: {
         name: 'foo'
       }
-    }];
+    };
+    pluginsManager._plugins.set(plugin);
 
     const request = new Request({
       controller: 'document',
@@ -274,6 +274,8 @@ describe('funnel.processRequest', () => {
         foo: 'bar',
       }
     });
+
+    pluginsManager._initPipes(plugin);
 
     await pluginsManager.run();
     return funnel.processRequest(request);

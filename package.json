@@ -1,13 +1,15 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
-  "main": "./lib/kuzzle",
   "bin": {
     "kuzzle": "./bin/start-kuzzle-server"
   },
   "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "npm run build-ts",
+    "build-ts": "tsc",
     "test": "npm run --silent test:lint && npm run test:unit:coverage && npm run test:functional",
     "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha",
     "test:unit:coverage": "DEBUG= nyc --reporter=text-summary --reporter=lcov mocha",
@@ -16,8 +18,11 @@
     "test:functional:sdk": "bash features-sdk/run.sh",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
-    "test:lint": "eslint --max-warnings=0 ./lib ./test ./features ./bin ./features-sdk ./doc/build-error-codes.js ./plugins/available/functional-test-plugin",
-    "test:lint:fix": "eslint --max-warnings=0 --fix ./lib ./test ./features ./bin ./features-sdk ./doc/build-error-codes.js",
+    "test:lint": "npm run test:lint:js && npm run test:lint:ts",
+    "test:lint:ts": "eslint --max-warnings=0 ./lib --ext .ts --config .eslintc-ts.json",
+    "test:lint:ts:fix": "eslint --max-warnings=0 --fix ./lib --ext .ts --config .eslintc-ts.json",
+    "test:lint:js": "eslint --max-warnings=0 ./lib ./test ./features ./bin ./features-sdk ./doc/build-error-codes.js ./plugins/available/functional-test-plugin",
+    "test:lint:js:fix": "eslint --max-warnings=0 --fix ./lib ./test ./features ./bin ./features-sdk ./doc/build-error-codes.js",
     "doc-prepare": "kuzdoc framework:install",
     "doc-dev": "kuzdoc repo:dev -d /core/2/ -v 2",
     "doc-build": "kuzdoc repo:build -d /core/2/ -v 2",
@@ -42,7 +47,7 @@
     "didyoumean": "^1.2.1",
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.4",
-    "inquirer": "^7.3.0",
+    "inquirer": "^7.3.1",
     "ioredis": "^4.17.3",
     "json-stable-stringify": "^1.0.1",
     "json2yaml": "^1.1.0",
@@ -51,7 +56,7 @@
     "kuzzle-common-objects": "^4.1.1",
     "kuzzle-sdk": "^7.2.0",
     "kuzzle-vault": "^2.0.0",
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "moment": "^2.27.0",
     "ms": "^2.1.2",
     "murmurhash-native": "^3.5.0",
@@ -67,13 +72,16 @@
     "winston-syslog": "^2.4.4",
     "winston-transport": "^4.4.0",
     "ws": "^7.3.1",
-    "yargs": "^15.4.0"
+    "yargs": "^15.4.1"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.155",
+    "@typescript-eslint/eslint-plugin": "^3.6.1",
+    "@typescript-eslint/parser": "^3.6.1",
     "async": "^3.2.0",
     "codecov": "^3.7.0",
     "cucumber": "^6.0.5",
@@ -90,10 +98,30 @@
     "should": "13.2.3",
     "should-sinon": "0.0.6",
     "sinon": "^9.0.2",
-    "strip-json-comments": "^3.1.0"
+    "strip-json-comments": "^3.1.1",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.3"
   },
   "engines": {
     "node": ">= 12.13.0"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "files": [
+    "bin/**/*.js",
+    "bin/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
+    "plugins/**/*.js",
+    "plugins/**/*.d.ts",
+    "protocols/**/*.js",
+    "protocols/**/*.d.ts",
+    "package.json",
+    "package-lock.json",
+    "index.js",
+    "index.d.ts",
+    ".kuzzlerc.sample",
+    "LICENSE.md",
+    "CONTRIBUTING.md",
+    "README.md"
+  ]
 }

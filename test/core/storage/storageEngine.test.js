@@ -89,6 +89,17 @@ describe('StorageEngine', () => {
       should(storageEngine._indexes.get('barfoo').collections)
         .have.keys('barlection');
     });
+
+    it('should create a new index entry if an alias points to a non-existing index', async () => {
+      storageEngine._publicClient.listAliases.resolves([{
+        name: 'ohnoes', index: 'nope', collection: 'collection'
+      }]);
+
+      await storageEngine.init();
+
+      should(storageEngine._indexes.get('nope').collections)
+        .have.keys('collection');
+    });
   });
 
   describe('#add', () => {

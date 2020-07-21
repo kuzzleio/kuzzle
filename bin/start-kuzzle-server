@@ -24,58 +24,67 @@
 'use strict';
 
 const fs = require('fs');
+
 const yargs = require('yargs');
 
-const Kuzzle = require('../lib/kuzzle');
+const { Backend } = require('../index');
 const waitForEs = require('./wait-elasticsearch');
 
-function loadJson (filePath) {
-  const rawData = fs.readFileSync(filePath, 'utf8');
 
-  return JSON.parse(rawData);
+function loadJson (path) {
+  if (! path) {
+    return {};
+  }
+
+  return JSON.parse(fs.readFileSync(path, 'utf8'));
 }
 
 async function startKuzzle (options = {}) {
-  const kuzzle = new Kuzzle();
-  const kuzzleParams = {};
-
-  if (options.mappings) {
-    kuzzleParams.mappings = loadJson(options.mappings);
-  }
-
-  if (options.fixtures) {
-    kuzzleParams.fixtures = loadJson(options.fixtures);
-  }
-
-  if (options.securities) {
-    kuzzleParams.securities = loadJson(options.securities);
-  }
+  const app = new Backend('kuzzle');
 
   if (options.enablePlugins) {
-    kuzzleParams.additionalPlugins = options.enablePlugins
+    const additionalPlugins = options.enablePlugins
       .trim()
       .split(',')
       .map(x => x.trim().replace(/(^")|("$)/g, ''));
-  }
 
-  try {
-    await waitForEs();
+    for (const additionalPlugin of additionalPlugins) {
+      const PluginClass = require(`../plugins/available/${additionalPlugin}`);
+      const manifest = require(`../plugins/available/${additionalPlugin}/manifest.json`);
+      const plugin = new PluginClass();
+      try {
+        plugin.version = require(`../plugins/available/${additionalPlugin}/package.json`).version;
+      }
+      catch (e) {}
 
-    console.log('[ℹ] Starting Kuzzle server');
-    await kuzzle.start(kuzzleParams)
-    console.log(`[✔] Kuzzle server ${require('../package.json').version} ready`);
-
-    const adminExists = await kuzzle.adminExists();
-
-    if (! adminExists) {
-      console.log('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');
-      console.log('[ℹ] You can use the CLI or the admin console to create the first administrator user.');
-      console.log('    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/');
+      app.plugin.use(plugin, { name: manifest.name });
     }
   }
-  catch (error) {
-    console.error(`[x] ${error.stack}`);
-    process.exit(1);
+
+  app._support.mappings = loadJson(options.mappings);
+
+  app._support.fixtures = loadJson(options.fixtures);
+
+  app._support.securities = loadJson(options.securities);
+
+  app.vault.key = options.vaultKey
+
+  app.vault.file = options.secretsFile;
+
+  app.version = '1.0.0';
+
+  await waitForEs();
+
+  await app.start();
+
+  const { total: admins } = await app.sdk.security.searchUsers({
+    query: { term: { profileIds: 'admin' } }
+  });
+
+  if (admins.length === 0) {
+    console.log('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');
+    console.log('[ℹ]  You can use the CLI or the admin console to create the first administrator user.');
+    console.log('    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/');
   }
 }
 
@@ -89,7 +98,17 @@ const options = yargs
   .describe('enable-plugins', 'Enable plugins from "plugins/available" directory')
   .argv;
 
-startKuzzle(options);
+const run = async () => {
+  try {
+    await startKuzzle(options);
+  }
+  catch (error) {
+    console.error(`[x] [ERROR] ${error.stack}`);
+    process.exit(1);
+  }
+};
+
+run();
 
 // Used for tests only
 module.exports = startKuzzle;
