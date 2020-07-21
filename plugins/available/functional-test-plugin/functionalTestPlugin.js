@@ -136,7 +136,7 @@ class FunctionalTestPlugin {
     const options = {};
 
     const roomId = await this.context.accessors.registerSubscription(
-      request.context.connection,
+      request.context.connection.id,
       index,
       collection,
       filters,
