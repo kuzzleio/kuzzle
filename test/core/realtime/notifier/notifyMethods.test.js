@@ -69,6 +69,15 @@ describe('notify methods', () => {
   });
 
   describe('#notifyDocument', () => {
+    it('should do nothing if there is no room to notify', async () => {
+      sinon.stub(notifier, '_notifyDocument');
+
+      await notifier.notifyDocument([], request, 'out', 'action', {});
+
+      should(notifier._notifyDocument).not.called();
+      should(kuzzle.emit).not.called();
+    });
+
     it('should emit the cluster sync event', async () => {
       notifier._notifyDocument = sinon.stub();
       const content = {some: 'content'};

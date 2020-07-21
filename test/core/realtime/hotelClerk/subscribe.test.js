@@ -6,7 +6,6 @@ const {
   Request,
   errors: {
     BadRequestError,
-    NotFoundError,
     SizeLimitError
   }
 } = require('kuzzle-common-objects');
@@ -20,7 +19,6 @@ describe('Test: hotelClerk.subscribe', () => {
   let kuzzle;
   let hotelClerk;
   let request;
-  let context;
   let realtimeModule;
 
   beforeEach(async () => {
@@ -164,84 +162,6 @@ describe('Test: hotelClerk.subscribe', () => {
       request,
       'in',
       { count: 1 });
-  });
-
-  it('should allow to subscribe to an existing room', async () => {
-    let result;
-
-    result = await hotelClerk.subscribe(request);
-    const roomId = result.roomId;
-
-    should(result).be.an.Object();
-    should(result).have.property('channel');
-    should(result).have.property('roomId');
-    should(hotelClerk.roomsCount).be.eql(1);
-    should(realtimeModule.notifier.notifyUser).calledWithMatch(
-      roomId,
-      request,
-      'in',
-      { count: 1 });
-
-    const request2 = new Request({
-      index: 'foo',
-      collection: 'bar',
-      controller: 'realtime',
-      action: 'join',
-      body: {
-        roomId: result.roomId
-      }
-    }, {connectionId: 'connection2', user: null});
-
-    request2.input.body = {roomId};
-
-    result = await hotelClerk.join(request2);
-
-    should(result).be.an.Object();
-    should(result).have.property('roomId', roomId);
-    should(result).have.property('channel');
-    should(hotelClerk.roomsCount).be.eql(1);
-    should(realtimeModule.notifier.notifyUser).calledWithMatch(
-      roomId,
-      request2,
-      'in',
-      { count: 2 });
-  });
-
-  it('#join should throw if the room does not exist', () => {
-    const joinRequest = new Request({
-      index: 'foo',
-      collection: 'bar',
-      controller: 'realtime',
-      action: 'join',
-      body: {roomId: 'i-exist'}
-    }, context);
-
-    return should(hotelClerk.join(joinRequest)).be.rejectedWith(NotFoundError, {
-      id: 'core.realtime.room_not_found',
-    });
-  });
-
-  it('#join should propagate notification only with "cluster" option', async () => {
-    const joinRequest = new Request({
-      index: 'foo',
-      collection: 'bar',
-      controller: 'realtime',
-      action: 'join',
-      body: {roomId: 'i-exist'}
-    }, context);
-    const response = { cluster: false, diff: 'diff', data: 'data'};
-    hotelClerk.rooms.set('i-exist', {});
-    sinon.stub(hotelClerk, '_subscribeToRoom').resolves(response);
-
-    await hotelClerk.join(joinRequest);
-
-    should(kuzzle.pipe).not.be.called();
-
-    response.cluster = true;
-
-    await hotelClerk.join(joinRequest);
-
-    should(kuzzle.pipe).be.calledWith('core:hotelClerk:join', 'diff');
   });
 
   it('should reject the subscription if the given scope argument is incorrect', () => {
