@@ -5,7 +5,6 @@
 # Integration tests
 _integration-tests: &integration-tests
   os: linux
-  sudo: required
   language: node_js
   node_js: 12
   services: docker
@@ -63,7 +62,6 @@ jobs:
     - stage: Unit Tests & Linters
       name: Node 12.16.3 - Unit Tests & ESLint
       os: linux
-      sudo: required
       language: node_js
       cache: npm
       node_js: 12.16.3
@@ -78,7 +76,6 @@ jobs:
     - stage: Unit Tests & Linters
       name: Node 12.18.1 - Unit Tests & ESLint
       os: linux
-      sudo: required
       language: node_js
       cache: npm
       node_js: 12.18.1
@@ -156,7 +153,7 @@ jobs:
       name: Node.js 12 - Functional tests sdk
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
-       - *integration-tests-env
+        - *integration-tests-env
 
 
 
@@ -192,7 +189,6 @@ jobs:
       name: NPM.js
       if: branch = master
       os: linux
-      sudo: required
       language: node_js
       node_js: 12
       script: echo "Deploying Kuzzle to NPM.js"
@@ -209,7 +205,6 @@ jobs:
     - stage: Deployments
       name: Dockerhub
       os: linux
-      sudo: required
       language: minimal
       services: docker
       script:
@@ -234,7 +229,6 @@ jobs:
 
     - stage: Deploy latest release on NPM
       if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/
-      sudo: false
       language: node_js
       node_js: 12
       addons:
