@@ -3,9 +3,9 @@ Feature: Application
   # Controller registration and http route definition
   Scenario: Call controller action with custom HTTP route
     When I successfully execute the action "tests":"sayHello" with args:
-      | name | "Trï" |
+      | name | "Tri" |
     Then I should receive a result matching:
-      | greeting | "Hello, Trï" |
+      | greeting | "Hello, Tri" |
 
   # Pipes registration
 
