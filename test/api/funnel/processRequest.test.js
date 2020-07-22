@@ -277,7 +277,6 @@ describe('funnel.processRequest', () => {
 
     pluginsManager._initPipes(plugin);
 
-    await pluginsManager.run();
     return funnel.processRequest(request);
   });
 

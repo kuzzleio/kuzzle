@@ -188,7 +188,7 @@ describe('Plugin', () => {
 
       should(kuzzle.log.info)
         .calledOnce()
-        .calledWith('[lambda-core]: Custom errors successfully loaded.');
+        .calledWith('[lambda-core] Custom errors successfully loaded.');
 
       const pluginErrors = errors.domains.plugin.subdomains;
 
