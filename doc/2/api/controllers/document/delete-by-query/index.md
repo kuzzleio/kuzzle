@@ -84,7 +84,7 @@ Body:
 
 Returns an object containing information about the deleted documents:
 
-- `ids`: an array containing the list of each deleted documents identifier.
+- `ids`: an array containing the list of each deleted document identifier.
 - `documents` an array of the deleted documents. These contain their respective contents if the `source` is set to `true`.
 
 ```js
