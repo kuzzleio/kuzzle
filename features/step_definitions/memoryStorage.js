@@ -77,7 +77,7 @@ Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (
  * @param {object} world - functional tests global object
  * @param {string} command - name of the scan command (scan, hscan, sscan, zscan)
  * @param {object} args - scan arguments
- * @return {Bluebird<object>}
+ * @returns {Bluebird<object>}
  */
 function scanRedis (world, command, args) {
   return world.api.callMemoryStorage(command, args)

@@ -84,11 +84,7 @@ Body:
 
 Returns an object containing information about the deleted documents:
 
-<DeprecatedBadge version="2.2.1">
 - `ids`: an array containing the list of each deleted documents identifier.
-
-</DeprecatedBadge>
-
 - `documents` an array of the deleted documents. These contain their respective contents if the `source` is set to `true`.
 
 ```js

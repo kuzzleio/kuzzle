@@ -26,7 +26,7 @@ You can define [collection additional metadata](/core/2/guides/essentials/databa
 
 <SinceBadge version="2.1.0"/>
 
-You can also provide Elasticsearch index [settings]((https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)) when creating a new collection.
+You can also provide Elasticsearch index [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings) when creating a new collection.
 
 ---
 

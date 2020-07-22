@@ -4,7 +4,9 @@ const should = require('should');
 const _ = require('lodash');
 
 class FunctionalTestPlugin {
-  constructor() {
+  constructor () {
+    this.version = require('./package.json').version;
+
     this.controllers = {};
     this.routes = [];
     this.pipes = {};
@@ -114,7 +116,7 @@ class FunctionalTestPlugin {
     // hooks related declarations ==============================================
     this.hooks['server:afterNow'] = async () => {
       await this.context.accessors.sdk.realtime.publish(
-        'functionnal-test',
+        'functional-test',
         'hooks',
         { event: 'server:afterNow' }
       );
