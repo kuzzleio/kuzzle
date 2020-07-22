@@ -170,6 +170,45 @@ describe('Test: security/userRepository', () => {
     });
   });
 
+  describe('#adminExists', () => {
+    const adminExistsEvent = 'core:security:user:adminExists';
+
+    it('should register an "adminExists" event', async () => {
+      userRepository.adminExists = sinon.stub();
+
+      await kuzzle.ask(adminExistsEvent);
+
+      should(userRepository.adminExists).be.calledOnce();
+    });
+
+    it('should call search with right query', async () => {
+      userRepository.search = sinon.stub().resolves({ total: 0 });
+
+      const query = { term: { profileIds: 'admin' } };
+
+      await userRepository.adminExists();
+
+      should(userRepository.search)
+        .be.calledWith({ query });
+    });
+
+    it('should return false if there is no result', async () => {
+      userRepository.search = sinon.stub().resolves({ total: 0 });
+
+      const exists = await userRepository.adminExists();
+
+      should(exists).be.false();
+    });
+
+    it('should return true if there is result', async () => {
+      userRepository.search = sinon.stub().resolves({ total: 42 });
+
+      const exists = await userRepository.adminExists();
+
+      should(exists).be.true();
+    });
+  });
+
   describe('#delete', () => {
     const deleteEvent = 'core:security:user:delete';
     let fakeUser;

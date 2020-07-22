@@ -25,7 +25,7 @@ All generic events share the same payload signature, and pipes plugged to them m
 
 ::: info
 
-"before" actions are only triggered on queries asking for specific documents. API routes such as `search`, `deleteByQuery` or `updateByQuery` cannot trigger "before" events, they only trigger "after" ones.
+"before" actions are only triggered on queries asking for specific documents. API action such as `document:search`, `document:deleteByQuery` or `document:updateByQuery` cannot trigger "before" events, they only trigger "after" ones.
 
 :::
 

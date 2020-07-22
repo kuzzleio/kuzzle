@@ -110,7 +110,8 @@
           "description": "The content of a protected index cannot be modified with generic API routes",
           "code": 20,
           "message": "Index '%s' is protected, use the appropriated routes instead.",
-          "class": "BadRequestError"
+          "class": "BadRequestError",
+          "deprecated": "auto-version"
         },
         "invalid_mapping": {
           "description": "The provided mapping is invalid",

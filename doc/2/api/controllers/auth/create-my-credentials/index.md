@@ -16,12 +16,22 @@ Creates new credentials for the current user.
 
 ### HTTP
 
+<SinceBadge version="auto-version"/>
+```http
+URL: http://kuzzle:7512/_me/credentials/<strategy>/_create
+Method: POST
+Headers: Authorization: "Bearer <authentication token>"
+Body:
+```
+
+<DeprecatedBadge version="auto-version">
 ```http
 URL: http://kuzzle:7512/credentials/<strategy>/_me/_create
 Method: POST
 Headers: Authorization: "Bearer <authentication token>"
 Body:
 ```
+</DeprecatedBadge>
 
 ```js
 {
