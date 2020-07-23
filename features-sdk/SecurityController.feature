@@ -156,6 +156,27 @@ Feature: Security Controller
     And I delete the role "test-role"
 
   @security
+  Scenario: Delete a profile and remove it from assigned users
+    Given I "create" a role "test-role" with the following API rights:
+      | document | { "actions": { "*": true, "*": true } } |
+    And I create a profile "base-profile" with the following policies:
+      | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I create a profile "to-be-removed-profile" with the following policies:
+      | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I create a user "test-user" with content:
+      | profileIds | ["base-profile", "to-be-removed-profile"] |
+    And I create a user "test-user-two" with content:
+      | profileIds | ["to-be-removed-profile"] |
+    When I successfully call the route "security":"deleteProfile" with args:
+      | _id             | "to-be-removed-profile" |
+      | onAssignedUsers | "remove"                |
+      | refresh         | "wait_for"              |
+    Then The user "test-user" should have the following profiles:
+      | base-profile |
+    And The user "test-user-two" should have the following profiles:
+      | anonymous |
+
+  @security
   Scenario: Create a role with invalid API rights
     When I can not "create" a role "test-role" with the following API rights:
       | invalid-controller | { "actions": { "create": true, "update": true } } |
