@@ -888,7 +888,7 @@ describe('Test: security controller - users', () => {
 
   describe('#getUserStrategies', () => {
     const getEvent = 'core:security:user:get';
-    const exampleStrategy = 'someStrategy'
+    const exampleStrategy = 'someStrategy';
     const returnedUser = new User();
     let getStub;
 
