@@ -156,6 +156,27 @@ Feature: Security Controller
     And I delete the role "test-role"
 
   @security
+  Scenario: Delete a profile and remove it from assigned users
+    Given I "create" a role "test-role" with the following API rights:
+      | document | { "actions": { "*": true, "*": true } } |
+    And I create a profile "base-profile" with the following policies:
+      | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I create a profile "to-be-removed-profile" with the following policies:
+      | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I create a user "test-user" with content:
+      | profileIds | ["base-profile", "to-be-removed-profile"] |
+    And I create a user "test-user-two" with content:
+      | profileIds | ["to-be-removed-profile"] |
+    When I successfully execute the action "security":"deleteProfile" with args:
+      | _id             | "to-be-removed-profile" |
+      | onAssignedUsers | "remove"                |
+      | refresh         | "wait_for"              |
+    Then The user "test-user" should have the following profiles:
+      | base-profile |
+    And The user "test-user-two" should have the following profiles:
+      | anonymous |
+
+  @security
   Scenario: Create a role with invalid API rights
     When I can not "create" a role "test-role" with the following API rights:
       | invalid-controller | { "actions": { "create": true, "update": true } } |
@@ -278,7 +299,7 @@ Feature: Security Controller
       | profileIds | ["default"] |
     And I create a user "test-user2" with content:
       | profileIds | ["admin"] |
-    When I successfully call the route "security":"searchUsers" with args:
+    When I successfully execute the action "security":"searchUsers" with args:
       | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
     Then I should receive a "hits" array of objects matching:
       | _id          |
@@ -286,7 +307,7 @@ Feature: Security Controller
       | "test-user2" |
     And I should receive a result matching:
       | total | 2 |
-    When I successfully call the route "security":"searchUsers" with args:
+    When I successfully execute the action "security":"searchUsers" with args:
       | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
       | from | 2                                                            |
       | size | 10                                                           |

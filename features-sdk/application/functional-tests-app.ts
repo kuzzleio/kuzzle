@@ -68,9 +68,9 @@ app.controller.register('tests', {
   actions: {
     // Controller registration and http route definition
     sayHello: {
-      handler: async request => ({
-        greeting: `Hello, ${request.input.args.name}`
-      }),
+      handler: async request => {
+        return { greeting: `Hello, ${request.input.args.name}` };
+      },
       http: [{ verb: 'POST', url: '/hello/:name' }]
     },
 
@@ -101,7 +101,8 @@ app.controller.register('tests', {
         const { body } = await client.index(esRequest);
 
         return body;
-      }
+      },
+      http: [{ verb: 'POST', url: '/es-client/:index/:_id' }],
     }
   }
 });
