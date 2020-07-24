@@ -20,7 +20,9 @@ ADD ./config /app/config
 ADD ./lib /app/lib
 ADD ./package.json /app/package.json
 ADD ./package-lock.json /app/package-lock.json
-ADD ./default.config.js /app/default.config.js
+ADD ./index.ts /app/index.ts
+ADD ./tsconfig.json /app/tsconfig.json
+ADD ./.kuzzlerc.sample /app/.kuzzlerc.sample
 
 WORKDIR /app
 
