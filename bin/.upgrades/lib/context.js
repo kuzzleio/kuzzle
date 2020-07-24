@@ -21,14 +21,16 @@
 
 'use strict';
 
-const
-  fs = require('fs'),
-  path = require('path'),
-  rc = require('rc'),
-  inquirer = require('./inquirerExtended'),
-  Logger = require('./logger'),
-  { version: currentVersion } = require('../../../package.json'),
-  defaultConfiguration = require('../../../default.config.js');
+const fs = require('fs');
+const path = require('path');
+
+const rc = require('rc');
+
+const inquirer = require('./inquirerExtended');
+const Logger = require('./logger');
+
+const defaultConfiguration = require('../../../lib/config/default.config.js');
+const { version: currentVersion } = require('../../../package.json');
 
 class Version {
   constructor() {
@@ -102,7 +104,7 @@ class UpgradeContext {
 
   /**
    * Asks the user the source version to upgrade from
-   * @return {Version}
+   * @returns {Version}
    */
   async getVersions () {
     const version = new Version();

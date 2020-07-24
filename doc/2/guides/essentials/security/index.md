@@ -228,7 +228,7 @@ Three different profiles can be created using that same role, each with varying 
 
 ## Writing complex permission rules
 
-So far, we've seen how to set permissions to API routes, using user roles and profiles.
+So far, we've seen how to set permissions to API action, using user roles and profiles.
 
 But this is rarely enough to secure an application, as it's commonplace to reject queries or data depending on business rules.
 For instance, suppose you have a chat application and you want the users to only be able to edit & delete their own messages: this type of rules cannot be expressed as a simple boolean.

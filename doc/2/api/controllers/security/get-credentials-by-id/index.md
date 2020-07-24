@@ -12,7 +12,7 @@ The returned `result` object will vary depending on the strategy (see the [getBy
 
 ::: info
 The user identifier to use depends on the specified strategy. 
-If you wish to get credential information using a [kuid](/core/2/guides/essentials/user-authentication#kuzzle-user-identifier-kuid) identifier, use the [getCredentials](/core/2/api/controllers/security/get-credentials) API route instead.
+If you wish to get credential information using a [kuid](/core/2/guides/essentials/user-authentication#kuzzle-user-identifier-kuid) identifier, use the [security:getCredentials](/core/2/api/controllers/security/get-credentials) API action instead.
 :::
 
 ---

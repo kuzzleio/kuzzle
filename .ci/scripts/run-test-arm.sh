@@ -14,10 +14,12 @@ export NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh"
 nvm use $NODE_VERSION
 
-node bin/start-kuzzle-server --enable-plugins functional-test-plugin &
+npm run build
+
+node -r ts-node/register features-sdk/application/functional-tests-app.ts &
 
 echo "[$(date)] - Starting Kuzzle..."
 
 ./bin/wait-kuzzle
 
-npm run test:functional
+npm run $KUZZLE_FUNCTIONAL_TESTS

@@ -1067,17 +1067,17 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#createFirstAdmin', () => {
+    const adminExistsEvent = 'core:security:user:adminExists';
     const createOrReplaceRoleEvent = 'core:security:role:createOrReplace';
     const createOrReplaceProfileEvent = 'core:security:profile:createOrReplace';
     let createOrReplaceRoleStub;
     let createOrReplaceProfileStub;
+    let adminExistsStub;
 
     beforeEach(() => {
       sinon.stub(securityController, '_persistUser');
 
       request.input.resource._id = 'test';
-
-      kuzzle.adminExists.resolves(false);
 
       createOrReplaceRoleStub = kuzzle.ask
         .withArgs(
@@ -1092,10 +1092,14 @@ describe('Test: security controller - users', () => {
           sinon.match.string,
           sinon.match.object,
           sinon.match.object);
+
+      adminExistsStub = kuzzle.ask
+        .withArgs(adminExistsEvent)
+        .resolves(false);
     });
 
     it('should reject if an admin already exists', async () => {
-      kuzzle.adminExists.resolves(true);
+      adminExistsStub.resolves(true);
 
       await should(securityController.createFirstAdmin(request))
         .be.rejectedWith(PreconditionError, {id: 'api.process.admin_exists'});

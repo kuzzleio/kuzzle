@@ -170,7 +170,7 @@ module.exports = class ControllerPlugin {
       To expose the new controller, it must be registered to Kuzzle's HTTP router.
 
       To do so, a "routes" property must be exposed by the plugin, as an array
-      of objects. Each object is an API route, with the following properties:
+      of objects. Each object is an API action, with the following properties:
 
       - verb: HTTP verb
       - url: HTTP address. Any parameter starting with a ':'

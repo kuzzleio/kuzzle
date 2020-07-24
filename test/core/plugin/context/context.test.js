@@ -15,7 +15,7 @@ const {
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
-const EmbeddedSDK = require('../../../../lib/core/plugin/sdk/embeddedSdk');
+const EmbeddedSDK = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
   const someCollection = 'someCollection';
@@ -24,7 +24,7 @@ describe('Plugin Context', () => {
   let PluginContext;
 
   beforeEach(() => {
-    PluginContext = mockrequire.reRequire(`${root}/lib/core/plugin/context`);
+    PluginContext = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
@@ -216,7 +216,7 @@ describe('Plugin Context', () => {
 
         should(kuzzle.log[level])
           .calledOnce()
-          .calledWithExactly('[plugin-pluginName] test');
+          .calledWithExactly('[pluginName] test');
       });
 
       should(context.accessors).be.an.Object().and.not.be.empty();
@@ -230,7 +230,7 @@ describe('Plugin Context', () => {
       process.nextTick(() => {
         should(kuzzle.log.info)
           .be.calledOnce()
-          .be.calledWith('[plugin-pluginName] foobar');
+          .be.calledWith('[pluginName] foobar');
 
         done();
       });

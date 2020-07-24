@@ -4,20 +4,20 @@ Feature: Security Controller
 
   @security
   Scenario: Refresh a security collection
-    Given I successfully call the route "security":"createUser" with args:
+    Given I successfully execute the action "security":"createUser" with args:
       | _id     | "aschen"                                     |
       | refresh | false                                        |
       | body    | { "content": { "profileIds": ["default"] } } |
     # Refresh success on known collection
-    When I successfully call the route "security":"refresh" with args:
+    When I successfully execute the action "security":"refresh" with args:
       | collection | "users" |
-    Then I successfully call the route "security":"searchUsers"
+    Then I successfully execute the action "security":"searchUsers"
     And I should receive a "hits" array of objects matching:
       | _id          |
       | "test-admin" |
       | "aschen"     |
     # Error on unknown collection
-    When I call the route "security":"refresh" with args:
+    When I execute the action "security":"refresh" with args:
       | collection | "frontend-security" |
     Then I should receive an error matching:
       | id | "api.assert.unexpected_argument" |
@@ -28,7 +28,7 @@ Feature: Security Controller
   Scenario: Create an API key for a user
     Given I create a user "My" with content:
       | profileIds | ["default"] |
-    When I successfully call the route "security":"createApiKey" with args:
+    When I successfully execute the action "security":"createApiKey" with args:
       | userId    | "My"                          |
       | expiresIn | -1                            |
       | refresh   | "wait_for"                    |
@@ -40,7 +40,7 @@ Feature: Security Controller
       | token       | "_STRING_" |
     And The result should contain a property "_id" of type "string"
     And I can login with the previously created API key
-    And I successfully call the route "security":"searchApiKeys" with args:
+    And I successfully execute the action "security":"searchApiKeys" with args:
       | userId | "My" |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
@@ -52,24 +52,24 @@ Feature: Security Controller
   Scenario: Search for a user API keys
     Given I create a user "My" with content:
       | profileIds | ["default"] |
-    And I successfully call the route "security":"createApiKey" with args:
+    And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "My"                          |
       | expiresIn | -1                            |
       | body      | { "description": "Le Huong" } |
-    And I successfully call the route "security":"createApiKey" with args:
+    And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                        |
       | expiresIn | -1                                  |
       | body      | { "description": "Sigfox API key" } |
-    And I successfully call the route "security":"createApiKey" with args:
+    And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                      |
       | expiresIn | -1                                |
       | body      | { "description": "Lora API key" } |
-    And I successfully call the route "security":"createApiKey" with args:
+    And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                        |
       | expiresIn | -1                                  |
       | refresh   | "wait_for"                          |
       | body      | { "description": "Lora API key 2" } |
-    When I successfully call the route "security":"searchApiKeys" with args:
+    When I successfully execute the action "security":"searchApiKeys" with args:
       | userId | "test-admin"                           |
       | body   | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
@@ -80,18 +80,18 @@ Feature: Security Controller
   # security:deleteApiKey =======================================================
 
   @security
-  Scenario: Delete an API key for a user
-    Given I successfully call the route "security":"createApiKey" with args:
+  Scenario: Delete an API key for an user
+    Given I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                     |
       | _id       | "SGN-HCM"                        |
       | expiresIn | -1                               |
       | body      | { "description": "My Le Huong" } |
     And I save the created API key
-    When I successfully call the route "security":"deleteApiKey" with args:
+    When I successfully execute the action "security":"deleteApiKey" with args:
       | userId  | "test-admin" |
       | _id     | "SGN-HCM"    |
       | refresh | "wait_for"   |
-    And I successfully call the route "security":"searchApiKeys" with args:
+    And I successfully execute the action "security":"searchApiKeys" with args:
       | userId | "test-admin" |
     Then I should receive a empty "hits" array
     And I can not login with the previously created API key
@@ -105,7 +105,7 @@ Feature: Security Controller
       | document | { "create": true, "update": true } |
     And I update the role "default" with:
       | document | { "delete": true, "get": true } |
-    When I successfully call the route "security":"createFirstAdmin" with args:
+    When I successfully execute the action "security":"createFirstAdmin" with args:
       | _id  | "first-admin"                                                                                        |
       | body | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
     Then I should receive a result matching:
@@ -123,7 +123,7 @@ Feature: Security Controller
       | document | { "create": true, "update": true } |
     And I update the role "default" with:
       | document | { "delete": true, "get": true } |
-    When I successfully call the route "security":"createFirstAdmin" with args:
+    When I successfully execute the action "security":"createFirstAdmin" with args:
       | _id   | "first-admin"                                                                                        |
       | body  | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
       | reset | true                                                                                                 |
@@ -154,6 +154,27 @@ Feature: Security Controller
     Then I delete the user "test-user"
     And I delete the profile "test-profile"
     And I delete the role "test-role"
+
+  @security
+  Scenario: Delete a profile and remove it from assigned users
+    Given I "create" a role "test-role" with the following API rights:
+      | document | { "actions": { "*": true, "*": true } } |
+    And I create a profile "base-profile" with the following policies:
+      | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I create a profile "to-be-removed-profile" with the following policies:
+      | test-role | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I create a user "test-user" with content:
+      | profileIds | ["base-profile", "to-be-removed-profile"] |
+    And I create a user "test-user-two" with content:
+      | profileIds | ["to-be-removed-profile"] |
+    When I successfully execute the action "security":"deleteProfile" with args:
+      | _id             | "to-be-removed-profile" |
+      | onAssignedUsers | "remove"                |
+      | refresh         | "wait_for"              |
+    Then The user "test-user" should have the following profiles:
+      | base-profile |
+    And The user "test-user-two" should have the following profiles:
+      | anonymous |
 
   @security
   Scenario: Create a role with invalid API rights
@@ -224,12 +245,12 @@ Feature: Security Controller
 
   @security
   Scenario: Create/Update a role with invalid plugin API rights
-    When I call the route "security":"createRole" with args:
+    When I execute the action "security":"createRole" with args:
       | _id  | "test-role-plugin"                                                                                        |
       | body | { "controllers" :{ "functional-test-plugin/non-existing-controller": {"actions": { "manage": true } } } } |
     Then I should receive an error matching:
       | id | "security.role.unknown_controller" |
-    When I successfully call the route "security":"createRole" with args:
+    When I successfully execute the action "security":"createRole" with args:
       | _id   | "test-role-plugin2"                                                                                       |
       | body  | { "controllers" :{ "functional-test-plugin/non-existing-controller": {"actions": { "manage": true } } } } |
       | force | true                                                                                                      |
@@ -245,7 +266,7 @@ Feature: Security Controller
       | functional-test-plugin/non-existing-controller | { "actions": { "manage": false } } |
     Then I should receive an error matching:
       | id | "security.role.unknown_controller" |
-    When I successfully call the route "security":"updateRole" with args:
+    When I successfully execute the action "security":"updateRole" with args:
       | _id   | "test-role-plugin2"                                                                                       |
       | body  | {"controllers" : {"functional-test-plugin/non-existing-controller": {"actions": { "manage": false } } } } |
       | force | true                                                                                                      |
@@ -259,13 +280,13 @@ Feature: Security Controller
       | profileIds | ["default"] |
     And I create a user "test-user2" with content:
       | profileIds | ["default"] |
-    When I successfully call the route "security":"mGetUsers" with args:
+    When I successfully execute the action "security":"mGetUsers" with args:
       | ids | "test-user,test-user2" |
     Then I should receive a "hits" array of objects matching:
       | _id          |
       | "test-user"  |
       | "test-user2" |
-    When I successfully call the route "security":"mGetUsers" with args:
+    When I successfully execute the action "security":"mGetUsers" with args:
       | body | {"ids": ["test-user", "test-user2"] } |
     Then I should receive a "hits" array of objects matching:
       | _id          |
@@ -278,7 +299,7 @@ Feature: Security Controller
       | profileIds | ["default"] |
     And I create a user "test-user2" with content:
       | profileIds | ["admin"] |
-    When I successfully call the route "security":"searchUsers" with args:
+    When I successfully execute the action "security":"searchUsers" with args:
       | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
     Then I should receive a "hits" array of objects matching:
       | _id          |
@@ -286,7 +307,7 @@ Feature: Security Controller
       | "test-user2" |
     And I should receive a result matching:
       | total | 2 |
-    When I successfully call the route "security":"searchUsers" with args:
+    When I successfully execute the action "security":"searchUsers" with args:
       | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
       | from | 2                                                            |
       | size | 10                                                           |
