@@ -167,7 +167,7 @@ Feature: Security Controller
       | profileIds | ["base-profile", "to-be-removed-profile"] |
     And I create a user "test-user-two" with content:
       | profileIds | ["to-be-removed-profile"] |
-    When I successfully call the route "security":"deleteProfile" with args:
+    When I successfully execute the action "security":"deleteProfile" with args:
       | _id             | "to-be-removed-profile" |
       | onAssignedUsers | "remove"                |
       | refresh         | "wait_for"              |
@@ -299,7 +299,7 @@ Feature: Security Controller
       | profileIds | ["default"] |
     And I create a user "test-user2" with content:
       | profileIds | ["admin"] |
-    When I successfully call the route "security":"searchUsers" with args:
+    When I successfully execute the action "security":"searchUsers" with args:
       | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
     Then I should receive a "hits" array of objects matching:
       | _id          |
@@ -307,7 +307,7 @@ Feature: Security Controller
       | "test-user2" |
     And I should receive a result matching:
       | total | 2 |
-    When I successfully call the route "security":"searchUsers" with args:
+    When I successfully execute the action "security":"searchUsers" with args:
       | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
       | from | 2                                                            |
       | size | 10                                                           |

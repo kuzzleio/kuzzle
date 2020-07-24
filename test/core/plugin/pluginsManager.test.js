@@ -595,7 +595,7 @@ describe('Plugin', () => {
       });
 
       it('should throw if strategies is not a non-empty object', () => {
-        const message = /\[test-plugin\]: the exposed "strategies" plugin property must be a non-empty object/;
+        const message = /\[test-plugin\] the exposed "strategies" plugin property must be a non-empty object/;
 
         [{}, [], null, undefined, 'foobar', 123, true].forEach(strategies => {
           plugin.instance.strategies = strategies;
@@ -793,7 +793,7 @@ describe('Plugin', () => {
             should(msg).be.undefined();
             should(err)
               .instanceOf(PluginImplementationError)
-              .match({message: /\[test-plugin\]: Strategy someStrategy: invalid authentication strategy result/});
+              .match({message: /\[test-plugin\] Strategy someStrategy: invalid authentication strategy result/});
             done();
           }
           catch (e) {
@@ -810,7 +810,7 @@ describe('Plugin', () => {
             should(msg).be.undefined();
             should(err)
               .instanceOf(PluginImplementationError)
-              .match({message: /\[test-plugin\]: Strategy someStrategy: invalid authentication kuid returned: expected a string, got a number/});
+              .match({message: /\[test-plugin\] Strategy someStrategy: invalid authentication kuid returned: expected a string, got a number/});
             done();
           }
           catch (e) {
@@ -1204,7 +1204,7 @@ describe('Plugin', () => {
 
       should(fooStub).be.calledOnce();
       should(kuzzle.log.warn)
-        .calledWithMatch(/\[test-plugin\]: pipe for event 'foo:bar' is slow \(\d+ms\)/);
+        .calledWithMatch(/\[test-plugin\] pipe for event 'foo:bar' is slow \(\d+ms\)/);
     });
 
     it('should accept promises for pipes', async () => {
