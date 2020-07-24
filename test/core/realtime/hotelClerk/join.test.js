@@ -130,6 +130,6 @@ describe('Test: hotelClerk.join', () => {
 
     await hotelClerk.join(joinRequest);
 
-    should(kuzzle.pipe).be.calledWith('core:hotelClerk:join', 'diff');
+    should(kuzzle.pipe).be.calledWith('core:realtime:user:joined', 'diff');
   });
 });

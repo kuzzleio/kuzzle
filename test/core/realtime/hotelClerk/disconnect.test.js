@@ -115,15 +115,10 @@ describe('Test: hotelClerk.disconnect', () => {
 
   it('should log an error if a problem occurs while unsubscribing', async () => {
     const error = new Error('Mocked error');
-    kuzzle.koncorde.remove = sinon.stub().throws(error);
+    realtimeModule.notifier.notifyUser.throws(error);
 
     await hotelClerk.disconnect(connectionId);
 
     should(kuzzle.log.error).be.calledWith(error);
-
-    // the room should be removed from the hotel clerk even if
-    // Koncorde fails
-    should(hotelClerk.roomsCount).be.eql(1);
-    should(hotelClerk.rooms).not.have.key('bar');
   });
 });

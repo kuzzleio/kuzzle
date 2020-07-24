@@ -25,7 +25,7 @@ describe('Test: hotelClerk.getRoomSize', () => {
     sinon.stub(hotelClerk, 'getRoomSize');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:getRoomSize', 'foo');
+    await kuzzle.ask('core:realtime:room:size', 'foo');
 
     should(hotelClerk.getRoomSize).calledWith('foo');
   });
