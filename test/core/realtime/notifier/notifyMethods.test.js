@@ -11,7 +11,7 @@ const Notifier = require('../../../../lib/core/realtime/notifier');
 const {
   DocumentNotification,
   UserNotification,
-} = require('../../../../lib/model/notification');
+} = require('../../../../lib/core/realtime/notification');
 
 describe('notify methods', () => {
   let kuzzle;
