@@ -1,21 +1,22 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  { MockNativeController } = require('../../mocks/controller.mock'),
-  FunnelController = require('../../../lib/api/funnel'),
-  {
-    Request,
-    errors: { NotFoundError }
-  } = require('kuzzle-common-objects');
+const should = require('should');
+const sinon = require('sinon');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const { MockNativeController } = require('../../mocks/controller.mock');
+const FunnelController = require('../../../lib/api/funnel');
+const {
+  Request,
+  errors: { NotFoundError }
+} = require('kuzzle-common-objects');
 
 describe('funnel.executePluginRequest', () => {
-  let
-    kuzzle,
-    originalHandleErrorDump,
-    funnel;
+  let kuzzle;
+  let originalHandleErrorDump;
+  let funnel;
+
+  const pluginGetControllersEvent = 'core:plugin:controllers:get';
+  let pluginGetControllersStub;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -23,6 +24,9 @@ describe('funnel.executePluginRequest', () => {
     funnel.controllers.set('testme', new MockNativeController(kuzzle));
     originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
+    pluginGetControllersStub = kuzzle.ask
+      .withArgs(pluginGetControllersEvent)
+      .resolves(new Map());
   });
 
   it('should fail if an unknown controller is invoked', () => {
@@ -45,6 +49,7 @@ describe('funnel.executePluginRequest', () => {
         should(funnel.controllers.get('testme').succeed)
           .calledOnce()
           .calledWith(rq);
+        should(pluginGetControllersStub).be.calledWith(pluginGetControllersEvent);
 
         should(res).equal(rq);
       });

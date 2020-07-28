@@ -22,10 +22,12 @@ const {
 } = require('kuzzle-common-objects');
 
 describe('funnel.processRequest', () => {
-  let
-    kuzzle,
-    funnel,
-    pluginsManager;
+  let kuzzle;
+  let funnel;
+  let pluginsManager;
+
+  const pluginGetControllersEvent = 'core:plugin:controllers:get';
+  let pluginGetControllersStub;
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
@@ -37,15 +39,19 @@ describe('funnel.processRequest', () => {
     funnel = new Funnel(kuzzle);
 
     kuzzle.emit.restore();
+
     pluginsManager = new PluginsManager(kuzzle);
     kuzzle.pluginsManager = pluginsManager;
 
     // inject fake controllers for unit tests
     funnel.controllers.set('fakeController', new MockNativeController(kuzzle));
     funnel.controllers.set('document', new DocumentController(kuzzle));
-    pluginsManager.controllers.set(
-      'fakePlugin/controller',
-      new MockBaseController(kuzzle));
+
+    pluginGetControllersStub = kuzzle.ask
+      .withArgs(pluginGetControllersEvent)
+      .resolves(new Map([
+        ['fakePlugin/controller', new MockBaseController(kuzzle)]
+      ]));
   });
 
   afterEach(() => {
@@ -94,9 +100,8 @@ describe('funnel.processRequest', () => {
   });
 
   it('should throw if a plugin action does not exist', () => {
-    const
-      controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'create'});
+    const controller = 'fakePlugin/controller';
+    const request = new Request({controller, action: 'create'});
 
     return should(funnel.processRequest(request))
       .rejectedWith(NotFoundError, { id: 'api.process.action_not_found' })
@@ -110,17 +115,23 @@ describe('funnel.processRequest', () => {
   });
 
   it('should reject if a plugin action returns a non-thenable object', () => {
-    const
-      controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'succeed'});
+    const controller = 'fakePlugin/controller';
+    const controllerMock = new MockBaseController(kuzzle);
+    const request = new Request({controller, action: 'succeed'});
 
-    pluginsManager.controllers.get(controller).succeed.returns('foobar');
+    controllerMock.succeed.returns('foobar');
+    pluginGetControllersStub = kuzzle.ask
+      .withArgs(pluginGetControllersEvent)
+      .resolves(new Map([
+        [controller, controllerMock]
+      ]));
 
     return should(funnel.processRequest(request))
       .rejectedWith(
         PluginImplementationError,
         {id: 'plugin.controller.invalid_action_response'})
       .then(() => {
+        should(pluginGetControllersStub).be.calledWith(pluginGetControllersEvent);
         should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
         should(kuzzle.pipe).calledWith('request:onError', request);
         should(kuzzle.pipe).calledWith(`${controller}:errorSucceed`, request);
@@ -140,17 +151,23 @@ describe('funnel.processRequest', () => {
   });
 
   it('should throw if a plugin action returns a non-serializable response', () => {
-    const
-      controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'succeed'}),
-      unserializable = {};
-    unserializable.self = unserializable;
+    const controller = 'fakePlugin/controller';
+    const controllerMock = new MockBaseController(kuzzle);
+    const request = new Request({controller, action: 'succeed'});
+    const unserializable = {};
 
-    pluginsManager.controllers.get(controller).succeed.resolves(unserializable);
+    unserializable.self = unserializable;
+    controllerMock.succeed.resolves(unserializable);
+    pluginGetControllersStub = kuzzle.ask
+      .withArgs(pluginGetControllersEvent)
+      .resolves(new Map([
+        [controller, controllerMock]
+      ]));
 
     return funnel.processRequest(request)
       .then(() => { throw new Error('Expected test to fail'); })
       .catch(e => {
+        should(pluginGetControllersStub).be.calledWith(pluginGetControllersEvent);
         should(e).be.an.instanceOf(PluginImplementationError);
         should(e.id).eql('plugin.controller.unserializable_response');
       });
@@ -215,11 +232,16 @@ describe('funnel.processRequest', () => {
   });
 
   it('should wrap a Node error on a plugin action failure', done => {
-    const
-      controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'fail'});
+    const controller = 'fakePlugin/controller';
+    const controllerMock = new MockBaseController(kuzzle);
+    const request = new Request({controller, action: 'fail'});
 
-    pluginsManager.controllers.get(controller).fail.rejects(new Error('foobar'));
+    controllerMock.fail.rejects(new Error('foobar'));
+    pluginGetControllersStub = kuzzle.ask
+      .withArgs(pluginGetControllersEvent)
+      .resolves(new Map([
+        [controller, controllerMock]
+      ]));
 
     funnel.processRequest(request)
       .then(() => done(new Error('Expected test to fail')))
@@ -241,6 +263,7 @@ describe('funnel.processRequest', () => {
           should(kuzzle.statistics.startRequest).be.called();
           should(kuzzle.statistics.completedRequest).not.be.called();
           should(kuzzle.statistics.failedRequest).be.called();
+          should(pluginGetControllersStub).be.calledWith(pluginGetControllersEvent);
           done();
         }
         catch(err) {
