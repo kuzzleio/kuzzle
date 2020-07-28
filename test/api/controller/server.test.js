@@ -317,12 +317,19 @@ describe('ServerController', () => {
       const pluginController = new BaseController();
       pluginController._addAction('publicMethod', function () {});
       pluginController._addAction('anotherMethod', function () {});
+      const pluginMap = new Map([['foobar', pluginController]]);
 
-      kuzzle.pluginsManager.controllers.set('foobar', pluginController);
-
-      kuzzle.pluginsManager.routes = [{
-        verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
-      }];
+      const pluginRoute = {
+        verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar',
+      };
+      const pluginGetControllersEvent = 'core:plugin:controllers:get';
+      const pluginGetRoutesEvent = 'core:plugin:routes:get';
+      const pluginGetControllersStub = kuzzle.ask
+        .withArgs(pluginGetControllersEvent)
+        .resolves(pluginMap);
+      const pluginGetRoutesStub = kuzzle.ask
+        .withArgs(pluginGetRoutesEvent)
+        .resolves([pluginRoute]);
 
       serverController._buildApiDefinition = sinon.stub().returns({});
 
@@ -333,9 +340,11 @@ describe('ServerController', () => {
             kuzzle.funnel.controllers,
             kuzzle.config.http.routes
           ]);
+          should(pluginGetControllersStub).be.calledWith(pluginGetControllersEvent);
+          should(pluginGetRoutesStub).be.calledWith(pluginGetRoutesEvent);
           should(serverController._buildApiDefinition.getCall(1).args).be.eql([
-            kuzzle.pluginsManager.controllers,
-            kuzzle.pluginsManager.routes
+            pluginMap,
+            [pluginRoute]
           ]);
         });
     });
