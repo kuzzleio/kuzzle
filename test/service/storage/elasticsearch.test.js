@@ -1509,9 +1509,9 @@ describe('Test: ElasticSearch service', () => {
           _kuzzle_info: {
             properties: {
               author:     { type: 'text' },
-              collection: {type: 'text'},
+              collection: {type: 'keyword'},
               createdAt:  { type: 'date' },
-              index: {type: 'text'},
+              index: {type: 'keyword'},
               updatedAt:  { type: 'date' },
               updater:    { type: 'keyword' },
             }
@@ -1543,9 +1543,9 @@ describe('Test: ElasticSearch service', () => {
             _kuzzle_info: {
               properties: {
                 author:     { type: 'text' },
-                collection: {type: 'text'},
+                collection: {type: 'keyword'},
                 createdAt:  { type: 'date' },
-                index: {type: 'text'},
+                index: {type: 'keyword'},
                 updatedAt:  { type: 'date' },
                 updater:    { type: 'keyword' },
               }
