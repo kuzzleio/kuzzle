@@ -2,6 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
+const { Request } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
@@ -18,13 +19,23 @@ describe('Test: notifier.notifyDocumentDelete', () => {
     return notifier.init();
   });
 
-  it('should register a "notify:deleted" event', async () => {
-    sinon.stub(notifier, 'notifyDocumentMDelete');
+  it('should send a document notification', async () => {
+    const rooms = [ 'bar', 'baz' ];
+    sinon.stub(notifier, 'notifyDocument');
+    kuzzle.koncorde.test.returns(rooms);
 
-    kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:notify:deleted', 'request', 'id', 'src');
+    const request = new Request({
+      collection: 'collection',
+      index: 'index',
+    });
+    const _id = 'foo';
+    const _source = { foo: 'bar' };
 
-    should(notifier.notifyDocumentMDelete)
-      .calledWithMatch('request', [{_id: 'id', _source: 'src'}]);
+    const result = await notifier.notifyDocumentDelete(request, { _id, _source });
+
+    should(kuzzle.koncorde.test).calledWith('index', 'collection', _source, _id);
+    should(notifier.notifyDocument)
+      .calledWithMatch(rooms, request, 'out', 'delete', { _id });
+    should(result).be.an.Array().and.be.empty();
   });
 });

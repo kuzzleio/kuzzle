@@ -291,7 +291,7 @@ describe('notify methods', () => {
       sinon.stub(notifier, 'notifyTokenExpired');
 
       kuzzle.ask.restore();
-      await kuzzle.ask('core:realtime:notify:tokenExpired', 'connectionId');
+      await kuzzle.ask('core:realtime:tokenExpired:notify', 'connectionId');
 
       should(notifier.notifyTokenExpired).calledWith('connectionId');
     });

@@ -13,6 +13,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const DocumentController = require('../../../lib/api/controller/document');
 const { NativeController } = require('../../../lib/api/controller/base');
+const actionEnum = require('../../../lib/core/realtime/actionEnum');
 
 describe('DocumentController', () => {
   const index = 'festivals';
@@ -282,16 +283,16 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.ask).be.calledWith(
-        'core:realtime:notify:created',
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
         request,
-        '_id',
-        '_source');
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
 
       should(response).match({
         _id: '_id',
+        _source: '_source',
         _version: '_version',
-        _source: '_source'
       });
     });
 
@@ -336,7 +337,7 @@ describe('DocumentController', () => {
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
 
-      const response = await documentController._mChanges(request, 'mCreate', true);
+      const response = await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
 
       should(documentController.publicStorage.mCreate).be.calledWith(
         index,
@@ -345,10 +346,10 @@ describe('DocumentController', () => {
         { userId: 'aschen', refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:realtime:notify:mChanged',
+        'core:realtime:document:mNotify',
         request,
-        items,
-        true);
+        actionEnum.CREATE,
+        items);
 
       should(response).match({
         successes: items,
@@ -357,7 +358,7 @@ describe('DocumentController', () => {
     });
 
     it('should have default values for userId and refresh params', async () => {
-      await documentController._mChanges(request, 'mCreate', true);
+      await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
 
       should(documentController.publicStorage.mCreate).be.calledWith(
         index,
@@ -378,7 +379,7 @@ describe('DocumentController', () => {
         ]
       }));
 
-      const response = await documentController._mChanges(request, 'mCreate', true);
+      const response = await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
 
       should(response).match({
         successes: items,
@@ -398,14 +399,14 @@ describe('DocumentController', () => {
         { _id: 'doc-2', _source: {} },
       ];
 
-      return should(documentController._mChanges(request, 'mCreate', true))
+      return should(documentController._mChanges(request, 'mCreate', actionEnum.CREATE))
         .be.rejectedWith({ id: 'api.assert.unexpected_argument' });
     });
 
     it('should reject if the number of documents to edit exceeds server configuration', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
 
-      return should(documentController._mChanges(request, 'foobar'))
+      return should(documentController._mChanges(request, 'foobar', actionEnum.CREATE))
         .rejectedWith(
           SizeLimitError,
           { id: 'services.storage.write_limit_exceeded' });
@@ -447,8 +448,11 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.ask)
-        .calledWith('core:realtime:notify:created', request, '_id', '_source');
+      should(kuzzle.ask).calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.WRITE,
+        { _id: '_id', _source: '_source' });
 
       should(response).match({
         _id: '_id',
@@ -456,19 +460,6 @@ describe('DocumentController', () => {
         _source: '_source',
         created: true
       });
-    });
-
-    it('should notify replace if document was replaced', async () => {
-      documentController.publicStorage.createOrReplace.resolves({
-        _id: '_id',
-        _version: '_version',
-        _source: '_source',
-        created: false
-      });
-
-      await documentController.createOrReplace(request);
-
-      should(kuzzle.ask).calledWith('core:realtime:notify:replaced', request);
     });
 
     it('should have default value for refresh and userId', async () => {
@@ -519,10 +510,14 @@ describe('DocumentController', () => {
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
       should(kuzzle.ask).be.calledWithMatch(
-        'core:realtime:notify:updated',
+        'core:realtime:document:notify',
         request,
-        '_id',
-        content);
+        actionEnum.UPDATE,
+        {
+          _id: '_id',
+          _source: content,
+          _updatedFields: Object.keys(request.input.body),
+        });
 
       should(response).match({
         _id: '_id',
@@ -590,9 +585,14 @@ describe('DocumentController', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:realtime:notify:mChanged',
+        'core:realtime:document:mNotify',
         request,
-        esResponse.successes);
+        actionEnum.UPDATE,
+        esResponse.successes.map(doc => ({
+          _id: doc._id,
+          _source: doc._source,
+          _updatedFields: [ 'bar' ],
+        })));
 
       should(response).be.eql(esResponse);
     });
@@ -619,9 +619,14 @@ describe('DocumentController', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).calledWith(
-        'core:realtime:notify:mChanged',
+        'core:realtime:document:mNotify',
         request,
-        esResponse.successes);
+        actionEnum.UPDATE,
+        esResponse.successes.map(doc => ({
+          _id: doc._id,
+          _source: { foo: 'bar', bar: 'foo' },
+          _updatedFields: [ 'bar' ],
+        })));
 
       should(response).be.eql(esResponse);
     });
@@ -695,7 +700,12 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.ask).calledWith('core:realtime:notify:replaced', request);
+      should(kuzzle.ask).calledWith(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.REPLACE,
+        { _id: request.input.resource._id, _source: content });
+
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -733,10 +743,10 @@ describe('DocumentController', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:realtime:notify:deleted',
+        'core:realtime:document:notify',
         request,
-        'foobar',
-        '_source');
+        actionEnum.DELETE,
+        { _id: 'foobar', _source: '_source' });
 
       should(response).be.eql({ _id: 'foobar' });
     });
@@ -757,19 +767,18 @@ describe('DocumentController', () => {
         'foobar');
 
       should(kuzzle.ask).be.calledWith(
-        'core:realtime:notify:deleted',
+        'core:realtime:document:notify',
         request,
-        'foobar',
-        '_source');
+        actionEnum.DELETE,
+        { _id: 'foobar', _source: '_source' });
 
       should(response).be.eql({ _id: 'foobar', _source: '_source'});
     });
   });
 
   describe('#mDelete', () => {
-    let
-      ids,
-      documents;
+    let ids;
+    let documents;
 
     beforeEach(() => {
       ids = ['id1', 'id2', 'id3'];
@@ -799,8 +808,11 @@ describe('DocumentController', () => {
         ids,
         { refresh: 'wait_for' });
 
-      should(kuzzle.ask)
-        .be.calledWith('core:realtime:notify:mDeleted', request, documents);
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.DELETE,
+        documents);
 
       should(response).match({
         successes: ['id1', 'id2', 'id3'],
@@ -853,8 +865,9 @@ describe('DocumentController', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:realtime:notify:mDeleted',
+        'core:realtime:document:mNotify',
         request,
+        actionEnum.DELETE,
         [
           { _id: 'id1', _source: undefined },
           { _id: 'id2', _source: undefined }
@@ -881,8 +894,9 @@ describe('DocumentController', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:realtime:notify:mDeleted',
+        'core:realtime:document:mNotify',
         request,
+        actionEnum.DELETE,
         [
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }

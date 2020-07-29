@@ -19,18 +19,8 @@ describe('Test: notifier.notifyDocumentCreate', () => {
     return notifier.init();
   });
 
-  it('should register a "notify:created" event', async () => {
-    sinon.stub(notifier, 'notifyDocumentCreate');
-
-    kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:notify:created', 'req', 'id', 'content');
-
-    should(notifier.notifyDocumentCreate).calledWith('req', 'id', 'content');
-  });
-
-  it('should send a document notification and cache the result', async () => {
+  it('should send a document notification and return the matched rooms', async () => {
     const rooms = [ 'bar', 'baz' ];
-    sinon.stub(notifier, '_setCacheWithTTL');
     sinon.stub(notifier, 'notifyDocument');
     kuzzle.koncorde.test.returns(rooms);
 
@@ -38,19 +28,14 @@ describe('Test: notifier.notifyDocumentCreate', () => {
       collection: 'collection',
       index: 'index',
     });
-    const id = 'foo';
-    const content = { foo: 'bar' };
+    const _id = 'foo';
+    const _source = { foo: 'bar' };
 
-    await notifier.notifyDocumentCreate(request, id, content);
+    const result = await notifier.notifyDocumentCreate(request, { _id, _source });
 
-    should(kuzzle.koncorde.test).calledWith('index', 'collection', content, id);
+    should(kuzzle.koncorde.test).calledWith('index', 'collection', _source, _id);
     should(notifier.notifyDocument)
-      .calledWithMatch(rooms, request, 'in', 'create', {
-        _id: id,
-        _source: content,
-      });
-
-    should(notifier._setCacheWithTTL)
-      .calledWithMatch(`{notif/index/collection}/${id}`, JSON.stringify(rooms));
+      .calledWithMatch(rooms, request, 'in', 'create', { _id, _source });
+    should(result).match(rooms);
   });
 });

@@ -9,6 +9,7 @@ const mockAssertions = require('../../mocks/mockAssertions');
 
 const BulkController = require('../../../lib/api/controller/bulk');
 const { NativeController } = require('../../../lib/api/controller/base');
+const actionEnum = require('../../../lib/core/realtime/actionEnum');
 
 describe('Test the bulk controller', () => {
   let controller;
@@ -83,86 +84,68 @@ describe('Test the bulk controller', () => {
   });
 
   describe('#write', () => {
-    let content;
-    let id;
-    let notifyCreateStub;
-    let notifyReplaceStub;
+    let _source;
+    let _id;
+    let notifyStub;
 
     beforeEach(() => {
-      id = 'tolkien';
-      content = { name: 'Feanor', silmarils: 3 };
+      _id = 'tolkien';
+      _source = { name: 'Feanor', silmarils: 3 };
 
       request.input.action = 'write';
-      request.input.body = content;
-      request.input.resource._id = id;
+      request.input.body = _source;
+      request.input.resource._id = _id;
 
       controller.publicStorage.createOrReplace.resolves({
-        _id: id,
+        _id,
+        _source,
         _version: 1,
-        _source: content,
         result: 'created',
       });
 
-      notifyCreateStub = kuzzle.ask.withArgs(
-        'core:realtime:notify:created',
+      notifyStub = kuzzle.ask.withArgs(
+        'core:realtime:document:notify',
         sinon.match.object,
-        sinon.match.string,
-        sinon.match.object);
-
-      notifyReplaceStub = kuzzle.ask.withArgs(
-        'core:realtime:notify:replaced',
+        sinon.match.number,
         sinon.match.object);
     });
 
     it('should createOrReplace the document without injecting meta', async () => {
       const response = await controller.write(request);
 
-      should(notifyCreateStub).not.called();
-      should(notifyReplaceStub).not.called();
+      should(notifyStub).not.called();
       should(controller.publicStorage.createOrReplace).be.calledWith(
         index,
         collection,
-        id,
-        content,
+        _id,
+        _source,
         { refresh: 'false', injectKuzzleMeta: false});
 
       should(response).match({
-        _id: id,
+        _id,
+        _source,
         _version: 1,
-        _source: content
       });
     });
 
-    it('should send "document created" notifications if asked to', async () => {
+    it('should send "document written" notifications if asked to', async () => {
       request.input.args.notify = true;
 
       controller.publicStorage.createOrReplace.resolves({
-        _id: id,
+        _id,
+        _source,
         _version: 1,
-        _source: content,
         result: 'created',
         created: true,
       });
 
       await controller.write(request);
 
-      should(notifyCreateStub).be.calledWith(
-        'core:realtime:notify:created',
+      should(notifyStub).be.calledWithMatch(
+        'core:realtime:document:notify',
         request,
-        id,
-        content);
-      should(notifyReplaceStub).not.called();
-    });
-
-    it('should send "document replaced" notifications if asked to', async () => {
-      request.input.args.notify = true;
-
-      await controller.write(request);
-
-      should(notifyCreateStub).not.called();
-      should(notifyReplaceStub).be.calledWith(
-        'core:realtime:notify:replaced',
-        request);
+        actionEnum.WRITE,
+        { _id, _source });
     });
   });
 
@@ -196,10 +179,10 @@ describe('Test the bulk controller', () => {
       });
 
       notifyMChangesStub = kuzzle.ask.withArgs(
-        'core:realtime:notify:mChanged',
+        'core:realtime:document:mNotify',
         sinon.match.object,
-        sinon.match.every(sinon.match.object),
-        sinon.match.bool);
+        sinon.match.number,
+        sinon.match.every(sinon.match.object));
     });
 
     it('should mCreateOrReplace the document without injecting meta', async () => {
@@ -227,10 +210,10 @@ describe('Test the bulk controller', () => {
       await controller.mWrite(request);
 
       should(notifyMChangesStub).be.calledWith(
-        'core:realtime:notify:mChanged',
+        'core:realtime:document:mNotify',
         request,
-        mCreateOrReplaceResult,
-        true);
+        actionEnum.WRITE,
+        mCreateOrReplaceResult);
     });
   });
 

@@ -368,7 +368,7 @@ describe('Test: collection controller', () => {
     beforeEach(() => {
       collectionController.publicStorage.listCollections.resolves(['col', 'loc']);
       realtimeListCollectionsStub = kuzzle.ask
-        .withArgs('core:realtime:listCollections', sinon.match.string)
+        .withArgs('core:realtime:collections:get', sinon.match.string)
         .resolves(['foo', 'bar']);
     });
 
@@ -376,7 +376,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.list(request);
 
       should(kuzzle.ask).calledWith(
-        'core:realtime:listCollections',
+        'core:realtime:collections:get',
         request.input.resource.index);
 
       should(collectionController.publicStorage.listCollections)
@@ -419,7 +419,7 @@ describe('Test: collection controller', () => {
       should(response).be.instanceof(Object);
       should(response.type).be.exactly('realtime');
       should(realtimeListCollectionsStub)
-        .calledWith('core:realtime:listCollections', 'index');
+        .calledWith('core:realtime:collections:get', 'index');
       should(collectionController.publicStorage.listCollections).not.be.called();
     });
 
@@ -444,7 +444,7 @@ describe('Test: collection controller', () => {
       ]);
       should(response.type).be.exactly('all');
       should(realtimeListCollectionsStub)
-        .calledWith('core:realtime:listCollections', 'index');
+        .calledWith('core:realtime:collections:get', 'index');
       should(collectionController.publicStorage.listCollections).be.called();
     });
 
@@ -468,7 +468,7 @@ describe('Test: collection controller', () => {
       ]);
       should(response).be.instanceof(Object);
       should(realtimeListCollectionsStub)
-        .calledWith('core:realtime:listCollections', 'index');
+        .calledWith('core:realtime:collections:get', 'index');
       should(collectionController.publicStorage.listCollections).be.called();
     });
 
@@ -492,7 +492,7 @@ describe('Test: collection controller', () => {
       ]);
       should(response.type).be.exactly('all');
       should(realtimeListCollectionsStub)
-        .calledWithMatch('core:realtime:listCollections', 'index');
+        .calledWithMatch('core:realtime:collections:get', 'index');
       should(collectionController.publicStorage.listCollections).be.called();
     });
 

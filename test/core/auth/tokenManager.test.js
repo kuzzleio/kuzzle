@@ -190,7 +190,7 @@ describe('Test: token manager core component', () => {
     beforeEach(() => {
       clock = sinon.useFakeTimers(new Date());
       tokenExpiredStub = kuzzle.ask
-        .withArgs('core:realtime:notify:tokenExpired', sinon.match.string)
+        .withArgs('core:realtime:tokenExpired:notify', sinon.match.string)
         .resolves();
     });
 
@@ -239,7 +239,7 @@ describe('Test: token manager core component', () => {
 
       should(tokenExpiredStub)
         .be.calledOnce()
-        .be.calledWith('core:realtime:notify:tokenExpired', 'connectionId2');
+        .be.calledWith('core:realtime:tokenExpired:notify', 'connectionId2');
 
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]._id).be.eql('bar');
