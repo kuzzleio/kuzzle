@@ -510,7 +510,9 @@ describe('Test: ElasticSearch service', () => {
               city: 'Kathmandu',
               _kuzzle_info: {
                 author: 'aschen',
-                createdAt: timestamp
+                collection,
+                createdAt: timestamp,
+                index
               }
             },
             id: 'liia',
@@ -547,7 +549,9 @@ describe('Test: ElasticSearch service', () => {
             body: {
               city: 'Panipokari',
               _kuzzle_info: {
-                author: null
+                author: null,
+                collection,
+                index
               }
             },
             op_type: 'index'
@@ -590,7 +594,9 @@ describe('Test: ElasticSearch service', () => {
               city: 'Kathmandu',
               _kuzzle_info: {
                 author: 'aschen',
+                collection,
                 createdAt: timestamp,
+                index,
                 updatedAt: timestamp,
                 updater: 'aschen'
               }
@@ -680,6 +686,8 @@ describe('Test: ElasticSearch service', () => {
               doc: {
                 city: 'Panipokari',
                 _kuzzle_info: {
+                  collection,
+                  index,  
                   updatedAt: timestamp,
                   updater: null
                 }
@@ -716,6 +724,8 @@ describe('Test: ElasticSearch service', () => {
               doc: {
                 city: 'Panipokari',
                 _kuzzle_info: {
+                  collection,
+                  index,  
                   updatedAt: timestamp,
                   updater: 'aschen'
                 }
@@ -766,6 +776,8 @@ describe('Test: ElasticSearch service', () => {
           doc: {
             city: 'Panipokari',
             _kuzzle_info: {
+              collection,
+              index,
               updatedAt: timestamp,
               updater: 'oh noes'
             }
@@ -807,7 +819,9 @@ describe('Test: ElasticSearch service', () => {
               city: 'Kathmandu',
               _kuzzle_info: {
                 author: null,
+                collection,
                 createdAt: timestamp,
+                index,
                 updatedAt: timestamp,
                 updater: null
               }
@@ -840,7 +854,9 @@ describe('Test: ElasticSearch service', () => {
               city: 'Kathmandu',
               _kuzzle_info: {
                 author: 'aschen',
+                collection,
                 createdAt: timestamp,
+                index,
                 updatedAt: timestamp,
                 updater: 'aschen'
               }
@@ -1502,7 +1518,9 @@ describe('Test: ElasticSearch service', () => {
           _kuzzle_info: {
             properties: {
               author:     { type: 'text' },
+              collection: {type: 'text'},
               createdAt:  { type: 'date' },
+              index: {type: 'text'},
               updatedAt:  { type: 'date' },
               updater:    { type: 'keyword' },
             }
@@ -1534,7 +1552,9 @@ describe('Test: ElasticSearch service', () => {
             _kuzzle_info: {
               properties: {
                 author:     { type: 'text' },
+                collection: {type: 'text'},
                 createdAt:  { type: 'date' },
+                index: {type: 'text'},
                 updatedAt:  { type: 'date' },
                 updater:    { type: 'keyword' },
               }
@@ -1987,7 +2007,9 @@ describe('Test: ElasticSearch service', () => {
             firstName: 'foo',
             _kuzzle_info: {
               author: userId,
+              collection,
               createdAt: timestamp,
+              index,
               updater: null,
               updatedAt: null
             }
@@ -1998,7 +2020,9 @@ describe('Test: ElasticSearch service', () => {
             firstName: 'bar',
             _kuzzle_info: {
               author: userId,
+              collection,
               createdAt: timestamp,
+              index,
               updater: null,
               updatedAt: null
             }
@@ -2009,6 +2033,8 @@ describe('Test: ElasticSearch service', () => {
             doc: {
               firstName: 'foobar',
               _kuzzle_info: {
+                collection,
+                index,
                 updater: userId,
                 updatedAt: timestamp
               }
@@ -2558,7 +2584,9 @@ describe('Test: ElasticSearch service', () => {
       kuzzleMeta = {
         _kuzzle_info: {
           author: null,
+          collection,
           createdAt: timestamp,
+          index,
           updater: null,
           updatedAt: null
         }
@@ -2748,7 +2776,9 @@ describe('Test: ElasticSearch service', () => {
       kuzzleMeta = {
         _kuzzle_info: {
           author: null,
+          collection,
           createdAt: timestamp,
+          index,
           updater: null,
           updatedAt: null
         }
@@ -2882,6 +2912,8 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       kuzzleMeta = {
         _kuzzle_info: {
+          collection,
+          index,
           updater: null,
           updatedAt: timestamp
         }
@@ -3034,7 +3066,9 @@ describe('Test: ElasticSearch service', () => {
       kuzzleMeta = {
         _kuzzle_info: {
           author: null,
+          collection,
           createdAt: timestamp,
+          index,
           updater: null,
           updatedAt: null
         }
@@ -3521,7 +3555,9 @@ describe('Test: ElasticSearch service', () => {
       const kuzzleMeta = {
         _kuzzle_info: {
           author: null,
+          collection,
           createdAt: timestamp,
+          index,
           updater: null,
           updatedAt: null
         }

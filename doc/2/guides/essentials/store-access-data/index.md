@@ -160,7 +160,9 @@ curl -X POST -H "Content-Type: application/json" -d '{ "driver": "liia", "arrive
       "arriveAt": "2019-07-26",
       "_kuzzle_info": {            // Kuzzle metadata
         "author": "-1",
+        "collection": "yellow-taxi",
         "createdAt": 1561443009768,
+        "index": "nyc-open-data",
         "updatedAt": null,
         "updater": null
       }
@@ -236,6 +238,7 @@ curl http://localhost:7512/nyc-open-data/yellow-taxi/document-uniq-id?pretty
       "arriveAt": "2019-07-26",
       "_kuzzle_info": {
         "author": "-1",
+        "collection": "collection-name"
         "createdAt": 1561443222474,
         "updatedAt": 1561443279526,
         "updater": "-1"
@@ -303,7 +306,9 @@ curl -X POST -H "Content-Type: application/json" -d '{
           "age": 27,
           "_kuzzle_info": {
             "author": "-1",
+            "collection": "yellow-taxi",
             "createdAt": 1561444837342,
+            "index": "nyc-open-data",
             "updatedAt": null,
             "updater": null
           }
@@ -319,7 +324,9 @@ curl -X POST -H "Content-Type: application/json" -d '{
           "age": 25,
           "_kuzzle_info": {
             "author": "-1",
+            "collection": "yellow-taxi",
             "createdAt": 1561444837239,
+            "index": "nyc-open-data",
             "updatedAt": null,
             "updater": null
           }
@@ -335,7 +342,9 @@ curl -X POST -H "Content-Type: application/json" -d '{
           "age": 28,
           "_kuzzle_info": {
             "author": "-1",
+            "collection": "yellow-taxi",
             "createdAt": 1561444837391,
+            "index": "nyc-open-data",
             "updatedAt": null,
             "updater": null
           }
@@ -351,7 +360,9 @@ curl -X POST -H "Content-Type: application/json" -d '{
           "age": 26,
           "_kuzzle_info": {
             "author": "-1",
+            "collection": "yellow-taxi",
             "createdAt": 1561444837290,
+            "index": "nyc-open-data",
             "updatedAt": null,
             "updater": null
           }

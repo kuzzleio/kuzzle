@@ -22,7 +22,9 @@ You can bypass metadata automatic creation by using [bulk:write](/core/2/api/con
 Metadata can be viewed in the document's `_kuzzle_info` field and contains the following properties:
 
 - `author`: The [unique identifier](/core/2/guides/essentials/user-authentication#kuzzle-user-identifier-kuidd) of the user who created the document.
+- `collection`: The name of the collection the document is in.
 - `createdAt`: Timestamp of document creation (create or replace), in epoch-milliseconds format.
+- `index`: The name of the index the document is in.
 - `updatedAt`: Timestamp of last document update in epoch-milliseconds format, or `null` if no update has been made.
 - `updater`: The [unique identifier](/core/2/guides/essentials/user-authentication#kuzzle-user-identifier-kuid) of the user that updated the document, or `null` if the document has never been updated.
 
@@ -38,7 +40,9 @@ Here is an example of a Kuzzle response, containing a document's `_id` and `_sou
     "message": "Hello World!",
     "_kuzzle_info": {
       "author": "<kuid>",
+      "collection": "<collection>",
       "createdAt": 1481816934209,
+      "index": "<index>",
       "updatedAt": null,
       "updater": null
     }
@@ -67,7 +71,7 @@ For example, to query by a document's creation timestamp, we can use the followi
 {
   "query": {
     "range": {
-      "_kuzzle_info.createdAt": {
+      ".createdAt": {
         "lte": 1481816930000
       }
     }

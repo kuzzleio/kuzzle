@@ -69,7 +69,9 @@ Returns an object with the following properties:
       "hobby": "Segway polo",
       "_kuzzle_info": {
         "author": "Bob",
+        "collection": "<collection>",
         "createdAt": 1481816934209,
+        "index": "<index>",
         "updatedAt": null,
         "updater": null
       }
