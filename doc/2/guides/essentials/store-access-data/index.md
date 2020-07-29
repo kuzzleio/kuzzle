@@ -238,8 +238,9 @@ curl http://localhost:7512/nyc-open-data/yellow-taxi/document-uniq-id?pretty
       "arriveAt": "2019-07-26",
       "_kuzzle_info": {
         "author": "-1",
-        "collection": "collection-name"
+        "collection": "yellow-taxi"
         "createdAt": 1561443222474,
+        "index": "nyc-open-data",
         "updatedAt": 1561443279526,
         "updater": "-1"
       },
