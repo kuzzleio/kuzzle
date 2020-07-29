@@ -71,7 +71,7 @@ For example, to query by a document's creation timestamp, we can use the followi
 {
   "query": {
     "range": {
-      ".createdAt": {
+      "_kuzzle_info.createdAt": {
         "lte": 1481816930000
       }
     }
