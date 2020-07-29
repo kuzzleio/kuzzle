@@ -2,10 +2,11 @@
 
 const { Given } = require('cucumber');
 
-Given('I {string} the pipe on {string} with the following changes:', async function (state, event, dataTable) {
+Given('I {string} the {string} pipe on {string} with the following changes:', async function (state, kind, event, dataTable) {
+  const controller = kind === 'plugin' ? 'functional-test-plugin/pipes' : 'pipes';
   const payload = this.parseObject(dataTable);
   const request = {
-    controller: 'functional-test-plugin/pipes',
+    controller,
     action: 'manage',
     state,
     event,
@@ -15,9 +16,11 @@ Given('I {string} the pipe on {string} with the following changes:', async funct
   await this.sdk.query(request);
 });
 
-Given('I {string} the pipe on {string} without changes', async function (state, event) {
+Given('I {string} the {string} pipe on {string} without changes', async function (state, kind, event) {
+  const controller = kind === 'plugin' ? 'functional-test-plugin/pipes' : 'pipes';
+
   await this.sdk.query({
-    controller: 'functional-test-plugin/pipes',
+    controller,
     action: 'manage',
     state,
     event

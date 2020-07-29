@@ -181,7 +181,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register plugins HTTP routes', (done) => {
-    httpRequest.url = '/_plugin/foo/bar/baz';
+    httpRequest.url = '/foo/bar/baz';
     httpRequest.method = 'GET';
 
     routeController.http.route(httpRequest, request => {

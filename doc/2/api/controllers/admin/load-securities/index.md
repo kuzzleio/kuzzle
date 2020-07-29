@@ -10,11 +10,11 @@ title: loadSecurities
 
 Load roles, profiles and users into the storage layer.
 
-The roles, profiles and users definitions follow the same structure as in the body parameter of these corresponding API routes:
+The roles, profiles and users definitions follow the same structure as in the body parameter of their corresponding API actions:
 
- - [createRole](/core/2/api/controllers/security/create-role)
- - [createProfile](/core/2/api/controllers/security/create-profile)
- - [createUser](/core/2/api/controllers/security/create-user)
+ - [security:createRole](/core/2/api/controllers/security/create-role)
+ - [security:createProfile](/core/2/api/controllers/security/create-profile)
+ - [security:createUser](/core/2/api/controllers/security/create-user)
 
 If users already exist, they will be deleted and then created again.
 
@@ -95,7 +95,7 @@ Body:
 
 * `onExistingUsers`: can be set to either `fail` (default), `skip` or `overwrite` to either fail, skip or overwrite existing users
 * `refresh`: if set to `wait_for`, Kuzzle will not respond until the fixtures are loaded
-* `force`: if set to `true`, creates the role even if it gives access to non-existent plugins API routes.
+* `force`: if set to `true`, creates the role even if it gives access to non-existent plugins API actions.
 
 ---
 

@@ -16,11 +16,20 @@ Returns information about the currently logged in user.
 
 ### HTTP
 
+<SinceBadge version="auto-version"/>
+```http
+URL: http://kuzzle:7512/_me
+Method: GET
+Headers: Authorization: "Bearer <authentication token>"
+```
+
+<DeprecatedBadge version="auto-version">
 ```http
 URL: http://kuzzle:7512/users/_me
 Method: GET
 Headers: Authorization: "Bearer <authentication token>"
 ```
+</DeprecatedBadge>
 
 ### Other protocols
 

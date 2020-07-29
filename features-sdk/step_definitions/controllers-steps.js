@@ -4,7 +4,7 @@ const _ = require('lodash');
 const should = require('should');
 const { Then } = require('cucumber');
 
-Then(/I (successfully )?call the route "(.*?)":"(.*?)" with args:$/, async function (expectSuccess, controller, action, dataTable) {
+Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async function (expectSuccess, controller, action, dataTable) {
   const args = this.parseObject(dataTable);
 
   try {
@@ -21,7 +21,7 @@ Then(/I (successfully )?call the route "(.*?)":"(.*?)" with args:$/, async funct
   }
 });
 
-Then(/I (successfully )?call the route "(.*?)":"(.*?)" with body:$/, async function (expectSuccess, controller, action, bodyRaw) {
+Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with body:$/, async function (expectSuccess, controller, action, bodyRaw) {
   const body = JSON.parse(bodyRaw);
 
   try {
@@ -38,7 +38,7 @@ Then(/I (successfully )?call the route "(.*?)":"(.*?)" with body:$/, async funct
   }
 });
 
-Then(/I (successfully )?call the route "(.*?)":"(.*?)"$/, async function (expectSuccess, controller, action) {
+Then(/I (successfully )?execute the action "(.*?)":"(.*?)"$/, async function (expectSuccess, controller, action) {
   try {
     const response = await this.sdk.query({ controller, action });
 
