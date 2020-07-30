@@ -11,12 +11,14 @@ describe('Test: router.httpRequest', () => {
   let httpRequest;
   let routeController;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     kuzzle = new KuzzleMock();
 
-    kuzzle.pluginsManager.routes = [
-      {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
-    ];
+    kuzzle.ask
+      .withArgs('core:plugin:routes:get')
+      .resolves([
+        {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
+      ]);
 
     kuzzle.funnel.execute.callsFake((request, callback) => {
       request.setResult({}, {status: 1234});
@@ -26,7 +28,7 @@ describe('Test: router.httpRequest', () => {
     kuzzle.config.http.accessControlAllowOrigin = 'foobar';
 
     routeController = new Router(kuzzle);
-    routeController.init();
+    await routeController.init();
 
     httpRequest = new HttpMessage(
       {id: 'requestId'},
