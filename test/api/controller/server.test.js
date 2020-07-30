@@ -77,9 +77,9 @@ describe('ServerController', () => {
   });
 
   describe('#adminExists', () => {
-    const adminExistsEvent = 'core:security:admin:exist';
+    const adminExistsEvent = 'core:security:user:admin:exist';
 
-    it('should calls "core:security:admin:exist"', async () => {
+    it('should calls "core:security:user:admin:exist"', async () => {
       kuzzle.ask
         .withArgs(adminExistsEvent)
         .returns(true);

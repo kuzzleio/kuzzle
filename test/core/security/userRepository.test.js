@@ -171,7 +171,7 @@ describe('Test: security/userRepository', () => {
   });
 
   describe('#adminExists', () => {
-    const adminExistsEvent = 'core:security:admin:exist';
+    const adminExistsEvent = 'core:security:user:admin:exist';
 
     it('should register an "adminExists" event', async () => {
       userRepository.adminExists = sinon.stub();
