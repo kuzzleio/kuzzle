@@ -1002,7 +1002,7 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#createFirstAdmin', () => {
-    const adminExistsEvent = 'core:security:user:adminExists';
+    const adminExistsEvent = 'core:security:admin:exist';
     const createOrReplaceRoleEvent = 'core:security:role:createOrReplace';
     const createOrReplaceProfileEvent = 'core:security:profile:createOrReplace';
     let createOrReplaceRoleStub;
