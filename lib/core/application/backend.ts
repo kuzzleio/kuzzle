@@ -198,7 +198,7 @@ class ControllerManager {
 
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, definition);
+    Plugin.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(

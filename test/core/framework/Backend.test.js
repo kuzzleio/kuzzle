@@ -177,7 +177,7 @@ describe('Backend', () => {
       actions: {
         sayHello: {
           handler: async request => `Hello, ${request.input.args.name}`,
-          http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
+          http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
         },
         sayBye: {
           handler: async request => `Bye ${request.input.args.name}!`,
@@ -214,7 +214,7 @@ describe('Backend', () => {
       }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
 
       definition = getDefinition();
-      definition.actions.sayHello.http = [{ verp: 'POST', url: '/url' }];
+      definition.actions.sayHello.http = [{ verp: 'POST', path: '/url' }];
 
       should(() => {
         application.controller.register('greeting', definition);
