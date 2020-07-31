@@ -350,7 +350,7 @@ class StorageManager extends ApplicationManager {
     super(application);
 
     const kuzzle = this._kuzzle;
-    this.Client = function Client () {
+    this.Client = function StorageClient () {
       return Elasticsearch.buildClient(kuzzle.storageEngine.config.client);
     } as any;
   }
@@ -501,8 +501,6 @@ export class Backend {
     this.log = new Logger(this);
 
     this.kerror = kerror;
-
-    const kuzzle = this._kuzzle;
 
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
