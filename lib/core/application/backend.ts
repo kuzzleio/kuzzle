@@ -343,15 +343,21 @@ class StorageManager extends ApplicationManager {
   /**
    * Storage client constructor.
    * (Currently Elasticsearch)
+   *
+   * @param clientConfig Overload configuration for the underlaying storage client
    */
-  public Client: new () => Client;
+  public Client: new (clientConfig?: any) => Client;
 
   constructor (application: Backend) {
     super(application);
 
     const kuzzle = this._kuzzle;
-    this.Client = function StorageClient () {
-      return Elasticsearch.buildClient(kuzzle.storageEngine.config.client);
+
+    this.Client = function StorageClient (clientConfig: JSONObject = {}) {
+      return Elasticsearch.buildClient({
+        ...kuzzle.storageEngine.config.client,
+        ...clientConfig
+      });
     } as any;
   }
 

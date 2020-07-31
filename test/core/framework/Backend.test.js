@@ -389,9 +389,10 @@ describe('Backend', () => {
       application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
       should(application.storage.Client).be.a.Function();
 
-      const client = new application.storage.Client();
+      const client = new application.storage.Client({ maxRetries: 42 });
       should(client).be.instanceOf(ElasticsearchClient);
       should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
+      should(client.helpers.maxRetries).be.eql(42);
     });
   });
 
