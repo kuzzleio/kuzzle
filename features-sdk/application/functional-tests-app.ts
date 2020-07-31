@@ -1,5 +1,7 @@
 'use strict';
 
+import should from 'should'
+
 import { Backend } from '../../index';
 import * as FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
 
@@ -91,19 +93,22 @@ app.controller.register('tests', {
       handler: async () => app.vault.secrets
     },
 
-    // ESClient constructor
-    esClient: {
+    // access storage client
+    storageClient: {
       handler: async request => {
-        const client = new app.ESClient();
+        const client = new app.storage.Client();
         const esRequest = {
           body: request.input.body,
           id: request.input.resource._id,
           index: request.input.resource.index,
         };
 
-        const { body } = await client.index(esRequest);
+        const response = await client.index(esRequest);
+        const response2 = await app.storage.client.index(esRequest);
 
-        return body;
+        should(response.body).match(response2.body);
+
+        return response.body;
       },
     }
   }

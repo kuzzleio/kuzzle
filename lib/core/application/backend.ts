@@ -40,17 +40,23 @@ import {
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
-/* PipeManager class ======================================================== */
+class ApplicationManager {
+  protected _application: any;
 
-class PipeManager {
-  private _application: any;
-
-  constructor (application: any) {
+  constructor (application: Backend) {
     Reflect.defineProperty(this, '_application', {
       value: application
     });
   }
 
+  protected get _kuzzle () {
+    return this._application._kuzzle;
+  }
+}
+
+/* PipeManager class ======================================================== */
+
+class PipeManager extends ApplicationManager {
   /**
    * Registers a new pipe on an event
    *
@@ -77,15 +83,7 @@ class PipeManager {
 
 /* HookManager class ======================================================== */
 
-class HookManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class HookManager extends ApplicationManager {
   /**
    * Registers a new hook on an event
    *
@@ -112,22 +110,18 @@ class HookManager {
 
 /* ConfigManager class ====================================================== */
 
-class ConfigManager {
-  private _application: any;
-
+class ConfigManager extends ApplicationManager {
   /**
    * Configuration content
    */
   public content: JSONObject;
 
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
+  constructor (application: Backend) {
+    super(application);
 
     Reflect.defineProperty(this, 'content', {
       enumerable: true,
-      value: this._application._kuzzle.config
+      value: this._kuzzle.config
     });
   }
 
@@ -142,7 +136,7 @@ class ConfigManager {
       throw runtimeError.get('already_started', 'config');
     }
 
-    _.set(this._application._kuzzle.config, path, value);
+    _.set(this._kuzzle.config, path, value);
   }
 
   /**
@@ -155,23 +149,15 @@ class ConfigManager {
       throw runtimeError.get('already_started', 'config');
     }
 
-    this._application._kuzzle.config = _.merge(
-      this._application._kuzzle.config,
+    this._kuzzle.config = _.merge(
+      this._kuzzle.config,
       config);
   }
 }
 
 /* ControllerManager class ================================================== */
 
-class ControllerManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class ControllerManager extends ApplicationManager {
   /**
    * Registers a new controller.
    *
@@ -224,15 +210,7 @@ class ControllerManager {
 
 /* VaultManager class ======================================================= */
 
-class VaultManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class VaultManager extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -263,35 +241,24 @@ class VaultManager {
       throw runtimeError.get('unavailable_before_start', 'vault.secrets');
     }
 
-    return this._application._kuzzle.vault.secrets;
+    return this._kuzzle.vault.secrets;
   }
 }
 
 /* PluginManager class ====================================================== */
 
-interface UsePluginOptions {
-  /**
-   * Specify plugin name instead of using the class name.
-   */
-  name?: string
-}
-
-class PluginManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class PluginManager extends ApplicationManager {
   /**
    * Uses a plugin in this application
    *
    * @param plugin - Plugin instance
    * @param options - Additionnal options
+   *    - `name`: Specify plugin name instead of using the class name.
    */
-  use (plugin: BasePlugin, options: UsePluginOptions = {}) : void {
+  use (
+    plugin: BasePlugin,
+    options: { name?: string } = {}
+  ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }
@@ -323,15 +290,7 @@ class PluginManager {
 
 /* Logger class ============================================================= */
 
-class Logger {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class Logger extends ApplicationManager {
   /**
    * Logs a debug message
    */
@@ -372,12 +331,43 @@ class Logger {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
 
-    this._application._kuzzle.log[level](`[${this._application.name}]: ${message}`);
+    this._kuzzle.log[level](`[${this._application.name}]: ${message}`);
   }
 }
 
-/* Backend class ======================================================== */
+/* StorageManager class ===================================================== */
 
+class StorageManager extends ApplicationManager {
+  private _client: Client = null;
+
+  /**
+   * Storage client constructor.
+   * (Currently Elasticsearch)
+   */
+  public Client: new () => Client;
+
+  constructor (application: Backend) {
+    super(application);
+
+    const kuzzle = this._kuzzle;
+    this.Client = function Client () {
+      return Elasticsearch.buildClient(kuzzle.storageEngine.config.client);
+    } as any;
+  }
+
+  /**
+   * Access to the underlaying storage engine client.
+   * (Currently Elasticsearch)
+   */
+  get client (): Client {
+    if (! this._client) {
+      this._client = Elasticsearch.buildClient(this._kuzzle.storageEngine.config.client);
+    }
+
+    return this._client;
+  }}
+
+/* Backend class ======================================================== */
 
 export class Backend {
   private _kuzzle: any;
@@ -403,11 +393,6 @@ export class Backend {
    * @todo add type
    */
   public kerror: any;
-
-  /**
-   * Elasticsearch client constructor
-   */
-  public ESClient: new () => Client;
 
   /**
    * PipeManager definition manager
@@ -471,6 +456,13 @@ export class Backend {
   public log: Logger;
 
   /**
+   * Storage manager
+   */
+  public storage: StorageManager;
+
+  /**
+   * @deprecated
+   *
    * Support for old features available before Kuzzle as a framework
    * to avoid breaking existing deployments.
    *
@@ -505,14 +497,12 @@ export class Backend {
     this.vault = new VaultManager(this);
     this.controller = new ControllerManager(this);
     this.plugin = new PluginManager(this);
+    this.storage = new StorageManager(this);
     this.log = new Logger(this);
 
     this.kerror = kerror;
 
     const kuzzle = this._kuzzle;
-    this.ESClient = function ESClient () {
-      return Elasticsearch.buildClient(kuzzle.storageEngine.config.client);
-    } as any;
 
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));

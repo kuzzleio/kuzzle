@@ -367,15 +367,6 @@ describe('Backend', () => {
     });
   });
 
-  it('should exposes ESClient', () => {
-    application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
-    should(application.ESClient).be.a.Function();
-
-    const client = new application.ESClient();
-    should(client).be.instanceOf(ElasticsearchClient);
-    should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
-  });
-
   it('should exposes kerror', () => {
     should(application.kerror.get).be.a.Function();
     should(application.kerror.reject).be.a.Function();
@@ -391,5 +382,26 @@ describe('Backend', () => {
 
     should(application._kuzzle.pipe).be.calledWith('xen:crystal', 'payload');
     should(result).be.eql('resonance cascade');
+  });
+
+  describe('StorageManager#Client', () => {
+    it('should allows to construct an ES Client', () => {
+      application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
+      should(application.storage.Client).be.a.Function();
+
+      const client = new application.storage.Client();
+      should(client).be.instanceOf(ElasticsearchClient);
+      should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
+    });
+  });
+
+  describe('StorageManager#client', () => {
+    it('should allows lazily access an ES Client', () => {
+      should(application.storage._client).be.null();
+
+      should(application.storage.client).be.instanceOf(ElasticsearchClient);
+      should(application.storage.client.connectionPool.connections[0].url.toString())
+        .be.eql('http://es:9200/');
+    });
   });
 });
