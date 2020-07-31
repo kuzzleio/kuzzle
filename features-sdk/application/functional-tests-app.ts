@@ -9,6 +9,9 @@ const app = new Backend('functional-tests-app');
 app.hook.register('request:onError', request => {
   console.log(request.error);
 });
+app.hook.register('hook:onError', request => {
+  console.log(request.error);
+});
 
 // Pipe management
 const activatedPipes: any = {};
@@ -71,7 +74,7 @@ app.controller.register('tests', {
       handler: async request => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
-      http: [{ verb: 'POST', url: '/hello/:name' }]
+      http: [{ verb: 'POST', path: '/hello/:name' }]
     },
 
     // Trigger custom event
@@ -102,7 +105,6 @@ app.controller.register('tests', {
 
         return body;
       },
-      http: [{ verb: 'POST', url: '/es-client/:index/:_id' }],
     }
   }
 });

@@ -27,13 +27,47 @@ export interface JSONObject {
   [key: string]: JSONObject | any
 }
 
+/**
+ * API controller definition.
+ *
+ * @example
+ * {
+ *   actions: {
+ *     sayHello: {
+ *       handler: async request => `Hello, ${request.input.args.name}`,
+ *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+ *     }
+ *   }
+ * }
+ */
 export interface ControllerDefinition {
   actions: {
+    /**
+     * Name of the API action
+     */
     [action: string]: {
+      // @todo use KuzzleRequest from common objects
+      /**
+       * Function handler for incoming requests.
+       */
       handler: (request: any) => Promise<any>,
+      /**
+       * Declare optional HTTP routes.
+       * Http routes will be auto-generated unless they are provided or an empty array
+       * is provided.
+       *
+       */
       http?: Array<{
+        /**
+         * HTTP verb.
+         */
         verb: string,
-        url: string
+        /**
+         * Route path.
+         * A route starting with `/` will be prefixed by `/_` otherwise the route
+         * will be prefixed by `/_/<application-name>/`
+         */
+        path: string
       }>
     }
   }

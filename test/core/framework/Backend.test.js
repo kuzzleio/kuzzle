@@ -235,7 +235,7 @@ describe('Backend', () => {
       should(application._controllers.greeting).not.be.undefined();
       should(application._controllers.greeting.actions.sayBye.http)
         .be.eql([
-          { verb: 'GET', url: '/greeting/say-bye' }
+          { verb: 'GET', path: '/greeting/say-bye' }
         ]);
     });
   });

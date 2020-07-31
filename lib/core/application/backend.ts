@@ -180,7 +180,7 @@ class ControllerManager {
    *   actions: {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
-   *       http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
+   *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
    *     }
    *   }
    * })
@@ -216,7 +216,7 @@ class ControllerManager {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
         // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'GET', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
+        definition.http = [{ verb: 'GET', path: `/${kebabCase(name)}/${kebabCase(action)}` }];
       }
     }
   }
