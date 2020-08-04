@@ -36,7 +36,9 @@ describe('Test: kuzzle/dumpGenerator', () => {
       path: '/tmp',
       dateFormat: 'YYYY'
     };
-    kuzzle.pluginsManager.getPluginsDescription.returns({ foo: {} });
+    kuzzle.ask
+      .withArgs('core:plugin:descriptions:get')
+      .resolves({ foo: {} });
     kuzzle.pluginsManager.plugins = { foo: {} };
     kuzzle.statistics.getAllStats.resolves({ hits: [ {stats: 42} ] });
 
