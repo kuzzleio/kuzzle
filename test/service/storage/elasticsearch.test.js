@@ -1469,12 +1469,8 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject when an incorrect dynamic property value is provided', async () => {
-      elasticsearch._checkMappings = _checkMappings;
       const mappings1 = {
-        dynamic: false,
-        properties: {
-          freeman:  { type: 'keyword' }
-        }
+        dynamic: null
       };
       const mappings2 = {
         properties: {
@@ -1487,6 +1483,18 @@ describe('Test: ElasticSearch service', () => {
           }
         }
       };
+      const mappings3 = {
+        dynamic: true
+      };
+
+      await elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings3 });
+
+      should(elasticsearch._checkMappings).be.calledWithMatch({
+        dynamic: 'true'
+      });
 
       await should(elasticsearch.createCollection(
         index,
