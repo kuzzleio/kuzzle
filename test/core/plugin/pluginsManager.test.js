@@ -45,16 +45,8 @@ describe('Plugin', () => {
     pluginsManager = new PluginsManager(kuzzle);
   });
 
-  describe('#set application', () => {
-    it('should adds the application to plugins', () => {
-      pluginsManager.application = application;
-      pluginsManager._plugins.set(plugin.name, plugin);
-
-      should(pluginsManager._plugins.get(application.name)).be.eql(application);
-      should(pluginsManager.application).be.eql(application);
-    });
-
-    it('should throws error if there is already application', () => {
+  describe('#set application internal', () => {
+    it('should throw error if there is already application', () => {
       pluginsManager.application = application;
 
       should(() => {
@@ -109,39 +101,54 @@ describe('Plugin', () => {
       pluginsManager.loadPlugins = sinon.stub().returns(new Map());
     });
 
-    it('should loads plugins with existing plugins', async () => {
-      const otherPlugin = createPlugin('other-plugin');
-      pluginsManager.loadPlugins.returns(new Map([[otherPlugin.name, otherPlugin]]));
-      pluginsManager._plugins.set(plugin.name, plugin);
-
-      await pluginsManager.init('additional plugins');
-
-      should(pluginsManager._plugins.get(plugin.name)).be.eql(plugin);
-      should(pluginsManager._plugins.get(otherPlugin.name)).be.eql(otherPlugin);
-    });
-
-    it('should registers handlers on hook events ', async () => {
-      await pluginsManager.init();
+    it('should register handlers on hook events', async () => {
+      await pluginsManager.init(application);
 
       should(kuzzle.on).be.calledTwice();
       should(kuzzle.on.getCall(0).args[0]).be.eql('plugin:hook:loop-error');
       should(kuzzle.on.getCall(1).args[0]).be.eql('hook:onError');
     });
 
-    it('should calls the application init function', async () => {
-      application.init = sinon.stub();
-      pluginsManager.application = application;
+    it('should register handlers on ask events', async () => {
+      await pluginsManager.init(application, 'not required for the test');
 
-      await pluginsManager.init();
+      should(kuzzle.onAsk.getCall(0).args[0]).be.eql('core:plugin:controllers:get');
+      should(kuzzle.onAsk.getCall(1).args[0]).be.eql('core:plugin:routes:get');
+      should(kuzzle.onAsk.getCall(2).args[0]).be.eql('core:plugin:descriptions:get');
+    });
+
+    it('should add the application to plugins list', async () => {
+      await pluginsManager.init(application, 'otherPlugin');
+
+      should(pluginsManager._plugins.get(application.name)).be.eql(application);
+      should(pluginsManager.application).be.eql(application);
+    });
+
+    it('should load specific plugins if required', async () => {
+      const otherPlugin = createPlugin('other-plugin');
+      pluginsManager.loadPlugins.returns(new Map([
+        [plugin.name, plugin],
+        [otherPlugin.name, otherPlugin]]));
+
+      await pluginsManager.init(application, otherPlugin);
+
+      should(pluginsManager.loadPlugins).be.calledWith(otherPlugin);
+      should(pluginsManager._plugins.get(otherPlugin.name)).be.eql(otherPlugin);
+      should(pluginsManager._plugins.get(plugin.name)).be.eql(plugin);
+    });
+
+    it('should call the application init function', async () => {
+      application.init = sinon.stub();
+
+      await pluginsManager.init(application, 'not required for the test');
 
       should(pluginsManager.application.init).be.calledWith(application.name);
     });
 
-    it('should calls each plugin instance init function', async () => {
-      pluginsManager.application = application;
-      pluginsManager._plugins.set(plugin.name, plugin);
+    it('should call each plugin instance init function', async () => {
+      pluginsManager.loadPlugins.returns(new Map([[plugin.name, plugin]]));
 
-      await pluginsManager.init();
+      await pluginsManager.init(application, 'not required for the test');
 
       should(plugin.instance.init).be.calledWith(plugin.config, plugin.context);
       should(application.instance.init).be.calledWith(application.config, application.context);
@@ -149,7 +156,7 @@ describe('Plugin', () => {
       should(application.initCalled).be.true();
     });
 
-    it('should registers plugins features', async () => {
+    it('should register plugins features', async () => {
       pluginsManager.config.common = {
         pipeWarnTime: 42,
         initTimeout: 100
@@ -160,10 +167,9 @@ describe('Plugin', () => {
       plugin.instance.controllers = 'controllers';
       plugin.instance.authenticators = 'authenticators';
       plugin.instance.strategies = 'strategies';
-      pluginsManager.application = application;
-      pluginsManager._plugins.set(plugin.name, plugin);
+      pluginsManager.loadPlugins.returns(new Map([[plugin.name, plugin]]));
 
-      await pluginsManager.init();
+      await pluginsManager.init(application, 'not required for the test');
 
       should(pluginsManager._initApi).be.calledWith(application);
       should(pluginsManager._initHooks).be.calledWith(application);
@@ -173,14 +179,13 @@ describe('Plugin', () => {
       should(pluginsManager._initStrategies).be.calledWith(plugin);
     });
 
-    it('should throws an error if a plugin init method take too long', () => {
+    it('should throw an error if a plugin init method take too long', () => {
       pluginsManager.config.common = {
         initTimeout: 10
       };
-      pluginsManager.application = application;
       application.instance.init = () => new Promise(resolve => setTimeout(resolve, 15));
 
-      return should(pluginsManager.init()).be.rejected();
+      return should(pluginsManager.init(application, 'not required for the test')).be.rejected();
     });
   });
 
