@@ -3,7 +3,7 @@
 import should from 'should'
 
 import { Backend } from '../../index';
-import * as FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
+import FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
 
 const app = new Backend('functional-tests-app');
 
