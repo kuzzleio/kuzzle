@@ -38,7 +38,7 @@ describe('#api.rateLimiter', () => {
     ];
 
     mGetProfilesStub = kuzzle.ask
-      .withArgs(mGetProfilesEvent, sinon.match.array)
+      .withArgs(mGetProfilesEvent)
       .resolves(profiles);
   });
 

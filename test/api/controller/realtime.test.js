@@ -94,9 +94,7 @@ describe('RealtimeController', () => {
     });
 
     it('should return nothing if the subscription is not performed', async () => {
-      kuzzle.ask
-        .withArgs('core:realtime:subscribe', sinon.match.object)
-        .resolves(null);
+      kuzzle.ask.withArgs('core:realtime:subscribe').resolves(null);
 
       const result = await realtimeController.subscribe(request);
 
@@ -211,8 +209,9 @@ describe('RealtimeController', () => {
       should(kuzzle.ask).calledWithMatch('core:realtime:publish', request);
 
       const req = kuzzle.ask
-        .withArgs('core:realtime:publish', sinon.match.object)
-        .getCall(0).args[1];
+        .withArgs('core:realtime:publish')
+        .getCall(0)
+        .args[1];
 
       should(req.input.body._kuzzle_info).be.instanceof(Object);
       should(req.input.body._kuzzle_info.author).be.eql('42');

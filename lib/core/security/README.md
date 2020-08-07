@@ -3,7 +3,7 @@
 The Repository classes allow to fetch and store some Kuzzle internal business object from/to the persistent layer.
 
 An abstract Repository class is available to be overridden if needed depending on the business needs.
-The class handles the persistence both to the CacheEngine (redis by default) and to the database (elastic search by default).
+The class handles the persistence both to the Cache module and to the database (elastic search by default).
 
 The **Repository** class exposes the following methods:
 
@@ -19,7 +19,7 @@ The underlying collection to store the Business objects to.
 
 * *integer | false* ttl (optional)
 
-The ttl to use for the CacheEngine. If set to false, the objects get an unlimited lifetime.
+The ttl to use for the cache module. If set to false, the objects get an unlimited lifetime.
 
 * *function* ObjectConstructor (mandatory)
 
@@ -29,9 +29,9 @@ The constructor function for the business objects. The load* methods will return
 
 The read engine to use to retrieve the business objects to/from the database. Defaults to Kuzzle's internalStorage (elasticsearch).
 
-* *function* cacheEngine (optional)
+* *function* cache (optional)
 
-The cache engine to use to store and retrieve the business objects to/from the cache. Defaults to Kuzzle's cacheEngine (redis).
+The cache database to use to store and retrieve the business objects to/from the cache. Defaults to Kuzzle's internal cache.
 
 ## loadOneFromDatabase
 

@@ -29,7 +29,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'vault',
     'log',
     'internalIndex',
-    'cacheEngine',
     'storageEngine',
     'dumpGenerator',
     'shutdown',
@@ -90,7 +89,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
-        kuzzle.cacheEngine.init,
         kuzzle.storageEngine.init,
         kuzzle.internalIndex.init,
         kuzzle.validation.init,
@@ -109,7 +107,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.pipe.withArgs('kuzzle:state:live'),
         kuzzle.entryPoint.startListening,
         kuzzle.pipe.withArgs('kuzzle:state:ready'),
-        kuzzle.emit.withArgs('core:kuzzleStart', sinon.match.any)
+        kuzzle.emit.withArgs('core:kuzzleStart')
       );
 
       should(kuzzle.started).be.true();

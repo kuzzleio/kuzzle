@@ -27,7 +27,7 @@ describe('core/plugin/pluginRepository', () => {
       should(pluginRepository.collection).be.equal(someCollection);
       should(pluginRepository.ObjectConstructor).be.exactly(SomeConstructor);
       should(pluginRepository.indexStorage).be.exactly(kuzzle.internalIndex);
-      should(pluginRepository.cacheEngine).be.exactly(null);
+      should(pluginRepository.cacheDb).be.exactly(null);
     });
   });
 
