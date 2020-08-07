@@ -20,16 +20,16 @@
  */
 
 
-import * as fs from 'fs';
-import * as _ from 'lodash';
+import fs from 'fs';
+import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 
-import * as Kuzzle from '../../kuzzle';
-import * as Plugin from '../plugin/plugin';
-import * as EmbeddedSDK from '../shared/sdk/embeddedSdk';
-import * as Elasticsearch from '../../service/storage/elasticsearch';
+import Kuzzle from '../../kuzzle';
+import Plugin from '../plugin/plugin';
+import EmbeddedSDK from '../shared/sdk/embeddedSdk';
+import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
-import * as kerror from '../../kerror';
+import kerror from '../../kerror';
 
 import {
   JSONObject,
