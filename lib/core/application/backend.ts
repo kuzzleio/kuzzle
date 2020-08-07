@@ -198,11 +198,11 @@ class ControllerManager extends ApplicationManager {
     this._application._controllers[name] = definition;
   }
 
-  private _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
+  private _generateMissingRoutes (controllerName: string, controllerDefinition: ControllerDefinition) {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
         // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'GET', path: `/${kebabCase(name)}/${kebabCase(action)}` }];
+        definition.http = [{ verb: 'GET', path: `/${kebabCase(controllerName)}/${kebabCase(action)}` }];
       }
     }
   }
