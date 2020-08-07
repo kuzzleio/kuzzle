@@ -397,7 +397,7 @@ describe('Backend', () => {
 
     it('should throws an error if the application is not started', () => {
       return should(() => {
-        application.trigger('xen:crystal', 'payload')
+        application.trigger('xen:crystal', 'payload');
       })
         .throwError({ id: 'plugin.runtime.unavailable_before_start' });
     });
