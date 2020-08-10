@@ -1,7 +1,7 @@
 'use strict';
 
 const should = require('should');
-const { errors: { ExternalServiceError } } = require('kuzzle-common-objects');
+const { ExternalServiceError } = require('kuzzle-common-objects');
 
 const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
 const KuzzleMock = require('../../mocks/kuzzle.mock');

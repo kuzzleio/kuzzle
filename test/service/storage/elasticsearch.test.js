@@ -4,11 +4,9 @@ const should = require('should');
 const sinon = require('sinon');
 const ms = require('ms');
 const {
-  errors: {
-    BadRequestError,
-    PreconditionError,
-    SizeLimitError,
-  }
+  BadRequestError,
+  PreconditionError,
+  SizeLimitError,
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

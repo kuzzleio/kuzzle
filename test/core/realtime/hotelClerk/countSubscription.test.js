@@ -3,7 +3,7 @@
 const should = require('should');
 const {
   Request,
-  errors: { NotFoundError }
+  NotFoundError
 } = require('kuzzle-common-objects');
 const Kuzzle = require('../../../../lib/kuzzle');
 

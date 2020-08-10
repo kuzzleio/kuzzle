@@ -5,10 +5,8 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const DocumentController = require('../../../lib/api/controller/document');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    SizeLimitError
-  }
+  BadRequestError,
+  SizeLimitError
 } = require('kuzzle-common-objects');
 const { NativeController } = require('../../../lib/api/controller/base');
 

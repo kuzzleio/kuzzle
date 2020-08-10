@@ -53,7 +53,7 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^3.0.0",
-    "kuzzle-common-objects": "^4.1.1",
+    "kuzzle-common-objects": "^5.0.0",
     "kuzzle-sdk": "^7.3.1",
     "kuzzle-vault": "^2.0.0",
     "lodash": "4.17.19",

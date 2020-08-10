@@ -6,9 +6,7 @@ const
   Config = rewire('../../lib/config'),
   defaultConfig = require('../../lib/config/default.config'),
   {
-    errors: {
-      InternalError: KuzzleInternalError
-    }
+    InternalError: KuzzleInternalError
   } = require('kuzzle-common-objects');
 
 describe('lib/config/index.js', () => {

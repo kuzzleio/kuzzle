@@ -15,10 +15,8 @@ const errorMatcher = require(`${root}/test/util/errorMatcher`);
 const kerror = require(`${root}/lib/kerror`).wrap('network', 'http');
 const {
   Request,
-  errors: {
-    SizeLimitError,
-    BadRequestError
-  }
+  SizeLimitError,
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 describe('/lib/core/network/protocols/http', () => {
