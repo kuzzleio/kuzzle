@@ -1,6 +1,7 @@
 'use strict';
 
 import should from 'should'
+import { omit } from 'lodash'
 
 import { Backend } from '../../index';
 import FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
@@ -106,7 +107,8 @@ app.controller.register('tests', {
         const response = await client.index(esRequest);
         const response2 = await app.storage.client.index(esRequest);
 
-        should(response.body).match(response2.body);
+        should(omit(response.body, ['_version', 'result', '_seq_no']))
+          .match(omit(response2.body, ['_version', 'result', '_seq_no']));
 
         return response.body;
       },
