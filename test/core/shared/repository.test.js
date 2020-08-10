@@ -218,7 +218,7 @@ describe('Test: repositories/repository', () => {
 
     it('should get content only from indexStorage if no cache DB is set', async () => {
       sinon.stub(repository, 'loadFromCache');
-      repository.cacheDb = null;
+      repository.cacheDb = cacheDbEnum.NONE;
       repository.indexStorage.get.resolves(dbPojo);
 
       const result = await repository.load('no-cache');
