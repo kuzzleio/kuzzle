@@ -103,7 +103,7 @@ The provided `room` object has the following properties:
 Triggered whenever a realtime room is deleted, which happens when the last subscriber leaves it.
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 | Arguments | Type              | Description            |
