@@ -1,6 +1,5 @@
 'use strict';
 
-const sinon = require('sinon');
 const should = require('should');
 const {
   Request,

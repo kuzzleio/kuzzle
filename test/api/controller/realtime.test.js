@@ -1,6 +1,5 @@
 'use strict';
 
-const sinon = require('sinon');
 const should = require('should');
 const RealtimeController = require('../../../lib/api/controller/realtime');
 const {
