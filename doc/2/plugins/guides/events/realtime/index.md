@@ -77,7 +77,7 @@ The provided `room` object has the following properties:
 Triggered whenever a new realtime room is subscribed (NOT triggered if a user subscribes to an existing room).
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 | Arguments | Type              | Description             |
