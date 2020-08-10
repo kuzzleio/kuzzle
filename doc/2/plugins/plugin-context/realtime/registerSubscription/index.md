@@ -6,7 +6,7 @@ title: registerSubscription
 
 # registerSubscription
 
-Subscribes to a given collection and a given set of filters, exactly like the [`realtime:subscribe` API endpoint](/api/controllers/realtime/subscribe/index.md) except that it accepts a `connectionId` parameter specifying the connection ID to route the notifications to.
+Registers a new realtime subscription over an existing connection. All the notifications triggered by the newly created subscription will be sent to the client with the given connection ID. The subscription works exaclty like the one created by the [`realtime:subscribe` API endpoint](/api/controllers/realtime/subscribe/index.md).
 
 ---
 
@@ -68,11 +68,10 @@ async customAction(request) {
 
 ## Use cases
 
-The most common use-case of this method is to restrict the realtime subscriptions from the server. Instead of leaving the client-side with the freedom of specifying any filter for a given connection, you can open a custom API endpoint in your plugin and call `registerSubscription` inside it by passing the same connection ID of the incoming Request. When the client hits this endpoint, they will start receiving the notifications from the subscription that has been shaped on server-side.
+The most common use-case of this method is to implement the realtime subscriptions on the server-side. Instead of leaving the client-side with the freedom (and the responsibility) of specifying the filters for a subscription, you can open a custom API endpoint in your plugin and call `registerSubscription` inside it by passing the same connection ID of the incoming Request. When the client hits this endpoint, they will start receiving the notifications from the newly created subscription. This way, the client will only be aware of a `subscribeToSomething` business-specific endpoint, but won't see the set of filters the endpoint encapsulates. 
 
 ::: info
 Note that the same restriction can be achieved by adding a pipe on the `realtime:subscribe` API endpoint. The pipe would check the filters object and make the request fail if the filters are not allowed. This approach has two main downsides:
 * you always need to be extremely careful when adding code to pipes that may result in failing requests, that's why code in pipes should always stay as light as possible;
-* even if you are ensuring security through the pipe, you still have to specify the filters in the client code, which is something you may not want to do.
+* even if you are ensuring security through the pipe, you still have to specify the filters in the client-side, while you may want to leave this responsibility to the server-side.
 :::
-
