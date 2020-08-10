@@ -65,7 +65,7 @@ When(/^I get all statistics frames$/, function (callback) {
 
 Then(/^I get at least 1 statistic frame$/, function (callback) {
   if (!this.result) {
-    return callback('Expected a statistics result, got: ' + this.result);
+    return callback(new Error('Expected a statistics result, got: ' + this.result));
   }
 
   if (this.result.hits &&
@@ -84,6 +84,6 @@ Then(/^I get at least 1 statistic frame$/, function (callback) {
     return callback();
   }
 
-  callback('Expected at least 1 statistic frame, found: ' + this.result);
+  callback(new Error('Expected at least 1 statistic frame, found: ' + this.result));
 });
 
