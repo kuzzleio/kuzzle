@@ -217,7 +217,7 @@ Use `core:realtime:room:create:after` instead.
 Triggered whenever a new [subscription](/core/2/api/controllers/realtime/subscribe) is created.
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 ### room
