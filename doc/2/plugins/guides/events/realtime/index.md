@@ -249,7 +249,7 @@ Use `core:realtime:room:remove:before` instead.
 Triggered whenever a real-time subscription is cancelled.
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 </DeprecatedBadge>
