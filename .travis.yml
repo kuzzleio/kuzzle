@@ -205,8 +205,12 @@ jobs:
     - stage: Deployments
       name: Dockerhub
       os: linux
-      language: minimal
+      language: node_js
+      node_js: 12
       services: docker
+      install:
+        - npm ci --silent
+        - npm run build-ts
       script:
         - MODE=production bash docker/build-docker-images.sh
 
