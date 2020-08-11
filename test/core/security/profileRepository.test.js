@@ -38,6 +38,7 @@ describe('Test: security/profileRepository', () => {
 
     userRepositoryMock = {
       search: sinon.stub(),
+      update: sinon.stub(),
     };
 
     profileRepository = new ProfileRepository(kuzzle, {
@@ -276,6 +277,41 @@ describe('Test: security/profileRepository', () => {
       should(profileRepository.deleteFromDatabase)
         .be.calledOnce()
         .be.calledWithMatch(testProfile._id, { refresh: 'wait_for' });
+    });
+
+    it('should be able to remove the profile from users when required', async () => {
+      const user = {
+        _id: 'baz',
+        foo: 'bar',
+        profileIds: [ testProfile._id ],
+      };
+
+      userRepositoryMock.search.resolves({
+        hits: [ user ],
+        total: 1,
+      });
+
+      profileRepository.profiles.set(testProfile._id, true);
+
+      await kuzzle.ask(deleteEvent, testProfile._id, {
+        onAssignedUsers: 'remove',
+      });
+
+      should(userRepositoryMock.search).be.called();
+
+      should(userRepositoryMock.update)
+        .be.calledOnce()
+        .be.calledWithMatch(user._id, ['anonymous'], user);
+
+      should(profileRepository.deleteFromDatabase)
+        .be.calledOnce()
+        .be.calledWithMatch(testProfile._id, { refresh: 'false' });
+
+      should(profileRepository.profiles).not.have.key(testProfile._id);
+
+      should(kuzzle.emit)
+        .be.calledOnce()
+        .be.calledWith('core:profileRepository:delete', {_id: testProfile._id});
     });
   });
 

@@ -16,11 +16,20 @@ Checks that the current authenticated user has credentials for the specified aut
 
 ### HTTP
 
+<SinceBadge version="2.4.0"/>
+```http
+URL: http://kuzzle:7512/_me/credentials/<strategy>/_exists
+Method: GET
+Headers: Authorization: "Bearer <authentication token>"
+```
+
+<DeprecatedBadge version="2.4.0">
 ```http
 URL: http://kuzzle:7512/credentials/<strategy>/_me/_exists
 Method: GET
 Headers: Authorization: "Bearer <authentication token>"
 ```
+</DeprecatedBadge>
 
 ### Other protocols
 

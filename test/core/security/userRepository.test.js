@@ -48,7 +48,7 @@ describe('Test: security/userRepository', () => {
 
   describe('#anonymous', () => {
     it('should return a valid anonymous user', async () => {
-      const user = await kuzzle.ask('core:security:user:anonymous');
+      const user = await kuzzle.ask('core:security:user:anonymous:get');
       assertIsAnonymous(user);
     });
   });
@@ -167,6 +167,45 @@ describe('Test: security/userRepository', () => {
         .be.rejectedWith(BadRequestError, {
           id: 'security.user.anonymous_profile_required'
         });
+    });
+  });
+
+  describe('#adminExists', () => {
+    const adminExistsEvent = 'core:security:user:admin:exist';
+
+    it('should register an "adminExists" event', async () => {
+      userRepository.adminExists = sinon.stub();
+
+      await kuzzle.ask(adminExistsEvent);
+
+      should(userRepository.adminExists).be.calledOnce();
+    });
+
+    it('should call search with right query', async () => {
+      userRepository.search = sinon.stub().resolves({ total: 0 });
+
+      const query = { term: { profileIds: 'admin' } };
+
+      await userRepository.adminExists();
+
+      should(userRepository.search)
+        .be.calledWith({ query });
+    });
+
+    it('should return false if there is no result', async () => {
+      userRepository.search = sinon.stub().resolves({ total: 0 });
+
+      const exists = await userRepository.adminExists();
+
+      should(exists).be.false();
+    });
+
+    it('should return true if there is result', async () => {
+      userRepository.search = sinon.stub().resolves({ total: 42 });
+
+      const exists = await userRepository.adminExists();
+
+      should(exists).be.true();
     });
   });
 

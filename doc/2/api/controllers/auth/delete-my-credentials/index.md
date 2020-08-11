@@ -18,11 +18,20 @@ If the credentials that generated the current JWT are removed, the user will rem
 
 ### HTTP
 
+<SinceBadge version="2.4.0"/>
+```http
+URL: http://kuzzle:7512/_me/credentials/<strategy>
+Method: DELETE
+Headers: Authorization: "Bearer <authentication token>"
+```
+
+<DeprecatedBadge version="2.4.0">
 ```http
 URL: http://kuzzle:7512/credentials/<strategy>/_me
 Method: DELETE
 Headers: Authorization: "Bearer <authentication token>"
 ```
+</DeprecatedBadge>
 
 ### Other protocols
 

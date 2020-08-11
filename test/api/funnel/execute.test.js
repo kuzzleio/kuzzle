@@ -27,7 +27,7 @@ describe('funnelController.execute', () => {
     kuzzle = new KuzzleMock();
 
     kuzzle.config.limits.requestsBufferWarningThreshold = -1;
-    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
+    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     request = new Request({
       controller: 'foo',

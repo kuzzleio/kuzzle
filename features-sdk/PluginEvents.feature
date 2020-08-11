@@ -3,7 +3,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify documents with document:generic:beforeWrite
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "activate" the pipe on "generic:document:beforeWrite" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:beforeWrite" with the following changes:
       | _source.leaveAt | "'10:30'"              |
       | _id             | "`${document._id}-vn`" |
     # mCreate
@@ -33,7 +33,7 @@ Feature: Plugin Events
       | company     | "So Viet" |
       | leaveAt     | "10:30"   |
     # Change pipe modifications
-    And I "activate" the pipe on "generic:document:beforeWrite" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:beforeWrite" with the following changes:
       | _source.leaveAt | "'11:30'"              |
       | _id             | "`${document._id}-vn`" |
     # mReplace
@@ -65,7 +65,7 @@ Feature: Plugin Events
       | destination | "Hà Giang" |
       | company     | "Cau Me"   |
       | leaveAt     | "11:30"    |
-    And I "activate" the pipe on "generic:document:beforeWrite" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:beforeWrite" with the following changes:
       | _source.leaveAt | "'12:30'"              |
       | _id             | "`${document._id}-vn`" |
     # replace
@@ -80,7 +80,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify documents with document:generic:afterWrite
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "activate" the pipe on "generic:document:afterWrite" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:afterWrite" with the following changes:
       | _source.type | "'sleepingBus'"  |
       | _id          | "'confidential'" |
     # mCreate
@@ -114,7 +114,7 @@ Feature: Plugin Events
       | _id     | "confidential"                              |
       | _source | { "duration": "6h", "type": "sleepingBus" } |
     # Change pipe modifications
-    And I "activate" the pipe on "generic:document:afterWrite" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:afterWrite" with the following changes:
       | _source.type | "'localBus'" |
       | _id          | "'redacted'" |
     # mReplace
@@ -141,7 +141,7 @@ Feature: Plugin Events
       | "bus-1-vn" | { "destination": "Ninh Binh" } |
       | "bus-2-vn" | { "destination": "Hanoi" }     |
       | "bus-3-vn" | { "destination": "Hang Mau" }  |
-    And I "activate" the pipe on "generic:document:beforeUpdate" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
       | _source.leaveAt | "'10:30'"              |
       | _id             | "`${document._id}-vn`" |
     # mUpdate
@@ -158,7 +158,7 @@ Feature: Plugin Events
       | company     | "So Viet" |
       | leaveAt     | "10:30"   |
     # Change pipe modifications
-    And I "activate" the pipe on "generic:document:beforeUpdate" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
       | _source.leaveAt | "'12:30'"              |
       | _id             | "`${document._id}-vn`" |
     # update
@@ -178,7 +178,7 @@ Feature: Plugin Events
       | "bus-1" | { "destination": "Ninh Binh" } |
       | "bus-2" | { "destination": "Hanoi" }     |
       | "bus-3" | { "destination": "Hang Mau" }  |
-    And I "activate" the pipe on "generic:document:afterUpdate" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
       | _source.type | "'sleepingBus'"  |
       | _id          | "'confidential'" |
     # mUpdate
@@ -191,7 +191,7 @@ Feature: Plugin Events
       | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Hanoi", "duration": "17h", "type": "sleepingBus" }     |
     # Change pipe modifications
-    And I "activate" the pipe on "generic:document:afterUpdate" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
       | _source.type | "'localBus'" |
       | _id          | "'redacted'" |
     # update
@@ -208,7 +208,7 @@ Feature: Plugin Events
       | _id        | body                           |
       | "bus-1-vn" | { "destination": "Ninh Binh" } |
       | "bus-2-vn" | { "destination": "Hanoi" }     |
-    And I "activate" the pipe on "generic:document:beforeGet" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:beforeGet" with the following changes:
       | _id | "`${document._id}-vn`" |
     # mGet
     When I "get" the following document ids with verb "GET":
@@ -229,7 +229,7 @@ Feature: Plugin Events
       | _id     | body                           |
       | "bus-1" | { "destination": "Ninh Binh" } |
       | "bus-2" | { "destination": "Hanoi" }     |
-    And I "activate" the pipe on "generic:document:afterGet" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:afterGet" with the following changes:
       | _source.type | "'sleepingBus'"  |
       | _id          | "'confidential'" |
     # mGet
@@ -253,7 +253,7 @@ Feature: Plugin Events
       | "bus-1-vn" | { "destination": "Ninh Binh" } |
       | "bus-2-vn" | { "destination": "Hanoi" }     |
       | "bus-3-vn" | { "destination": "Hang Mau" }  |
-    And I "activate" the pipe on "generic:document:beforeDelete" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:beforeDelete" with the following changes:
       | _id | "`${document._id}-vn`" |
     # mDelete
     When I "delete" the following document ids:
@@ -273,7 +273,7 @@ Feature: Plugin Events
       | "bus-1" | { "destination": "Ninh Binh" } |
       | "bus-2" | { "destination": "Hanoi" }     |
       | "bus-3" | { "destination": "Hang Mau" }  |
-    And I "activate" the pipe on "generic:document:afterDelete" with the following changes:
+    And I "activate" the "plugin" pipe on "generic:document:afterDelete" with the following changes:
       | _id | "'confidential'" |
     # mDelete
     When I "delete" the following document ids:
@@ -293,9 +293,9 @@ Feature: Plugin Events
 
   @realtime
   Scenario: Listen to events with hooks
-    Given I subscribe to "functionnal-test":"hooks" notifications
-    When I successfully call the route "server":"now"
-    Then I should receive realtime notifications for "functionnal-test":"hooks" matching:
+    Given I subscribe to "functional-test":"hooks" notifications
+    When I successfully execute the action "server":"now"
+    Then I should receive realtime notifications for "functional-test":"hooks" matching:
       | result._source.event |
       | "server:afterNow"    |
 
@@ -303,7 +303,7 @@ Feature: Plugin Events
 
   @events
   Scenario: Trigger a pipe declared with a function name
-    Given I "activate" the pipe on "server:afterNow" without changes
-    When I successfully call the route "server":"now"
+    Given I "activate" the "plugin" pipe on "server:afterNow" without changes
+    When I successfully execute the action "server":"now"
     Then I should receive a result matching:
       | lyrics | "_STRING_" |

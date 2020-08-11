@@ -89,14 +89,14 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.cacheEngine.internal.get.resolves('1');
       elasticsearch._client.scroll.resolves({
         body: {
+          _scroll_id: 'azerty',
           hits: {
             hits: [
               {_id: 'foo', _source: {}},
               {_id: 'bar', _source: {}},
             ],
-            total: { value: 1000 }
+            total: { value: 1000 },
           },
-          _scroll_id: 'azerty'
         }
       });
 
@@ -119,18 +119,19 @@ describe('Test: ElasticSearch service', () => {
       should(elasticsearch._client.clearScroll).not.called();
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scroll: '10s',
         scrollId: 'i-am-scroll-id',
-        scroll: '10s'
       });
 
       should(result).be.match({
-        total: 1000,
+        aggregations: undefined,
         hits: [
           {_id: 'foo', _source: {}},
           {_id: 'bar', _source: {}},
         ],
+        remaining: 997,
         scrollId: 'azerty',
-        aggregations: undefined
+        total: 1000,
       });
     });
 
@@ -165,18 +166,19 @@ describe('Test: ElasticSearch service', () => {
         .calledWithMatch({scrollId: 'azerty'});
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scroll: '10s',
         scrollId: 'i-am-scroll-id',
-        scroll: '10s'
       });
 
       should(result).be.match({
-        total: 1000,
+        aggregations: undefined,
         hits: [
           {_id: 'foo', _source: {}},
           {_id: 'bar', _source: {}},
         ],
+        remaining: 0,
         scrollId: 'azerty',
-        aggregations: undefined
+        total: 1000,
       });
     });
 
@@ -239,44 +241,49 @@ describe('Test: ElasticSearch service', () => {
       kuzzle.cacheEngine.internal.keys.resolves({ values: [] });
     });
 
-    it('should be able to search documents', () => {
+    it('should be able to search documents', async () => {
       elasticsearch._client.search.resolves({
         body: {
+          aggregations: { some: 'aggregs' },
+          body: filter,
           hits: {
             hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight', other: 'thing' } ],
             total: { value: 1 },
           },
-          body: filter,
-          aggregations: { some: 'aggregs' },
-          _scroll_id: 'i-am-scroll-id'
+          _scroll_id: 'i-am-scroll-id',
         }
       });
 
-      const promise = elasticsearch.search(index, collection, filter);
+      const result = await elasticsearch.search(index, collection, filter);
 
-      return promise
-        .then(result => {
-          should(elasticsearch._client.search.firstCall.args[0]).match({
-            index: esIndexName,
-            body: { query: { match_all: {} } },
-            from: undefined,
-            size: undefined,
-            scroll: undefined
-          });
+      should(elasticsearch._client.search.firstCall.args[0]).match({
+        index: esIndexName,
+        body: { query: { match_all: {} } },
+        from: undefined,
+        size: undefined,
+        scroll: undefined,
+        trackTotalHits: true,
+      });
 
-          should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
-            .be.eql(ms(elasticsearch.config.defaults.scrollTTL));
+      should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
+        .be.eql(ms(elasticsearch.config.defaults.scrollTTL));
 
-          should(result).match({
-            scrollId: 'i-am-scroll-id',
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight' } ],
-            total: 1,
-            aggregations: { some: 'aggregs' }
-          });
-        });
+      should(result).match({
+        aggregations: { some: 'aggregs' },
+        hits: [
+          {
+            _id: 'liia',
+            _source: { city: 'Kathmandu' },
+            highlight: 'highlight',
+          },
+        ],
+        remaining: 0,
+        scrollId: 'i-am-scroll-id',
+        total: 1,
+      });
     });
 
-    it('should be able to search with from/size and scroll arguments', () => {
+    it('should be able to search with from/size and scroll arguments', async () => {
       elasticsearch._client.search.resolves({
         body: {
           hits: { hits: [], total: { value: 0 } },
@@ -284,35 +291,32 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      const promise = elasticsearch.search(
-        index,
-        collection,
-        filter,
-        { from: 0, size: 1, scroll: '30s' });
+      await elasticsearch.search(index, collection, filter, {
+        from: 0,
+        scroll: '30s',
+        size: 1,
+      });
 
-      return promise
-        .then(() => {
-          should(elasticsearch._client.search.firstCall.args[0]).match({
-            index: esIndexName,
-            body: filter,
-            from: 0,
-            size: 1,
-            scroll: '30s'
-          });
-          should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
-            .be.eql(ms('30s'));
-        });
+      should(elasticsearch._client.search.firstCall.args[0]).match({
+        body: filter,
+        from: 0,
+        index: esIndexName,
+        scroll: '30s',
+        size: 1,
+        trackTotalHits: true,
+      });
+
+      should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
+        .be.eql(ms('30s'));
     });
 
-    it('should return a rejected promise if a search fails', () => {
+    it('should return a rejected promise if a search fails', async () => {
       elasticsearch._client.search.rejects(esClientError);
 
-      const promise = elasticsearch.search(index, collection, filter);
+      await should(elasticsearch.search(index, collection, filter))
+        .be.rejected();
 
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
-        });
+      should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
 
     it('should return a rejected promise if an unhautorized property is in the query', () => {
@@ -321,41 +325,36 @@ describe('Test: ElasticSearch service', () => {
         query : {}
       };
 
-      const promise = elasticsearch.search(index, collection, filter);
-
-      return should(promise)
+      return should(elasticsearch.search(index, collection, filter))
         .be.rejectedWith({ id: 'services.storage.invalid_search_query' });
     });
 
-    it('should not save the scrollId in the cache if not present in response', () => {
+    it('should not save the scrollId in the cache if not present in response', async () => {
       elasticsearch._client.search.resolves({
         body: {
-          hits: { hits: [], total: { value: 0 } }
-        }
+          hits: { hits: [], total: { value: 0 } },
+        },
       });
 
-      const promise = elasticsearch.search(index, collection, {});
+      await elasticsearch.search(index, collection, {});
 
-      return promise
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.psetex).not.be.called();
-        });
+      should(kuzzle.cacheEngine.internal.psetex).not.be.called();
     });
 
-    it('should return a rejected promise if the scroll duration is too great', () => {
+    it('should return a rejected promise if the scroll duration is too great', async () => {
       elasticsearch._config.maxScrollDuration = '21m';
 
-      const promise = elasticsearch.search(index, collection, filter, { scroll: '42m' });
+      const promise = elasticsearch.search(index, collection, filter, {
+        scroll: '42m'
+      });
 
-      return should(promise).be.rejectedWith({
+      await should(promise).be.rejectedWith({
         id: 'services.storage.scroll_duration_too_great'
-      })
-        .then(() => {
-          should(elasticsearch._client.search).not.be.called();
-        });
+      });
+
+      should(elasticsearch._client.search).not.be.called();
     });
   });
-
 
   describe('#get', () => {
     it('should allow getting a single document', () => {

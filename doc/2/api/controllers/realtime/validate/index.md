@@ -8,7 +8,7 @@ title: validate
 
 <DeprecatedBadge version="1.5.0" />
 
-This API route is deprecated and should not be used. Instead, use [document:validate](/core/2/api/controllers/document/validate).
+This API action is deprecated and should not be used. Instead, use [document:validate](/core/2/api/controllers/document/validate).
 
 Validates data against existing validation rules.
 

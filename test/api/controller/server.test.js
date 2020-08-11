@@ -77,29 +77,17 @@ describe('ServerController', () => {
   });
 
   describe('#adminExists', () => {
-    it('should call search with right query', () => {
-      return serverController.adminExists()
-        .then(() => {
-          should(kuzzle.adminExists).be.calledOnce();
-        });
-    });
+    const adminExistsEvent = 'core:security:user:admin:exist';
 
-    it('should return false if there is no result', () => {
-      kuzzle.adminExists.resolves(false);
+    it('should calls "core:security:user:admin:exist"', async () => {
+      kuzzle.ask
+        .withArgs(adminExistsEvent)
+        .returns(true);
 
-      return serverController.adminExists()
-        .then(response => {
-          should(response).match({ exists: false });
-        });
-    });
+      const response = await serverController.adminExists();
 
-    it('should return true if there is result', () => {
-      kuzzle.adminExists.resolves(true);
-
-      return serverController.adminExists()
-        .then((response) => {
-          should(response).match({ exists: true });
-        });
+      should(response).match({ exists: true });
+      should(kuzzle.ask).be.calledWith(adminExistsEvent);
     });
   });
 
@@ -259,7 +247,7 @@ describe('ServerController', () => {
             publicMethod: {
               action: 'publicMethod',
               controller: 'foobar',
-              http: [{ url: '_plugin/foobar', verb: 'BAR' }]
+              http: [{ url: '/foobar', verb: 'BAR' }]
             },
             anotherMethod: {
               action: 'anotherMethod',
@@ -293,7 +281,7 @@ describe('ServerController', () => {
               publicMethod: {
                 action: 'publicMethod',
                 controller: 'foobar',
-                http: [{ url: '_plugin/foobar', verb: 'BAR' }]
+                http: [{ url: '/foobar', verb: 'BAR' }]
               },
               anotherMethod: {
                 action: 'anotherMethod',
@@ -347,8 +335,7 @@ describe('ServerController', () => {
           ]);
           should(serverController._buildApiDefinition.getCall(1).args).be.eql([
             kuzzle.pluginsManager.controllers,
-            kuzzle.pluginsManager.routes,
-            '_plugin/'
+            kuzzle.pluginsManager.routes
           ]);
         });
     });
@@ -385,7 +372,7 @@ describe('ServerController', () => {
       const pluginApiDefinition = serverController._buildApiDefinition(
         pluginsControllers,
         pluginsRoutes,
-        '_plugin/');
+        '/');
 
       should(apiDefinition).match({
         foo: {
@@ -405,7 +392,7 @@ describe('ServerController', () => {
           publicMethod: {
             action: 'publicMethod',
             controller: 'foobar',
-            http: [{ url: '_plugin/foobar', verb: 'BAR' }]
+            http: [{ url: '/foobar', verb: 'BAR' }]
           },
           anotherMethod: {
             action: 'anotherMethod',

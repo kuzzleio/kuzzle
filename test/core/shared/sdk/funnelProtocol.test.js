@@ -11,7 +11,7 @@ const {
 } = require('kuzzle-common-objects');
 
 const User = require('../../../../lib/model/security/user');
-const FunnelProtocol = require('../../../../lib/core/plugin/sdk/funnelProtocol');
+const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
 
 describe('Test: sdk/funnelProtocol', () => {
   let request;

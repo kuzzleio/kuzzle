@@ -6,7 +6,7 @@ Feature: Document Controller
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"strict-taxi" with:
       | mappings | { "dynamic": "strict" } |
-    When I call the route "document":"create" with args:
+    When I execute the action "document":"create" with args:
       | index      | "nyc-open-data"       |
       | collection | "strict-taxi"         |
       | body       | { "name": "lehuong" } |
@@ -92,6 +92,43 @@ Feature: Document Controller
     Then I should receive a "hits" array of objects matching:
       | _id          |
       | "document-3" |
+
+  @mappings
+  Scenario: Search with scroll
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    And I refresh the collection
+    When I search documents with the following query:
+      """
+      {}
+      """
+    And with the following search options:
+      """
+      {
+        "scroll": "30s",
+        "size": 1
+      }
+      """
+    And I execute the search query
+    Then I should receive a result matching:
+      | remaining | 2 |
+      | total     | 3 |
+    And I should receive a "hits" array containing 1 elements
+    When I scroll to the next page
+    Then I should receive a result matching:
+      | remaining | 1 |
+      | total     | 3 |
+    And I should receive a "hits" array containing 1 elements
+    When I scroll to the next page
+    Then I should receive a result matching:
+      | remaining | 0 |
+      | total     | 3 |
+    And I should receive a "hits" array containing 1 elements
+
 
   # document:exists ============================================================
 
@@ -196,7 +233,7 @@ Feature: Document Controller
     And I "create" the document "document-1" with content:
       | name | "document-1" |
       | age  | 42           |
-    When I successfully call the route "document":"update" with args:
+    When I successfully execute the action "document":"update" with args:
       | index      | "nyc-open-data"        |
       | collection | "yellow-taxi"          |
       | _id        | "document-1"           |
@@ -208,7 +245,7 @@ Feature: Document Controller
     And The document "document-1" content match:
       | name | "updated1" |
       | age  | 42         |
-    When I successfully call the route "document":"update" with args:
+    When I successfully execute the action "document":"update" with args:
       | index      | "nyc-open-data"        |
       | collection | "yellow-taxi"          |
       | _id        | "document-1"           |
@@ -449,7 +486,7 @@ Feature: Document Controller
     And I "create" the following documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
-    When I successfully call the route "document":"delete" with args:
+    When I successfully execute the action "document":"delete" with args:
       | index      | "nyc-open-data"        |
       | collection | "yellow-taxi"          |
       | _id        | "document-1"           |
@@ -468,7 +505,7 @@ Feature: Document Controller
       | -   | { "name": "document2", "age": 84 } |
       | -   | { "name": "document2", "age": 21 } |
     And I refresh the collection
-    When I successfully call the route "document":"deleteByQuery" with args:
+    When I successfully execute the action "document":"deleteByQuery" with args:
       | index      | "nyc-open-data"                                   |
       | collection | "yellow-taxi"                                     |
       | body       | { "query": { "range": { "age": { "gt": 21 } } } } |
@@ -485,7 +522,7 @@ Feature: Document Controller
       | -   | { "name": "document2", "age": 84 } |
       | -   | { "name": "document2", "age": 21 } |
     And I refresh the collection
-    When I successfully call the route "document":"deleteByQuery" with args:
+    When I successfully execute the action "document":"deleteByQuery" with args:
       | index      | "nyc-open-data"                                   |
       | collection | "yellow-taxi"                                     |
       | source     | true                                              |
@@ -507,7 +544,7 @@ Feature: Document Controller
       | "document-3" | { "name": "Tirion Fordring" }     |
       | "document-4" | { "name": "Sylvanas Windrunner" } |
     And I refresh the collection
-    When I successfully call the route "document":"updateByQuery" with args:
+    When I successfully execute the action "document":"updateByQuery" with args:
       | index      | "nyc-open-data"                                                                                   |
       | collection | "yellow-taxi"                                                                                     |
       | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |

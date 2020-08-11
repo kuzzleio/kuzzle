@@ -1,17 +1,17 @@
 'use strict';
 
 const should = require('should');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
 const rewire = require('rewire');
 const {
   errors: { PluginImplementationError }
 } = require('kuzzle-common-objects');
 
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 describe('AbstractManifest class', () => {
-  const
-    kuzzle = new KuzzleMock(),
-    defaultKuzzleVersion = '>=2.0.0 <3.0.0',
-    pluginPath = 'foo/bar';
+  const kuzzle = new KuzzleMock();
+  const defaultKuzzleVersion = '>=2.0.0 <3.0.0';
+  const pluginPath = 'foo/bar';
 
   let Manifest;
 
@@ -46,8 +46,7 @@ describe('AbstractManifest class', () => {
   });
 
   it('should throw if kuzzleVersion is not present', () => {
-    const
-      manifest = new Manifest(kuzzle, pluginPath);
+    const manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar' })(() => {
       should(() => manifest.load())
@@ -56,9 +55,8 @@ describe('AbstractManifest class', () => {
   });
 
   it('should set the provided kuzzleVersion value', () => {
-    const
-      kuzzleVersion = '>1.0.0 <=99.99.99',
-      manifest = new Manifest(kuzzle, pluginPath);
+    const kuzzleVersion = '>1.0.0 <=99.99.99';
+    const manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion })(() => {
       manifest.load();
@@ -91,9 +89,8 @@ describe('AbstractManifest class', () => {
   });
 
   it('should throw if kuzzleVersion does not match the current Kuzzle version', () => {
-    const
-      kuzzleVersion = '>0.4.2 <1.0.0',
-      manifest = new Manifest(kuzzle, pluginPath);
+    const kuzzleVersion = '>0.4.2 <1.0.0';
+    const manifest = new Manifest(kuzzle, pluginPath);
 
     mockRequireManifest({ name: 'foobar', kuzzleVersion })(() => {
       should(() => manifest.load()).throw(PluginImplementationError, {
@@ -105,7 +102,10 @@ describe('AbstractManifest class', () => {
   it('should serialize only the necessary properties', () => {
     const manifest = new Manifest(kuzzle, pluginPath);
 
-    mockRequireManifest({ name: 'foobar', kuzzleVersion: defaultKuzzleVersion })(() => {
+    mockRequireManifest({
+      kuzzleVersion: defaultKuzzleVersion ,
+      name: 'foobar',
+    })(() => {
       manifest.load();
 
       const serialized = JSON.parse(JSON.stringify(manifest));
