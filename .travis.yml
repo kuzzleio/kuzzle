@@ -205,7 +205,8 @@ jobs:
     - stage: Deployments
       name: Dockerhub
       os: linux
-      language: minimal
+      language: node_js
+      node_js: 12
       services: docker
       install:
         - npm ci --silent
