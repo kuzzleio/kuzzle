@@ -177,7 +177,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
       {count: 1});
 
     should(kuzzle.pipe).be.calledWithMatch(
-      'core:realtime:user:unsubscribed',
+      'core:realtime:user:unsubscribe:after',
       {
         requestContext: { connection: { id: connectionId } },
         room: hotelClerk.rooms.get('roomId')
@@ -200,7 +200,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
     await hotelClerk.unsubscribe(connectionId, roomId);
 
     should(kuzzle.pipe).be.calledWithMatch(
-      'core:realtime:user:unsubscribed',
+      'core:realtime:user:unsubscribe:after',
       {
         requestContext: { connection: { id: connectionId } },
         room: expectedRoom

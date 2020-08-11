@@ -20,11 +20,11 @@ describe('Test: hotelClerk.listCollections', () => {
     return hotelClerk.init();
   });
 
-  it('should register a "listCollections" event', async () => {
+  it('should register a "collections:get" event', async () => {
     sinon.stub(hotelClerk, 'listCollections');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:listCollections', 'index');
+    await kuzzle.ask('core:realtime:collections:get', 'index');
 
     should(hotelClerk.listCollections).calledWith('index');
   });

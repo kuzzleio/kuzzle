@@ -169,7 +169,7 @@ describe('RealtimeController', () => {
 
     it('should send the correct ask event', async () => {
       const stub = kuzzle.ask
-        .withArgs('core:realtime:room:size', 'foo')
+        .withArgs('core:realtime:room:size:get', 'foo')
         .resolves(42);
 
       request.input.body.roomId = 'foo';
@@ -184,7 +184,8 @@ describe('RealtimeController', () => {
   describe('#list', () => {
     it('should ask for the proper realtime event', async () => {
       await realtimeController.list(request);
-      should(kuzzle.ask).calledWith('core:realtime:list', request.context);
+      should(kuzzle.ask)
+        .calledWith('core:realtime:list', request.context);
     });
   });
 

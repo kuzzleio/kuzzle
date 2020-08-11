@@ -7,7 +7,7 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 
-describe('Test: hotelClerk.disconnect', () => {
+describe('Test: hotelClerk.removeUser', () => {
   const connectionId = 'connectionid';
   const collection = 'user';
   const index = '%test';
@@ -51,26 +51,26 @@ describe('Test: hotelClerk.disconnect', () => {
     return hotelClerk.init();
   });
 
-  it('should register a "disconnect" event', async () => {
-    sinon.stub(hotelClerk, 'disconnect');
+  it('should register a "user:remove" event', async () => {
+    sinon.stub(hotelClerk, 'removeUser');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:disconnect', 'connectionId');
+    await kuzzle.ask('core:realtime:user:remove', 'connectionId');
 
-    should(hotelClerk.disconnect).calledWith('connectionId');
+    should(hotelClerk.removeUser).calledWith('connectionId');
   });
 
   it('should do nothing when a bad connectionId is given', async () => {
     sinon.stub(hotelClerk, 'unsubscribe');
 
-    await hotelClerk.disconnect('nope');
+    await hotelClerk.removeUser('nope');
 
     should(hotelClerk.unsubscribe).not.be.called();
     should(hotelClerk.roomsCount).be.eql(2);
   });
 
   it('should clean up customers, rooms object', async () => {
-    await hotelClerk.disconnect(connectionId);
+    await hotelClerk.removeUser(connectionId);
 
     should(kuzzle.koncorde.remove).be.calledOnce();
 
@@ -117,7 +117,7 @@ describe('Test: hotelClerk.disconnect', () => {
     const error = new Error('Mocked error');
     realtimeModule.notifier.notifyUser.throws(error);
 
-    await hotelClerk.disconnect(connectionId);
+    await hotelClerk.removeUser(connectionId);
 
     should(kuzzle.log.error).be.calledWith(error);
   });

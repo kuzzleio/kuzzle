@@ -34,64 +34,44 @@ describe('Test: notifier.notifyDocumentReplace', () => {
     return notifier.init();
   });
 
-  it('should register a "notify:replaced" event', async () => {
-    sinon.stub(notifier, 'notifyDocumentReplace');
-
-    kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:notify:replaced', 'request');
-
-    should(notifier.notifyDocumentReplace).calledWith('request');
-  });
-
   it('should notify subscribers when a replaced document entered their scope', async () => {
-    const internalCache = kuzzle.cacheEngine.internal;
+    const _id = request.input.resource._id;
+
     kuzzle.koncorde.test.returns(['foo']);
 
-    internalCache.get.resolves(JSON.stringify(['foo', 'bar']));
-
-    await notifier.notifyDocumentReplace(request);
-
-    const { _id, index, collection } = request.input.resource;
+    const result = await notifier.notifyDocumentReplace(
+      request,
+      {
+        _id,
+        _source: request.input.body,
+      },
+      JSON.stringify(['foo', 'bar']));
 
     should(notifier.notifyDocument.callCount).be.eql(2);
 
     should(notifier.notifyDocument.getCall(0))
       .calledWith(['foo'], request, 'in', 'replace', {
         _id,
-        _source: {
-          foo: 'bar',
-          _kuzzle_info: {'can I has': 'cheezburgers?'}
-        },
+        _source: request.input.body,
       });
 
     should(notifier.notifyDocument.getCall(1))
       .calledWith(['bar'], request, 'out', 'replace', { _id });
 
-    should(internalCache.get.callCount).be.eql(1);
-    should(internalCache.get.getCall(0))
-      .calledWith(`{notif/${index}/${collection}}/${_id}`);
-
-    should(internalCache.del).not.be.called();
-
-    should(internalCache.setex)
-      .calledOnce()
-      .calledWith(
-        `{notif/${index}/${collection}}/${_id}`,
-        kuzzle.config.limits.subscriptionDocumentTTL,
-        JSON.stringify(['foo']));
+    should(result).match(['foo']);
   });
 
-  it('should remove the cache entry if no room matches the replaced document', async () => {
+  it('should return an empty array if no room matches the replaced document', async () => {
     kuzzle.koncorde.test.returns([]);
 
-    kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(['foo', 'bar']));
+    const rooms = await notifier.notifyDocumentReplace(
+      request,
+      {
+        _id: request.input.resource._id,
+        _source: request.input.body,
+      },
+      JSON.stringify(['foo', 'bar']));
 
-    await notifier.notifyDocumentReplace(request);
-
-
-    should(kuzzle.cacheEngine.internal.del)
-      .calledWith(`{notif/index/collection}/${request.input.resource._id}`);
-
-    should(kuzzle.cacheEngine.internal.setex).not.called();
+    should(rooms).be.an.Array().and.be.empty();
   });
 });
