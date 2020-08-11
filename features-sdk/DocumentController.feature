@@ -93,6 +93,43 @@ Feature: Document Controller
       | _id          |
       | "document-3" |
 
+  @mappings
+  Scenario: Search with scroll
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    And I refresh the collection
+    When I search documents with the following query:
+      """
+      {}
+      """
+    And with the following search options:
+      """
+      {
+        "scroll": "30s",
+        "size": 1
+      }
+      """
+    And I execute the search query
+    Then I should receive a result matching:
+      | remaining | 2 |
+      | total     | 3 |
+    And I should receive a "hits" array containing 1 elements
+    When I scroll to the next page
+    Then I should receive a result matching:
+      | remaining | 1 |
+      | total     | 3 |
+    And I should receive a "hits" array containing 1 elements
+    When I scroll to the next page
+    Then I should receive a result matching:
+      | remaining | 0 |
+      | total     | 3 |
+    And I should receive a "hits" array containing 1 elements
+
+
   # document:exists ============================================================
 
   @mappings
