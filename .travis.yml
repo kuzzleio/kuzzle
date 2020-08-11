@@ -207,6 +207,9 @@ jobs:
       os: linux
       language: minimal
       services: docker
+      install:
+        - npm ci --silent
+        - npm run build-ts
       script:
         - MODE=production bash docker/build-docker-images.sh
 
