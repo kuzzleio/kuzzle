@@ -18,7 +18,7 @@ describe('Test: token manager core component', () => {
     kuzzle = new KuzzleMock();
 
     kuzzle.ask
-      .withArgs('core:security:user:anonymous')
+      .withArgs('core:security:user:anonymous:get')
       .resolves({_id: '-1'});
 
     tokenManager = new TokenManager(kuzzle);

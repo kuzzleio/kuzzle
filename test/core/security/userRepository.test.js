@@ -48,7 +48,7 @@ describe('Test: security/userRepository', () => {
 
   describe('#anonymous', () => {
     it('should return a valid anonymous user', async () => {
-      const user = await kuzzle.ask('core:security:user:anonymous');
+      const user = await kuzzle.ask('core:security:user:anonymous:get');
       assertIsAnonymous(user);
     });
   });
@@ -171,7 +171,7 @@ describe('Test: security/userRepository', () => {
   });
 
   describe('#adminExists', () => {
-    const adminExistsEvent = 'core:security:user:adminExists';
+    const adminExistsEvent = 'core:security:user:admin:exist';
 
     it('should register an "adminExists" event', async () => {
       userRepository.adminExists = sinon.stub();
