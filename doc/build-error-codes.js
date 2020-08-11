@@ -24,7 +24,39 @@
 const path = require('path');
 const fs = require('fs');
 const { domains } = require(`${__dirname}/../lib/kerror/codes/`);
-const { errors } = require('kuzzle-common-objects');
+const {
+  BadRequestError,
+  ExternalServiceError,
+  ForbiddenError,
+  GatewayTimeoutError,
+  InternalError,
+  KuzzleError,
+  NotFoundError,
+  PartialError,
+  PluginImplementationError,
+  PreconditionError,
+  ServiceUnavailableError,
+  SizeLimitError,
+  TooManyRequestsError,
+  UnauthorizedError,
+} = require('kuzzle-common-objects');
+
+const errors = {
+  BadRequestError,
+  ExternalServiceError,
+  ForbiddenError,
+  GatewayTimeoutError,
+  InternalError,
+  KuzzleError,
+  NotFoundError,
+  PartialError,
+  PluginImplementationError,
+  PreconditionError,
+  ServiceUnavailableError,
+  SizeLimitError,
+  TooManyRequestsError,
+  UnauthorizedError,
+};
 
 function getHeader(title) {
   return `---
