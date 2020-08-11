@@ -7,11 +7,9 @@ const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    NotFoundError,
-    SizeLimitError
-  }
+  BadRequestError,
+  NotFoundError,
+  SizeLimitError
 } = require('kuzzle-common-objects');
 
 describe('Test: hotelClerk.addSubscription', () => {

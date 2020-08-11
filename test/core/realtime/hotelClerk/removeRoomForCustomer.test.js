@@ -6,11 +6,9 @@ const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
-  models: { RequestContext },
-  errors: {
-    PreconditionError,
-    NotFoundError
-  }
+  RequestContext,
+  PreconditionError,
+  NotFoundError
 } = require('kuzzle-common-objects');
 
 describe ('lib/core/hotelclerk:removeRoomForCustomer', () => {

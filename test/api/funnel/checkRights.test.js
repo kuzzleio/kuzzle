@@ -4,10 +4,8 @@ const should = require('should');
 const sinon = require('sinon');
 const {
   Request,
-  errors: {
-    ForbiddenError,
-    UnauthorizedError
-  }
+  ForbiddenError,
+  UnauthorizedError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

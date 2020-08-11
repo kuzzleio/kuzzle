@@ -5,8 +5,8 @@ const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const Router = require('../../../../lib/core/network/router');
 const {
-  models: { RequestContext },
-  errors: { PluginImplementationError }
+  RequestContext,
+  PluginImplementationError
 } = require('kuzzle-common-objects');
 
 describe('Test: router', () => {

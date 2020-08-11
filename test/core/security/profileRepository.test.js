@@ -3,12 +3,10 @@
 const sinon = require('sinon');
 const should = require('should');
 const {
-  errors: {
-    BadRequestError,
-    PreconditionError,
-    NotFoundError,
-    InternalError
-  }
+  BadRequestError,
+  PreconditionError,
+  NotFoundError,
+  InternalError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

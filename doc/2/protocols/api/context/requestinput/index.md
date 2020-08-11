@@ -10,7 +10,7 @@ Request input, normalizing a [Kuzzle API call](/core/2/api/essentials/query-synt
 
 This is the class used to build the `input` property of any [Request](/core/2/protocols/api/context/request) object.
 
-Technical information: [github repository](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput)
+Technical information: [github repository](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestinput)
 
 ---
 

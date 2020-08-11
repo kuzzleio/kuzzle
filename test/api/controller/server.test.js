@@ -4,7 +4,7 @@ const should = require('should');
 const sinon = require('sinon');
 const {
   Request,
-  errors: { ExternalServiceError }
+  ExternalServiceError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

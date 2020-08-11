@@ -5,11 +5,9 @@ const should = require('should');
 const sinon = require('sinon');
 const PipeRunner = require('../../../lib/kuzzle/event/pipeRunner');
 const {
-  errors: {
-    BadRequestError,
-    PluginImplementationError,
-    ServiceUnavailableError
-  }
+  BadRequestError,
+  PluginImplementationError,
+  ServiceUnavailableError
 } = require('kuzzle-common-objects');
 
 class RemoteControlledPipe {

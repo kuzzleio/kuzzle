@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 const {
-  models: { RequestContext },
+  RequestContext,
   Request,
 } = require('kuzzle-common-objects');
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');

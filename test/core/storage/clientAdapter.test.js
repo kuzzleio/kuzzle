@@ -2,7 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const { errors: { BadRequestError } } = require('kuzzle-common-objects');
+const { BadRequestError } = require('kuzzle-common-objects');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ElasticsearchMock = require('../../mocks/elasticsearch.mock');
 const ClientAdapter = require('../../../lib/core/storage/clientAdapter');
