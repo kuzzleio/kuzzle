@@ -65,7 +65,7 @@ describe('Test: sdk/funnelProtocol', () => {
   describe('#query', () => {
     beforeEach(() => {
       kuzzle.ask
-        .withArgs('core:network:internal:connectionId')
+        .withArgs('core:network:internal:connectionId:get')
         .resolves('connection-id');
     });
 
