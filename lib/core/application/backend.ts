@@ -557,12 +557,16 @@ export class Backend {
   /**
    * Triggers an event
    *
-   * @param {String} - Event name
-   * @param {any} - Event payload
+   * @param - Event name
+   * @param - Event payload
    *
    * @returns {Promise<any>}
    */
   trigger (event: string, payload: any): Promise<any> {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'trigger');
+    }
+
     return this._kuzzle.pipe(event, payload);
   }
 

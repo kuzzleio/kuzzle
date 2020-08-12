@@ -13,12 +13,10 @@ const {
 const ElasticsearchClientMock = require('../../mocks/service/elasticsearchClient.mock');
 const {
   Request,
-  errors: {
-    NotFoundError,
-    PluginImplementationError,
-    InternalError: KuzzleInternalError,
-    BadRequestError
-  }
+  NotFoundError,
+  PluginImplementationError,
+  InternalError: KuzzleInternalError,
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 describe('funnel.processRequest', () => {

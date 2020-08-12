@@ -5,11 +5,9 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    ServiceUnavailableError,
-    TooManyRequestsError
-  }
+  BadRequestError,
+  ServiceUnavailableError,
+  TooManyRequestsError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

@@ -7,7 +7,7 @@ const RedisClientMock = require('../../mocks/service/redisClient.mock');
 const { NativeController } = require('../../../lib/api/controller/base');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 const MemoryStorageController = rewire('../../../lib/api/controller/memoryStorage.js');
 

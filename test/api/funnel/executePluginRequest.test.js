@@ -8,7 +8,7 @@ const
   FunnelController = require('../../../lib/api/funnel'),
   {
     Request,
-    errors: { NotFoundError }
+    NotFoundError
   } = require('kuzzle-common-objects');
 
 describe('funnel.executePluginRequest', () => {

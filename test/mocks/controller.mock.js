@@ -5,9 +5,7 @@ const {
   NativeController
 } = require('../../lib/api/controller/base');
 const {
-  errors: {
-    InternalError: KuzzleInternalError
-  }
+  InternalError: KuzzleInternalError
 } = require('kuzzle-common-objects');
 const sinon = require('sinon');
 

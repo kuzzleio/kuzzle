@@ -4,7 +4,7 @@ const should = require('should');
 const Koncorde = require('koncorde');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');

@@ -10,7 +10,7 @@ Connection context.
 
 This is the class used to build the `context` property of any [Request](/core/2/protocols/api/context/request) object.
 
-Technical information: [github repository](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestcontext)
+Technical information: [github repository](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestcontext)
 
 ---
 
