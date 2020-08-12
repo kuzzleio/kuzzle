@@ -5,11 +5,9 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    ServiceUnavailableError,
-    TooManyRequestsError
-  }
+  BadRequestError,
+  ServiceUnavailableError,
+  TooManyRequestsError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -27,7 +25,7 @@ describe('funnelController.execute', () => {
     kuzzle = new KuzzleMock();
 
     kuzzle.config.limits.requestsBufferWarningThreshold = -1;
-    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
+    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     request = new Request({
       controller: 'foo',

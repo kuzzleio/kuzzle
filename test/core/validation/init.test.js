@@ -10,7 +10,7 @@ const
     BadRequestError,
     PluginImplementationError,
     PreconditionError
-  } = require('kuzzle-common-objects').errors;
+  } = require('kuzzle-common-objects');
 
 describe('Test: validation initialization', () => {
   let

@@ -4,7 +4,7 @@ const should = require('should');
 const sinon = require('sinon');
 const {
   Request,
-  errors: { ExternalServiceError }
+  ExternalServiceError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -77,9 +77,9 @@ describe('ServerController', () => {
   });
 
   describe('#adminExists', () => {
-    const adminExistsEvent = 'core:security:user:adminExists';
+    const adminExistsEvent = 'core:security:user:admin:exist';
 
-    it('should calls "core:security:user:adminExists"', async () => {
+    it('should calls "core:security:user:admin:exist"', async () => {
       kuzzle.ask
         .withArgs(adminExistsEvent)
         .returns(true);

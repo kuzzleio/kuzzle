@@ -5,7 +5,8 @@ const should = require('should');
 const sinon = require('sinon');
 const {
   Request,
-  errors: { PreconditionError, NotFoundError }
+  PreconditionError,
+  NotFoundError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

@@ -4,7 +4,7 @@ const mockrequire = require('mock-require');
 const rewire = require('rewire');
 const sinon = require('sinon');
 const should = require('should');
-const { errors: { PreconditionError } } = require('kuzzle-common-objects');
+const { PreconditionError } = require('kuzzle-common-objects');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const FsMock = require('../mocks/fs.mock');
 

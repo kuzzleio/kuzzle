@@ -3,14 +3,12 @@
 const should = require('should');
 const kerror = require('../../lib/kerror');
 const {
-  errors: {
-    InternalError,
-    ExternalServiceError,
-    NotFoundError,
-    PreconditionError,
-    PartialError,
-    UnauthorizedError
-  }
+  InternalError,
+  ExternalServiceError,
+  NotFoundError,
+  PreconditionError,
+  PartialError,
+  UnauthorizedError
 } = require('kuzzle-common-objects');
 
 describe('#kerror', () => {

@@ -8,7 +8,7 @@ const Router = require('../../../../lib/core/network/httpRouter');
 const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
 const {
   Request,
-  errors: { InternalError }
+  InternalError
 } = require('kuzzle-common-objects');
 
 describe('core/network/httpRouter', () => {

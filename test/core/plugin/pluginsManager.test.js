@@ -4,11 +4,9 @@ const should = require('should');
 const mockrequire = require('mock-require');
 const sinon = require('sinon');
 const {
-  errors: {
-    KuzzleError,
-    NotFoundError,
-    PluginImplementationError,
-  }
+  KuzzleError,
+  NotFoundError,
+  PluginImplementationError,
 } = require('kuzzle-common-objects');
 
 const Plugin = require('../../../lib/core/plugin/plugin');

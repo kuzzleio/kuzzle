@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import { Request } from 'kuzzle-common-objects';
 
 /**
  * An interface representing an object with string key and any value
@@ -46,15 +47,14 @@ export interface ControllerDefinition {
      * Name of the API action
      */
     [action: string]: {
-      // @todo use KuzzleRequest from common objects
       /**
        * Function handler for incoming requests.
        */
-      handler: (request: any) => Promise<any>,
+      handler: (request: Request) => Promise<any>,
       /**
-       * Declare optional HTTP routes.
-       * Http routes will be auto-generated unless they are provided or an empty array
-       * is provided.
+       * Declare HTTP routes (optional).
+       * Http routes will be auto-generated unless at least one is provided
+       * or an empty array is provided.
        *
        */
       http?: Array<{

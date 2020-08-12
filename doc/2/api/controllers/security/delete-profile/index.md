@@ -45,7 +45,7 @@ Method: DELETE
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the profile deletion is indexed (default: `"wait_for"`)
-- `onAssignedUsers`: if set to `remove`, Kuzzle will remove this profile from assigned users. If this was a user's sole profile, then the `anonymous` profile will be assigned. (default: `"fail"`) <SinceBadge version="auto-version" />
+- `onAssignedUsers`: if set to `remove`, Kuzzle will remove this profile from assigned users. If this was a user's sole profile, then the `anonymous` profile will be assigned. (default: `"fail"`) <SinceBadge version="2.4.0" />
 
 ---
 

@@ -16,7 +16,7 @@ This route cannot update the list of associated security profiles. To change a u
 
 ### HTTP
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.4.0"/>
 ```http
 URL: http://kuzzle:7512/_me[?refresh=wait_for][?retryOnConflict=10]
 Method: PUT
@@ -24,7 +24,7 @@ Headers: Authorization: "Bearer <authentication token>"
 Body:
 ```
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.4.0">
 ```http
 URL: http://kuzzle:7512/_updateSelf[?refresh=wait_for][?retryOnConflict=10]
 Method: PUT

@@ -11,12 +11,10 @@ const Bluebird = require('bluebird');
 const mockrequire = require('mock-require');
 const {
   Request,
-  models: { RequestContext },
-  errors: {
-    InternalError: KuzzleInternalError,
-    ServiceUnavailableError,
-    PluginImplementationError
-  }
+  RequestContext,
+  InternalError: KuzzleInternalError,
+  ServiceUnavailableError,
+  PluginImplementationError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
@@ -73,7 +71,7 @@ describe('lib/core/core/network/entryPoint', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
+    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     HttpMock = FakeHttpProtocol;
     WebSocketMock = FakeWebSocketProtocol;

@@ -375,13 +375,23 @@ describe('Backend', () => {
     should(application.kerror.wrap).be.a.Function();
   });
 
-  it('should exposes the trigger method', async () => {
-    application._kuzzle.pipe = sinon.stub().resolves('resonance cascade');
+  describe('#trigger', () => {
+    it('should exposes the trigger method', async () => {
+      application.started = true;
+      application._kuzzle.pipe = sinon.stub().resolves('resonance cascade');
 
-    const result = await application.trigger('xen:crystal', 'payload');
+      const result = await application.trigger('xen:crystal', 'payload');
 
-    should(application._kuzzle.pipe).be.calledWith('xen:crystal', 'payload');
-    should(result).be.eql('resonance cascade');
+      should(application._kuzzle.pipe).be.calledWith('xen:crystal', 'payload');
+      should(result).be.eql('resonance cascade');
+    });
+
+    it('should throws an error if the application is not started', () => {
+      return should(() => {
+        application.trigger('xen:crystal', 'payload');
+      })
+        .throwError({ id: 'plugin.runtime.unavailable_before_start' });
+    });
   });
 
   describe('StorageManager#Client', () => {

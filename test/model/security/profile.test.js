@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const Kuzzle = require('../../mocks/kuzzle.mock');

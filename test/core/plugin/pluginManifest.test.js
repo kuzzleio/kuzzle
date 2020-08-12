@@ -1,13 +1,17 @@
 'use strict';
 
 const should = require('should');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockrequire = require('mock-require');
+const {
+  PluginImplementationError,
+} = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const AbstractManifest = require('../../../lib/core/shared/abstractManifest');
-const { errors: { PluginImplementationError } } = require('kuzzle-common-objects');
 
 class AbstractManifestStub extends AbstractManifest {
-  loadFromDisk() {}
+  load() {}
 }
 
 describe('Plugins manifest class', () => {
@@ -32,10 +36,9 @@ describe('Plugins manifest class', () => {
       manifest.name = name;
 
       /* eslint-disable-next-line no-loop-func */
-      should(() => manifest.load())
-        .throw(PluginImplementationError, {
-          id: 'plugin.manifest.invalid_name'
-        });
+      should(() => manifest.load()).throw(PluginImplementationError, {
+        id: 'plugin.manifest.invalid_name'
+      });
     }
   });
 
