@@ -1474,6 +1474,53 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
+    it('should reject when an incorrect dynamic property value is provided', async () => {
+      const mappings1 = {
+        dynamic: null
+      };
+      const mappings2 = {
+        properties: {
+          user: {
+            properties: {
+              metadata: {
+                dynamic: 'notTooMuch'
+              }
+            }
+          }
+        }
+      };
+      const mappings3 = {
+        dynamic: true
+      };
+
+      await elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings3 });
+
+      should(elasticsearch._checkMappings).be.calledWithMatch({
+        dynamic: 'true'
+      });
+
+      await should(elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings1 })
+      ).be.rejectedWith({
+        message: /Dynamic property value should be a string./,
+        id: 'services.storage.invalid_mapping'
+      });
+
+      await should(elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings2 })
+      ).be.rejectedWith({
+        message: /Incorrect dynamic property value/,
+        id: 'services.storage.invalid_mapping'
+      });
+    });
+
     it('should call updateCollection if the collection already exists', async () => {
       const
         settings = { index: { blocks: { write: true } } },
@@ -1796,7 +1843,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.updateMapping(index, collection, newMapping))
         .be.rejectedWith({
-          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -1837,7 +1884,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
     });
   });
@@ -3613,13 +3660,13 @@ describe('Test: ElasticSearch service', () => {
 
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
 
       should(() => elasticsearch._checkMappings(mapping2))
         .throw({
-          message: 'Invalid mapping property "mapping.type".',
+          message: 'Invalid mapping property "mappings.type".',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -3640,7 +3687,7 @@ describe('Test: ElasticSearch service', () => {
 
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.properties.car.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
     });

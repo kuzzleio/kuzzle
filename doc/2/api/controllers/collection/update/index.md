@@ -35,7 +35,7 @@ Body:
 ```js
 {
   "mappings": {
-    "dynamic": "[true|false|strict]",
+    "dynamic": "[true|false|strict]", // boolean are also accepted
     "_meta": {
       "field": "value"
     },
@@ -75,7 +75,7 @@ Body:
   "action": "update",
   "body": {
     "mappings": {
-      "dynamic": "[true|false|strict]",
+      "dynamic": "[true|false|strict]", // boolean are also accepted
       "_meta": {
         "field": "value"
       },
