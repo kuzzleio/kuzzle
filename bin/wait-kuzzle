@@ -23,9 +23,13 @@
 
 'use strict';
 
+/* eslint-disable no-console */
+
 const net = require('net');
 
-const sleep = seconds => new Promise(resolve => setTimeout(() => resolve(), seconds * 1000))
+const sleep = seconds => {
+  return new Promise(resolve => setTimeout(() => resolve(), seconds * 1000));
+};
 
 const kuzzleHost = process.env.KUZZLE_HOST || 'localhost';
 const kuzzlePort = process.env.KUZZLE_PORT || 7512;
@@ -43,32 +47,27 @@ function tryConnect (host, port) {
   });
 }
 
-async function waitKuzzle (host, port, maxTries) {
+async function waitKuzzle (host, port, timeout) {
   const spinner = '|/-\\';
-  let i = 0;
-  let seconds = 0;
 
   console.log(`[ℹ] Trying to connect to Kuzzle at "${kuzzleHost}:${kuzzlePort}"`);
 
-  while (seconds < maxTries) {
+  for (let seconds = 0; seconds < timeout; seconds++) {
     const connected = await tryConnect(host, port);
 
     if (connected) {
-      console.log(`[✔] Kuzzle is up`);
+      console.log('[✔] Kuzzle is up');
 
       return;
     }
 
-    process.stdout.write(`[${spinner.charAt(i)}] Still trying to connect to Kuzzle (${seconds}s)...`);
+    process.stdout.write(`[${spinner.charAt(seconds % spinner.lentgh)}] Still trying to connect to Kuzzle (${seconds}s)...`);
     process.stdout.write('\r');
 
     await sleep(1);
-
-    i = i === 3 ? 0 : i + 1;
-    seconds++;
   }
 
-  console.log(`Timeout after ${seconds}s: cannot connect to Kuzzle at "${kuzzleHost}:${kuzzlePort}"`);
+  console.log(`Timeout after ${timeout}s: cannot connect to Kuzzle at "${kuzzleHost}:${kuzzlePort}"`);
   process.exit(1);
 }
 

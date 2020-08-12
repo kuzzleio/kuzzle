@@ -116,14 +116,7 @@ if (process.env.SECRETS_FILE_PREFIX) {
 app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
 
-const run = async () => {
-  try {
-    await app.start();
-  }
-  catch (error) {
-    console.log(error);
-    process.exit(1);
-  }
-};
-
-run();
+app.start().catch(error => {
+  console.log(error);
+  process.exit(1);
+});
