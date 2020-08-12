@@ -111,6 +111,11 @@ class FunctionalTestPlugin {
     this.config = config;
     this.context = context;
     this.sdk = context.accessors.sdk;
+
+    // Plugins must be able to perform API requests during their init phase.
+    // There is no test associated: this line by itself will make functional
+    // tests throw before they can even start if this premise is violated.
+    await this.sdk.server.info();
   }
 
   // context.constructor.ESClient related methods ==============================
