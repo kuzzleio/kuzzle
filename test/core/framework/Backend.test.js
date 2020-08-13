@@ -7,6 +7,7 @@ const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { Backend } = require('../../../lib/core/application/backend.ts');
 const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
+const Kuzzle = require('../../../lib/kuzzle/kuzzle');
 
 describe('Backend', () => {
   let application;
@@ -32,7 +33,7 @@ describe('Backend', () => {
 
   describe('#sdk', () => {
     it('should returns the embedded sdk', async () => {
-      application._kuzzle.start = sinon.stub();
+      sinon.stub(Kuzzle.prototype, 'start')
 
       await application.start();
 
@@ -49,7 +50,7 @@ describe('Backend', () => {
 
   describe('#start', () => {
     it('should calls kuzzle.start with an instantiated plugin and options', async () => {
-      application._kuzzle.start = sinon.stub();
+      sinon.stub(Kuzzle.prototype, 'start')
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
@@ -343,7 +344,10 @@ describe('Backend', () => {
 
   describe('Logger', () => {
     describe('#_log', () => {
-      it('should exposes log methods and call kuzzle ones', () => {
+      it('should exposes log methods and call kuzzle ones', async () => {
+        sinon.stub(Kuzzle.prototype, 'start');
+        await application.start();
+
         application._kuzzle.log = {
           debug: sinon.stub(),
           info: sinon.stub(),
@@ -351,7 +355,6 @@ describe('Backend', () => {
           error: sinon.stub(),
           verbose: sinon.stub(),
         };
-        application.started = true;
         application.log.debug('debug');
         application.log.info('info');
         application.log.warn('warn');
@@ -377,8 +380,10 @@ describe('Backend', () => {
 
   describe('#trigger', () => {
     it('should exposes the trigger method', async () => {
-      application.started = true;
-      application._kuzzle.pipe = sinon.stub().resolves('resonance cascade');
+      sinon.stub(Kuzzle.prototype, 'start')
+      await application.start();
+
+      sinon.stub(Kuzzle.prototype, 'pipe').resolves('resonance cascade');
 
       const result = await application.trigger('xen:crystal', 'payload');
 
@@ -395,7 +400,9 @@ describe('Backend', () => {
   });
 
   describe('StorageManager#Client', () => {
-    it('should allows to construct an ES Client', () => {
+    it('should allows to construct an ES Client', async () => {
+      sinon.stub(Kuzzle.prototype, 'start')
+      await application.start();
       application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
       should(application.storage.Client).be.a.Function();
 
@@ -407,7 +414,10 @@ describe('Backend', () => {
   });
 
   describe('StorageManager#client', () => {
-    it('should allows lazily access an ES Client', () => {
+    it('should allows lazily access an ES Client', async () => {
+      sinon.stub(Kuzzle.prototype, 'start')
+      await application.start();
+
       should(application.storage._client).be.null();
 
       should(application.storage.client).be.instanceOf(ElasticsearchClient);

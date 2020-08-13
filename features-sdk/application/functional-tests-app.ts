@@ -8,13 +8,15 @@ import FunctionalTestPlugin from '../../plugins/available/functional-test-plugin
 
 const app = new Backend('functional-tests-app');
 
-// Easier debug
-app.hook.register('request:onError', request => {
-  console.log(request.error);
-});
-app.hook.register('hook:onError', request => {
-  console.log(request.error);
-});
+if (! process.env.TRAVIS) {
+  // Easier debug
+  app.hook.register('request:onError', request => {
+    console.log(request.error);
+  });
+  app.hook.register('hook:onError', request => {
+    console.log(request.error);
+  });
+}
 
 // Pipe management
 const activatedPipes: any = {};

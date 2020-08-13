@@ -119,24 +119,21 @@ class ConfigManager extends ApplicationManager {
   constructor (application: Backend) {
     super(application);
 
-    Reflect.defineProperty(this, 'content', {
-      enumerable: true,
-      value: this._kuzzle.config
-    });
+    this.content = require('../../config');
   }
 
   /**
    * Sets a configuration value
    *
    * @param path - Path to the configuration key (lodash style)
-   * @param value - Value for the configuraiton key
+   * @param value - Value for the configuration key
    */
   set (path: string, value: any) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'config');
     }
 
-    _.set(this._kuzzle.config, path, value);
+    _.set(this.content, path, value);
   }
 
   /**
@@ -149,9 +146,7 @@ class ConfigManager extends ApplicationManager {
       throw runtimeError.get('already_started', 'config');
     }
 
-    this._kuzzle.config = _.merge(
-      this._kuzzle.config,
-      config);
+    this.content = _.merge(this.content, config);
   }
 }
 
@@ -339,6 +334,11 @@ class Logger extends ApplicationManager {
 
 class StorageManager extends ApplicationManager {
   private _client: Client = null;
+  private _Client: new (clientConfig?: any) => Client = null;
+
+  constructor (application: Backend) {
+    super(application);
+  }
 
   /**
    * Storage client constructor.
@@ -346,19 +346,19 @@ class StorageManager extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  public Client: new (clientConfig?: any) => Client;
+  get Client (): new (clientConfig?: any) => Client {
+    if (! this._Client) {
+      const kuzzle = this._kuzzle;
 
-  constructor (application: Backend) {
-    super(application);
+      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
+        return Elasticsearch.buildClient({
+          ...kuzzle.storageEngine.config.client,
+          ...clientConfig
+        });
+      } as any;
+    }
 
-    const kuzzle = this._kuzzle;
-
-    this.Client = function StorageClient (clientConfig: JSONObject = {}) {
-      return Elasticsearch.buildClient({
-        ...kuzzle.storageEngine.config.client,
-        ...clientConfig
-      });
-    } as any;
+    return this._Client;
   }
 
   /**
@@ -490,7 +490,7 @@ export class Backend {
     this._name = name;
 
     Reflect.defineProperty(this, '_kuzzle', {
-      value: new Kuzzle()
+      writable: true
     });
 
     Reflect.defineProperty(this, '_sdk', {
@@ -524,6 +524,8 @@ export class Backend {
     if (this.started) {
       throw runtimeError.get('already_started', 'start');
     }
+
+    this._kuzzle = new Kuzzle(this.config.content);
 
     const application = new Plugin(
       this._kuzzle,

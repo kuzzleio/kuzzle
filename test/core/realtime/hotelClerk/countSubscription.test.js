@@ -6,13 +6,14 @@ const {
   NotFoundError
 } = require('kuzzle-common-objects');
 const Kuzzle = require('../../../../lib/kuzzle');
+const config = require('../../../../lib/config');
 
 describe('Test: hotelClerk.countSubscription', () => {
   let
     kuzzle;
 
   before(() => {
-    kuzzle = new Kuzzle();
+    kuzzle = new Kuzzle(config);
   });
 
   it('should reject the request if the provided room ID is unknown to Kuzzle', () => {
