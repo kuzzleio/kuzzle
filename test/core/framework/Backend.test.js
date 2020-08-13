@@ -33,7 +33,7 @@ describe('Backend', () => {
 
   describe('#sdk', () => {
     it('should returns the embedded sdk', async () => {
-      sinon.stub(Kuzzle.prototype, 'start')
+      sinon.stub(Kuzzle.prototype, 'start');
 
       await application.start();
 
@@ -50,7 +50,7 @@ describe('Backend', () => {
 
   describe('#start', () => {
     it('should calls kuzzle.start with an instantiated plugin and options', async () => {
-      sinon.stub(Kuzzle.prototype, 'start')
+      sinon.stub(Kuzzle.prototype, 'start');
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
@@ -380,7 +380,7 @@ describe('Backend', () => {
 
   describe('#trigger', () => {
     it('should exposes the trigger method', async () => {
-      sinon.stub(Kuzzle.prototype, 'start')
+      sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
 
       sinon.stub(Kuzzle.prototype, 'pipe').resolves('resonance cascade');
@@ -401,7 +401,7 @@ describe('Backend', () => {
 
   describe('StorageManager#Client', () => {
     it('should allows to construct an ES Client', async () => {
-      sinon.stub(Kuzzle.prototype, 'start')
+      sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
       application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
       should(application.storage.Client).be.a.Function();
@@ -415,7 +415,7 @@ describe('Backend', () => {
 
   describe('StorageManager#client', () => {
     it('should allows lazily access an ES Client', async () => {
-      sinon.stub(Kuzzle.prototype, 'start')
+      sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
 
       should(application.storage._client).be.null();
