@@ -5,7 +5,7 @@ const should = require('should');
 const RealtimeController = require('../../../lib/api/controller/realtime');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

@@ -1,6 +1,6 @@
 'use strict';
 
-const { errors: { BadRequestError } } = require('kuzzle-common-objects');
+const { BadRequestError } = require('kuzzle-common-objects');
 const should = require('should');
 const sinon = require('sinon');
 const KuzzleMock = require('../../mocks/kuzzle.mock');

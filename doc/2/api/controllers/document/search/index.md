@@ -126,7 +126,7 @@ Returns a paginated search result set, with the following properties:
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
   - `highlight`: optional result from [highlight API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-highlighting)
-- `remaining`: remaining documents that can be fetched. Present only if the `scroll` argument has been supplied <SinceBadge version="auto-version"/>
+- `remaining`: remaining documents that can be fetched. Present only if the `scroll` argument has been supplied <SinceBadge version="2.4.0"/>
 - `scrollId`: identifier to the next page of result. Present only if the `scroll` argument has been supplied
 - `total`: total number of found documents. Can be greater than the number of documents in a result page, meaning that other matches than the one retrieved are available
 

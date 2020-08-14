@@ -2,9 +2,7 @@
 
 const should = require('should');
 const rewire = require('rewire');
-const {
-  errors: { PluginImplementationError }
-} = require('kuzzle-common-objects');
+const { PluginImplementationError } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 

@@ -9,11 +9,9 @@ const { NativeController } = require('../../../../lib/api/controller/base');
 const SecurityController = rewire('../../../../lib/api/controller/security');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    PartialError,
-    SizeLimitError
-  }
+  BadRequestError,
+  PartialError,
+  SizeLimitError
 } = require('kuzzle-common-objects');
 const kerror = require('../../../../lib/kerror');
 

@@ -5,10 +5,8 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const sinon = require('sinon');
 const Repository = require('../../../lib/core/shared/repository');
 const {
-  errors: {
-    InternalError: KuzzleInternalError,
-    NotFoundError
-  }
+  InternalError: KuzzleInternalError,
+  NotFoundError
 } = require('kuzzle-common-objects');
 
 describe('Test: repositories/repository', () => {

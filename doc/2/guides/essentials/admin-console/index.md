@@ -23,7 +23,7 @@ The Kuzzle Admin Console automatically searches for Kuzzle on `ws://localhost:75
 
 At any time, you can reconfigure the Kuzzle Admin Console to connect to any Kuzzle installation by clicking the **"Choose Environment"** dropdown menu and then selecting **"Create new"**. This feature allows you to manage multiple Kuzzle installations on a single Kuzzle Admin Console.
 
-![Kuzzle Admin Console is trying to connect to Kuzzle](kuzbo-connecting.png)
+![Kuzzle Admin Console is trying to connect to Kuzzle](./kuzbo-connecting.png)
 
 To create a connection to Kuzzle, provide its **name** (e.g. "Development" or "My First Kuzzle"), **address** (or hostname) and **port**. Optionally, select a **color** to identify the connection (e.g. red could be used to identify production environments).
 
@@ -35,7 +35,7 @@ Your Kuzzle Admin Console is now connected to Kuzzle.
 
 At this point Kuzzle is not secure and any `anonymous` user has full access. The Kuzzle Admin Console configurator will automatically request that an Admin Account be created. For the purpose of this tutorial, leave the **reset default and anonymous rights** unchecked, as we will use the `anonymous` account in the next steps.
 
-![Kuzzle Admin Console requests that an admin account be created](kuzbo-firstadmin.png)
+![Kuzzle Admin Console requests that an admin account be created](./kuzbo-firstadmin.png)
 
 Once the Admin Account credentials have been created, use them to login.
 

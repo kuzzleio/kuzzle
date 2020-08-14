@@ -5,7 +5,7 @@ const Kuzzle = require('../../mocks/kuzzle.mock');
 const Role = require('../../../lib/model/security/role');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const

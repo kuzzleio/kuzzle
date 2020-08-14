@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const Kuzzle = require('../../mocks/kuzzle.mock');
@@ -134,7 +134,7 @@ describe('Test: model/security/profile', () => {
       roles[roleId][_kuzzle] = kuzzle;
     }
 
-    profile.constructor._hash = kuzzle.constructor.hash;
+    profile.constructor._hash = obj => kuzzle.hash(obj);
 
     profile.policies.push({roleId: role3._id});
 

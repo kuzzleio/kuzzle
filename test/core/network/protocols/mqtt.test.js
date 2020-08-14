@@ -5,7 +5,7 @@ const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const { errors: { BadRequestError } } = require('kuzzle-common-objects');
+const { BadRequestError } = require('kuzzle-common-objects');
 const errorMatcher = require('../../../util/errorMatcher');
 
 class AedesMock {

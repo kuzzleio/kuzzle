@@ -45,7 +45,7 @@ Body:
 ```js
 {
   "mappings": {
-    "dynamic": "[true|false|strict]",
+    "dynamic": "[true|false|strict]", // boolean are also accepted
     "_meta": {
       "field": "value"
     },
@@ -110,7 +110,7 @@ Body:
   "action": "create",
   "body": {
     "mappings": {
-      "dynamic": "[true|false|strict]",
+      "dynamic": "[true|false|strict]", // boolean are also accepted
       "_meta": {
         "field": "value"
       },
@@ -191,7 +191,7 @@ Body:
 
 <DeprecatedBadge version="2.1.0"/>
 
-* `dynamic`: [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
+* `dynamic`: [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed string values: `true` (default), `false`, `strict` or a boolean
 * `_meta`: [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) stored next to the collection
 * `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/2/guides/essentials/database-mappings#properties-types-definition)
 

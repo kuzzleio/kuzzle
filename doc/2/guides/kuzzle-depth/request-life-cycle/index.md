@@ -40,7 +40,7 @@ The following diagram shows how a request flows between the client application, 
 
 - The _Entry Point_ receives the message and passes it on to the _HTTP Router_.
 
-- The _HTTP Router_ creates a [Request Input](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput) object and sends it to the _Funnel_. The `Request Input` will look like this:
+- The _HTTP Router_ creates a [Request Input](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestinput) object and sends it to the _Funnel_. The `Request Input` will look like this:
 
 ```js
 {
@@ -117,7 +117,7 @@ this.socket.once('ed4faaff-253a-464f-a6b3-387af9d8483d', function(response) {
 ```
 
  <br/>
-* The *Entry Point* receives the message and creates a [Request Input](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput) object which it passes to the *Funnel*. The `Request Input` looks like this:
+* The *Entry Point* receives the message and creates a [Request Input](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestinput) object which it passes to the *Funnel*. The `Request Input` looks like this:
 
 ```js
 {
@@ -197,7 +197,7 @@ The following diagram shows how a client can subscribe to a channel.
 ```
 
  <br/>
-* The Kuzzle server receives the message and the *Entry Point* creates a [Request Input](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput) object with the following format:
+* The Kuzzle server receives the message and the *Entry Point* creates a [Request Input](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestinput) object with the following format:
 
 ```js
 {

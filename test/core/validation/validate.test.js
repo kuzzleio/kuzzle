@@ -7,7 +7,7 @@ const Validation = rewire('../../../lib/core/validation/validation');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 describe('Test: validation.validate', () => {

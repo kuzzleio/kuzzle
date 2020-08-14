@@ -6,8 +6,8 @@ const Kuzzle = require('../../mocks/kuzzle.mock');
 const Statistics = rewire('../../../lib/core/statistics/statistics');
 const {
   Request,
-  models: { RequestContext },
-  errors: { BadRequestError }
+  RequestContext,
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 describe('Test: statistics core component', () => {

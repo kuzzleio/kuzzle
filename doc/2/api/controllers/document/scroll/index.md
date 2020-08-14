@@ -60,7 +60,7 @@ Returns a paginated search result set, with the following properties:
   - `_id`: document unique identifier
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
-- `remaining`: remaining documents that can be fetched <SinceBadge version="auto-version"/>
+- `remaining`: remaining documents that can be fetched <SinceBadge version="2.4.0"/>
 - `scrollId`: identifier to the next page of result. Can be different than the previous one(s)
 - `total`: total number of found documents. Usually greater than the number of documents in a result page
 
