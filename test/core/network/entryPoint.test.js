@@ -18,6 +18,7 @@ const {
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+const EventEmitter = require('eventemitter3');
 
 class FakeProtocol {
   constructor (name) {
@@ -50,6 +51,7 @@ describe('lib/core/core/network/entryPoint', () => {
   let MqttMock;
   let InternalMock;
   let httpMock;
+  let httpEventEmitter;
   let EntryPoint;
   let entrypoint;
   let winstonTransportConsole;
@@ -78,11 +80,14 @@ describe('lib/core/core/network/entryPoint', () => {
     MqttMock = FakeMqttProtocol;
     InternalMock = FakeInternalProtocol;
 
+    httpEventEmitter = new EventEmitter();
+    sinon.spy(httpEventEmitter, 'on');
+    httpEventEmitter.listen = sinon.spy();
+
     httpMock = {
-      createServer: sinon.stub().returns({
-        listen: sinon.spy()
-      })
+      createServer: sinon.stub().returns(httpEventEmitter)
     };
+
     winstonTransportConsole = sinon.spy();
     winstonTransportElasticsearch = sinon.spy();
     winstonTransportFile = sinon.spy();
@@ -244,6 +249,7 @@ describe('lib/core/core/network/entryPoint', () => {
   describe('#startListening', () => {
     beforeEach(async () => {
       await entrypoint.init();
+      process.nextTick(() => httpEventEmitter.emit('listening'));
     });
 
     it('should call proper methods in order', async () => {

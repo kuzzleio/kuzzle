@@ -79,7 +79,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      const params = {
+      const options = {
         mappings: {},
         fixtures: {},
         securities: {}
@@ -87,7 +87,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.started).be.false();
 
-      await kuzzle.start(application, params);
+      await kuzzle.start(application, options);
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
