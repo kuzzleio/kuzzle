@@ -52,12 +52,13 @@ async function startKuzzle (options = {}) {
       const PluginClass = require(`../plugins/available/${additionalPlugin}`);
       const manifest = require(`../plugins/available/${additionalPlugin}/manifest.json`);
       const plugin = new PluginClass();
+
       try {
         plugin.version = require(`../plugins/available/${additionalPlugin}/package.json`).version;
       }
       catch (e) {}
 
-      app.plugin.use(plugin, { name: manifest.name });
+      app.plugin.use(plugin, { name: manifest.name, manifest });
     }
   }
 
