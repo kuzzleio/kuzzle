@@ -26,12 +26,11 @@ else
   ENABLED_PLUGINS=functional-test-plugin
 fi
 
-
 nodemon \
     --ext 'js,json,ts' \
     --inspect=0.0.0.0:9229 \
     --exec node -r ts-node/register \
-    bin/start-kuzzle-server \
+    features-sdk/application/functional-tests-app.ts \
     --mappings /fixtures/mappings.json \
     --fixtures /fixtures/fixtures.json \
     --securities /fixtures/securities.json \

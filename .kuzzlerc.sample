@@ -397,7 +397,7 @@
     //       Default interval in ms between Kuzzle tries to init
     //       the service again on first failure.
     "common": {
-      "defaultInitTimeout": 10000,
+      "defaultInitTimeout": 120000,
       "retryInterval": 1000
     },
 
