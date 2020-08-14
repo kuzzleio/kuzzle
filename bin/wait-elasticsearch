@@ -26,12 +26,13 @@
 const yargs = require('yargs');
 const { Client: ESClient } = require('@elastic/elasticsearch');
 
+const config = require('../lib/config');
 const Kuzzle = require('../lib/kuzzle');
 
 const sleep = seconds => new Promise(resolve => setTimeout(() => resolve(), seconds * 1000))
 
 async function waitForEs (maxSeconds = 120) {
-  const kuzzle = new Kuzzle();
+  const kuzzle = new Kuzzle(config);
   const esConfig = kuzzle.config.services.storageEngine;
   const client = new ESClient(esConfig.client);
   const spinner = '|/-\\';

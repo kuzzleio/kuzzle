@@ -290,8 +290,13 @@ class PluginManager {
    *
    * @param plugin - Plugin instance
    * @param options - Additionnal options
+   *    - `name`: Specify plugin name instead of using the class name.
+   *    - `manifest`: Manually add a manifest definition (deprecated)
    */
-  use (plugin: BasePlugin, options: UsePluginOptions = {}) : void {
+  use (
+    plugin: BasePlugin,
+    options: { name?: string, manifest?: JSONObject } = {}
+  ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }
@@ -317,7 +322,7 @@ class PluginManager {
       throw assertionError.get('init_not_found', name);
     }
 
-    this._application._plugins[name] = plugin;
+    this._application._plugins[name] = { manifest: options.manifest, plugin };
   }
 }
 

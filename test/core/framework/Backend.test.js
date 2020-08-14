@@ -302,15 +302,17 @@ describe('Backend', () => {
 
       application.plugin.use(plugin);
 
-      should(application._plugins['dummy-plugin']).be.eql(plugin);
+      should(application._plugins['dummy-plugin'])
+        .be.eql({ plugin, manifest: undefined });
     });
 
-    it('should allows to specify the plugin name', () => {
+    it('should allows to specify the plugin name and manifest', () => {
       const plugin = new DummyPlugin();
 
-      application.plugin.use(plugin, { name: 'not-dummy' });
+      application.plugin.use(plugin, { name: 'not-dummy', manifest: 'manifest' });
 
-      should(application._plugins['not-dummy']).be.eql(plugin);
+      should(application._plugins['not-dummy'])
+        .be.eql({ plugin, manifest: 'manifest'});
     });
 
     it('should throws an error if the plugin is invalid', () => {
