@@ -7,6 +7,7 @@ const rewire = require('rewire');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
+const config = require('../../lib/config');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
@@ -40,7 +41,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   function _mockKuzzle (KuzzleConstructor) {
     const mock = new KuzzleMock();
-    const k = new KuzzleConstructor();
+    const k = new KuzzleConstructor(config);
 
     mockedProperties.forEach(p => {
       k[p] = mock[p];

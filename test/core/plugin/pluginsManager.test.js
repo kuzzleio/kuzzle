@@ -248,62 +248,62 @@ describe('Plugin', () => {
       should(pluginsManager.routes).be.an.Array().and.length(12);
 
       should(pluginsManager.routes[0].verb).be.equal('get');
-      should(pluginsManager.routes[0].url).be.equal('/_plugin/test-plugin/bar/:name');
+      should(pluginsManager.routes[0].path).be.equal('/_plugin/test-plugin/bar/:name');
       should(pluginsManager.routes[0].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[0].action).be.equal('bar');
 
       should(pluginsManager.routes[1].verb).be.equal('get');
-      should(pluginsManager.routes[1].url).be.equal('/_/bar/:name');
+      should(pluginsManager.routes[1].path).be.equal('/_/bar/:name');
       should(pluginsManager.routes[1].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[1].action).be.equal('bar');
 
       should(pluginsManager.routes[2].verb).be.equal('head');
-      should(pluginsManager.routes[2].url).be.equal('/_plugin/test-plugin/bar/:name');
+      should(pluginsManager.routes[2].path).be.equal('/_plugin/test-plugin/bar/:name');
       should(pluginsManager.routes[2].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[2].action).be.equal('bar');
 
       should(pluginsManager.routes[3].verb).be.equal('head');
-      should(pluginsManager.routes[3].url).be.equal('/_/bar/:name');
+      should(pluginsManager.routes[3].path).be.equal('/_/bar/:name');
       should(pluginsManager.routes[3].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[3].action).be.equal('bar');
 
       should(pluginsManager.routes[4].verb).be.equal('post');
-      should(pluginsManager.routes[4].url).be.equal('/_plugin/test-plugin/bar');
+      should(pluginsManager.routes[4].path).be.equal('/_plugin/test-plugin/bar');
       should(pluginsManager.routes[4].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[4].action).be.equal('bar');
 
       should(pluginsManager.routes[5].verb).be.equal('post');
-      should(pluginsManager.routes[5].url).be.equal('/_/bar');
+      should(pluginsManager.routes[5].path).be.equal('/_/bar');
       should(pluginsManager.routes[5].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[5].action).be.equal('bar');
 
       should(pluginsManager.routes[6].verb).be.equal('put');
-      should(pluginsManager.routes[6].url).be.equal('/_plugin/test-plugin/bar');
+      should(pluginsManager.routes[6].path).be.equal('/_plugin/test-plugin/bar');
       should(pluginsManager.routes[6].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[6].action).be.equal('bar');
 
       should(pluginsManager.routes[7].verb).be.equal('put');
-      should(pluginsManager.routes[7].url).be.equal('/_/bar');
+      should(pluginsManager.routes[7].path).be.equal('/_/bar');
       should(pluginsManager.routes[7].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[7].action).be.equal('bar');
 
       should(pluginsManager.routes[8].verb).be.equal('delete');
-      should(pluginsManager.routes[8].url).be.equal('/_plugin/test-plugin/bar');
+      should(pluginsManager.routes[8].path).be.equal('/_plugin/test-plugin/bar');
       should(pluginsManager.routes[8].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[8].action).be.equal('bar');
 
       should(pluginsManager.routes[9].verb).be.equal('delete');
-      should(pluginsManager.routes[9].url).be.equal('/_/bar');
+      should(pluginsManager.routes[9].path).be.equal('/_/bar');
       should(pluginsManager.routes[9].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[9].action).be.equal('bar');
 
       should(pluginsManager.routes[10].verb).be.equal('patch');
-      should(pluginsManager.routes[10].url).be.equal('/_plugin/test-plugin/bar');
+      should(pluginsManager.routes[10].path).be.equal('/_plugin/test-plugin/bar');
       should(pluginsManager.routes[10].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[10].action).be.equal('bar');
 
       should(pluginsManager.routes[11].verb).be.equal('patch');
-      should(pluginsManager.routes[11].url).be.equal('/_/bar');
+      should(pluginsManager.routes[11].path).be.equal('/_/bar');
       should(pluginsManager.routes[11].controller).be.equal('test-plugin/foo');
       should(pluginsManager.routes[11].action).be.equal('bar');
     });

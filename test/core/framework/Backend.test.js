@@ -7,6 +7,7 @@ const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { Backend } = require('../../../lib/core/application/backend.ts');
 const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
+const Kuzzle = require('../../../lib/kuzzle/kuzzle');
 
 describe('Backend', () => {
   let application;
@@ -32,7 +33,7 @@ describe('Backend', () => {
 
   describe('#sdk', () => {
     it('should returns the embedded sdk', async () => {
-      application._kuzzle.start = sinon.stub();
+      sinon.stub(Kuzzle.prototype, 'start');
 
       await application.start();
 
@@ -49,7 +50,7 @@ describe('Backend', () => {
 
   describe('#start', () => {
     it('should calls kuzzle.start with an instantiated plugin and options', async () => {
-      application._kuzzle.start = sinon.stub();
+      sinon.stub(Kuzzle.prototype, 'start');
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
@@ -177,7 +178,7 @@ describe('Backend', () => {
       actions: {
         sayHello: {
           handler: async request => `Hello, ${request.input.args.name}`,
-          http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
+          http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
         },
         sayBye: {
           handler: async request => `Bye ${request.input.args.name}!`,
@@ -214,7 +215,7 @@ describe('Backend', () => {
       }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
 
       definition = getDefinition();
-      definition.actions.sayHello.http = [{ verp: 'POST', url: '/url' }];
+      definition.actions.sayHello.http = [{ verp: 'POST', path: '/url' }];
 
       should(() => {
         application.controller.register('greeting', definition);
@@ -235,7 +236,7 @@ describe('Backend', () => {
       should(application._controllers.greeting).not.be.undefined();
       should(application._controllers.greeting.actions.sayBye.http)
         .be.eql([
-          { verb: 'GET', url: '/greeting/say-bye' }
+          { verb: 'GET', path: '/greeting/say-bye' }
         ]);
     });
   });
@@ -343,7 +344,10 @@ describe('Backend', () => {
 
   describe('Logger', () => {
     describe('#_log', () => {
-      it('should exposes log methods and call kuzzle ones', () => {
+      it('should exposes log methods and call kuzzle ones', async () => {
+        sinon.stub(Kuzzle.prototype, 'start');
+        await application.start();
+
         application._kuzzle.log = {
           debug: sinon.stub(),
           info: sinon.stub(),
@@ -351,7 +355,6 @@ describe('Backend', () => {
           error: sinon.stub(),
           verbose: sinon.stub(),
         };
-        application.started = true;
         application.log.debug('debug');
         application.log.info('info');
         application.log.warn('warn');
@@ -367,15 +370,6 @@ describe('Backend', () => {
     });
   });
 
-  it('should exposes ESClient', () => {
-    application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
-    should(application.ESClient).be.a.Function();
-
-    const client = new application.ESClient();
-    should(client).be.instanceOf(ElasticsearchClient);
-    should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
-  });
-
   it('should exposes kerror', () => {
     should(application.kerror.get).be.a.Function();
     should(application.kerror.reject).be.a.Function();
@@ -386,8 +380,10 @@ describe('Backend', () => {
 
   describe('#trigger', () => {
     it('should exposes the trigger method', async () => {
-      application.started = true;
-      application._kuzzle.pipe = sinon.stub().resolves('resonance cascade');
+      sinon.stub(Kuzzle.prototype, 'start');
+      await application.start();
+
+      sinon.stub(Kuzzle.prototype, 'pipe').resolves('resonance cascade');
 
       const result = await application.trigger('xen:crystal', 'payload');
 
@@ -400,6 +396,33 @@ describe('Backend', () => {
         application.trigger('xen:crystal', 'payload');
       })
         .throwError({ id: 'plugin.runtime.unavailable_before_start' });
+    });
+  });
+
+  describe('StorageManager#Client', () => {
+    it('should allows to construct an ES Client', async () => {
+      sinon.stub(Kuzzle.prototype, 'start');
+      await application.start();
+      application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
+      should(application.storage.Client).be.a.Function();
+
+      const client = new application.storage.Client({ maxRetries: 42 });
+      should(client).be.instanceOf(ElasticsearchClient);
+      should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
+      should(client.helpers.maxRetries).be.eql(42);
+    });
+  });
+
+  describe('StorageManager#client', () => {
+    it('should allows lazily access an ES Client', async () => {
+      sinon.stub(Kuzzle.prototype, 'start');
+      await application.start();
+
+      should(application.storage._client).be.null();
+
+      should(application.storage.client).be.instanceOf(ElasticsearchClient);
+      should(application.storage.client.connectionPool.connections[0].url.toString())
+        .be.eql('http://es:9200/');
     });
   });
 });
