@@ -28,9 +28,9 @@ describe('Test: hotelClerk.list', () => {
     sinon.stub(hotelClerk, 'list');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:list', 'context');
+    await kuzzle.ask('core:realtime:list', 'user');
 
-    should(hotelClerk.list).calledWith('context');
+    should(hotelClerk.list).calledWith('user');
   });
 
   it('should return an empty object if there is no room', async () => {

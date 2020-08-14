@@ -185,7 +185,7 @@ describe('RealtimeController', () => {
     it('should ask for the proper realtime event', async () => {
       await realtimeController.list(request);
       should(kuzzle.ask)
-        .calledWith('core:realtime:list', request.context);
+        .calledWith('core:realtime:list', request.context.user);
     });
   });
 
