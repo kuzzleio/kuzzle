@@ -269,13 +269,6 @@ class VaultManager {
 
 /* PluginManager class ====================================================== */
 
-interface UsePluginOptions {
-  /**
-   * Specify plugin name instead of using the class name.
-   */
-  name?: string
-}
-
 class PluginManager {
   private _application: any;
 
