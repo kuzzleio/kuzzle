@@ -10,8 +10,6 @@ app.hook.register('request:onError', request => {
   console.log(request.error);
 });
 
-app.config.set('plugins.cluster.privileged', true);
-
 // Pipe management
 const activatedPipes: any = {};
 
