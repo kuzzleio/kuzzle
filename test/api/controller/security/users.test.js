@@ -4,12 +4,10 @@ const should = require('should');
 const sinon = require('sinon');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    PluginImplementationError,
-    SizeLimitError,
-    PreconditionError
-  }
+  BadRequestError,
+  PluginImplementationError,
+  SizeLimitError,
+  PreconditionError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
@@ -982,7 +980,7 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#createFirstAdmin', () => {
-    const adminExistsEvent = 'core:security:user:adminExists';
+    const adminExistsEvent = 'core:security:user:admin:exist';
     const createOrReplaceRoleEvent = 'core:security:role:createOrReplace';
     const createOrReplaceProfileEvent = 'core:security:profile:createOrReplace';
     let createOrReplaceRoleStub;

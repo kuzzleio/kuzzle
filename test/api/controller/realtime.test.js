@@ -4,7 +4,7 @@ const should = require('should');
 const RealtimeController = require('../../../lib/api/controller/realtime');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -182,7 +182,7 @@ describe('RealtimeController', () => {
     it('should ask for the proper realtime event', async () => {
       await realtimeController.list(request);
       should(kuzzle.ask)
-        .calledWith('core:realtime:list', request.context);
+        .calledWith('core:realtime:list', request.context.user);
     });
   });
 

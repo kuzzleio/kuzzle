@@ -4,8 +4,8 @@ const should = require('should');
 const rewire = require('rewire');
 const {
   Request,
-  models: { RequestContext },
-  errors: { BadRequestError }
+  RequestContext,
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const Kuzzle = require('../../mocks/kuzzle.mock');

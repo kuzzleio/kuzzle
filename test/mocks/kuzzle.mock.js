@@ -16,7 +16,7 @@ let _instance;
 
 class KuzzleMock extends Kuzzle {
   constructor () {
-    super();
+    super(config);
 
     _instance = this;
 
@@ -218,7 +218,7 @@ class KuzzleMock extends Kuzzle {
       const kuzzleProto = Object.getPrototypeOf(mockProto);
 
       for (const name of Object.getOwnPropertyNames(kuzzleProto)) {
-        if (['constructor', 'adminExists'].includes(name)) {
+        if (['constructor', 'hash'].includes(name)) {
           continue;
         }
 
@@ -229,10 +229,6 @@ class KuzzleMock extends Kuzzle {
         }
       }
     }
-  }
-
-  static hash (input) {
-    return Kuzzle.hash(input);
   }
 
   static instance () {

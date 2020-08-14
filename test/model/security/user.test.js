@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 const {
-  errors: { InternalError },
+  InternalError,
   Request,
 } = require('kuzzle-common-objects');
 

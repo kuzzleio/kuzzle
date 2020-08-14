@@ -21,7 +21,8 @@ ADD ./config /var/app/config
 ADD ./lib /var/app/lib
 ADD ./package.json /var/app/package.json
 ADD ./package-lock.json /var/app/package-lock.json
-ADD ./default.config.js /var/app/default.config.js
+ADD ./index.js /app/index.js
+ADD ./.kuzzlerc.sample /app/.kuzzlerc.sample
 
 WORKDIR /var/app
 

@@ -40,9 +40,9 @@ Feature: Application
   # ESClient constructor
 
   @mappings
-  Scenario: Instantiate a new embedded ES Client and use it
+  Scenario: Instantiate a new embedded storage Client and use it
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    When I successfully execute the action "tests":"esClient" with args:
+    When I successfully execute the action "tests":"storageClient" with args:
       | _id   | "es-document"                    |
       | body  | { "from": "embedded-es-client" } |
       | index | "&nyc-open-data.yellow-taxi"     |

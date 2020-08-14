@@ -1,9 +1,41 @@
 'use strict';
 
 const should = require('should');
-const { errors: kuzzleObjectErrors } = require('kuzzle-common-objects');
+const {
+  KuzzleError,
+  UnauthorizedError,
+  TooManyRequestsError,
+  SizeLimitError,
+  ServiceUnavailableError,
+  PreconditionError,
+  PluginImplementationError,
+  PartialError,
+  NotFoundError,
+  InternalError,
+  GatewayTimeoutError,
+  ForbiddenError,
+  ExternalServiceError,
+  BadRequestError,
+} = require('kuzzle-common-objects');
 
 const { checkDomains } = require('../../lib/kerror/codes');
+
+const kuzzleObjectErrors = {
+  KuzzleError,
+  UnauthorizedError,
+  TooManyRequestsError,
+  SizeLimitError,
+  ServiceUnavailableError,
+  PreconditionError,
+  PluginImplementationError,
+  PartialError,
+  NotFoundError,
+  InternalError,
+  GatewayTimeoutError,
+  ForbiddenError,
+  ExternalServiceError,
+  BadRequestError,
+};
 
 describe('kerror: error codes loader', () => {
   let domains;

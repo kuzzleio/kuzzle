@@ -5,9 +5,7 @@ const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
-  errors: {
-    PluginImplementationError
-  }
+  PluginImplementationError
 } = require('kuzzle-common-objects');
 
 const User = require('../../../../lib/model/security/user');
@@ -67,7 +65,7 @@ describe('Test: sdk/funnelProtocol', () => {
   describe('#query', () => {
     beforeEach(() => {
       kuzzle.ask
-        .withArgs('core:network:internal:connectionId')
+        .withArgs('core:network:internal:connectionId:get')
         .resolves('connection-id');
     });
 

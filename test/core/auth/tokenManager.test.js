@@ -18,7 +18,7 @@ describe('Test: token manager core component', () => {
     kuzzle = new KuzzleMock();
 
     kuzzle.ask
-      .withArgs('core:security:user:anonymous')
+      .withArgs('core:security:user:anonymous:get')
       .resolves({_id: '-1'});
 
     tokenManager = new TokenManager(kuzzle);
@@ -142,7 +142,7 @@ describe('Test: token manager core component', () => {
       await tokenManager.expire(token);
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
       should(kuzzle.ask)
-        .calledWith('core:realtime:disconnect', 'foo');
+        .calledWith('core:realtime:user:remove', 'foo');
     });
 
     it('should do nothing if the provided token is from the anonymous user', async () => {

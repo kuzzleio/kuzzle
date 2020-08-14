@@ -3,12 +3,10 @@
 const sinon = require('sinon');
 const should = require('should');
 const {
-  errors: {
-    BadRequestError,
-    PreconditionError,
-    NotFoundError,
-    InternalError
-  }
+  BadRequestError,
+  PreconditionError,
+  NotFoundError,
+  InternalError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -280,16 +278,28 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should be able to remove the profile from users when required', async () => {
-      userRepositoryMock.search.resolves({ total: 1, hits: [{...testProfile, profileIds: [testProfile._id]}]});
+      const user = {
+        _id: 'baz',
+        foo: 'bar',
+        profileIds: [ testProfile._id ],
+      };
+
+      userRepositoryMock.search.resolves({
+        hits: [ user ],
+        total: 1,
+      });
+
       profileRepository.profiles.set(testProfile._id, true);
 
-      await kuzzle.ask(deleteEvent, testProfile._id, { onAssignedUsers: 'remove' });
+      await kuzzle.ask(deleteEvent, testProfile._id, {
+        onAssignedUsers: 'remove',
+      });
 
       should(userRepositoryMock.search).be.called();
 
       should(userRepositoryMock.update)
-        .be.called()
-        .be.calledWithMatch(testProfile._id, ['anonymous'], testProfile);
+        .be.calledOnce()
+        .be.calledWithMatch(user._id, ['anonymous'], user);
 
       should(profileRepository.deleteFromDatabase)
         .be.calledOnce()

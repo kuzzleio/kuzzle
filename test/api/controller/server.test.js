@@ -4,7 +4,7 @@ const should = require('should');
 const sinon = require('sinon');
 const {
   Request,
-  errors: { ExternalServiceError }
+  ExternalServiceError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -77,9 +77,9 @@ describe('ServerController', () => {
   });
 
   describe('#adminExists', () => {
-    const adminExistsEvent = 'core:security:user:adminExists';
+    const adminExistsEvent = 'core:security:user:admin:exist';
 
-    it('should calls "core:security:user:adminExists"', async () => {
+    it('should calls "core:security:user:admin:exist"', async () => {
       kuzzle.ask
         .withArgs(adminExistsEvent)
         .returns(true);
@@ -348,8 +348,8 @@ describe('ServerController', () => {
       const controllers = new Map([[ 'foo', nativeController ]]);
 
       const routes = [
-        { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/r/l' },
-        { verb: 'foo', action: 'publicMethod', controller: 'foo', url: '/u/:foobar' }
+        { verb: 'foo', action: 'publicMethod', controller: 'foo', path: '/u/r/l' },
+        { verb: 'foo', action: 'publicMethod', controller: 'foo', path: '/u/:foobar' }
       ];
 
       const pluginController = new BaseController();
@@ -359,7 +359,7 @@ describe('ServerController', () => {
       const pluginsControllers = new Map([ [ 'foobar', pluginController ] ]);
 
       const pluginsRoutes = [{
-        verb: 'bar', action: 'publicMethod', controller: 'foobar', url: '/foobar'
+        verb: 'bar', action: 'publicMethod', controller: 'foobar', path: '/foobar'
       }];
 
 
@@ -378,8 +378,8 @@ describe('ServerController', () => {
             controller: 'foo',
             action: 'publicMethod',
             http: [
-              { url: '/u/r/l', verb: 'FOO' },
-              { url: '/u/:foobar', verb: 'FOO' }
+              { url: '/u/r/l', path: '/u/r/l', verb: 'FOO' },
+              { url: '/u/:foobar', path: '/u/:foobar', verb: 'FOO' }
             ]
           }
         }
@@ -390,7 +390,7 @@ describe('ServerController', () => {
           publicMethod: {
             action: 'publicMethod',
             controller: 'foobar',
-            http: [{ url: '/foobar', verb: 'BAR' }]
+            http: [{ url: '/foobar', path: '/foobar', verb: 'BAR' }]
           },
           anotherMethod: {
             action: 'anotherMethod',

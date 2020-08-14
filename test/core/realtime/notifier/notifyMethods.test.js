@@ -23,7 +23,7 @@ describe('notify methods', () => {
     kuzzle = new KuzzleMock();
 
     hotelClerk = new HotelClerk(kuzzle);
-    sinon.stub(hotelClerk, 'disconnect');
+    sinon.stub(hotelClerk, 'removeUser');
 
     notifier = new Notifier(kuzzle, { hotelClerk });
 
@@ -303,7 +303,7 @@ describe('notify methods', () => {
 
       should(kuzzle.entryPoint.dispatch).not.be.called();
       should(kuzzle.pipe).not.be.called();
-      should(hotelClerk.disconnect).not.called();
+      should(hotelClerk.removeUser).not.called();
     });
 
     it('should notify subscribed channels', async () => {

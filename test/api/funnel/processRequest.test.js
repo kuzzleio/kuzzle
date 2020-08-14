@@ -5,12 +5,10 @@ const should = require('should');
 const mockrequire = require('mock-require');
 const {
   Request,
-  errors: {
-    NotFoundError,
-    PluginImplementationError,
-    InternalError: KuzzleInternalError,
-    BadRequestError
-  }
+  NotFoundError,
+  PluginImplementationError,
+  InternalError: KuzzleInternalError,
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

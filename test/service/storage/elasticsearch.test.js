@@ -4,11 +4,9 @@ const should = require('should');
 const sinon = require('sinon');
 const ms = require('ms');
 const {
-  errors: {
-    BadRequestError,
-    PreconditionError,
-    SizeLimitError,
-  }
+  BadRequestError,
+  PreconditionError,
+  SizeLimitError,
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -92,14 +90,14 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch._client.scroll.resolves({
         body: {
+          _scroll_id: 'azerty',
           hits: {
             hits: [
               {_id: 'foo', _source: {}},
               {_id: 'bar', _source: {}},
             ],
-            total: { value: 1000 }
+            total: { value: 1000 },
           },
-          _scroll_id: 'azerty'
         }
       });
 
@@ -121,18 +119,19 @@ describe('Test: ElasticSearch service', () => {
       should(elasticsearch._client.clearScroll).not.called();
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scroll: '10s',
         scrollId: 'i-am-scroll-id',
-        scroll: '10s'
       });
 
       should(result).be.match({
-        total: 1000,
+        aggregations: undefined,
         hits: [
           {_id: 'foo', _source: {}},
           {_id: 'bar', _source: {}},
         ],
+        remaining: 997,
         scrollId: 'azerty',
-        aggregations: undefined
+        total: 1000,
       });
     });
 
@@ -170,18 +169,19 @@ describe('Test: ElasticSearch service', () => {
         .calledWithMatch({scrollId: 'azerty'});
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scroll: '10s',
         scrollId: 'i-am-scroll-id',
-        scroll: '10s'
       });
 
       should(result).be.match({
-        total: 1000,
+        aggregations: undefined,
         hits: [
           {_id: 'foo', _source: {}},
           {_id: 'bar', _source: {}},
         ],
+        remaining: 0,
         scrollId: 'azerty',
-        aggregations: undefined
+        total: 1000,
       });
     });
 
@@ -252,6 +252,8 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to search documents', async () => {
       elasticsearch._client.search.resolves({
         body: {
+          aggregations: { some: 'aggregs' },
+          body: filter,
           hits: {
             hits: [
               {
@@ -263,9 +265,7 @@ describe('Test: ElasticSearch service', () => {
             ],
             total: { value: 1 },
           },
-          body: filter,
-          aggregations: { some: 'aggregs' },
-          _scroll_id: 'i-am-scroll-id'
+          _scroll_id: 'i-am-scroll-id',
         }
       });
 
@@ -287,10 +287,17 @@ describe('Test: ElasticSearch service', () => {
         ms(elasticsearch.config.defaults.scrollTTL) / 1000);
 
       should(result).match({
+        aggregations: { some: 'aggregs' },
+        hits: [
+          {
+            _id: 'liia',
+            _source: { city: 'Kathmandu' },
+            highlight: 'highlight',
+          },
+        ],
+        remaining: 0,
         scrollId: 'i-am-scroll-id',
-        hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight' } ],
         total: 1,
-        aggregations: { some: 'aggregs' }
       });
     });
 
@@ -304,16 +311,16 @@ describe('Test: ElasticSearch service', () => {
 
       await elasticsearch.search(index, collection, filter, {
         from: 0,
-        size: 1,
         scroll: '30s',
+        size: 1,
       });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
-        index: esIndexName,
         body: filter,
         from: 0,
-        size: 1,
+        index: esIndexName,
         scroll: '30s',
+        size: 1,
         trackTotalHits: true,
       });
 
@@ -346,8 +353,8 @@ describe('Test: ElasticSearch service', () => {
     it('should not save the scrollId in the cache if not present in response', async () => {
       elasticsearch._client.search.resolves({
         body: {
-          hits: { hits: [], total: { value: 0 } }
-        }
+          hits: { hits: [], total: { value: 0 } },
+        },
       });
 
       await elasticsearch.search(index, collection, {});
@@ -369,7 +376,6 @@ describe('Test: ElasticSearch service', () => {
       should(elasticsearch._client.search).not.be.called();
     });
   });
-
 
   describe('#get', () => {
     it('should allow getting a single document', () => {
@@ -1491,6 +1497,53 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
+    it('should reject when an incorrect dynamic property value is provided', async () => {
+      const mappings1 = {
+        dynamic: null
+      };
+      const mappings2 = {
+        properties: {
+          user: {
+            properties: {
+              metadata: {
+                dynamic: 'notTooMuch'
+              }
+            }
+          }
+        }
+      };
+      const mappings3 = {
+        dynamic: true
+      };
+
+      await elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings3 });
+
+      should(elasticsearch._checkMappings).be.calledWithMatch({
+        dynamic: 'true'
+      });
+
+      await should(elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings1 })
+      ).be.rejectedWith({
+        message: /Dynamic property value should be a string./,
+        id: 'services.storage.invalid_mapping'
+      });
+
+      await should(elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings2 })
+      ).be.rejectedWith({
+        message: /Incorrect dynamic property value/,
+        id: 'services.storage.invalid_mapping'
+      });
+    });
+
     it('should call updateCollection if the collection already exists', async () => {
       const
         settings = { index: { blocks: { write: true } } },
@@ -1813,7 +1866,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.updateMapping(index, collection, newMapping))
         .be.rejectedWith({
-          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -1854,7 +1907,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
     });
   });
@@ -3630,13 +3683,13 @@ describe('Test: ElasticSearch service', () => {
 
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
 
       should(() => elasticsearch._checkMappings(mapping2))
         .throw({
-          message: 'Invalid mapping property "mapping.type".',
+          message: 'Invalid mapping property "mappings.type".',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -3657,7 +3710,7 @@ describe('Test: ElasticSearch service', () => {
 
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.properties.car.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
     });

@@ -3,10 +3,8 @@
 const should = require('should');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    SizeLimitError
-  }
+  BadRequestError,
+  SizeLimitError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -42,11 +40,12 @@ describe('DocumentController', () => {
   describe('#search', () => {
     it('should call publicStorage search method', async () => {
       documentController.publicStorage.search.resolves({
-        scrollId: 'scrollId',
-        hits: 'hits',
         aggregations: 'aggregations',
+        hits: 'hits',
+        other: 'other',
+        remaining: 'remaining',
+        scrollId: 'scrollId',
         total: 'total',
-        other: 'other'
       });
       request.input.body = { query: { bar: 'bar '} };
       request.input.args.from = 1;
@@ -62,42 +61,43 @@ describe('DocumentController', () => {
         { from: 1, size: 3, scroll: '10s' });
 
       should(response).match({
-        scrollId: 'scrollId',
-        hits: 'hits',
         aggregations: 'aggregations',
-        total: 'total'
+        hits: 'hits',
+        remaining: 'remaining',
+        scrollId: 'scrollId',
+        total: 'total',
       });
     });
 
-    it('should throw an error if index contains a comma', () => {
+    it('should reject if index contains a comma', () => {
       request.input.resource.index = '%test,anotherIndex';
       request.input.action = 'search';
 
-      should(() => documentController.search(request)).throw(
+      return should(documentController.search(request)).rejectedWith(
         BadRequestError,
         { id: 'services.storage.no_multi_indexes' });
     });
 
-    it('should throw an error if collection contains a comma', () => {
+    it('should reject if collection contains a comma', () => {
       request.input.resource.collection = 'unit-test-documentController,anotherCollection';
       request.input.action = 'search';
 
-      should(() => documentController.search(request)).throw(
+      return should(documentController.search(request)).rejectedWith(
         BadRequestError,
         { id: 'services.storage.no_multi_collections' });
     });
 
-    it('should throw an error if the size argument exceeds server configuration', () => {
+    it('should reject if the size argument exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.size = 10;
       request.input.action = 'search';
 
-      should(() => documentController.search(request)).throw(
+      return should(documentController.search(request)).rejectedWith(
         SizeLimitError,
         { id: 'services.storage.get_limit_exceeded' });
     });
 
-    it('should reject an error in case of error', () => {
+    it('should reject in case of error', () => {
       kuzzle.storageEngine.public.search.rejects(new Error('foobar'));
 
       return should(documentController.search(request)).be.rejectedWith('foobar');
@@ -107,11 +107,13 @@ describe('DocumentController', () => {
   describe('#scroll', () => {
     it('should call publicStorage scroll method', async () => {
       documentController.publicStorage.scroll.resolves({
-        scrollId: 'scrollId',
         hits: 'hits',
+        other: 'other',
+        remaining: 'remaining',
+        scrollId: 'scrollId',
         total: 'total',
-        other: 'other'
       });
+
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
@@ -122,13 +124,14 @@ describe('DocumentController', () => {
         { scrollTTL: '1m' });
 
       should(response).match({
-        scrollId: 'scrollId',
         hits: 'hits',
-        total: 'total'
+        remaining: 'remaining',
+        scrollId: 'scrollId',
+        total: 'total',
       });
     });
 
-    it('should reject an error in case of error', () => {
+    it('should reject in case of error', () => {
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
@@ -631,7 +634,7 @@ describe('DocumentController', () => {
       should(response).be.eql(esResponse);
     });
 
-    it('should throw if field "query" is missing', () => {
+    it('should reject if field "query" is missing', () => {
       request.input.body = {
         invalidField: {
           match: { foo: 'bar' }
@@ -645,10 +648,13 @@ describe('DocumentController', () => {
 
       return should(documentController.updateByQuery(request)).rejectedWith(
         BadRequestError,
-        { id: 'api.assert.missing_argument' });
+        {
+          id: 'api.assert.missing_argument',
+          message: /^Missing argument "body.query"/,
+        });
     });
 
-    it('should throw if field "changes" is missing', () => {
+    it('should reject if field "changes" is missing', () => {
       request.input.body = {
         query: {
           match: { foo: 'bar' }
@@ -662,7 +668,10 @@ describe('DocumentController', () => {
 
       return should(documentController.updateByQuery(request)).rejectedWith(
         BadRequestError,
-        { id: 'api.assert.missing_argument' });
+        {
+          id: 'api.assert.missing_argument',
+          message: /^Missing argument "body.changes"/,
+        });
     });
   });
 

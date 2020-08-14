@@ -3,8 +3,8 @@
 const should = require('should');
 const sinon = require('sinon');
 const {
-  models: { RequestContext },
-  errors: { PluginImplementationError }
+  RequestContext,
+  PluginImplementationError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
@@ -67,7 +67,7 @@ describe('Test: router', () => {
 
     beforeEach(() => {
       realtimeDisconnectStub = kuzzle.ask
-        .withArgs('core:realtime:disconnect', sinon.match.string)
+        .withArgs('core:realtime:user:remove')
         .resolves();
     });
 
@@ -75,7 +75,7 @@ describe('Test: router', () => {
       router.connections.set(connectionId, requestContext);
       router.removeConnection(requestContext);
 
-      should(kuzzle.ask).calledWith('core:realtime:disconnect', connectionId);
+      should(kuzzle.ask).calledWith('core:realtime:user:remove', connectionId);
       should(kuzzle.statistics.dropConnection)
         .calledOnce()
         .calledWith(requestContext);

@@ -8,5 +8,5 @@ export SCOPE=${1:-features-sdk}
 
 for protocol in websocket http; do
   # profiles are defined in the cucumber.js file at the root of this project
-  KUZZLE_PROTOCOL=$protocol ./node_modules/.bin/cucumber-js --profile $protocol $SCOPE
+  KUZZLE_PROTOCOL=$protocol npx cucumber-js --profile $protocol $SCOPE
 done

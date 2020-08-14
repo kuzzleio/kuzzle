@@ -7,6 +7,7 @@ const rewire = require('rewire');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
+const config = require('../../lib/config');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
@@ -39,7 +40,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   function _mockKuzzle (KuzzleConstructor) {
     const mock = new KuzzleMock();
-    const k = new KuzzleConstructor();
+    const k = new KuzzleConstructor(config);
 
     mockedProperties.forEach(p => {
       k[p] = mock[p];
@@ -77,7 +78,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      const params = {
+      const options = {
         mappings: {},
         fixtures: {},
         securities: {}
@@ -85,7 +86,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.started).be.false();
 
-      await kuzzle.start(application, params);
+      await kuzzle.start(application, options);
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
@@ -100,8 +101,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.storageEngine.public.loadFixtures,
         kuzzle.ask.withArgs('core:security:load', sinon.match.object),
         kuzzle.ask.withArgs('core:security:verify'),
-        kuzzle.pluginsManager.init,
         kuzzle.entryPoint.init,
+        kuzzle.pluginsManager.init,
         kuzzle.router.init,
         kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe.withArgs('kuzzle:state:live'),

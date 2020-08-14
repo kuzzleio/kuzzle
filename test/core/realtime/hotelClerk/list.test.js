@@ -2,24 +2,26 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const { models: { RequestContext } } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 
 describe('Test: hotelClerk.list', () => {
-  const connectionId = 'connectionid';
   const index = '%test';
   const collection = 'user';
   let kuzzle;
-  let context;
   let hotelClerk;
+  let user;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     hotelClerk = new HotelClerk(kuzzle, {});
-    context = new RequestContext({ connectionId });
+
+    user = {
+      _id: 'user',
+      isActionAllowed: sinon.stub().resolves(true),
+    };
 
     return hotelClerk.init();
   });
@@ -28,23 +30,18 @@ describe('Test: hotelClerk.list', () => {
     sinon.stub(hotelClerk, 'list');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:list', 'context');
+    await kuzzle.ask('core:realtime:list', 'user');
 
-    should(hotelClerk.list).calledWith('context');
+    should(hotelClerk.list).calledWith('user');
   });
 
   it('should return an empty object if there is no room', async () => {
-    const response = await hotelClerk.list(context);
+    const response = await hotelClerk.list(user);
 
     should(response).be.empty().Object();
   });
 
   it('should return a correct list according to subscribe on filter', async () => {
-    context.user = {
-      _id: 'user',
-      isActionAllowed: sinon.stub().resolves(true)
-    };
-
     kuzzle.koncorde.getIndexes.returns(['index', 'anotherIndex']);
     kuzzle.koncorde.getCollections.withArgs('index').returns(['collection']);
     kuzzle.koncorde.getCollections
@@ -73,7 +70,7 @@ describe('Test: hotelClerk.list', () => {
       customers: new Set(['a', 'c'])
     });
 
-    const response = await hotelClerk.list(context);
+    const response = await hotelClerk.list(user);
 
     should(response).match({
       index: {
@@ -120,18 +117,14 @@ describe('Test: hotelClerk.list', () => {
     hotelClerk.rooms.set('baz', { customers: new Set(['d', 'e']) });
     hotelClerk.rooms.set('foobar', { customers: new Set(['a', 'c']) });
 
-    context.user = {
-      _id: 'user',
-      isActionAllowed: sinon.stub().resolves(true)
-    };
-    context.user.isActionAllowed
+    user.isActionAllowed
       .onSecondCall()
       .resolves(false);
-    context.user.isActionAllowed
+    user.isActionAllowed
       .onThirdCall()
       .resolves(false);
 
-    const response = await hotelClerk.list(context);
+    const response = await hotelClerk.list(user);
 
     should(response).match({
       index: {

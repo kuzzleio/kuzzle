@@ -4,7 +4,7 @@ const should = require('should');
 const rewire = require('rewire');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');

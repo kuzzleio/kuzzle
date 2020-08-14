@@ -2,9 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const {
-  errors: { NotFoundError }
-} = require('kuzzle-common-objects');
+const { NotFoundError } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 

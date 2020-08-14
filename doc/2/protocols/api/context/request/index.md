@@ -58,10 +58,10 @@ Read-only:
 
 | Properties  | Type                                                                                                                      | Description                                                           |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `context`   | `<a href=https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestcontext>RequestContext</a>` | General request information (logged user, network information, ...)   |
+| `context`   | [RequestContext](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestcontext) | General request information (logged user, network information, ...)   |
 | `error`     | `KuzzleError` | Request [error](/core/2/protocols/api/context/errors)                                                 |
-| `input`     | `<a href=https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput>RequestInput</a>`     | Input request representation                                          |
-| `response`  | `<a href=https://github.com/kuzzleio/kuzzle-common-objects#requestresponse>RequestResponse</a>`                           | Serialized [request response](/core/2/api/essentials/kuzzle-response) |
+| `input`     | [RequestInput](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput)     | Input request representation                                          |
+| `response`  | [RequestResponse](https://github.com/kuzzleio/kuzzle-common-objects#requestresponse)                           | Serialized [request response](/core/2/api/essentials/kuzzle-response) |
 | `result`    | `*`                                                                                                                      | Request result                                                        |
 | `timestamp` | `integer`                                                                                                                 | Request creation timestamp, in Epoch-millis format                    |
 

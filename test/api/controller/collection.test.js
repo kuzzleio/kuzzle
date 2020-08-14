@@ -3,11 +3,9 @@
 const should = require('should');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    NotFoundError,
-    SizeLimitError
-  }
+  BadRequestError,
+  NotFoundError,
+  SizeLimitError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
