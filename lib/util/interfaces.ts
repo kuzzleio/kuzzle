@@ -28,13 +28,46 @@ export interface JSONObject {
   [key: string]: JSONObject | any
 }
 
+/**
+ * API controller definition.
+ *
+ * @example
+ * {
+ *   actions: {
+ *     sayHello: {
+ *       handler: async request => `Hello, ${request.input.args.name}`,
+ *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+ *     }
+ *   }
+ * }
+ */
 export interface ControllerDefinition {
   actions: {
+    /**
+     * Name of the API action
+     */
     [action: string]: {
+      /**
+       * Function handler for incoming requests.
+       */
       handler: (request: Request) => Promise<any>,
+      /**
+       * Declare HTTP routes (optional).
+       * Http routes will be auto-generated unless at least one is provided
+       * or an empty array is provided.
+       *
+       */
       http?: Array<{
+        /**
+         * HTTP verb.
+         */
         verb: string,
-        url: string
+        /**
+         * Route path.
+         * A route starting with `/` will be prefixed by `/_` otherwise the route
+         * will be prefixed by `/_/<application-name>/`
+         */
+        path: string
       }>
     }
   }

@@ -52,13 +52,13 @@ describe('ApiKey', () => {
         .withArgs(createTokenEvent, sinon.match.object, sinon.match.any)
         .resolves(token);
 
-      sinon.stub(BaseModel.kuzzle.constructor, 'hash').returns('hashed-jwt-token');
+      sinon.stub(BaseModel.kuzzle, 'hash').returns('hashed-jwt-token');
 
       saveStub = sinon.stub(ApiKey.prototype, 'save').resolves();
     });
 
     afterEach(() => {
-      BaseModel.kuzzle.constructor.hash.restore();
+      BaseModel.kuzzle.hash.restore();
     });
 
     it('should create a new API key and generate a token', async () => {

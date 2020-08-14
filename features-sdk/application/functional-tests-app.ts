@@ -1,14 +1,22 @@
 'use strict';
 
+import should from 'should'
+import { omit } from 'lodash'
+
 import { Backend } from '../../index';
-import * as FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
+import FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
 
 const app = new Backend('functional-tests-app');
 
-// Easier debug
-app.hook.register('request:onError', request => {
-  console.log(request.error);
-});
+if (! process.env.TRAVIS) {
+  // Easier debug
+  app.hook.register('request:onError', request => {
+    console.log(request.error);
+  });
+  app.hook.register('hook:onError', request => {
+    console.log(request.error);
+  });
+}
 
 // Pipe management
 const activatedPipes: any = {};
@@ -71,7 +79,7 @@ app.controller.register('tests', {
       handler: async request => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
-      http: [{ verb: 'POST', url: '/hello/:name' }]
+      http: [{ verb: 'POST', path: '/hello/:name' }]
     },
 
     // Trigger custom event
@@ -88,21 +96,27 @@ app.controller.register('tests', {
       handler: async () => app.vault.secrets
     },
 
-    // ESClient constructor
-    esClient: {
+    // access storage client
+    storageClient: {
       handler: async request => {
-        const client = new app.ESClient();
+        const client = new app.storage.Client();
         const esRequest = {
           body: request.input.body,
           id: request.input.resource._id,
           index: request.input.resource.index,
         };
 
-        const { body } = await client.index(esRequest);
+        const response = await client.index(esRequest);
+        const response2 = await app.storage.client.index(esRequest);
 
-        return body;
+        should(omit(response.body, ['_version', 'result', '_seq_no']))
+          .match(omit(response2.body, ['_version', 'result', '_seq_no']));
+
+        return response.body;
       },
-      http: [{ verb: 'POST', url: '/es-client/:index/:_id' }],
+      http: [
+        { verb: 'POST', path: '/tests/storage-client/:index' }
+      ]
     }
   }
 });
@@ -117,6 +131,6 @@ app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
 
 app.start().catch(error => {
-  console.log(error);
+  console.error(error);
   process.exit(1);
 });
