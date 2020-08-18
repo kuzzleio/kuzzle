@@ -19,25 +19,24 @@
  * limitations under the License.
  */
 
-'use strict';
+import { Kuzzle as KuzzleSDK } from 'kuzzle-sdk';
 
-const { Kuzzle: KuzzleSDK } = require('kuzzle-sdk');
-
-const FunnelProtocol = require('./funnelProtocol');
-const { isPlainObject } = require('../../../util/safeObject');
-const kerror = require('../../../kerror');
+import { KuzzleRequest, KuzzleResponse } from '../../../util/interfaces';
+import FunnelProtocol from './funnelProtocol';
+import { isPlainObject } from '../../../util/safeObject';
+import kerror from '../../../kerror';
 
 const contextError = kerror.wrap('plugin', 'context');
 
 /**
  * Kuzzle embedded SDK to make API calls inside applications or plugins.
  */
-class EmbeddedSDK extends KuzzleSDK {
+export class EmbeddedSDK extends KuzzleSDK {
   /**
-   * @param {Kuzzle} kuzzle - Kuzzle object
-   * @param {User} [user] - User to impersonate the SDK with
+   * @param kuzzle - Kuzzle object
+   * @param user - User to impersonate the SDK with
    */
-  constructor (kuzzle, user) {
+  constructor (kuzzle, user?) {
     super(new FunnelProtocol(kuzzle, user), { autoResubscribe: false });
 
     Reflect.defineProperty(this, '_kuzzle', {
@@ -45,18 +44,16 @@ class EmbeddedSDK extends KuzzleSDK {
     });
   }
 
-  get kuzzle () {
+  protected get kuzzle () {
     return this._kuzzle;
   }
 
   /**
    * Returns a new SDK impersonated with the provided user.
    *
-   * @param {User} user - User to impersonate the SDK with
-   *
-   * @returns {EmbeddedSDK}
+   * @param user - User to impersonate the SDK with
    */
-  as (user) {
+  as (user: { _id: string }) {
     if (! isPlainObject(user) || typeof user._id !== 'string') {
       throw contextError.get('invalid_user');
     }
@@ -70,11 +67,13 @@ class EmbeddedSDK extends KuzzleSDK {
    * This is a low-level method, exposed to allow advanced SDK users to bypass
    * high-level methods.
    *
-   * @param {Object} request - API request (https://docs.kuzzle.io/core/2/api/essentials/query-syntax/#other-protocols)
-   * @param {Object} [options] - Optional arguments
-   * @returns {Promise<Object>}
+   * @param request - API request (https://docs.kuzzle.io/core/2/api/essentials/query-syntax/#other-protocols)
+   * @param options - Optional arguments
    */
-  query (request, options = {}) {
+  query (
+    request: KuzzleRequest,
+    options: { propagate?: boolean } = {}
+  ): Promise<KuzzleResponse> {
     // By default, do not propagate realtime notification accross cluster nodes
     if ( isPlainObject(request)
       && request.controller === 'realtime'
@@ -92,5 +91,3 @@ class EmbeddedSDK extends KuzzleSDK {
     return super.query(request, options);
   }
 }
-
-module.exports = EmbeddedSDK;
