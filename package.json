@@ -47,6 +47,8 @@
     "didyoumean": "^1.2.1",
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.4",
+    "graphql": "^15.3.0",
+    "graphql-tools": "^6.0.18",
     "inquirer": "^7.3.3",
     "ioredis": "^4.17.3",
     "json-stable-stringify": "^1.0.1",

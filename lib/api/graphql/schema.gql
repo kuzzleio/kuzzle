@@ -1,0 +1,13 @@
+type Book {
+  id: ID!
+  name: String!
+  likes: Int
+}
+
+type Query {
+  book(id: ID!): Book
+}
+
+schema {
+  query: Query
+}
