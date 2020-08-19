@@ -56,6 +56,8 @@
     "kuzzle-common-objects": "^4.1.1",
     "kuzzle-sdk": "^7.3.1",
     "kuzzle-vault": "^2.0.0",
+    "kuzzle-plugin-auth-passport-local": "^6.2.0",
+    "kuzzle-plugin-logger": "^2.0.7",
     "lodash": "4.17.19",
     "moment": "^2.27.0",
     "ms": "^2.1.2",

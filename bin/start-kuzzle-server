@@ -30,7 +30,6 @@ const yargs = require('yargs');
 const { Backend } = require('../index');
 const waitForEs = require('./wait-elasticsearch');
 
-
 function loadJson (path) {
   if (! path) {
     return {};

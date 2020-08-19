@@ -23,6 +23,8 @@
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
+import * as PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
+import * as PluginLogger from 'kuzzle-plugin-logger';
 
 import * as Kuzzle from '../../kuzzle';
 import * as Plugin from '../plugin/plugin';
@@ -519,6 +521,10 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
+
+    // we need to load the default plugins
+    this.plugin.use(new PluginPassportAuthLocal(), { name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
   }
 
   /**
