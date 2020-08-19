@@ -123,6 +123,18 @@
           "code": 6,
           "message": "Cannot use property \"%s\" before application startup",
           "class": "PluginImplementationError"
+        },
+        "unavailable_before_app_creation": {
+          "description": "The KuzzleContext.app property is only available after Backend instantiation.",
+          "code": 7,
+          "message": "Cannot use the application context before instantiation.",
+          "class": "PluginImplementationError"
+        },
+        "app_already_instantiated": {
+          "description": "Only one Backend can be instantiated by process.",
+          "code": 8,
+          "message": "A Backend has already been instantiated. ",
+          "class": "PluginImplementationError"
         }
       }
     },

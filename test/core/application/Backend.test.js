@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { Backend } = require('../../../lib/core/application/backend.ts');
+const { KuzzleContext } = require('../../../lib/core/application/kuzzleContext.ts');
 const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
 const Kuzzle = require('../../../lib/kuzzle/kuzzle');
 
@@ -13,7 +14,20 @@ describe('Backend', () => {
   let application;
 
   beforeEach(() => {
+    Backend._instantiated = false;
     application = new Backend('black-mesa');
+  });
+
+  describe('#constructor', () => {
+    it('should set the KuzzleContext.app property', () => {
+      should(KuzzleContext._app).be.eql(application);
+    });
+
+    it('should throw an error if a Backend has already been instantiated', () => {
+      should(() => {
+        new Backend('city-17');
+      }).throwError({ id: 'plugin.runtime.app_already_instantiated' });
+    });
   });
 
   describe('#_instanceProxy', () => {

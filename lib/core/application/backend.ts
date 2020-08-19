@@ -119,7 +119,11 @@ class ConfigManager extends ApplicationManager {
   constructor (application: Backend) {
     super(application);
 
-    this.content = require('../../config');
+    // do not print the config on the console
+    Reflect.defineProperty(this, 'content', {
+      value: require('../../config'),
+      writable: true
+    });
   }
 
   /**
@@ -230,6 +234,7 @@ class VaultManager extends ApplicationManager {
 
   /**
    * Decrypted secrets
+   * Available only after application start.
    */
   get secrets () : JSONObject {
     if (! this._application.started) {
@@ -289,6 +294,7 @@ class PluginManager extends ApplicationManager {
 class Logger extends ApplicationManager {
   /**
    * Logs a debug message
+   * Available only after application start.
    */
   debug (message: string): void {
     this._log('debug', message);
@@ -296,6 +302,7 @@ class Logger extends ApplicationManager {
 
   /**
    * Logs an info message
+   * Available only after application start.
    */
   info (message: string): void {
     this._log('info', message);
@@ -303,6 +310,7 @@ class Logger extends ApplicationManager {
 
   /**
    * Logs a warn message
+   * Available only after application start.
    */
   warn (message: string): void {
     this._log('warn', message);
@@ -310,6 +318,7 @@ class Logger extends ApplicationManager {
 
   /**
    * Logs an error message
+   * Available only after application start.
    */
   error (message: string): void {
     this._log('error', message);
@@ -317,6 +326,7 @@ class Logger extends ApplicationManager {
 
   /**
    * Logs a verbose message
+   * Available only after application start.
    */
   verbose (message: string): void {
     this._log('verbose', message);
@@ -377,6 +387,8 @@ class StorageManager extends ApplicationManager {
 /* Backend class ======================================================== */
 
 export class Backend {
+  private static _instantiated = false;
+
   private _kuzzle: any;
   private _name: string;
   private _sdk: EmbeddedSDK;
@@ -484,6 +496,11 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
+    if (Backend._instantiated) {
+      throw runtimeError.get('app_already_instantiated');
+    }
+    Backend._instantiated = true;
+
     if (! Plugin.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
@@ -516,6 +533,9 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
+
+    const { KuzzleContext } = require('./kuzzleContext');
+    KuzzleContext._app = this;
   }
 
   /**
@@ -552,7 +572,8 @@ export class Backend {
   }
 
   /**
-   * Triggers an event
+   * Triggers an event.
+   * Available only after application start.
    *
    * @param - Event name
    * @param - Event payload
@@ -574,6 +595,7 @@ export class Backend {
 
   /**
    * Internal SDK
+   * Available only after application start.
    */
   get sdk (): EmbeddedSDK {
     if (! this.started) {
