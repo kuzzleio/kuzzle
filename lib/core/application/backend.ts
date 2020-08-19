@@ -616,7 +616,7 @@ export class Backend {
       return null;
     }
 
-    return  fs.readFileSync(refFile, 'utf8');
+    return  fs.readFileSync(refFile, 'utf8').replace('\n', '');
   }
 
 }
