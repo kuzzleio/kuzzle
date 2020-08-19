@@ -57,46 +57,70 @@ _doc-deploy: &doc-deploy
 jobs:
   include:
     # ---------------------------------------
-    # Unit Tests & Linters
+    # Stage: Tests
     # ---------------------------------------
-    - stage: Unit Tests & Linters
-      name: Node 12.16.3 - Unit Tests & ESLint
+    - name: ESLint - Node 12.16.3
+      stage: Tests
       os: linux
       language: node_js
       cache: npm
       node_js: 12.16.3
       install:
         - npm ci --silent
+        - npm run build
       script:
         - npm run --silent test:lint
+
+    - name: Unit Tests - Node 12.16.3
+      stage: Tests
+      os: linux
+      language: node_js
+      cache: npm
+      node_js: 12.16.3
+      install:
+        - npm ci --silent
+        - npm run build
+      script:
         - npm run test:unit:coverage
       after_script:
         - npm run codecov
 
-    - stage: Unit Tests & Linters
-      name: Node 12.18.1 - Unit Tests & ESLint
+    - name: ESLint - Node 12.18.1
+      stage: Tests
       os: linux
       language: node_js
       cache: npm
       node_js: 12.18.1
       install:
         - npm ci --silent
+        - npm run build
       script:
         - npm run --silent test:lint
+
+    - name: Unit Tests - Node 12.18.1
+      stage: Tests
+      os: linux
+      language: node_js
+      cache: npm
+      node_js: 12.18.1
+      install:
+        - npm ci --silent
+        - npm run build
+      script:
         - npm run test:unit:coverage
       after_script:
         - npm run codecov
 
-    - stage: Unit Tests & Linters
-      name: SonarCloud
+    - name: SonarCloud
+      stage: Tests
       if: fork != true
       os: linux
       dist: trusty
       script:
         - .ci/sonar.sh
 
-    - stage: Unit Tests & Linters
-      name: Documentation dead links
+    - name: Documentation dead links check
+      stage: Tests
       language: node_js
       node_js: 12
       cache:
@@ -113,8 +137,8 @@ jobs:
         - cd doc/framework/
         - HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/
 
-    - stage: Unit Tests & Linters
-      name: Error codes check
+    - name: Error codes check
+      stage: Tests
       language: node_js
       node_js: 12
       install:
@@ -122,43 +146,38 @@ jobs:
       script:
         - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
 
-    # ---------------------------------------
-    # Integration tests
-    # ---------------------------------------
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests legacy
+    - name: Functional tests legacy - Node.js 12.16.3
+      stage: Tests
+      <<: *integration-tests
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
         - NODE_VERSION=12.16.3
         - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests sdk
+    - name: Functional tests sdk - Node.js 12.16.3
+      stage: Tests
+      <<: *integration-tests
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
         - NODE_VERSION=12.16.3
         - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12 - Functional tests legacy
+    - name: Functional tests legacy - Node.js 12.18.1
+      stage: Tests
+      <<: *integration-tests
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
         - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12 - Functional tests sdk
+    - name: Functional tests sdk - Node.js 12.18.1
+      stage: Tests
+      <<: *integration-tests
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
         - *integration-tests-env
 
-
-
     # ---------------------------------------
-    # Cross-platform tests
+    # Stage: Cross-platform tests
     # ---------------------------------------
     - <<: *integration-tests
       name: Linux ARMHF
@@ -183,27 +202,10 @@ jobs:
         - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
 
     # ---------------------------------------
-    # Deployments
+    # Stage: Deployments
     # ---------------------------------------
-    - stage: Deployments
-      name: NPM.js
-      if: branch = master
-      os: linux
-      language: node_js
-      node_js: 12
-      script: echo "Deploying Kuzzle to NPM.js"
-      deploy:
-        provider: npm
-        email: support@kuzzle.io
-        api_key:
-          secure: gqLBt1Scnr8wAR0zauW3jI7M576Jr7d+d2C5gvCA+iI1Y6gBWMM04A3w1MHHcPUBNA+xbwNimyoxbrBozq7otiMEDbP5ConS+T3KRWyHYwjdSfmL5KmEoNqwjmo128qJq2uWFxEecBmBk63q9A3gbnhdw3/D+05NKL4B44PpyNDpT6fApsVyDNXQmeib6cYfjwB1rCv8Mcf2sbVE1eqcJuGTwDtxx/860405PqBSg7H8iGGJJr7cymaU8cK4RLre+u8GHRiSDoKeU1UiWIoIoLG0y8TisFllSstZu9kguA6ShPJJA28NLiNyJ7j0KxKW6muvY03AFxa4XQ0sMaxotjQxN3IRUnLdN1mnQydWqMRP2+HWK1uRXCiDoL9ZnSClS1BixSAv15tvhggqE76Rq4uGCcl7hYfagpUzQpsUIV40Wc7CHez/O4ZvvicWIOdo2jmh/6fRYWOFY2+ihzwszaZwAQT1cdTm75JMIqrATyNWEZvwvczQzC85HmJajhf1azyEY08kdIJxwmwh30AMl2Is0vlq9ujCp8XRsanbdj74CcDNf9RSgesiD83McLd/ZJZHSDIe//wNypcTcW4fQbSfGb1oDHWVLQ6L/jr+W3OJUgVBG31mMciGo2jSROOos8n4iHHqs3QbxTwh0B+t+1amvZlpelFUEoicprPCcN8=
-        on:
-          repo: kuzzleio/kuzzle
-          branch: master
-          tags: true
-
-    - stage: Deployments
-      name: Dockerhub
+    - name: Dockerhub
+      stage: Deployments
       os: linux
       language: node_js
       node_js: 12
@@ -214,24 +216,25 @@ jobs:
       script:
         - MODE=production bash docker/build-docker-images.sh
 
-    - <<: *doc-deploy
-      name: Documentation to next-docs.kuzzle.io
+    - name: Documentation to next-docs.kuzzle.io
       if: branch =~ /^[0-9]+-dev$/
+      <<: *doc-deploy
       env:
         - *doc-deploy-env
         - BRANCH=dev
         - S3_BUCKET=docs-next.kuzzle.io
         - CLOUDFRONT_DISTRIBUTION_ID=E2ZCCEK9GRB49U
 
-    - <<: *doc-deploy
-      name: Deploy docs.kuzzle.io
+    - name: Deploy docs.kuzzle.io
       if: branch =~ /^master|[0-9]+-(stable|beta)$/
+      <<: *doc-deploy
       env:
         - *doc-deploy-env
         - S3_BUCKET=docs.kuzzle.io
         - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
 
-    - stage: Deploy latest release on NPM
+    - name: Deploy kuzzle package on NPM
+      stage: Deploy latest release on NPM
       if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/
       language: node_js
       node_js: 12
@@ -264,10 +267,7 @@ jobs:
 # Stages configuration
 # ------------------------
 stages:
-  - name: Unit Tests & Linters
-    if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
-  - name: Integration tests
-    # if: type = cron
+  - name: Tests
     if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
   - name: Cross-platform tests
     if: type = cron
