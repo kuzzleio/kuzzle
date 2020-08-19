@@ -1,6 +1,3 @@
-[submodule "plugins/available/kuzzle-plugin-logger"]
-	path = plugins/enabled/kuzzle-plugin-logger
-	url = https://github.com/kuzzleio/kuzzle-plugin-logger.git
 [submodule "plugins/available/kuzzle-plugin-cluster"]
 	path = plugins/available/kuzzle-plugin-cluster
 	url = https://github.com/kuzzleio/kuzzle-plugin-cluster
