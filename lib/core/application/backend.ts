@@ -534,6 +534,7 @@ export class Backend {
       // Silent if no version can be found
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { KuzzleContext } = require('./kuzzleContext');
     KuzzleContext._app = this;
   }
