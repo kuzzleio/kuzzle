@@ -227,7 +227,7 @@ describe('ServerController', () => {
     });
   });
 
-  describe.only('#info', () => {
+  describe('#info', () => {
     it('should return a properly formatted server information object', () => {
       serverController._buildApiDefinition = sinon.stub()
         .onCall(0).returns({
