@@ -70,6 +70,7 @@ describe('Backend', () => {
       should(plugin.application).be.true();
       should(plugin.name).be.eql('black-mesa');
       should(plugin.version).be.eql('42.21.84');
+      should(plugin.commit).be.String();
       should(plugin.instance).be.eql(application._instanceProxy);
 
       should(options.secretsFile).be.eql(application._secretsFile);

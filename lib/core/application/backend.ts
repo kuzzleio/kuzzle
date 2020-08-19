@@ -396,6 +396,11 @@ export class Backend {
   public version: string;
 
   /**
+   * Current Git commit (if available)
+   */
+  public commit: string | null;
+
+  /**
    * Errors manager
    * @todo add type
    */
@@ -516,6 +521,8 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
+
+    this.commit = this._readCommit();
   }
 
   /**
@@ -534,6 +541,7 @@ export class Backend {
       { application: true, name: this.name });
 
     application.version = this.version;
+    application.commit = this.commit;
 
     const options = {
       fixtures: this._support.fixtures,
@@ -591,6 +599,24 @@ export class Backend {
       init: () => {},
       pipes: this._pipes,
     };
+  }
+
+  /**
+   * Try to read the current commit hash.
+   */
+  private _readCommit (dir = process.cwd(), depth = 3) {
+    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+      return this._readCommit(`${dir}/..`, depth - 1);
+    }
+
+    const [, ref] = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ');
+    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+
+    if (! fs.existsSync(refFile)) {
+      return null;
+    }
+
+    return  fs.readFileSync(refFile, 'utf8');
   }
 
 }
