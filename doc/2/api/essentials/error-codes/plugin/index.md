@@ -43,6 +43,8 @@ description: Error codes definitions
 | plugin.runtime.too_many_pipes<br/><pre>0x04020004</pre>  | [ServiceUnavailableError](/core/2/api/essentials/error-handling#serviceunavailableerror) <pre>(503)</pre> | Request discarded: maximum number of executing pipe functions reached. | The number of running pipes exceeds the configured capacity (see configuration files). This may be caused by pipes being too slow, or by an insufficient number of Kuzzle nodes. |
 | plugin.runtime.already_started<br/><pre>0x04020005</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Cannot use Backend.%s when application is already running | Features definition cannot be changed after startup. |
 | plugin.runtime.unavailable_before_start<br/><pre>0x04020006</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Cannot use property "%s" before application startup | The property is only accessible after application startup. |
+| plugin.runtime.unavailable_before_app_creation<br/><pre>0x04020007</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Cannot use the application context before instantiation. | The KuzzleContext.app property is only available after Backend instantiation. |
+| plugin.runtime.app_already_instantiated<br/><pre>0x04020008</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A Backend has already been instantiated.  | Only one Backend can be instantiated by process. |
 
 ---
 

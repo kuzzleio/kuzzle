@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Backend } from './backend'
+import { Backend } from './backend';
 import kerror from '../../kerror';
 
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -31,8 +31,9 @@ export class KuzzleContext {
 
   private static _app: Backend;
 
-  constructor () {}
-
+  /**
+   * Accessor to the application context
+   */
   get app (): Backend {
     if (! KuzzleContext._app) {
       throw runtimeError.get('unavailable_before_app_creation');
