@@ -5,8 +5,8 @@ const should = require('should');
 const sinon = require('sinon');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
-const { Backend } = require('../../../lib/core/application/backend.ts');
-const { KuzzleContext } = require('../../../lib/core/application/kuzzleContext.ts');
+const { Backend } = require('../../../lib/core/application/backend');
+const { KuzzleContext } = require('../../../lib/core/application/kuzzleContext');
 const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
 const Kuzzle = require('../../../lib/kuzzle/kuzzle');
 

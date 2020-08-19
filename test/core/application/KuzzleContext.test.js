@@ -2,8 +2,8 @@
 
 const should = require('should');
 
-const { Backend } = require('../../../lib/core/application/backend.ts');
-const { KuzzleContext } = require('../../../lib/core/application/kuzzleContext.ts');
+const { Backend } = require('../../../lib/core/application/backend');
+const { KuzzleContext } = require('../../../lib/core/application/kuzzleContext');
 
 class Service extends KuzzleContext {}
 
