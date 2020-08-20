@@ -42,6 +42,7 @@
     "bufferutil": "^4.0.1",
     "busboy": "^0.3.1",
     "cli-color": "^2.0.0",
+    "dataloader": "^2.0.0",
     "debug": "^4.1.1",
     "denque": "^1.4.1",
     "didyoumean": "^1.2.1",
