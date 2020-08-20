@@ -1,3 +1,0 @@
-[submodule "plugins/available/kuzzle-plugin-cluster"]
-	path = plugins/available/kuzzle-plugin-cluster
-	url = https://github.com/kuzzleio/kuzzle-plugin-cluster

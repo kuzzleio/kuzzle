@@ -49,6 +49,7 @@
     "eventemitter3": "^4.0.4",
     "inquirer": "^7.3.3",
     "ioredis": "^4.17.3",
+    "ip": "^1.1.5",
     "json-stable-stringify": "^1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
@@ -74,7 +75,8 @@
     "winston-syslog": "^2.4.4",
     "winston-transport": "^4.4.0",
     "ws": "^7.3.1",
-    "yargs": "^15.4.1"
+    "yargs": "^15.4.1",
+    "zeromq": "^5.2.0"
   },
   "repository": {
     "type": "git",
