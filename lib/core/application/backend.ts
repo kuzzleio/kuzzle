@@ -609,7 +609,7 @@ export class Backend {
       return this._readCommit(`${dir}/..`, depth - 1);
     }
 
-    const [, ref] = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ');
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
     const refFile = `${dir}/.git/${ref}`.replace('\n', '');
 
     if (! fs.existsSync(refFile)) {
