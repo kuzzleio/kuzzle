@@ -521,10 +521,6 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
-
-    // we need to load the default plugins
-    this.plugin.use(new PluginPassportAuthLocal(), { name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
   }
 
   /**
@@ -534,6 +530,10 @@ export class Backend {
     if (this.started) {
       throw runtimeError.get('already_started', 'start');
     }
+
+    // we need to load the default plugins
+    this.plugin.use(new PluginPassportAuthLocal(), { name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
 
     const application = new Plugin(
       this._kuzzle,
