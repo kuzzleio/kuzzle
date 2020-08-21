@@ -69,41 +69,5 @@ describe('Test: ElasticSearch Wrapper', () => {
         id: 'services.storage.not_found'
       });
     });
-
-    it('should log the source error for easier support & debugging', () => {
-      kuzzle.log.info.resetHistory();
-
-      const error = new Error('test');
-      error.meta = {
-        statusCode: 420,
-        meta: {
-          request: {
-            oh: 'noes',
-          }
-        }
-      };
-
-      esWrapper.formatESError(error);
-
-      should(kuzzle.log.info).calledWithMatch({
-        message: `Elasticsearch Client error: ${error.message}`,
-        meta: error.meta,
-        stack: error.stack,
-      });
-    });
-
-    it('should be able to log errors without meta', () => {
-      kuzzle.log.info.resetHistory();
-
-      const error = new Error('test');
-
-      esWrapper.formatESError(error);
-
-      should(kuzzle.log.info).calledWithMatch({
-        message: `Elasticsearch Client error: ${error.message}`,
-        meta: null,
-        stack: error.stack,
-      });
-    });
   });
 });
