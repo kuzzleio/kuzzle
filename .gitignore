@@ -50,6 +50,7 @@ plugins/available/*
 plugins/enabled/*
 !plugins/enabled/kuzzle-plugin-auth-passport-local
 !plugins/enabled/kuzzle-plugin-logger
+!plugins/enabled/.keep
 
 #secrets files
 config/secrets.json
