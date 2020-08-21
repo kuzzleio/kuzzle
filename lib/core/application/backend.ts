@@ -353,8 +353,8 @@ class StorageManager extends ApplicationManager {
 
       this._Client = function StorageClient (clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
-          ...kuzzle.storageEngine.config.client,
-          ...clientConfig
+          ...kuzzle.config.services.storageEngine.client,
+          ...clientConfig,
         });
       } as any;
     }
@@ -368,7 +368,8 @@ class StorageManager extends ApplicationManager {
    */
   get client (): Client {
     if (! this._client) {
-      this._client = Elasticsearch.buildClient(this._kuzzle.storageEngine.config.client);
+      this._client = Elasticsearch
+        .buildClient(this._kuzzle.config.services.storageEngine.client);
     }
 
     return this._client;
