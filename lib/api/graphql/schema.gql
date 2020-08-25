@@ -4,8 +4,15 @@ type Book {
   likes: Int
 }
 
+type Author {
+  id: ID!
+  name: String!
+  books: [Book!]
+}
+
 type Query {
   book(id: ID!): Book
+  author(id: ID!): Author
 }
 
 schema {
