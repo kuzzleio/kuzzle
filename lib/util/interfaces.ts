@@ -40,5 +40,5 @@ export interface ControllerDefinition {
 }
 
 export interface BasePlugin {
-  init: (config: JSONObject, context: any) => Promise<void> | void
+  init: (config: JSONObject, context: any) => Promise<any> | any
 }
