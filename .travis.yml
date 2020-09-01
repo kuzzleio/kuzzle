@@ -123,39 +123,87 @@ jobs:
         - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
 
     # ---------------------------------------
-    # Integration tests
+    # Integration tests Node.js 12.16.3
     # ---------------------------------------
+
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests legacy
+      name: Node.js 12.16.3 - Functional tests legacy - Http
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
         - NODE_VERSION=12.16.3
         - *integration-tests-env
 
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests sdk
+      name: Node.js 12.16.3 - Functional tests legacy - WebSocket
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
         - NODE_VERSION=12.16.3
         - *integration-tests-env
 
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12 - Functional tests legacy
+      name: Node.js 12.16.3 - Functional tests legacy - Mqtt
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+        - NODE_VERSION=12.16.3
         - *integration-tests-env
 
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12 - Functional tests sdk
+      name: Node.js 12.16.3 - Functional tests sdk - Http
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
+        - NODE_VERSION=12.16.3
         - *integration-tests-env
 
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests sdk - WebSocket
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
+        - NODE_VERSION=12.16.3
+        - *integration-tests-env
 
+    # ---------------------------------------
+    # Integration tests Node.js 12
+    # ---------------------------------------
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - Http
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - WebSocket
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - Mqtt
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests sdk - Http
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests sdk - WebSocket
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
+        - *integration-tests-env
 
     # ---------------------------------------
     # Cross-platform tests
