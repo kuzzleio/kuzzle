@@ -613,6 +613,10 @@ export class Backend {
    * Try to read the current commit hash.
    */
   private _readCommit (dir = process.cwd(), depth = 3) {
+    if (depth === 0) {
+      return null;
+    }
+
     if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
     }

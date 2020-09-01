@@ -3,16 +3,28 @@
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
+const mockrequire = require('mock-require');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
-const { Backend } = require('../../../lib/core/application/backend');
+// const { Backend } = require('../../../lib/core/application/backend');
 const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
 const Kuzzle = require('../../../lib/kuzzle/kuzzle');
+const FsMock = require('../../mocks/fs.mock');
 
 describe('Backend', () => {
   let application;
+  let fsStub;
+  let Backend;
 
   beforeEach(() => {
+    fsStub = new FsMock();
+    mockrequire('fs', fsStub);
+    fsStub.existsSync.returns(true);
+    fsStub.readFileSync.returns('ref: refs/master');
+
+    const modul = mockrequire.reRequire('../../../lib/core/application/backend');
+    Backend = modul.Backend;
+
     application = new Backend('black-mesa');
   });
 
