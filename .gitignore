@@ -43,13 +43,10 @@ kuzzle-swagger.*
 
 #plugins
 plugins/available/*
-!plugins/available/kuzzle-plugin-auth-passport-local
-!plugins/available/kuzzle-plugin-logger
 !plugins/available/functional-test-plugin
+!plugins/available/kuzzle-plugin-cluster
 
 plugins/enabled/*
-!plugins/enabled/kuzzle-plugin-auth-passport-local
-!plugins/enabled/kuzzle-plugin-logger
 !plugins/enabled/.keep
 
 #secrets files
@@ -61,9 +58,6 @@ config/kuzzlerc
 
 #tests files
 index-dump/*
-
-#Node.js 6 compat
-bin/commands/node6/*
 
 #doc framework
 doc/framework
