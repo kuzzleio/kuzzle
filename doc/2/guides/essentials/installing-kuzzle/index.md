@@ -27,7 +27,7 @@ Before launching Kuzzle using Docker containers, ensure that your system meets t
 
 - **64-bit environment**
 - **At least 1.4GB of memory**
-- **Docker v1.10+**, see [instructions here](https://docs.docker.com/engine/installation)
+- **Docker v1.10+**, see [instructions here](https://docs.docker.com/engine/install/)
 - **Docker Compose v1.8+**, see [instructions here](https://docs.docker.com/compose/install)
 
 ::: info
