@@ -73,6 +73,20 @@ export interface ControllerDefinition {
   }
 }
 
+/**
+ * Interface to declare and use a controller class
+ */
+export interface Controller {
+  /**
+   * Controller name
+   */
+  name: string;
+  /**
+   * Controller definition
+   */
+  definition: ControllerDefinition;
+}
+
 export interface BasePlugin {
   init: (config: JSONObject, context: any) => Promise<any> | any
 }
