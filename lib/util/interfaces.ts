@@ -20,6 +20,9 @@
  */
 
 import { Request } from 'kuzzle-common-objects';
+import { Backend } from '../core/application/backend';
+
+export * from 'kuzzle-common-objects'
 
 /**
  * An interface representing an object with string key and any value
@@ -74,17 +77,27 @@ export interface ControllerDefinition {
 }
 
 /**
- * Interface to declare and use a controller class
+ * Base class to declare a controller class
  */
-export interface Controller {
+export abstract class Controller {
+  /**
+   * Current application instance
+   */
+  private app: Backend;
+
   /**
    * Controller name
    */
-  name: string;
+  public name: string;
+
   /**
    * Controller definition
    */
-  definition: ControllerDefinition;
+  public definition: ControllerDefinition;
+
+  constructor (app: Backend) {
+    this.app = app;
+  }
 }
 
 export interface BasePlugin {
