@@ -11,8 +11,6 @@ _integration-tests: &integration-tests
   cache:
     directories:
       - node_modules
-      - plugins/available/kuzzle-plugin-auth-passport-local/node_modules
-      - plugins/available/kuzzle-plugin-logger/node_modules
   env: &integration-tests-env
     - DOCKER_COMPOSE_TEST=test
   install:
