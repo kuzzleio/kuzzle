@@ -27,6 +27,7 @@ class FsMock {
     this.unlink = sinon.stub();
     this.unlinkSync = sinon.stub();
     this.writeFileSync = sinon.stub();
+    this.readFileSync = sinon.stub();
   }
 }
 
