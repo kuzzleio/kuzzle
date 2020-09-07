@@ -255,6 +255,9 @@ describe('ServerController', () => {
             }
           }
         });
+      kuzzle.pluginsManager.application.info.returns({
+        commit: '42fea32fea42fea'
+      });
 
       return serverController.info()
         .then(response => {
@@ -265,6 +268,7 @@ describe('ServerController', () => {
           should(response.serverInfo).be.an.Object();
           should(response.serverInfo.kuzzle).be.and.Object();
           should(response.serverInfo.kuzzle.version).be.a.String();
+          should(response.serverInfo.kuzzle.application.commit).be.a.String();
           should(response.serverInfo.kuzzle.api).be.an.Object();
           should(response.serverInfo.kuzzle.api.routes).match({
             foo: {
