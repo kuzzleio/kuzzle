@@ -381,14 +381,15 @@ describe('node', () => {
 
       node._onSubMessage(JSON.stringify(['cluster:notify:document', payload]));
 
-      should(node.kuzzle.notifier._notifyDocument)
-        .be.calledWithMatch(payload.rooms,
-          sinon.match.instanceOf(Request),
-          payload.scope,
-          payload.action,
-          payload.content);
+      should(node.kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:dispatch',
+        payload.rooms,
+        sinon.match.instanceOf(Request),
+        payload.scope,
+        payload.action,
+        payload.content);
 
-      const sentRequest = node.kuzzle.notifier._notifyDocument.firstCall.args[1];
+      const sentRequest = node.kuzzle.ask.firstCall.args[2];
 
       should(sentRequest.input.resource).match({
         index: payload.request.data.index,
@@ -418,13 +419,15 @@ describe('node', () => {
 
       node._onSubMessage(JSON.stringify(['cluster:notify:user', payload]));
 
-      should(node.kuzzle.notifier._notifyUser)
-        .be.calledWithMatch(payload.room,
+      should(node.kuzzle.ask)
+        .be.calledWithMatch(
+          'core:realtime:user:sendMessage',
+          payload.room,
           sinon.match.instanceOf(Request),
           payload.scope,
           payload.content);
 
-      const sentRequest = node.kuzzle.notifier._notifyUser.firstCall.args[1];
+      const sentRequest = node.kuzzle.ask.firstCall.args[2];
 
       should(sentRequest.input.resource).match({
         index: payload.request.data.index,
