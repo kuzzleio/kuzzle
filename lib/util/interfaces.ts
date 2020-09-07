@@ -112,7 +112,7 @@ export interface KuzzleResponse extends JSONObject {
     stack?: string;
   };
   requestId: string;
-  result: JSONObject | null;
+  result: any;
   status: number;
   volatile?: JSONObject;
   room?: string;
