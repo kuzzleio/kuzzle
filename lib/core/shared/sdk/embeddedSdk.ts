@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Kuzzle as KuzzleSDK } from 'kuzzle-sdk';
+import { Kuzzle } from 'kuzzle-sdk';
 
 import { KuzzleRequest, KuzzleResponse } from '../../../util/interfaces';
 import FunnelProtocol from './funnelProtocol';
@@ -31,7 +31,7 @@ const contextError = kerror.wrap('plugin', 'context');
 /**
  * Kuzzle embedded SDK to make API calls inside applications or plugins.
  */
-export class EmbeddedSDK extends KuzzleSDK {
+export class EmbeddedSDK extends Kuzzle {
   /**
    * @param kuzzle - Kuzzle object
    * @param user - User to impersonate the SDK with

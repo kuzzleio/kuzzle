@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const mockrequire = require('mock-require');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
-const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
+const { EmbeddedSDK } = require('../../../lib/core/shared/sdk/embeddedSdk');
 const Kuzzle = require('../../../lib/kuzzle/kuzzle');
 const FsMock = require('../../mocks/fs.mock');
 
@@ -43,7 +43,7 @@ describe('Backend', () => {
   });
 
   describe('#sdk', () => {
-    it('should returns the embedded sdk', async () => {
+    it.only('should returns the embedded sdk', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
 
       await application.start();
