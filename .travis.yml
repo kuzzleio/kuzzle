@@ -152,6 +152,14 @@ jobs:
 
     - <<: *integration-tests
       stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests legacy - Cluster
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:cluster
+        - NODE_VERSION=12.16.3
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
       name: Node.js 12.16.3 - Functional tests sdk - Http
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
@@ -189,6 +197,13 @@ jobs:
       name: Node.js 12 - Functional tests legacy - Mqtt
       env:
         - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - Cluster
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:cluster
         - *integration-tests-env
 
     - <<: *integration-tests
