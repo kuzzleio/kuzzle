@@ -43,7 +43,7 @@ describe('Backend', () => {
   });
 
   describe('#sdk', () => {
-    it.only('should returns the embedded sdk', async () => {
+    it('should returns the embedded sdk', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
 
       await application.start();
