@@ -10,8 +10,6 @@ fi
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
-n $NODE_VERSION
-
 echo "Installing dependencies..."
 npm ci --silent --unsafe-perm
 

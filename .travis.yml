@@ -163,7 +163,6 @@ jobs:
         - NODE_VERSION=12.16.3
       install:
         - sudo sysctl -w vm.max_map_count=262144
-        - sudo npm i -g n
       script:
         # avoid write /dev/stdout: resource temporarily unavailable
         # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
