@@ -10,8 +10,6 @@ fi
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
-sudo npm i -g n
-
 n $NODE_VERSION
 
 echo "Installing dependencies..."

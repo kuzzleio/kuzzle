@@ -1,505 +1,372 @@
 ---
-_doc-deploy:
+# -----------------
+# YAML Templates
+# -----------------
+# Integration tests
+_integration-tests: &integration-tests
+  os: linux
+  language: node_js
+  node_js: 12
+  services: docker
+  cache:
+    directories: node_modules
+  env: &integration-tests-env
+    - DOCKER_COMPOSE_TEST=test
+  install:
+    - sudo sysctl -w vm.max_map_count=262144
+  script:
+    # avoid write /dev/stdout: resource temporarily unavailable
+    # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
+    - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+    - docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle
+
+# Documentation deployment
+_doc-deploy: &doc-deploy
+  stage: Deployments
+  language: node_js
+  node_js: 12
+  env: &doc-deploy-env
+    - NODE_ENV=production
+    - AWS_DEFAULT_REGION=us-west-2
+    - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
+    # AWS_SECRET_ACCESS_KEY
+    - secure: h8n58Siclba6vRZEUcVzH2UTCBaA2src/mJvPaiXln1dPP4+/CICkfoljggA/qZDv9pv1ck07u7fHf6EJa7ONO2aNKD/r9CyyKHbZsgT5Wz6zLaOJfu/DmLZq9yclG/e9XmlK7qpjW+H7vCPn98GNVaU2h8cjqNVZ3KpkLwQ0j2RBoM6x4jpOFUsbiwnKWaHxS2u3JHpZ/L8PM9uy2JDoRm52HW5k+fmvyxwNis+R5ezteJJYcqhYhun9CRDVjGg47t8YFkO+fXjtgl5EAhNlOtE1UixV7h8+MVbmS0XJQm4Xen76J0a2O3xEGOggsdMJebTuDlHk97jhR17pMFu0lfM4V2YmiC8BclY/fdnxX7aoc9hPi9Zf6ReHOqVo8jWP4ArS7awHdKW8c5zkH2itf7M6tw89hnDmoXVk/48joOyj+vMwhvI2wJ3oUjhsjpZWG7Mks4hY2CYmkA5n56K/6+qgPq19qZr4MKqW1zr8066TNzqa2ZtdbtSzIyP0jcXLyNOxhwXejyBnHTyJ7ZVbiNxyGTvLQcOP1UYNn1LxmDTJWvDCguXbwLQ2oHzD032xVuNCS2XjZ1dDFtEtEfDniVnOGosEzJWK2kkRCaOzW5GT+VunfZnN9j4MNZVfI1iCW3EQ4CI7n/Ct89y4YrezwRoFjvMQvhb64pVLwMeOp4=
+  cache:
+    npm: true
+    directories:
+      - $HOME/.cache/pip
+      - doc/framework/node_modules
   addons:
     apt:
       packages:
         - python
         - python-pip
-  cache:
-    directories:
-      - $HOME/.cache/pip
-      - doc/framework/node_modules
-    npm: true
-  env:
-    - NODE_ENV=production
-    - AWS_DEFAULT_REGION=us-west-2
-    - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
-    -
-      secure: h8n58Siclba6vRZEUcVzH2UTCBaA2src/mJvPaiXln1dPP4+/CICkfoljggA/qZDv9pv1ck07u7fHf6EJa7ONO2aNKD/r9CyyKHbZsgT5Wz6zLaOJfu/DmLZq9yclG/e9XmlK7qpjW+H7vCPn98GNVaU2h8cjqNVZ3KpkLwQ0j2RBoM6x4jpOFUsbiwnKWaHxS2u3JHpZ/L8PM9uy2JDoRm52HW5k+fmvyxwNis+R5ezteJJYcqhYhun9CRDVjGg47t8YFkO+fXjtgl5EAhNlOtE1UixV7h8+MVbmS0XJQm4Xen76J0a2O3xEGOggsdMJebTuDlHk97jhR17pMFu0lfM4V2YmiC8BclY/fdnxX7aoc9hPi9Zf6ReHOqVo8jWP4ArS7awHdKW8c5zkH2itf7M6tw89hnDmoXVk/48joOyj+vMwhvI2wJ3oUjhsjpZWG7Mks4hY2CYmkA5n56K/6+qgPq19qZr4MKqW1zr8066TNzqa2ZtdbtSzIyP0jcXLyNOxhwXejyBnHTyJ7ZVbiNxyGTvLQcOP1UYNn1LxmDTJWvDCguXbwLQ2oHzD032xVuNCS2XjZ1dDFtEtEfDniVnOGosEzJWK2kkRCaOzW5GT+VunfZnN9j4MNZVfI1iCW3EQ4CI7n/Ct89y4YrezwRoFjvMQvhb64pVLwMeOp4=
   install:
-    - "pip install awscli --upgrade --user"
-    - "npm install --production=false"
-  language: node_js
-  node_js: 12
+    - pip install awscli --upgrade --user
+    - npm install --production=false
   script:
-    - "rm -rf doc/framework"
-    - "npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront"
-  stage: Deployments
-_integration-tests:
-  cache:
-    directories: node_modules
-  env:
-    - DOCKER_COMPOSE_TEST=test
-  install:
-    - "sudo sysctl -w vm.max_map_count=262144"
-  language: node_js
-  node_js: 12
-  os: linux
-  script:
-    - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-    - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-  services: docker
+    - rm -rf doc/framework
+    - npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront
+
+# ------------------------
+# Jobs configuration
+# ------------------------
 jobs:
   include:
-    -
-      after_script:
-        - "npm run codecov"
-      cache: npm
-      install:
-        - "npm ci --silent"
-      language: node_js
-      name: "Node 12.16.3 - Unit Tests & ESLint"
-      node_js: "12.16.3"
+    # ---------------------------------------
+    # Unit Tests & Linters
+    # ---------------------------------------
+    - stage: Unit Tests & Linters
+      name: Node 12.16.3 - Unit Tests & ESLint
       os: linux
-      script:
-        - "npm run --silent test:lint"
-        - "npm run test:unit:coverage"
-      stage: "Unit Tests & Linters"
-    -
-      after_script:
-        - "npm run codecov"
-      cache: npm
-      install:
-        - "npm ci --silent"
       language: node_js
-      name: "Node 12.18.1 - Unit Tests & ESLint"
-      node_js: "12.18.1"
-      os: linux
+      cache: npm
+      node_js: 12.16.3
+      install:
+        - npm ci --silent
       script:
-        - "npm run --silent test:lint"
-        - "npm run test:unit:coverage"
-      stage: "Unit Tests & Linters"
-    -
-      dist: trusty
-      if: "fork != true"
+        - npm run --silent test:lint
+        - npm run test:unit:coverage
+      after_script:
+        - npm run codecov
+
+    - stage: Unit Tests & Linters
+      name: Node 12.18.1 - Unit Tests & ESLint
+      os: linux
+      language: node_js
+      cache: npm
+      node_js: 12.18.1
+      install:
+        - npm ci --silent
+      script:
+        - npm run --silent test:lint
+        - npm run test:unit:coverage
+      after_script:
+        - npm run codecov
+
+    - stage: Unit Tests & Linters
       name: SonarCloud
+      if: fork != true
       os: linux
+      dist: trusty
       script:
         - .ci/sonar.sh
-      stage: "Unit Tests & Linters"
-    -
-      before_script:
-        - "npm run doc-prepare"
-        - "$(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/"
-        - "$(npm bin)/kuzdoc framework:link -d /core/2/ -v 2"
+
+    - stage: Unit Tests & Linters
+      name: Documentation dead links
+      language: node_js
+      node_js: 12
       cache:
         directories:
           - $HOME/.gem/specs
       install:
-        - "gem install typhoeus"
-        - "npm ci --silent"
-      language: node_js
-      name: "Documentation dead links"
-      node_js: 12
+        - gem install typhoeus
+        - npm ci --silent
+      before_script:
+        - npm run doc-prepare
+        - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
+        - $(npm bin)/kuzdoc framework:link -d /core/2/ -v 2
       script:
-        - "cd doc/framework/"
-        - "HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/"
-      stage: "Unit Tests & Linters"
-    -
-      install:
-        - "npm ci --silent"
+        - cd doc/framework/
+        - HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/
+
+    - stage: Unit Tests & Linters
+      name: Error codes check
       language: node_js
-      name: "Error codes check"
       node_js: 12
+      install:
+        - npm ci --silent
       script:
         - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
-      stage: "Unit Tests & Linters"
-    -
-      cache:
-        directories: node_modules
+
+    # ---------------------------------------
+    # Integration tests Node.js 12.16.3
+    # ---------------------------------------
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests legacy - Http
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http"
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
         - NODE_VERSION=12.16.3
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12.16.3 - Functional tests legacy - Http"
-      node_js: 12
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests legacy - WebSocket
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
+        - NODE_VERSION=12.16.3
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests legacy - Mqtt
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+        - NODE_VERSION=12.16.3
+        - *integration-tests-env
+
+    - stage: Integration tests
+      # /!\ cluster functional tests must NOT be executed from inside a
+      # running kuzzle container, otherwise all tests will target one node,
+      # instead of being sent to each node w/ round-robin, killing the
+      # purpose of testing cluster syncs
+      name: Node.js 12.16.3 - Functional tests legacy - Cluster
       os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
+      language: node_js
+      node_js: 12
       services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
-      env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket"
-        - NODE_VERSION=12.16.3
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12.16.3 - Functional tests legacy - WebSocket"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
-      env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt"
-        - NODE_VERSION=12.16.3
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12.16.3 - Functional tests legacy - Mqtt"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
       cache:
         directories: node_modules
       env:
         - NODE_VERSION=12.16.3
       install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12.16.3 - Functional tests legacy - Cluster"
-      node_js: 12
-      os: linux
+        - sudo sysctl -w vm.max_map_count=262144
+        - sudo npm i -g n
       script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
+        # avoid write /dev/stdout: resource temporarily unavailable
+        # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
+        - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
         - ./.ci/scripts/run-test-cluster.sh
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests sdk - Http
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http"
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
         - NODE_VERSION=12.16.3
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12.16.3 - Functional tests sdk - Http"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests sdk - WebSocket
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket"
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
         - NODE_VERSION=12.16.3
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12.16.3 - Functional tests sdk - WebSocket"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
+        - *integration-tests-env
+
+    # ---------------------------------------
+    # Integration tests Node.js 12
+    # ---------------------------------------
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - Http
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http"
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12 - Functional tests legacy - Http"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - WebSocket
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket"
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12 - Functional tests legacy - WebSocket"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - Mqtt
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt"
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12 - Functional tests legacy - Mqtt"
-      node_js: 12
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+        - *integration-tests-env
+
+    - stage: Integration tests
+      # /!\ cluster functional tests must NOT be executed from inside a
+      # running kuzzle container, otherwise all tests will target one node,
+      # instead of being sent to each node w/ round-robin, killing the
+      # purpose of testing cluster syncs
+      name: Node.js 12 - Functional tests legacy - Cluster
       os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
+      language: node_js
+      node_js: 12
       services: docker
-      stage: "Integration tests"
-    -
       cache:
         directories: node_modules
       install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12 - Functional tests legacy - Cluster"
-      node_js: 12
-      os: linux
+        - sudo sysctl -w vm.max_map_count=262144
+        - sudo npm i -g n
       script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
+        - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
         - ./.ci/scripts/run-test-cluster.sh
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests sdk - Http
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http"
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12 - Functional tests sdk - Http"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
-      cache:
-        directories: node_modules
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests sdk - WebSocket
       env:
-        - "KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket"
-        -
-          - DOCKER_COMPOSE_TEST=test
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Node.js 12 - Functional tests sdk - WebSocket"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Integration tests"
-    -
-      before_script:
-        - "docker run --rm --privileged multiarch/qemu-user-static:register"
-        - "docker run --rm -it -v \"$(pwd)\":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh"
-      cache:
-        directories: node_modules
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
+        - *integration-tests-env
+
+    # ---------------------------------------
+    # Cross-platform tests
+    # ---------------------------------------
+    - <<: *integration-tests
+      name: Linux ARMHF
+      stage: Cross-platform tests
       env:
-        -
-          - DOCKER_COMPOSE_TEST=test
+        - *integration-tests-env
         - ARM=armhf
         - DOCKER_COMPOSE_TEST=test-$ARM
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Linux ARMHF"
-      node_js: 12
-      os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Cross-platform tests"
-    -
       before_script:
-        - "docker run --rm --privileged multiarch/qemu-user-static:register"
-        - "docker run --rm -it -v \"$(pwd)\":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh"
-      cache:
-        directories: node_modules
+        - docker run --rm --privileged multiarch/qemu-user-static:register
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
+
+    - <<: *integration-tests
+      name: Linux ARM64
+      stage: Cross-platform tests
       env:
-        -
-          - DOCKER_COMPOSE_TEST=test
+        - *integration-tests-env
         - ARM=aarch64
         - DOCKER_COMPOSE_TEST=test-$ARM
-      install:
-        - "sudo sysctl -w vm.max_map_count=262144"
-      language: node_js
-      name: "Linux ARM64"
-      node_js: 12
+      before_script:
+        - docker run --rm --privileged multiarch/qemu-user-static:register
+        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
+
+    # ---------------------------------------
+    # Deployments
+    # ---------------------------------------
+    - stage: Deployments
+      name: NPM.js
+      if: branch = master
       os: linux
-      script:
-        - "python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'"
-        - "docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle"
-      services: docker
-      stage: "Cross-platform tests"
-    -
+      language: node_js
+      node_js: 12
+      script: echo "Deploying Kuzzle to NPM.js"
       deploy:
+        provider: npm
+        email: support@kuzzle.io
         api_key:
           secure: gqLBt1Scnr8wAR0zauW3jI7M576Jr7d+d2C5gvCA+iI1Y6gBWMM04A3w1MHHcPUBNA+xbwNimyoxbrBozq7otiMEDbP5ConS+T3KRWyHYwjdSfmL5KmEoNqwjmo128qJq2uWFxEecBmBk63q9A3gbnhdw3/D+05NKL4B44PpyNDpT6fApsVyDNXQmeib6cYfjwB1rCv8Mcf2sbVE1eqcJuGTwDtxx/860405PqBSg7H8iGGJJr7cymaU8cK4RLre+u8GHRiSDoKeU1UiWIoIoLG0y8TisFllSstZu9kguA6ShPJJA28NLiNyJ7j0KxKW6muvY03AFxa4XQ0sMaxotjQxN3IRUnLdN1mnQydWqMRP2+HWK1uRXCiDoL9ZnSClS1BixSAv15tvhggqE76Rq4uGCcl7hYfagpUzQpsUIV40Wc7CHez/O4ZvvicWIOdo2jmh/6fRYWOFY2+ihzwszaZwAQT1cdTm75JMIqrATyNWEZvwvczQzC85HmJajhf1azyEY08kdIJxwmwh30AMl2Is0vlq9ujCp8XRsanbdj74CcDNf9RSgesiD83McLd/ZJZHSDIe//wNypcTcW4fQbSfGb1oDHWVLQ6L/jr+W3OJUgVBG31mMciGo2jSROOos8n4iHHqs3QbxTwh0B+t+1amvZlpelFUEoicprPCcN8=
-        email: support@kuzzle.io
-        provider: npm
-        true:
-          branch: master
+        on:
           repo: kuzzleio/kuzzle
+          branch: master
           tags: true
-      if: "branch = master"
-      language: node_js
-      name: NPM.js
-      node_js: 12
-      os: linux
-      script: "echo \"Deploying Kuzzle to NPM.js\""
-      stage: Deployments
-    -
-      install:
-        - "npm ci --silent"
-        - "npm run build-ts"
-      language: node_js
+
+    - stage: Deployments
       name: Dockerhub
-      node_js: 12
       os: linux
-      script:
-        - "MODE=production bash docker/build-docker-images.sh"
+      language: node_js
+      node_js: 12
       services: docker
-      stage: Deployments
-    -
-      addons:
-        apt:
-          packages:
-            - python
-            - python-pip
-      cache:
-        directories:
-          - $HOME/.cache/pip
-          - doc/framework/node_modules
-        npm: true
+      install:
+        - npm ci --silent
+        - npm run build-ts
+      script:
+        - MODE=production bash docker/build-docker-images.sh
+
+    - <<: *doc-deploy
+      name: Documentation to next-docs.kuzzle.io
+      if: branch =~ /^[0-9]+-dev$/
       env:
-        -
-          - NODE_ENV=production
-          - AWS_DEFAULT_REGION=us-west-2
-          - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
-          -
-            secure: h8n58Siclba6vRZEUcVzH2UTCBaA2src/mJvPaiXln1dPP4+/CICkfoljggA/qZDv9pv1ck07u7fHf6EJa7ONO2aNKD/r9CyyKHbZsgT5Wz6zLaOJfu/DmLZq9yclG/e9XmlK7qpjW+H7vCPn98GNVaU2h8cjqNVZ3KpkLwQ0j2RBoM6x4jpOFUsbiwnKWaHxS2u3JHpZ/L8PM9uy2JDoRm52HW5k+fmvyxwNis+R5ezteJJYcqhYhun9CRDVjGg47t8YFkO+fXjtgl5EAhNlOtE1UixV7h8+MVbmS0XJQm4Xen76J0a2O3xEGOggsdMJebTuDlHk97jhR17pMFu0lfM4V2YmiC8BclY/fdnxX7aoc9hPi9Zf6ReHOqVo8jWP4ArS7awHdKW8c5zkH2itf7M6tw89hnDmoXVk/48joOyj+vMwhvI2wJ3oUjhsjpZWG7Mks4hY2CYmkA5n56K/6+qgPq19qZr4MKqW1zr8066TNzqa2ZtdbtSzIyP0jcXLyNOxhwXejyBnHTyJ7ZVbiNxyGTvLQcOP1UYNn1LxmDTJWvDCguXbwLQ2oHzD032xVuNCS2XjZ1dDFtEtEfDniVnOGosEzJWK2kkRCaOzW5GT+VunfZnN9j4MNZVfI1iCW3EQ4CI7n/Ct89y4YrezwRoFjvMQvhb64pVLwMeOp4=
+        - *doc-deploy-env
         - BRANCH=dev
         - S3_BUCKET=docs-next.kuzzle.io
         - CLOUDFRONT_DISTRIBUTION_ID=E2ZCCEK9GRB49U
-      if: "branch =~ /^[0-9]+-dev$/"
-      install:
-        - "pip install awscli --upgrade --user"
-        - "npm install --production=false"
-      language: node_js
-      name: "Documentation to next-docs.kuzzle.io"
-      node_js: 12
-      script:
-        - "rm -rf doc/framework"
-        - "npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront"
-      stage: Deployments
-    -
-      addons:
-        apt:
-          packages:
-            - python
-            - python-pip
-      cache:
-        directories:
-          - $HOME/.cache/pip
-          - doc/framework/node_modules
-        npm: true
+
+    - <<: *doc-deploy
+      name: Deploy docs.kuzzle.io
+      if: branch =~ /^master|[0-9]+-(stable|beta)$/
       env:
-        -
-          - NODE_ENV=production
-          - AWS_DEFAULT_REGION=us-west-2
-          - AWS_ACCESS_KEY_ID=AKIAIYAXFUAHXOWP2MJA
-          -
-            secure: h8n58Siclba6vRZEUcVzH2UTCBaA2src/mJvPaiXln1dPP4+/CICkfoljggA/qZDv9pv1ck07u7fHf6EJa7ONO2aNKD/r9CyyKHbZsgT5Wz6zLaOJfu/DmLZq9yclG/e9XmlK7qpjW+H7vCPn98GNVaU2h8cjqNVZ3KpkLwQ0j2RBoM6x4jpOFUsbiwnKWaHxS2u3JHpZ/L8PM9uy2JDoRm52HW5k+fmvyxwNis+R5ezteJJYcqhYhun9CRDVjGg47t8YFkO+fXjtgl5EAhNlOtE1UixV7h8+MVbmS0XJQm4Xen76J0a2O3xEGOggsdMJebTuDlHk97jhR17pMFu0lfM4V2YmiC8BclY/fdnxX7aoc9hPi9Zf6ReHOqVo8jWP4ArS7awHdKW8c5zkH2itf7M6tw89hnDmoXVk/48joOyj+vMwhvI2wJ3oUjhsjpZWG7Mks4hY2CYmkA5n56K/6+qgPq19qZr4MKqW1zr8066TNzqa2ZtdbtSzIyP0jcXLyNOxhwXejyBnHTyJ7ZVbiNxyGTvLQcOP1UYNn1LxmDTJWvDCguXbwLQ2oHzD032xVuNCS2XjZ1dDFtEtEfDniVnOGosEzJWK2kkRCaOzW5GT+VunfZnN9j4MNZVfI1iCW3EQ4CI7n/Ct89y4YrezwRoFjvMQvhb64pVLwMeOp4=
+        - *doc-deploy-env
         - S3_BUCKET=docs.kuzzle.io
         - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
-      if: "branch =~ /^master|[0-9]+-(stable|beta)$/"
-      install:
-        - "pip install awscli --upgrade --user"
-        - "npm install --production=false"
+
+    - stage: Deploy latest release on NPM
+      if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/
       language: node_js
-      name: "Deploy docs.kuzzle.io"
       node_js: 12
-      script:
-        - "rm -rf doc/framework"
-        - "npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront"
-      stage: Deployments
-    -
       addons:
         apt:
+          sources:
+            - ubuntu-toolchain-r-test
           packages:
             - gcc-4.9
             - g++-4.9
-          sources:
-            - ubuntu-toolchain-r-test
       before_install:
-        - "export CC=\"gcc-4.9\" CXX=\"g++-4.9\""
+        - export CC="gcc-4.9" CXX="g++-4.9"
+      install:
+        - npm install
+      script:
+        - npm run build
       deploy:
-        api_key:
-          secure: WE+3vUgOvZ2pEKYStsz/9t+VKV7fCYG4ZwC0Xppr4t8M/4EGWa8Pr+cWG4+JuljBYmQry4I4tptfjROR2zNSzGQ0RwwEfvjt/Qbc705qxX2jtF6Dq+sqaha18TfPhjuSSKABSb7NDhzjUdmaJ7ki8DmRsmM/5aqQBHw6TUtHMGejT++jymY3W74SZAHCFw+opsxCrey01UtSTHLussiTP9YntVSwBtNXZ1DQwggZXiPCtPqJcqOOTia8MQt6GA7TLc94drpORKAN7kIShrE7Mg9lpMXT5gDv1cf+9VRyhjZSlPUbBfMN30ZrvPJNboIh31rFLdGLu3WfDG/LHHVzw0aYU9w+RJ63zBlP5DChKWKRgJqqOdW4Z5XT6lImiEQaIICVEN3nCH1uavQICl+O3Z81uEtk4wynRJlbZlfYG0r3vCffiHCeZjj5xy9+XwzpiJysxm+XvIewFiP0jcPjRRl9/un2jQMgeTm6uOMXVnQUgxR3bB5ZAYwKJ3y1rt6pPhKVLXCq1MM6HvaWjBGbLuQbl46OWjG2HNfxTVOqpfovCETrWKKpUUCS3Z+Ho4WUILZs9Jx4HOU02rOcM+gwXN4+WRMKLc1sq6V1gI8D7b/XIDaiDmrdNKSBtlxyfq8wZPcunhSQESHrqbAxquQxD6J8DW4ugjsXXWU89PwT4TY=
-        email: support@kuzzle.io
         provider: npm
         skip_cleanup: true
+        email: support@kuzzle.io
         tag: latest
-        true:
-          all_branches: true
+        api_key:
+          secure: WE+3vUgOvZ2pEKYStsz/9t+VKV7fCYG4ZwC0Xppr4t8M/4EGWa8Pr+cWG4+JuljBYmQry4I4tptfjROR2zNSzGQ0RwwEfvjt/Qbc705qxX2jtF6Dq+sqaha18TfPhjuSSKABSb7NDhzjUdmaJ7ki8DmRsmM/5aqQBHw6TUtHMGejT++jymY3W74SZAHCFw+opsxCrey01UtSTHLussiTP9YntVSwBtNXZ1DQwggZXiPCtPqJcqOOTia8MQt6GA7TLc94drpORKAN7kIShrE7Mg9lpMXT5gDv1cf+9VRyhjZSlPUbBfMN30ZrvPJNboIh31rFLdGLu3WfDG/LHHVzw0aYU9w+RJ63zBlP5DChKWKRgJqqOdW4Z5XT6lImiEQaIICVEN3nCH1uavQICl+O3Z81uEtk4wynRJlbZlfYG0r3vCffiHCeZjj5xy9+XwzpiJysxm+XvIewFiP0jcPjRRl9/un2jQMgeTm6uOMXVnQUgxR3bB5ZAYwKJ3y1rt6pPhKVLXCq1MM6HvaWjBGbLuQbl46OWjG2HNfxTVOqpfovCETrWKKpUUCS3Z+Ho4WUILZs9Jx4HOU02rOcM+gwXN4+WRMKLc1sq6V1gI8D7b/XIDaiDmrdNKSBtlxyfq8wZPcunhSQESHrqbAxquQxD6J8DW4ugjsXXWU89PwT4TY=
+        on:
           repo: kuzzleio/kuzzle
-      if: "type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/"
-      install:
-        - "npm install"
-      language: node_js
-      node_js: 12
-      script:
-        - "npm run build"
-      stage: "Deploy latest release on NPM"
+          all_branches: true
+
+
+# ------------------------
+# Stages configuration
+# ------------------------
+stages:
+  - name: Unit Tests & Linters
+    if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
+  - name: Integration tests
+    # if: type = cron
+    if: type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
+  - name: Cross-platform tests
+    if: type = cron
+  - name: Deployments
+    if: type = push AND branch =~ /^master|[0-9]+-(dev|stable|beta)|1-dev|$/
+
+# ---------------------------------------
+# Notifications
+# ---------------------------------------
 notifications:
   slack:
-    on_failure: always
-    on_success: never
     rooms:
-      -
-        secure: nx2W8a0wTPUfMFfR0TQxoA+M0ExUAJxIBy1AfKRlJXHaXN3al+SjLNXDU/OdplN9doae8BhcpHJBLiCDfQFY5Wmmbuxq2wAWhrPduIMPZFttBuxkoWkAbrhzYPsk5t7vERrJbSAynNbKeVL1gj7zitStJxzJzT2Z8y//9KYwXty3hPMJei2R1GCLTIOYp0ddq1Uu02Sdhkg07IO+bCrv5q6NFOpnx27SjYEBIOX66bVnGUcUzrbFQM1WToHwFHU3ylZUbj+zJHu+njj9SNTaoR7nIl6oedHCtloagTxyqjLQ0k3E9O4D5fuVvanKDAnLXrlPHWwNoEjffUMQ/b8OtTpgjB6pTr8Xu5oMN4tb5AbofdFOYIyumhHEN7Yt9t1sI6mYMEPu8GfAUTNHS41QfJakGRjYWOMoWQD4sOwRi8VRx+wOkvGSF75wsIrRM30qOkU4cXjoe44My7OkJKycz5AlvR8Drow5d8FO7N4C8olNM4MyP1Ofs2ulXYVEXEXV9NxuRIpcejx8UUZfBNjHnLsAjgq4sWyey22vTxIlmzc1dN3AngiScNdU7u2emZVBmC9VSLN2hAduA1y7HxESpqxd7+9v8qKxeSYw2j1V1sh2nvOvKah2Y61erDWjOI/eAxQPnT/uF4yoHC3dFnW9j9tCej0vZ0PeIBCUIKb5mx8=
-stages:
-  -
-    if: "type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)"
-    name: "Unit Tests & Linters"
-  -
-    if: "type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)"
-    name: "Integration tests"
-  -
-    if: "type = cron"
-    name: "Cross-platform tests"
-  -
-    if: "type = push AND branch =~ /^master|[0-9]+-(dev|stable|beta)|1-dev|$/"
-    name: Deployments
+      - secure: nx2W8a0wTPUfMFfR0TQxoA+M0ExUAJxIBy1AfKRlJXHaXN3al+SjLNXDU/OdplN9doae8BhcpHJBLiCDfQFY5Wmmbuxq2wAWhrPduIMPZFttBuxkoWkAbrhzYPsk5t7vERrJbSAynNbKeVL1gj7zitStJxzJzT2Z8y//9KYwXty3hPMJei2R1GCLTIOYp0ddq1Uu02Sdhkg07IO+bCrv5q6NFOpnx27SjYEBIOX66bVnGUcUzrbFQM1WToHwFHU3ylZUbj+zJHu+njj9SNTaoR7nIl6oedHCtloagTxyqjLQ0k3E9O4D5fuVvanKDAnLXrlPHWwNoEjffUMQ/b8OtTpgjB6pTr8Xu5oMN4tb5AbofdFOYIyumhHEN7Yt9t1sI6mYMEPu8GfAUTNHS41QfJakGRjYWOMoWQD4sOwRi8VRx+wOkvGSF75wsIrRM30qOkU4cXjoe44My7OkJKycz5AlvR8Drow5d8FO7N4C8olNM4MyP1Ofs2ulXYVEXEXV9NxuRIpcejx8UUZfBNjHnLsAjgq4sWyey22vTxIlmzc1dN3AngiScNdU7u2emZVBmC9VSLN2hAduA1y7HxESpqxd7+9v8qKxeSYw2j1V1sh2nvOvKah2Y61erDWjOI/eAxQPnT/uF4yoHC3dFnW9j9tCej0vZ0PeIBCUIKb5mx8=
+    on_success: never
+    on_failure: always
