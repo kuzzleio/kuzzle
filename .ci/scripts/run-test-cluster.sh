@@ -19,6 +19,9 @@ echo "[$(date)] - Starting Kuzzle Cluster..."
 
 docker-compose -f ./docker-compose.yml up -d
 
-./bin/wait-kuzzle
+# don't wait on 7512: nginx will accept connections far before Kuzzle
+KUZZLE_PORT=17510 ./bin/wait-kuzzle
+KUZZLE_PORT=17511 ./bin/wait-kuzzle
+KUZZLE_PORT=17512 ./bin/wait-kuzzle
 
 npm run test:functional:legacy:cluster
