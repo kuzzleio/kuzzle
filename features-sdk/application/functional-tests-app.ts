@@ -5,6 +5,7 @@ import { omit } from 'lodash'
 
 import { Backend } from '../../index';
 import FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
+import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
 
@@ -17,6 +18,9 @@ if (! process.env.TRAVIS) {
     console.log(request.error);
   });
 }
+
+// Controller class usage
+app.controller.use(new FunctionalTestsController(app));
 
 // Pipe management
 const activatedPipes: any = {};

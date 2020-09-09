@@ -48,3 +48,10 @@ Feature: Application
       | index | "&nyc-open-data.yellow-taxi"     |
     Then The document "es-document" content match:
       | from | "embedded-es-client" |
+
+  # Controller classe usage
+  Scenario: Check if Kuzzle can use a controller class
+    When I successfully execute the action "functional-tests-controller":"helloWorld" with args:
+    | name | "Martial" |
+    Then I should receive a result matching:
+    | greeting | "Hello, Martial" |
