@@ -13,7 +13,7 @@ echo "Testing Kuzzle against node v$NODE_VERSION"
 echo "Installing dependencies..."
 npm ci --silent --unsafe-perm
 
-./ci/scripts/install-plugins.sh
+./.ci/scripts/install-plugins.sh
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
