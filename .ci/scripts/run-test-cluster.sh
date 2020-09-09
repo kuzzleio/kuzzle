@@ -10,7 +10,7 @@ fi
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
-npm i -g n
+sudo npm i -g n
 
 n $NODE_VERSION
 
