@@ -150,7 +150,6 @@ app.controller.register('tests', {
   }
 });
 
-
 let vaultfile = 'features-sdk/fixtures/secrets.enc.json';
 if (process.env.SECRETS_FILE_PREFIX) {
   vaultfile = process.env.SECRETS_FILE_PREFIX + vaultfile;

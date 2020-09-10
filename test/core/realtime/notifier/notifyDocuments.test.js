@@ -69,23 +69,26 @@ describe('#notifier.notifyDocuments', () => {
         { _id: 'baz' },
       ]);
 
-      should(kuzzle.cacheEngine.internal.mget).not.called();
-      should(kuzzle.cacheEngine.internal.del).not.called();
+      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+      should(kuzzle.ask).not.calledWith('core:cache:internal:del');
 
-      should(kuzzle.cacheEngine.internal.setex)
+      should(kuzzle.ask.withArgs('core:cache:internal:store'))
         .calledThrice()
         .calledWith(
+          'core:cache:internal:store',
           `{notif/${index}/${collection}}/foo`,
-          ttl,
-          JSON.stringify(rooms))
+          JSON.stringify(rooms),
+          ttl)
         .calledWith(
+          'core:cache:internal:store',
           `{notif/${index}/${collection}}/bar`,
-          ttl,
-          JSON.stringify(rooms))
+          JSON.stringify(rooms),
+          ttl)
         .calledWith(
+          'core:cache:internal:store',
           `{notif/${index}/${collection}}/baz`,
-          ttl,
-          JSON.stringify(rooms));
+          JSON.stringify(rooms),
+          ttl);
     });
 
     it('should put the result rooms in cache forever (TTL = 0)', async () => {
@@ -100,19 +103,21 @@ describe('#notifier.notifyDocuments', () => {
         { _id: 'baz' },
       ]);
 
-      should(kuzzle.cacheEngine.internal.mget).not.called();
-      should(kuzzle.cacheEngine.internal.del).not.called();
-      should(kuzzle.cacheEngine.internal.setex).not.called();
+      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+      should(kuzzle.ask).not.calledWith('core:cache:internal:del');
 
-      should(kuzzle.cacheEngine.internal.set)
+      should(kuzzle.ask.withArgs('core:cache:internal:store'))
         .calledThrice()
         .calledWith(
+          'core:cache:internal:store',
           `{notif/${index}/${collection}}/foo`,
           JSON.stringify(rooms))
         .calledWith(
+          'core:cache:internal:store',
           `{notif/${index}/${collection}}/bar`,
           JSON.stringify(rooms))
         .calledWith(
+          'core:cache:internal:store',
           `{notif/${index}/${collection}}/baz`,
           JSON.stringify(rooms));
     });
@@ -128,17 +133,18 @@ describe('#notifier.notifyDocuments', () => {
         { _id: 'baz' },
       ]);
 
-      should(kuzzle.cacheEngine.internal.mget).not.called();
-      should(kuzzle.cacheEngine.internal.setex)
+      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+      should(kuzzle.ask.withArgs('core:cache:internal:store'))
         .calledOnce()
         .calledWith(
+          'core:cache:internal:store',
           `{notif/${index}/${collection}}/bar`,
-          ttl,
-          JSON.stringify(['foo', 'bar']));
+          JSON.stringify(['foo', 'bar']),
+          ttl);
 
-      should(kuzzle.cacheEngine.internal.del)
+      should(kuzzle.ask.withArgs('core:cache:internal:del'))
         .calledOnce()
-        .calledWith([
+        .calledWith('core:cache:internal:del', [
           `{notif/${index}/${collection}}/foo`,
           `{notif/${index}/${collection}}/baz`,
         ]);
@@ -159,7 +165,7 @@ describe('#notifier.notifyDocuments', () => {
         .calledThrice()
         .alwaysCalledWith(request, document);
 
-      should(kuzzle.cacheEngine.internal.mget).not.called();
+      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
     });
 
     it('"document deleted" notification', async () => {
@@ -175,7 +181,7 @@ describe('#notifier.notifyDocuments', () => {
         .calledThrice()
         .alwaysCalledWith(request, document);
 
-      should(kuzzle.cacheEngine.internal.mget).not.called();
+      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
     });
 
     it('"document updated" notification', async () => {
@@ -185,7 +191,7 @@ describe('#notifier.notifyDocuments', () => {
         'baz',
       ];
 
-      kuzzle.cacheEngine.internal.mget.resolves(cacheResult);
+      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
 
       sinon.stub(notifier, 'notifyDocumentUpdate').resolves([]);
 
@@ -206,7 +212,7 @@ describe('#notifier.notifyDocuments', () => {
       should(notifier.notifyDocumentUpdate.thirdCall)
         .calledWith(request, { _id: 'baz' }, cacheResult[2]);
 
-      should(kuzzle.cacheEngine.internal.mget).calledWith([
+      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
         `{notif/${index}/${collection}}/foo`,
         `{notif/${index}/${collection}}/bar`,
         `{notif/${index}/${collection}}/baz`,
@@ -220,7 +226,7 @@ describe('#notifier.notifyDocuments', () => {
         'baz',
       ];
 
-      kuzzle.cacheEngine.internal.mget.resolves(cacheResult);
+      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
 
       sinon.stub(notifier, 'notifyDocumentReplace').resolves([]);
 
@@ -241,7 +247,7 @@ describe('#notifier.notifyDocuments', () => {
       should(notifier.notifyDocumentReplace.thirdCall)
         .calledWith(request, { _id: 'baz' }, cacheResult[2]);
 
-      should(kuzzle.cacheEngine.internal.mget).calledWith([
+      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
         `{notif/${index}/${collection}}/foo`,
         `{notif/${index}/${collection}}/bar`,
         `{notif/${index}/${collection}}/baz`,
@@ -255,7 +261,7 @@ describe('#notifier.notifyDocuments', () => {
         undefined,
       ];
 
-      kuzzle.cacheEngine.internal.mget.resolves(cacheResult);
+      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
 
       sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
       sinon.stub(notifier, 'notifyDocumentReplace').resolves([]);
@@ -278,7 +284,7 @@ describe('#notifier.notifyDocuments', () => {
       should(notifier.notifyDocumentReplace)
         .calledWith(request, { _id: 'bar', created: false }, cacheResult[1]);
 
-      should(kuzzle.cacheEngine.internal.mget).calledWith([
+      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
         `{notif/${index}/${collection}}/foo`,
         `{notif/${index}/${collection}}/bar`,
         `{notif/${index}/${collection}}/baz`,
@@ -307,7 +313,7 @@ describe('#notifier.notifyDocuments', () => {
       should(notifier.notifyDocumentCreate.thirdCall)
         .calledWith(request, { _id: 'baz', created: true });
 
-      should(kuzzle.cacheEngine.internal.mget).not.called();
+      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
     });
 
     it('should throw on an unknown action', () => {

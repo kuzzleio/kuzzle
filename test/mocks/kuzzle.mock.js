@@ -109,31 +109,6 @@ class KuzzleMock extends Kuzzle {
       config: this.config.services.storageEngine
     };
 
-    this.cacheEngine = {
-      init: sinon.stub().resolves(),
-      internal: {
-        get: sinon.stub().resolves(),
-        del: sinon.stub().resolves(),
-        exists: sinon.stub().resolves(),
-        expire: sinon.stub().resolves(),
-        flushdb: sinon.stub().resolves(),
-        info: sinon.stub().resolves(),
-        keys: sinon.stub().resolves(),
-        mget: sinon.stub().resolves(),
-        persist: sinon.stub().resolves(),
-        pexpire: sinon.stub().resolves(),
-        psetex: sinon.stub().resolves(),
-        searchKeys: sinon.stub().resolves(),
-        set: sinon.stub().resolves(),
-        setex: sinon.stub().resolves(),
-        setnx: sinon.stub().resolves(),
-      },
-      public: {
-        flushdb: sinon.stub().resolves(),
-        info: sinon.stub().resolves()
-      }
-    };
-
     this.internalIndex = new IndexStorageMock(
       'kuzzle',
       this.storageEngine.internal);

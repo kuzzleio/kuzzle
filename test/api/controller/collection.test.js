@@ -1,7 +1,6 @@
 'use strict';
 
 const should = require('should');
-const sinon = require('sinon');
 const {
   Request,
   BadRequestError,
@@ -366,7 +365,7 @@ describe('Test: collection controller', () => {
     beforeEach(() => {
       collectionController.publicStorage.listCollections.resolves(['col', 'loc']);
       realtimeListCollectionsStub = kuzzle.ask
-        .withArgs('core:realtime:collections:get', sinon.match.string)
+        .withArgs('core:realtime:collections:get')
         .resolves(['foo', 'bar']);
     });
 

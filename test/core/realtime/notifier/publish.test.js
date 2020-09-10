@@ -50,9 +50,7 @@ describe('Test: notifier.publish', () => {
       .calledOnce()
       .calledWith(rooms, request, 'in', request.input.action, {
         _source: request.input.body,
-        _id: request.input.resource._id
+        _id: request.input.resource._id,
       });
-
-    should(kuzzle.cacheEngine.internal.setex).not.be.called();
   });
 });
