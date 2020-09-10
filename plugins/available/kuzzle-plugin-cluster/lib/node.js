@@ -27,9 +27,7 @@ const debugSync = require('debug')('kuzzle:cluster:sync');
 const zeromq = require('zeromq');
 const {
   Request,
-  errors: {
-    InternalError: KuzzleInternalError,
-  }
+  InternalError: KuzzleInternalError,
 } = require('kuzzle-common-objects');
 
 const RedisStateManager = require('./redis/manager');
