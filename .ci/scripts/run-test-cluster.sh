@@ -17,7 +17,7 @@ npm ci --silent --unsafe-perm
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
-docker-compose -f ./docker-compose.yml up -d
+docker-compose -f ./.ci/test-cluster.yml up -d
 
 # don't wait on 7512: nginx will accept connections far before Kuzzle
 KUZZLE_PORT=17510 ./bin/wait-kuzzle
