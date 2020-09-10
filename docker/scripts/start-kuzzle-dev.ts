@@ -1,12 +1,41 @@
 'use strict';
 
+// Starts a Kuzzle Backend application tailored for development
+// This loads a special plugin dedicated to functional tests
+
 import should from 'should'
 import { omit } from 'lodash'
 
 import { Backend } from '../../index';
-import FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
 
 const app = new Backend('functional-tests-app');
+
+async function loadAdditionalPlugins () {
+  const additionalPluginsIndex = process.argv.indexOf('--enable-plugins');
+  const additionalPlugins = additionalPluginsIndex > -1
+    ? process.argv[additionalPluginsIndex + 1].split(',')
+    : [];
+
+  for (const name of additionalPlugins) {
+    const path = `../../plugins/available/${name}`;
+    const { default: Plugin } = await import(path);
+
+    let manifest = null;
+
+    try {
+      manifest = require(`${path}/manifest.json`);
+    }
+    catch (e) {
+      // do nothing
+    }
+
+    const options = manifest !== null
+      ? { manifest, name: manifest.name }
+      : null;
+
+    app.plugin.use(new Plugin(), options);
+  }
+}
 
 if (! process.env.TRAVIS) {
   // Easier debug
@@ -121,8 +150,6 @@ app.controller.register('tests', {
   }
 });
 
-app.plugin.use(new FunctionalTestPlugin());
-
 let vaultfile = 'features-sdk/fixtures/secrets.enc.json';
 if (process.env.SECRETS_FILE_PREFIX) {
   vaultfile = process.env.SECRETS_FILE_PREFIX + vaultfile;
@@ -130,7 +157,9 @@ if (process.env.SECRETS_FILE_PREFIX) {
 app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
 
-app.start().catch(error => {
-  console.error(error);
-  process.exit(1);
-});
+loadAdditionalPlugins()
+  .then(() => app.start())
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });

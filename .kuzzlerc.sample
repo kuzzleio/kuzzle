@@ -120,6 +120,27 @@
       "initTimeout": 2000,
       "maxConcurrentPipes": 50,
       "pipesBufferSize": 50000
+    },
+
+    // plugin logger configuration.
+    // see https://github.com/kuzzleio/kuzzle-plugin-logger
+    "kuzzle-plugin-logger": {
+      "services": {
+        "stdout": {
+          "level": "warning"
+        }
+      }
+    },
+
+    // plugin auth local strategy
+    // see https://github.com/kuzzleio/kuzzle-plugin-passport-local
+    "kuzzle-plugin-auth-passport-local": {
+      "algorithm": "sha512",
+      "stretching": true,
+      "digest": "hex",
+      "encryption": "hmac",
+      "requirePassword": false,
+      "passwordPolicies": []
     }
 
     // Custom plugin configurations must be described here.

@@ -23,6 +23,8 @@
 import fs from 'fs';
 import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
+import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
+import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
 import Plugin from '../plugin/plugin';
@@ -396,6 +398,11 @@ export class Backend {
   public version: string;
 
   /**
+   * Current Git commit (if available)
+   */
+  public commit: string | null;
+
+  /**
    * Errors manager
    * @todo add type
    */
@@ -516,6 +523,8 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
+
+    this.commit = this._readCommit();
   }
 
   /**
@@ -528,12 +537,19 @@ export class Backend {
 
     this._kuzzle = new Kuzzle(this.config.content);
 
+    // we need to load the default plugins
+    this.plugin.use(
+      new PluginPassportAuthLocal(),
+      { name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
+
     const application = new Plugin(
       this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });
 
     application.version = this.version;
+    application.commit = this.commit;
 
     const options = {
       fixtures: this._support.fixtures,
@@ -591,6 +607,28 @@ export class Backend {
       init: () => {},
       pipes: this._pipes,
     };
+  }
+
+  /**
+   * Try to read the current commit hash.
+   */
+  private _readCommit (dir = process.cwd(), depth = 3) {
+    if (depth === 0) {
+      return null;
+    }
+
+    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+      return this._readCommit(`${dir}/..`, depth - 1);
+    }
+
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+
+    if (! fs.existsSync(refFile)) {
+      return null;
+    }
+
+    return fs.readFileSync(refFile, 'utf8').replace('\n', '');
   }
 
 }

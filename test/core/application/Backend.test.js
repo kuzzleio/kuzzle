@@ -3,16 +3,28 @@
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
+const mockrequire = require('mock-require');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
-const { Backend } = require('../../../lib/core/application/backend.ts');
+// const { Backend } = require('../../../lib/core/application/backend');
 const EmbeddedSDK = require('../../../lib/core/shared/sdk/embeddedSdk');
 const Kuzzle = require('../../../lib/kuzzle/kuzzle');
+const FsMock = require('../../mocks/fs.mock');
 
 describe('Backend', () => {
   let application;
+  let fsStub;
+  let Backend;
 
   beforeEach(() => {
+    fsStub = new FsMock();
+    mockrequire('fs', fsStub);
+    fsStub.existsSync.returns(true);
+    fsStub.readFileSync.returns('ref: refs/master');
+
+    const modul = mockrequire.reRequire('../../../lib/core/application/backend');
+    Backend = modul.Backend;
+
     application = new Backend('black-mesa');
   });
 
@@ -54,7 +66,7 @@ describe('Backend', () => {
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
-      application._plugins = 'plugins';
+      application._plugins = {};
       application._support = {
         mappings: 'mappings',
         fixtures: 'fixtures',
@@ -70,11 +82,13 @@ describe('Backend', () => {
       should(plugin.application).be.true();
       should(plugin.name).be.eql('black-mesa');
       should(plugin.version).be.eql('42.21.84');
+      should(plugin.commit).be.String();
       should(plugin.instance).be.eql(application._instanceProxy);
 
       should(options.secretsFile).be.eql(application._secretsFile);
       should(options.vaultKey).be.eql(application._vaultKey);
-      should(options.plugins).be.eql(application._plugins);
+      should(options.plugins)
+        .have.keys('kuzzle-plugin-logger', 'kuzzle-plugin-auth-passport-local');
       should(options.mappings).be.eql(application._support.mappings);
       should(options.fixtures).be.eql(application._support.fixtures);
       should(options.securities).be.eql(application._support.securities);
