@@ -224,8 +224,9 @@ jobs:
         directories: node_modules
       install:
         - sudo sysctl -w vm.max_map_count=262144
-        - sudo npm i -g n
       script:
+        # avoid write /dev/stdout: resource temporarily unavailable
+        # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
         - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
         - ./.ci/scripts/run-test-cluster.sh
 
