@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 set -ex
+
+trap 'docker-compose -f ./.ci/test-cluster.yml logs' err exit
 
 if [ -z "$NODE_VERSION" ];
 then
@@ -19,7 +21,7 @@ echo "[$(date)] - Starting Kuzzle Cluster..."
 
 docker-compose -f ./.ci/test-cluster.yml up -d
 
-# don't wait on 7512: nginx will accept connections far before Kuzzle
+# don't wait on 7512: nginx will accept connections far before Kuzzle does
 KUZZLE_PORT=17510 ./bin/wait-kuzzle
 KUZZLE_PORT=17511 ./bin/wait-kuzzle
 KUZZLE_PORT=17512 ./bin/wait-kuzzle
