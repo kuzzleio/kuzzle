@@ -17,6 +17,8 @@ npm ci --silent --unsafe-perm
 
 ./.ci/scripts/install-plugins.sh
 
+npm run build-ts
+
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
 docker-compose -f ./.ci/test-cluster.yml up -d
