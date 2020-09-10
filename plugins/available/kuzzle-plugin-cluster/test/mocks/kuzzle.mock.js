@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-
 const sinon = require('sinon');
 
 class KuzzleMock {
@@ -44,12 +43,6 @@ class KuzzleMock {
       ])
     };
 
-    this.hotelClerk = {
-      customers: new Map(),
-      rooms: new Map(),
-      _removeRoomEverywhere: sinon.spy()
-    };
-
     this.storageEngine = {
       indexCache: {
         add: sinon.spy(),
@@ -60,11 +53,6 @@ class KuzzleMock {
 
     this.janitor = {
       dump: sinon.spy()
-    };
-
-    this.notifier = {
-      _notifyDocument: sinon.stub(),
-      _notifyUser: sinon.stub()
     };
 
     this.pluginsManager = {

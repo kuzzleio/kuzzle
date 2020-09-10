@@ -46,7 +46,7 @@ Then(/^The notification should have "([^"]*)" array with ([\d]*) element/, funct
   } else {
     console.log('Wrong notification received: ');
     console.dir(this.api.responses, { colors: true, depth: null });
-    callback('The document was supposed to contain the member "' + member + '" with ' + n_elements + ' elements : Has '+ this.api.responses.result[member].length +'.');
+    callback(new Error(`The document was supposed to contain the member "${member}" with ${n_elements} elements: Has ${this.api.responses.result[member].length}.`));
   }
 });
 
@@ -57,13 +57,13 @@ Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, 
   else {
     console.log('Wrong notification received: ');
     console.dir(this.api.responses, {colors: true, depth: null});
-    callback('The document was ' + (not ? 'not ' : '') + 'supposed to contain the member "' + member + '"');
+    callback(new Error(`The document was ${not ? 'not ' : ''} supposed to contain the member "${member}"`));
   }
 });
 
 Then(/^The notification should have volatile/, function (callback) {
   if (!this.api.responses.volatile) {
-    return callback('Expected volatile in the notification but none was found');
+    return callback(new Error('Expected volatile in the notification but none was found'));
   }
 
   let diff = Object.keys(this.volatile).length !== Object.keys(this.api.responses.volatile).length;
@@ -79,7 +79,7 @@ Then(/^The notification should have volatile/, function (callback) {
   });
 
   if (diff) {
-    callback('Expected ' + JSON.stringify(this.api.responses.volatile) + ' to match ' + JSON.stringify(this.volatile));
+    callback(new Error(`Expected ${JSON.stringify(this.api.responses.volatile)} to match ${JSON.stringify(this.volatile)}`));
   } else {
     callback();
   }

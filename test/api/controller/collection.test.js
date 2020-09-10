@@ -1,14 +1,17 @@
 'use strict';
 
 const should = require('should');
-const CollectionController = require('../../../lib/api/controller/collection');
+const sinon = require('sinon');
 const {
   Request,
   BadRequestError,
   NotFoundError,
   SizeLimitError
 } = require('kuzzle-common-objects');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const CollectionController = require('../../../lib/api/controller/collection');
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('Test: collection controller', () => {
@@ -358,15 +361,22 @@ describe('Test: collection controller', () => {
   });
 
   describe('#list', () => {
+    let realtimeListCollectionsStub;
+
     beforeEach(() => {
       collectionController.publicStorage.listCollections.resolves(['col', 'loc']);
-      kuzzle.hotelClerk.getRealtimeCollections.returns(['foo', 'bar']);
+      realtimeListCollectionsStub = kuzzle.ask
+        .withArgs('core:realtime:collections:get', sinon.match.string)
+        .resolves(['foo', 'bar']);
     });
 
     it('should resolve to a full collections list', async () => {
       const response = await collectionController.list(request);
 
-      should(kuzzle.hotelClerk.getRealtimeCollections).be.calledOnce();
+      should(kuzzle.ask).calledWith(
+        'core:realtime:collections:get',
+        request.input.resource.index);
+
       should(collectionController.publicStorage.listCollections)
         .be.calledWith(index);
 
@@ -383,97 +393,114 @@ describe('Test: collection controller', () => {
     it('should reject the request if an invalid "type" argument is provided', () => {
       request = new Request({index: 'index', type: 'foo'});
 
-      should(collectionController.list(request)).rejectedWith(
+      return should(collectionController.list(request)).rejectedWith(
         BadRequestError,
         { id: 'api.assert.invalid_argument' });
     });
 
-    it('should only return stored collections with type = stored', () => {
+    it('should only return stored collections with type = stored', async () => {
       request = new Request({index: 'index', type: 'stored'});
 
-      return collectionController.list(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.type).be.exactly('stored');
-          should(kuzzle.hotelClerk.getRealtimeCollections).not.be.called();
-          should(collectionController.publicStorage.listCollections).be.called();
-        });
+      const response = await collectionController.list(request);
+
+      should(response).be.instanceof(Object);
+      should(response.type).be.exactly('stored');
+      should(realtimeListCollectionsStub).not.be.called();
+      should(collectionController.publicStorage.listCollections).be.called();
     });
 
-    it('should only return realtime collections with type = realtime', () => {
+    it('should only return realtime collections with type = realtime', async () => {
       request = new Request({index: 'index', type: 'realtime'});
 
-      return collectionController.list(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.type).be.exactly('realtime');
-          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(collectionController.publicStorage.listCollections).not.be.called();
-        });
+      const response = await collectionController.list(request);
+
+      should(response).be.instanceof(Object);
+      should(response.type).be.exactly('realtime');
+      should(realtimeListCollectionsStub)
+        .calledWith('core:realtime:collections:get', 'index');
+      should(collectionController.publicStorage.listCollections).not.be.called();
     });
 
-    it('should return a portion of the collection list if from and size are specified', () => {
+    it('should return a portion of the collection list if from and size are specified', async () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
       collectionController.publicStorage.listCollections.resolves(['astored', 'bstored', 'cstored', 'dstored', 'estored']);
-      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
+      realtimeListCollectionsStub.resolves([
+        'arealtime',
+        'brealtime',
+        'crealtime',
+        'drealtime',
+        'erealtime'
+      ]);
 
-      return collectionController.list(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.collections).be.deepEqual([
-            {name: 'brealtime', type: 'realtime'},
-            {name: 'bstored', type: 'stored'},
-            {name: 'crealtime', type: 'realtime'}
-          ]);
-          should(response.type).be.exactly('all');
-          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(collectionController.publicStorage.listCollections).be.called();
-        });
+      const response = await collectionController.list(request);
+
+      should(response).be.instanceof(Object);
+      should(response.collections).be.deepEqual([
+        {name: 'brealtime', type: 'realtime'},
+        {name: 'bstored', type: 'stored'},
+        {name: 'crealtime', type: 'realtime'}
+      ]);
+      should(response.type).be.exactly('all');
+      should(realtimeListCollectionsStub)
+        .calledWith('core:realtime:collections:get', 'index');
+      should(collectionController.publicStorage.listCollections).be.called();
     });
 
-    it('should return a portion of the collection list if from is specified', () => {
+    it('should return a portion of the collection list if from is specified', async () => {
       request = new Request({index: 'index', type: 'all', from: 8});
       collectionController.publicStorage.listCollections.resolves(['astored', 'bstored', 'cstored', 'dstored', 'estored']);
-      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
+      realtimeListCollectionsStub.resolves([
+        'arealtime',
+        'brealtime',
+        'crealtime',
+        'drealtime',
+        'erealtime'
+      ]);
 
-      return collectionController.list(request)
-        .then(response => {
-          should(response.type).be.exactly('all');
-          should(response.collections).be.deepEqual([
-            {name: 'erealtime', type: 'realtime'},
-            {name: 'estored', type: 'stored'}
-          ]);
-          should(response).be.instanceof(Object);
-          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(collectionController.publicStorage.listCollections).be.called();
-        });
+      const response = await collectionController.list(request);
+
+      should(response.type).be.exactly('all');
+      should(response.collections).be.deepEqual([
+        {name: 'erealtime', type: 'realtime'},
+        {name: 'estored', type: 'stored'}
+      ]);
+      should(response).be.instanceof(Object);
+      should(realtimeListCollectionsStub)
+        .calledWith('core:realtime:collections:get', 'index');
+      should(collectionController.publicStorage.listCollections).be.called();
     });
 
-    it('should return a portion of the collection list if size is specified', () => {
+    it('should return a portion of the collection list if size is specified', async () => {
       request = new Request({index: 'index', type: 'all', size: 2});
       collectionController.publicStorage.listCollections.resolves(['astored', 'bstored', 'cstored', 'dstored', 'estored']);
-      kuzzle.hotelClerk.getRealtimeCollections.returns(['arealtime', 'brealtime', 'crealtime', 'drealtime', 'erealtime']);
+      realtimeListCollectionsStub.resolves([
+        'arealtime',
+        'brealtime',
+        'crealtime',
+        'drealtime',
+        'erealtime'
+      ]);
 
-      return collectionController.list(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.collections).be.deepEqual([
-            {name: 'arealtime', type: 'realtime'},
-            {name: 'astored', type: 'stored'}
-          ]);
-          should(response.type).be.exactly('all');
-          should(kuzzle.hotelClerk.getRealtimeCollections).be.called();
-          should(collectionController.publicStorage.listCollections).be.called();
-        });
+      const response = await collectionController.list(request);
+
+      should(response).be.instanceof(Object);
+      should(response.collections).be.deepEqual([
+        {name: 'arealtime', type: 'realtime'},
+        {name: 'astored', type: 'stored'}
+      ]);
+      should(response.type).be.exactly('all');
+      should(realtimeListCollectionsStub)
+        .calledWithMatch('core:realtime:collections:get', 'index');
+      should(collectionController.publicStorage.listCollections).be.called();
     });
 
-    it('should reject an error if getting stored collections fails', () => {
+    it('should reject if getting stored collections fails', () => {
       collectionController.publicStorage.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'stored'});
       return should(collectionController.list(request)).be.rejected();
     });
 
-    it('should reject an error if getting all collections fails', () => {
+    it('should reject if getting all collections fails', () => {
       collectionController.publicStorage.listCollections.rejects(new Error('foobar'));
       request = new Request({index: 'index', type: 'all'});
       return should(collectionController.list(request)).be.rejected();

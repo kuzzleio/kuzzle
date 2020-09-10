@@ -63,6 +63,7 @@ Returns a `roomId` property containing the subscription identifier.
   "volatile": {},
   "requestId": "<unique request identifier>",
   "result": {
+    "channel": "<unique channel identifier>",
     "roomId": "<unique Kuzzle room identifier>"
   }
 }

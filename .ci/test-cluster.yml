@@ -2,11 +2,11 @@ version: '3.4'
 
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:2
-  command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
+  command: >
+    sh -c "n $NODE_VERSION &&
+           ./bin/start-kuzzle-server --enable-plugins kuzzle-plugin-cluster"
   volumes:
-    - ".:/var/app"
-    - "./docker/scripts/run-dev.sh:/run-dev.sh"
-    - "./docker/fixtures:/fixtures"
+    - "..:/var/app"
   cap_add:
     - SYS_PTRACE
   ulimits:
@@ -24,24 +24,20 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_server__protocols__mqtt__enabled=true
     - kuzzle_server__protocols__mqtt__developmentMode=false
     - kuzzle_limits__loginsPerSecond=50
-    - NODE_ENV=${NODE_ENV:-development}
-    - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:entry-point:protocols:websocket}
-    # - DEBUG=${DEBUG:-none}
-    - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
-    - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
-    - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
-    - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
-    - DEBUG_COLORS=${DEBUG_COLORS:-on}
-    - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
-    - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features-sdk/fixtures/secrets.enc.json}
-    # Variables used by the development scripts
-    - NODE_12_VERSION=12.13.0
-    - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
-    - REBUILD # Force a rebuild of npm modules
+    - NODE_ENV=development
+    - DEBUG=none
+    - SECRETS_FILE_PREFIX=/var/app/
+    # Travis env var must be propagated into the container
+    - TRAVIS
+    - TRAVIS_COMMIT
+    - TRAVIS_JOB_NUMBER
+    - TRAVIS_BRANCH
+    - TRAVIS_JOB_ID
+    - TRAVIS_PULL_REQUEST
+    - TRAVIS_REPO_SLUG
     # cluster
     - kuzzle_plugins__cluster__privileged=true
     - kuzzle_plugins__cluster__minimumNodes=3
-    - KUZZLE_PLUGINS=kuzzle-plugin-cluster
 
 services:
   nginx:
@@ -54,7 +50,7 @@ services:
     ports:
       - "7512:7512"
     volumes:
-      - ./docker/nginx-dev:/etc/nginx/conf.d
+      - ../docker/nginx-dev:/etc/nginx/conf.d
 
   kuzzle_node_1:
     <<: *kuzzle-config

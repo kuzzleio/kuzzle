@@ -20,26 +20,26 @@
  */
 
 
-const
-  mockRequire = require('mock-require'),
-  KuzzleMock = require('../mocks/kuzzle.mock'),
-  NodeMock = require('../mocks/node.mock'),
-  RedisMock = require('../mocks/redis.mock'),
-  {
+const should = require('should');
+const sinon = require('sinon');
+const mockRequire = require('mock-require');
+const {
+  Request,
+  errors: {
     BadRequestError,
-    NotFoundError
-  } = require('kuzzle-common-objects').errors,
-  Request = require('kuzzle-common-objects').Request,
-  should = require('should'),
-  sinon = require('sinon');
+    NotFoundError,
+  }
+} = require('kuzzle-common-objects');
 
-let
-  Cluster;
+const KuzzleMock = require('../mocks/kuzzle.mock');
+const NodeMock = require('../mocks/node.mock');
+const RedisMock = require('../mocks/redis.mock');
+
+let Cluster;
 
 describe('index', () => {
-  let
-    cluster,
-    context;
+  let cluster;
+  let context;
 
   beforeEach(() => {
     mockRequire('ioredis', RedisMock);
@@ -120,22 +120,27 @@ describe('index', () => {
           collection: 'collection'
         });
 
-        cluster.beforeJoin(new Request({
+        const request = new Request({
           controller: 'realtime',
           action: 'join',
           body: {
-            roomId: 'roomId'
-          }
-        }), () => {
-          should(cluster.kuzzle.hotelClerk.rooms).have.value('roomId', {
-            index: 'index',
-            collection: 'collection',
-            id: 'roomId',
-            customers: new Set(),
-            channels: {}
-          });
+            roomId: 'roomId',
+          },
+        });
 
-          done();
+        cluster.beforeJoin(request, () => {
+          try {
+            should(cluster.kuzzle.ask).calledWith(
+              'core:realtime:room:create',
+              'index',
+              'collection',
+              'roomId');
+
+            done();
+          }
+          catch (e) {
+            done(e);
+          }
         });
       });
 
@@ -360,130 +365,104 @@ describe('index', () => {
     });
 
     describe('#subscriptionAdded', () => {
-      it('should persist Kuzzle state in redis and broadcast a sync request', () => {
-        should(cluster.pipes['core:hotelClerk:addSubscription'])
+      it('should persist Kuzzle state in redis and broadcast a sync request', async () => {
+        should(cluster.pipes['core:realtime:user:subscribe:after'])
           .eql('subscriptionAdded');
 
-        cluster.kuzzle.hotelClerk.rooms.set('roomId', {
-          customers: new Set(['customer']),
-          channels: {},
-          index: 'index',
-          collection: 'collection'
-        });
         cluster._serializeRoom = JSON.stringify;
 
-        return cluster.subscriptionAdded({
+        await cluster.subscriptionAdded({
           index: 'index',
           collection: 'collection',
           filters: 'filters',
           roomId: 'roomId',
           connectionId: 'connectionId'
-        })
-          .then(() => {
-            should(cluster.redis.clusterSubOn)
-              .be.calledWith('{index/collection}',
-                cluster.uuid,
-                'roomId',
-                'connectionId',
-                JSON.stringify({
-                  index: 'index',
-                  collection: 'collection',
-                  filters: 'filters'
-                })
-              );
+        });
 
-            should(cluster.node.broadcast)
-              .be.calledWith('cluster:sync', {
-                index: 'index',
-                collection: 'collection',
-                roomId: 'roomId',
-                event: 'state',
-                post: 'add'
-              });
-          });
+        should(cluster.redis.clusterSubOn).be.calledWith(
+          '{index/collection}',
+          cluster.uuid,
+          'roomId',
+          'connectionId',
+          JSON.stringify({
+            index: 'index',
+            collection: 'collection',
+            filters: 'filters',
+          }));
+
+        should(cluster.node.broadcast).be.calledWith('cluster:sync', {
+          index: 'index',
+          collection: 'collection',
+          roomId: 'roomId',
+          event: 'state',
+          post: 'add',
+        });
       });
     });
 
     describe('#subscriptionJoined', () => {
-      it('should persist Kuzzle state in redis and broadcast changes', () => {
-        should(cluster.pipes['core:hotelClerk:join'])
+      it('should persist Kuzzle state in redis and broadcast changes', async () => {
+        should(cluster.pipes['core:realtime:user:join:after'])
           .eql('subscriptionJoined');
-
-        cluster.kuzzle.hotelClerk.rooms.set('roomId', {
-          customers: new Set(['customer']),
-          channels: {},
-          index: 'index',
-          collection: 'collection'
-        });
         cluster._serializeRoom = JSON.stringify;
 
-        return cluster.subscriptionJoined({
+        await cluster.subscriptionJoined({
           index: 'index',
           collection: 'collection',
           roomId: 'roomId',
           connectionId: 'connectionId'
-        })
-          .then(() => {
-            should(cluster.redis.clusterSubOn)
-              .be.calledWith('{index/collection}',
-                cluster.uuid,
-                'roomId',
-                'connectionId',
-                'none'
-              );
+        });
 
-            should(cluster.node.broadcast)
-              .be.calledWith('cluster:sync', {
-                index: 'index',
-                collection: 'collection',
-                roomId: 'roomId',
-                event: 'state',
-                post: 'join'
-              });
-          });
+        should(cluster.redis.clusterSubOn).be.calledWith(
+          '{index/collection}',
+          cluster.uuid,
+          'roomId',
+          'connectionId',
+          'none');
+
+        should(cluster.node.broadcast).be.calledWith('cluster:sync', {
+          index: 'index',
+          collection: 'collection',
+          roomId: 'roomId',
+          event: 'state',
+          post: 'join',
+        });
       });
 
     });
 
     describe('#subscriptionOff', () => {
-      it('should persist Kuzzle state in redis and broadcast changes', () => {
-        should(cluster.pipes['core:hotelClerk:removeRoomForCustomer'])
+      it('should persist Kuzzle state in redis and broadcast changes', async () => {
+        should(cluster.pipes['core:realtime:user:unsubscribe:after'])
           .eql('subscriptionOff');
 
         cluster.node.state.getVersion.returns(1);
-        cluster.kuzzle.hotelClerk.rooms.set('roomId', {
-          id: 'roomId',
-          customers: new Set(['customer', 'customers2']),
-          channels: {},
-          index: 'index',
-          collection: 'collection'
-        });
         cluster.redis.clusterSubOff.resolves([42, '0', 'debug']);
 
-        return cluster.subscriptionOff({
-          room: cluster.kuzzle.hotelClerk.rooms.get('roomId'),
+        await cluster.subscriptionOff({
+          room: {
+            id: 'roomId',
+            index: 'index',
+            collection: 'collection',
+          },
           requestContext: {
             connectionId: 'connectionId'
           }
-        })
-          .then(() => {
-            should(cluster.redis.clusterSubOff)
-              .be.calledWith(
-                '{index/collection}',
-                cluster.uuid,
-                'roomId',
-                'connectionId'
-              );
+        });
 
-            should(cluster.node.broadcast)
-              .be.calledWith('cluster:sync', {
-                index: 'index',
-                collection: 'collection',
-                roomId: 'roomId',
-                event: 'state',
-                post: 'off'
-              });
-          });
+        should(cluster.redis.clusterSubOff).be.calledWith(
+          '{index/collection}',
+          cluster.uuid,
+          'roomId',
+          'connectionId',);
+
+        should(cluster.node.broadcast).be.calledWith('cluster:sync', {
+          index: 'index',
+          collection: 'collection',
+          roomId: 'roomId',
+          event: 'state',
+          post: 'off',
+        });
       });
 
     });
@@ -506,85 +485,12 @@ describe('index', () => {
 
     describe('#roomCreated', () => {
       it('should flag the room to protect it', () => {
-        should(cluster.hooks['room:new'])
+        should(cluster.hooks['core:realtime:room:create:after'])
           .eql('roomCreated');
 
         cluster.roomCreated({roomId: 'roomId'});
 
-        should(cluster.node.state.locks.create.has('roomId'))
-          .be.true();
-      });
-    });
-
-    describe('#unlockCreateRoom', () => {
-      it('should do nothing if the incoming request does not have a body', () => {
-        const request = new Request({});
-        cluster.node.state.locks.create = {
-          delete: sinon.spy()
-        };
-
-        cluster.unlockCreateRoom(request);
-        should(cluster.node.state.locks.create.delete)
-          .not.be.called();
-      });
-
-      it('should do nothing if the incoming request does not have a roomId', () => {
-        const request = new Request({ body: { foo: 'bar' }});
-        cluster.node.state.locks.create = {
-          delete: sinon.spy()
-        };
-
-        cluster.unlockCreateRoom(request);
-        should(cluster.node.state.locks.create.delete)
-          .not.be.called();
-      });
-
-      it('should delete the lock for the given roomId', () => {
-        const request = new Request({ body: { roomId: 'roomId' }});
-        cluster.node.state.locks.create = {
-          delete: sinon.spy()
-        };
-
-        cluster.unlockCreateRoom(request);
-        should(cluster.node.state.locks.create.delete)
-          .be.calledOnce()
-          .be.calledWith('roomId');
-      });
-    });
-
-    describe('#unlockDeleteRoom', () => {
-      it('should do nothing if the incoming request does not have a body', () => {
-        const request = new Request({});
-        cluster.node.state.locks.delete = {
-          delete: sinon.spy()
-        };
-
-        cluster.unlockDeleteRoom(request);
-        should(cluster.node.state.locks.delete.delete)
-          .not.be.called();
-      });
-
-      it('should do nothing if the incoming request does not have a room id', () => {
-        const request = new Request({ body: { foo: 'bar' } });
-        cluster.node.state.locks.delete = {
-          delete: sinon.spy()
-        };
-
-        cluster.unlockDeleteRoom(request);
-        should(cluster.node.state.locks.delete.delete)
-          .not.be.called();
-      });
-
-      it('should delete the lock for the given room id', () => {
-        const request = new Request({ body: { roomId: 'roomId' } });
-        cluster.node.state.locks.delete = {
-          delete: sinon.spy()
-        };
-
-        cluster.unlockDeleteRoom(request);
-        should(cluster.node.state.locks.delete.delete)
-          .be.calledOnce()
-          .be.calledWith('roomId');
+        should(cluster.node.state.locks.create.has('roomId')).be.true();
       });
     });
 

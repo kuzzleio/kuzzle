@@ -20,17 +20,17 @@
  */
 'use strict';
 
-const
-  Bluebird = require('bluebird'),
-  debug = require('debug')('kuzzle:cluster'),
-  debugNotify = require('debug')('kuzzle:cluster:notify'),
-  debugSync = require('debug')('kuzzle:cluster:sync'),
-  {
-    InternalError: KuzzleInternalError
-  } = require('kuzzle-common-objects').errors,
-  RedisStateManager = require('./redis/manager'),
-  Request = require('kuzzle-common-objects').Request,
-  zeromq = require('zeromq');
+const Bluebird = require('bluebird');
+const debug = require('debug')('kuzzle:cluster');
+const debugNotify = require('debug')('kuzzle:cluster:notify');
+const debugSync = require('debug')('kuzzle:cluster:sync');
+const zeromq = require('zeromq');
+const {
+  Request,
+  InternalError: KuzzleInternalError,
+} = require('kuzzle-common-objects');
+
+const RedisStateManager = require('./redis/manager');
 
 class Node {
   constructor (context) {
@@ -386,22 +386,22 @@ class Node {
     }
     else if (room === 'cluster:notify:document') {
       debugNotify('doc %o', data);
-      this.kuzzle.notifier._notifyDocument(
+      await this.kuzzle.ask(
+        'core:realtime:document:dispatch',
         data.rooms,
         new Request(data.request.data, data.request.options),
         data.scope,
         data.action,
-        data.content
-      );
+        data.content);
     }
     else if (room === 'cluster:notify:user') {
       debugNotify('user %o', data);
-      this.kuzzle.notifier._notifyUser(
+      this.kuzzle.ask(
+        'core:realtime:user:sendMessage',
         data.room,
         new Request(data.request.data, data.request.options),
         data.scope,
-        data.content
-      );
+        data.content);
     }
     else if (room === 'cluster:ready') {
       if (data.pub !== this.uuid && !this.pool[data.pub]) {

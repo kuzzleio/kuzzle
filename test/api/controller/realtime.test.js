@@ -1,29 +1,36 @@
 'use strict';
 
+const sinon = require('sinon');
 const should = require('should');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
 const RealtimeController = require('../../../lib/api/controller/realtime');
 const {
   Request,
   BadRequestError
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('RealtimeController', () => {
   let kuzzle;
   let request;
   let realtimeController;
-  let foo = {foo: 'bar'};
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     realtimeController = new RealtimeController(kuzzle);
-    request = new Request({
-      index: 'test',
-      collection: 'collection',
-      controller: 'realtime',
-      body: {}
-    }, {user: {_id: '42'}});
+    request = new Request(
+      {
+        index: 'test',
+        collection: 'collection',
+        controller: 'realtime',
+        body: {}
+      },
+      {
+        connection: {id: 'connectionId'},
+        user: {_id: '42'},
+      });
   });
 
   describe('#constructor', () => {
@@ -54,38 +61,42 @@ describe('RealtimeController', () => {
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
-    it('should call the proper hotelClerk method',() => {
-      return realtimeController.subscribe(request)
-        .then(result => {
-          should(result).be.match(foo);
-          should(kuzzle.hotelClerk.addSubscription).be.calledOnce();
-          should(kuzzle.hotelClerk.addSubscription).be.calledWith(request);
-          should(request.input.args.propagate).be.true();
-        });
+    it('should ask for the proper realtime event', async () => {
+      const subscribeResult = { roomId: 'foo', channel: 'bar' };
+      const stub = kuzzle.ask
+        .withArgs('core:realtime:subscribe', request)
+        .resolves(subscribeResult);
+      const result = await realtimeController.subscribe(request);
+
+      should(result).be.match(subscribeResult);
+      should(stub).calledOnce();
+      should(request.input.args.propagate).be.true();
     });
 
     it('should handle propagate flag only with funnel protocol', async () => {
+      const stub = kuzzle.ask.withArgs('core:realtime:subscribe', request);
+
       request.context.connection.protocol = 'funnel';
       request.input.args.propagate = false;
 
       await realtimeController.subscribe(request);
 
-      let req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
+      let req = stub.getCall(0).args[1];
       should(req.input.args.propagate).be.false();
-
 
       request.context.connection.protocol = 'http';
       request.input.args.propagate = false;
 
       await realtimeController.subscribe(request);
 
-      req = kuzzle.hotelClerk.addSubscription.getCall(0).args[0];
+      req = stub.getCall(1).args[1];
       should(req.input.args.propagate).be.true();
     });
 
-    it('should return nothing if the connection is dead', async () => {
-      // the check is actually done in the hotelclerk and returns undefined if so
-      kuzzle.hotelClerk.addSubscription.resolves();
+    it('should return nothing if the subscription is not performed', async () => {
+      kuzzle.ask
+        .withArgs('core:realtime:subscribe', sinon.match.object)
+        .resolves(null);
 
       const result = await realtimeController.subscribe(request);
 
@@ -106,24 +117,16 @@ describe('RealtimeController', () => {
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should call the proper hotelClerk method',() => {
+    it('should ask for the correct ask event', async () => {
+      const expected = { roomId: 'foo', channel: 'bar' };
       request.input.body.roomId = 'foo';
 
-      return realtimeController.join(request)
-        .then(result => {
-          should(result).be.match(foo);
-          should(kuzzle.hotelClerk.join).be.calledOnce();
-          should(kuzzle.hotelClerk.join).be.calledWith(request);
-        });
-    });
+      kuzzle.ask.withArgs('core:realtime:join', request).resolves(expected);
 
-    it('should return nothing if the connection is dead', async () => {
-      // the check is actually done in the hotelclerk and returns null if so
-      kuzzle.hotelClerk.addSubscription.resolves();
+      const result = await realtimeController.join(request);
 
-      const result = await realtimeController.subscribe(request);
-
-      should(result).be.null();
+      should(kuzzle.ask).calledWithMatch('core:realtime:join', request);
+      should(result).match(expected);
     });
   });
 
@@ -140,15 +143,14 @@ describe('RealtimeController', () => {
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should call the proper hotelClerk method',() => {
+    it('should send the correct ask event', async () => {
       request.input.body.roomId = 'foo';
 
-      return realtimeController.unsubscribe(request)
-        .then(result => {
-          should(result).be.match(foo);
-          should(kuzzle.hotelClerk.removeSubscription).be.calledOnce();
-          should(kuzzle.hotelClerk.removeSubscription).be.calledWith(request);
-        });
+      const result = await realtimeController.unsubscribe(request);
+
+      should(result).be.match({ roomId: 'foo' });
+      should(kuzzle.ask)
+        .calledWithMatch('core:realtime:unsubscribe', 'connectionId', 'foo');
     });
   });
 
@@ -165,23 +167,25 @@ describe('RealtimeController', () => {
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should call the proper hotelClerk method',() => {
+    it('should send the correct ask event', async () => {
+      const stub = kuzzle.ask
+        .withArgs('core:realtime:room:size:get', 'foo')
+        .resolves(42);
+
       request.input.body.roomId = 'foo';
 
-      return realtimeController.count(request)
-        .then(result => {
-          should(result).be.match(foo);
-          should(kuzzle.hotelClerk.countSubscription).be.calledOnce();
-          should(kuzzle.hotelClerk.countSubscription).be.calledWith(request);
-        });
+      const result = await realtimeController.count(request);
+
+      should(result).match({ count: 42 });
+      should(stub).calledOnce();
     });
   });
 
   describe('#list', () => {
-    it('should call the proper hotelClerk method', async () => {
+    it('should ask for the proper realtime event', async () => {
       await realtimeController.list(request);
-      should(kuzzle.hotelClerk.listSubscriptions).be.calledOnce();
-      should(kuzzle.hotelClerk.listSubscriptions).be.calledWith(request);
+      should(kuzzle.ask)
+        .calledWith('core:realtime:list', request.context.user);
     });
   });
 
@@ -196,8 +200,7 @@ describe('RealtimeController', () => {
 
       should(kuzzle.validation.validate).be.calledOnce();
 
-      should(kuzzle.notifier.publish).be.calledOnce();
-      should(kuzzle.notifier.publish).be.calledWith(request);
+      should(kuzzle.ask).be.calledWithMatch('core:realtime:publish', request);
 
       should(response).match({published: true});
     });
@@ -205,9 +208,12 @@ describe('RealtimeController', () => {
     it('should add basic metadata to body', async () => {
       await realtimeController.publish(request);
 
-      should(kuzzle.notifier.publish).be.calledOnce();
+      should(kuzzle.ask).calledWithMatch('core:realtime:publish', request);
 
-      const req = kuzzle.notifier.publish.getCall(0).args[0];
+      const req = kuzzle.ask
+        .withArgs('core:realtime:publish', sinon.match.object)
+        .getCall(0).args[1];
+
       should(req.input.body._kuzzle_info).be.instanceof(Object);
       should(req.input.body._kuzzle_info.author).be.eql('42');
       should(req.input.body._kuzzle_info.createdAt).be.approximately(Date.now(), 100);
@@ -220,8 +226,7 @@ describe('RealtimeController', () => {
 
       should(kuzzle.validation.validate).be.calledOnce();
 
-      should(kuzzle.notifier.publish).be.calledOnce();
-      should(kuzzle.notifier.publish).be.calledWith(request);
+      should(kuzzle.ask).calledWithMatch('core:realtime:publish', request);
 
       should(response).match({published: true});
     });
