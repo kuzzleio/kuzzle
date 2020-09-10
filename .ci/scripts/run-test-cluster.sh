@@ -2,7 +2,6 @@
 
 set -ex
 
-trap 'docker-compose -f ./.ci/test-cluster.yml logs' err exit
 
 if [ -z "$NODE_VERSION" ];
 then
@@ -21,11 +20,15 @@ npm run build-ts
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
+trap 'docker-compose -f ./.ci/test-cluster.yml logs' err
+
 docker-compose -f ./.ci/test-cluster.yml up -d
 
 # don't wait on 7512: nginx will accept connections far before Kuzzle does
 KUZZLE_PORT=17510 ./bin/wait-kuzzle
 KUZZLE_PORT=17511 ./bin/wait-kuzzle
 KUZZLE_PORT=17512 ./bin/wait-kuzzle
+
+trap - err
 
 npm run test:functional:legacy:cluster
