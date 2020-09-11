@@ -77,7 +77,7 @@ The provided `room` object has the following properties:
 Triggered whenever a new realtime room is subscribed (NOT triggered if a user subscribes to an existing room).
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 | Arguments | Type              | Description             |
@@ -103,7 +103,7 @@ The provided `room` object has the following properties:
 Triggered whenever a realtime room is deleted, which happens when the last subscriber leaves it.
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 | Arguments | Type              | Description            |
@@ -217,7 +217,7 @@ Use `core:realtime:room:create:after` instead.
 Triggered whenever a new [subscription](/core/2/api/controllers/realtime/subscribe) is created.
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 ### room
@@ -249,7 +249,7 @@ Use `core:realtime:room:remove:before` instead.
 Triggered whenever a real-time subscription is cancelled.
 
 :::info
-Pipes cannot listen to that event, only hooks can.
+Pipes cannot listen to this event, only hooks can.
 :::
 
 </DeprecatedBadge>

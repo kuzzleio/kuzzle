@@ -70,39 +70,52 @@ describe('Test: ElasticSearch Wrapper', () => {
       });
     });
 
-    it('should log the source error for easier support & debugging', () => {
-      kuzzle.log.info.resetHistory();
+    describe('logging in production', () => {
+      let nodeEnv;
 
-      const error = new Error('test');
-      error.meta = {
-        statusCode: 420,
-        meta: {
-          request: {
-            oh: 'noes',
-          }
-        }
-      };
-
-      esWrapper.formatESError(error);
-
-      should(kuzzle.log.info).calledWithMatch({
-        message: `Elasticsearch Client error: ${error.message}`,
-        meta: error.meta,
-        stack: error.stack,
+      beforeEach(() => {
+        nodeEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'production';
       });
-    });
 
-    it('should be able to log errors without meta', () => {
-      kuzzle.log.info.resetHistory();
+      afterEach(() => {
+        process.env.NODE_ENV = nodeEnv;
+      });
 
-      const error = new Error('test');
+      it('should log the source error for easier support & debugging', () => {
+        kuzzle.log.info.resetHistory();
 
-      esWrapper.formatESError(error);
+        const error = new Error('test');
+        error.meta = {
+          statusCode: 420,
+          meta: {
+            request: {
+              oh: 'noes',
+            }
+          }
+        };
 
-      should(kuzzle.log.info).calledWithMatch({
-        message: `Elasticsearch Client error: ${error.message}`,
-        meta: null,
-        stack: error.stack,
+        esWrapper.formatESError(error);
+
+        should(kuzzle.log.info).be.calledWith(JSON.stringify({
+          message: `Elasticsearch Client error: ${error.message}`,
+          meta: error.meta,
+          stack: error.stack,
+        }));
+      });
+
+      it('should be able to log errors without meta', () => {
+        kuzzle.log.info.resetHistory();
+
+        const error = new Error('test');
+
+        esWrapper.formatESError(error);
+
+        should(kuzzle.log.info).be.calledWith(JSON.stringify({
+          message: `Elasticsearch Client error: ${error.message}`,
+          meta: null,
+          stack: error.stack,
+        }));
       });
     });
   });
