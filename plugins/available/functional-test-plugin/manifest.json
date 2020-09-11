@@ -1,0 +1,4 @@
+{
+  "name": "functional-test-plugin",
+  "kuzzleVersion": ">=2.0.0"
+}
