@@ -189,8 +189,11 @@ class ControllerManager extends ApplicationManager {
    * The controller class must:
    *  - call the super constructor with the application instance
    *  - extend the "Controller" class
-   *  - define the "name" property
    *  - define the "definition" property
+   *  - (optional) define the "name" property
+   *
+   * The controller name will be infered from the class name.
+   *   e.g. "EmailController" controller name will be "email"
    *
    * @example
    *
@@ -198,18 +201,17 @@ class ControllerManager extends ApplicationManager {
    *   constructor (app) {
    *     super(app);
    *
-   *     this.name = 'email';
-   *
    *     this.definition = {
    *       actions: {
    *         send: {
    *           handler: this.send
    *         }
    *       }
-   *     }
+   *     };
    *   }
    *
-   *   async send () {
+   *   async send (request: Request) {
+   *     // ...
    *   }
    * }
    *
@@ -222,8 +224,20 @@ class ControllerManager extends ApplicationManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
-    for (const [, definition] of Object.entries(controller.definition.actions)) {
+    for (const [action, definition] of Object.entries(controller.definition.actions)) {
+      if (typeof definition.handler !== 'function') {
+        throw assertionError.get(
+          'invalid_controller_definition',
+          name,
+          `Handler for action "${action}" is not a function.`);
+      }
+
       definition.handler = definition.handler.bind(controller);
+    }
+
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
     }
 
     this._add(controller.name, controller.definition);
