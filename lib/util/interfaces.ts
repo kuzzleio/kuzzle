@@ -22,8 +22,6 @@
 import { Request } from 'kuzzle-common-objects';
 import { Backend } from '../core/application/backend';
 
-export * from 'kuzzle-common-objects'
-
 /**
  * An interface representing an object with string key and any value
  */

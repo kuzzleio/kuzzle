@@ -192,8 +192,8 @@ class ControllerManager extends ApplicationManager {
    *  - define the "definition" property
    *  - (optional) define the "name" property
    *
-   * The controller name will be infered from the class name.
-   *   e.g. "EmailController" controller name will be "email"
+   * The controller name will be inferred from the class name.
+   *   e.g. "PaymentSolutionController" will become "payment-solution"
    *
    * @example
    *
