@@ -25,7 +25,6 @@ describe('Test: security/tokenRepository', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.config.security.jwt.secret = 'test-secret';
-    kuzzle.ask.restore();
 
     tokenRepository = new TokenRepository(kuzzle);
 
@@ -69,22 +68,21 @@ describe('Test: security/tokenRepository', () => {
   });
 
   describe('#verify', () => {
-    const verifyEvent = 'core:security:token:verify';
-
     beforeEach(() => {
-      tokenRepository.cacheEngine.get.resolves(null);
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves(null);
     });
 
     it('should register a "verify" event', async () => {
       sinon.stub(tokenRepository, 'verifyToken');
 
-      await kuzzle.ask(verifyEvent, 'hash');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:token:verify', 'hash');
 
       should(tokenRepository.verifyToken).calledWith('hash');
     });
 
     it('should reject the promise if the jwt is invalid', () => {
-      return should(kuzzle.ask(verifyEvent, 'invalidToken'))
+      return should(tokenRepository.verifyToken('invalidToken'))
         .be.rejectedWith(UnauthorizedError, {
           id: 'security.token.invalid'
         });
@@ -96,7 +94,7 @@ describe('Test: security/tokenRepository', () => {
         kuzzle.config.security.jwt.secret,
         {algorithm: kuzzle.config.security.jwt.algorithm});
 
-      return should(kuzzle.ask(verifyEvent, token))
+      return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
           id: 'security.token.invalid'
         });
@@ -108,7 +106,7 @@ describe('Test: security/tokenRepository', () => {
         kuzzle.config.security.jwt.secret,
         {algorithm: kuzzle.config.security.jwt.algorithm, expiresIn: 0});
 
-      return should(kuzzle.ask(verifyEvent, token))
+      return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
           id: 'security.token.expired'
         });
@@ -123,14 +121,14 @@ describe('Test: security/tokenRepository', () => {
       sinon.stub(tokenRepository, 'loadFromCache')
         .rejects(new KuzzleInternalError('Error'));
 
-      return should(kuzzle.ask(verifyEvent, token))
+      return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'security.token.verification_error'
         });
     });
 
     it('should load the anonymous user if the token is null', async () => {
-      const userToken = await kuzzle.ask(verifyEvent, null);
+      const userToken = await tokenRepository.verifyToken(null);
 
       assertIsAnonymous(userToken);
     });
@@ -141,7 +139,7 @@ describe('Test: security/tokenRepository', () => {
         kuzzle.config.security.jwt.secret,
         {algorithm: kuzzle.config.security.jwt.algorithm});
 
-      return should(kuzzle.ask(verifyEvent, token))
+      return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
           id: 'security.token.invalid'
         });
@@ -155,32 +153,33 @@ describe('Test: security/tokenRepository', () => {
         {algorithm: kuzzle.config.security.jwt.algorithm});
       const cacheObj = JSON.stringify({_id, jwt: token});
 
-      tokenRepository.cacheEngine.get
-        .withArgs(tokenRepository.getCacheKey(`${_id}#${token}`))
+      kuzzle.ask
+        .withArgs(
+          'core:cache:internal:get',
+          tokenRepository.getCacheKey(`${_id}#${token}`))
         .resolves(cacheObj);
 
-      const loaded = await kuzzle.ask(verifyEvent, token);
+      const loaded = await tokenRepository.verifyToken(token);
 
       should(loaded).be.instanceOf(Token).and.match(JSON.parse(cacheObj));
 
       // the cache entry must not be refreshed
-      should(tokenRepository.cacheEngine.expire).not.be.called();
+      should(kuzzle.ask).not.be.calledWith('core:cache:internal:expire');
     });
   });
 
   describe('#create', () => {
-    const createEvent = 'core:security:token:create';
-
     it('should register a "create" event', async () => {
       sinon.stub(tokenRepository, 'generateToken');
 
-      await kuzzle.ask(createEvent, 'user', 'opts');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:token:create', 'user', 'opts');
 
       should(tokenRepository.generateToken).calledWith('user', 'opts');
     });
 
     it('should reject the promise if the username is null', () => {
-      return should(kuzzle.ask(createEvent, null))
+      return should(tokenRepository.generateToken(null))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'security.token.unknown_user'
         });
@@ -200,7 +199,7 @@ describe('Test: security/tokenRepository', () => {
 
       sinon.spy(tokenRepository, 'persistForUser');
 
-      const token = await kuzzle.ask(createEvent, user);
+      const token = await tokenRepository.generateToken(user);
 
       should(token).be.an.instanceOf(Token);
       should(token.jwt).be.exactly(checkToken);
@@ -214,9 +213,11 @@ describe('Test: security/tokenRepository', () => {
 
       user._id = 'userInCache';
 
-      tokenRepository.cacheEngine.setex.rejects(new Error('error'));
+      kuzzle.ask
+        .withArgs('core:cache:internal:store')
+        .rejects(new Error('error'));
 
-      return should(kuzzle.ask(createEvent, user))
+      return should(tokenRepository.generateToken(user))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'services.cache.write_failed'
         });
@@ -226,7 +227,9 @@ describe('Test: security/tokenRepository', () => {
       const user = new User();
       user._id = 'id';
 
-      const token = await kuzzle.ask(createEvent, user, {expiresIn: '1000y'});
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '1000y',
+      });
 
       should(token).be.an.instanceOf(Token);
     });
@@ -237,7 +240,9 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      const token = await kuzzle.ask(createEvent, user, {expiresIn: '30s'});
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '30s',
+      });
 
       should(token).be.an.instanceOf(Token);
     });
@@ -248,7 +253,7 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      return should(kuzzle.ask(createEvent, user, {expiresIn: '1m'}))
+      return should(tokenRepository.generateToken(user, {expiresIn: '1m'}))
         .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
     });
 
@@ -258,7 +263,7 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      return should(kuzzle.ask(createEvent, user, { expiresIn: -1 }))
+      return should(tokenRepository.generateToken(user, { expiresIn: -1 }))
         .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
     });
 
@@ -266,7 +271,7 @@ describe('Test: security/tokenRepository', () => {
       const user = new User();
       user._id = 'id';
 
-      return should(kuzzle.ask(createEvent, user, { expiresIn: 'ehh' }))
+      return should(tokenRepository.generateToken(user, { expiresIn: 'ehh' }))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'security.token.generation_failed'
         });
@@ -274,36 +279,39 @@ describe('Test: security/tokenRepository', () => {
   });
 
   describe('#assign', () => {
-    const assignEvent = 'core:security:token:assign';
-
     it('should register an "assign" event', async () => {
       sinon.stub(tokenRepository, 'persistForUser');
 
-      await kuzzle.ask(assignEvent, 'hash', 'user', 'ttl');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:token:assign', 'hash', 'user', 'ttl');
 
       should(tokenRepository.persistForUser).calledWith('hash', 'user', 'ttl');
     });
 
     it('should persist a token with TTL into Redis', async () => {
-      const token = await kuzzle.ask(assignEvent,
+      const token = await tokenRepository.persistForUser(
         'encoded-token',
         'user-id',
         42000);
 
-      should(tokenRepository.cacheEngine.setex)
-        .be.calledOnce()
-        .be.calledWith('repos/kuzzle/token/user-id#encoded-token', 42);
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'repos/kuzzle/token/user-id#encoded-token',
+        JSON.stringify(token),
+        42);
       should(token._id).be.eql('user-id#encoded-token');
       should(token.ttl).be.eql(42000);
       should(token.expiresAt).be.approximately(Date.now() + 42000, 20);
     });
 
     it('should persist a token without TTL into Redis', async () => {
-      await kuzzle.ask(assignEvent, 'encoded-token', 'user-id', -1);
+      const token = await tokenRepository
+        .persistForUser('encoded-token', 'user-id', -1);
 
-      should(tokenRepository.cacheEngine.set)
-        .be.calledOnce()
-        .be.calledWith('repos/kuzzle/token/user-id#encoded-token');
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'repos/kuzzle/token/user-id#encoded-token',
+        JSON.stringify(token));
     });
   });
 
@@ -320,12 +328,11 @@ describe('Test: security/tokenRepository', () => {
   });
 
   describe('#delete', () => {
-    const deleteEvent = 'core:security:token:delete';
-
     it('should register a "delete" event', async () => {
       sinon.stub(tokenRepository, 'expire');
 
-      await kuzzle.ask(deleteEvent, 'token');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:token:delete', 'token');
 
       should(tokenRepository.expire).calledWith('token');
     });
@@ -339,7 +346,7 @@ describe('Test: security/tokenRepository', () => {
       sinon.stub(Repository.prototype, 'expireFromCache');
 
       try {
-        await kuzzle.ask(deleteEvent, token);
+        await tokenRepository.expire(token);
 
         should(kuzzle.tokenManager.expire)
           .be.calledOnce()
@@ -352,38 +359,38 @@ describe('Test: security/tokenRepository', () => {
   });
 
   describe('#deleteByKuid', () => {
-    const deleteEvent = 'core:security:token:deleteByKuid';
-
     it('should register a "deleteByKuid" event', async () => {
       sinon.stub(tokenRepository, 'deleteByKuid');
 
-      await kuzzle.ask(deleteEvent, 'kuid');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:token:deleteByKuid', 'kuid');
 
       should(tokenRepository.deleteByKuid).calledWith('kuid');
     });
 
     it('should delete the tokens associated to a user identifier', async () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
-      tokenRepository.cacheEngine.searchKeys.resolves([
+      kuzzle.ask.withArgs('core:cache:internal:searchKeys').resolves([
         'repos/kuzzle/token/foo#foo',
         'repos/kuzzle/token/foo#bar',
-        'repos/kuzzle/token/foo#baz']);
+        'repos/kuzzle/token/foo#baz',
+      ]);
 
-      tokenRepository.cacheEngine.get.onFirstCall().resolves(
+      kuzzle.ask.withArgs('core:cache:internal:get').onFirstCall().resolves(
         JSON.stringify({ userId: 'foo', _id: 'foo', expiresAt: 1 }));
 
-      tokenRepository.cacheEngine.get.onSecondCall().resolves(
+      kuzzle.ask.withArgs('core:cache:internal:get').onSecondCall().resolves(
         JSON.stringify({ userId: 'foo', _id: 'bar', expiresAt: 2 }));
 
-      tokenRepository.cacheEngine.get.onThirdCall().resolves(
+      kuzzle.ask.withArgs('core:cache:internal:get').onThirdCall().resolves(
         JSON.stringify({ userId: 'foo', _id: 'baz', expiresAt: 3 }));
 
-      await kuzzle.ask(deleteEvent, 'foo');
+      await tokenRepository.deleteByKuid('foo');
 
-      should(tokenRepository.cacheEngine.expire)
-        .calledWith('repos/kuzzle/token/foo', -1)
-        .calledWith('repos/kuzzle/token/bar', -1)
-        .calledWith('repos/kuzzle/token/baz', -1);
+      should(kuzzle.ask)
+        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/foo', -1)
+        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/bar', -1)
+        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/baz', -1);
 
       should(kuzzle.tokenManager.expire)
         .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
@@ -393,26 +400,32 @@ describe('Test: security/tokenRepository', () => {
 
     it('should not delete tokens if the internal cache return a false positive', async () => {
       sinon.stub(tokenRepository, 'refreshCacheTTL');
-      tokenRepository.cacheEngine.searchKeys.resolves([
+      kuzzle.ask.withArgs('core:cache:internal:searchKeys').resolves([
         'repos/kuzzle/token/foo#foo',
         'repos/kuzzle/token/foo#bar#bar',
         'repos/kuzzle/token/foo#baz'
       ]);
 
-      tokenRepository.cacheEngine.get
+      const cacheGetStub = kuzzle.ask.withArgs('core:cache:internal:get');
+
+      cacheGetStub
         .onFirstCall()
         .resolves(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1}));
-      tokenRepository.cacheEngine.get
+
+      cacheGetStub
         .onSecondCall()
         .resolves(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 2}));
 
-      await kuzzle.ask(deleteEvent, 'foo');
+      await tokenRepository.deleteByKuid('foo');
 
-      should(tokenRepository.cacheEngine.get.callCount).be.eql(2);
-      should(tokenRepository.cacheEngine.expire.callCount).be.eql(2);
-      should(tokenRepository.cacheEngine.expire)
-        .calledWith('repos/kuzzle/token/foo', -1)
-        .calledWith('repos/kuzzle/token/baz', -1);
+      should(cacheGetStub.callCount).be.eql(2);
+
+      const expireStub = kuzzle.ask.withArgs('core:cache:internal:expire');
+
+      should(expireStub.callCount).be.eql(2);
+      should(expireStub)
+        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/foo', -1)
+        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/baz', -1);
 
       should(kuzzle.tokenManager.expire.callCount).be.eql(2);
       should(kuzzle.tokenManager.expire)
@@ -422,12 +435,11 @@ describe('Test: security/tokenRepository', () => {
   });
 
   describe('#get', () => {
-    const getEvent = 'core:security:token:get';
-
     it('should register a "get" event', async () => {
       sinon.stub(tokenRepository, 'loadForUser');
 
-      await kuzzle.ask(getEvent, 'user', 'hash');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:token:get', 'user', 'hash');
 
       should(tokenRepository.loadForUser).calledWith('user', 'hash');
     });
@@ -436,7 +448,7 @@ describe('Test: security/tokenRepository', () => {
       sinon.stub(Repository.prototype, 'load').resolves('foo');
 
       try {
-        const ret = await kuzzle.ask(getEvent, 'user', 'hash');
+        const ret = await tokenRepository.loadForUser('user', 'hash');
 
         should(ret).eql('foo');
 
@@ -449,7 +461,6 @@ describe('Test: security/tokenRepository', () => {
   });
 
   describe('#refresh', () => {
-    const refreshEvent = 'core:security:token:refresh';
     let fakeToken;
 
     beforeEach(() => {
@@ -462,7 +473,8 @@ describe('Test: security/tokenRepository', () => {
     it('should register a "refresh" event', async () => {
       sinon.stub(tokenRepository, 'refresh');
 
-      await kuzzle.ask(refreshEvent, 'user', 'token', 'ttl');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:token:refresh', 'user', 'token', 'ttl');
 
       should(tokenRepository.refresh).calledWith('user', 'token', 'ttl');
     });
@@ -470,7 +482,7 @@ describe('Test: security/tokenRepository', () => {
     it('should create a new token and expire the old one', async () => {
       const oldToken = new Token();
 
-      const token = await kuzzle.ask(refreshEvent, 'user', oldToken, '10m');
+      const token = await tokenRepository.refresh('user', oldToken, '10m');
 
       should(token).eql(fakeToken);
       should(oldToken.refreshed).be.true();
@@ -488,7 +500,7 @@ describe('Test: security/tokenRepository', () => {
 
       tokenRepository.generateToken.rejects(new Error('foo'));
 
-      await should(kuzzle.ask(refreshEvent, 'user', oldToken, '10m'))
+      await should(tokenRepository.refresh('user', oldToken, '10m'))
         .rejectedWith('foo');
 
       should(oldToken.refreshed).be.false();
@@ -499,7 +511,7 @@ describe('Test: security/tokenRepository', () => {
       const oldToken = new Token();
       oldToken.refreshed = true;
 
-      await should(kuzzle.ask(refreshEvent, 'user', oldToken, '10m'))
+      await should(tokenRepository.refresh('user', oldToken, '10m'))
         .rejectedWith(UnauthorizedError, {id: 'security.token.invalid'});
 
       should(tokenRepository.generateToken).not.called();

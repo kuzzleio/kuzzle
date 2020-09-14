@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "./bin/start-kuzzle-server"
@@ -14,10 +14,11 @@
     "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha",
     "test:unit:coverage": "DEBUG= nyc --reporter=text-summary --reporter=lcov mocha",
     "test:functional": "npm run test:functional:legacy && npm run test:functional:sdk",
-    "test:functional:legacy": "npm run test:functional:legacy:http && npm run test:functional:legacy:websocket && npm run test:functional:legacy:mqtt",
+    "test:functional:legacy": "npm run test:functional:legacy:http && npm run test:functional:legacy:websocket && npm run test:functional:legacy:mqtt && npm run test:functional:legacy:cluster",
     "test:functional:legacy:http": "npx cucumber-js --format progress-bar --profile http",
     "test:functional:legacy:websocket": "npx cucumber-js --format progress-bar --profile websocket",
     "test:functional:legacy:mqtt": "npx cucumber-js --format progress-bar --profile mqtt",
+    "test:functional:legacy:cluster": "npx cucumber-js --format progress-bar --profile websocketCluster",
     "test:functional:sdk": "npm run test:functional:sdk:http && npm run test:functional:sdk:websocket",
     "test:functional:sdk:http": "KUZZLE_PROTOCOL=http npx cucumber-js --profile http",
     "test:functional:sdk:websocket": "KUZZLE_PROTOCOL=websocket npx cucumber-js --profile websocket",

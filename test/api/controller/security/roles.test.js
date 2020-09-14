@@ -77,11 +77,7 @@ describe('Test: security controller - roles', () => {
       Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       createOrReplaceStub = kuzzle.ask
-        .withArgs(
-          createOrReplaceEvent,
-          request.input.resource._id,
-          sinon.match.object,
-          sinon.match.object)
+        .withArgs(createOrReplaceEvent, request.input.resource._id)
         .resolves(createdRole);
     });
 
@@ -167,11 +163,7 @@ describe('Test: security controller - roles', () => {
       Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       createStub = kuzzle.ask
-        .withArgs(
-          createEvent,
-          request.input.resource._id,
-          sinon.match.object,
-          sinon.match.object)
+        .withArgs(createEvent, request.input.resource._id)
         .resolves(createdRole);
     });
 
@@ -298,7 +290,7 @@ describe('Test: security controller - roles', () => {
     beforeEach(() => {
       request.input.body = { ids: 'foobar'.split('') };
 
-      mGetStub = kuzzle.ask.withArgs(mGetEvent, sinon.match.array);
+      mGetStub = kuzzle.ask.withArgs(mGetEvent);
     });
 
     it('should reject if no body is provided', async () => {
@@ -374,7 +366,7 @@ describe('Test: security controller - roles', () => {
       Object.assign(searchedRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       searchStub = kuzzle.ask
-        .withArgs(searchEvent, sinon.match.array, sinon.match.object)
+        .withArgs(searchEvent)
         .resolves({ hits: [searchedRole], total: 1 });
     });
 
@@ -485,13 +477,7 @@ describe('Test: security controller - roles', () => {
       updatedRole._id = 'test';
       Object.assign(updatedRole, {controllers: { ctrl: true }, foo: 'bar'});
 
-      updateStub = kuzzle.ask
-        .withArgs(
-          updateEvent,
-          sinon.match.string,
-          sinon.match.any,
-          sinon.match.any)
-        .resolves(updatedRole);
+      updateStub = kuzzle.ask.withArgs(updateEvent).resolves(updatedRole);
     });
 
     it('should return a valid response and use default options', async () => {
@@ -571,10 +557,7 @@ describe('Test: security controller - roles', () => {
     beforeEach(() => {
       request.input.resource._id = 'test';
 
-      deleteStub = kuzzle.ask.withArgs(
-        deleteEvent,
-        sinon.match.string,
-        sinon.match.any);
+      deleteStub = kuzzle.ask.withArgs(deleteEvent);
     });
 
     it('should return a valid response and handle default options', async () => {

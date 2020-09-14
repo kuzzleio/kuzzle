@@ -84,7 +84,10 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#scroll', () => {
     it('should be able to scroll an old search', async () => {
-      kuzzle.cacheEngine.internal.get.resolves('1');
+      const cacheStub = kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .resolves('1');
+
       elasticsearch._client.scroll.resolves({
         body: {
           _scroll_id: 'azerty',
@@ -102,17 +105,16 @@ describe('Test: ElasticSearch service', () => {
         scrollTTL: '10s'
       });
 
-      should(kuzzle.cacheEngine.internal.get).be.calledOnce();
+      should(cacheStub).calledOnce();
 
-      const redisKey = kuzzle.cacheEngine.internal.get.firstCall.args[0];
+      const redisKey = cacheStub.firstCall.args[1];
 
-      should(kuzzle.cacheEngine.internal.psetex)
-        .calledOnce()
-        // 10000: scrollTTL of 10s converted to millisecondes
-        // 3:
-        //   the redis key stub returns "1" (1 result fetched so far) +
-        //   the 2 results contained in the stubbed result of _client.scroll
-        .calledWith(redisKey, 10000, 3);
+      // 3:
+      //   the redis key stub returns "1" (1 result fetched so far) +
+      //   the 2 results contained in the stubbed result of _client.scroll
+      // 10: scrollTTL of 10s
+      should(kuzzle.ask)
+        .calledWith('core:cache:internal:store', redisKey, 3, 10);
 
       should(elasticsearch._client.clearScroll).not.called();
 
@@ -134,7 +136,10 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should clear a scroll upon fetching its last page of results', async () => {
-      kuzzle.cacheEngine.internal.get.resolves('998');
+      const cacheStub = kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .resolves('998');
+
       elasticsearch._client.scroll.resolves({
         body: {
           hits: {
@@ -152,12 +157,12 @@ describe('Test: ElasticSearch service', () => {
         scrollTTL: '10s'
       });
 
-      should(kuzzle.cacheEngine.internal.get).be.calledOnce();
+      should(cacheStub).be.calledOnce();
 
-      const redisKey = kuzzle.cacheEngine.internal.get.firstCall.args[0];
+      const redisKey = cacheStub.firstCall.args[1];
 
-      should(kuzzle.cacheEngine.internal.psetex).not.called();
-      should(kuzzle.cacheEngine.internal.del).calledOnce().calledWith(redisKey);
+      should(kuzzle.ask).not.calledWith('core:cache:internal:store');
+      should(kuzzle.ask).calledWith('core:cache:internal:del', redisKey);
 
       should(elasticsearch._client.clearScroll)
         .calledOnce()
@@ -182,36 +187,38 @@ describe('Test: ElasticSearch service', () => {
 
     it('should reject promise if a scroll fails', async () => {
       elasticsearch._client.scroll.rejects(esClientError);
-      kuzzle.cacheEngine.internal.get.resolves('1');
+
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves('1');
 
       await should(elasticsearch.scroll('i-am-scroll-id')).be.rejected();
+
       should(elasticsearch._esWrapper.formatESError).calledWith(esClientError);
     });
 
     it('should reject if the scrollId does not exists in Kuzzle cache', async () => {
-      kuzzle.cacheEngine.internal.get.resolves(null);
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves(null);
 
       await should(elasticsearch.scroll('i-am-scroll-id')).be.rejectedWith({
         id: 'services.storage.unknown_scroll_id'
       });
 
-      should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
       should(elasticsearch._client.scroll).not.be.called();
     });
 
     it('should reject if the scroll duration is too great', async () => {
       elasticsearch._config.maxScrollDuration = '21m';
-      kuzzle.cacheEngine.internal.get.resolves('1');
 
       await should(elasticsearch.scroll('i-am-scroll-id', { scrollTTL: '42m' }))
         .be.rejectedWith({ id: 'services.storage.scroll_duration_too_great' });
 
-      should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
       should(elasticsearch._client.scroll).not.be.called();
     });
 
     it('should default an explicitly null scrollTTL argument', async () => {
-      kuzzle.cacheEngine.internal.get.resolves('1');
+      const cacheStub = kuzzle.ask
+        .withArgs('core:cache:internal:get', sinon.match.string)
+        .resolves('1');
+
       elasticsearch._client.scroll.resolves({
         body: {
           hits: { hits: [], total: { value: 1000 } },
@@ -221,8 +228,13 @@ describe('Test: ElasticSearch service', () => {
 
       await elasticsearch.scroll('scroll-id', { scrollTTL: null });
 
-      should(kuzzle.cacheEngine.internal.get).be.called();
-      should(kuzzle.cacheEngine.internal.psetex).be.called();
+      should(cacheStub).calledOnce();
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        sinon.match.string,
+        1,
+        sinon.match.number);
+
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
         scrollId: 'scroll-id',
         scroll: elasticsearch.config.defaults.scrollTTL
@@ -235,8 +247,6 @@ describe('Test: ElasticSearch service', () => {
 
     beforeEach(() => {
       filter = {};
-
-      kuzzle.cacheEngine.internal.keys.resolves({ values: [] });
     });
 
     it('should be able to search documents', async () => {
@@ -245,7 +255,14 @@ describe('Test: ElasticSearch service', () => {
           aggregations: { some: 'aggregs' },
           body: filter,
           hits: {
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight', other: 'thing' } ],
+            hits: [
+              {
+                _id: 'liia',
+                _source: { city: 'Kathmandu' },
+                highlight: 'highlight',
+                other: 'thing'
+              }
+            ],
             total: { value: 1 },
           },
           _scroll_id: 'i-am-scroll-id',
@@ -263,8 +280,11 @@ describe('Test: ElasticSearch service', () => {
         trackTotalHits: true,
       });
 
-      should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
-        .be.eql(ms(elasticsearch.config.defaults.scrollTTL));
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        sinon.match.string,
+        1,
+        ms(elasticsearch.config.defaults.scrollTTL) / 1000);
 
       should(result).match({
         aggregations: { some: 'aggregs' },
@@ -304,8 +324,11 @@ describe('Test: ElasticSearch service', () => {
         trackTotalHits: true,
       });
 
-      should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
-        .be.eql(ms('30s'));
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        sinon.match.string,
+        0,
+        30);
     });
 
     it('should return a rejected promise if a search fails', async () => {
@@ -336,7 +359,7 @@ describe('Test: ElasticSearch service', () => {
 
       await elasticsearch.search(index, collection, {});
 
-      should(kuzzle.cacheEngine.internal.psetex).not.be.called();
+      should(kuzzle.ask).not.calledWith('core:cache:internal:store');
     });
 
     it('should return a rejected promise if the scroll duration is too great', async () => {

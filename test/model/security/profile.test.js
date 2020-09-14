@@ -1,6 +1,5 @@
 'use strict';
 
-const sinon = require('sinon');
 const should = require('should');
 const {
   Request,
@@ -66,7 +65,7 @@ describe('Test: model/security/profile', () => {
     profile.policies = [{roleId: 'denyRole'}];
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.string)
+      .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;
@@ -139,7 +138,7 @@ describe('Test: model/security/profile', () => {
     profile.policies.push({roleId: role3._id});
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.string)
+      .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;

@@ -49,7 +49,7 @@ describe('ApiKey', () => {
       };
 
       createTokenStub = BaseModel.kuzzle.ask
-        .withArgs(createTokenEvent, sinon.match.object, sinon.match.any)
+        .withArgs(createTokenEvent)
         .resolves(token);
 
       sinon.stub(BaseModel.kuzzle, 'hash').returns('hashed-jwt-token');

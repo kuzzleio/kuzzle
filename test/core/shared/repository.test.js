@@ -1,26 +1,25 @@
 'use strict';
 
 const should = require('should');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
 const sinon = require('sinon');
-const Repository = require('../../../lib/core/shared/repository');
 const {
   InternalError: KuzzleInternalError,
-  NotFoundError
+  NotFoundError,
 } = require('kuzzle-common-objects');
 
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const Repository = require('../../../lib/core/shared/repository');
+const cacheDbEnum = require('../../../lib/core/cache/cacheDbEnum');
+
 describe('Test: repositories/repository', () => {
-  let
-    kuzzle,
-    repository,
-    ObjectConstructor,
-    dbPojo = {_id: 'someId', _source: {some: 'source'}, found: true},
-    cachePojo = {_id: 'someId', some: 'source'};
+  let kuzzle;
+  let repository;
+  let ObjectConstructor;
+  const dbPojo = {_id: 'someId', _source: {some: 'source'}, found: true};
+  const cachePojo = {_id: 'someId', some: 'source'};
 
   before(() => {
-    /**
-     * @constructor
-     */
     ObjectConstructor = function () {};
   });
 
@@ -30,7 +29,10 @@ describe('Test: repositories/repository', () => {
     repository = new Repository(kuzzle);
     repository.index = '%test';
     repository.collection = 'objects';
-    repository.init({ indexStorage: kuzzle.internalIndex });
+    repository.init({
+      cache: cacheDbEnum.INTERNAL,
+      indexStorage: kuzzle.internalIndex,
+    });
     repository.ObjectConstructor = ObjectConstructor;
   });
 
@@ -108,55 +110,58 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#loadFromCache', () => {
-    it('should return null for an non-existing id', () => {
-      kuzzle.cacheEngine.internal.get.resolves(null);
+    it('should return null for an non-existing id', async () => {
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves(null);
 
-      return repository.loadFromCache(-999)
-        .then(result => should(result).be.null());
+      should(await repository.loadFromCache(-999)).be.null();
     });
 
-    it('should reject the promise in case of error', () => {
-      kuzzle.cacheEngine.internal.get.rejects(new KuzzleInternalError('error'));
+    it('should reject in case of error', () => {
+      kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .rejects(new KuzzleInternalError('error'));
 
       return should(repository.loadFromCache('error')).
         rejectedWith(KuzzleInternalError, {
-          id: 'services.cache.read_failed'
+          id: 'services.cache.read_failed',
         });
     });
 
     it('should reject the promise when loading an incorrect object', () => {
-      kuzzle.cacheEngine.internal.get.resolves('bad type');
+      kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .resolves('bad type');
 
       return should(repository.loadFromCache('string'))
         .rejectedWith(KuzzleInternalError, {
-          id: 'services.cache.read_failed'
+          id: 'services.cache.read_failed',
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found', () => {
-      kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(cachePojo));
+    it('should return a valid ObjectConstructor instance if found', async () => {
+      kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .resolves(JSON.stringify(cachePojo));
 
-      return repository.loadFromCache('persisted')
-        .then(result => {
-          should(result).be.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly('someId');
-          should(result.some).be.exactly('source');
-        });
+      const result = await repository.loadFromCache('persisted');
+
+      should(result).be.instanceOf(ObjectConstructor);
+      should(result._id).be.exactly('someId');
+      should(result.some).be.exactly('source');
     });
   });
 
   describe('#load', () => {
     beforeEach(() => {
-      repository.cacheEngine.get.resolves(null);
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves(null);
     });
 
     it('should reject for a non-existing id', () => {
       repository.indexStorage.get.rejects(new NotFoundError('Not found'));
 
-      return should(repository.load(-9999))
-        .rejectedWith(NotFoundError, {
-          id: 'services.storage.not_found'
-        });
+      return should(repository.load(-9999)).rejectedWith(NotFoundError, {
+        id: 'services.storage.not_found',
+      });
     });
 
     it('should reject the promise in case of error', () => {
@@ -167,7 +172,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise when loading an incorrect object', () => {
-      kuzzle.cacheEngine.internal.get.resolves('bad type');
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves('bad type');
 
       return should(repository.load('string'))
         .rejectedWith(KuzzleInternalError, {
@@ -186,15 +191,16 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found only in cache', () => {
-      kuzzle.cacheEngine.internal.get.resolves(JSON.stringify(cachePojo));
+    it('should return a valid ObjectConstructor instance if found only in cache', async () => {
+      kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .resolves(JSON.stringify(cachePojo));
 
-      return repository.load('cached')
-        .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly('someId');
-          should(result.some).be.exactly('source');
-        });
+      const result = await repository.load('cached');
+
+      should(result).be.an.instanceOf(ObjectConstructor);
+      should(result._id).be.exactly('someId');
+      should(result.some).be.exactly('source');
     });
 
     it('should return a valid ObjectConstructor instance if found only in indexStorage', () => {
@@ -208,22 +214,23 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should get content only from indexStorage if cacheEngine is null', () => {
+    it('should get content only from indexStorage if no cache DB is set', async () => {
+      sinon.stub(repository, 'loadFromCache');
+      repository.cacheDb = cacheDbEnum.NONE;
       repository.indexStorage.get.resolves(dbPojo);
 
-      return repository.load('no-cache')
-        .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly('someId');
-          should(result.some).be.exactly('source');
-        });
+      const result = await repository.load('no-cache');
+
+      should(result).be.an.instanceOf(ObjectConstructor);
+      should(result._id).be.exactly('someId');
+      should(result.some).be.exactly('source');
+      should(repository.loadFromCache).not.called();
     });
 
-    it('should get content only from cacheEngine if indexStorage is null', () => {
+    it('should get content only from the cache if indexStorage is null', async () => {
       repository.indexStorage = null;
 
-      return repository.load('uncached')
-        .then(result => should(result).be.null());
+      should(await repository.load('uncached')).be.null();
     });
   });
 
@@ -252,78 +259,90 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#deleteFromCache', () => {
-    it('should call a cache deletion properly', () => {
-      return repository.deleteFromCache('someId')
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.del)
-            .calledOnce()
-            .calledWith(repository.getCacheKey('someId'));
-        });
+    it('should call a cache deletion properly', async () => {
+      repository.cacheDb = cacheDbEnum.INTERNAL;
+
+      await repository.deleteFromCache('someId');
+
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:del',
+        repository.getCacheKey('someId'));
+
+      repository.cacheDb = cacheDbEnum.PUBLIC;
+
+      await repository.deleteFromCache('someId');
+
+      should(kuzzle.ask).calledWith(
+        'core:cache:public:del',
+        repository.getCacheKey('someId'));
     });
   });
 
   describe('#delete', () => {
-    it('should delete an object from both cache and database when pertinent', () => {
+    it('should delete an object from both cache and database when pertinent', async () => {
       const someObject = { _id: 'someId' };
 
-      return repository.delete(someObject)
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.del)
-            .calledOnce()
-            .calledWith(repository.getCacheKey('someId'));
+      await repository.delete(someObject);
 
-          should(repository.indexStorage.delete)
-            .calledOnce()
-            .calledWith(repository.collection, 'someId');
-        });
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:del',
+        repository.getCacheKey('someId'));
+
+      should(repository.indexStorage.delete)
+        .calledOnce()
+        .calledWith(repository.collection, 'someId');
     });
   });
 
   describe('#persistToCache', () => {
-    it('should set the object if the ttl is false', () => {
-      return repository.persistToCache(cachePojo, {ttl: false, key: 'someKey'})
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.set)
-            .calledOnce()
-            .calledWith('someKey', JSON.stringify(cachePojo));
-        });
+    it('should set the object if the ttl is false', async () => {
+      await repository.persistToCache(cachePojo, {ttl: false, key: 'someKey'});
+
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        'someKey',
+        JSON.stringify(cachePojo));
     });
 
-    it('should set the object with a ttl by default', () => {
-      return repository.persistToCache(cachePojo, {ttl: 500, key: 'someKey'})
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.setex)
-            .calledOnce()
-            .calledWith('someKey', 500, JSON.stringify(cachePojo));
-        });
+    it('should set the object with a ttl by default', async () => {
+      await repository.persistToCache(cachePojo, {ttl: 500, key: 'someKey'});
+
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        'someKey',
+        JSON.stringify(cachePojo),
+        500);
     });
   });
 
   describe('#refreshCacheTTL', () => {
-    it('should persist the object if the ttl is set to false', () => {
-      repository.refreshCacheTTL(cachePojo, {ttl: false});
+    it('should persist the object if the ttl is set to false', async () => {
+      await repository.refreshCacheTTL(cachePojo, {ttl: false});
 
-      should(kuzzle.cacheEngine.internal.persist)
-        .calledOnce()
-        .calledWith(repository.getCacheKey(cachePojo._id, repository.collection));
+      should(kuzzle.ask)
+        .calledWith(
+          'core:cache:internal:persist',
+          repository.getCacheKey(cachePojo._id, repository.collection));
     });
 
-    it('should refresh the ttl with the provided TTL', () => {
-      repository.refreshCacheTTL(cachePojo, {ttl: 500});
+    it('should refresh the ttl with the provided TTL', async () => {
+      await repository.refreshCacheTTL(cachePojo, {ttl: 500});
 
-      should(kuzzle.cacheEngine.internal.expire)
-        .calledOnce()
-        .calledWith(repository.getCacheKey(cachePojo._id, repository.collection), 500);
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:expire',
+        repository.getCacheKey(cachePojo._id, repository.collection),
+        500);
     });
 
-    it('should use the provided object TTL if one has been defined', () => {
+    it('should use the provided object TTL if one has been defined', async () => {
       const pojo = Object.assign({}, cachePojo, {ttl: 1234});
 
-      repository.refreshCacheTTL(pojo);
+      await repository.refreshCacheTTL(pojo);
 
-      should(kuzzle.cacheEngine.internal.expire)
-        .calledOnce()
-        .calledWith(repository.getCacheKey(pojo._id, repository.collection), 1234);
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:expire',
+        repository.getCacheKey(pojo._id, repository.collection),
+        1234);
     });
 
     it('should use the provided ttl instead of the object-defined one', () => {
@@ -331,9 +350,10 @@ describe('Test: repositories/repository', () => {
 
       repository.refreshCacheTTL(pojo, {ttl: 500});
 
-      should(kuzzle.cacheEngine.internal.expire)
-        .calledOnce()
-        .calledWith(repository.getCacheKey(pojo._id, repository.collection), 500);
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:expire',
+        repository.getCacheKey(pojo._id, repository.collection),
+        500);
     });
   });
 
@@ -341,17 +361,20 @@ describe('Test: repositories/repository', () => {
     it('should expire the object', () => {
       repository.expireFromCache(cachePojo);
 
-      should(kuzzle.cacheEngine.internal.expire)
-        .calledOnce()
-        .calledWith(repository.getCacheKey(cachePojo._id, repository.collection), -1);
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:expire',
+        repository.getCacheKey(cachePojo._id, repository.collection),
+        -1);
     });
   });
 
   describe('#serializeToCache', () => {
     it('should return the same object', () => {
-      const
-        object = Object.assign(new ObjectConstructor(), cachePojo._source, {_id: cachePojo._id}),
-        serialized = repository.serializeToCache(object);
+      const object = Object.assign(
+        new ObjectConstructor(),
+        cachePojo._source,
+        {_id: cachePojo._id});
+      const serialized = repository.serializeToCache(object);
 
       should(Object.keys(serialized).length).be.exactly(Object.keys(object).length);
       Object.keys(repository.serializeToCache(object)).forEach(key => {

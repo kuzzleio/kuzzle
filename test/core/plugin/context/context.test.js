@@ -254,11 +254,16 @@ describe('Plugin Context', () => {
       context.log.info('foobar');
 
       process.nextTick(() => {
-        should(kuzzle.log.info)
-          .be.calledOnce()
-          .be.calledWith('[pluginName] foobar');
+        try {
+          should(kuzzle.log.info)
+            .be.calledOnce()
+            .be.calledWith('[pluginName] foobar');
 
-        done();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
       });
     });
 

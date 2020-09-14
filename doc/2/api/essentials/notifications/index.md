@@ -48,6 +48,7 @@ The `result` object is the notification content, and it has the following struct
 | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | `_id`     | string | Document unique ID<br/>`null` if the notification is from a real-time message                                                    |
 | `_source` | object | The message or full document content. Not present if the event is about a document deletion                                      |
+| `_updatedFields` | string[] | List of fields that have been updated (only available on document partial updates) |
 
 ### Example
 

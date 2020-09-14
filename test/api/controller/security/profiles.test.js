@@ -88,11 +88,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       createOrReplaceStub = kuzzle.ask
-        .withArgs(
-          createOrReplaceEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(createOrReplaceEvent)
         .resolves(fakeProfile);
 
       request.input.resource._id = 'test';
@@ -181,11 +177,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       createStub = kuzzle.ask
-        .withArgs(
-          createEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(createEvent)
         .resolves(fakeProfile);
 
       request.input.resource._id = 'test';
@@ -299,7 +291,7 @@ describe('Test: security controller - profiles', () => {
     let getStub;
 
     beforeEach(() => {
-      getStub = kuzzle.ask.withArgs(getEvent, sinon.match.string);
+      getStub = kuzzle.ask.withArgs(getEvent);
       request.input.resource._id = 'foobar';
     });
 
@@ -346,7 +338,7 @@ describe('Test: security controller - profiles', () => {
     let mGetStub;
 
     beforeEach(() => {
-      mGetStub = kuzzle.ask.withArgs(mGetEvent, sinon.match.array);
+      mGetStub = kuzzle.ask.withArgs(mGetEvent);
       request.input.body = {ids: 'ids'.split('')};
     });
 
@@ -397,7 +389,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       searchStub = kuzzle.ask
-        .withArgs(searchEvent, sinon.match.array, sinon.match.object)
+        .withArgs(searchEvent)
         .resolves({
           hits: [ fakeProfile, fakeProfile, fakeProfile ],
           total: 3,
@@ -470,7 +462,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       scrollStub = kuzzle.ask
-        .withArgs(scrollEvent, sinon.match.string, sinon.match.any)
+        .withArgs(scrollEvent)
         .resolves({
           hits: [fakeProfile, fakeProfile, fakeProfile],
           scrollId: 'foobar',
@@ -523,13 +515,7 @@ describe('Test: security controller - profiles', () => {
     let updateStub;
 
     beforeEach(() => {
-      updateStub = kuzzle.ask
-        .withArgs(
-          updateEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.any)
-        .resolves(fakeProfile);
+      updateStub = kuzzle.ask.withArgs(updateEvent).resolves(fakeProfile);
 
       request.input.resource._id = 'profileId';
       request.input.body = {
@@ -611,9 +597,7 @@ describe('Test: security controller - profiles', () => {
     let deleteStub;
 
     beforeEach(() => {
-      deleteStub = kuzzle.ask
-        .withArgs(deleteEvent, sinon.match.string, sinon.match.any)
-        .resolves();
+      deleteStub = kuzzle.ask.withArgs(deleteEvent).resolves();
 
       request.input.resource._id = 'profileId';
     });
@@ -657,7 +641,7 @@ describe('Test: security controller - profiles', () => {
     let getStub;
 
     beforeEach(() => {
-      getStub = kuzzle.ask.withArgs(getEvent, sinon.match.string);
+      getStub = kuzzle.ask.withArgs(getEvent);
       request.input.resource._id = 'test';
     });
 

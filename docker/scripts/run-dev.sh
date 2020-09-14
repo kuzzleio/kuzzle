@@ -29,8 +29,7 @@ fi
 nodemon \
     --ext 'js,json,ts' \
     --inspect=0.0.0.0:9229 \
-    --exec node -r ts-node/register \
-    features-sdk/application/functional-tests-app.ts \
+    --exec node -r ts-node/register docker/scripts/start-kuzzle-dev.ts \
     --mappings /fixtures/mappings.json \
     --fixtures /fixtures/fixtures.json \
     --securities /fixtures/securities.json \

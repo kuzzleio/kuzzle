@@ -19,7 +19,7 @@ npm run build
 
 echo "[$(date)] - Starting Kuzzle..."
 
-node -r ts-node/register features-sdk/application/functional-tests-app.ts &
+node -r ts-node/register docker/scripts/start-kuzzle-dev.ts &
 
 ./bin/wait-kuzzle
 
