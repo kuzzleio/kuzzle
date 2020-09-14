@@ -49,7 +49,7 @@ Feature: Application
     Then The document "es-document" content match:
       | from | "embedded-es-client" |
 
-  # Controller classe usage
+  # Controller class usage
   Scenario: Check if Kuzzle can use a controller class
     When I successfully execute the action "functional-tests-controller":"helloWorld" with args:
     | name | "Martial" |
