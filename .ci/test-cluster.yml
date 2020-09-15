@@ -56,33 +56,26 @@ services:
     <<: *kuzzle-config
     container_name: kuzzle_node_1
     ports:
-      - "17510:7512" # Kuzzle API port
-      - "9229:9229" # Debug port
+      - "17510:7512" # Kuzzle API port, used to check if it is up
 
   kuzzle_node_2:
     <<: *kuzzle-config
     container_name: kuzzle_node_2
     ports:
-      - "17511:7512" # Kuzzle API port
-      - "9230:9229" # Debug port
+      - "17511:7512"
 
   kuzzle_node_3:
     <<: *kuzzle-config
     container_name: kuzzle_node_3
     ports:
-      - "17512:7512" # Kuzzle API port
-      - "9231:9229" # Debug port
+      - "17512:7512"
 
   redis:
     image: redis:5
     container_name: kuzzle_redis
-    ports:
-      - "6379:6379"
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
     container_name: kuzzle_elasticsearch
-    ports:
-      - "9200:9200"
     ulimits:
       nofile: 65536
