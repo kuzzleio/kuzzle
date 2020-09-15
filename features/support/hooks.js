@@ -1,16 +1,11 @@
 'use strict';
 
-const
-  _ = require('lodash'),
-  minimist = require('minimist'),
-  {
-    After,
-    Before,
-    BeforeAll
-  } = require('cucumber'),
-  Bluebird = require('bluebird'),
-  Http = require('./api/http'),
-  World = require('./world');
+const _ = require('lodash');
+const { After, Before, BeforeAll } = require('cucumber');
+const Bluebird = require('bluebird');
+
+const Http = require('./api/http');
+const World = require('./world');
 
 function bootstrapDatabase () {
   const
@@ -178,14 +173,17 @@ function cleanValidations() {
 }
 
 function parseWorldParameters() {
-  const
-    argv = minimist(process.argv.slice(2)),
-    parameters = Object.assign({
-      protocol: 'websocket',
-      host: 'localhost',
-      port: 7512,
-      silent: true
-    }, JSON.parse(argv['world-parameters'] || '{}'));
+  const worldParamIndex = process.argv.indexOf('--world-parameters');
+  const worldParam = worldParamIndex > -1
+    ? JSON.parse(process.argv[worldParamIndex + 1])
+    : {};
+
+  const parameters = Object.assign({
+    host: 'localhost',
+    port: 7512,
+    protocol: 'websocket',
+    silent: true,
+  }, worldParam);
 
   return parameters;
 }
