@@ -28,7 +28,7 @@ import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
 import Plugin from '../plugin/plugin';
-import EmbeddedSDK from '../shared/sdk/embeddedSdk';
+import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
