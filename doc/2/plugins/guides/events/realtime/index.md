@@ -17,7 +17,7 @@ This event is deprecated and will be removed in the next major version of Kuzzle
 
 Use `core:realtime:user:subscribe:after` instead.
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.4.6">
 
 | Arguments  | Type              | Description                           |
 | ---------- | ----------------- | ------------------------------------- |
@@ -47,7 +47,7 @@ This event is deprecated and will be removed in the next major version of Kuzzle
 
 Use `core:realtime:user:unsubscribe:after` instead.
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.4.6">
 
 | Arguments        | Type              | Description                                                                                  |
 | -----------------| ----------------- | -------------------------------------------------------------------------------------------- |
@@ -72,7 +72,7 @@ The provided `room` object has the following properties:
 
 ## core:realtime:room:create:after
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.4.6"/>
 
 Triggered whenever a new realtime room is subscribed (NOT triggered if a user subscribes to an existing room).
 
@@ -98,7 +98,7 @@ The provided `room` object has the following properties:
 
 ## core:realtime:room:remove:before
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.4.6"/>
 
 Triggered whenever a realtime room is deleted, which happens when the last subscriber leaves it.
 
@@ -117,7 +117,7 @@ Pipes cannot listen to this event, only hooks can.
 
 Triggered whenever a user makes a new [subscription](/core/2/api/controllers/realtime/subscribe).
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.4.6"/>
 
 | Arguments  | Type              | Description                           |
 | ---------- | ----------------- | ------------------------------------- |
@@ -142,7 +142,7 @@ The provided `subscription` object has the following properties:
 
 Triggered whenever a user leaves a room.
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.4.6"/>
 
 | Arguments        | Type              | Description                                                                                  |
 | -----------------| ----------------- | -------------------------------------------------------------------------------------------- |
@@ -207,7 +207,7 @@ This event is deprecated and will be removed in the next major version of Kuzzle
 
 Use `core:realtime:room:create:after` instead.
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.4.6">
 
 
 | Arguments | Type              | Description             |
@@ -240,7 +240,7 @@ This event is deprecated and will be removed in the next major version of Kuzzle
 
 Use `core:realtime:room:remove:before` instead.
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.4.6">
 
 | Arguments | Type              | Description            |
 | --------- | ----------------- | ---------------------- |
