@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
 const should = require('should');
 const sinon = require('sinon');
+const mockrequire = require('mock-require');
 const {
   BadRequestError,
   InternalError: KuzzleInternalError,
@@ -208,19 +209,30 @@ describe('Test: security/tokenRepository', () => {
         .be.calledWith(checkToken, user._id, 3600000);
     });
 
-    it('should return an internal error if an error occurs when generating token', () => {
+    it('should return an internal error if an error occurs when generating token', async () => {
       const user = new User();
 
       user._id = 'userInCache';
 
-      kuzzle.ask
-        .withArgs('core:cache:internal:store')
-        .rejects(new Error('error'));
+      mockrequire('jsonwebtoken', {
+        sign: () => {
+          throw new Error('oh noes');
+        }
+      });
 
-      return should(tokenRepository.generateToken(user))
-        .be.rejectedWith(KuzzleInternalError, {
-          id: 'services.cache.write_failed'
-        });
+      const MockedTokenRepository = mockrequire.reRequire('../../../lib/core/security/tokenRepository');
+
+      tokenRepository = new MockedTokenRepository(kuzzle);
+
+      try {
+        await should(tokenRepository.generateToken(user))
+          .be.rejectedWith(KuzzleInternalError, {
+            id: 'security.token.generation_failed',
+          });
+      }
+      finally {
+        mockrequire.stopAll();
+      }
     });
 
     it('should allow a big ttl if no maxTTL is set', async () => {
@@ -272,9 +284,38 @@ describe('Test: security/tokenRepository', () => {
       user._id = 'id';
 
       return should(tokenRepository.generateToken(user, { expiresIn: 'ehh' }))
-        .be.rejectedWith(KuzzleInternalError, {
-          id: 'security.token.generation_failed'
+        .be.rejectedWith(BadRequestError, {
+          id: 'api.assert.invalid_argument',
         });
+    });
+
+    it('should pass the correct expiration delay to jwt.sign', async () => {
+      // jwt.sign does not accept double values for its expiresIn option
+      // in previous versions of Kuzzle, we simply divided the number of
+      // milliseconds received by 1000 without precaution, making jwt.sign
+      // throw an error when generating the token
+      const user = new User();
+      const checkToken = jwt.sign(
+        { _id: 'userInCache' },
+        kuzzle.config.security.jwt.secret,
+        {
+          algorithm: kuzzle.config.security.jwt.algorithm,
+          expiresIn: 123,
+        });
+
+      user._id = 'userInCache';
+
+      sinon.spy(tokenRepository, 'persistForUser');
+
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: 123456
+      });
+
+      should(token).be.an.instanceOf(Token);
+      should(token.jwt).be.exactly(checkToken);
+      should(token._id).be.exactly(`${user._id}#${checkToken}`);
+      should(tokenRepository.persistForUser)
+        .be.calledWith(checkToken, user._id, 123456);
     });
   });
 
