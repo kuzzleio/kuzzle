@@ -48,31 +48,31 @@ class KuzzleCluster {
     this.node = null;
 
     this.hooks = {
+      'admin:afterDump': 'dump',
+      'admin:afterResetSecurity': 'resetSecurityCache',
+      'admin:afterShutdown': 'shutdown',
+      'collection:afterDeleteSpecifications': 'refreshSpecifications',
+      'collection:afterUpdateSpecifications': 'refreshSpecifications',
       'core:kuzzleStart': 'kuzzleStarted',
-      'core:indexCache:add': 'indexCacheAdded',
-      'core:indexCache:remove': 'indexCacheRemoved',
       'core:notify:document': 'notifyDocument',
       'core:notify:user': 'notifyUser',
-      'core:profileRepository:save': 'profileUpdated',
       'core:profileRepository:delete': 'profileUpdated',
-      'core:roleRepository:save': 'roleUpdated',
-      'core:roleRepository:delete': 'roleUpdated',
-      'collection:afterUpdateSpecifications': 'refreshSpecifications',
-      'collection:afterDeleteSpecifications': 'refreshSpecifications',
+      'core:profileRepository:save': 'profileUpdated',
       'core:realtime:room:create:after': 'roomCreated',
-      'admin:afterResetSecurity': 'resetSecurityCache',
-      'admin:afterDump': 'dump',
-      'admin:afterShutdown': 'shutdown'
+      'core:roleRepository:delete': 'roleUpdated',
+      'core:roleRepository:save': 'roleUpdated',
+      'core:store:cache:add:after': 'indexCacheAdded',
+      'core:store:cache:remove:after': 'indexCacheRemoved',
     };
 
     this.pipes = {
       'core:auth:strategyAdded': 'strategyAdded',
       'core:auth:strategyRemoved': 'strategyRemoved',
+      'core:realtime:room:remove:before': 'removeRoom',
+      'core:realtime:user:join:after': 'subscriptionJoined',
       'core:realtime:user:subscribe:after': 'subscriptionAdded',
       'core:realtime:user:unsubscribe:after': 'subscriptionOff',
-      'core:realtime:user:join:after': 'subscriptionJoined',
       'realtime:beforeJoin': 'beforeJoin',
-      'core:realtime:room:remove:before': 'removeRoom',
     };
 
     this.routes = [
@@ -213,7 +213,7 @@ class KuzzleCluster {
     }
 
     this.node.broadcast('cluster:sync', {
-      event: 'indexCache:add',
+      event: 'store:cache:add',
       ...payload
     });
   }
@@ -230,7 +230,7 @@ class KuzzleCluster {
     }
 
     this.node.broadcast('cluster:sync', {
-      event: 'indexCache:remove',
+      event: 'store:cache:remove',
       ...payload,
     });
   }

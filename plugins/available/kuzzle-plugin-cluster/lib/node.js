@@ -125,8 +125,7 @@ class Node {
         // Currently only used by tests for clean exits
         this.heartbeatTimer = setInterval(
           () => this._heartbeat(),
-          this.config.timers.heartbeat
-        );
+          this.config.timers.heartbeat);
 
         return this.join();
       });
@@ -185,22 +184,16 @@ class Node {
     }
 
     switch (data.event) {
-      case 'indexCache:add':
-        this.kuzzle.storageEngine.indexCache.add({
-          index: data.index,
-          collection: data.collection,
-          scope: data.scope,
-          notify: false
-        });
-        break;
-      case 'indexCache:remove':
-        this.kuzzle.storageEngine.indexCache.remove({
-          index: data.index,
-          collection: data.collection,
-          scope: data.scope,
-          notify: false
-        });
-        break;
+      case 'store:cache:add':
+        return this.kuzzle.ask(
+          `core:store:${data.scope}:cache:add`,
+          data.index,
+          data.collection);
+      case 'store:cache:remove':
+        return this.kuzzle.ask(
+          `core:store:${data.scope}:cache:remove`,
+          data.index,
+          data.collection);
       case 'profile':
         return this.kuzzle.ask('core:security:profile:invalidate', data.id);
       case 'role':
@@ -324,7 +317,8 @@ class Node {
       this.context.log('warn', `[cluster] no heartbeat received in time for ${node.pub}. removing node`);
       this._removeNode(node.pub);
 
-      // send a rejoin request to lost node in case this is a temp issue (overload/network congestion..)
+      // send a rejoin request to lost node in case this is a temp issue
+      // (overload/network congestion..)
       this._remoteJoin(remoteNode);
     }, this.config.timers.heartbeat * 2);
   }
