@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 const {
-  errors: { InternalError },
+  InternalError,
   Request,
 } = require('kuzzle-common-objects');
 
@@ -35,7 +35,7 @@ describe('Test: model/security/user', () => {
     user.profileIds = ['profile', 'profile2'];
 
     kuzzle.ask
-      .withArgs('core:security:profile:mGet', sinon.match.array)
+      .withArgs('core:security:profile:mGet')
       .resolves([profile, profile2]);
   });
 

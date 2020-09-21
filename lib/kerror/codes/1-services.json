@@ -116,7 +116,7 @@
         "invalid_mapping": {
           "description": "The provided mapping is invalid",
           "code": 21,
-          "message": "Invalid mapping property \"mapping.%s\".%s",
+          "message": "Invalid mapping property \"mappings.%s\".%s",
           "class": "BadRequestError"
         },
         "collection_reserved": {

@@ -92,6 +92,10 @@ The value of this configuration will change the way Elasticsearch manages the cr
   - `"false"`: Stores the document and does not update the collection mapping (fields are not indexed)
   - `"strict"`: Rejects the document
 
+::: info
+Kuzzle will accept either string or boolean values for the dynamic property but it's advised to always use string values.
+:::
+
 Refer to Elasticsearch documentation for more informations: [Elasticsearch dynamic mapping](https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html)
 
 The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/essentials/configuration) file under the key `services.storageEngine.commonMapping.dynamic`.

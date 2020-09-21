@@ -47,7 +47,7 @@ class FunctionalTestPlugin {
     this.routes.push({
       action: 'manage',
       controller: 'pipes',
-      url: '/pipes/:event/:state',
+      path: '/pipes/:event/:state', // should work with "path" or "url"
       verb: 'post',
     });
     this.routes.push({

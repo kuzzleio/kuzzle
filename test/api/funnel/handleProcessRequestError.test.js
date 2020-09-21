@@ -6,10 +6,8 @@ const
   KuzzleMock = require('../../mocks/kuzzle.mock'),
   {
     Request,
-    errors: {
-      BadRequestError,
-      PluginImplementationError
-    }
+    BadRequestError,
+    PluginImplementationError
   } = require('kuzzle-common-objects');
 
 describe('funnel.processRequest', () => {

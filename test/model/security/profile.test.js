@@ -1,10 +1,9 @@
 'use strict';
 
-const sinon = require('sinon');
 const should = require('should');
 const {
   Request,
-  errors: { BadRequestError }
+  BadRequestError
 } = require('kuzzle-common-objects');
 
 const Kuzzle = require('../../mocks/kuzzle.mock');
@@ -66,7 +65,7 @@ describe('Test: model/security/profile', () => {
     profile.policies = [{roleId: 'denyRole'}];
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.string)
+      .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;
@@ -134,12 +133,12 @@ describe('Test: model/security/profile', () => {
       roles[roleId][_kuzzle] = kuzzle;
     }
 
-    profile.constructor._hash = kuzzle.constructor.hash;
+    profile.constructor._hash = obj => kuzzle.hash(obj);
 
     profile.policies.push({roleId: role3._id});
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.string)
+      .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
 
     profile[_kuzzle] = kuzzle;

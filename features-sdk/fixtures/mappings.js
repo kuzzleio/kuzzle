@@ -5,7 +5,9 @@ module.exports = {
   'nyc-open-data': {
     'yellow-taxi': {
       properties: {
-        'age': { 'type': 'integer' }
+        job: { type: 'keyword' },
+        name: { type: 'keyword' },
+        age: { type: 'integer' }
       }
     }
   }

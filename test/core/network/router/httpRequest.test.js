@@ -15,7 +15,7 @@ describe('Test: router.httpRequest', () => {
     kuzzle = new KuzzleMock();
 
     kuzzle.pluginsManager.routes = [
-      {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
+      {verb: 'get', path: 'foo/bar/baz', controller: 'foo', action: 'bar'}
     ];
 
     kuzzle.funnel.execute.callsFake((request, callback) => {

@@ -9,13 +9,24 @@ const _ = require('lodash');
 const { Client: ESClient } = require('@elastic/elasticsearch');
 const {
   Request,
-  errors: {
-    PluginImplementationError
-  }
+  KuzzleError,
+  UnauthorizedError,
+  TooManyRequestsError,
+  SizeLimitError,
+  ServiceUnavailableError,
+  PreconditionError,
+  PluginImplementationError,
+  PartialError,
+  NotFoundError,
+  InternalError,
+  GatewayTimeoutError,
+  ForbiddenError,
+  ExternalServiceError,
+  BadRequestError,
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
-const EmbeddedSDK = require('../../../../lib/core/shared/sdk/embeddedSdk');
+const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
   const someCollection = 'someCollection';
@@ -191,7 +202,22 @@ describe('Plugin Context', () => {
     });
 
     it('should expose all error objects as capitalized constructors', () => {
-      const errors = require('kuzzle-common-objects').errors;
+      const errors = {
+        KuzzleError,
+        UnauthorizedError,
+        TooManyRequestsError,
+        SizeLimitError,
+        ServiceUnavailableError,
+        PreconditionError,
+        PluginImplementationError,
+        PartialError,
+        NotFoundError,
+        InternalError,
+        GatewayTimeoutError,
+        ForbiddenError,
+        ExternalServiceError,
+        BadRequestError,
+      };
 
       should(context.errors).be.an.Object().and.not.be.empty();
 
@@ -228,11 +254,16 @@ describe('Plugin Context', () => {
       context.log.info('foobar');
 
       process.nextTick(() => {
-        should(kuzzle.log.info)
-          .be.calledOnce()
-          .be.calledWith('[pluginName] foobar');
+        try {
+          should(kuzzle.log.info)
+            .be.calledOnce()
+            .be.calledWith('[pluginName] foobar');
 
-        done();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
       });
     });
 

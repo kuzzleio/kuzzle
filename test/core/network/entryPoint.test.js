@@ -11,12 +11,10 @@ const Bluebird = require('bluebird');
 const mockrequire = require('mock-require');
 const {
   Request,
-  models: { RequestContext },
-  errors: {
-    InternalError: KuzzleInternalError,
-    ServiceUnavailableError,
-    PluginImplementationError
-  }
+  RequestContext,
+  InternalError: KuzzleInternalError,
+  ServiceUnavailableError,
+  PluginImplementationError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);

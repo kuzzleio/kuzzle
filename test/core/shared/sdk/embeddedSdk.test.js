@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const EmbeddedSDK = require('../../../../lib/core/shared/sdk/embeddedSdk');
+const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('EmbeddedSDK', () => {

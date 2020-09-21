@@ -36,7 +36,11 @@ class ElasticsearchClientMock {
     };
 
     this.cluster = {
-      health: sinon.stub().resolves(),
+      health: sinon.stub().resolves({
+        body: {
+          number_of_pending_tasks: 0,
+        },
+      }),
       stats: sinon.stub().resolves()
     };
 

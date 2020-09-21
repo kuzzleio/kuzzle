@@ -1,7 +1,7 @@
 'use strict';
 
 const
-  { errors: { PreconditionError } } = require('kuzzle-common-objects'),
+  { PreconditionError } = require('kuzzle-common-objects'),
   BaseType = require('../../../../lib/core/validation/baseType'),
   UrlType = require('../../../../lib/core/validation/types/url'),
   should = require('should');

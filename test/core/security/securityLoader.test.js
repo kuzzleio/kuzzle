@@ -2,7 +2,7 @@
 
 const sinon = require('sinon');
 const should = require('should');
-const { errors: { BadRequestError } } = require('kuzzle-common-objects');
+const { BadRequestError } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const securities = require('../../mocks/securities.json');

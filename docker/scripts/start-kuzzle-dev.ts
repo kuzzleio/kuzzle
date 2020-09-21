@@ -1,14 +1,51 @@
 'use strict';
 
+// Starts a Kuzzle Backend application tailored for development
+// This loads a special plugin dedicated to functional tests
+
+import should from 'should'
+import { omit } from 'lodash'
+
 import { Backend } from '../../index';
-import * as FunctionalTestPlugin from '../../plugins/available/functional-test-plugin';
 
 const app = new Backend('functional-tests-app');
 
-// Easier debug
-app.hook.register('request:onError', request => {
-  console.log(request.error);
-});
+async function loadAdditionalPlugins () {
+  const additionalPluginsIndex = process.argv.indexOf('--enable-plugins');
+  const additionalPlugins = additionalPluginsIndex > -1
+    ? process.argv[additionalPluginsIndex + 1].split(',')
+    : [];
+
+  for (const name of additionalPlugins) {
+    const path = `../../plugins/available/${name}`;
+    const { default: Plugin } = await import(path);
+
+    let manifest = null;
+
+    try {
+      manifest = require(`${path}/manifest.json`);
+    }
+    catch (e) {
+      // do nothing
+    }
+
+    const options = manifest !== null
+      ? { manifest, name: manifest.name }
+      : null;
+
+    app.plugin.use(new Plugin(), options);
+  }
+}
+
+if (! process.env.TRAVIS) {
+  // Easier debug
+  app.hook.register('request:onError', request => {
+    console.log(request.error);
+  });
+  app.hook.register('hook:onError', request => {
+    console.log(request.error);
+  });
+}
 
 // Pipe management
 const activatedPipes: any = {};
@@ -71,7 +108,7 @@ app.controller.register('tests', {
       handler: async request => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
-      http: [{ verb: 'POST', url: '/hello/:name' }]
+      http: [{ verb: 'POST', path: '/hello/:name' }]
     },
 
     // Trigger custom event
@@ -88,26 +125,30 @@ app.controller.register('tests', {
       handler: async () => app.vault.secrets
     },
 
-    // ESClient constructor
-    esClient: {
+    // access storage client
+    storageClient: {
       handler: async request => {
-        const client = new app.ESClient();
+        const client = new app.storage.Client();
         const esRequest = {
           body: request.input.body,
           id: request.input.resource._id,
           index: request.input.resource.index,
         };
 
-        const { body } = await client.index(esRequest);
+        const response = await client.index(esRequest);
+        const response2 = await app.storage.client.index(esRequest);
 
-        return body;
+        should(omit(response.body, ['_version', 'result', '_seq_no']))
+          .match(omit(response2.body, ['_version', 'result', '_seq_no']));
+
+        return response.body;
       },
-      http: [{ verb: 'POST', url: '/es-client/:index/:_id' }],
+      http: [
+        { verb: 'POST', path: '/tests/storage-client/:index' }
+      ]
     }
   }
 });
-
-app.plugin.use(new FunctionalTestPlugin());
 
 let vaultfile = 'features-sdk/fixtures/secrets.enc.json';
 if (process.env.SECRETS_FILE_PREFIX) {
@@ -116,14 +157,9 @@ if (process.env.SECRETS_FILE_PREFIX) {
 app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
 
-const run = async () => {
-  try {
-    await app.start();
-  }
-  catch (error) {
-    console.log(error);
+loadAdditionalPlugins()
+  .then(() => app.start())
+  .catch(error => {
+    console.error(error);
     process.exit(1);
-  }
-};
-
-run();
+  });

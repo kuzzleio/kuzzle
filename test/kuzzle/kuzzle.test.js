@@ -7,6 +7,7 @@ const rewire = require('rewire');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
+const config = require('../../lib/config');
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
@@ -29,7 +30,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'vault',
     'log',
     'internalIndex',
-    'cacheEngine',
     'storageEngine',
     'dumpGenerator',
     'shutdown',
@@ -40,7 +40,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   function _mockKuzzle (KuzzleConstructor) {
     const mock = new KuzzleMock();
-    const k = new KuzzleConstructor();
+    const k = new KuzzleConstructor(config);
 
     mockedProperties.forEach(p => {
       k[p] = mock[p];
@@ -90,7 +90,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
-        kuzzle.cacheEngine.init,
         kuzzle.storageEngine.init,
         kuzzle.internalIndex.init,
         kuzzle.validation.init,
@@ -109,7 +108,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.pipe.withArgs('kuzzle:state:live'),
         kuzzle.entryPoint.startListening,
         kuzzle.pipe.withArgs('kuzzle:state:ready'),
-        kuzzle.emit.withArgs('core:kuzzleStart', sinon.match.any)
+        kuzzle.emit.withArgs('core:kuzzleStart')
       );
 
       should(kuzzle.started).be.true();
