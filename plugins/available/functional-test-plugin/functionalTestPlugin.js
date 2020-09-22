@@ -2,6 +2,7 @@
 
 const should = require('should');
 const _ = require('lodash');
+const { Request } = require('kuzzle-common-objects');
 
 class FunctionalTestPlugin {
   constructor () {
@@ -21,6 +22,19 @@ class FunctionalTestPlugin {
       controller: 'constructors',
       url: '/constructors/esclient/:index',
       verb: 'post',
+    });
+
+    // Custom Realtime subscription related declarations =======================
+
+    this.controllers.accessors = {
+      registerSubscription: 'registerSubscription',
+    };
+    
+    this.routes.push({
+      action: 'registerSubscription',
+      controller: 'accessors',
+      url: '/accessors/registerSubscription',
+      verb: 'POST',
     });
 
     // context.secrets related declarations ====================================
@@ -116,6 +130,31 @@ class FunctionalTestPlugin {
     // There is no test associated: this line by itself will make functional
     // tests throw before they can even start if this premise is violated.
     await this.sdk.server.info();
+  }
+
+  // accessors.registerSubscription related methods ============================
+
+  async registerSubscription(request) {
+    const customRequest = new Request(
+      {
+        action: request.input.action,
+        body: {},
+        collection: 'titi',
+        controller: request.input.controller,
+        index: 'toto',
+      },
+      {
+        connectionId: request.context.connection.id,
+      });
+  
+    const roomId = await this.context.accessors.realtime.registerSubscription(
+      customRequest
+    );
+  
+    return {
+      acknowledged: 'OK',
+      roomId,
+    };
   }
 
   // context.constructor.ESClient related methods ==============================
