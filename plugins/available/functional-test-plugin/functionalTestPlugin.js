@@ -138,7 +138,11 @@ class FunctionalTestPlugin {
     const customRequest = new Request(
       {
         action: request.input.action,
-        body: {},
+        body: {
+          match: {
+            name: 'Luca'
+          }
+        },
         collection: 'titi',
         controller: request.input.controller,
         index: 'toto',
