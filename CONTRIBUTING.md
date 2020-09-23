@@ -39,8 +39,8 @@ cd kuzzle
 docker-compose up
 ```
 
-You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebSocket and MQTT APIs.
-This is the entrypoint for the loadbalancer, API requests are then forwarded to kuzzle individual kuzzle nodes (round-robin).
+You can now access to the Kuzzle HTTP/WebSocket API through the following URL: `http://localhost:7512`.
+This is the entrypoint for the loadbalancer: API requests are then forwarded to kuzzle individual kuzzle nodes (round-robin).
 
 For development purposes, nodes can be accessed individually:
 
