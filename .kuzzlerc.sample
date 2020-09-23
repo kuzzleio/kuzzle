@@ -25,7 +25,7 @@
     //   * enabled: 
     //      enable the Swagger specifications endpoint
     //   * yamlOutput:
-    //      use YAML format for Swagger specifications output instead of JSON
+    //      use YAML format to print Swagger specifications instead of JSON
     "swagger": {
       "enabled": true,
       "yamlOutput": false
