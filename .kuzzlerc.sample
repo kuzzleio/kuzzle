@@ -19,7 +19,17 @@
     // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
     "accessControlAllowOrigin": "*",
     "accessControlAllowMethods": "GET,POST,PUT,DELETE,OPTIONS,HEAD",
-    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
+    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
+    
+    // [Swagger]
+    //   * enabled: 
+    //      enable the Swagger specifications endpoint
+    //   * yamlOutput:
+    //      use YAML format for Swagger specifications output instead of JSON
+    "swagger": {
+      "enabled": true,
+      "yamlOutput": false
+    }
   },
 
   // Kuzzle configured limits
