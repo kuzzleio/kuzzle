@@ -84,7 +84,7 @@ See our [plugins documentation](https://docs.kuzzle.io/core/2/plugins/)
 ```bash
 $ docker-compose up -d
 
-# wait for Kuzzle stack to be up, and start the entire test suite (long)
+# Wait for Kuzzle stack to be up, and start the entire test suite (long)
 $ npm run test
 
 # To launch tests individually:
