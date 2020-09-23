@@ -9,7 +9,8 @@ _integration-tests: &integration-tests
   node_js: 12
   services: docker
   cache:
-    directories: node_modules
+    directories:
+      - node_modules
   env: &integration-tests-env
     - DOCKER_COMPOSE_TEST=test
   install:

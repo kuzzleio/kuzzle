@@ -76,3 +76,44 @@ export interface ControllerDefinition {
 export interface BasePlugin {
   init: (config: JSONObject, context: any) => Promise<any> | any
 }
+
+/**
+ * Kuzzle API request
+ *
+ * @see https://docs.kuzzle.io/core/2/api/essentials/query-syntax/#other-protocols
+ */
+export interface KuzzleRequest extends JSONObject {
+  controller: string;
+  action: string;
+  index?: string;
+  collection?: string;
+  _id?: string;
+  jwt?: string;
+  volatile?: JSONObject;
+  body?: JSONObject;
+  [key: string]: any;
+}
+
+/**
+ * Kuzzle API response
+ *
+ * @see https://docs.kuzzle.io/core/2/api/essentials/kuzzle-response/
+ */
+export interface KuzzleResponse extends JSONObject {
+  controller: string;
+  action: string;
+  index?: string;
+  collection?: string;
+  error?: {
+    id: string;
+    code: number;
+    message: string;
+    status: number;
+    stack?: string;
+  };
+  requestId: string;
+  result: any;
+  status: number;
+  volatile?: JSONObject;
+  room?: string;
+}
