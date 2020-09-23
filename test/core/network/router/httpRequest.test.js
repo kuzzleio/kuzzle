@@ -147,6 +147,12 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register the swagger JSON auto-generator route', (done) => {
+    kuzzle.config.http.swagger.enabled = true;
+    kuzzle.config.http.swagger.yamlOutput = false;
+
+    routeController = new Router(kuzzle);
+    routeController.init();
+
     httpRequest.url = '/swagger.json';
     httpRequest.method = 'GET';
 
@@ -164,6 +170,12 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register the swagger YAML auto-generator route', (done) => {
+    kuzzle.config.http.swagger.enabled = true;
+    kuzzle.config.http.swagger.yamlOutput = true;
+
+    routeController = new Router(kuzzle);
+    routeController.init();
+
     httpRequest.url = '/swagger.yml';
     httpRequest.method = 'GET';
 
@@ -179,6 +191,35 @@ describe('Test: router.httpRequest', () => {
       }
     });
   });
+
+  it('should not register the swagger JSON or YAML auto-generator route', (done) => {
+    kuzzle.config.http.swagger.enabled = false;
+
+    routeController = new Router(kuzzle);
+    routeController.init();
+
+    const checkResponse = result => {
+      try {
+        should(result.response.status).be.eql(404);
+      }
+      catch (e) {
+        done(e);
+      }
+    };
+
+    httpRequest.url = '/swagger.json';
+    httpRequest.method = 'GET';
+
+    routeController.http.route(httpRequest, checkResponse);
+
+    httpRequest.url = '/swagger.yml';
+    httpRequest.method = 'GET';
+
+    routeController.http.route(httpRequest, checkResponse);
+
+    done();
+  });
+
 
   it('should register plugins HTTP routes', (done) => {
     httpRequest.url = '/foo/bar/baz';
