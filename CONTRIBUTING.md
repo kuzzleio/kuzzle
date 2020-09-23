@@ -39,7 +39,7 @@ cd kuzzle
 docker-compose up
 ```
 
-You can now access to the Kuzzle HTTP/WebSocket API through the following URL: `http://localhost:7512`.
+You can now access the Kuzzle HTTP/WebSocket API through the following URL: `http://localhost:7512`.
 This is the entrypoint for the loadbalancer: API requests are then forwarded to kuzzle individual kuzzle nodes (round-robin).
 
 For development purposes, nodes can be accessed individually:
@@ -98,4 +98,3 @@ $ npm run test:unit
 # functional tests: test Kuzzle's API behavior
 $ npm run test:functional
 ```
-
