@@ -139,13 +139,13 @@ class FunctionalTestPlugin {
       {
         action: request.input.action,
         body: {
-          match: {
+          equals: {
             name: 'Luca'
           }
         },
-        collection: 'titi',
+        collection: 'yellow-taxi',
         controller: request.input.controller,
-        index: 'toto',
+        index: 'nyc-open-data',
       },
       {
         connectionId: request.context.connection.id,

@@ -28,21 +28,12 @@ Feature: Plugin context
     Then I should receive a result matching:
       | result | "Hello, Mr Freeman" |
 
-  # accessors.sdk.realtime =====================================================
+  # accessors.realtime.registerSubscription ===================================
 
-  @realtime
-  Scenario: Subscribe and unsubscribe to realtime notifications
-    Given I subscribe to "test":"answer" notifications
-    When I successfully execute the action "realtime":"publish" with args:
-      | index      | "test"     |
-      | collection | "question" |
-      | body       | {}         |
-    Then I should have receive "1" notifications for "test":"answer"
-    # should not be subscribed anymore
-    When I successfully execute the action "realtime":"publish" with args:
-      | index      | "test"     |
-      | collection | "question" |
-      | body       | {}         |
-    Then I should have receive "1" notifications for "test":"answer"
+  Scenario: Register a new subscription
+    Given a collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "functional-test-plugin/accessors":"registerSubscription"
+    Then I should receive a result matching:
+      | acknowledged | "OK" |
 
-  # @todo add cluster tests
+# @todo add cluster tests
