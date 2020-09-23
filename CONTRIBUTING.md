@@ -35,7 +35,7 @@ How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
 git clone git@github.com:kuzzleio/kuzzle.git
 cd kuzzle
 
-# start a kuzzle cluster with development tools enabled
+# Start a kuzzle cluster with development tools enabled
 docker-compose up
 ```
 
