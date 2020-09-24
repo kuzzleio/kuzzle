@@ -28,12 +28,19 @@ class FunctionalTestPlugin {
 
     this.controllers.accessors = {
       registerSubscription: 'registerSubscription',
+      unregisterSubscription: 'unregisterSubscription',
     };
     
     this.routes.push({
       action: 'registerSubscription',
       controller: 'accessors',
       url: '/accessors/registerSubscription',
+      verb: 'POST',
+    });
+    this.routes.push({
+      action: 'unregisterSubscription',
+      controller: 'accessors',
+      url: '/accessors/unregisterSubscription',
       verb: 'POST',
     });
 
@@ -151,7 +158,7 @@ class FunctionalTestPlugin {
         connectionId: request.context.connection.id,
       });
   
-    const roomId = await this.context.accessors.realtime.registerSubscription(
+    const roomId = await this.context.accessors.realtime.subscribe(
       customRequest
     );
   
@@ -159,6 +166,13 @@ class FunctionalTestPlugin {
       acknowledged: 'OK',
       roomId,
     };
+  }
+
+  async unregisterSubscription(request) {
+    const connectionId = request.context.connection.id,
+      roomId = request.input.body.roomId;
+
+    await this.context.accessors.realtime.unsubscribe(connectionId, roomId, false);
   }
 
   // context.constructor.ESClient related methods ==============================

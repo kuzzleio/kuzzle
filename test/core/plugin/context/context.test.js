@@ -311,8 +311,37 @@ describe('Plugin Context', () => {
     it('should expose a realtime accessor', () => {
       const realtime = context.accessors.realtime;
 
-      should(realtime.registerSubscription).be.a.Function();
-      should(realtime.unregisterSubscription).be.a.Function();
+      should(realtime.subscribe).be.a.Function();
+      should(realtime.unsubscribe).be.a.Function();
+    });
+
+    describe('#accessors.realtime functions', () => {
+      it('should call subscribe with the right ask and argument', async () => {
+        const customRequest = new Request(
+          {
+            action: 'subscribe',
+            body: {
+              equals: {
+                name: 'Luca'
+              }
+            },
+            collection: 'yellow-taxi',
+            controller: 'realtime',
+            index: 'nyc-open-data',
+          },
+          {
+            connectionId: 'superid',
+          });
+  
+        await context.accessors.realtime.subscribe(customRequest);
+  
+        should(kuzzle.ask).be.calledWithExactly('core:realtime:subscribe', customRequest);
+      });
+
+      it('should call subscribe with the right ask and argument', async () => {
+        await context.accessors.realtime.unsubscribe('connectionId', 'roomId', false);
+        should(kuzzle.ask).be.calledWithExactly('core:realtime:unsubscribe', 'connectionId', 'roomId', false);
+      });
     });
 
     describe('#trigger', () => {
