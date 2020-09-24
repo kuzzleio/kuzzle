@@ -23,8 +23,8 @@ describe('Test: security controller - profiles', () => {
       {controller: 'security'},
       {user: {_id: 'userId'}});
     kuzzle = new KuzzleMock();
-    kuzzle.internalIndex.get.resolves({});
-    kuzzle.internalIndex.getMapping.resolves({
+    kuzzle.ask.withArgs('core:store:private:document:get').resolves({});
+    kuzzle.ask.withArgs('core:store:private:mappings:get').resolves({
       internalIndex: {
         mappings: {
           profiles: {
@@ -51,34 +51,38 @@ describe('Test: security controller - profiles', () => {
       }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
-    it('should update the profile mapping', () => {
-      kuzzle.internalIndex.updateMapping.resolves(foo);
+    it('should update the profile mapping', async () => {
+      kuzzle.ask.withArgs('core:store:private:mappings:update').resolves(foo);
       request.input.body = foo;
 
-      return securityController.updateProfileMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.updateMapping).be.calledOnce();
-          should(kuzzle.internalIndex.updateMapping).be.calledWith('profiles', request.input.body);
+      const response = await securityController.updateProfileMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:mappings:update',
+        kuzzle.internalIndex.index,
+        'profiles',
+        request.input.body);
+
+      should(response).be.instanceof(Object);
+      should(response).match(foo);
     });
   });
 
   describe('#getProfileMapping', () => {
-    it('should fulfill with a response object', () => {
-      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+    it('should fulfill with a response object', async () => {
+      kuzzle.ask.withArgs('core:store:private:mappings:get').resolves({
+        properties: { foo: 'bar' },
+      });
 
-      return securityController.getProfileMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.getMapping)
-            .be.calledOnce()
-            .be.calledWith('profiles');
+      const response = await securityController.getProfileMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match({ mapping: { foo: 'bar' } });
-        });
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:mappings:get',
+        kuzzle.internalIndex.index,
+        'profiles');
+
+      should(response).be.instanceof(Object);
+      should(response).match({ mapping: { foo: 'bar' } });
     });
   });
 

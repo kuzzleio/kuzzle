@@ -26,86 +26,104 @@ describe('Test: repositories/repository', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    repository = new Repository(kuzzle);
-    repository.index = '%test';
-    repository.collection = 'objects';
-    repository.init({
+    repository = new Repository(kuzzle, {
       cache: cacheDbEnum.INTERNAL,
-      indexStorage: kuzzle.internalIndex,
+      store: kuzzle.internalIndex,
     });
+
+    repository.collection = 'objects';
     repository.ObjectConstructor = ObjectConstructor;
   });
 
   describe('#loadOneFromDatabase', () => {
     it('should reject for an non existing id', () => {
-      repository.indexStorage.get.rejects(new NotFoundError('Not found'));
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .rejects(new NotFoundError('Not found'));
 
       return should(repository.loadOneFromDatabase(-9999))
         .rejectedWith(NotFoundError, { id: 'services.storage.not_found' });
     });
 
     it('should reject the promise in case of error', () => {
-      repository.indexStorage.get.rejects(new KuzzleInternalError('error'));
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .rejects(new KuzzleInternalError('error'));
 
       return should(repository.loadOneFromDatabase('error'))
         .rejectedWith(KuzzleInternalError, { message: 'error' });
     });
 
-    it('should return a valid ObjectConstructor instance if found', () => {
-      repository.indexStorage.get.resolves(dbPojo);
-      return repository.loadOneFromDatabase('persisted')
-        .then(result => {
-          should(result).be.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly('someId');
-          should(result.some).be.exactly('source');
-        });
+    it('should return a valid ObjectConstructor instance if found', async () => {
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .resolves(dbPojo);
+
+      const result = await repository.loadOneFromDatabase('persisted');
+
+      should(result).be.instanceOf(ObjectConstructor);
+      should(result._id).be.exactly('someId');
+      should(result.some).be.exactly('source');
     });
   });
 
   describe('#loadMultiFromDatabase', () => {
-    it('should return an empty array for an non existing id', () => {
-      repository.indexStorage.mGet.resolves({items: []});
-      return repository.loadMultiFromDatabase([-999, -998, -997])
-        .then(results => should(results).be.an.Array().and.have.length(0));
+    it('should return an empty array for an non existing id', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+        items: [],
+      });
+
+      const result = await repository.loadMultiFromDatabase([-999, -998, -997]);
+
+      should(result).be.an.Array().and.have.length(0);
     });
 
-    it('should return a list of plain object', () => {
-      repository.indexStorage.mGet.resolves({items: [dbPojo, dbPojo]});
+    it('should return a list of plain object', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+        items: [dbPojo, dbPojo],
+      });
 
-      return repository.loadMultiFromDatabase(['persisted', 'persisted'])
-        .then(results => {
-          should(results).be.an.Array().and.not.be.empty();
+      const results = await repository.loadMultiFromDatabase([
+        'persisted',
+        'persisted',
+      ]);
 
-          results.forEach(result => {
-            should(result).be.instanceOf(ObjectConstructor);
-            should(result._id).be.exactly('someId');
-            should(result.some).be.exactly('source');
-          });
-        });
+      should(results).be.an.Array().and.not.be.empty();
+
+      results.forEach(result => {
+        should(result).be.instanceOf(ObjectConstructor);
+        should(result._id).be.exactly('someId');
+        should(result.some).be.exactly('source');
+      });
     });
 
-    it('should handle list of objects as an argument', () => {
-      repository.indexStorage.mGet.resolves({items: [dbPojo, dbPojo]});
+    it('should handle list of objects as an argument', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+        items: [dbPojo, dbPojo],
+      });
 
-      return repository.loadMultiFromDatabase([{_id:'persisted'}, {_id:'persisted'}])
-        .then(results => {
-          should(results).be.an.Array().and.not.be.empty();
+      const results = await repository.loadMultiFromDatabase([
+        {_id:'persisted'},
+        {_id:'persisted'},
+      ]);
 
-          results.forEach(result => {
-            should(result).be.instanceOf(ObjectConstructor);
-            should(result._id).be.exactly('someId');
-            should(result.some).be.exactly('source');
-          });
-        });
+      should(results).be.an.Array().and.not.be.empty();
+
+      results.forEach(result => {
+        should(result).be.instanceOf(ObjectConstructor);
+        should(result._id).be.exactly('someId');
+        should(result.some).be.exactly('source');
+      });
     });
 
-    it('should respond with an empty array if no result found', () => {
-      repository.indexStorage.mGet.resolves({ items: [] });
+    it('should respond with an empty array if no result found', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+        items: [],
+      });
 
-      return repository.loadMultiFromDatabase([{_id:'null'}])
-        .then(results => {
-          should(results).be.an.Array().and.be.empty();
-        });
+      const results = await repository.loadMultiFromDatabase([{_id:'null'}]);
+
+      should(results).be.an.Array().and.be.empty();
     });
   });
 
@@ -157,7 +175,9 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject for a non-existing id', () => {
-      repository.indexStorage.get.rejects(new NotFoundError('Not found'));
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .rejects(new NotFoundError('Not found'));
 
       return should(repository.load(-9999)).rejectedWith(NotFoundError, {
         id: 'services.storage.not_found',
@@ -165,7 +185,9 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should reject the promise in case of error', () => {
-      repository.indexStorage.get.rejects(new KuzzleInternalError('test'));
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .rejects(new KuzzleInternalError('test'));
 
       return should(repository.load('error'))
         .rejectedWith(KuzzleInternalError, { message: 'test' });
@@ -180,15 +202,16 @@ describe('Test: repositories/repository', () => {
         });
     });
 
-    it('should return a valid ObjectConstructor instance if found', () => {
-      repository.indexStorage.get.resolves(dbPojo);
+    it('should return a valid ObjectConstructor instance if found', async () => {
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .resolves(dbPojo);
 
-      return repository.load('persisted')
-        .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly('someId');
-          should(result.some).be.exactly('source');
-        });
+      const result = await repository.load('persisted');
+
+      should(result).be.an.instanceOf(ObjectConstructor);
+      should(result._id).be.exactly('someId');
+      should(result.some).be.exactly('source');
     });
 
     it('should return a valid ObjectConstructor instance if found only in cache', async () => {
@@ -203,21 +226,24 @@ describe('Test: repositories/repository', () => {
       should(result.some).be.exactly('source');
     });
 
-    it('should return a valid ObjectConstructor instance if found only in indexStorage', () => {
-      repository.indexStorage.get.resolves(dbPojo);
+    it('should return a valid ObjectConstructor instance if found only in the store', async () => {
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .resolves(dbPojo);
 
-      return repository.load('uncached')
-        .then(result => {
-          should(result).be.an.instanceOf(ObjectConstructor);
-          should(result._id).be.exactly('someId');
-          should(result.some).be.exactly('source');
-        });
+      const result = await repository.load('uncached');
+
+      should(result).be.an.instanceOf(ObjectConstructor);
+      should(result._id).be.exactly('someId');
+      should(result.some).be.exactly('source');
     });
 
-    it('should get content only from indexStorage if no cache DB is set', async () => {
+    it('should get content only from the store if no cache is set', async () => {
       sinon.stub(repository, 'loadFromCache');
       repository.cacheDb = cacheDbEnum.NONE;
-      repository.indexStorage.get.resolves(dbPojo);
+      kuzzle.ask
+        .withArgs('core:store:private:document:get')
+        .resolves(dbPojo);
 
       const result = await repository.load('no-cache');
 
@@ -227,34 +253,37 @@ describe('Test: repositories/repository', () => {
       should(repository.loadFromCache).not.called();
     });
 
-    it('should get content only from the cache if indexStorage is null', async () => {
-      repository.indexStorage = null;
+    it('should get content only from the cache if the store is null', async () => {
+      repository.store = null;
 
       should(await repository.load('uncached')).be.null();
     });
   });
 
   describe('#persistToDatabase', () => {
-    it('should call the createOrReplace method of internal Engine', () => {
+    it('should call the createOrReplace method of internal Engine', async () => {
       const object = {_id: 'someId', some: 'source'};
 
-      return repository.persistToDatabase(object)
-        .then(() => {
-          should(repository.indexStorage.createOrReplace)
-            .calledOnce()
-            .calledWith(repository.collection, 'someId', repository.serializeToDatabase(object));
-        });
+      await repository.persistToDatabase(object);
+
+      should(kuzzle.ask).calledWith(
+        'core:store:private:document:createOrReplace',
+        kuzzle.internalIndex.index,
+        repository.collection,
+        'someId',
+        repository.serializeToDatabase(object));
     });
   });
 
   describe('#deleteFromDatabase', () => {
-    it('should call a database deletion properly', () => {
-      return repository.deleteFromDatabase('someId')
-        .then(() => {
-          should(repository.indexStorage.delete)
-            .calledOnce()
-            .calledWith(repository.collection, 'someId');
-        });
+    it('should call a database deletion properly', async () => {
+      await repository.deleteFromDatabase('someId');
+
+      should(kuzzle.ask).calledWith(
+        'core:store:private:document:delete',
+        kuzzle.internalIndex.index,
+        repository.collection,
+        'someId');
     });
   });
 
@@ -288,9 +317,11 @@ describe('Test: repositories/repository', () => {
         'core:cache:internal:del',
         repository.getCacheKey('someId'));
 
-      should(repository.indexStorage.delete)
-        .calledOnce()
-        .calledWith(repository.collection, 'someId');
+      should(kuzzle.ask).calledWith(
+        'core:store:private:document:delete',
+        kuzzle.internalIndex.index,
+        repository.collection,
+        'someId');
     });
   });
 
@@ -394,107 +425,131 @@ describe('Test: repositories/repository', () => {
   });
 
   describe('#search', () => {
-    it('should return a list from database', () => {
-      repository.indexStorage.search.resolves({hits: [dbPojo], total: 1});
-
-      return repository.search({query:'noquery'})
-        .then(response => {
-          should(response).be.an.Object();
-          should(response.hits).be.an.Array();
-          should(response.total).be.exactly(1);
-          should(repository.indexStorage.search).be.calledWithMatch(repository.collection, {query:'noquery'}, {});
-        });
-    });
-
-    it('should inject back the scroll id, if there is one', () => {
-      repository.indexStorage.search.resolves({
+    it('should return a list from database', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
         hits: [dbPojo],
         total: 1,
-        scrollId: 'foobar'
       });
 
-      return repository.search({query:'noquery'}, {from: 13, size: 42, scroll: '45s'})
-        .then(response => {
-          should(response).be.an.Object();
-          should(response.hits).be.an.Array();
-          should(response.total).be.exactly(1);
-          should(response.scrollId).be.eql('foobar');
-          should(repository.indexStorage.search).be.calledWithMatch(repository.collection, {query:'noquery'}, {from: 13, size: 42, scroll: '45s'});
-        });
+      const response = await repository.search({query:'noquery'});
+
+      should(response).be.an.Object();
+      should(response.hits).be.an.Array();
+      should(response.total).be.exactly(1);
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:store:private:document:search',
+        kuzzle.internalIndex.index,
+        repository.collection,
+        {query:'noquery'},
+        {});
     });
 
-    it('should return a list if no hits', () => {
-      repository.indexStorage.search.resolves({hits: [], total: 0});
+    it('should inject back the scroll id, if there is one', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+        hits: [dbPojo],
+        scrollId: 'foobar',
+        total: 1,
+      });
 
-      return repository.search({})
-        .then(response => {
-          should(response).be.an.Object();
-          should(response.hits).be.an.Array();
-          should(response.hits).be.empty();
-          should(response.total).be.exactly(0);
-        });
+      const response = await repository.search({ query: 'noquery' }, {
+        from: 13,
+        scroll: '45s',
+        size: 42,
+      });
+
+      should(response).be.an.Object();
+      should(response.hits).be.an.Array();
+      should(response.total).be.exactly(1);
+      should(response.scrollId).be.eql('foobar');
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:store:private:document:search',
+        kuzzle.internalIndex.index,
+        repository.collection,
+        { query:'noquery' },
+        { from: 13, scroll: '45s', size: 42 });
+    });
+
+    it('should return a list if no hits', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+        hits: [],
+        total: 0,
+      });
+
+      const response = await repository.search({});
+
+      should(response).be.an.Object();
+      should(response.hits).be.an.Array();
+      should(response.hits).be.empty();
+      should(response.total).be.exactly(0);
     });
 
     it('should be rejected with an error if something goes wrong', () => {
       const error = new Error('Mocked error');
-      repository.indexStorage.search.rejects(error);
+      kuzzle.ask
+        .withArgs('core:store:private:document:search')
+        .rejects(error);
 
       return should(repository.search({})).be.rejectedWith(error);
     });
   });
 
   describe('#scroll', () => {
-    it('should return a list from database', () => {
-      repository.indexStorage.scroll.resolves({
-        hits: [dbPojo],
-        total: 1
-      });
-
-      return repository.scroll('foo')
-        .then(response => {
-          should(response).be.an.Object();
-          should(response.hits).be.an.Array();
-          should(response.total).be.exactly(1);
-          should(repository.indexStorage.scroll).be.calledWithMatch('foo', undefined);
-        });
-    });
-
-    it('should inject back the scroll id', () => {
-      repository.indexStorage.scroll.resolves({
+    it('should return a list from database', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
         hits: [dbPojo],
         total: 1,
-        scrollId: 'foobar'
       });
 
-      return repository.scroll('foo', 'bar')
-        .then(response => {
-          should(response).be.an.Object();
-          should(response.hits).be.an.Array();
-          should(response.total).be.exactly(1);
-          should(response.scrollId).be.eql('foobar');
-          should(repository.indexStorage.scroll).be.calledWithMatch('foo', 'bar');
-        });
+      const response = await repository.scroll('foo');
+
+      should(response).be.an.Object();
+      should(response.hits).be.an.Array();
+      should(response.total).be.exactly(1);
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:store:private:document:search',
+        kuzzle.internalIndex.index,
+        'foo',
+        undefined);
     });
 
-    it('should return a list if no hits', () => {
-      repository.indexStorage.scroll.resolves({
-        hits: [],
-        total: 0,
-        scrollId: 'foobar'
+    it('should inject back the scroll id', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
+        hits: [dbPojo],
+        scrollId: 'foobar',
+        total: 1,
       });
 
-      return repository.scroll({})
-        .then(response => {
-          should(response).be.an.Object();
-          should(response.hits).be.an.Array().and.be.empty();
-          should(response.total).be.exactly(0);
-          should(response.scrollId).be.eql('foobar');
-        });
+      const response = await repository.scroll('foo', 'bar');
+
+      should(response).be.an.Object();
+      should(response.hits).be.an.Array();
+      should(response.total).be.exactly(1);
+      should(response.scrollId).be.eql('foobar');
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:store:private:document:scroll',
+        kuzzle.internalIndex.index,
+        'foo',
+        'bar');
+    });
+
+    it('should return a list if no hits', async () => {
+      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
+        hits: [],
+        scrollId: 'foobar',
+        total: 0,
+      });
+
+      const response = await repository.scroll({});
+
+      should(response).be.an.Object();
+      should(response.hits).be.an.Array().and.be.empty();
+      should(response.total).be.exactly(0);
+      should(response.scrollId).be.eql('foobar');
     });
 
     it('should be rejected with an error if something goes wrong', () => {
       const error = new Error('Mocked error');
-      repository.indexStorage.scroll.rejects(error);
+      kuzzle.ask.withArgs('core:store:private:document:scroll').rejects(error);
 
       return should(repository.scroll('foo')).be.rejectedWith(error);
     });

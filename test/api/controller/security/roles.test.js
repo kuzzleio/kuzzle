@@ -32,18 +32,23 @@ describe('Test: security controller - roles', () => {
       await should(securityController.updateRoleMapping(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
 
-      should(kuzzle.internalIndex.updateMapping).not.called();
+      should(kuzzle.ask.withArgs('core:store:private:mappings:update'))
+        .not.called();
     });
 
     it('should update the role mapping', async () => {
       request.input.body = { foo: 'bar' };
-      kuzzle.internalIndex.updateMapping.resolves(request.input.body);
+      kuzzle.ask
+        .withArgs('core:store:private:mappings:update')
+        .resolves(request.input.body);
 
       const response = await securityController.updateRoleMapping(request);
 
-      should(kuzzle.internalIndex.updateMapping)
-        .calledOnce()
-        .calledWith('roles', request.input.body);
+      should(kuzzle.ask).calledWith(
+        'core:store:private:mappings:update',
+        kuzzle.internalIndex.index,
+        'roles',
+        request.input.body);
 
       should(response).match(request.input.body);
     });
@@ -51,13 +56,16 @@ describe('Test: security controller - roles', () => {
 
   describe('#getRoleMapping', () => {
     it('should fulfill with a response object', async () => {
-      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+      kuzzle.ask.withArgs('core:store:private:mappings:get').resolves({
+        properties: { foo: 'bar' },
+      });
 
       const response = await securityController.getRoleMapping(request);
 
-      should(kuzzle.internalIndex.getMapping)
-        .be.calledOnce()
-        .be.calledWith('roles');
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:mappings:get',
+        kuzzle.internalIndex.index,
+        'roles');
 
       should(response).match({ mapping: { foo: 'bar' } });
     });

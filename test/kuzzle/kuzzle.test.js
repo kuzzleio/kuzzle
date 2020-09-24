@@ -30,7 +30,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'vault',
     'log',
     'internalIndex',
-    'storageEngine',
     'dumpGenerator',
     'shutdown',
     'pipe',
@@ -90,16 +89,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
-        kuzzle.storageEngine.init,
         kuzzle.internalIndex.init,
         kuzzle.validation.init,
         kuzzle.tokenManager.init,
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.storageEngine.public.loadMappings,
-        kuzzle.storageEngine.public.loadFixtures,
-        kuzzle.ask.withArgs('core:security:load', sinon.match.object),
+        kuzzle.ask.withArgs('core:store:public:mappings:import'),
+        kuzzle.ask.withArgs('core:store:public:document:import'),
+        kuzzle.ask.withArgs('core:security:load'),
         kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,

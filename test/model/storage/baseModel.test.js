@@ -3,8 +3,10 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockrequire = require('mock-require');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+
 const BaseModel = require('../../../lib/model/storage/baseModel');
 
 class Model extends BaseModel {
@@ -37,8 +39,6 @@ describe('BaseModel', () => {
 
     StorageEngine = mockrequire.reRequire('../../../lib/core/storage/storageEngine');
     storageEngine = new StorageEngine(kuzzle);
-
-    storageEngine._populateIndexCache = sinon.stub().resolves();
 
     return storageEngine.init();
   });
@@ -102,7 +102,7 @@ describe('BaseModel', () => {
 
   describe('BaseModel.load', () => {
     it('should load and instantiate a model from database', async () => {
-      BaseModel.indexStorage.get.resolves({
+      kuzzle.internalIndex.get.resolves({
         _id: 'mylehuong' ,
         _source: {
           name: 'mylehuong',
@@ -118,7 +118,7 @@ describe('BaseModel', () => {
         location: 'thehive'
       });
       should(model.__persisted).be.true();
-      should(BaseModel.indexStorage.get).be.calledWith('models', 'mylehuong');
+      should(kuzzle.internalIndex.get).be.calledWith('models', 'mylehuong');
     });
   });
 
@@ -131,14 +131,18 @@ describe('BaseModel', () => {
         { _id: 'thehive', _source: {} }
       ];
 
-      BaseModel.indexStorage.deleteByQuery = sinon.stub().resolves({documents});
+      sinon.stub(kuzzle.internalIndex, 'deleteByQuery').resolves({ documents });
     });
 
     it('should call the driver\'s deleteByQuery', async () => {
       await Model.deleteByQuery({ match_all: {} });
 
-      should(BaseModel.indexStorage.deleteByQuery).be.calledOnce();
-      const [ collection, query ] = BaseModel.indexStorage.deleteByQuery.getCall(0).args;
+      should(kuzzle.internalIndex.deleteByQuery).be.calledOnce();
+
+      const [ collection, query ] = kuzzle.internalIndex.deleteByQuery
+        .getCall(0)
+        .args;
+
       should(collection).be.eql('models');
       should(query).be.eql({ match_all: {} });
       should(Model.prototype._afterDelete).be.calledTwice();
@@ -147,22 +151,24 @@ describe('BaseModel', () => {
     it('should refresh the collection if the option.refresh is set', async () => {
       await Model.deleteByQuery({ match_all: {} }, { refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.refreshCollection).be.calledWith('models');
+      should(kuzzle.internalIndex.refreshCollection).be.calledWith('models');
     });
   });
 
   describe('BaseModel.search', () => {
     it('should call search and return instantiated models', async () => {
-      BaseModel.indexStorage.search.resolves({
+      kuzzle.internalIndex.search.resolves({
         hits: [
           { _id: 'mylehuong', _source: { location: 'Saigon' } },
-          { _id: 'thehive', _source: { location: 'Hanoi' } }
-        ]
+          { _id: 'thehive', _source: { location: 'Hanoi' } },
+        ],
       });
 
-      const models = await Model.search({ query: { match_all: {} } }, { scroll: '5s' });
+      const models = await Model.search(
+        { query: { match_all: {} } },
+        { scroll: '5s' });
 
-      should(BaseModel.indexStorage.search).be.calledWith(
+      should(kuzzle.internalIndex.search).be.calledWith(
         'models',
         { query: { match_all: {} } },
         { scroll: '5s' });
@@ -175,30 +181,28 @@ describe('BaseModel', () => {
 
   describe('BaseModel.truncate', () => {
     it('should call BaseModel.deleteByQuery with match_all', async () => {
-      const baseModelDeleteByQuery = BaseModel.deleteByQuery;
-      BaseModel.deleteByQuery = sinon.stub().resolves('ret');
+      sinon.stub(BaseModel, 'deleteByQuery').resolves('ret');
 
-      const ret = await BaseModel.truncate({ refresh: 'wait_for' });
+      try {
+        const ret = await BaseModel.truncate({ refresh: 'wait_for' });
 
-      should(BaseModel.deleteByQuery).be.calledWith(
-        { match_all: {} },
-        { refresh: 'wait_for' });
-      should(ret).be.eql('ret');
-
-      BaseModel.deleteByQuery = baseModelDeleteByQuery;
+        should(BaseModel.deleteByQuery).be.calledWith(
+          { match_all: {} },
+          { refresh: 'wait_for' });
+        should(ret).be.eql('ret');
+      }
+      finally {
+        BaseModel.deleteByQuery.restore();
+      }
     });
   });
 
   describe('#save', () => {
-    const
-      _id = 'mylehuong',
-      _source = { location: 'Saigon' };
+    const _id = 'mylehuong';
+    const _source = { location: 'Saigon' };
 
     beforeEach(() => {
-      BaseModel.indexStorage.create.resolves({
-        _source,
-        _id
-      });
+      kuzzle.internalIndex.create.resolves({ _id, _source });
     });
 
     it('should create the document if it is not persisted yet', async () => {
@@ -206,7 +210,7 @@ describe('BaseModel', () => {
 
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.create).be.calledWith(
+      should(kuzzle.internalIndex.create).be.calledWith(
         'models',
         'mylehuong',
         { location: 'Saigon' },
@@ -219,7 +223,7 @@ describe('BaseModel', () => {
 
       await model.save();
 
-      should(BaseModel.indexStorage.create).be.calledWith(
+      should(kuzzle.internalIndex.create).be.calledWith(
         'models',
         null,
         { location: 'Saigon' },
@@ -233,7 +237,7 @@ describe('BaseModel', () => {
 
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.update).be.calledWith(
+      should(kuzzle.internalIndex.update).be.calledWith(
         'models',
         'mylehuong',
         { location: 'Saigon' },
@@ -242,9 +246,8 @@ describe('BaseModel', () => {
   });
 
   describe('#delete', () => {
-    const
-      _id = 'mylehuong',
-      _source = { location: 'Saigon' };
+    const _id = 'mylehuong';
+    const _source = { location: 'Saigon' };
 
     it('should delete the document and call _afterDelete hook', async () => {
       const model = new Model(_source, _id);
@@ -252,7 +255,7 @@ describe('BaseModel', () => {
 
       await model.delete({ refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.delete).be.calledWith(
+      should(kuzzle.internalIndex.delete).be.calledWith(
         'models',
         'mylehuong',
         { refresh: 'wait_for' });
@@ -265,16 +268,15 @@ describe('BaseModel', () => {
 
       await model.delete();
 
-      should(BaseModel.indexStorage.delete).not.be.called();
+      should(kuzzle.internalIndex.delete).not.be.called();
     });
   });
 
   describe('#serialize', () => {
     it('should return an object with _id and _source', () => {
-      const
-        _id = 'mylehuong',
-        _source = { location: 'Saigon' },
-        model = new Model(_source, _id);
+      const _id = 'mylehuong';
+      const _source = { location: 'Saigon' };
+      const model = new Model(_source, _id);
 
       const serialized = model.serialize();
 

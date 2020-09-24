@@ -237,7 +237,11 @@ describe('funnel.processRequest', () => {
 
   it('should update the query documents with alias pipe', async () => {
     kuzzle.pipe.restore();
-    kuzzle.storageEngine.public.create.resolves({_id: 'foobar', _source: 'src' });
+    kuzzle.ask.withArgs('core:store:public:document:create').resolves({
+      _id: 'foobar',
+      _source: 'src',
+    });
+
     const plugin = {
       instance: {
         init: () => {},

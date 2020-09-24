@@ -4,11 +4,10 @@ const _ = require('lodash');
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
-const IndexStorageMock = require('./indexStorage.mock');
-const ClientAdapterMock = require('./clientAdapter.mock');
-
 const Kuzzle = require('../../lib/kuzzle');
 const config = require('../../lib/config');
+
+const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
 
 const foo = { foo: 'bar' };
 
@@ -95,28 +94,7 @@ class KuzzleMock extends Kuzzle {
 
     this.shutdown = sinon.stub();
 
-    this.storageEngine = {
-      init: sinon.stub().resolves(),
-      indexCache: {
-        add: sinon.stub().resolves(),
-        remove: sinon.stub().resolves(),
-        exists: sinon.stub().resolves(),
-        listIndexes: sinon.stub().resolves(),
-        listCollections: sinon.stub().resolves()
-      },
-      public: new ClientAdapterMock(),
-      internal: new ClientAdapterMock(),
-      config: this.config.services.storageEngine
-    };
-
-    this.internalIndex = new IndexStorageMock(
-      'kuzzle',
-      this.storageEngine.internal);
-
-    this.internalIndex._bootstrap = {
-      startOrWait: sinon.stub().resolves(),
-      createInitialSecurities: sinon.stub().resolves()
-    };
+    this.internalIndex = new InternalIndexHandlerMock(this);
 
     this.passport = {
       use: sinon.stub(),

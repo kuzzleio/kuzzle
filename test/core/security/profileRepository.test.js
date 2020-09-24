@@ -52,7 +52,7 @@ describe('Test: security/profileRepository', () => {
       {roleId: 'test2'}
     ];
 
-    return profileRepository.init({ indexStorage: kuzzle.internalIndex });
+    return profileRepository.init();
   });
 
   describe('#get', () => {
@@ -75,7 +75,13 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should reject if the profile does not exist', () => {
-      profileRepository.indexStorage.get.rejects(new NotFoundError('Not found'));
+      kuzzle.ask
+        .withArgs(
+          'core:store:private:document:get',
+          kuzzle.internalIndex.index,
+          'profiles',
+          'idontexist')
+        .rejects(new NotFoundError('Not found'));
 
       return should(kuzzle.ask(getEvent, 'idontexist'))
         .rejectedWith(NotFoundError, { id: 'security.profile.not_found' });

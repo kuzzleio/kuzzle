@@ -272,23 +272,19 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid index name', () => {
+    it('should reject if restrictedTo points to an invalid index name', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index'}]
       }];
 
-      kuzzle.storageEngine.internal.isIndexNameValid.returns(false);
+      kuzzle.ask.withArgs('core:store:index:isValid').resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_index_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isIndexNameValid)
-            .calledOnce()
-            .calledWith('index');
-        });
+      await should(profile.validateDefinition()).rejectedWith(BadRequestError, {
+        id: 'services.storage.invalid_index_name',
+      });
+
+      should(kuzzle.ask).calledWith('core:store:index:isValid', 'index');
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -303,23 +299,19 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid collection name', () => {
+    it('should reject if restrictedTo points to an invalid collection name', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', collections: ['foo']}]
       }];
 
-      kuzzle.storageEngine.internal.isCollectionNameValid.returns(false);
+      kuzzle.ask.withArgs('core:store:collection:isValid').resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_collection_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isCollectionNameValid)
-            .calledOnce()
-            .calledWith('foo');
-        });
+      await should(profile.validateDefinition()).rejectedWith(BadRequestError, {
+        id: 'services.storage.invalid_collection_name',
+      });
+
+      should(kuzzle.ask).calledWith('core:store:collection:isValid', 'foo');
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {

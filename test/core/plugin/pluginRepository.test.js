@@ -6,20 +6,24 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const PluginRepository = require('../../../lib/core/plugin/pluginRepository');
 const cacheDbEnum = require('../../../lib/core/cache/cacheDbEnum');
+const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
+const Store = require('../../../lib/core/shared/store');
 
 describe('core/plugin/pluginRepository', () => {
   const someObject = {_id: 'someId', some: {defined: 'object'}};
   const someCollection = 'someCollection';
   const SomeConstructor = function () {};
   let kuzzle;
+  let store;
   let pluginRepository;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    pluginRepository = new PluginRepository(kuzzle, 'pluginName', someCollection);
+    store = new Store(kuzzle, 'pluginName', scopeEnum.PRIVATE);
+
+    pluginRepository = new PluginRepository(kuzzle, store, someCollection);
     pluginRepository.init({
-      indexStorage: kuzzle.internalIndex,
-      ObjectConstructor: SomeConstructor
+      ObjectConstructor: SomeConstructor,
     });
   });
 
@@ -28,7 +32,7 @@ describe('core/plugin/pluginRepository', () => {
       should(pluginRepository.index).be.equal('pluginName');
       should(pluginRepository.collection).be.equal(someCollection);
       should(pluginRepository.ObjectConstructor).be.exactly(SomeConstructor);
-      should(pluginRepository.indexStorage).be.exactly(kuzzle.internalIndex);
+      should(pluginRepository.store).be.exactly(store);
       should(pluginRepository.cacheDb).be.exactly(cacheDbEnum.NONE);
     });
   });
