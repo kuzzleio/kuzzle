@@ -247,10 +247,10 @@ describe('Plugin Context', () => {
 
       should(context.accessors).be.an.Object().and.not.be.empty();
       should(context.accessors).have.properties(
-        ['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
+        ['execute', 'validation', 'storage', 'trigger', 'realtime', 'strategies', 'sdk']);
     });
 
-    it('should adds the plugin name in logs', done => {
+    it('should add the plugin name in logs', done => {
       context.log.info('foobar');
 
       process.nextTick(() => {
@@ -306,6 +306,13 @@ describe('Plugin Context', () => {
       const sdk = context.accessors.sdk;
 
       should(sdk).be.instanceOf(EmbeddedSDK);
+    });
+
+    it('should expose a realtime accessor', () => {
+      const realtime = context.accessors.realtime;
+
+      should(realtime.registerSubscription).be.a.Function();
+      should(realtime.unregisterSubscription).be.a.Function();
     });
 
     describe('#trigger', () => {
