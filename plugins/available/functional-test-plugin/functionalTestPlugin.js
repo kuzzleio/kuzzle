@@ -164,15 +164,21 @@ class FunctionalTestPlugin {
   
     return {
       acknowledged: 'OK',
-      roomId,
+      connectionId: request.context.connection.id,
+      roomId
     };
   }
 
   async unregisterSubscription(request) {
-    const connectionId = request.context.connection.id,
+    const connectionId = request.input.body.roomId || 
+            request.context.connection.id,
       roomId = request.input.body.roomId;
 
     await this.context.accessors.realtime.unsubscribe(connectionId, roomId, false);
+
+    return {
+      acknowledged: 'OK'
+    };
   }
 
   // context.constructor.ESClient related methods ==============================

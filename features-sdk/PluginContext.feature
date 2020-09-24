@@ -55,6 +55,10 @@ Feature: Plugin context
     Then I should receive a result matching:
       | acknowledged | "OK" |
     And The result should contain a property roomId of type string
+    And The result should contain a property connectionId of type string
+    When I unsubscribe from the current room via the plugin
+    Then I should receive a result matching:
+      | acknowledged | "OK" |
 
 
 # @todo add cluster tests
