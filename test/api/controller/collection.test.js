@@ -328,7 +328,7 @@ describe('Test: collection controller', () => {
       await should(collectionController.updateSpecifications(request))
         .be.rejectedWith(BadRequestError, {
           id: 'validation.assert.invalid_specifications',
-        })
+        });
 
       should(kuzzle.validation.curateSpecification).not.be.called();
       should(kuzzle.internalIndex.createOrReplace).not.be.called();
