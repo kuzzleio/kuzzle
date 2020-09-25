@@ -27,8 +27,8 @@ class ClientAdapterMock extends ClientAdapter {
     sinon.stub(this, 'deleteCollection').resolves();
     sinon.stub(this, 'hasIndex').resolves();
     sinon.stub(this, 'hasCollection').resolves();
-    sinon.stub(this, 'listIndexes').resolves();
-    sinon.stub(this, 'listCollections').resolves();
+    sinon.stub(this, 'listIndexes').resolves([]);
+    sinon.stub(this, 'listCollections').resolves([]);
     sinon.stub(this, 'refreshCollection').resolves();
     sinon.stub(this, 'populateCache').resolves();
     sinon.stub(this, 'loadMappings').resolves();

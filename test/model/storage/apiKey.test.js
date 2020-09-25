@@ -64,7 +64,6 @@ describe('ApiKey', () => {
     it('should create a new API key and generate a token', async () => {
       const apiKey = await ApiKey.create(
         user,
-        'connectionId',
         'expiresIn',
         'Sigfox API key',
         { creatorId: 'aschen', refresh: 'wait_for' });
@@ -89,7 +88,6 @@ describe('ApiKey', () => {
     it('should allow to specify the API key ID', async () => {
       const apiKey = await ApiKey.create(
         user,
-        'connectionId',
         'expiresIn',
         'Sigfox API key',
         { apiKeyId: 'my-api-key-id' });

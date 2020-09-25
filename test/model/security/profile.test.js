@@ -193,6 +193,7 @@ describe('Test: model/security/profile', () => {
       profile = new Profile();
       profile[_kuzzle] = kuzzle;
       profile._id = 'test';
+      kuzzle.ask.withArgs('core:store:index:isValid').resolves(true);
     });
 
     it('should reject if no policies are provided', () => {
@@ -263,7 +264,7 @@ describe('Test: model/security/profile', () => {
     it('should reject if restrictedTo is given an invalid attribute', () => {
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{ index: 'index', foo: 'bar' }]
+        restrictedTo: [{ index: 'index', foo: 'bar' }],
       }];
 
       return should(profile.validateDefinition())

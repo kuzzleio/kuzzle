@@ -102,7 +102,7 @@ describe('BaseModel', () => {
 
   describe('BaseModel.load', () => {
     it('should load and instantiate a model from database', async () => {
-      kuzzle.internalIndex.get.resolves({
+      kuzzle.ask.withArgs('core:store:private:document:get').resolves({
         _id: 'mylehuong' ,
         _source: {
           name: 'mylehuong',
@@ -118,7 +118,11 @@ describe('BaseModel', () => {
         location: 'thehive'
       });
       should(model.__persisted).be.true();
-      should(kuzzle.internalIndex.get).be.calledWith('models', 'mylehuong');
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:document:get',
+        kuzzle.internalIndex.index,
+        'models',
+        'mylehuong');
     });
   });
 
@@ -128,36 +132,39 @@ describe('BaseModel', () => {
     beforeEach(() => {
       documents = [
         { _id: 'mylehuong', _source: {} },
-        { _id: 'thehive', _source: {} }
+        { _id: 'thehive', _source: {} },
       ];
 
-      sinon.stub(kuzzle.internalIndex, 'deleteByQuery').resolves({ documents });
+      kuzzle.ask
+        .withArgs('core:store:private:document:deleteByQuery')
+        .resolves({ documents });
     });
 
     it('should call the driver\'s deleteByQuery', async () => {
       await Model.deleteByQuery({ match_all: {} });
 
-      should(kuzzle.internalIndex.deleteByQuery).be.calledOnce();
+      should(kuzzle.ask).calledWith(
+        'core:store:private:document:deleteByQuery',
+        kuzzle.internalIndex.index,
+        'models',
+        { match_all: {} });
 
-      const [ collection, query ] = kuzzle.internalIndex.deleteByQuery
-        .getCall(0)
-        .args;
-
-      should(collection).be.eql('models');
-      should(query).be.eql({ match_all: {} });
       should(Model.prototype._afterDelete).be.calledTwice();
     });
 
     it('should refresh the collection if the option.refresh is set', async () => {
       await Model.deleteByQuery({ match_all: {} }, { refresh: 'wait_for' });
 
-      should(kuzzle.internalIndex.refreshCollection).be.calledWith('models');
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:collection:refresh',
+        kuzzle.internalIndex.index,
+        'models');
     });
   });
 
   describe('BaseModel.search', () => {
     it('should call search and return instantiated models', async () => {
-      kuzzle.internalIndex.search.resolves({
+      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
         hits: [
           { _id: 'mylehuong', _source: { location: 'Saigon' } },
           { _id: 'thehive', _source: { location: 'Hanoi' } },
@@ -168,7 +175,9 @@ describe('BaseModel', () => {
         { query: { match_all: {} } },
         { scroll: '5s' });
 
-      should(kuzzle.internalIndex.search).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:document:search',
+        kuzzle.internalIndex.index,
         'models',
         { query: { match_all: {} } },
         { scroll: '5s' });
@@ -202,7 +211,10 @@ describe('BaseModel', () => {
     const _source = { location: 'Saigon' };
 
     beforeEach(() => {
-      kuzzle.internalIndex.create.resolves({ _id, _source });
+      kuzzle.ask.withArgs('core:store:private:document:create').resolves({
+        _id,
+        _source,
+      });
     });
 
     it('should create the document if it is not persisted yet', async () => {
@@ -210,11 +222,12 @@ describe('BaseModel', () => {
 
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
-      should(kuzzle.internalIndex.create).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:document:create',
+        kuzzle.internalIndex.index,
         'models',
-        'mylehuong',
         { location: 'Saigon' },
-        { userId: 'aschen', refresh: 'wait_for' });
+        { id: 'mylehuong', userId: 'aschen', refresh: 'wait_for' });
       should(model.__persisted).be.true();
     });
 
@@ -223,11 +236,12 @@ describe('BaseModel', () => {
 
       await model.save();
 
-      should(kuzzle.internalIndex.create).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:document:create',
+        kuzzle.internalIndex.index,
         'models',
-        null,
         { location: 'Saigon' },
-        { userId: null, refresh: undefined });
+        { id: null, userId: null, refresh: undefined });
       should(model._id).be.eql('mylehuong');
     });
 
@@ -237,7 +251,9 @@ describe('BaseModel', () => {
 
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
-      should(kuzzle.internalIndex.update).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:document:update',
+        kuzzle.internalIndex.index,
         'models',
         'mylehuong',
         { location: 'Saigon' },
@@ -255,7 +271,9 @@ describe('BaseModel', () => {
 
       await model.delete({ refresh: 'wait_for' });
 
-      should(kuzzle.internalIndex.delete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:document:delete',
+        kuzzle.internalIndex.index,
         'models',
         'mylehuong',
         { refresh: 'wait_for' });
@@ -268,7 +286,7 @@ describe('BaseModel', () => {
 
       await model.delete();
 
-      should(kuzzle.internalIndex.delete).not.be.called();
+      should(kuzzle.ask).not.be.calledWith('core:store:private:document:delete');
     });
   });
 

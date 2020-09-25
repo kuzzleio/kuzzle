@@ -342,7 +342,7 @@ describe('Test: repositories/repository', () => {
         'core:cache:internal:store',
         'someKey',
         JSON.stringify(cachePojo),
-        500);
+        { ttl: 500 });
     });
   });
 
@@ -506,8 +506,7 @@ describe('Test: repositories/repository', () => {
       should(response.hits).be.an.Array();
       should(response.total).be.exactly(1);
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:search',
-        kuzzle.internalIndex.index,
+        'core:store:private:document:scroll',
         'foo',
         undefined);
     });
@@ -527,7 +526,6 @@ describe('Test: repositories/repository', () => {
       should(response.scrollId).be.eql('foobar');
       should(kuzzle.ask).be.calledWithMatch(
         'core:store:private:document:scroll',
-        kuzzle.internalIndex.index,
         'foo',
         'bar');
     });

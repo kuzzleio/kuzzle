@@ -336,83 +336,88 @@ describe('Test: validation utilities', () => {
       kuzzle = new KuzzleMock();
     });
 
-    it('should return the default configuration if nothing is returned from internal engine', () => {
+    it('should return the default configuration if nothing is returned from internal engine', async () => {
       kuzzle.config.validation = genericMock;
-      kuzzle.internalIndex.search.resolves({hits: []});
+      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+        hits: [],
+      });
 
-      return getValidationConfiguration(kuzzle)
-        .then(result => {
-          should(result).be.deepEqual(kuzzle.config.validation);
-          should(kuzzle.internalIndex.search.callCount).be.eql(1);
-          should(kuzzle.internalIndex.search.args[0][0]).be.eql('validations');
-        });
+      const result = await getValidationConfiguration(kuzzle);
+
+      should(result).be.deepEqual(kuzzle.config.validation);
+
+      should(kuzzle.ask).calledWithMatch(
+        'core:store:private:document:search',
+        kuzzle.internalIndex.index,
+        'validations');
     });
 
-    it('should return an empty object if nothing is returned from internal engine and there is no configuration', () => {
+    it('should return an empty object if nothing is returned from internal engine and there is no configuration', async () => {
       delete kuzzle.config.validation;
-      kuzzle.internalIndex.search.resolves({hits: []});
+      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+        hits: [],
+      });
 
-      return getValidationConfiguration(kuzzle)
-        .then(result => {
-          should(result).be.deepEqual({});
-        });
+      const result = await getValidationConfiguration(kuzzle);
+
+      should(result).be.an.Object().and.be.empty();
     });
 
-    it('should return a well formed configuration when getting results from internal engine', () => {
-      var
-        internalEngineResponse = {
-          hits: [
-            {
-              _id: 'anIndex#aCollection',
-              _source: {
-                index: 'anIndex',
-                collection: 'aCollection',
-                validation: 'validation1'
-              }
-            },
-            {
-              _id: 'anIndex#anotherCollection',
-              _source: {
-                index: 'anIndex',
-                collection: 'anotherCollection',
-                validation: 'validation2'
-              }
-            },
-            {
-              _id: 'anotherIndex#aCollection',
-              _source: {
-                index: 'anotherIndex',
-                collection: 'aCollection',
-                validation: 'validation3'
-              }
-            },
-            {
-              _id: 'anotherIndex#anotherCollection',
-              _source: {
-                index: 'anotherIndex',
-                collection: 'anotherCollection',
-                validation: 'validation4'
-              }
+    it('should return a well formed configuration when getting results from internal engine', async () => {
+      const internalEngineResponse = {
+        hits: [
+          {
+            _id: 'anIndex#aCollection',
+            _source: {
+              index: 'anIndex',
+              collection: 'aCollection',
+              validation: 'validation1'
             }
-          ]
-        },
-        expectedConfiguration = {
-          anIndex: {
-            aCollection: 'validation1',
-            anotherCollection: 'validation2'
           },
-          anotherIndex: {
-            aCollection: 'validation3',
-            anotherCollection: 'validation4'
+          {
+            _id: 'anIndex#anotherCollection',
+            _source: {
+              index: 'anIndex',
+              collection: 'anotherCollection',
+              validation: 'validation2'
+            }
+          },
+          {
+            _id: 'anotherIndex#aCollection',
+            _source: {
+              index: 'anotherIndex',
+              collection: 'aCollection',
+              validation: 'validation3'
+            }
+          },
+          {
+            _id: 'anotherIndex#anotherCollection',
+            _source: {
+              index: 'anotherIndex',
+              collection: 'anotherCollection',
+              validation: 'validation4'
+            }
           }
-        };
+        ]
+      };
+      const expectedConfiguration = {
+        anIndex: {
+          aCollection: 'validation1',
+          anotherCollection: 'validation2'
+        },
+        anotherIndex: {
+          aCollection: 'validation3',
+          anotherCollection: 'validation4'
+        }
+      };
 
-      kuzzle.internalIndex.search.resolves(internalEngineResponse);
+      kuzzle.ask
+        .withArgs('core:store:private:document:search')
+        .resolves(internalEngineResponse);
 
-      return getValidationConfiguration(kuzzle)
-        .then(result => {
-          should(result).be.deepEqual(expectedConfiguration);
-        });
+      const result = await getValidationConfiguration(kuzzle);
+
+      should(result).be.deepEqual(expectedConfiguration);
     });
   });
 });

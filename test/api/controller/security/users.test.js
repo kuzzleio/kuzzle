@@ -211,13 +211,15 @@ describe('Test: security controller - users', () => {
 
     it('should update the user mapping', async () => {
       request.input.body = foo;
-      kuzzle.internalIndex.updateMapping.resolves(foo);
+      kuzzle.ask.withArgs('core:store:private:mappings:update').resolves(foo);
 
       const response = await securityController.updateUserMapping(request);
 
-      should(kuzzle.internalIndex.updateMapping)
-        .be.calledOnce()
-        .be.calledWith('users', request.input.body);
+      should(kuzzle.ask).be.calledWith(
+        'core:store:private:mappings:update',
+        kuzzle.internalIndex.index,
+        'users',
+        request.input.body);
 
       should(response).eql(foo);
     });
@@ -225,13 +227,16 @@ describe('Test: security controller - users', () => {
 
   describe('#getUserMapping', () => {
     it('should fulfill with a response object', async () => {
-      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+      kuzzle.ask.withArgs('core:store:private:mappings:get').resolves({
+        properties: { foo: 'bar' },
+      });
 
       const response = await securityController.getUserMapping(request);
 
-      should(kuzzle.internalIndex.getMapping)
-        .be.calledOnce()
-        .be.calledWith('users');
+      should(kuzzle.ask).calledWith(
+        'core:store:private:mappings:get',
+        kuzzle.internalIndex.index,
+        'users');
 
       should(response).match({ mapping: { foo: 'bar' } });
     });

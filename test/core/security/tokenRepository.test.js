@@ -25,7 +25,7 @@ describe('Test: security/tokenRepository', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.config.security.jwt.secret = 'test-secret';
+    kuzzle.secret = 'test-secret';
 
     tokenRepository = new TokenRepository(kuzzle);
 
@@ -92,7 +92,7 @@ describe('Test: security/tokenRepository', () => {
     it('should reject the token if the uuid is not known', () => {
       const token = jwt.sign(
         {_id: -99999},
-        kuzzle.config.security.jwt.secret,
+        kuzzle.secret,
         {algorithm: kuzzle.config.security.jwt.algorithm});
 
       return should(tokenRepository.verifyToken(token))
@@ -101,10 +101,10 @@ describe('Test: security/tokenRepository', () => {
         });
     });
 
-    it('shoud reject if the jwt is expired', () => {
+    it('should reject if the jwt is expired', () => {
       const token = jwt.sign(
-        {_id: -1},
-        kuzzle.config.security.jwt.secret,
+        { _id: -1 },
+        kuzzle.secret,
         {algorithm: kuzzle.config.security.jwt.algorithm, expiresIn: 0});
 
       return should(tokenRepository.verifyToken(token))
@@ -116,7 +116,7 @@ describe('Test: security/tokenRepository', () => {
     it('should reject if an error occurred while fetching the user from the cache', () => {
       const token = jwt.sign(
         { _id: 'auser' },
-        kuzzle.config.security.jwt.secret,
+        kuzzle.secret,
         { algorithm: kuzzle.config.security.jwt.algorithm });
 
       sinon.stub(tokenRepository, 'loadFromCache')
@@ -136,9 +136,9 @@ describe('Test: security/tokenRepository', () => {
 
     it('should reject the token if it does not contain the user id', () => {
       const token = jwt.sign(
-        {forged: 'token'},
-        kuzzle.config.security.jwt.secret,
-        {algorithm: kuzzle.config.security.jwt.algorithm});
+        { forged: 'token' },
+        kuzzle.secret,
+        { algorithm: kuzzle.config.security.jwt.algorithm });
 
       return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
@@ -149,9 +149,9 @@ describe('Test: security/tokenRepository', () => {
     it('should return the token loaded from cache', async () => {
       const _id = 'auser';
       const token = jwt.sign(
-        {_id},
-        kuzzle.config.security.jwt.secret,
-        {algorithm: kuzzle.config.security.jwt.algorithm});
+        { _id },
+        kuzzle.secret,
+        { algorithm: kuzzle.config.security.jwt.algorithm });
       const cacheObj = JSON.stringify({_id, jwt: token});
 
       kuzzle.ask
@@ -190,10 +190,10 @@ describe('Test: security/tokenRepository', () => {
       const user = new User();
       const checkToken = jwt.sign(
         { _id: 'userInCache' },
-        kuzzle.config.security.jwt.secret,
+        kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
-          expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000
+          expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000,
         });
 
       user._id = 'userInCache';
@@ -297,7 +297,7 @@ describe('Test: security/tokenRepository', () => {
       const user = new User();
       const checkToken = jwt.sign(
         { _id: 'userInCache' },
-        kuzzle.config.security.jwt.secret,
+        kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: 123,
@@ -339,7 +339,7 @@ describe('Test: security/tokenRepository', () => {
         'core:cache:internal:store',
         'repos/kuzzle/token/user-id#encoded-token',
         JSON.stringify(token),
-        42);
+        { ttl: 42000 });
       should(token._id).be.eql('user-id#encoded-token');
       should(token.ttl).be.eql(42000);
       should(token.expiresAt).be.approximately(Date.now() + 42000, 20);

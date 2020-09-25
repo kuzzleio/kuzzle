@@ -13,7 +13,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
   let Kuzzle;
   let application;
-  let coreModuleStub;
 
   const mockedProperties = [
     'entryPoint',
@@ -49,11 +48,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
-    coreModuleStub = {
-      init: sinon.stub().resolves(),
+    const coreModuleStub = function () {
+      return { init: sinon.stub().resolves() };
     };
 
-    mockrequire('../../lib/core', coreModuleStub);
+    mockrequire('../../lib/core/cache/cacheEngine', coreModuleStub);
+    mockrequire('../../lib/core/storage/storageEngine', coreModuleStub);
+    mockrequire('../../lib/core/security', coreModuleStub);
+    mockrequire('../../lib/core/realtime', coreModuleStub);
+
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
     Kuzzle.__set__('console', { log: () => {} });

@@ -168,12 +168,13 @@ describe('Test: collection controller', () => {
       request.input.args.from = 0;
       request.input.args.size = 20;
 
-      should(() => collectionController.searchSpecifications(request)).throw(
-        SizeLimitError,
-        { id: 'services.storage.get_limit_exceeded' });
+      return should(collectionController.searchSpecifications(request))
+        .rejectedWith(SizeLimitError, {
+          id: 'services.storage.get_limit_exceeded',
+        });
     });
 
-    it('should call internalIndex with the right data', () => {
+    it('should call internalIndex with the right data', async () => {
       kuzzle.ask.withArgs('core:store:private:document:search').resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
@@ -191,25 +192,24 @@ describe('Test: collection controller', () => {
         scroll: '15s'
       });
 
-      return collectionController.searchSpecifications(request)
-        .then(response => {
-          should(kuzzle.ask).be.calledWithMatch(
-            'core:store:private:document:search',
-            kuzzle.internalIndex.index,
-            'validations',
-            request.input.body,
-            {
-              from: request.input.args.from,
-              size: request.input.args.size,
-              scroll: request.input.args.scroll
-            });
+      const response = await collectionController.searchSpecifications(request);
 
-          should(response).match({
-            total: 123,
-            scrollId: 'foobar',
-            hits: [{ _id: 'bar' }]
-          });
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:store:private:document:search',
+        kuzzle.internalIndex.index,
+        'validations',
+        request.input.body,
+        {
+          from: request.input.args.from,
+          size: request.input.args.size,
+          scroll: request.input.args.scroll
         });
+
+      should(response).match({
+        total: 123,
+        scrollId: 'foobar',
+        hits: [{ _id: 'bar' }]
+      });
     });
   });
 
@@ -220,12 +220,12 @@ describe('Test: collection controller', () => {
         action: 'scrollSpecifications'
       });
 
-      should(() => collectionController.scrollSpecifications(request))
-        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+      return should(collectionController.scrollSpecifications(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should call internalIndex with the right data', async () => {
-      kuzzle.ask('core:store:private:document:scroll').resolves({
+      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
         hits: [{ _id: 'bar' }],
         scrollId: 'foobar',
         total: 123
