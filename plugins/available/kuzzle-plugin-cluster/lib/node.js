@@ -24,6 +24,7 @@ const Bluebird = require('bluebird');
 const debug = require('debug')('kuzzle:cluster');
 const debugNotify = require('debug')('kuzzle:cluster:notify');
 const debugSync = require('debug')('kuzzle:cluster:sync');
+const debugHeartbeat = require('debug')('kuzzle:cluster:heartbeat');
 const zeromq = require('zeromq');
 const {
   Request,
@@ -370,17 +371,15 @@ class Node {
   async _onSubMessage (buffer) {
     const [room, data] = JSON.parse(buffer);
 
-    if (['cluster:sync', 'cluster:notify:user', 'cluster:notify:document'].indexOf(room) < 0) {
-      // merges & notifications have their own debug level
-      debug('[sub][%s] %o', room, data);
+    if (room === 'cluster:heartbeat') {
+      debugHeartbeat('Heartbeat from: %s', data.pub);
+      this._onHeartbeat(data);
+      return;
     }
 
-    if (room === 'cluster:heartbeat') {
-      this._onHeartbeat(data);
-    }
-    else if (room === 'cluster:notify:document') {
+    if (room === 'cluster:notify:document') {
       debugNotify('doc %o', data);
-      await this.kuzzle.ask(
+      return this.kuzzle.ask(
         'core:realtime:document:dispatch',
         data.rooms,
         new Request(data.request.data, data.request.options),
@@ -388,16 +387,25 @@ class Node {
         data.action,
         data.content);
     }
-    else if (room === 'cluster:notify:user') {
+
+    if (room === 'cluster:notify:user') {
       debugNotify('user %o', data);
-      this.kuzzle.ask(
+      return this.kuzzle.ask(
         'core:realtime:user:sendMessage',
         data.room,
         new Request(data.request.data, data.request.options),
         data.scope,
         data.content);
     }
-    else if (room === 'cluster:ready') {
+
+    if (room === 'cluster:sync') {
+      this.sync(data);
+      return;
+    }
+
+    debug('[sub][%s] %o', room, data);
+
+    if (room === 'cluster:ready') {
       if (data.pub !== this.uuid && !this.pool[data.pub]) {
         // an unknown node is marked as ready, we are not anymore
         this.context.log('warn', `[cluster] unknown node ready: ${data.pub}`);
@@ -412,9 +420,6 @@ class Node {
     }
     else if (room === 'cluster:remove') {
       this._removeNode(data.pub);
-    }
-    else if (room === 'cluster:sync') {
-      this.sync(data);
     }
     else if (room === 'cluster:admin:dump') {
       this.kuzzle.janitor.dump(data.suffix);
