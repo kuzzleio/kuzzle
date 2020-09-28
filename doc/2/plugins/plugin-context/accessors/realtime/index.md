@@ -6,7 +6,7 @@ title: registerSubscription
 
 # `realtime`
 
-Add or remove [real-time subscriptions](/core/2/guides/essentials/real-time) from the backend.
+Adds or removes [real-time subscriptions](/core/2/guides/essentials/real-time) from the backend.
 
 ## `registerSubscription`
 
