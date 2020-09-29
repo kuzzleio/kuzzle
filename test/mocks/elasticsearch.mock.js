@@ -26,9 +26,9 @@ class ElasticsearchMock extends Elasticsearch {
     this.getMapping = sinon.stub().resolves();
     this.truncateCollection = sinon.stub().resolves();
     this.import = sinon.stub().resolves();
-    this.listCollections = sinon.stub().resolves();
-    this.listIndexes = sinon.stub().resolves();
-    this.listAliases = sinon.stub().resolves();
+    this.listCollections = sinon.stub().resolves([]);
+    this.listIndexes = sinon.stub().resolves([]);
+    this.listAliases = sinon.stub().resolves([]);
     this.deleteIndexes = sinon.stub().resolves();
     this.deleteIndex = sinon.stub().resolves();
     this.refreshCollection = sinon.stub().resolves();

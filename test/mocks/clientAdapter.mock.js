@@ -33,6 +33,9 @@ class ClientAdapterMock extends ClientAdapter {
     sinon.stub(this, 'populateCache').resolves();
     sinon.stub(this, 'loadMappings').resolves();
     sinon.stub(this, 'loadFixtures').resolves();
+
+    sinon.stub(this.client, 'isIndexNameValid').resolves(true);
+    sinon.stub(this.client, 'isCollectionNameValid').resolves(true);
   }
 }
 
