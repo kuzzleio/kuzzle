@@ -531,7 +531,7 @@ describe('Test: security/tokenRepository', () => {
         expiresIn: '10m'
       });
       should(tokenRepository.persistToCache).calledWithMatch(oldToken, {
-        ttl: kuzzle.config.security.jwt.gracePeriod / 1000,
+        ttl: kuzzle.config.security.jwt.gracePeriod,
       });
       should(kuzzle.tokenManager.refresh).calledWith(oldToken, fakeToken);
     });
