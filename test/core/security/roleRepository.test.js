@@ -488,6 +488,8 @@ describe('Test: security/roleRepository', () => {
     const { NativeController } = require('../../../lib/api/controller/base');
 
     beforeEach(() => {
+      kuzzle.ask = sinon.stub();
+      kuzzle.ask.withArgs('kuzzle:started:get').resolves(true);
       kuzzle.funnel.controllers.set('document', new NativeController(kuzzle, [
         'create',
         'delete'
@@ -580,6 +582,8 @@ describe('Test: security/roleRepository', () => {
     let plugin_test;
 
     beforeEach(() => {
+      kuzzle.ask = sinon.stub();
+      kuzzle.ask.withArgs('kuzzle:started:get').resolves(true);
       plugin_test = {
         object: {
           controllers: {
@@ -624,6 +628,27 @@ describe('Test: security/roleRepository', () => {
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
     });
 
+    it('should warn if kuzzle is not started and forceWarn is set', async () => {
+      kuzzle.ask.withArgs('kuzzle:started:get').resolves(false);
+      kuzzle.pluginsManager.isController.returns(false);
+      const role = new Role();
+
+      role._id = 'test';
+      role.controllers = {
+        'invalid_controller': {
+          actions: {
+            publicMethod: true
+          }
+        }
+      };
+
+      await roleRepository.checkRolePluginsRights(
+        role,
+        { force: true, forceWarn: true });
+
+      should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
+    });
+
     it('should throw if we try to write a role with an invalid plugin controller.', () => {
       kuzzle.pluginsManager.isController.returns(false);
       kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
@@ -639,7 +664,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      return should(async () => await roleRepository.checkRolePluginsRights(role)).throw({
+      return should(roleRepository.checkRolePluginsRights(role)).be.rejectedWith({
         id: 'security.role.unknown_controller'
       });
     });
@@ -677,7 +702,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      return should(async () => await roleRepository.checkRolePluginsRights(role)).throw({
+      return should(roleRepository.checkRolePluginsRights(role)).be.rejectedWith({
         id: 'security.role.unknown_action'
       });
     });
