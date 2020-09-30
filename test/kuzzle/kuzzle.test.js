@@ -76,6 +76,14 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     kuzzle.emit('event');
   });
 
+  it('should register a kuzzle:started:get event', async () => {
+    const kuzzleBis = new Kuzzle(config);
+
+    kuzzleBis.started = true;
+
+    should(await kuzzleBis.ask('kuzzle:started:get')).be.True();
+  });
+
   describe('#start', () => {
     it('should init the components in proper order', async () => {
       const options = {
@@ -100,9 +108,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.storageEngine.public.loadMappings,
         kuzzle.storageEngine.public.loadFixtures,
         kuzzle.ask.withArgs('core:security:load', sinon.match.object),
-        kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,
+        kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
         kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe.withArgs('kuzzle:state:live'),
