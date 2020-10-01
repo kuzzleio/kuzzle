@@ -25,6 +25,7 @@ import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
 import PluginLogger from 'kuzzle-plugin-logger';
+import { SchemaConfig } from 'kuzzle-graphql'
 
 import Kuzzle from '../../kuzzle';
 import Plugin from '../plugin/plugin';
@@ -46,13 +47,13 @@ const runtimeError = kerror.wrap('plugin', 'runtime');
 class ApplicationManager {
   protected _application: any;
 
-  constructor (application: Backend) {
+  constructor(application: Backend) {
     Reflect.defineProperty(this, '_application', {
       value: application
     });
   }
 
-  protected get _kuzzle () {
+  protected get _kuzzle() {
     return this._application._kuzzle;
   }
 }
@@ -67,7 +68,7 @@ class PipeManager extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any>) : void {
+  register(event: string, handler: (...args: any) => Promise<any>): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'pipe');
     }
@@ -76,7 +77,7 @@ class PipeManager extends ApplicationManager {
       throw assertionError.get('invalid_pipe', event);
     }
 
-    if (! this._application._pipes[event]) {
+    if (!this._application._pipes[event]) {
       this._application._pipes[event] = [];
     }
 
@@ -94,7 +95,7 @@ class HookManager extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any> | void) : void {
+  register(event: string, handler: (...args: any) => Promise<any> | void): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'hook');
     }
@@ -103,7 +104,7 @@ class HookManager extends ApplicationManager {
       throw assertionError.get('invalid_hook', event);
     }
 
-    if (! this._application._hooks[event]) {
+    if (!this._application._hooks[event]) {
       this._application._hooks[event] = [];
     }
 
@@ -119,7 +120,7 @@ class ConfigManager extends ApplicationManager {
    */
   public content: JSONObject;
 
-  constructor (application: Backend) {
+  constructor(application: Backend) {
     super(application);
 
     this.content = require('../../config');
@@ -131,7 +132,7 @@ class ConfigManager extends ApplicationManager {
    * @param path - Path to the configuration key (lodash style)
    * @param value - Value for the configuration key
    */
-  set (path: string, value: any) {
+  set(path: string, value: any) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'config');
     }
@@ -144,7 +145,7 @@ class ConfigManager extends ApplicationManager {
    *
    * @param config - Configuration object to merge
    */
-  merge (config: JSONObject) {
+  merge(config: JSONObject) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'config');
     }
@@ -175,7 +176,7 @@ class ControllerManager extends ApplicationManager {
    * @param name - Controller name
    * @param definition - Controller definition
    */
-  register (name: string, definition: ControllerDefinition) {
+  register(name: string, definition: ControllerDefinition) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'controller');
     }
@@ -219,7 +220,7 @@ class ControllerManager extends ApplicationManager {
    *
    * @param controller Controller class
    */
-  use (controller: Controller) {
+  use(controller: Controller) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'controller');
     }
@@ -235,7 +236,7 @@ class ControllerManager extends ApplicationManager {
       definition.handler = definition.handler.bind(controller);
     }
 
-    if (! controller.name) {
+    if (!controller.name) {
       controller.name = kebabCase(controller.constructor.name)
         .replace('-controller', '');
     }
@@ -243,7 +244,7 @@ class ControllerManager extends ApplicationManager {
     this._add(controller.name, controller.definition);
   }
 
-  private _add (name: string, definition: ControllerDefinition) {
+  private _add(name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
     Plugin.checkControllerDefinition(name, definition, { application: true });
@@ -260,9 +261,9 @@ class ControllerManager extends ApplicationManager {
     this._application._controllers[name] = definition;
   }
 
-  private _generateMissingRoutes (controllerName: string, controllerDefinition: ControllerDefinition) {
+  private _generateMissingRoutes(controllerName: string, controllerDefinition: ControllerDefinition) {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
-      if (! definition.http) {
+      if (!definition.http) {
         // eslint-disable-next-line sort-keys
         definition.http = [{ verb: 'GET', path: `/${kebabCase(controllerName)}/${kebabCase(action)}` }];
       }
@@ -276,7 +277,7 @@ class VaultManager extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
-  set key (key: string) {
+  set key(key: string) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'vault');
     }
@@ -287,7 +288,7 @@ class VaultManager extends ApplicationManager {
   /**
    * File containing encrypted secrets
    */
-  set file (file: string) {
+  set file(file: string) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'vault');
     }
@@ -298,8 +299,8 @@ class VaultManager extends ApplicationManager {
   /**
    * Decrypted secrets
    */
-  get secrets () : JSONObject {
-    if (! this._application.started) {
+  get secrets(): JSONObject {
+    if (!this._application.started) {
       throw runtimeError.get('unavailable_before_start', 'vault.secrets');
     }
 
@@ -318,10 +319,10 @@ class PluginManager extends ApplicationManager {
    *    - `name`: Specify plugin name instead of using the class name.
    *    - `manifest`: Manually add a manifest definition (deprecated)
    */
-  use (
+  use(
     plugin: BasePlugin,
     options: { name?: string, manifest?: JSONObject } = {}
-  ) : void {
+  ): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }
@@ -329,13 +330,13 @@ class PluginManager extends ApplicationManager {
     // Avoid plain objects
     if ((typeof plugin.constructor !== 'function'
       || plugin.constructor.name === 'Object')
-      && ! options.name
+      && !options.name
     ) {
       throw assertionError.get('no_name_provided');
     }
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
-    if (! Plugin.checkName(name)) {
+    if (!Plugin.checkName(name)) {
       throw assertionError.get('invalid_plugin_name', name);
     }
 
@@ -357,40 +358,40 @@ class Logger extends ApplicationManager {
   /**
    * Logs a debug message
    */
-  debug (message: string): void {
+  debug(message: string): void {
     this._log('debug', message);
   }
 
   /**
    * Logs an info message
    */
-  info (message: string): void {
+  info(message: string): void {
     this._log('info', message);
   }
 
   /**
    * Logs a warn message
    */
-  warn (message: string): void {
+  warn(message: string): void {
     this._log('warn', message);
   }
 
   /**
    * Logs an error message
    */
-  error (message: string): void {
+  error(message: string): void {
     this._log('error', message);
   }
 
   /**
    * Logs a verbose message
    */
-  verbose (message: string): void {
+  verbose(message: string): void {
     this._log('verbose', message);
   }
 
-  private _log (level: string, message: string) {
-    if (! this._application.started) {
+  private _log(level: string, message: string) {
+    if (!this._application.started) {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
 
@@ -404,7 +405,7 @@ class StorageManager extends ApplicationManager {
   private _client: Client = null;
   private _Client: new (clientConfig?: any) => Client = null;
 
-  constructor (application: Backend) {
+  constructor(application: Backend) {
     super(application);
   }
 
@@ -414,11 +415,11 @@ class StorageManager extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get Client (): new (clientConfig?: any) => Client {
-    if (! this._Client) {
+  get Client(): new (clientConfig?: any) => Client {
+    if (!this._Client) {
       const kuzzle = this._kuzzle;
 
-      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
+      this._Client = function StorageClient(clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
           ...kuzzle.storageEngine.config.client,
           ...clientConfig
@@ -433,13 +434,31 @@ class StorageManager extends ApplicationManager {
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
    */
-  get client (): Client {
-    if (! this._client) {
+  get client(): Client {
+    if (!this._client) {
       this._client = Elasticsearch.buildClient(this._kuzzle.storageEngine.config.client);
     }
 
     return this._client;
-  }}
+  }
+}
+
+class GraphQLManager extends ApplicationManager {
+  private _enabled: boolean = false;
+
+  constructor(application: Backend) {
+    super(application)
+  }
+
+  use(config: SchemaConfig) {
+    this._application._gqlSchemaConfig = config
+    this._enabled = true
+  }
+
+  get enabled(): boolean {
+    return this._enabled
+  }
+}
 
 /* Backend class ======================================================== */
 
@@ -456,6 +475,7 @@ export class Backend {
   protected _plugins = {};
   protected _vaultKey?: string;
   protected _secretsFile?: string;
+  protected _gqlSchemaConfig: SchemaConfig = {}
 
   /**
    * Application version
@@ -540,6 +560,11 @@ export class Backend {
   public storage: StorageManager;
 
   /**
+   * GraphQL Manager
+   */
+  public graphql: GraphQLManager;
+
+  /**
    * @deprecated
    *
    * Support for old features available before Kuzzle as a framework
@@ -555,8 +580,8 @@ export class Backend {
    *
    * @param name - Your application name
    */
-  constructor (name: string) {
-    if (! Plugin.checkName(name)) {
+  constructor(name: string) {
+    if (!Plugin.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
 
@@ -578,6 +603,7 @@ export class Backend {
     this.plugin = new PluginManager(this);
     this.storage = new StorageManager(this);
     this.log = new Logger(this);
+    this.graphql = new GraphQLManager(this);
 
     this.kerror = kerror;
 
@@ -595,7 +621,7 @@ export class Backend {
   /**
    * Starts the Kuzzle application with the defined features
    */
-  async start () : Promise<void> {
+  async start(): Promise<void> {
     if (this.started) {
       throw runtimeError.get('already_started', 'start');
     }
@@ -623,6 +649,7 @@ export class Backend {
       secretsFile: this._secretsFile,
       securities: this._support.securities,
       vaultKey: this._vaultKey,
+      graphql: this._gqlSchemaConfig
     };
 
     await this._kuzzle.start(application, options);
@@ -640,8 +667,8 @@ export class Backend {
    *
    * @returns {Promise<any>}
    */
-  trigger (event: string, payload: any): Promise<any> {
-    if (! this.started) {
+  trigger(event: string, payload: any): Promise<any> {
+    if (!this.started) {
       throw runtimeError.get('unavailable_before_start', 'trigger');
     }
 
@@ -651,25 +678,25 @@ export class Backend {
   /**
    * Application Name
    */
-  get name (): string { return this._name; }
+  get name(): string { return this._name; }
 
   /**
    * Internal SDK
    */
-  get sdk (): EmbeddedSDK {
-    if (! this.started) {
+  get sdk(): EmbeddedSDK {
+    if (!this.started) {
       throw runtimeError.get('unavailable_before_start', 'sdk');
     }
 
     return this._sdk;
   }
 
-  private get _instanceProxy () {
+  private get _instanceProxy() {
     return {
       api: this._controllers,
       hooks: this._hooks,
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      init: () => {},
+      init: () => { },
       pipes: this._pipes,
     };
   }
@@ -677,19 +704,19 @@ export class Backend {
   /**
    * Try to read the current commit hash.
    */
-  private _readCommit (dir = process.cwd(), depth = 3) {
+  private _readCommit(dir = process.cwd(), depth = 3) {
     if (depth === 0) {
       return null;
     }
 
-    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+    if (!fs.existsSync(`${dir}/.git`) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
     }
 
     const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
     const refFile = `${dir}/.git/${ref}`.replace('\n', '');
 
-    if (! fs.existsSync(refFile)) {
+    if (!fs.existsSync(refFile)) {
       return null;
     }
 
