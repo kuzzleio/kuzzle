@@ -76,14 +76,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     kuzzle.emit('event');
   });
 
-  it('should register a kuzzle:started:get event', async () => {
-    const kuzzleBis = new Kuzzle(config);
-
-    kuzzleBis.started = true;
-
-    should(await kuzzleBis.ask('kuzzle:started:get')).be.True();
-  });
-
   describe('#start', () => {
     it('should init the components in proper order', async () => {
       const options = {
@@ -92,7 +84,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         securities: {}
       };
 
-      should(kuzzle.started).be.false();
+      should(kuzzle.state).be.eql(Kuzzle.states.STARTING);
 
       await kuzzle.start(application, options);
 
@@ -119,7 +111,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.emit.withArgs('core:kuzzleStart')
       );
 
-      should(kuzzle.started).be.true();
+      should(kuzzle.state).be.eql(Kuzzle.states.RUNNING);
     });
 
     // @deprecated

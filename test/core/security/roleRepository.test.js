@@ -488,8 +488,7 @@ describe('Test: security/roleRepository', () => {
     const { NativeController } = require('../../../lib/api/controller/base');
 
     beforeEach(() => {
-      kuzzle.ask = sinon.stub();
-      kuzzle.ask.withArgs('kuzzle:started:get').resolves(true);
+      kuzzle.state = KuzzleMock.states.RUNNING;
       kuzzle.funnel.controllers.set('document', new NativeController(kuzzle, [
         'create',
         'delete'
@@ -582,8 +581,8 @@ describe('Test: security/roleRepository', () => {
     let plugin_test;
 
     beforeEach(() => {
-      kuzzle.ask = sinon.stub();
-      kuzzle.ask.withArgs('kuzzle:started:get').resolves(true);
+      kuzzle.state = KuzzleMock.states.RUNNING;
+
       plugin_test = {
         object: {
           controllers: {
@@ -602,12 +601,12 @@ describe('Test: security/roleRepository', () => {
       role.controllers = { '*': 123 };
 
       kuzzle.funnel.isNativeController.returns(false);
-      await should(async () => await roleRepository.checkRolePluginsRights(role)).not.throw();
+      await roleRepository.checkRolePluginsRights(role);
 
       role.controllers = { 'foo': 0 };
 
       kuzzle.funnel.isNativeController.returns(true);
-      await should(async () => await roleRepository.checkRolePluginsRights(role)).not.throw();
+      await roleRepository.checkRolePluginsRights(role);
     });
 
     it('should warn if we force a role having an invalid plugin controller.', async () => {
@@ -629,7 +628,7 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should warn if kuzzle is not started and forceWarn is set', async () => {
-      kuzzle.ask.withArgs('kuzzle:started:get').resolves(false);
+      kuzzle.state = KuzzleMock.states.STARTING;
       kuzzle.pluginsManager.isController.returns(false);
       const role = new Role();
 
@@ -707,7 +706,7 @@ describe('Test: security/roleRepository', () => {
       });
     });
 
-    it('should not warn nor throw when a role contains valid controller and action.', () => {
+    it('should not warn nor throw when a role contains valid controller and action.', async () => {
       kuzzle.pluginsManager.isController.returns(true);
       kuzzle.pluginsManager.isAction.returns(true);
 
@@ -722,7 +721,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      should(async () => await roleRepository.checkRolePluginsRights(role)).not.throw();
+      await roleRepository.checkRolePluginsRights(role);
 
       should(kuzzle.log.warn).be.not.called();
     });
