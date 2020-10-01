@@ -145,7 +145,8 @@ class KuzzleMock extends Kuzzle {
       unregisterStrategy: sinon.stub(),
       application: {
         info: sinon.stub()
-      }
+      },
+      routes: []
     };
 
     this.rootPath = '/kuzzle';

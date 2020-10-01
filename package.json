@@ -96,6 +96,7 @@
     "codecov": "^3.7.2",
     "cucumber": "^6.0.5",
     "eslint": "^7.6.0",
+    "js-yaml": "^3.14.0",
     "kuzdoc": "^1.2.2",
     "mocha": "^8.1.1",
     "mock-require": "^3.0.3",

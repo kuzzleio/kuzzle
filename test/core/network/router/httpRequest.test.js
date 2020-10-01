@@ -146,6 +146,7 @@ describe('Test: router.httpRequest', () => {
     });
   });
 
+<<<<<<< HEAD
   it('should register the swagger JSON auto-generator route', (done) => {
     httpRequest.url = '/swagger.json';
     httpRequest.method = 'GET';
@@ -180,6 +181,8 @@ describe('Test: router.httpRequest', () => {
     });
   });
 
+=======
+>>>>>>> 5c082f8d5... Integrate Swagger to a new server controller route
   it('should register plugins HTTP routes', (done) => {
     httpRequest.url = '/foo/bar/baz';
     httpRequest.method = 'GET';
