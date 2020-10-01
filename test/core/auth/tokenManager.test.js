@@ -2,7 +2,9 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
 const Token = require('../../../lib/model/security/token');
 const TokenManager = require('../../../lib/core/auth/tokenManager');
 
@@ -22,9 +24,9 @@ describe('Test: token manager core component', () => {
     tokenManager = new TokenManager(kuzzle);
     token = new Token({
       _id: 'foo#bar',
-      userId: 'foo',
+      expiresAt: Date.now()+1000,
       jwt: 'bar',
-      expiresAt: Date.now()+1000
+      userId: 'foo',
     });
 
     return tokenManager.init();
@@ -134,15 +136,16 @@ describe('Test: token manager core component', () => {
   });
 
   describe('#expire', () => {
-    it('should force a token to expire when called', () => {
+    it('should force a token to expire when called', async () => {
       tokenManager._add(token, 'foo', ['bar']);
 
-      tokenManager.expire(token);
+      await tokenManager.expire(token);
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
+      should(kuzzle.ask)
+        .calledWith('core:realtime:user:remove', 'foo');
     });
 
-    it('should do nothing if the provided token is from the anonymous user', () => {
+    it('should do nothing if the provided token is from the anonymous user', async () => {
       // manually insert the anonymous token in the manager
       // should never happen in real-life scenarios (see UTs above)
       const fakeEntry = {
@@ -155,7 +158,7 @@ describe('Test: token manager core component', () => {
 
       tokenManager.tokens.insert(fakeEntry);
 
-      tokenManager.expire(anonymousToken);
+      await tokenManager.expire(anonymousToken);
 
       should(tokenManager.tokens.array)
         .be.an.Array()
@@ -163,7 +166,7 @@ describe('Test: token manager core component', () => {
         .and.have.length(1);
     });
 
-    it('should do nothing if the provided token has not been previously registered', () => {
+    it('should do nothing if the provided token has not been previously registered', async () => {
       const token2 = new Token({
         _id: 'foo2#bar2',
         userId: 'foo2',
@@ -172,7 +175,7 @@ describe('Test: token manager core component', () => {
       });
 
       tokenManager.tokens.array.push(token);
-      tokenManager.expire(token2);
+      await tokenManager.expire(token2);
 
       should(tokenManager.tokens.array)
         .be.an.Array()
@@ -182,44 +185,43 @@ describe('Test: token manager core component', () => {
 
   describe('#checkTokensValidity', () => {
     let clock;
+    let tokenExpiredStub;
 
     beforeEach(() => {
       clock = sinon.useFakeTimers(new Date());
+      tokenExpiredStub = kuzzle.ask
+        .withArgs('core:realtime:tokenExpired:notify', sinon.match.string)
+        .resolves();
     });
 
     afterEach(() => {
       clock.restore();
     });
 
-    it('should do nothing if no token has expired', () => {
-      const
-        expiresAt = Date.now() + 1000000,
-        runTimerStub = sinon.stub(tokenManager, 'runTimer');
+    it('should do nothing if no token has expired', async () => {
+      const expiresAt = Date.now() + 1000000;
+      const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
-      tokenManager.link(new Token({_id: 'bar', expiresAt}), 'connectionId1', 'roomId1');
-      tokenManager.link(new Token({_id: 'foo', expiresAt}), 'connectionId2', 'roomId2');
+      tokenManager.link(
+        new Token({_id: 'bar', expiresAt}),
+        'connectionId1',
+        'roomId1');
+      tokenManager.link(
+        new Token({_id: 'foo', expiresAt}),
+        'connectionId2',
+        'roomId2');
 
       runTimerStub.resetHistory();
-      tokenManager.checkTokensValidity();
+      await tokenManager.checkTokensValidity();
 
-      should(kuzzle.notifier.notifyServer).not.be.called();
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
+      should(tokenExpiredStub).not.be.called();
       should(tokenManager.tokens.array).have.length(2);
       should(runTimerStub).be.calledOnce();
     });
 
     it('should clean up subscriptions upon a token expiration', async () => {
-      const
-        now = Date.now(),
-        runTimerStub = sinon.stub(tokenManager, 'runTimer');
-
-      kuzzle.hotelClerk.customers.set('connectionId2', new Map([
-        [ 'room1', true ],
-        [ 'room2', true ]
-      ]));
-      kuzzle.hotelClerk.customers.set('connectionId1', new Map([
-        [ 'room3', true ]
-      ]));
+      const now = Date.now();
+      const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
       tokenManager.link(
         new Token({_id: 'bar', expiresAt: now + 1000000}),
@@ -235,43 +237,9 @@ describe('Test: token manager core component', () => {
 
       clock.runAll();
 
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).be.calledOnce();
-      should(kuzzle.notifier.notifyServer)
+      should(tokenExpiredStub)
         .be.calledOnce()
-        .be.calledWith(
-          ['room1', 'room2'],
-          'connectionId2',
-          'TokenExpired',
-          'Authentication Token Expired');
-
-      should(tokenManager.tokens.array.length).be.eql(1);
-      should(tokenManager.tokens.array[0]._id).be.eql('bar');
-      should(runTimerStub).be.calledOnce();
-    });
-
-    it('should behave correctly if the token does not match any subscription', async () => {
-      const
-        now = Date.now(),
-        runTimerStub = sinon.stub(tokenManager, 'runTimer');
-
-      kuzzle.hotelClerk.customers.clear();
-
-      tokenManager.link(
-        new Token({_id: 'bar', expiresAt: now + 1000000}),
-        'connectionId1',
-        'roomId1');
-      tokenManager.link(
-        new Token({_id: 'foo', expiresAt: now - 1000}),
-        'connectionId2',
-        'roomId2');
-
-      runTimerStub.resetHistory();
-      await tokenManager.checkTokensValidity();
-
-      clock.runAll();
-
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
-      should(kuzzle.notifier.notifyServer).not.be.called();
+        .be.calledWith('core:realtime:tokenExpired:notify', 'connectionId2');
 
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]._id).be.eql('bar');
@@ -280,8 +248,6 @@ describe('Test: token manager core component', () => {
 
     it('should not expire API key', async () => {
       const runTimerStub = sinon.stub(tokenManager, 'runTimer');
-
-      kuzzle.hotelClerk.customers.clear();
 
       tokenManager.link(
         new Token({_id: 'api-key-1', expiresAt: -1}),
@@ -294,8 +260,7 @@ describe('Test: token manager core component', () => {
 
       clock.runAll();
 
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
-      should(kuzzle.notifier.notifyServer).not.be.called();
+      should(tokenExpiredStub).not.be.called();
 
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]._id).be.eql('api-key-1');
@@ -303,13 +268,13 @@ describe('Test: token manager core component', () => {
     });
 
     it('should not rerun a timer if the last token has been removed', async () => {
-      const
-        now = Date.now(),
-        runTimerStub = sinon.stub(tokenManager, 'runTimer');
+      const now = Date.now();
+      const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
-      kuzzle.hotelClerk.customers.clear();
-
-      tokenManager.link(new Token({_id: 'foo', expiresAt: now - 1000}), 'connectionId2', 'roomId2');
+      tokenManager.link(
+        new Token({_id: 'foo', expiresAt: now - 1000}),
+        'connectionId2',
+        'roomId2');
 
       runTimerStub.resetHistory();
       await tokenManager.checkTokensValidity();

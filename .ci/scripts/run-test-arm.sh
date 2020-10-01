@@ -16,7 +16,7 @@ nvm use $NODE_VERSION
 
 npm run build
 
-node -r ts-node/register features-sdk/application/functional-tests-app.ts &
+node -r ts-node/register docker/scripts/start-kuzzle-dev.ts &
 
 echo "[$(date)] - Starting Kuzzle..."
 

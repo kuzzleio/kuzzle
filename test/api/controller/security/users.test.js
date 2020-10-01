@@ -57,12 +57,7 @@ describe('Test: security controller - users', () => {
 
       fakeUser = new User();
       createStub = kuzzle.ask
-        .withArgs(
-          createEvent,
-          request.input.resource._id,
-          profileIds,
-          content,
-          sinon.match.object)
+        .withArgs(createEvent, request.input.resource._id, profileIds, content)
         .resolves(fakeUser);
       deleteStub = kuzzle.ask
         .withArgs(deleteEvent, request.input.resource._id, sinon.match.object)
@@ -294,9 +289,7 @@ describe('Test: security controller - users', () => {
       mGetResult[1]._id = 'bar';
       mGetResult[2]._id = 'baz';
 
-      mGetStub = kuzzle.ask
-        .withArgs(mGetEvent, sinon.match.array)
-        .resolves(mGetResult);
+      mGetStub = kuzzle.ask.withArgs(mGetEvent).resolves(mGetResult);
     });
 
     it('should reject if no ids are given', async () => {
@@ -354,7 +347,7 @@ describe('Test: security controller - users', () => {
       request.input.args.scroll = 'foo';
 
       searchStub = kuzzle.ask
-        .withArgs(searchEvent, sinon.match.any, sinon.match.object)
+        .withArgs(searchEvent)
         .resolves({
           hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
           total: 2,
@@ -469,7 +462,7 @@ describe('Test: security controller - users', () => {
     beforeEach(() => {
       request.input.args.scrollId = 'foobar';
       scrollStub = kuzzle.ask
-        .withArgs(scrollEvent, sinon.match.string, sinon.match.any)
+        .withArgs(scrollEvent)
         .resolves({
           hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
           total: 2,
@@ -514,9 +507,7 @@ describe('Test: security controller - users', () => {
     let deleteStub;
 
     beforeEach(() => {
-      deleteStub = kuzzle.ask
-        .withArgs(deleteEvent, sinon.match.string, sinon.match.object)
-        .resolves();
+      deleteStub = kuzzle.ask.withArgs(deleteEvent).resolves();
 
       request.input.resource._id = 'test';
     });
@@ -692,14 +683,8 @@ describe('Test: security controller - users', () => {
       updatedUser._id = request.input.resource._id;
 
       updateStub = kuzzle.ask
-        .withArgs(
-          updateEvent,
-          request.input.resource._id,
-          sinon.match.any,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(updateEvent, request.input.resource._id)
         .resolves(updatedUser);
-
     });
 
     it('should return a valid response and use default options', async () => {
@@ -786,12 +771,7 @@ describe('Test: security controller - users', () => {
       replacedUser = new User();
 
       replaceStub = kuzzle.ask
-        .withArgs(
-          replaceEvent,
-          request.input.resource._id,
-          sinon.match.array,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(replaceEvent, request.input.resource._id)
         .resolves(replacedUser);
     });
 
@@ -1012,19 +992,10 @@ describe('Test: security controller - users', () => {
 
       request.input.resource._id = 'test';
 
-      createOrReplaceRoleStub = kuzzle.ask
-        .withArgs(
-          createOrReplaceRoleEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.object);
+      createOrReplaceRoleStub = kuzzle.ask.withArgs(createOrReplaceRoleEvent);
 
       createOrReplaceProfileStub = kuzzle.ask
-        .withArgs(
-          createOrReplaceProfileEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.object);
+        .withArgs(createOrReplaceProfileEvent);
 
       adminExistsStub = kuzzle.ask
         .withArgs(adminExistsEvent)

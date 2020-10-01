@@ -1,9 +1,11 @@
 'use strict';
 
-const _ = require('lodash');
 const should = require('should');
-const PluginRepository = require('../../../lib/core/plugin/pluginRepository');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const PluginRepository = require('../../../lib/core/plugin/pluginRepository');
+const cacheDbEnum = require('../../../lib/core/cache/cacheDbEnum');
 
 describe('core/plugin/pluginRepository', () => {
   const someObject = {_id: 'someId', some: {defined: 'object'}};
@@ -27,14 +29,13 @@ describe('core/plugin/pluginRepository', () => {
       should(pluginRepository.collection).be.equal(someCollection);
       should(pluginRepository.ObjectConstructor).be.exactly(SomeConstructor);
       should(pluginRepository.indexStorage).be.exactly(kuzzle.internalIndex);
-      should(pluginRepository.cacheEngine).be.exactly(null);
+      should(pluginRepository.cacheDb).be.exactly(cacheDbEnum.NONE);
     });
   });
 
   describe('#serializeToDatabase', () => {
     it('should copy the argument and remove _id from the copy serializeToCache', () => {
-      let copy = {};
-      _.assign(copy, someObject);
+      const copy = Object.assign({}, someObject);
 
       delete copy._id;
 

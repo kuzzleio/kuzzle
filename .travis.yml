@@ -11,8 +11,6 @@ _integration-tests: &integration-tests
   cache:
     directories:
       - node_modules
-      - plugins/available/kuzzle-plugin-auth-passport-local/node_modules
-      - plugins/available/kuzzle-plugin-logger/node_modules
   env: &integration-tests-env
     - DOCKER_COMPOSE_TEST=test
   install:
@@ -123,39 +121,129 @@ jobs:
         - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
 
     # ---------------------------------------
-    # Integration tests
+    # Integration tests Node.js 12.16.3
     # ---------------------------------------
+
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests legacy
+      name: Node.js 12.16.3 - Functional tests legacy - Http
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
         - NODE_VERSION=12.16.3
         - *integration-tests-env
 
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests sdk
+      name: Node.js 12.16.3 - Functional tests legacy - WebSocket
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
         - NODE_VERSION=12.16.3
         - *integration-tests-env
 
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12 - Functional tests legacy
+      name: Node.js 12.16.3 - Functional tests legacy - Mqtt
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+        - NODE_VERSION=12.16.3
+        - *integration-tests-env
+
+    - stage: Integration tests
+      # /!\ cluster functional tests must NOT be executed from inside a
+      # running kuzzle container, otherwise all tests will target one node,
+      # instead of being sent to each node w/ round-robin, killing the
+      # purpose of testing cluster syncs
+      name: Node.js 12.16.3 - Functional tests legacy - Cluster
+      os: linux
+      language: node_js
+      node_js: 12
+      services: docker
+      cache:
+        directories: node_modules
+      env:
+        - NODE_VERSION=12.16.3
+      install:
+        - sudo sysctl -w vm.max_map_count=262144
+      script:
+        # avoid write /dev/stdout: resource temporarily unavailable
+        # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
+        - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+        - ./.ci/scripts/run-test-cluster.sh
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12.16.3 - Functional tests sdk - Http
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
+        - NODE_VERSION=12.16.3
         - *integration-tests-env
 
     - <<: *integration-tests
       stage: Integration tests
-      name: Node.js 12 - Functional tests sdk
+      name: Node.js 12.16.3 - Functional tests sdk - WebSocket
       env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
+        - NODE_VERSION=12.16.3
         - *integration-tests-env
 
+    # ---------------------------------------
+    # Integration tests Node.js 12
+    # ---------------------------------------
 
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - Http
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - WebSocket
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests legacy - Mqtt
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+        - *integration-tests-env
+
+    - stage: Integration tests
+      # /!\ cluster functional tests must NOT be executed from inside a
+      # running kuzzle container, otherwise all tests will target one node,
+      # instead of being sent to each node w/ round-robin, killing the
+      # purpose of testing cluster syncs
+      name: Node.js 12 - Functional tests legacy - Cluster
+      os: linux
+      language: node_js
+      node_js: 12
+      services: docker
+      cache:
+        directories: node_modules
+      install:
+        - sudo sysctl -w vm.max_map_count=262144
+      script:
+        # avoid write /dev/stdout: resource temporarily unavailable
+        # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
+        - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+        - ./.ci/scripts/run-test-cluster.sh
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests sdk - Http
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
+        - *integration-tests-env
+
+    - <<: *integration-tests
+      stage: Integration tests
+      name: Node.js 12 - Functional tests sdk - WebSocket
+      env:
+        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
+        - *integration-tests-env
 
     # ---------------------------------------
     # Cross-platform tests

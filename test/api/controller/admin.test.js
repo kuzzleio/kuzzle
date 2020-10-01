@@ -36,19 +36,24 @@ describe('AdminController', () => {
   });
 
   describe('#resetCache', () => {
-    let flushdbStub = sinon.stub();
-
     beforeEach(() => {
       request.input.action = 'resetCache';
     });
 
-    it('should flush the cache for the specified database', async () => {
-      kuzzle.cacheEngine.public.flushdb = flushdbStub.returns();
+    it('should flush the cache for the public database', async () => {
       request.input.args.database = 'memoryStorage';
 
       await adminController.resetCache(request);
 
-      should(flushdbStub).be.calledOnce();
+      should(kuzzle.ask).be.calledWith('core:cache:public:flushdb');
+    });
+
+    it('should flush the cache for the internal database', async () => {
+      request.input.args.database = 'internalCache';
+
+      await adminController.resetCache(request);
+
+      should(kuzzle.ask).be.calledWith('core:cache:internal:flushdb');
     });
 
     it('should raise an error if database does not exist', () => {

@@ -23,10 +23,12 @@
 import fs from 'fs';
 import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
+import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
+import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
 import Plugin from '../plugin/plugin';
-import EmbeddedSDK from '../shared/sdk/embeddedSdk';
+import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
@@ -34,7 +36,8 @@ import kerror from '../../kerror';
 import {
   JSONObject,
   ControllerDefinition,
-  BasePlugin
+  BasePlugin,
+  Controller
 } from '../../util/interfaces';
 
 const assertionError = kerror.wrap('plugin', 'assert');
@@ -157,7 +160,7 @@ class ControllerManager extends ApplicationManager {
    * Registers a new controller.
    *
    * @example
-   * register('greeting', {
+   * app.controller.register('greeting', {
    *   actions: {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
@@ -177,6 +180,70 @@ class ControllerManager extends ApplicationManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
+    this._add(name, definition);
+  }
+
+  /**
+   * Uses a new controller class.
+   *
+   * The controller class must:
+   *  - call the super constructor with the application instance
+   *  - extend the "Controller" class
+   *  - define the "definition" property
+   *  - (optional) define the "name" property
+   *
+   * The controller name will be inferred from the class name.
+   *   e.g. "PaymentSolutionController" will become "payment-solution"
+   *
+   * @example
+   *
+   * class EmailController extends Controller {
+   *   constructor (app) {
+   *     super(app);
+   *
+   *     this.definition = {
+   *       actions: {
+   *         send: {
+   *           handler: this.send
+   *         }
+   *       }
+   *     };
+   *   }
+   *
+   *   async send (request: Request) {
+   *     // ...
+   *   }
+   * }
+   *
+   * app.controller.use(new EmailController(app));
+   *
+   * @param controller Controller class
+   */
+  use (controller: Controller) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'controller');
+    }
+
+    for (const [action, definition] of Object.entries(controller.definition.actions)) {
+      if (typeof definition.handler !== 'function') {
+        throw assertionError.get(
+          'invalid_controller_definition',
+          name,
+          `Handler for action "${action}" is not a function.`);
+      }
+
+      definition.handler = definition.handler.bind(controller);
+    }
+
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
+    }
+
+    this._add(controller.name, controller.definition);
+  }
+
+  private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
     Plugin.checkControllerDefinition(name, definition, { application: true });
@@ -396,6 +463,11 @@ export class Backend {
   public version: string;
 
   /**
+   * Current Git commit (if available)
+   */
+  public commit: string | null;
+
+  /**
    * Errors manager
    * @todo add type
    */
@@ -516,6 +588,8 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
+
+    this.commit = this._readCommit();
   }
 
   /**
@@ -528,12 +602,19 @@ export class Backend {
 
     this._kuzzle = new Kuzzle(this.config.content);
 
+    // we need to load the default plugins
+    this.plugin.use(
+      new PluginPassportAuthLocal(),
+      { name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
+
     const application = new Plugin(
       this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });
 
     application.version = this.version;
+    application.commit = this.commit;
 
     const options = {
       fixtures: this._support.fixtures,
@@ -591,6 +672,28 @@ export class Backend {
       init: () => {},
       pipes: this._pipes,
     };
+  }
+
+  /**
+   * Try to read the current commit hash.
+   */
+  private _readCommit (dir = process.cwd(), depth = 3) {
+    if (depth === 0) {
+      return null;
+    }
+
+    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+      return this._readCommit(`${dir}/..`, depth - 1);
+    }
+
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+
+    if (! fs.existsSync(refFile)) {
+      return null;
+    }
+
+    return fs.readFileSync(refFile, 'utf8').replace('\n', '');
   }
 
 }
