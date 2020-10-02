@@ -11,9 +11,10 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 
 ## Guidelines
 
-* Use promises instead of callbacks as often as you can.
-* If you add new functions, files or features to Kuzzle, then implements the corresponding unit and/or functional tests. We won't accept non-tested pull requests.
-* [Documentation and comments are more important than code](http://queue.acm.org/detail.cfm?id=1053354): comment your code, use jsdoc for every new function, add or update markdown documentation if need be. We won't accept non-documented pull requests.
+* Prefer async/await or promises instead of callbacks as often as you can
+  * Except for methods invoked before the funnel module: ALWAYS use callbacks there to prevent event loop saturation (i.e. mostly methods handling network connections) 
+* Always add/update the corresponding unit and/or functional tests. We won't accept non-tested pull requests.
+* [Documentation and comments are more important than code](http://queue.acm.org/detail.cfm?id=1053354): comment your code, use jsdoc for every new function, add or update markdown documentation if need be. We won't accept undocumented pull requests.
 * Similar to the previous rule: documentation is important, but also is code readability. Write [self-describing code](https://en.wikipedia.org/wiki/Self-documenting).
 
 ## General rules and principles we'd like you to follow
@@ -34,17 +35,22 @@ How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
 git clone git@github.com:kuzzleio/kuzzle.git
 cd kuzzle
 
-# don't forget to retreive default plugins embeded in submodules
-git submodule init
-git submodule update
-
-# start kuzzle with development tools enabled
+# Start a kuzzle cluster with development tools enabled
 docker-compose up
 ```
 
-You can now access to `http://localhost:7512` for the standard Kuzzle HTTP, WebSocket and MQTT APIs
+You can now access the Kuzzle HTTP/WebSocket API through the following URL: `http://localhost:7512`.
+This is the entrypoint for the loadbalancer: API requests are then forwarded to kuzzle individual kuzzle nodes (round-robin).
 
-Everytime a modification is detected in the source files, the server is automatically restarted and a new debug URL is provided.
+For development purposes, nodes can be accessed individually:
+
+| Node no. | HTTP/WebSocket port | MQTT port | Chrome Inspect Port |
+|:--------:|:-------------------:|:---------:|:-------------------:|
+| 1 | 17510 | 1883 | 9229 |
+| 2 | 17511 | 11883 | 9230 |
+| 3 | 17512 | 11884 | 9231 |
+
+Everytime a modification is detected in the source files, the nodes are automatically restarted.
 
 ### Kuzzle over SSL
 
@@ -78,21 +84,17 @@ See our [plugins documentation](https://docs.kuzzle.io/core/2/plugins/)
 ```bash
 $ docker-compose up -d
 
-# wait for Kuzzle stack to be up
+# Wait for Kuzzle stack to be up, and start the entire test suite (long)
+$ npm run test
 
-$ docker-compose exec kuzzle npm run test:lint
-$ docker-compose exec kuzzle npm run test:unit
-$ docker-compose exec kuzzle npm run test:functional
-```
+# To launch tests individually:
 
-### Locally, with Kuzzle running in Docker
-
-```bash
-$ docker-compose up -d
-
-# wait for Kuzzle stack to be up
-
+# linter: check that the code is properly written
 $ npm run test:lint
+
+# unit tests: test parts of the code individually
 $ npm run test:unit
+
+# functional tests: test Kuzzle's API behavior
 $ npm run test:functional
 ```

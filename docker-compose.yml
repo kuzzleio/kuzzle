@@ -61,6 +61,7 @@ services:
     container_name: kuzzle_node_1
     ports:
       - "17510:7512" # Kuzzle API port
+      - "1883:1883" # Kuzzle MQTT port
       - "9229:9229" # Debug port
 
   kuzzle_node_2:
@@ -68,6 +69,7 @@ services:
     container_name: kuzzle_node_2
     ports:
       - "17511:7512" # Kuzzle API port
+      - "11883:1883" # Kuzzle MQTT port
       - "9230:9229" # Debug port
 
   kuzzle_node_3:
@@ -75,6 +77,7 @@ services:
     container_name: kuzzle_node_3
     ports:
       - "17512:7512" # Kuzzle API port
+      - "11884:1883" # Kuzzle MQTT port
       - "9231:9229" # Debug port
 
   redis:
