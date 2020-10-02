@@ -594,22 +594,22 @@ describe('Test: security/roleRepository', () => {
       kuzzle.pluginsManager.plugins = { plugin_test };
     });
 
-    it('should skip non-plugins or wildcarded controllers', async () => {
+    it('should skip non-plugins or wildcarded controllers', () => {
       kuzzle.pluginsManager.isController.returns(false);
 
       const role = new Role();
       role.controllers = { '*': 123 };
 
       kuzzle.funnel.isNativeController.returns(false);
-      await roleRepository.checkRolePluginsRights(role);
+      roleRepository.checkRolePluginsRights(role);
 
       role.controllers = { 'foo': 0 };
 
       kuzzle.funnel.isNativeController.returns(true);
-      await roleRepository.checkRolePluginsRights(role);
+      roleRepository.checkRolePluginsRights(role);
     });
 
-    it('should warn if we force a role having an invalid plugin controller.', async () => {
+    it('should warn if we force a role having an invalid plugin controller.', () => {
       kuzzle.pluginsManager.isController.returns(false);
       const role = new Role();
 
@@ -622,12 +622,12 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      await roleRepository.checkRolePluginsRights(role, {force: true});
+      roleRepository.checkRolePluginsRights(role, {force: true});
 
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
     });
 
-    it('should warn if kuzzle is not started and forceWarn is set', async () => {
+    it('should warn if kuzzle is not started and forceWarn is set', () => {
       kuzzle.state = KuzzleMock.states.STARTING;
       kuzzle.pluginsManager.isController.returns(false);
       const role = new Role();
@@ -641,7 +641,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      await roleRepository.checkRolePluginsRights(
+      roleRepository.checkRolePluginsRights(
         role,
         { force: true, forceWarn: true });
 
@@ -668,7 +668,7 @@ describe('Test: security/roleRepository', () => {
       });
     });
 
-    it('should warn if we force a role having an invalid plugin action.', async () => {
+    it('should warn if we force a role having an invalid plugin action.', () => {
       kuzzle.pluginsManager.isController = sinon.stub().returns(true);
       kuzzle.pluginsManager.isAction = sinon.stub().returns(false);
       const controllers = {
@@ -682,7 +682,7 @@ describe('Test: security/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
 
-      await roleRepository.checkRolePluginsRights(role, {force: true});
+      roleRepository.checkRolePluginsRights(role, {force: true});
 
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".');
     });
@@ -706,7 +706,7 @@ describe('Test: security/roleRepository', () => {
       });
     });
 
-    it('should not warn nor throw when a role contains valid controller and action.', async () => {
+    it('should not warn nor throw when a role contains valid controller and action.', () => {
       kuzzle.pluginsManager.isController.returns(true);
       kuzzle.pluginsManager.isAction.returns(true);
 
@@ -721,7 +721,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      await roleRepository.checkRolePluginsRights(role);
+      roleRepository.checkRolePluginsRights(role);
 
       should(kuzzle.log.warn).be.not.called();
     });
