@@ -145,7 +145,7 @@ describe('RealtimeController', () => {
 
       const result = await realtimeController.unsubscribe(request);
 
-      should(result).be.match({ roomId: 'foo' });
+      should(result).be.match('foo');
       should(kuzzle.ask)
         .calledWithMatch('core:realtime:unsubscribe', 'connectionId', 'foo');
     });
