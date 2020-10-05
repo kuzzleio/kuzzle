@@ -488,6 +488,7 @@ describe('Test: security/roleRepository', () => {
     const { NativeController } = require('../../../lib/api/controller/base');
 
     beforeEach(() => {
+      kuzzle.state = KuzzleMock.states.RUNNING;
       kuzzle.funnel.controllers.set('document', new NativeController(kuzzle, [
         'create',
         'delete'
@@ -580,6 +581,8 @@ describe('Test: security/roleRepository', () => {
     let plugin_test;
 
     beforeEach(() => {
+      kuzzle.state = KuzzleMock.states.RUNNING;
+
       plugin_test = {
         object: {
           controllers: {
@@ -598,12 +601,12 @@ describe('Test: security/roleRepository', () => {
       role.controllers = { '*': 123 };
 
       kuzzle.funnel.isNativeController.returns(false);
-      should(() => roleRepository.checkRolePluginsRights(role)).not.throw();
+      roleRepository.checkRolePluginsRights(role);
 
       role.controllers = { 'foo': 0 };
 
       kuzzle.funnel.isNativeController.returns(true);
-      should(() => roleRepository.checkRolePluginsRights(role)).not.throw();
+      roleRepository.checkRolePluginsRights(role);
     });
 
     it('should warn if we force a role having an invalid plugin controller.', () => {
@@ -624,6 +627,27 @@ describe('Test: security/roleRepository', () => {
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
     });
 
+    it('should warn if kuzzle is not started and forceWarn is set', () => {
+      kuzzle.state = KuzzleMock.states.STARTING;
+      kuzzle.pluginsManager.isController.returns(false);
+      const role = new Role();
+
+      role._id = 'test';
+      role.controllers = {
+        'invalid_controller': {
+          actions: {
+            publicMethod: true
+          }
+        }
+      };
+
+      roleRepository.checkRolePluginsRights(
+        role,
+        { force: true, forceWarn: true });
+
+      should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
+    });
+
     it('should throw if we try to write a role with an invalid plugin controller.', () => {
       kuzzle.pluginsManager.isController.returns(false);
       kuzzle.pluginsManager.getControllerNames.returns(['foobar']);
@@ -639,7 +663,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      should(() => roleRepository.checkRolePluginsRights(role)).throw({
+      return should(() => roleRepository.checkRolePluginsRights(role)).throw({
         id: 'security.role.unknown_controller'
       });
     });
@@ -657,7 +681,9 @@ describe('Test: security/roleRepository', () => {
         role = new Role();
       role._id = 'test';
       role.controllers = controllers;
+
       roleRepository.checkRolePluginsRights(role, {force: true});
+
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".');
     });
 
@@ -675,7 +701,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      should(() => roleRepository.checkRolePluginsRights(role)).throw({
+      return should(() => roleRepository.checkRolePluginsRights(role)).throw({
         id: 'security.role.unknown_action'
       });
     });
@@ -695,7 +721,8 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      should(() => roleRepository.checkRolePluginsRights(role)).not.throw();
+      roleRepository.checkRolePluginsRights(role);
+
       should(kuzzle.log.warn).be.not.called();
     });
 
@@ -940,14 +967,14 @@ describe('Test: security/roleRepository', () => {
         hits: [ role1, role2, role3 ],
       });
 
-      sinon.stub(roleRepository, 'checkRolePluginsRights');
+      sinon.stub(roleRepository, 'checkRolePluginsRights').resolves();
 
       await kuzzle.ask(sanityCheckEvent);
 
       should(roleRepository.checkRolePluginsRights)
-        .calledWithMatch(role1, { force: true })
-        .calledWithMatch(role2, { force: true })
-        .calledWithMatch(role3, { force: true });
+        .calledWithMatch(role1, { force: true, forceWarn: true })
+        .calledWithMatch(role2, { force: true, forceWarn: true })
+        .calledWithMatch(role3, { force: true, forceWarn: true });
     });
   });
 

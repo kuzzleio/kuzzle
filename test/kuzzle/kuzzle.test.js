@@ -84,7 +84,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         securities: {}
       };
 
-      should(kuzzle.started).be.false();
+      should(kuzzle.state).be.eql(Kuzzle.states.STARTING);
 
       await kuzzle.start(application, options);
 
@@ -100,9 +100,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.storageEngine.public.loadMappings,
         kuzzle.storageEngine.public.loadFixtures,
         kuzzle.ask.withArgs('core:security:load', sinon.match.object),
-        kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,
+        kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
         kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe.withArgs('kuzzle:state:live'),
@@ -111,7 +111,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.emit.withArgs('core:kuzzleStart')
       );
 
-      should(kuzzle.started).be.true();
+      should(kuzzle.state).be.eql(Kuzzle.states.RUNNING);
     });
 
     // @deprecated

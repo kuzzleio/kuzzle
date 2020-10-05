@@ -218,7 +218,7 @@ class KuzzleMock extends Kuzzle {
       const kuzzleProto = Object.getPrototypeOf(mockProto);
 
       for (const name of Object.getOwnPropertyNames(kuzzleProto)) {
-        if (['constructor', 'hash'].includes(name)) {
+        if (['constructor', 'hash', 'starting', 'running', 'shuttingDown'].includes(name)) {
           continue;
         }
 
