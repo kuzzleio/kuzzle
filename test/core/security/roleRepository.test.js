@@ -663,7 +663,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      return should(roleRepository.checkRolePluginsRights(role)).be.rejectedWith({
+      return should(() => roleRepository.checkRolePluginsRights(role)).throw({
         id: 'security.role.unknown_controller'
       });
     });
@@ -701,7 +701,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      return should(roleRepository.checkRolePluginsRights(role)).be.rejectedWith({
+      return should(() => roleRepository.checkRolePluginsRights(role)).throw({
         id: 'security.role.unknown_action'
       });
     });
