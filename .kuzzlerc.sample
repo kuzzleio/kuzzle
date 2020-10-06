@@ -262,7 +262,8 @@
             },
             "server": {
               "actions": {
-                "publicApi": true
+                "publicApi": true,
+                "openapi": true
               }
             }
           }
