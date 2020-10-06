@@ -362,24 +362,13 @@ describe('ServerController', () => {
         });
     });
 
-    it('should return YAML formated Swagger specifications if specified and protocol is HTTP', () => {
+    it('should return YAML formated Swagger specifications if specified', () => {
       request.input.args.format = 'yaml';
-      request.context.connection.protocol = 'http';
       return serverController.swagger(request)
         .then((response) => {
           const parsedResponse = yaml.load(response);
           parsedResponse.should.be.an.Object();
           parsedResponse.openapi.should.be.a.String();
-        });
-    });
-
-    it('should return JSON formated Swagger specifications if YAML is specified and protocol is not HTTP', () => {
-      request.input.args.format = 'yaml';
-      request.context.connection.protocol = 'websocket';
-      return serverController.swagger(request)
-        .then((response) => {
-          response.should.be.an.Object();
-          response.openapi.should.be.a.String();
         });
     });
   });

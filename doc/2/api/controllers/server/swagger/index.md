@@ -20,17 +20,13 @@ URL: http://kuzzle:7512/_swagger[?format=<json|yaml>]
 Method: GET
 ```
 
-::: warning
-The YAML response format is only available using the HTTP protocol. 
-Using other protocols like WebSocket or MQTT, the response will always be JSON formatted.
-:::
-
 ### Other protocols
 
 ```js
 {
   "controller": "server",
   "action": "swagger",
+  "format": "<json|yaml>"
 }
 ```
 
