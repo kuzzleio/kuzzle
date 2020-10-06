@@ -340,7 +340,20 @@ describe('Plugin Context', () => {
           customRequest.input.body
         );
   
-        should(kuzzle.ask).be.calledWithExactly('core:realtime:subscribe', customRequest);
+        should(kuzzle.ask).be.calledWith('core:realtime:subscribe', sinon.match(
+          {
+            context: {
+              connection: {
+                id: customRequest.context.connection.id
+              },
+              input: {
+                body: customRequest.input.body,
+                collection: customRequest.input.collection,
+                index: customRequest.input.index
+              }
+            }
+          }
+        ));
       });
 
       it('should call unregister with the right ask and argument', async () => {
