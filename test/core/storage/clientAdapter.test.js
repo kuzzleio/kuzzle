@@ -5,6 +5,7 @@ const sinon = require('sinon');
 const mockRequire = require('mock-require');
 const {
   BadRequestError,
+  PartialError,
   PreconditionError,
 } = require('kuzzle-common-objects');
 
@@ -435,9 +436,7 @@ describe('#core/storage/ClientAdapter', () => {
 
       it('should reject if the provided argument is not a valid object', async () => {
         for (const arg of [null, [], 'foo', 123, true]) {
-          const result = kuzzle.ask(
-            `core:store:${publicAdapter.scope}:mappings:import`,
-            arg);
+          const result = kuzzle.ask('core:store:public:mappings:import', arg);
 
           await should(result).rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_argument',
@@ -450,13 +449,37 @@ describe('#core/storage/ClientAdapter', () => {
           mappings.index = arg;
 
           const result = kuzzle.ask(
-            `core:store:${publicAdapter.scope}:mappings:import`,
-            arg);
+            'core:store:public:mappings:import',
+            mappings);
 
           await should(result).rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_argument',
           });
         }
+      });
+
+      it('should reject if creating a new index fails', () => {
+        const err = new Error();
+
+        publicAdapter.client.createIndex.rejects(err);
+
+        return should(kuzzle.ask('core:store:public:mappings:import', mappings))
+          .rejectedWith(err);
+      });
+
+      it('should ignore rejections due to an already existing index', async () => {
+        mappings.index2 = mappings.index;
+
+        const err = new Error();
+        err.id = 'services.storage.index_already_exists';
+
+        publicAdapter.client.createIndex.onFirstCall().rejects(err);
+
+        await should(kuzzle.ask('core:store:public:mappings:import', mappings))
+          .fulfilled();
+
+        should(publicAdapter.client.createIndex).calledWith('index');
+        should(publicAdapter.client.createIndex).calledWith('index2');
       });
     });
 
@@ -808,9 +831,7 @@ describe('#core/storage/ClientAdapter', () => {
 
       it('should reject if the provided argument is not a valid object', async () => {
         for (const arg of [null, [], 'foo', 123, true]) {
-          const result = kuzzle.ask(
-            `core:store:${publicAdapter.scope}:document:import`,
-            arg);
+          const result = kuzzle.ask('core:store:public:document:import', arg);
 
           await should(result).rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_argument',
@@ -823,13 +844,20 @@ describe('#core/storage/ClientAdapter', () => {
           fixtures.index = arg;
 
           const result = kuzzle.ask(
-            `core:store:${publicAdapter.scope}:document:import`,
-            arg);
+            'core:store:public:document:import',
+            fixtures);
 
           await should(result).rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_argument',
           });
         }
+      });
+
+      it('should wrap import errors', async () => {
+        publicAdapter.client.import.resolves({ errors: [ 'oh', 'noes' ] });
+
+        await should(kuzzle.ask('core:store:public:document:import', fixtures))
+          .rejectedWith(PartialError, { id: 'services.storage.import_failed' });
       });
     });
 
@@ -1058,14 +1086,12 @@ describe('#core/storage/ClientAdapter', () => {
             `core:store:${adapter.scope}:document:mGet`,
             'index',
             'collection',
-            'ids',
-            'options');
+            'ids');
 
           should(adapter.cache.assertCollectionExists)
             .calledWith('index', 'collection');
 
-          should(adapter.client.mGet)
-            .calledWith('index', 'collection', 'ids', 'options');
+          should(adapter.client.mGet).calledWith('index', 'collection', 'ids');
         }
       });
 
