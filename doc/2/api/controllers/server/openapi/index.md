@@ -1,13 +1,13 @@
 ---
 code: true
 type: page
-title: swagger
+title: openapi
 ---
 
-# swagger
+# openapi
 
 
-Returns available API routes Swagger specifications, including both Kuzzle's and plugins'.  
+Returns available API routes OpenAPI v3 specifications, including both Kuzzle's and plugins'.  
 
 ---
 
@@ -16,7 +16,7 @@ Returns available API routes Swagger specifications, including both Kuzzle's and
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_swagger[?format=<json|yaml>]
+URL: http://kuzzle:7512/_openapi[?format=<json|yaml>]
 Method: GET
 ```
 
@@ -25,7 +25,7 @@ Method: GET
 ```js
 {
   "controller": "server",
-  "action": "swagger",
+  "action": "openapi",
   "format": "<json|yaml>"
 }
 ```
@@ -34,7 +34,7 @@ Method: GET
 
 ## Response
 
-Returns the Swagger specifications JSON (by default) or YAML formatted.
+Returns the OpenAPI v3 specifications JSON (by default) or YAML formatted.
 
 * JSON format:
 ```js

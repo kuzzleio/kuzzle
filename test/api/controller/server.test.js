@@ -344,27 +344,27 @@ describe('ServerController', () => {
     });
   });
 
-  describe('#swagger', () => {
-    it('should return JSON formated Swagger specifications by default', () => {
-      return serverController.swagger(request)
+  describe('#openapi', () => {
+    it('should return JSON formated OpenAPI specifications by default', () => {
+      return serverController.openapi(request)
         .then((response) => {
           response.should.be.an.Object();
           response.openapi.should.be.a.String();
         });
     });
 
-    it('should return JSON formated Swagger specifications if specified', () => {
+    it('should return JSON formated OpenAPI specifications if specified', () => {
       request.input.args.format = 'json';
-      return serverController.swagger(request)
+      return serverController.openapi(request)
         .then((response) => {
           response.should.be.an.Object();
           response.openapi.should.be.a.String();
         });
     });
 
-    it('should return YAML formated Swagger specifications if specified', () => {
+    it('should return YAML formated OpenAPI specifications if specified', () => {
       request.input.args.format = 'yaml';
-      return serverController.swagger(request)
+      return serverController.openapi(request)
         .then((response) => {
           const parsedResponse = yaml.load(response);
           parsedResponse.should.be.an.Object();
