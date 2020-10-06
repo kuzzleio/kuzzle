@@ -345,12 +345,12 @@ describe('Plugin Context', () => {
             context: {
               connection: {
                 id: customRequest.context.connection.id
-              },
-              input: {
-                body: customRequest.input.body,
-                collection: customRequest.input.collection,
-                index: customRequest.input.index
               }
+            },
+            input: {
+              body: customRequest.input.body,
+              collection: customRequest.input.collection,
+              index: customRequest.input.index
             }
           }
         ));

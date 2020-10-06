@@ -2,7 +2,6 @@
 
 const should = require('should');
 const _ = require('lodash');
-const { Request } = require('kuzzle-common-objects');
 
 class FunctionalTestPlugin {
   constructor () {
