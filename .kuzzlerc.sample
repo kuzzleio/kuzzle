@@ -263,7 +263,7 @@
             "server": {
               "actions": {
                 "publicApi": true,
-                "openapi" true
+                "openapi": true
               }
             }
           }
