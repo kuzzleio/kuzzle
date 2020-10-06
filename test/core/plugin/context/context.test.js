@@ -247,7 +247,7 @@ describe('Plugin Context', () => {
 
       should(context.accessors).be.an.Object().and.not.be.empty();
       should(context.accessors).have.properties(
-        ['execute', 'validation', 'storage', 'trigger', 'realtime', 'strategies', 'sdk']);
+        ['execute', 'validation', 'storage', 'trigger', 'subscription', 'strategies', 'sdk']);
     });
 
     it('should add the plugin name in logs', done => {
@@ -309,14 +309,14 @@ describe('Plugin Context', () => {
     });
 
     it('should expose a realtime accessor', () => {
-      const realtime = context.accessors.realtime;
+      const subscription = context.accessors.subscription;
 
-      should(realtime.subscribe).be.a.Function();
-      should(realtime.unsubscribe).be.a.Function();
+      should(subscription.register).be.a.Function();
+      should(subscription.unregister).be.a.Function();
     });
 
-    describe('#accessors.realtime functions', () => {
-      it('should call subscribe with the right ask and argument', async () => {
+    describe('#accessors.subscription functions', () => {
+      it('should call register with the right ask and argument', async () => {
         const customRequest = new Request(
           {
             action: 'subscribe',
@@ -333,13 +333,18 @@ describe('Plugin Context', () => {
             connectionId: 'superid',
           });
   
-        await context.accessors.realtime.subscribe(customRequest);
+        await context.accessors.subscription.register(
+          customRequest.context.connection.id,
+          customRequest.input.index,
+          customRequest.input.collection,
+          customRequest.input.body
+        );
   
         should(kuzzle.ask).be.calledWithExactly('core:realtime:subscribe', customRequest);
       });
 
-      it('should call subscribe with the right ask and argument', async () => {
-        await context.accessors.realtime.unsubscribe('connectionId', 'roomId', false);
+      it('should call unregister with the right ask and argument', async () => {
+        await context.accessors.subscription.unregister('connectionId', 'roomId', false);
         should(kuzzle.ask).be.calledWithExactly('core:realtime:unsubscribe', 'connectionId', 'roomId', false);
       });
     });

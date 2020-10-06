@@ -142,24 +142,15 @@ class FunctionalTestPlugin {
   // accessors.registerSubscription related methods ============================
 
   async registerSubscription(request) {
-    const customRequest = new Request(
-      {
-        action: request.input.action,
-        body: {
-          equals: {
-            name: 'Luca'
-          }
-        },
-        collection: 'yellow-taxi',
-        controller: request.input.controller,
-        index: 'nyc-open-data',
-      },
-      {
-        connectionId: request.context.connection.id,
-      });
-  
     const roomId = await this.context.accessors.realtime.subscribe(
-      customRequest
+      request.context.connection.id,
+      'nyc-open-data',
+      'yellow-taxi',
+      {
+        equals: {
+          name: 'Luca'
+        }
+      },
     );
   
     return {
