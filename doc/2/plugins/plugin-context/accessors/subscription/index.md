@@ -1,14 +1,14 @@
 ---
 code: true
 type: page
-title: registerSubscription
+title: subscription
 ---
 
-# `realtime`
+# `subscription`
 
 Adds or removes [real-time subscriptions](/core/2/guides/essentials/real-time) from the backend.
 
-## `subscribe`
+## `register`
 
 Registers a new realtime subscription on behalf of a client. The subscription works exactly like the one created by the [`realtime:subscribe` API endpoint](/api/controllers/realtime/subscribe/index.md). The notifications will be sent to the connection identified by the `Request` object passed to the method.
 
@@ -17,14 +17,17 @@ Registers a new realtime subscription on behalf of a client. The subscription wo
 ### Arguments
 
 ```js
-subscribe(request)
+register(connectionId, index, collection, filters)
 ```
 
 <br/>
 
 | Argument | Type | Description |
 |----------|------|-------------|
-| `request` | `Request` | The request object that contains the subscription payload |
+| `connectionId` | `String` | The connection ID of the client that will receive the notifications |
+| `index` | `String` | The index containing the collection to subscribe to |
+| `collection` | `String` | The collection to subscribe to |
+| `filters` | `Object` | The Koncorde filters object |
 
 ---
 
@@ -38,25 +41,15 @@ Resolves to the room ID associated with the registered subscription.
 
 ```js
 async subscribeToSomething(request) {
-  const customRequest = new Request(
+  const options = {};
+  const roomId = await this.context.accessors.subscription.register(
+    request.context.connection.id, 
+    'myindex', 
+    'mycollection', 
     {
-      action: request.input.action,
-      body: {
-        equals: {
-          myAttribute: 'mycollection'
-        }
-      },
-      collection: 'yellow-taxi',
-      controller: request.input.controller,
-      index: 'myindex',
-    },
-    {
-      connectionId: request.context.connection.id,
+      myAttribute: 'mycollection'
     });
-
-  const options = {}
-  const roomId = await this.context.accessors.realtime.subscribe(customRequest);
-  return { roomId }
+  return { roomId };
 }
 ```
 
@@ -81,7 +74,7 @@ Removes a realtime subscription on an existing `roomId` and `connectionId`. The 
 ### Arguments
 
 ```js
-unsubscribe(connectionId, roomId, notify)
+unregister(connectionId, roomId, notify)
 ```
 
 <br/>
@@ -104,11 +97,10 @@ Resolves to void.
 
 ```js
 async unregisterSubscription(request) {
-  const connectionId = request.input.body.roomId || 
-          request.context.connection.id,
-    roomId = request.input.body.roomId;
+  const connectionId = request.context.connection.id;
+  const roomId = request.input.body.roomId;
 
-  await this.context.accessors.realtime.unsubscribe(connectionId, roomId, false);
+  await this.context.accessors.subscription.unregister(connectionId, roomId, false);
 
   return {
     acknowledged: 'OK'
