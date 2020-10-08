@@ -101,7 +101,7 @@ describe('#mutex', () => {
       }
 
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(true);
-      clock.tick(1000);
+      clock.restore();
       await should(mutexPromise).be.fulfilledWith(true);
     });
 
@@ -121,7 +121,7 @@ describe('#mutex', () => {
       }
 
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(true);
-      clock.runAll();
+      clock.restore();
 
       await should(mutexPromise).fulfilledWith(true);
     });
