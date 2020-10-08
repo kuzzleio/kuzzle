@@ -7,7 +7,7 @@ const { InternalError: KuzzleInternalError } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
-describe.only('#mutex', () => {
+describe('#mutex', () => {
   let Mutex = require('../../lib/util/mutex');
   let kuzzle;
   let clock;
