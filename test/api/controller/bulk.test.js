@@ -248,7 +248,7 @@ describe('Test the bulk controller', () => {
         });
     });
 
-    it('should call deleteByQuery with fetch=false', async () => {
+    it('should call deleteByQuery with fetch=false and size=-1', async () => {
       const response = await controller.deleteByQuery(request);
 
       should(kuzzle.ask).be.calledWith(
@@ -256,7 +256,7 @@ describe('Test the bulk controller', () => {
         index,
         collection,
         query,
-        { refresh: 'wait_for', fetch: false });
+        { refresh: 'wait_for', fetch: false, size: -1 });
 
       should(response.deleted).be.eql(2);
     });
