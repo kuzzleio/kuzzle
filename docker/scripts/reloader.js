@@ -79,16 +79,13 @@ function startProcess () {
 
     console.log(clc.red(`[RELOADER] Process exited with ${msg}. Waiting for a file change to restart it.`));
     childProcess = null;
+    state = stateEnum.STOPPED;
   });
 
   state = stateEnum.RUNNING;
 }
 
 async function stopProcess () {
-  if (childProcess === null) {
-    state = stateEnum.STOPPED;
-  }
-
   if (state !== stateEnum.RUNNING) {
     return;
   }
