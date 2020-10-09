@@ -23,8 +23,8 @@ describe('Test: security controller - profiles', () => {
       {controller: 'security'},
       {user: {_id: 'userId'}});
     kuzzle = new KuzzleMock();
-    kuzzle.ask.withArgs('core:store:private:document:get').resolves({});
-    kuzzle.ask.withArgs('core:store:private:mappings:get').resolves({
+    kuzzle.ask.withArgs('core:storage:private:document:get').resolves({});
+    kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
       internalIndex: {
         mappings: {
           profiles: {
@@ -52,13 +52,13 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should update the profile mapping', async () => {
-      kuzzle.ask.withArgs('core:store:private:mappings:update').resolves(foo);
+      kuzzle.ask.withArgs('core:storage:private:mappings:update').resolves(foo);
       request.input.body = foo;
 
       const response = await securityController.updateProfileMapping(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:mappings:update',
+        'core:storage:private:mappings:update',
         kuzzle.internalIndex.index,
         'profiles',
         request.input.body);
@@ -70,14 +70,14 @@ describe('Test: security controller - profiles', () => {
 
   describe('#getProfileMapping', () => {
     it('should fulfill with a response object', async () => {
-      kuzzle.ask.withArgs('core:store:private:mappings:get').resolves({
+      kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
         properties: { foo: 'bar' },
       });
 
       const response = await securityController.getProfileMapping(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:mappings:get',
+        'core:storage:private:mappings:get',
         kuzzle.internalIndex.index,
         'profiles');
 

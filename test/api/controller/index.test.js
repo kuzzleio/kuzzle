@@ -47,10 +47,10 @@ describe('IndexController', () => {
 
       indexController = new IndexController(kuzzle);
 
-      kuzzle.ask.withArgs('core:store:public:index:list').resolves([
+      kuzzle.ask.withArgs('core:storage:public:index:list').resolves([
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'
       ]);
-      kuzzle.ask.withArgs('core:store:public:index:mDelete').resolves(['a', 'e', 'i']);
+      kuzzle.ask.withArgs('core:storage:public:index:mDelete').resolves(['a', 'e', 'i']);
     });
 
     it('should list indexes from storage engine, filter authorized ones and respond', async () => {
@@ -65,7 +65,7 @@ describe('IndexController', () => {
       should(isActionAllowedStub).have.callCount(5);
 
       should(kuzzle.ask)
-        .be.calledWith('core:store:public:index:mDelete', ['a', 'e', 'i']);
+        .be.calledWith('core:storage:public:index:mDelete', ['a', 'e', 'i']);
 
       should(response).match({ deleted: ['a', 'e', 'i'] });
     });
@@ -75,7 +75,7 @@ describe('IndexController', () => {
     it('should trigger the proper methods and return a valid response', async () => {
       const response = await indexController.create(request);
 
-      should(kuzzle.ask).be.calledWith('core:store:public:index:create', index);
+      should(kuzzle.ask).be.calledWith('core:storage:public:index:create', index);
 
       should(response).be.undefined();
     });
@@ -85,7 +85,7 @@ describe('IndexController', () => {
     it('should trigger the proper methods and return a valid response', async () => {
       const response = await indexController.delete(request);
 
-      should(kuzzle.ask).be.calledWith('core:store:public:index:delete', index);
+      should(kuzzle.ask).be.calledWith('core:storage:public:index:delete', index);
 
       should(response).match({
         acknowledged: true
@@ -96,12 +96,12 @@ describe('IndexController', () => {
   describe('#list', () => {
     it('should trigger the proper methods and return a valid response', async () => {
       kuzzle.ask
-        .withArgs('core:store:public:index:list')
+        .withArgs('core:storage:public:index:list')
         .resolves(['a', 'b', 'c']);
 
       const response = await indexController.list(request);
 
-      should(kuzzle.ask).be.calledWith('core:store:public:index:list');
+      should(kuzzle.ask).be.calledWith('core:storage:public:index:list');
 
       should(response).match({
         indexes: ['a', 'b', 'c']
@@ -111,11 +111,11 @@ describe('IndexController', () => {
 
   describe('#exists', () => {
     it('should trigger the proper methods and return a valid response', async () => {
-      kuzzle.ask.withArgs('core:store:public:index:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
 
       const response = await indexController.exists(request);
 
-      should(kuzzle.ask).be.calledWith('core:store:public:index:exist', index);
+      should(kuzzle.ask).be.calledWith('core:storage:public:index:exist', index);
 
       should(response).be.eql(true);
     });

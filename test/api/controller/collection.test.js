@@ -54,13 +54,13 @@ describe('Test: collection controller', () => {
       request.input.body = mappings;
 
       kuzzle.ask
-        .withArgs('core:store:public:mappings:update')
+        .withArgs('core:storage:public:mappings:update')
         .resolves(mappings);
 
       const response = await collectionController.updateMapping(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:mappings:update',
+        'core:storage:public:mappings:update',
         index,
         collection,
         mappings);
@@ -81,12 +81,12 @@ describe('Test: collection controller', () => {
         properties: 'properties'
       };
 
-      kuzzle.ask.withArgs('core:store:public:mappings:get').resolves(mappings);
+      kuzzle.ask.withArgs('core:storage:public:mappings:get').resolves(mappings);
 
       const response = await collectionController.getMapping(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:mappings:get',
+        'core:storage:public:mappings:get',
         index,
         collection,
         { includeKuzzleMeta: false });
@@ -102,12 +102,12 @@ describe('Test: collection controller', () => {
       };
       request.input.args.includeKuzzleMeta = true;
 
-      kuzzle.ask.withArgs('core:store:public:mappings:get').resolves(mappings);
+      kuzzle.ask.withArgs('core:storage:public:mappings:get').resolves(mappings);
 
       await collectionController.getMapping(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:mappings:get',
+        'core:storage:public:mappings:get',
         index,
         collection,
         { includeKuzzleMeta: true });
@@ -119,7 +119,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.truncate(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:collection:truncate',
+        'core:storage:public:collection:truncate',
         index,
         collection);
 
@@ -131,7 +131,7 @@ describe('Test: collection controller', () => {
 
   describe('#getSpecifications', () => {
     it('should trigger the proper methods and return a valid response', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:get').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:get').resolves({
         _source: {
           some: 'validation',
         },
@@ -140,7 +140,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.getSpecifications(request);
 
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:get',
+        'core:storage:private:document:get',
         kuzzle.internalIndex.index,
         'validations',
         `${index}#${collection}`);
@@ -152,7 +152,7 @@ describe('Test: collection controller', () => {
 
     it('should give a meaningful message if there is no specifications', () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .rejects(new NotFoundError('not found'));
 
       return should(collectionController.getSpecifications(request))
@@ -175,7 +175,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should call internalIndex with the right data', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [{_id: 'bar'}],
         scrollId: 'foobar',
         total: 123
@@ -195,7 +195,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.searchSpecifications(request);
 
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:search',
+        'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         'validations',
         request.input.body,
@@ -225,7 +225,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should call internalIndex with the right data', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:scroll').resolves({
         hits: [{ _id: 'bar' }],
         scrollId: 'foobar',
         total: 123
@@ -236,7 +236,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.scrollSpecifications(request);
 
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:scroll',
+        'core:storage:private:document:scroll',
         'foobar',
         collectionController.defaultScrollTTL);
 
@@ -248,7 +248,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should handle the optional scroll argument', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:scroll').resolves({
         hits: [{ _id: 'bar' }],
         scrollId: 'foobar',
         total: 123
@@ -259,7 +259,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.scrollSpecifications(request);
 
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:scroll',
+        'core:storage:private:document:scroll',
         'foobar',
         'qux');
 
@@ -289,14 +289,14 @@ describe('Test: collection controller', () => {
       const response = await collectionController.updateSpecifications(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:collection:refresh',
+        'core:storage:private:collection:refresh',
         kuzzle.internalIndex.index,
         'validations');
 
       should(kuzzle.validation.curateSpecification).be.called();
 
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         kuzzle.internalIndex.index,
         'validations',
         `${index}#${collection}`,
@@ -382,13 +382,13 @@ describe('Test: collection controller', () => {
       const response = await collectionController.deleteSpecifications(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:document:delete',
+        'core:storage:private:document:delete',
         kuzzle.internalIndex.index,
         'validations',
         `${index}#${collection}`);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:collection:refresh',
+        'core:storage:private:collection:refresh',
         kuzzle.internalIndex.index,
         'validations');
 
@@ -405,7 +405,7 @@ describe('Test: collection controller', () => {
 
     beforeEach(() => {
       kuzzle.ask
-        .withArgs('core:store:public:collection:list')
+        .withArgs('core:storage:public:collection:list')
         .resolves([ 'col', 'loc' ]);
 
       realtimeListCollectionsStub = kuzzle.ask
@@ -420,7 +420,7 @@ describe('Test: collection controller', () => {
         'core:realtime:collections:get',
         request.input.resource.index);
 
-      should(kuzzle.ask).calledWith('core:store:public:collection:list', index);
+      should(kuzzle.ask).calledWith('core:storage:public:collection:list', index);
 
       should(response.type).be.exactly('all');
       should(response.collections).be.an.Array();
@@ -448,7 +448,7 @@ describe('Test: collection controller', () => {
       should(response).be.instanceof(Object);
       should(response.type).be.exactly('stored');
       should(realtimeListCollectionsStub).not.be.called();
-      should(kuzzle.ask).be.calledWith('core:store:public:collection:list');
+      should(kuzzle.ask).be.calledWith('core:storage:public:collection:list');
     });
 
     it('should only return realtime collections with type = realtime', async () => {
@@ -462,7 +462,7 @@ describe('Test: collection controller', () => {
       should(realtimeListCollectionsStub)
         .calledWith('core:realtime:collections:get', 'index');
 
-      should(kuzzle.ask.withArgs('core:store:public:collection:list'))
+      should(kuzzle.ask.withArgs('core:storage:public:collection:list'))
         .not.be.called();
     });
 
@@ -470,7 +470,7 @@ describe('Test: collection controller', () => {
       request = new Request({index: 'index', type: 'all', from: 2, size: 3});
 
       kuzzle.ask
-        .withArgs('core:store:public:collection:list')
+        .withArgs('core:storage:public:collection:list')
         .resolves(['astored', 'bstored', 'cstored', 'dstored', 'estored']);
 
       realtimeListCollectionsStub.resolves([
@@ -492,13 +492,13 @@ describe('Test: collection controller', () => {
       should(response.type).be.exactly('all');
       should(realtimeListCollectionsStub)
         .calledWith('core:realtime:collections:get', 'index');
-      should(kuzzle.ask).calledWith('core:store:public:collection:list');
+      should(kuzzle.ask).calledWith('core:storage:public:collection:list');
     });
 
     it('should return a portion of the collection list if from is specified', async () => {
       request = new Request({index: 'index', type: 'all', from: 8});
 
-      kuzzle.ask.withArgs('core:store:public:collection:list').resolves([
+      kuzzle.ask.withArgs('core:storage:public:collection:list').resolves([
         'astored',
         'bstored',
         'cstored',
@@ -524,13 +524,13 @@ describe('Test: collection controller', () => {
       should(response).be.instanceof(Object);
       should(realtimeListCollectionsStub)
         .calledWith('core:realtime:collections:get', 'index');
-      should(kuzzle.ask).be.calledWith('core:store:public:collection:list');
+      should(kuzzle.ask).be.calledWith('core:storage:public:collection:list');
     });
 
     it('should return a portion of the collection list if size is specified', async () => {
       request = new Request({index: 'index', type: 'all', size: 2});
 
-      kuzzle.ask.withArgs('core:store:public:collection:list').resolves([
+      kuzzle.ask.withArgs('core:storage:public:collection:list').resolves([
         'astored',
         'bstored',
         'cstored',
@@ -556,12 +556,12 @@ describe('Test: collection controller', () => {
       should(response.type).be.exactly('all');
       should(realtimeListCollectionsStub)
         .calledWithMatch('core:realtime:collections:get', 'index');
-      should(kuzzle.ask).be.calledWith('core:store:public:collection:list');
+      should(kuzzle.ask).be.calledWith('core:storage:public:collection:list');
     });
 
     it('should reject if getting stored collections fails', () => {
       kuzzle.ask
-        .withArgs('core:store:public:collection:list')
+        .withArgs('core:storage:public:collection:list')
         .rejects(new Error('foobar'));
 
       request = new Request({index: 'index', type: 'stored'});
@@ -570,7 +570,7 @@ describe('Test: collection controller', () => {
 
     it('should reject if getting all collections fails', () => {
       kuzzle.ask
-        .withArgs('core:store:public:collection:list')
+        .withArgs('core:storage:public:collection:list')
         .rejects(new Error('foobar'));
 
       request = new Request({index: 'index', type: 'all'});
@@ -580,13 +580,13 @@ describe('Test: collection controller', () => {
 
   describe('#exists', () => {
     it('should forward to the store module', async () => {
-      kuzzle.ask.withArgs('core:store:public:collection:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
 
       const response = await collectionController.exists(request);
 
       should(response).match(true);
       should(kuzzle.ask).calledWith(
-        'core:store:public:collection:exist',
+        'core:storage:public:collection:exist',
         request.input.resource.index,
         request.input.resource.collection);
     });
@@ -598,7 +598,7 @@ describe('Test: collection controller', () => {
 
       should(response).be.null();
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:collection:refresh',
+        'core:storage:public:collection:refresh',
         index,
         collection);
     });
@@ -609,7 +609,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.create(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:collection:create',
+        'core:storage:public:collection:create',
         index,
         collection);
 
@@ -625,7 +625,7 @@ describe('Test: collection controller', () => {
       const response = await collectionController.delete(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:collection:delete',
+        'core:storage:public:collection:delete',
         index,
         collection);
 

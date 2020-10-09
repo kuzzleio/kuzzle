@@ -464,7 +464,7 @@ describe('Test: security/roleRepository', () => {
       sinon.stub(roleRepository, 'loadOneFromDatabase').resolves(fakeRole);
 
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .resolves({});
 
       await roleRepository.validateAndSaveRole(fakeRole);

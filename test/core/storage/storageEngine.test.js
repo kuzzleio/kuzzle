@@ -52,10 +52,10 @@ describe('#core/storage/StorageEngine', () => {
 
       kuzzle.ask.restore();
 
-      await kuzzle.ask('core:store:index:isValid', 'foo');
+      await kuzzle.ask('core:storage:index:isValid', 'foo');
       should(storageEngine.public.client.isIndexNameValid).calledWith('foo');
 
-      await kuzzle.ask('core:store:collection:isValid', 'bar');
+      await kuzzle.ask('core:storage:collection:isValid', 'bar');
       should(storageEngine.public.client.isCollectionNameValid).calledWith('bar');
     });
 

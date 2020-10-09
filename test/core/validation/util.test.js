@@ -338,7 +338,7 @@ describe('Test: validation utilities', () => {
 
     it('should return the default configuration if nothing is returned from internal engine', async () => {
       kuzzle.config.validation = genericMock;
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [],
       });
 
@@ -347,14 +347,14 @@ describe('Test: validation utilities', () => {
       should(result).be.deepEqual(kuzzle.config.validation);
 
       should(kuzzle.ask).calledWithMatch(
-        'core:store:private:document:search',
+        'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         'validations');
     });
 
     it('should return an empty object if nothing is returned from internal engine and there is no configuration', async () => {
       delete kuzzle.config.validation;
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [],
       });
 
@@ -412,7 +412,7 @@ describe('Test: validation utilities', () => {
       };
 
       kuzzle.ask
-        .withArgs('core:store:private:document:search')
+        .withArgs('core:storage:private:document:search')
         .resolves(internalEngineResponse);
 
       const result = await getValidationConfiguration(kuzzle);

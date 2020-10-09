@@ -52,7 +52,7 @@ describe('core/plugin/pluginRepository', () => {
       await pluginRepository.create(someObject);
 
       const args = kuzzle.ask
-        .withArgs('core:store:private:document:create')
+        .withArgs('core:storage:private:document:create')
         .firstCall
         .args;
 
@@ -68,7 +68,7 @@ describe('core/plugin/pluginRepository', () => {
       await pluginRepository.createOrReplace(someObject);
 
       const args = kuzzle.ask
-        .withArgs('core:store:private:document:createOrReplace')
+        .withArgs('core:storage:private:document:createOrReplace')
         .firstCall
         .args;
 
@@ -84,7 +84,7 @@ describe('core/plugin/pluginRepository', () => {
       await pluginRepository.replace(someObject);
 
       const args = kuzzle.ask
-        .withArgs('core:store:private:document:replace')
+        .withArgs('core:storage:private:document:replace')
         .firstCall
         .args;
 
@@ -100,7 +100,7 @@ describe('core/plugin/pluginRepository', () => {
       await pluginRepository.update(someObject);
 
       const args = kuzzle.ask
-        .withArgs('core:store:private:document:update')
+        .withArgs('core:storage:private:document:update')
         .firstCall
         .args;
 
@@ -116,7 +116,7 @@ describe('core/plugin/pluginRepository', () => {
       await pluginRepository.delete('someId', {refresh: 'wait_for'});
 
       const args = kuzzle.ask
-        .withArgs('core:store:private:document:delete')
+        .withArgs('core:storage:private:document:delete')
         .firstCall
         .args;
 

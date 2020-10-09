@@ -154,14 +154,14 @@ describe('AdminController', () => {
 
     it('remove all indexes handled by Kuzzle', async () => {
       kuzzle.ask
-        .withArgs('core:store:public:index:list')
+        .withArgs('core:storage:public:index:list')
         .resolves(['a', 'b', 'c']);
 
       const response = await adminController.resetDatabase(request);
 
-      should(kuzzle.ask).be.calledWith('core:store:public:index:list');
+      should(kuzzle.ask).be.calledWith('core:storage:public:index:list');
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:index:mDelete',
+        'core:storage:public:index:mDelete',
         ['a', 'b', 'c']);
 
       should(response).match({ acknowledge: true });
@@ -230,7 +230,7 @@ describe('AdminController', () => {
       await adminController.loadMappings(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:mappings:import',
+        'core:storage:public:mappings:import',
         request.input.body);
     });
   });
@@ -245,7 +245,7 @@ describe('AdminController', () => {
       await adminController.loadFixtures(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:import',
+        'core:storage:public:document:import',
         request.input.body);
     });
 
@@ -253,7 +253,7 @@ describe('AdminController', () => {
       const err = new Error('err');
 
       kuzzle.ask
-        .withArgs('core:store:public:document:import')
+        .withArgs('core:storage:public:document:import')
         .rejects(err);
 
       request.input.args.refresh = false;

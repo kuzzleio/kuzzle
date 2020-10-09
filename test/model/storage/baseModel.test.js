@@ -102,7 +102,7 @@ describe('BaseModel', () => {
 
   describe('BaseModel.load', () => {
     it('should load and instantiate a model from database', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:get').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:get').resolves({
         _id: 'mylehuong' ,
         _source: {
           name: 'mylehuong',
@@ -119,7 +119,7 @@ describe('BaseModel', () => {
       });
       should(model.__persisted).be.true();
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:document:get',
+        'core:storage:private:document:get',
         kuzzle.internalIndex.index,
         'models',
         'mylehuong');
@@ -136,7 +136,7 @@ describe('BaseModel', () => {
       ];
 
       kuzzle.ask
-        .withArgs('core:store:private:document:deleteByQuery')
+        .withArgs('core:storage:private:document:deleteByQuery')
         .resolves({ documents });
     });
 
@@ -144,7 +144,7 @@ describe('BaseModel', () => {
       await Model.deleteByQuery({ match_all: {} });
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:deleteByQuery',
+        'core:storage:private:document:deleteByQuery',
         kuzzle.internalIndex.index,
         'models',
         { match_all: {} });
@@ -156,7 +156,7 @@ describe('BaseModel', () => {
       await Model.deleteByQuery({ match_all: {} }, { refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:collection:refresh',
+        'core:storage:private:collection:refresh',
         kuzzle.internalIndex.index,
         'models');
     });
@@ -164,7 +164,7 @@ describe('BaseModel', () => {
 
   describe('BaseModel.search', () => {
     it('should call search and return instantiated models', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [
           { _id: 'mylehuong', _source: { location: 'Saigon' } },
           { _id: 'thehive', _source: { location: 'Hanoi' } },
@@ -176,7 +176,7 @@ describe('BaseModel', () => {
         { scroll: '5s' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:document:search',
+        'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         'models',
         { query: { match_all: {} } },
@@ -211,7 +211,7 @@ describe('BaseModel', () => {
     const _source = { location: 'Saigon' };
 
     beforeEach(() => {
-      kuzzle.ask.withArgs('core:store:private:document:create').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:create').resolves({
         _id,
         _source,
       });
@@ -223,7 +223,7 @@ describe('BaseModel', () => {
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         kuzzle.internalIndex.index,
         'models',
         { location: 'Saigon' },
@@ -237,7 +237,7 @@ describe('BaseModel', () => {
       await model.save();
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         kuzzle.internalIndex.index,
         'models',
         { location: 'Saigon' },
@@ -252,7 +252,7 @@ describe('BaseModel', () => {
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:document:update',
+        'core:storage:private:document:update',
         kuzzle.internalIndex.index,
         'models',
         'mylehuong',
@@ -272,7 +272,7 @@ describe('BaseModel', () => {
       await model.delete({ refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:private:document:delete',
+        'core:storage:private:document:delete',
         kuzzle.internalIndex.index,
         'models',
         'mylehuong',
@@ -286,7 +286,7 @@ describe('BaseModel', () => {
 
       await model.delete();
 
-      should(kuzzle.ask).not.be.calledWith('core:store:private:document:delete');
+      should(kuzzle.ask).not.be.calledWith('core:storage:private:document:delete');
     });
   });
 

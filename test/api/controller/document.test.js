@@ -40,7 +40,7 @@ describe('DocumentController', () => {
   describe('#search', () => {
     it('should forward to the store module', async () => {
       kuzzle.ask
-        .withArgs('core:store:public:document:search')
+        .withArgs('core:storage:public:document:search')
         .resolves({
           aggregations: 'aggregations',
           hits: 'hits',
@@ -57,7 +57,7 @@ describe('DocumentController', () => {
       const response = await documentController.search(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:search',
+        'core:storage:public:document:search',
         index,
         collection,
         { query: { bar: 'bar '} },
@@ -102,7 +102,7 @@ describe('DocumentController', () => {
 
     it('should reject in case of error', () => {
       kuzzle.ask
-        .withArgs('core:store:public:document:search')
+        .withArgs('core:storage:public:document:search')
         .rejects(new Error('foobar'));
 
       return should(documentController.search(request)).be.rejectedWith('foobar');
@@ -112,7 +112,7 @@ describe('DocumentController', () => {
   describe('#scroll', () => {
     it('should forward to the store module', async () => {
       kuzzle.ask
-        .withArgs('core:store:public:document:scroll')
+        .withArgs('core:storage:public:document:scroll')
         .resolves({
           hits: 'hits',
           other: 'other',
@@ -127,7 +127,7 @@ describe('DocumentController', () => {
       const response = await documentController.scroll(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:scroll',
+        'core:storage:public:document:scroll',
         'SomeScrollIdentifier',
         { scrollTTL: '1m' });
 
@@ -144,7 +144,7 @@ describe('DocumentController', () => {
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
       kuzzle.ask
-        .withArgs('core:store:public:document:scroll')
+        .withArgs('core:storage:public:document:scroll')
         .rejects(new Error('foobar'));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');
@@ -153,13 +153,13 @@ describe('DocumentController', () => {
 
   describe('#exists', () => {
     it('should forward to the store module', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:document:exist').resolves(true);
       request.input.resource._id = 'foo';
 
       const response = await documentController.exists(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:exist',
+        'core:storage:public:document:exist',
         index,
         collection,
         'foo');
@@ -170,7 +170,7 @@ describe('DocumentController', () => {
 
   describe('#get', () => {
     it('should forward to the store module', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:get').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves(({
         _id: '_id',
         _version: '_version',
         _source: '_source',
@@ -182,7 +182,7 @@ describe('DocumentController', () => {
       const response = await documentController.get(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:get',
+        'core:storage:public:document:get',
         index,
         collection,
         'foo');
@@ -201,7 +201,7 @@ describe('DocumentController', () => {
         ids: ['foo', 'bar']
       };
 
-      kuzzle.ask.withArgs('core:store:public:document:mGet').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
         items: [
           { _id: 'id', _source: 'source', _version: 1, some: 'some' },
           { _id: 'id2', _source: 'source', _version: 1, some: 'some' }
@@ -214,7 +214,7 @@ describe('DocumentController', () => {
       const response = await documentController.mGet(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:mGet',
+        'core:storage:public:document:mGet',
         index,
         collection,
         ['foo', 'bar']);
@@ -237,7 +237,7 @@ describe('DocumentController', () => {
     });
 
     it('should handle errors if some documents are missing', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:mGet').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
         items: [
           { _id: 'id', _source: 'source', _version: 1, some: 'some' }
         ],
@@ -257,13 +257,13 @@ describe('DocumentController', () => {
 
   describe('#count', () => {
     it('should forward to the store module', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:count').resolves(42);
+      kuzzle.ask.withArgs('core:storage:public:document:count').resolves(42);
       request.input.body = { query: {} };
 
       const response = await documentController.count(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:count',
+        'core:storage:public:document:count',
         index,
         collection,
         { query: {} });
@@ -279,7 +279,7 @@ describe('DocumentController', () => {
       request.input.body = content;
       kuzzle.validation.validate.resolvesArg(0);
 
-      kuzzle.ask.withArgs('core:store:public:document:create').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:create').resolves({
         _id: '_id',
         _version: '_version',
         _source: '_source'
@@ -294,7 +294,7 @@ describe('DocumentController', () => {
       const response = await documentController.create(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:create',
+        'core:storage:public:document:create',
         index,
         collection,
         content,
@@ -319,7 +319,7 @@ describe('DocumentController', () => {
       await documentController.create(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:create',
+        'core:storage:public:document:create',
         index,
         collection,
         content,
@@ -346,7 +346,7 @@ describe('DocumentController', () => {
         { _id: '_id3', _source: '_source', _version: '_version', created: true, result: 'created' }
       ];
 
-      kuzzle.ask.withArgs('core:store:public:document:mCreate').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
         items,
         errors: []
       }));
@@ -362,7 +362,7 @@ describe('DocumentController', () => {
         actionEnum.CREATE);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:mCreate',
+        'core:storage:public:document:mCreate',
         index,
         collection,
         documents,
@@ -384,7 +384,7 @@ describe('DocumentController', () => {
       await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:mCreate',
+        'core:storage:public:document:mCreate',
         index,
         collection,
         documents,
@@ -392,7 +392,7 @@ describe('DocumentController', () => {
     });
 
     it('should handle errors if some actions failed', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:mCreate').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
         items,
         errors: [
           {
@@ -451,7 +451,7 @@ describe('DocumentController', () => {
       kuzzle.validation.validate.resolvesArg(0);
 
       kuzzle.ask
-        .withArgs('core:store:public:document:createOrReplace')
+        .withArgs('core:storage:public:document:createOrReplace')
         .resolves({
           _id: '_id',
           _version: '_version',
@@ -469,7 +469,7 @@ describe('DocumentController', () => {
       const response = await documentController.createOrReplace(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:createOrReplace',
+        'core:storage:public:document:createOrReplace',
         index,
         collection,
         'foobar',
@@ -496,7 +496,7 @@ describe('DocumentController', () => {
       await documentController.createOrReplace(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:createOrReplace',
+        'core:storage:public:document:createOrReplace',
         index,
         collection,
         'foobar',
@@ -515,7 +515,7 @@ describe('DocumentController', () => {
 
       kuzzle.validation.validate.resolvesArg(0);
 
-      kuzzle.ask.withArgs('core:store:public:document:update').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:update').resolves({
         _id: '_id',
         _version: '_version',
         _source: { ...content, name: 'gordon' }
@@ -532,7 +532,7 @@ describe('DocumentController', () => {
       const response = await documentController.update(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:update',
+        'core:storage:public:document:update',
         index,
         collection,
         'foobar',
@@ -562,7 +562,7 @@ describe('DocumentController', () => {
       await documentController.update(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:update',
+        'core:storage:public:document:update',
         index,
         collection,
         'foobar',
@@ -594,7 +594,7 @@ describe('DocumentController', () => {
       };
 
       kuzzle.ask
-        .withArgs('core:store:public:document:updateByQuery')
+        .withArgs('core:storage:public:document:updateByQuery')
         .resolves(esResponse);
     });
 
@@ -613,7 +613,7 @@ describe('DocumentController', () => {
       const response = await documentController.updateByQuery(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:updateByQuery',
+        'core:storage:public:document:updateByQuery',
         index,
         collection,
         { match: { foo: 'bar' } },
@@ -648,7 +648,7 @@ describe('DocumentController', () => {
       const response = await documentController.updateByQuery(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:updateByQuery',
+        'core:storage:public:document:updateByQuery',
         index,
         collection,
         { match: { foo: 'bar' } },
@@ -719,7 +719,7 @@ describe('DocumentController', () => {
 
       kuzzle.validation.validate.resolvesArg(0);
 
-      kuzzle.ask.withArgs('core:store:public:document:replace').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:replace').resolves({
         _id: '_id',
         _version: '_version',
         _source: '_source'
@@ -735,7 +735,7 @@ describe('DocumentController', () => {
       const response = await documentController.replace(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:replace',
+        'core:storage:public:document:replace',
         index,
         collection,
         'foobar',
@@ -761,7 +761,7 @@ describe('DocumentController', () => {
       await documentController.replace(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:replace',
+        'core:storage:public:document:replace',
         index,
         collection,
         'foobar',
@@ -773,7 +773,7 @@ describe('DocumentController', () => {
   describe('#delete', () => {
     it('should forward to the store module and notify', async () => {
       request.input.args.refresh = 'wait_for';
-      kuzzle.ask.withArgs('core:store:public:document:get').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foobar',
         _source: '_source'
       });
@@ -782,7 +782,7 @@ describe('DocumentController', () => {
       const response = await documentController.delete(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:delete',
+        'core:storage:public:document:delete',
         index,
         collection,
         'foobar',
@@ -798,7 +798,7 @@ describe('DocumentController', () => {
     });
 
     it('should forward to the store module, notify and retrieve document source', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:get').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foobar',
         _source: '_source'
       });
@@ -808,7 +808,7 @@ describe('DocumentController', () => {
       const response = await documentController.delete(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:delete',
+        'core:storage:public:document:delete',
         index,
         collection,
         'foobar');
@@ -838,7 +838,7 @@ describe('DocumentController', () => {
         { _id: 'id3', _source: '_source3' }
       ];
 
-      kuzzle.ask.withArgs('core:store:public:document:mDelete').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mDelete').resolves(({
         documents,
         errors: []
       }));
@@ -850,7 +850,7 @@ describe('DocumentController', () => {
       const response = await documentController.mDelete(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:mDelete',
+        'core:storage:public:document:mDelete',
         index,
         collection,
         ids,
@@ -869,7 +869,7 @@ describe('DocumentController', () => {
     });
 
     it('should handle errors if some actions failed', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:mDelete').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mDelete').resolves(({
         documents,
         errors: [
           { id: 'id1', reason: 'reason' }
@@ -889,7 +889,7 @@ describe('DocumentController', () => {
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
-      kuzzle.ask.withArgs('core:store:public:document:deleteByQuery').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:deleteByQuery').resolves({
         documents: [
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }
@@ -907,7 +907,7 @@ describe('DocumentController', () => {
       const response = await documentController.deleteByQuery(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:deleteByQuery',
+        'core:storage:public:document:deleteByQuery',
         index,
         collection,
         { foo: 'bar' },
@@ -937,7 +937,7 @@ describe('DocumentController', () => {
       const response = await documentController.deleteByQuery(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:deleteByQuery',
+        'core:storage:public:document:deleteByQuery',
         index,
         collection,
         { foo: 'bar' },

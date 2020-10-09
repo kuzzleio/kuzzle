@@ -38,7 +38,7 @@ describe('Test: repositories/repository', () => {
   describe('#loadOneFromDatabase', () => {
     it('should reject for an non existing id', () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .rejects(new NotFoundError('Not found'));
 
       return should(repository.loadOneFromDatabase(-9999))
@@ -47,7 +47,7 @@ describe('Test: repositories/repository', () => {
 
     it('should reject the promise in case of error', () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .rejects(new KuzzleInternalError('error'));
 
       return should(repository.loadOneFromDatabase('error'))
@@ -56,7 +56,7 @@ describe('Test: repositories/repository', () => {
 
     it('should return a valid ObjectConstructor instance if found', async () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .resolves(dbPojo);
 
       const result = await repository.loadOneFromDatabase('persisted');
@@ -69,7 +69,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#loadMultiFromDatabase', () => {
     it('should return an empty array for an non existing id', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:mGet').resolves({
         items: [],
       });
 
@@ -79,7 +79,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a list of plain object', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:mGet').resolves({
         items: [dbPojo, dbPojo],
       });
 
@@ -98,7 +98,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should handle list of objects as an argument', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:mGet').resolves({
         items: [dbPojo, dbPojo],
       });
 
@@ -117,7 +117,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should respond with an empty array if no result found', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:mGet').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:mGet').resolves({
         items: [],
       });
 
@@ -176,7 +176,7 @@ describe('Test: repositories/repository', () => {
 
     it('should reject for a non-existing id', () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .rejects(new NotFoundError('Not found'));
 
       return should(repository.load(-9999)).rejectedWith(NotFoundError, {
@@ -186,7 +186,7 @@ describe('Test: repositories/repository', () => {
 
     it('should reject the promise in case of error', () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .rejects(new KuzzleInternalError('test'));
 
       return should(repository.load('error'))
@@ -204,7 +204,7 @@ describe('Test: repositories/repository', () => {
 
     it('should return a valid ObjectConstructor instance if found', async () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .resolves(dbPojo);
 
       const result = await repository.load('persisted');
@@ -228,7 +228,7 @@ describe('Test: repositories/repository', () => {
 
     it('should return a valid ObjectConstructor instance if found only in the store', async () => {
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .resolves(dbPojo);
 
       const result = await repository.load('uncached');
@@ -242,7 +242,7 @@ describe('Test: repositories/repository', () => {
       sinon.stub(repository, 'loadFromCache');
       repository.cacheDb = cacheDbEnum.NONE;
       kuzzle.ask
-        .withArgs('core:store:private:document:get')
+        .withArgs('core:storage:private:document:get')
         .resolves(dbPojo);
 
       const result = await repository.load('no-cache');
@@ -267,7 +267,7 @@ describe('Test: repositories/repository', () => {
       await repository.persistToDatabase(object);
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         kuzzle.internalIndex.index,
         repository.collection,
         'someId',
@@ -280,7 +280,7 @@ describe('Test: repositories/repository', () => {
       await repository.deleteFromDatabase('someId');
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:delete',
+        'core:storage:private:document:delete',
         kuzzle.internalIndex.index,
         repository.collection,
         'someId');
@@ -318,7 +318,7 @@ describe('Test: repositories/repository', () => {
         repository.getCacheKey('someId'));
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:delete',
+        'core:storage:private:document:delete',
         kuzzle.internalIndex.index,
         repository.collection,
         'someId');
@@ -426,7 +426,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#search', () => {
     it('should return a list from database', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [dbPojo],
         total: 1,
       });
@@ -437,7 +437,7 @@ describe('Test: repositories/repository', () => {
       should(response.hits).be.an.Array();
       should(response.total).be.exactly(1);
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:search',
+        'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         repository.collection,
         {query:'noquery'},
@@ -445,7 +445,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should inject back the scroll id, if there is one', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [dbPojo],
         scrollId: 'foobar',
         total: 1,
@@ -462,7 +462,7 @@ describe('Test: repositories/repository', () => {
       should(response.total).be.exactly(1);
       should(response.scrollId).be.eql('foobar');
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:search',
+        'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         repository.collection,
         { query:'noquery' },
@@ -470,7 +470,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should return a list if no hits', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [],
         total: 0,
       });
@@ -486,7 +486,7 @@ describe('Test: repositories/repository', () => {
     it('should be rejected with an error if something goes wrong', () => {
       const error = new Error('Mocked error');
       kuzzle.ask
-        .withArgs('core:store:private:document:search')
+        .withArgs('core:storage:private:document:search')
         .rejects(error);
 
       return should(repository.search({})).be.rejectedWith(error);
@@ -495,7 +495,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#scroll', () => {
     it('should return a list from database', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:scroll').resolves({
         hits: [dbPojo],
         total: 1,
       });
@@ -506,13 +506,13 @@ describe('Test: repositories/repository', () => {
       should(response.hits).be.an.Array();
       should(response.total).be.exactly(1);
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:scroll',
+        'core:storage:private:document:scroll',
         'foo',
         undefined);
     });
 
     it('should inject back the scroll id', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:scroll').resolves({
         hits: [dbPojo],
         scrollId: 'foobar',
         total: 1,
@@ -525,13 +525,13 @@ describe('Test: repositories/repository', () => {
       should(response.total).be.exactly(1);
       should(response.scrollId).be.eql('foobar');
       should(kuzzle.ask).be.calledWithMatch(
-        'core:store:private:document:scroll',
+        'core:storage:private:document:scroll',
         'foo',
         'bar');
     });
 
     it('should return a list if no hits', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:scroll').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:scroll').resolves({
         hits: [],
         scrollId: 'foobar',
         total: 0,
@@ -547,7 +547,7 @@ describe('Test: repositories/repository', () => {
 
     it('should be rejected with an error if something goes wrong', () => {
       const error = new Error('Mocked error');
-      kuzzle.ask.withArgs('core:store:private:document:scroll').rejects(error);
+      kuzzle.ask.withArgs('core:storage:private:document:scroll').rejects(error);
 
       return should(repository.scroll('foo')).be.rejectedWith(error);
     });

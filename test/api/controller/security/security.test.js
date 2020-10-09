@@ -46,7 +46,7 @@ describe('/api/controller/security', () => {
 
         should(response).be.null();
         should(kuzzle.ask).calledWith(
-          'core:store:private:collection:refresh',
+          'core:storage:private:collection:refresh',
           kuzzle.internalIndex.index,
           collection);
       }
@@ -58,7 +58,7 @@ describe('/api/controller/security', () => {
       await should(securityController.refresh(request))
         .rejectedWith({ id: 'api.assert.unexpected_argument' });
 
-      should(kuzzle.ask.withArgs('core:store:private:collection:refresh'))
+      should(kuzzle.ask.withArgs('core:storage:private:collection:refresh'))
         .not.be.called();
     });
   });

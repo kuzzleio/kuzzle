@@ -9,7 +9,7 @@ const RedisClientMock = require('../../mocks/service/redisClient.mock');
 
 const Redis = rewire('../../../lib/service/cache/redis');
 
-describe.only('Redis', () => {
+describe('Redis', () => {
   let kuzzle;
   let redis;
   let config;

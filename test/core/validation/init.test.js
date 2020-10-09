@@ -94,7 +94,7 @@ describe('Test: validation initialization', () => {
       };
 
     beforeEach(() => {
-      kuzzle.ask.withArgs('core:store:private:document:search').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [
           {_id: 'anIndex#aCollection', _source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
           {_id: 'anIndex#anotherCollection', _source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},

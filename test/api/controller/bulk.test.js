@@ -50,7 +50,7 @@ describe('Test the bulk controller', () => {
 
       request.input.body = { bulkData };
 
-      kuzzle.ask.withArgs('core:store:public:document:bulk').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
         items: ['fake', 'data'],
         errors: []
       });
@@ -60,7 +60,7 @@ describe('Test the bulk controller', () => {
       const response = await controller.import(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:bulk',
+        'core:storage:public:document:bulk',
         index,
         collection,
         bulkData,
@@ -73,7 +73,7 @@ describe('Test the bulk controller', () => {
     });
 
     it('should handle errors', async () => {
-      kuzzle.ask.withArgs('core:store:public:document:bulk').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
         items: [],
         errors: ['fake', 'data']
       });
@@ -101,7 +101,7 @@ describe('Test the bulk controller', () => {
       request.input.resource._id = _id;
 
       kuzzle.ask
-        .withArgs('core:store:public:document:createOrReplace')
+        .withArgs('core:storage:public:document:createOrReplace')
         .resolves({
           _id,
           _source,
@@ -121,7 +121,7 @@ describe('Test the bulk controller', () => {
 
       should(notifyStub).not.called();
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:createOrReplace',
+        'core:storage:public:document:createOrReplace',
         index,
         collection,
         _id,
@@ -139,7 +139,7 @@ describe('Test the bulk controller', () => {
       request.input.args.notify = true;
 
       kuzzle.ask
-        .withArgs('core:store:public:document:createOrReplace')
+        .withArgs('core:storage:public:document:createOrReplace')
         .resolves({
           _id,
           _source,
@@ -183,7 +183,7 @@ describe('Test the bulk controller', () => {
       ];
 
       kuzzle.ask
-        .withArgs('core:store:public:document:mCreateOrReplace')
+        .withArgs('core:storage:public:document:mCreateOrReplace')
         .resolves({
           items: mCreateOrReplaceResult,
           errors: []
@@ -201,7 +201,7 @@ describe('Test the bulk controller', () => {
 
       should(notifyMChangesStub).not.be.called();
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:mCreateOrReplace',
+        'core:storage:public:document:mCreateOrReplace',
         index,
         collection,
         documents,
@@ -242,7 +242,7 @@ describe('Test the bulk controller', () => {
       request.input.body = { query };
 
       kuzzle.ask
-        .withArgs('core:store:public:document:deleteByQuery')
+        .withArgs('core:storage:public:document:deleteByQuery')
         .resolves({
           deleted: 2,
         });
@@ -252,7 +252,7 @@ describe('Test the bulk controller', () => {
       const response = await controller.deleteByQuery(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:deleteByQuery',
+        'core:storage:public:document:deleteByQuery',
         index,
         collection,
         query,

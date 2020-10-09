@@ -74,7 +74,7 @@ describe('Test: security/profileRepository', () => {
     it('should reject if the profile does not exist', () => {
       kuzzle.ask
         .withArgs(
-          'core:store:private:document:get',
+          'core:storage:private:document:get',
           kuzzle.internalIndex.index,
           'profiles',
           'idontexist')
@@ -371,7 +371,7 @@ describe('Test: security/profileRepository', () => {
 
   describe('#validateAndSaveProfile', () => {
     beforeEach(() => {
-      kuzzle.ask.withArgs('core:store:index:isValid').resolves(true);
+      kuzzle.ask.withArgs('core:storage:index:isValid').resolves(true);
     });
 
     it('should throw if roles cannot be loaded', () => {

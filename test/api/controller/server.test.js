@@ -104,7 +104,7 @@ describe('ServerController', () => {
 
   describe('#healthCheck', () => {
     beforeEach(() => {
-      kuzzle.ask.withArgs('core:store:public:info:get').resolves({
+      kuzzle.ask.withArgs('core:storage:public:info:get').resolves({
         status: 'green',
       });
     });
@@ -120,7 +120,7 @@ describe('ServerController', () => {
     });
 
     it('should return a 200 response with status "green" if ES status is "yellow" and Redis is OK', async () => {
-      kuzzle.ask.withArgs('core:store:public:info:get').resolves({
+      kuzzle.ask.withArgs('core:storage:public:info:get').resolves({
         status: 'yellow',
       });
 
@@ -173,7 +173,7 @@ describe('ServerController', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine status is "red"', async () => {
-      kuzzle.ask.withArgs('core:store:public:info:get').resolves({
+      kuzzle.ask.withArgs('core:storage:public:info:get').resolves({
         status: 'red',
       });
 
@@ -188,7 +188,7 @@ describe('ServerController', () => {
     });
 
     it('should return a 503 response with status "red" if storageEngine is KO', async () => {
-      kuzzle.ask.withArgs('core:store:public:info:get').rejects(new Error());
+      kuzzle.ask.withArgs('core:storage:public:info:get').rejects(new Error());
 
       const response = await serverController.healthCheck(request);
 
@@ -301,7 +301,7 @@ describe('ServerController', () => {
 
     it('should reject an error in case of error', () => {
       kuzzle.ask
-        .withArgs('core:store:public:info:get')
+        .withArgs('core:storage:public:info:get')
         .rejects(new Error('foobar'));
 
       return should(serverController.info()).be.rejected();

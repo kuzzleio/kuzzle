@@ -60,33 +60,33 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler.init();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:collection:create',
+        'core:storage:private:collection:create',
         'fooindex',
         'foo',
         { mappings: collections.foo });
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:collection:create',
+        'core:storage:private:collection:create',
         'fooindex',
         'bar',
         { mappings: collections.bar });
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:collection:create',
+        'core:storage:private:collection:create',
         'fooindex',
         'baz',
         { mappings: collections.baz });
     });
 
     it('should bootstrap if able to acquire a mutex lock', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:exist').resolves(false);
+      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(false);
 
       sinon.stub(internalIndexHandler, '_bootstrapSequence').resolves();
 
       await internalIndexHandler.init();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:exist',
+        'core:storage:private:document:exist',
         internalIndexName,
         'config',
         internalIndexHandler._BOOTSTRAP_DONE_ID);
@@ -100,7 +100,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       should(internalIndexHandler._bootstrapSequence).calledOnce();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         internalIndexName,
         'config',
         sinon.match.object,
@@ -108,7 +108,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
     });
 
     it('should not bootstrap if the bootstrap document is present', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(true);
 
       sinon.stub(internalIndexHandler, '_bootstrapSequence').resolves();
 
@@ -117,7 +117,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       should(internalIndexHandler._bootstrapSequence).not.called();
 
       should(kuzzle.ask).not.calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         internalIndexName,
         'config',
         sinon.match.object,
@@ -128,12 +128,12 @@ describe('#kuzzle/InternalIndexHandler', () => {
       const err = new Error();
       sinon.stub(internalIndexHandler, '_bootstrapSequence').rejects(err);
 
-      kuzzle.ask.withArgs('core:store:private:document:exist').resolves(false);
+      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(false);
 
       await should(internalIndexHandler.init()).rejectedWith(err);
 
       should(kuzzle.ask).not.calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         internalIndexName,
         'config',
         sinon.match.object,
@@ -145,13 +145,13 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
       sinon.stub(internalIndexHandler, '_bootstrapSequence').rejects(err);
 
-      kuzzle.ask.withArgs('core:store:private:document:exist').resolves(false);
+      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(false);
 
       await should(internalIndexHandler.init())
         .rejectedWith(KuzzleInternalError, { id: 'services.storage.bootstrap_timeout' });
 
       should(kuzzle.ask).not.calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         internalIndexName,
         'config',
         sinon.match({ timestamp: sinon.match.number }),
@@ -174,7 +174,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       should(internalIndexHandler._loadApiKeys).called();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         internalIndexName,
         'config',
         sinon.match({ version: sinon.match.string }),
@@ -187,7 +187,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler.createInitialSecurities();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         internalIndexName,
         'roles',
         'admin',
@@ -203,7 +203,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         internalIndexName,
         'roles',
         'default',
@@ -219,7 +219,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         internalIndexName,
         'roles',
         'anonymous',
@@ -239,7 +239,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler.createInitialSecurities();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         internalIndexName,
         'profiles',
         'admin',
@@ -250,7 +250,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         internalIndexName,
         'profiles',
         'default',
@@ -260,7 +260,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         internalIndexName,
         'profiles',
         'anonymous',
@@ -284,7 +284,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler.createInitialValidations();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:createOrReplace',
+        'core:storage:private:document:createOrReplace',
         internalIndexName,
         'validations',
         'index#collection',
@@ -317,7 +317,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler._persistSecret();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         internalIndexName,
         'config',
         sinon.match({ seed: 'foobar' }),
@@ -330,7 +330,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler._persistSecret();
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:create',
+        'core:storage:private:document:create',
         internalIndexName,
         'config',
         sinon.match({ seed: randomBytesMock().toString('hex') }),
@@ -342,7 +342,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
     it('should forward document creation rejections', () => {
       const err = new Error();
 
-      kuzzle.ask.withArgs('core:store:private:document:create').rejects(err);
+      kuzzle.ask.withArgs('core:storage:private:document:create').rejects(err);
 
       return should(internalIndexHandler._persistSecret()).rejectedWith(err);
     });
@@ -351,7 +351,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       const err = new Error();
       err.id = 'services.storage.document_already_exists';
 
-      kuzzle.ask.withArgs('core:store:private:document:create').rejects(err);
+      kuzzle.ask.withArgs('core:storage:private:document:create').rejects(err);
 
       return should(internalIndexHandler._persistSecret()).be.fulfilled();
     });
@@ -359,7 +359,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
   describe('#getSecret', () => {
     it('should fetch the secret seed from the storage space', async () => {
-      kuzzle.ask.withArgs('core:store:private:document:get').resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:get').resolves({
         _source: {
           seed: 'foobar',
         },
@@ -368,7 +368,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await should(internalIndexHandler.getSecret()).fulfilledWith('foobar');
 
       should(kuzzle.ask).calledWith(
-        'core:store:private:document:get',
+        'core:storage:private:document:get',
         internalIndexName,
         'config',
         internalIndexHandler._JWT_SECRET_ID);

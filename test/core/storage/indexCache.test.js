@@ -26,7 +26,7 @@ describe('#core/storage/indexCache', () => {
 
       should(indexCache.hasIndex('foo')).be.true();
 
-      should(kuzzle.emit).calledWith('core:store:cache:add:after', {
+      should(kuzzle.emit).calledWith('core:storage:cache:add:after', {
         index: 'foo',
         scope: scopeEnum.PUBLIC,
       });
@@ -39,13 +39,13 @@ describe('#core/storage/indexCache', () => {
 
       should(indexCache.addIndex('foo')).be.false();
 
-      should(kuzzle.emit).not.calledWith('core:store:cache:add:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:add:after');
     });
 
     it('should skip notification event when asked', () => {
       should(indexCache.addIndex('foo', { notify: false })).be.true();
 
-      should(kuzzle.emit).not.calledWith('core:store:cache:add:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:add:after');
     });
   });
 
@@ -59,7 +59,7 @@ describe('#core/storage/indexCache', () => {
 
       should(indexCache.hasCollection('foo', 'bar')).be.true();
 
-      should(kuzzle.emit).calledWith('core:store:cache:add:after', {
+      should(kuzzle.emit).calledWith('core:storage:cache:add:after', {
         collection: 'bar',
         index: 'foo',
         scope: scopeEnum.PUBLIC,
@@ -73,7 +73,7 @@ describe('#core/storage/indexCache', () => {
 
       should(indexCache.hasIndex('foo')).be.true();
       should(indexCache.hasCollection('foo', 'bar')).be.true();
-      should(kuzzle.emit).calledWith('core:store:cache:add:after', {
+      should(kuzzle.emit).calledWith('core:storage:cache:add:after', {
         collection: 'bar',
         index: 'foo',
         scope: scopeEnum.PUBLIC,
@@ -85,7 +85,7 @@ describe('#core/storage/indexCache', () => {
       kuzzle.emit.resetHistory();
 
       indexCache.addCollection('foo', 'bar');
-      should(kuzzle.emit).not.calledWith('core:store:cache:add:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:add:after');
     });
 
     it('should not send notification if asked to', () => {
@@ -93,7 +93,7 @@ describe('#core/storage/indexCache', () => {
 
       should(indexCache.hasIndex('foo')).be.true();
       should(indexCache.hasCollection('foo', 'bar')).be.true();
-      should(kuzzle.emit).not.calledWith('core:store:cache:add:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:add:after');
     });
   });
 
@@ -106,7 +106,7 @@ describe('#core/storage/indexCache', () => {
       indexCache.removeIndex('foo');
 
       should(indexCache.hasIndex('foo')).be.false();
-      should(kuzzle.emit).calledWith('core:store:cache:remove:after', {
+      should(kuzzle.emit).calledWith('core:storage:cache:remove:after', {
         index: 'foo',
         scope: scopeEnum.PUBLIC,
       });
@@ -115,7 +115,7 @@ describe('#core/storage/indexCache', () => {
     it('should ignore non-existing indexes', () => {
       indexCache.removeIndex('foo');
 
-      should(kuzzle.emit).not.calledWith('core:store:cache:remove:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:remove:after');
     });
 
     it('should not notify if asked to', () => {
@@ -123,7 +123,7 @@ describe('#core/storage/indexCache', () => {
 
       indexCache.removeIndex('foo', { notify: false });
 
-      should(kuzzle.emit).not.calledWith('core:store:cache:remove:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:remove:after');
     });
   });
 
@@ -136,7 +136,7 @@ describe('#core/storage/indexCache', () => {
       indexCache.removeCollection('foo', 'bar');
       should(indexCache.hasCollection('foo', 'bar')).be.false();
       should(indexCache.hasIndex('foo')).be.true();
-      should(kuzzle.emit).calledWith('core:store:cache:remove:after', {
+      should(kuzzle.emit).calledWith('core:storage:cache:remove:after', {
         collection: 'bar',
         index: 'foo',
         scope: scopeEnum.PUBLIC,
@@ -149,7 +149,7 @@ describe('#core/storage/indexCache', () => {
       indexCache.removeCollection('ohnoes');
       indexCache.removeCollection('foo', 'ohnoes');
       should(indexCache.hasCollection('foo', 'bar')).be.true();
-      should(kuzzle.emit).not.calledWith('core:store:cache:remove:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:remove:after');
     });
 
     it('should not notify if asked to', () => {
@@ -157,7 +157,7 @@ describe('#core/storage/indexCache', () => {
 
       indexCache.removeCollection('foo', 'bar', { notify: false });
       should(indexCache.hasCollection('foo', 'bar')).be.false();
-      should(kuzzle.emit).not.calledWith('core:store:cache:remove:after');
+      should(kuzzle.emit).not.calledWith('core:storage:cache:remove:after');
     });
   });
 

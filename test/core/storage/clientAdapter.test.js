@@ -107,7 +107,7 @@ describe('#core/storage/ClientAdapter', () => {
   describe('#global events', () => {
     it('should register a global "info" event', async () => {
       for (const adapter of [publicAdapter, privateAdapter]) {
-        await kuzzle.ask(`core:store:${adapter.scope}:info:get`);
+        await kuzzle.ask(`core:storage:${adapter.scope}:info:get`);
         should(adapter.client.info).calledOnce();
       }
     });
@@ -117,7 +117,7 @@ describe('#core/storage/ClientAdapter', () => {
     describe('#index:create', async () => {
       it('should register an "index:create" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:store:${adapter.scope}:index:create`, 'foo');
+          await kuzzle.ask(`core:storage:${adapter.scope}:index:create`, 'foo');
 
           should(adapter.client.createIndex).calledWith('foo');
           should(adapter.cache.addIndex).calledWith('foo');
@@ -137,7 +137,7 @@ describe('#core/storage/ClientAdapter', () => {
     describe('#index:delete', () => {
       it('should register an "index:delete" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:store:${adapter.scope}:index:delete`, 'foo');
+          await kuzzle.ask(`core:storage:${adapter.scope}:index:delete`, 'foo');
 
           should(publicAdapter.cache.assertIndexExists).calledWith('foo');
           should(publicAdapter.client.deleteIndex).calledWith('foo');
@@ -160,7 +160,7 @@ describe('#core/storage/ClientAdapter', () => {
         adapter.cache.hasIndex.returns('bar');
 
         const res = await kuzzle.ask(
-          `core:store:${adapter.scope}:index:exist`,
+          `core:storage:${adapter.scope}:index:exist`,
           'foo');
 
         should(res).eql('bar');
@@ -172,7 +172,7 @@ describe('#core/storage/ClientAdapter', () => {
       for (const adapter of [publicAdapter, privateAdapter]) {
         adapter.cache.listIndexes.resolves('bar');
 
-        const res = await kuzzle.ask(`core:store:${adapter.scope}:index:list`);
+        const res = await kuzzle.ask(`core:storage:${adapter.scope}:index:list`);
 
         should(res).eql('bar');
         should(adapter.cache.listIndexes).calledOnce();
@@ -184,7 +184,7 @@ describe('#core/storage/ClientAdapter', () => {
         const indexes = ['foo', 'bar', 'baz'];
 
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:store:${adapter.scope}:index:mDelete`, indexes);
+          await kuzzle.ask(`core:storage:${adapter.scope}:index:mDelete`, indexes);
 
           should(publicAdapter.client.deleteIndexes).calledWith(indexes);
           should(publicAdapter.cache.removeIndex).calledWith('foo');
@@ -210,7 +210,7 @@ describe('#core/storage/ClientAdapter', () => {
     it('#collection:create', async () => {
       for (const adapter of [publicAdapter, privateAdapter]) {
         await kuzzle.ask(
-          `core:store:${adapter.scope}:collection:create`,
+          `core:storage:${adapter.scope}:collection:create`,
           'foo',
           'bar',
           'opts');
@@ -227,7 +227,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "collection:delete" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:collection:delete`,
+            `core:storage:${adapter.scope}:collection:delete`,
             'foo',
             'bar');
 
@@ -252,7 +252,7 @@ describe('#core/storage/ClientAdapter', () => {
     it('should register a "collection:exist" event', async () => {
       for (const adapter of [publicAdapter, privateAdapter]) {
         await kuzzle.ask(
-          `core:store:${adapter.scope}:collection:exist`,
+          `core:storage:${adapter.scope}:collection:exist`,
           'foo',
           'bar');
 
@@ -264,7 +264,7 @@ describe('#core/storage/ClientAdapter', () => {
 
     it('should register a "collection:list" event', async () => {
       for (const adapter of [publicAdapter, privateAdapter]) {
-        await kuzzle.ask(`core:store:${adapter.scope}:collection:list`, 'foo');
+        await kuzzle.ask(`core:storage:${adapter.scope}:collection:list`, 'foo');
 
         should(adapter.cache.listCollections).calledOnce().calledWith('foo');
       }
@@ -275,7 +275,7 @@ describe('#core/storage/ClientAdapter', () => {
 
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:collection:refresh`,
+            `core:storage:${adapter.scope}:collection:refresh`,
             'foo',
             'bar');
 
@@ -291,7 +291,7 @@ describe('#core/storage/ClientAdapter', () => {
 
         publicAdapter.cache.assertCollectionExists.throws(err);
 
-        await should(kuzzle.ask('core:store:public:collection:refresh', 'foo', 'bar'))
+        await should(kuzzle.ask('core:storage:public:collection:refresh', 'foo', 'bar'))
           .rejectedWith(err);
 
         should(publicAdapter.client.refreshCollection).not.called();
@@ -302,7 +302,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "collection:truncate" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:collection:truncate`,
+            `core:storage:${adapter.scope}:collection:truncate`,
             'foo',
             'bar');
 
@@ -319,7 +319,7 @@ describe('#core/storage/ClientAdapter', () => {
 
         publicAdapter.cache.assertCollectionExists.throws(err);
 
-        await should(kuzzle.ask('core:store:public:collection:truncate', 'foo', 'bar'))
+        await should(kuzzle.ask('core:storage:public:collection:truncate', 'foo', 'bar'))
           .rejectedWith(err);
 
         should(publicAdapter.client.truncateCollection).not.called();
@@ -330,7 +330,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "collection:update" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:collection:update`,
+            `core:storage:${adapter.scope}:collection:update`,
             'foo',
             'bar',
             'changes');
@@ -349,7 +349,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const promise = kuzzle.ask(
-          'core:store:public:collection:update',
+          'core:storage:public:collection:update',
           'foo',
           'bar',
           'changes');
@@ -366,7 +366,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "mappings:get" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:mappings:get`,
+            `core:storage:${adapter.scope}:mappings:get`,
             'foo',
             'bar',
             'opts');
@@ -385,7 +385,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const promise = kuzzle.ask(
-          'core:store:public:mappings:get',
+          'core:storage:public:mappings:get',
           'foo',
           'bar',
           'opts');
@@ -415,7 +415,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "mappings:import" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:mappings:import`,
+            `core:storage:${adapter.scope}:mappings:import`,
             mappings);
 
           should(adapter.client.createIndex).calledWith('index');
@@ -436,7 +436,7 @@ describe('#core/storage/ClientAdapter', () => {
 
       it('should reject if the provided argument is not a valid object', async () => {
         for (const arg of [null, [], 'foo', 123, true]) {
-          const result = kuzzle.ask('core:store:public:mappings:import', arg);
+          const result = kuzzle.ask('core:storage:public:mappings:import', arg);
 
           await should(result).rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_argument',
@@ -449,7 +449,7 @@ describe('#core/storage/ClientAdapter', () => {
           mappings.index = arg;
 
           const result = kuzzle.ask(
-            'core:store:public:mappings:import',
+            'core:storage:public:mappings:import',
             mappings);
 
           await should(result).rejectedWith(BadRequestError, {
@@ -463,7 +463,7 @@ describe('#core/storage/ClientAdapter', () => {
 
         publicAdapter.client.createIndex.rejects(err);
 
-        return should(kuzzle.ask('core:store:public:mappings:import', mappings))
+        return should(kuzzle.ask('core:storage:public:mappings:import', mappings))
           .rejectedWith(err);
       });
 
@@ -475,7 +475,7 @@ describe('#core/storage/ClientAdapter', () => {
 
         publicAdapter.client.createIndex.onFirstCall().rejects(err);
 
-        await should(kuzzle.ask('core:store:public:mappings:import', mappings))
+        await should(kuzzle.ask('core:storage:public:mappings:import', mappings))
           .fulfilled();
 
         should(publicAdapter.client.createIndex).calledWith('index');
@@ -487,7 +487,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "mappings:update" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:mappings:update`,
+            `core:storage:${adapter.scope}:mappings:update`,
             'index',
             'collection',
             'mappings');
@@ -505,7 +505,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:mappings:update',
+          'core:storage:public:mappings:update',
           'index',
           'collection',
           'mappings');
@@ -522,7 +522,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:bulk" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:bulk`,
+            `core:storage:${adapter.scope}:document:bulk`,
             'index',
             'collection',
             'documents',
@@ -542,7 +542,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:bulk',
+          'core:storage:public:document:bulk',
           'index',
           'collection',
           'documents',
@@ -558,7 +558,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:count" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:count`,
+            `core:storage:${adapter.scope}:document:count`,
             'index',
             'collection',
             'filters');
@@ -577,7 +577,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:count',
+          'core:storage:public:document:count',
           'index',
           'collection',
           'filters');
@@ -592,7 +592,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:create" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:create`,
+            `core:storage:${adapter.scope}:document:create`,
             'index',
             'collection',
             'content',
@@ -612,7 +612,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:create',
+          'core:storage:public:document:create',
           'index',
           'collection',
           'content',
@@ -628,7 +628,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:createOrReplace" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:createOrReplace`,
+            `core:storage:${adapter.scope}:document:createOrReplace`,
             'index',
             'collection',
             'id',
@@ -649,7 +649,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:createOrReplace',
+          'core:storage:public:document:createOrReplace',
           'index',
           'collection',
           'id',
@@ -666,7 +666,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:delete" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:delete`,
+            `core:storage:${adapter.scope}:document:delete`,
             'index',
             'collection',
             'id',
@@ -686,7 +686,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:delete',
+          'core:storage:public:document:delete',
           'index',
           'collection',
           'id',
@@ -702,7 +702,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:deleteByQuery" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:deleteByQuery`,
+            `core:storage:${adapter.scope}:document:deleteByQuery`,
             'index',
             'collection',
             'query',
@@ -722,7 +722,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:deleteByQuery',
+          'core:storage:public:document:deleteByQuery',
           'index',
           'collection',
           'query',
@@ -738,7 +738,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:exist" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:exist`,
+            `core:storage:${adapter.scope}:document:exist`,
             'index',
             'collection',
             'id');
@@ -757,7 +757,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:exist',
+          'core:storage:public:document:exist',
           'index',
           'collection',
           'id');
@@ -772,7 +772,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:get" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:get`,
+            `core:storage:${adapter.scope}:document:get`,
             'index',
             'collection',
             'id');
@@ -791,7 +791,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:get',
+          'core:storage:public:document:get',
           'index',
           'collection',
           'id');
@@ -821,7 +821,7 @@ describe('#core/storage/ClientAdapter', () => {
           adapter.client.import.resolves({ errors: [] });
 
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:import`,
+            `core:storage:${adapter.scope}:document:import`,
             fixtures);
 
           should(adapter.client.import)
@@ -831,7 +831,7 @@ describe('#core/storage/ClientAdapter', () => {
 
       it('should reject if the provided argument is not a valid object', async () => {
         for (const arg of [null, [], 'foo', 123, true]) {
-          const result = kuzzle.ask('core:store:public:document:import', arg);
+          const result = kuzzle.ask('core:storage:public:document:import', arg);
 
           await should(result).rejectedWith(BadRequestError, {
             id: 'api.assert.invalid_argument',
@@ -844,7 +844,7 @@ describe('#core/storage/ClientAdapter', () => {
           fixtures.index = arg;
 
           const result = kuzzle.ask(
-            'core:store:public:document:import',
+            'core:storage:public:document:import',
             fixtures);
 
           await should(result).rejectedWith(BadRequestError, {
@@ -856,7 +856,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should wrap import errors', async () => {
         publicAdapter.client.import.resolves({ errors: [ 'oh', 'noes' ] });
 
-        await should(kuzzle.ask('core:store:public:document:import', fixtures))
+        await should(kuzzle.ask('core:storage:public:document:import', fixtures))
           .rejectedWith(PartialError, { id: 'services.storage.import_failed' });
       });
     });
@@ -865,7 +865,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:mCreate" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:mCreate`,
+            `core:storage:${adapter.scope}:document:mCreate`,
             'index',
             'collection',
             'documents',
@@ -885,7 +885,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:mCreate',
+          'core:storage:public:document:mCreate',
           'index',
           'collection',
           'documents',
@@ -901,7 +901,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:mCreateOrReplace" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:mCreateOrReplace`,
+            `core:storage:${adapter.scope}:document:mCreateOrReplace`,
             'index',
             'collection',
             'documents',
@@ -921,7 +921,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:mCreateOrReplace',
+          'core:storage:public:document:mCreateOrReplace',
           'index',
           'collection',
           'documents',
@@ -937,7 +937,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:mDelete" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:mDelete`,
+            `core:storage:${adapter.scope}:document:mDelete`,
             'index',
             'collection',
             'ids',
@@ -957,7 +957,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:mDelete',
+          'core:storage:public:document:mDelete',
           'index',
           'collection',
           'ids',
@@ -973,7 +973,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:mReplace" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:mReplace`,
+            `core:storage:${adapter.scope}:document:mReplace`,
             'index',
             'collection',
             'documents',
@@ -993,7 +993,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:mReplace',
+          'core:storage:public:document:mReplace',
           'index',
           'collection',
           'documents',
@@ -1009,7 +1009,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:mUpdate" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:mUpdate`,
+            `core:storage:${adapter.scope}:document:mUpdate`,
             'index',
             'collection',
             'documents',
@@ -1029,7 +1029,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:mUpdate',
+          'core:storage:public:document:mUpdate',
           'index',
           'collection',
           'documents',
@@ -1045,7 +1045,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:mExecute" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:mExecute`,
+            `core:storage:${adapter.scope}:document:mExecute`,
             'index',
             'collection',
             'query',
@@ -1066,7 +1066,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:mExecute',
+          'core:storage:public:document:mExecute',
           'index',
           'collection',
           'query',
@@ -1083,7 +1083,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:mGet" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:mGet`,
+            `core:storage:${adapter.scope}:document:mGet`,
             'index',
             'collection',
             'ids');
@@ -1101,7 +1101,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:mGet',
+          'core:storage:public:document:mGet',
           'index',
           'collection',
           'ids',
@@ -1117,7 +1117,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:replace" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:replace`,
+            `core:storage:${adapter.scope}:document:replace`,
             'index',
             'collection',
             'id',
@@ -1138,7 +1138,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:replace',
+          'core:storage:public:document:replace',
           'index',
           'collection',
           'id',
@@ -1155,7 +1155,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:scroll" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:scroll`,
+            `core:storage:${adapter.scope}:document:scroll`,
             'id',
             'options');
 
@@ -1168,7 +1168,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:search" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:search`,
+            `core:storage:${adapter.scope}:document:search`,
             'index',
             'collection',
             'query',
@@ -1188,7 +1188,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:search',
+          'core:storage:public:document:search',
           'index',
           'collection',
           'query',
@@ -1204,7 +1204,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:update" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:update`,
+            `core:storage:${adapter.scope}:document:update`,
             'index',
             'collection',
             'id',
@@ -1225,7 +1225,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:update',
+          'core:storage:public:document:update',
           'index',
           'collection',
           'id',
@@ -1242,7 +1242,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should register a "document:updateByQuery" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:document:updateByQuery`,
+            `core:storage:${adapter.scope}:document:updateByQuery`,
             'index',
             'collection',
             'query',
@@ -1263,7 +1263,7 @@ describe('#core/storage/ClientAdapter', () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         const result = kuzzle.ask(
-          'core:store:public:document:updateByQuery',
+          'core:storage:public:document:updateByQuery',
           'index',
           'collection',
           'query',
@@ -1281,7 +1281,7 @@ describe('#core/storage/ClientAdapter', () => {
     describe('#cache:add', () => {
       it('should handle adding a single index', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:store:${adapter.scope}:cache:add`, 'index');
+          await kuzzle.ask(`core:storage:${adapter.scope}:cache:add`, 'index');
 
           should(adapter.cache.addIndex).calledWith('index', { notify: false });
           should(adapter.cache.addCollection).not.called();
@@ -1291,7 +1291,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should handle adding an index/collection pair', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:cache:add`,
+            `core:storage:${adapter.scope}:cache:add`,
             'index',
             'collection');
 
@@ -1306,7 +1306,7 @@ describe('#core/storage/ClientAdapter', () => {
     describe('#cache:remove', () => {
       it('should handle removing a single index', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:store:${adapter.scope}:cache:remove`, 'index');
+          await kuzzle.ask(`core:storage:${adapter.scope}:cache:remove`, 'index');
 
           should(adapter.cache.removeIndex).calledWith('index', {
             notify: false,
@@ -1318,7 +1318,7 @@ describe('#core/storage/ClientAdapter', () => {
       it('should handle removing an index/collection pair', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:store:${adapter.scope}:cache:remove`,
+            `core:storage:${adapter.scope}:cache:remove`,
             'index',
             'collection');
 

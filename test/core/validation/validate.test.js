@@ -336,7 +336,7 @@ describe('Test: validation.validate', () => {
         _id: 'foo'
       });
 
-      kuzzle.ask.withArgs('core:store:public:document:get').resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foo',
       });
 
@@ -346,7 +346,7 @@ describe('Test: validation.validate', () => {
 
       should(result).be.eql(request);
       should(kuzzle.ask).be.calledWith(
-        'core:store:public:document:get',
+        'core:storage:public:document:get',
         index,
         collection,
         'foo');
