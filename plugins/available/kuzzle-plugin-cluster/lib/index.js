@@ -61,8 +61,8 @@ class KuzzleCluster {
       'core:realtime:room:create:after': 'roomCreated',
       'core:roleRepository:delete': 'roleUpdated',
       'core:roleRepository:save': 'roleUpdated',
-      'core:store:cache:add:after': 'indexCacheAdded',
-      'core:store:cache:remove:after': 'indexCacheRemoved',
+      'core:storage:cache:add:after': 'indexCacheAdded',
+      'core:storage:cache:remove:after': 'indexCacheRemoved',
     };
 
     this.pipes = {
@@ -213,7 +213,7 @@ class KuzzleCluster {
     }
 
     this.node.broadcast('cluster:sync', {
-      event: 'store:cache:add',
+      event: 'storage:cache:add',
       ...payload
     });
   }
@@ -230,7 +230,7 @@ class KuzzleCluster {
     }
 
     this.node.broadcast('cluster:sync', {
-      event: 'store:cache:remove',
+      event: 'storage:cache:remove',
       ...payload,
     });
   }

@@ -185,14 +185,14 @@ class Node {
     }
 
     switch (data.event) {
-      case 'store:cache:add':
+      case 'storage:cache:add':
         return this.kuzzle.ask(
-          `core:store:${data.scope}:cache:add`,
+          `core:storage:${data.scope}:cache:add`,
           data.index,
           data.collection);
-      case 'store:cache:remove':
+      case 'storage:cache:remove':
         return this.kuzzle.ask(
-          `core:store:${data.scope}:cache:remove`,
+          `core:storage:${data.scope}:cache:remove`,
           data.index,
           data.collection);
       case 'profile':
