@@ -1,0 +1,8 @@
+{
+  "cwd": "/var/app",
+  "directories": [ "lib", "plugins", "node_modules" ],
+  "files": [
+    "index.js"
+  ],
+  "waitExit": 5000
+}
