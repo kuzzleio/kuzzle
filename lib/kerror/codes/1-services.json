@@ -111,7 +111,7 @@
           "code": 20,
           "message": "Index '%s' is protected, use the appropriated routes instead.",
           "class": "BadRequestError",
-          "deprecated": "auto-version"
+          "deprecated": "2.5.0"
         },
         "invalid_mapping": {
           "description": "The provided mapping is invalid",
