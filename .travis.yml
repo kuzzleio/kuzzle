@@ -90,6 +90,8 @@ jobs:
       if: fork != true
       os: linux
       dist: trusty
+      language: node_js
+      node_js: 12.18.1
       script:
         - .ci/sonar.sh
 

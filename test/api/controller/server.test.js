@@ -2,6 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
+const yaml = require('js-yaml');
 const {
   Request,
   ExternalServiceError
@@ -339,6 +340,35 @@ describe('ServerController', () => {
             kuzzle.pluginsManager.controllers,
             kuzzle.pluginsManager.routes
           ]);
+        });
+    });
+  });
+
+  describe('#openapi', () => {
+    it('should return JSON formated OpenAPI specifications by default', () => {
+      return serverController.openapi(request)
+        .then((response) => {
+          response.should.be.an.Object();
+          response.openapi.should.be.a.String();
+        });
+    });
+
+    it('should return JSON formated OpenAPI specifications if specified', () => {
+      request.input.args.format = 'json';
+      return serverController.openapi(request)
+        .then((response) => {
+          response.should.be.an.Object();
+          response.openapi.should.be.a.String();
+        });
+    });
+
+    it('should return YAML formated OpenAPI specifications if specified', () => {
+      request.input.args.format = 'yaml';
+      return serverController.openapi(request)
+        .then((response) => {
+          const parsedResponse = yaml.load(response);
+          parsedResponse.should.be.an.Object();
+          parsedResponse.openapi.should.be.a.String();
         });
     });
   });

@@ -20,6 +20,7 @@
  */
 
 import { Request } from 'kuzzle-common-objects';
+import { Backend } from '../core/application/backend';
 
 /**
  * An interface representing an object with string key and any value
@@ -70,6 +71,30 @@ export interface ControllerDefinition {
         path: string
       }>
     }
+  }
+}
+
+/**
+ * Base class to declare a controller class
+ */
+export abstract class Controller {
+  /**
+   * Current application instance
+   */
+  private app: Backend;
+
+  /**
+   * Controller name
+   */
+  public name: string;
+
+  /**
+   * Controller definition
+   */
+  public definition: ControllerDefinition;
+
+  constructor (app: Backend) {
+    this.app = app;
   }
 }
 

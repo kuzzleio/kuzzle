@@ -6,7 +6,8 @@
 import should from 'should'
 import { omit } from 'lodash'
 
-import { Backend } from '../../index';
+import { Backend, Request } from '../../index';
+import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
 
@@ -39,13 +40,16 @@ async function loadAdditionalPlugins () {
 
 if (! process.env.TRAVIS) {
   // Easier debug
-  app.hook.register('request:onError', request => {
+  app.hook.register('request:onError', (request: Request) => {
     console.log(request.error);
   });
-  app.hook.register('hook:onError', request => {
+  app.hook.register('hook:onError', (request: Request) => {
     console.log(request.error);
   });
 }
+
+// Controller class usage
+app.controller.use(new FunctionalTestsController(app));
 
 // Pipe management
 const activatedPipes: any = {};
@@ -64,7 +68,7 @@ app.controller.register('pipes', {
       }
     },
     manage: {
-      handler: async request => {
+      handler: async (request: Request) => {
         const payload = request.input.body;
         const state = request.input.args.state;
         const event = request.input.args.event;
@@ -105,7 +109,7 @@ app.controller.register('tests', {
   actions: {
     // Controller registration and http route definition
     sayHello: {
-      handler: async request => {
+      handler: async (request: Request) => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
       http: [{ verb: 'POST', path: '/hello/:name' }]
@@ -113,7 +117,7 @@ app.controller.register('tests', {
 
     // Trigger custom event
     triggerEvent: {
-      handler: async request => {
+      handler: async (request: Request) => {
         await app.trigger('custom:event', request.input.args.name);
 
         return { trigger: 'custom:event', payload: request.input.args.name }
@@ -127,7 +131,7 @@ app.controller.register('tests', {
 
     // access storage client
     storageClient: {
-      handler: async request => {
+      handler: async (request: Request) => {
         const client = new app.storage.Client();
         const esRequest = {
           body: request.input.body,
