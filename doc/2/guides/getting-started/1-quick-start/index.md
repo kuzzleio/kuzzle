@@ -23,6 +23,8 @@ Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/
 
 You can install Kourou globally by using NPM: `npm install -g kourou`
 
+### Let's go!
+
 First, we will initialize a new application using Kourou:
 
 ```bash
@@ -76,4 +78,4 @@ We can now run our first application with `npm run dev`
 Under the hood, the command `npm run dev` use [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) to run the application.
 :::
 
-Now visit http://localhost:7512 with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
+Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
