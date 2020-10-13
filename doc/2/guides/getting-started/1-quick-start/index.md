@@ -14,14 +14,19 @@ It only requires two services: Elasticsearch and Redis.
 
 In this guide we will use Docker and Docker Compose to run those services.
 
-Prerequisites:
- - [Node.js >= 12](https://nodejs.org/en/download/) (with NPM)
+### Prerequisites
+
+ - [Node.js >= 12](https://nodejs.org/en/download/)
  - [Docker](https://docs.docker.com/engine/install/)
  - [Docker Compose](https://docs.docker.com/compose/install/)
+
+#### Kourou
 
 Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI.
 
 You can install Kourou globally by using NPM: `npm install -g kourou`
+
+#### Admin Console
 
 We are also gonna use the [Admin Console](/core/2/some-page-about-ac) which allows to manage your data, your users and your rights.
 
@@ -32,13 +37,7 @@ No data related to your connection to Kuzzle will pass through our servers.
 
 First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follow:
 
-| Configuration   | Value          | Explanation                          |
-|-----------------|----------------|--------------------------------------|
-| Connection name | `Kuzzle Local` | A name to identify this connection   |
-| Hostname        | `localhost`    | Hostname where Kuzzle can be reached |
-| Port            | `7512`         | Port where Kuzzle can be reached     |
-| Use SSL         | `No`           | Use SSL connection to connect        |
-| Kuzzle version  | `v2.x`         | Kuzzle version                       |
+![Admin Console create connection form](./admin-console-create-connection.png)
 
 Then click on `Create Connection`. 
 
