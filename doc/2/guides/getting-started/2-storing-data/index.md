@@ -36,6 +36,10 @@ If you're more familiar with the way relational databases store data, here is ho
 
 First, we are gonna create an index with Kourou: `kourou index:create nyc-open-data`
 
+::: info
+This will use the [index:create](/core/2/api/controllers/index/create) API action.
+:::
+
 Then, we are gonna create a collection inside this index. We will provide the following basic mappings:
 
 ```js
@@ -58,6 +62,11 @@ $ kourou collection:create nyc-open-data yellow-taxi '{
 }'
 ```
 
+::: info
+This will use the [collection:create](/core/2/api/controllers/index/create) API action.
+:::
+
+
 Now we have a collection ready to receive documents, again use Kourou to create one:
 
 ```bash
@@ -66,6 +75,10 @@ $ kourou document:create nyc-open-data yellow-taxi '{
   age: 27
 }'
 ```
+
+::: info
+This will use the [document:create](/core/2/api/controllers/index/create) API action.
+:::
 
 Finally, we are going to use the [Admin Console](http://console.kuzzle.io) to look at what we have created.
 
