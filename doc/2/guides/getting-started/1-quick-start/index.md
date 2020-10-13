@@ -23,6 +23,27 @@ Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/
 
 You can install Kourou globally by using NPM: `npm install -g kourou`
 
+We are also gonna use the [Admin Console](/core/2/some-page-about-ac) which allows to manage your data, your users and your rights.
+
+::: info
+The Admin Console is a Single Page Application written in Vue.js and using the Javascript SDK.  
+No data related to your connection to Kuzzle will pass through our servers.
+:::
+
+First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follow:
+
+| Configuration   | Value          | Explanation                          |
+|-----------------|----------------|--------------------------------------|
+| Connection name | `Kuzzle Local` | A name to identify this connection   |
+| Hostname        | `localhost`    | Hostname where Kuzzle can be reached |
+| Port            | `7512`         | Port where Kuzzle can be reached     |
+| Use SSL         | `No`           | Use SSL connection to connect        |
+| Kuzzle version  | `v2.x`         | Kuzzle version                       |
+
+Then click on `Create Connection`. 
+
+Your connection is now ready but you can't use it yet since Kuzzle is not running!
+
 ### Let's go!
 
 First, we will initialize a new application using Kourou:
@@ -79,3 +100,7 @@ Under the hood, the command `npm run dev` use [nodemon](https://nodemon.io/) and
 :::
 
 Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
+
+You can also open the [Admin Console](http://console.kuzzle.io) again and use the connection we setup at the beginning of this guide.
+
+When asked for credentials, just choose `Login as Anonymous`.
