@@ -51,7 +51,7 @@ Feature: Application
 
   # Controller class usage
   Scenario: Check if Kuzzle can use a controller class
-    When I successfully execute the action "functional-tests-controller":"helloWorld" with args:
+    When I successfully execute the action "functional-tests":"helloWorld" with args:
     | name | "Martial" |
     Then I should receive a result matching:
     | greeting | "Hello, Martial" |
