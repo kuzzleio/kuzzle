@@ -2,7 +2,7 @@
 code: false
 type: branch
 title: Getting Started
-description: learn kuzzle in a few steps
+description: Learn how to use Kuzzle to develop your backend application
 order: 100
 ---
 
