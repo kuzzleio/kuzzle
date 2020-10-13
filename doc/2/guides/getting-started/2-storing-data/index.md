@@ -24,7 +24,7 @@ The collections have mappings that characterize the way Elasticsearch will index
 It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
 :::
 
-If you're more familiar with the way relational databases store data, here is how it compares:
+If you're more familiar with the way relational databases store data, here is an analogy. Bear in mind that this is only to give you a rough point of comparison with a relational database, the similarities end here:
 
 | Relational databases storage | Document-oriented storage |
 | :--------------------------: | :-----------------------: |
