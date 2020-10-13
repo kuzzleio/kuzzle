@@ -17,7 +17,7 @@ The permissions system is designed following a standard model and is structured 
 
 ![roles, profiles and users](./role-profile-user.png)
 
-See the in-depth guide for more details.: [Access Control Rights in depth](/core/2/guides/some-link)
+See the [in-depth guide](/core/2/guides/some-link-for-acl-in-depth) for more details.
 
 ### Create our first restricted user
 
@@ -151,6 +151,8 @@ Try to run the following command: `kourou server:now`
 You should get the following error because since the anonymous user is now restricted to only a few API actions:
 
 ```bash
+$ kourou server:now
+
 [ℹ] Unknown command "server:now", fallback to API method
  
  🚀 Kourou - Executes an API query.
@@ -170,6 +172,8 @@ Run the same command but authenticate with the user we just create: `kourou serv
 We have the right to use this API action because we are now authenticated.
 
 ```bash
+$ kourou server:now --username yagmur --password password
+
 [ℹ] Unknown command "server:now", fallback to API method
  
  🚀 Kourou - Executes an API query.
