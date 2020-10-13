@@ -44,7 +44,7 @@ The following role description give access to [auth:getCurrentUser](/core/2/api/
 }
 ```
 
-Copy the above role and then run this command: `kourou security:createRole --id hostes --body-editor`
+Copy the above role and then run this command: `kourou security:createRole --id dummy --body-editor`
 
 A text editor should open itself, replace the existing body by our role definition and then exit the editor.
 
@@ -65,7 +65,7 @@ $ kourou security:createRole '{
       }
     }
   }
-}' --id hostes
+}' --id dummy
 ```
 :::
 
@@ -80,12 +80,12 @@ Then, we are gonna create a profile who use our newly created role. For this we 
 ```bash
 $ kourou security:createProfile '{
   policies: [
-    { roleId: "hostes" }
+    { roleId: "dummy" }
   ]
-}' --id hostes
+}' --id dummy
 ```
 
-Now we have a `hostes` profile which give access to the `hostes` role actions.
+Now we have a `dummy` profile which give access to the `dummy` role actions.
 
 You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://console.kuzzle.io)
 
@@ -93,14 +93,14 @@ You should see your newly created profile in the `Security > Profiles` section o
 
 #### User
 
-Finally, we need an user that use the `hostes` profile. The API action to create an user is [security:createUser](/core/2/api/controllers/security/create-user).
+Finally, we need an user that use the `dummy` profile. The API action to create an user is [security:createUser](/core/2/api/controllers/security/create-user).
 
 User need at least to be assigned with one profile. Also we are gonna give our user some credentials to be able to log in.
 
 ```bash
 $ kourou security:createUser '{
   content: {
-    profileIds: ["hostes"]
+    profileIds: ["dummy"]
   },
   credentials: {
     local: {
