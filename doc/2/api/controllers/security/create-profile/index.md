@@ -6,8 +6,6 @@ title: createProfile
 
 # createProfile
 
-
-
 Creates a new profile.
 
 ---
@@ -17,7 +15,7 @@ Creates a new profile.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/profiles/<_id>/_create[?refresh=wait_for]
+URL: http://kuzzle:7512/profiles/<_id>/_create[?refresh=wait_for][&force]
 Method: POST
 Body:
 ```
@@ -77,7 +75,10 @@ Body:
         ]
       }
     ]
-  }
+  },
+  // Optional parameters
+  "force": true,
+  "refresh": "wait_for"
 }
 ```
 
@@ -89,6 +90,7 @@ Body:
 
 ### Optional:
 
+- `force` (default: `false`): if set to true, will allow the profile to be restricted on non-existing indexes or collections <SinceBadge version="auto-version"/>
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created profile is indexed (default: `"wait_for"`)
 
 ---

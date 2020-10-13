@@ -6,8 +6,6 @@ title: updateProfile
 
 # updateProfile
 
-
-
 Updates a security profile definition.
 
 ---
@@ -17,7 +15,7 @@ Updates a security profile definition.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/profiles/<_id>/_update[?refresh=wait_for][&retryOnConflict=10]
+URL: http://kuzzle:7512/profiles/<_id>/_update[?refresh=wait_for][&retryOnConflict=10][&force]
 Method: PUT
 Body:
 ```
@@ -79,6 +77,7 @@ Body:
     ]
   },
   // Optional
+  "force": true,
   "refresh": "wait_for",
   "retryOnConflict": 10
 }
@@ -92,6 +91,7 @@ Body:
 
 ### Optional arguments
 
+- `force` (default: `false`): if set to true, will allow the profile to be restricted on non-existing indexes or collections <SinceBadge version="auto-version"/>
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the user changes are indexed (default: `"wait_for"`)
 - `retryOnConflict`: in case of an update conflict in Elasticsearch, the number of retries before aborting the operation (default: `10`)
 

@@ -274,7 +274,7 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid index name', async () => {
+    it('should reject if restrictedTo points to an unknown index', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index'}]
@@ -291,6 +291,23 @@ describe('Test: model/security/profile', () => {
         .calledWith('index');
     });
 
+    it('should allow unknown indexes if the "force" option is set', async () => {
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{ index: 'index'}]
+      }];
+
+      kuzzle.storageEngine.public.indexExists.resolves(false);
+
+      await profile.validateDefinition({ force: true });
+
+      should(profile[_kuzzle].storageEngine.public.indexExists)
+        .calledOnce()
+        .calledWith('index');
+
+      should(kuzzle.log.warn).calledWith('The profile "test" gives access to the non-existing index "index".');
+    });
+
     it('should reject if restrictedTo.collections is not an array', () => {
       profile.policies = [{
         roleId: 'admin',
@@ -303,7 +320,7 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid collection name', async () => {
+    it('should reject if restrictedTo points to an unknown collection', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', collections: ['foo']}]
@@ -318,6 +335,23 @@ describe('Test: model/security/profile', () => {
       should(profile[_kuzzle].storageEngine.public.collectionExists)
         .calledOnce()
         .calledWith('index', 'foo');
+    });
+
+    it('should allow unknown collection if the "force" option is set', async () => {
+      profile.policies = [{
+        roleId: 'admin',
+        restrictedTo: [{ index: 'index', collections: ['foo']}]
+      }];
+
+      kuzzle.storageEngine.public.collectionExists.resolves(false);
+
+      await profile.validateDefinition({ force: true });
+
+      should(profile[_kuzzle].storageEngine.public.collectionExists)
+        .calledOnce()
+        .calledWith('index', 'foo');
+
+      should(kuzzle.log.warn).calledWith('The profile "test" gives access to non-existing collections "foo".');
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {
