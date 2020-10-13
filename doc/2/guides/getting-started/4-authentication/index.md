@@ -17,6 +17,22 @@ Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) internally and th
 See [how to integrate a new strategy](/core/2/some-link-on-integrating-new-strategy)
 :::
 
+We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide. When creating a user, we had to provide credentials for the `local` strategy:
+
+```bash
+$ kourou security:createUser '{
+  content: {
+    profileIds: ["dummy"]
+  },
+  credentials: {
+    local: {
+      username: "yagmur",
+      password: "password"
+    }
+  }
+}'
+```
+
 ### Get an authentication token
 
 Kuzzle uses authentication token.  
