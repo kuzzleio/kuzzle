@@ -40,7 +40,7 @@ First, we are gonna create an index with Kourou: `kourou index:create nyc-open-d
 This will use the [index:create](/core/2/api/controllers/index/create) API action.
 :::
 
-Then, we are gonna create a collection inside this index. We will provide the following basic mappings:
+Then, we are going to create a collection inside this index. We will provide the following basic mappings:
 
 ```js
 {
