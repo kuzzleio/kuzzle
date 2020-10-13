@@ -8,16 +8,16 @@ order: 400
 
 # Authentication
 
-Kuzzle authentication system is multi-strategy. This means that the same user can authenticate in several different ways.
+Kuzzle authentication system is multi-strategy based. This means that the same user can authenticate in several different ways.
 
 For example, the same user can authenticate with the `local` strategy with an username and a password pair but also with the `oauth` strategy using an external provider such as Facebook or Google.
 
 ::: info
-Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) internally and therefore the 300+ strategies are made available. (LDAP, Active Directory, x509, etc.)  
+Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) under-the-hood and therefore there is 300+ strategies that are made available. (LDAP, Active Directory, x509, etc.)  
 See [how to integrate a new strategy](/core/2/some-link-on-integrating-new-strategy)
 :::
 
-We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide. When creating a user, we had to provide credentials for the `local` strategy:
+We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide. When creating a user, we had to provide credentials for the `local` strategy but we could have provided more strategies:
 
 ```bash
 $ kourou security:createUser '{
@@ -28,6 +28,11 @@ $ kourou security:createUser '{
     local: {
       username: "yagmur",
       password: "password"
+    },
+    ldap: {
+      bindDN: "cn=root",
+      searchBase: "ou=passport-ldapauth",
+      searchFilter: "(uid=yagmur)"
     }
   }
 }'
