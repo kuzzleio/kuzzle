@@ -77,7 +77,7 @@ app.start()
 We can now run our first application with `npm run dev`
 
 ::: info
-Under the hood, the command `npm run dev` use [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) to run the application.
+Under the hood, the command `npm run dev` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) to run the application.
 :::
 
 Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
