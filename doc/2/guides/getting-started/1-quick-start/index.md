@@ -19,29 +19,11 @@ In this guide we will use Docker and Docker Compose to run those services.
  - [Node.js >= 12](https://nodejs.org/en/download/)
  - [Docker](https://docs.docker.com/engine/install/)
  - [Docker Compose](https://docs.docker.com/compose/install/)
-
-#### Kourou
+ - [Kourou](https://github.com/kuzzleio/kourou)
 
 Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI.
 
 You can install Kourou globally by using NPM: `npm install -g kourou`
-
-#### Admin Console
-
-We are also gonna use the [Admin Console](/core/2/some-page-about-ac) which allows to manage your data, your users and your rights.
-
-::: info
-The Admin Console is a Single Page Application written in Vue.js and using the Javascript SDK.  
-No data related to your connection to Kuzzle will pass through our servers.
-:::
-
-First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follow:
-
-![Admin Console create connection form](./admin-console-create-connection.png)
-
-Then click on `Create Connection`. 
-
-Your connection is now ready but you can't use it yet since Kuzzle is not running!
 
 ### Let's go!
 
@@ -100,6 +82,21 @@ Under the hood, the command `npm run dev` use [nodemon](https://nodemon.io/) and
 
 Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
 
-You can also open the [Admin Console](http://console.kuzzle.io) again and use the connection we setup at the beginning of this guide.
+### Admin Console
+
+We can also use the [Admin Console](/core/2/some-page-about-ac) which allows to manage your data, your users and your rights.
+
+::: info
+The Admin Console is a Single Page Application written in Vue.js and using the Javascript SDK.  
+No data related to your connection to Kuzzle will pass through our servers.
+:::
+
+First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follow:
+
+![Admin Console create connection form](./admin-console-create-connection.png)
+
+Click on `Create Connection` and then select your connection on the dropdown menu.
 
 When asked for credentials, just choose `Login as Anonymous`.
+
+You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
