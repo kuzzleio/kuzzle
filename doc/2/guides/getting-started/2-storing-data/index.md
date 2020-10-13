@@ -18,10 +18,10 @@ Kuzzle organizes the data storage in 4 levels:
 
 An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.
 
-Les collections ont des mappings qui caractérisent la manière dont Elasticsearch va indexer les données pour la recherche.
+The collections have mappings that characterize the way Elasticsearch will index the data for the search.
 
 ::: info
-Il est recommandé de définir soi-même ses mappings afin de spécifier les types voulus pour ses collections.
+It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
 :::
 
 If you're more familiar with the way relational databases store data, here is how it compares:
@@ -56,3 +56,18 @@ $ kourou collection:create nyc-open-data yellow-taxi '{
   }
 }'
 ```
+
+Now we have a collection ready to receive documents, again use Kourou to create one:
+
+```bash
+$ kourou document:create nyc-open-data yellow-taxi '{
+  name: "Yagmur",
+  age: 27
+}'
+```
+
+Finally, we are going to use the admin console to look at what we have created.
+
+Open [http://console.kuzzle.io](http://console.kuzzle.io) in your browser.
+
+![admin console show document](./admin-console-show-document.gif)
