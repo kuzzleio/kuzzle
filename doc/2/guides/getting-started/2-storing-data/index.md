@@ -26,12 +26,13 @@ It is recommended that you define your own mappings in order to specify the desi
 
 If you're more familiar with the way relational databases store data, here is how it compares:
 
-| Document-oriented storage | Relational databases storage |
-| --------------------- | -------------- | 
-| index | database | 
-| collection | table |
-| document | line |
-| field | column |
+| Relational databases storage | Document-oriented storage |
+| :--------------------------: | :-----------------------: |
+| database                     | index                     |
+| table                        | collection                |
+| schema                       | mappings                  |
+| line                         | document                  |
+| column                       | field                     |
 
 First, we are gonna create an index with Kourou: `kourou index:create nyc-open-data`
 
@@ -66,8 +67,8 @@ $ kourou document:create nyc-open-data yellow-taxi '{
 }'
 ```
 
-Finally, we are going to use the admin console to look at what we have created.
+Finally, we are going to use the [Admin Console](http://console.kuzzle.io) to look at what we have created.
 
-Open [http://console.kuzzle.io](http://console.kuzzle.io) in your browser.
+Select the `nyc-open-data` index and then the `yellow-taxi` collection. You should see one document in this collection.
 
 ![admin console show document](./admin-console-show-document.gif)
