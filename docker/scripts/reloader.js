@@ -61,7 +61,7 @@ function loadConfig () {
       cwd: '.',
       directories: [],
       files: [],
-      waitExit: 5000,
+      killDelay: 5000,
     },
     cfg);
 }
@@ -102,15 +102,15 @@ async function stopProcess () {
 
   childProcess.kill();
 
-  // Wait for config.waitExit for the process to stop itself, after that: kill it
+  // Wait for config.killDelay for the process to stop itself, after that: kill it
   const now = Date.now();
   let forced = false;
 
   while (!exited) {
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    if (!forced && (Date.now() - now) > config.waitExit) {
-      console.log(clc.red(`[RELOADER] Process still here after ${config.waitExit}ms. Sending a SIGKILL signal`));
+    if (!forced && (Date.now() - now) > config.killDelay) {
+      console.log(clc.red(`[RELOADER] Process still here after ${config.killDelay}ms. Sending a SIGKILL signal`));
       childProcess.kill('SIGKILL');
       forced = true;
     }
