@@ -27,7 +27,6 @@ else
 fi
 
 node docker/scripts/reloader.js \
-    docker/scripts/reloader.json \
     --inspect=0.0.0.0:9229 \
     -r ts-node/register docker/scripts/start-kuzzle-dev.ts \
     --mappings /fixtures/mappings.json \

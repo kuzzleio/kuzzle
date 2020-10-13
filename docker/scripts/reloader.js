@@ -22,13 +22,23 @@
 
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
 const { fork } = require('child_process');
 
 const chokidar = require('chokidar');
-const jsonStrip = require('strip-json-comments');
 const clc = require('cli-color');
+
+const config = {
+  cwd: '/var/app',
+  killDelay: 5000,
+  watch: [
+    'lib',
+    'plugins',
+    'node_modules',
+    'index.js',
+    'docker/scripts/*.ts',
+  ],
+};
 
 const stateEnum = Object.freeze({
   RUNNING: 1,
@@ -36,14 +46,13 @@ const stateEnum = Object.freeze({
   STOPPING: 3,
 });
 
-const config = loadConfig();
 const { nodeArgs, script, scriptArgs } = parseArgs();
 
 let childProcess;
 let state = stateEnum.STOPPED;
 
 function parseArgs () {
-  const args = process.argv.slice(3);
+  const args = process.argv.slice(2);
   const idx = args.findIndex(arg => arg.endsWith('.js') || arg.endsWith('.ts'));
 
   return {
@@ -51,19 +60,6 @@ function parseArgs () {
     script: args[idx],
     scriptArgs: args.slice(idx + 1),
   };
-}
-
-function loadConfig () {
-  const cfg = JSON.parse(jsonStrip(fs.readFileSync(process.argv[2]).toString()));
-
-  return Object.assign(
-    {
-      cwd: '.',
-      directories: [],
-      files: [],
-      killDelay: 5000,
-    },
-    cfg);
 }
 
 function startProcess () {
@@ -120,8 +116,7 @@ async function stopProcess () {
 }
 
 const watcher = chokidar.watch(script);
-watcher.add(config.directories.map(dir => path.join(config.cwd, dir)));
-watcher.add(config.files.map(file => path.join(config.cwd, file)));
+watcher.add(config.watch.map(dir => path.join(config.cwd, dir)));
 
 watcher.on('change', async file => {
   if (state === stateEnum.RUNNING) {

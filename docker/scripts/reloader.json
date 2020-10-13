@@ -1,8 +1,0 @@
-{
-  "cwd": "/var/app",
-  "directories": [ "lib", "plugins", "node_modules" ],
-  "files": [
-    "index.js"
-  ],
-  "killDelay": 5000
-}
