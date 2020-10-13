@@ -8,22 +8,22 @@ order: 100
 
 # Quick Start
 
-Kuzzle est une application Node.js pouvant être installée sur toute les plateformes.
+Kuzzle is a Node.js application that can be installed on every platforms.
 
-Elle nécessite seulement la présence de deux services: Elasticsearch et Redis.
+It only requires two services: Elasticsearch and Redis.
 
-Pour plus de simplicité, dans ce guide nous utiliserons Docker et Docker Compose.
+In this guide we will use Docker and Docker Compose to run those services.
 
-Prérequis:
+Prerequisites:
  - [Node.js >= 12](https://nodejs.org/en/download/) (with NPM)
  - [Docker](https://docs.docker.com/engine/install/)
  - [Docker Compose](https://docs.docker.com/compose/install/)
 
-Tout au long de ce guide, nous allons avoir besoin de [Kourou](https://github.com/kuzzleio/kourou), la CLI de Kuzzle.
+Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI.
 
-Vous pouvez installer Kourou globalement via NPM: `npm install -g kourou`
+You can install Kourou globally by using NPM: `npm install -g kourou`
 
-Tout d'abord, nous allons initialiser une nouvelle application en utilisant Kourou:
+First, we will initialize a new application using Kourou:
 
 ```bash
 $ kourou app:scaffold playground
@@ -70,10 +70,10 @@ app.start()
   .catch(console.error)
 ```
 
-Vous pouvez donc lancer votre première application avec `npm run dev`
+We can now run our first application with `npm run dev`
 
 ::: info
-Under the hood, the command `npm run dev` use [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) to run your application.
+Under the hood, the command `npm run dev` use [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) to run the application.
 :::
 
 Now visit http://localhost:7512 with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
