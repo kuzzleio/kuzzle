@@ -8,10 +8,10 @@ order: 300
 
 # Access Control Rights
 
-As in any backend, Kuzzle allows you to restrict access to its functionalities according to the users.
+As in any backend, Kuzzle allows you to restrict access to its features, depending on the querying users.
 
 The permissions system is designed following a standard model and is structured in 3 dimensions:
- - **role**: whitelist authorized API actions
+ - **role**: whitelist of allowed API actions
  - **profile**: combination of one or more roles
  - **user**: combination of one or more profiles
 
@@ -23,9 +23,9 @@ See the [in-depth guide](/core/2/guides/some-link-for-acl-in-depth) for more det
 
 #### Role
 
-First, we are gonna create a new role with the [security:createRole](/core/2/api/controllers/security/create-role) action.
+First, we are going to create a new role with the [security:createRole](/core/2/api/controllers/security/create-role) action.
 
-The following role description give access to [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and [server:info](/core/2/api/controllers/auth/get-current-user) actions only.
+The following role description gives access to [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and to the [server:info](/core/2/api/controllers/auth/get-current-user) actions only.
 
 ```js
 {
@@ -46,7 +46,7 @@ The following role description give access to [auth:getCurrentUser](/core/2/api/
 
 Copy the above role and then run this command: `kourou security:createRole --id hostes --body-editor`
 
-A text editor should open itself, replace the existing body by our role definition and then exit the editor.
+A text editor should open itself: replace the existing body by the copied role definition and then exit the editor.
 
 ::: info
 If you have trouble with the integrated text editor, you can try to run the command directly as well:  
@@ -75,7 +75,7 @@ You should see your newly created role in the `Security > Roles` section of the 
 
 #### Profile
 
-Then, we are gonna create a profile who use our newly created role. For this we will use the [security:createProfile](/core/2/api/controllers/security/create-profile) action.
+Then, we are going to create a profile which uses our newly created role. For this we will use the [security:createProfile](/core/2/api/controllers/security/create-profile) action.
 
 ```bash
 $ kourou security:createProfile '{
@@ -85,7 +85,7 @@ $ kourou security:createProfile '{
 }' --id hostes
 ```
 
-Now we have a `hostes` profile which give access to the `hostes` role actions.
+Now we have a `hostes` profile which gives access to the API actions allowed by the `hostes` role.
 
 You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://console.kuzzle.io)
 
@@ -93,9 +93,9 @@ You should see your newly created profile in the `Security > Profiles` section o
 
 #### User
 
-Finally, we need an user that use the `hostes` profile. The API action to create an user is [security:createUser](/core/2/api/controllers/security/create-user).
+Finally, we need a user attached to the `hostes` profile. The API action to create a user is [security:createUser](/core/2/api/controllers/security/create-user).
 
-User need at least to be assigned with one profile. Also we are gonna give our user some credentials to be able to log in.
+Users need to have at least one assigned profile. We also will have to give our user some credentials to be able to log in with it.
 
 ```bash
 $ kourou security:createUser '{
@@ -115,23 +115,23 @@ You should see your newly created role in the `Security > Users` section of the 
 
 ![Admin Console users display](./admin-console-users.png)
 
-### Creates administrator and restrict anonymous user rights
+### Creating an administrator account, and restricting anonymous user rights
 
-When you are not authenticated, your request are executed as the `anonymous` user.
+When you are not authenticated, your requests are executed as the `anonymous` user.
 
-Like every other user, this user is assigned with a profile (`anonymous`) and thus a role (`anonymous` as well).
-
-::: info
-By default, the `anonymous` role give access to every API actions. This is intended to makes development easier but it's definitively not suitable for production.
-:::
-
-It's recommanded to use the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action to creates an admin and restrict anonymous user rights.
+As with any other user, the `anonymous` user has a profile assigned (named `anonymous`), and thus a role (named `anonymous` as well).
 
 ::: info
-The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) creates an user which have the `admin` profile and this the `admin` role who give access to every API actions.
+By default, the `anonymous` role gives access to all API actions. This is intended to make development easier, but it's definitively not suitable for production.
 :::
 
-In this way you can always access the complete API throught this admin account.
+It's recommended to use the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action to create an administrator user, and to restrict anonymous user rights.
+
+::: info
+The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.
+:::
+
+This way you can always access the complete API through this admin account.
 
 ```bash
 $ kourou security:createFirstAdmin '{
@@ -144,11 +144,11 @@ $ kourou security:createFirstAdmin '{
 }' -a reset=true
 ```
 
-#### Try the API as anonymous user
+#### Try the API as the anonymous user
 
 Try to run the following command: `kourou server:now`
 
-You should get the following error because since the anonymous user is now restricted to only a few API actions:
+You should get the following error because now the anonymous user is restricted to only a few API actions:
 
 ```bash
 $ kourou server:now
@@ -165,11 +165,11 @@ $ kourou server:now
         id: security.rights.unauthorized
 ```
 
-#### Try the API as authentified user
+#### Try the API as an authenticated user
 
-Run the same command but authenticate with the user we just create: `kourou server:now --username yagmur --password password`
+Run the same command, authenticating with the user we just created: `kourou server:now --username yagmur --password password`
 
-We have the right to use this API action because we are now authenticated.
+We are allowed to use this API action because we are now authenticated with a user with sufficient rights.
 
 ```bash
 $ kourou server:now --username yagmur --password password
