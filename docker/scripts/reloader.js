@@ -35,7 +35,7 @@ const config = {
     'lib',
     'plugins',
     'node_modules',
-    'index.js',
+    'index.*s',
     'docker/scripts/*.ts',
   ],
 };
