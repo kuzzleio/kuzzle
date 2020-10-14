@@ -13,11 +13,11 @@ Kuzzle authentication system is multi-strategy based. This means that the same u
 For example, the same user can authenticate with the `local` strategy with an username and a password pair but also with the `oauth` strategy using an external provider such as Facebook or Google.
 
 ::: info
-Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) under-the-hood and therefore there is 300+ strategies that are made available. (LDAP, Active Directory, x509, etc.)  
+Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) under the hood, and therefore there are 300+ strategies readily available. (LDAP, OpenID, Active Directory, x509, etc.)  
 See [how to integrate a new strategy](/core/2/some-link-on-integrating-new-strategy)
 :::
 
-We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide. When creating a user, we had to provide credentials for the `local` strategy but we could have provided more strategies:
+We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide, when creating a user, we had to provide credentials for the `local` strategy, but we could have provided more strategies (provided the right strategy plugins are installed):
 
 ```bash
 $ kourou security:createUser '{
@@ -38,13 +38,13 @@ $ kourou security:createUser '{
 }'
 ```
 
-### Get an authentication token
+### Getting an authentication token
 
-Kuzzle uses authentication token.  
+Kuzzle uses authentication tokens to identify user sessions.  
 
-First we need to get one with the [auth:login](/core/2/api/controllers/auth/login) action. This action takes the `strategy` used to authenticate and any information needed by the strategy.
+First we need to get one with the [auth:login](/core/2/api/controllers/auth/login) action. This action takes the `strategy` used as a mean to authenticate, and any additional information needed by that strategy.
 
-In our example we will use the `local` strategy so we have to provide an `username` and a `password`:
+In our example we will use the `local` strategy so we have to provide a `username` and a `password`:
 
 ```bash
 $ kourou auth:login -a strategy=local -a username=yagmur -a password=password
@@ -65,17 +65,17 @@ $ kourou auth:login -a strategy=local -a username=yagmur -a password=password
 Kuzzle sent us back the token in the `jwt` property
 
 ::: warning
-When executing the [auth:login](/core/2/api/controllers/auth/login) action, the anonymous user rights will apply.
+Usually, login attempts are made by anonymous users, to acquire a token granting the necessary rights to perform more actions.
 
-So if the anonymous user does not have the rights to execute this action, then no one will be able to login.
+Since removing rights to the `auth:login` action from anonymous users would mean that it would be no longer possible to log in, Kuzzle prevents that action from ever be removed from the `anonymous` role.
 :::
 
-### Use an authentication token
+### Using an authentication token
 
-Now that we have a token, we must be pass it in the HTTP headers or in the request payload.
+Now that we have a token, we must pass it to API queries, either in the HTTP headers or in the request payload, depending on what network protocol is used.
 
 ::: info
-When using Kourou with `--username` and `--password` flags, the [auth:login](/core/2/api/controllers/auth/login) action is called and the received token is sent with the next request.
+When using Kourou with `--username` and `--password` flags, the [auth:login](/core/2/api/controllers/auth/login) action is called and the received token is automatically used along with subsequent requests.
 :::
 
 :::: tabs
@@ -98,7 +98,7 @@ Request payload format:
 }
 ```
 
-You can try to send an authenticated with the WebSocket protocol with [wscat](https://www.npmjs.com/package/wscat):
+You can try to send an authentication token with the WebSocket protocol with [wscat](https://www.npmjs.com/package/wscat):
 
 ```bash
 $ npx wscat -c ws://localhost:7512 --execute '{ "controller": "auth", "action": "getCurrentUser", "jwt": "<token>" }'
