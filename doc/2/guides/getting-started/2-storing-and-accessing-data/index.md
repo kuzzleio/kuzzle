@@ -95,9 +95,9 @@ Select the `nyc-open-data` index and then the `yellow-taxi` collection. You shou
 
 ### Search for documents
 
-One of the best strengths of Kuzzle is to expose directly and securely the search functionality of Elasticsearch.
+Kuzzle directly exposes Elasticsearch's query language in a secure way. 
 
-We will be able to use the powerful query language of Elasticsearch to retrieve the documents we are interested in. 
+We'll now use that to search for the documents we're interested in.
 
 First, we need to create more documents:
 
