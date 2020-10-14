@@ -113,7 +113,7 @@ $ kourou sdk:execute --code '
 ```
 
 ::: info
-Kourou is able to execute Javascript code snippets.  
+Kourou is able to [execute](/core/2/api/kourou/commands/sdk/execute) Javascript code snippets.  
 A `sdk` variable is exposed and refer to an instance of the [Javascript SDK](/sdk/js/7) connected (and authenticated if credentials were provided) to Kuzzle.
 ::: 
 
