@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.4.5",
+  "version": "2.5.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "./bin/start-kuzzle-server"
@@ -20,8 +20,8 @@
     "test:functional:legacy:mqtt": "npx cucumber-js --format progress-bar --profile mqtt",
     "test:functional:legacy:cluster": "npx cucumber-js --format progress-bar --profile websocketCluster",
     "test:functional:sdk": "npm run test:functional:sdk:http && npm run test:functional:sdk:websocket",
-    "test:functional:sdk:http": "KUZZLE_PROTOCOL=http npx cucumber-js --profile http",
-    "test:functional:sdk:websocket": "KUZZLE_PROTOCOL=websocket npx cucumber-js --profile websocket",
+    "test:functional:sdk:http": "KUZZLE_PROTOCOL=http npx cucumber-js --profile http ./features-sdk",
+    "test:functional:sdk:websocket": "KUZZLE_PROTOCOL=websocket npx cucumber-js --profile websocket ./features-sdk",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
     "test:lint": "npm run test:lint:js && npm run test:lint:ts",
