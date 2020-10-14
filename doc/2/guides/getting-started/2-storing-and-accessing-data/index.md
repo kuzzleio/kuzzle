@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Storing and Accessing Data
+title: Storing and accessing Data
 description: Create and retrieve documents
 order: 200
 ---
 
-# Storing and Accessing Data
+# Storing and accessing Data
 
 Now that Kuzzle is running, we are going to create some documents.
 
