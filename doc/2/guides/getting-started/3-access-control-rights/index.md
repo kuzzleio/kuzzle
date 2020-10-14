@@ -46,6 +46,11 @@ The following role description gives access to [auth:getCurrentUser](/core/2/api
 
 Copy the above role and then run this command: `kourou security:createRole --id dummy --body-editor`
 
+::: info
+This will use the [security:createRole](/core/2/api/controllers/security/create-role) API action.
+:::
+
+
 A text editor should open itself: replace the existing body by the copied role definition and then exit the editor.
 
 ::: info
@@ -69,6 +74,7 @@ $ kourou security:createRole '{
 ```
 :::
 
+
 You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://console.kuzzle.io)
 
 ![Admin Console roles display](./admin-console-roles.png)
@@ -84,6 +90,10 @@ $ kourou security:createProfile '{
   ]
 }' --id dummy
 ```
+
+::: info
+This will use the [security:createProfile](/core/2/api/controllers/security/create-profile) API action.
+:::
 
 Now we have a `dummy` profile which gives access to the API actions allowed by the `dummy` role.
 
@@ -111,6 +121,11 @@ $ kourou security:createUser '{
 }'
 ```
 
+::: info
+This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
+:::
+
+
 You should see your newly created role in the `Security > Users` section of the [Admin Console](http://console.kuzzle.io)
 
 ![Admin Console users display](./admin-console-users.png)
@@ -128,7 +143,7 @@ By default, the `anonymous` role gives access to all API actions. This is intend
 It's recommended to use the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action to create an administrator user, and to restrict anonymous user rights.
 
 ::: info
-The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.
+The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.
 :::
 
 This way you can always access the complete API through this admin account.
@@ -199,4 +214,8 @@ $ kourou security:updateRole '{
   }
 }' --id anonymous --username admin --password password
 ```
+
+This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
 :::
+
+Learn more about permissions: [Access Control Rights](/core/2/some-link)
