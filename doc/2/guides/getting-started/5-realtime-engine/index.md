@@ -24,6 +24,10 @@ First, we need to subscribe to changes occuring in a specific collection:
 $ kourou realtime:subscribe nyc-open-data yellow-taxi
 ```
 
+::: info
+This will use the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) API action. 
+::: 
+
 Kourou is now waiting for realtime notifications about changes in our collection.
 
 We are going to create a new document in the Admin Console to trigger one!
@@ -186,4 +190,3 @@ Learn more about:
  - [Koncorde Filter DSL](/core/2/some-link).
  - [Kuzzle Realtime Engine](/core/2/some-link).
  - Javascript SDK [realtime.subscribe](/sdk/js/7/controllers/realtime/subscribe) method
- 
