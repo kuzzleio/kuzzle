@@ -67,7 +67,7 @@ $ kourou collection:create nyc-open-data yellow-taxi '{
 ```
 
 ::: info
-This will use the [collection:create](/core/2/api/controllers/index/create) API action.
+This will use the [collection:create](/core/2/api/controllers/collection/create) API action.
 :::
 
 
@@ -84,7 +84,7 @@ $ kourou document:create nyc-open-data yellow-taxi '{
 ```
 
 ::: info
-This will use the [document:create](/core/2/api/controllers/index/create) API action.
+This will use the [document:create](/core/2/api/controllers/document/create) API action.
 :::
 
 Finally, we are going to use the [Admin Console](http://console.kuzzle.io) to look at what we have created.
