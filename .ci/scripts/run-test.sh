@@ -23,4 +23,4 @@ node -r ts-node/register docker/scripts/start-kuzzle-dev.ts &
 
 ./bin/wait-kuzzle
 
-npm run $KUZZLE_FUNCTIONAL_TESTS
+npm run $KUZZLE_FUNCTIONAL_TESTS --enable-plugins functional-test-plugin
