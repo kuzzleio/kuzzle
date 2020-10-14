@@ -10,7 +10,7 @@ order: 500
 
 Kuzzle integrates an advanced realtime engine. It can work in a classic pub/sub mode but also as a realtime database notification engine.
 
-**Any change occuring on the database is likely to generate a realtime notification** about the creation, modification and deletion of documents.
+**Any change occuring on the database can generate a realtime notification** about the creation, modification and deletion of documents.
 
 A filter system also allows clients to receive notifications only according to their interest in certain types of documents.
 
@@ -68,10 +68,10 @@ Again, we are going to subscribe to notifications but only for documents where:
   - `age` is greater than `30`
   - `city` is equal to `Antalya`
 
-This filter must be written using Koncorde Filter DSL who is a little inspired by Elasticsearch DSL:
+This filter must be written using Koncorde Filter DSL, which is a little inspired by Elasticsearch DSL:
 
 ::: info
-Koncorde is part of Kuzzle Realtime Engine and handle subscription filters.
+Koncorde is part of Kuzzle Realtime Engine and handles subscription filters.
 :::
 
 ```json
