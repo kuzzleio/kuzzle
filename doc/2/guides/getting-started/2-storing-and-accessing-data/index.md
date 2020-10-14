@@ -24,7 +24,7 @@ The collections have mappings that characterize the way Elasticsearch will index
 It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
 :::
 
-If you're more familiar with the way relational databases store data, here is how it compares:
+If you're more familiar with the way relational databases store data, here is an analogy. Bear in mind that this is only to give you a rough point of comparison with a relational database, the similarities end here:
 
 | Relational databases storage | Document-oriented storage |
 | :--------------------------: | :-----------------------: |
@@ -36,13 +36,13 @@ If you're more familiar with the way relational databases store data, here is ho
 
 ### Prepare the database
 
-First, we are gonna create an index with Kourou: `kourou index:create nyc-open-data`
+First, we are going to create an index with Kourou: `kourou index:create nyc-open-data`
 
 ::: info
 This will use the [index:create](/core/2/api/controllers/index/create) API action.
 :::
 
-Then, we are gonna create a collection inside this index. We will provide the following basic mappings:
+Then, we are going to create a collection inside this index. We will provide the following basic mappings:
 
 ```js
 {
@@ -114,11 +114,11 @@ $ kourou sdk:execute --code '
 
 ::: info
 Kourou is able to [execute](/core/2/api/kourou/commands/sdk/execute) Javascript code snippets.  
-A `sdk` variable is exposed and refer to an instance of the [Javascript SDK](/sdk/js/7) connected (and authenticated if credentials were provided) to Kuzzle.
+A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/sdk/js/7), connected to Kuzzle and authenticated if credentials are provided.
 ::: 
 
 Then we are going to use the [document:search](/core/2/api/controllers/document/search) API action to fetch only documents where:
- - `age` is greather than `30`
+ - `age` is greater than `30`
  - `city` is equal to `Antalya`
 
 For this, we need to write a [boolean query](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-bool-query.html):
