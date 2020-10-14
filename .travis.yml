@@ -20,8 +20,6 @@ _integration-tests: &integration-tests
     # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
     - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
     - docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml run kuzzle
-  after_script:
-    - docker-compose -f .ci/$DOCKER_COMPOSE_TEST.yml logs
 
 # Documentation deployment
 _doc-deploy: &doc-deploy
