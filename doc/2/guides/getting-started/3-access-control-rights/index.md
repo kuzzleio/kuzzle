@@ -185,3 +185,18 @@ $ kourou server:now --username yagmur --password password
 }
  [✔] Successfully executed "server:now"
 ```
+
+::: info
+You can now reset anonymous rights to default to make the rest of this tutorial easier:
+```bash
+$ kourou security:updateRole '{
+  controllers: {
+    "*": {
+      actions: {
+        "*": true
+      }
+    }
+  }
+}' --id anonymous --username admin --password password
+```
+:::
