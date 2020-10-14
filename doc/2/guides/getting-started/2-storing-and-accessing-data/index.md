@@ -95,9 +95,9 @@ Select the `nyc-open-data` index and then the `yellow-taxi` collection. You shou
 
 ### Search for documents
 
-Un des meilleur atouts de Kuzzle est d'exposer directement de façon sécurisé la fonction de recherche d'Elasticsearch.
+One of the best strengths of Kuzzle is to expose directly and securely the search functionality of Elasticsearch.
 
-Nous allons pouvoir utiliser le puissant langage de requête d'Elasticsearch pour récupérer les documents qui nous intéressent. 
+We will be able to use the powerful query language of Elasticsearch to retrieve the documents we are interested in. 
 
 First, we need to create more documents:
 
@@ -121,7 +121,7 @@ Then we are going to use the [document:search](/core/2/api/controllers/document/
  - `age` is greather than `30`
  - `city` is equal to `Antalya`
 
-For this, we are going to write a [boolean query](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-bool-query.html):
+For this, we need to write a [boolean query](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-bool-query.html):
 
 ```js
 {
@@ -158,6 +158,7 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 ```
 
 <details><summary>You should retrieve the following 3 documents:</summary>
+
 ```bash
  🚀 Kourou - Searches for documents
  
@@ -200,6 +201,7 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 }
  [✔] 3 documents fetched on a total of 3
 ```
+
 </details>
 
 Learn more about querying Elasticsearch: [Mappings and Search](/core/2/some-link-to-search-guide).
