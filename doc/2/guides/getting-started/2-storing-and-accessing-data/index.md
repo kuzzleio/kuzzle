@@ -204,4 +204,6 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 
 </details>
 
-Learn more about querying Elasticsearch: [Mappings and Search](/core/2/some-link-to-search-guide).
+Learn more about:
+  - [Database mappings](/core/2/guides/some-link)
+  - [Querying Elasticsearch]()(/core/2/guides/some-link).
