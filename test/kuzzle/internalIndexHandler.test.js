@@ -346,15 +346,6 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
       return should(internalIndexHandler._persistSecret()).rejectedWith(err);
     });
-
-    it('should not reject if the seed document already exists', () => {
-      const err = new Error();
-      err.id = 'services.storage.document_already_exists';
-
-      kuzzle.ask.withArgs('core:storage:private:document:create').rejects(err);
-
-      return should(internalIndexHandler._persistSecret()).be.fulfilled();
-    });
   });
 
   describe('#getSecret', () => {

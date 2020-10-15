@@ -146,6 +146,8 @@ class KuzzleCluster {
       ? new IORedis.Cluster(this.config.redis)
       : new IORedis(this.config.redis);
 
+    this.redis.client('SETNAME', `cluster_manager/${this.kuzzle.id}`);
+
     this.redis.defineCommand('clusterCleanNode', {
       numberOfKeys: 1,
       lua: fs.readFileSync(path.resolve(__dirname, 'redis/cleanNode.lua'))
