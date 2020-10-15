@@ -3,7 +3,8 @@
 const should = require('should');
 const {
   Request,
-  BadRequestError
+  BadRequestError,
+  PreconditionError,
 } = require('kuzzle-common-objects');
 
 const Kuzzle = require('../../mocks/kuzzle.mock');
@@ -274,7 +275,7 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an unknown index', async () => {
+    it('should reject if restrictedTo points to an unknown index (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index'}]
@@ -282,30 +283,16 @@ describe('Test: model/security/profile', () => {
 
       kuzzle.storageEngine.public.indexExists.resolves(false);
 
-      await should(profile.validateDefinition()).rejectedWith(BadRequestError, {
-        id: 'services.storage.invalid_index_name',
-      });
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_index',
+        });
 
       should(profile[_kuzzle].storageEngine.public.indexExists)
         .calledOnce()
         .calledWith('index');
-    });
-
-    it('should allow unknown indexes if the "force" option is set', async () => {
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: [{ index: 'index'}]
-      }];
-
-      kuzzle.storageEngine.public.indexExists.resolves(false);
-
-      await profile.validateDefinition({ force: true });
-
-      should(profile[_kuzzle].storageEngine.public.indexExists)
-        .calledOnce()
-        .calledWith('index');
-
-      should(kuzzle.log.warn).calledWith('The profile "test" gives access to the non-existing index "index".');
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -320,7 +307,7 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an unknown collection', async () => {
+    it('should reject if restrictedTo points to an unknown collection (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', collections: ['foo']}]
@@ -328,30 +315,16 @@ describe('Test: model/security/profile', () => {
 
       kuzzle.storageEngine.public.collectionExists.resolves(false);
 
-      await should(profile.validateDefinition()).rejectedWith(BadRequestError, {
-        id: 'services.storage.invalid_collection_name',
-      });
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_collection',
+        });
 
       should(profile[_kuzzle].storageEngine.public.collectionExists)
         .calledOnce()
         .calledWith('index', 'foo');
-    });
-
-    it('should allow unknown collection if the "force" option is set', async () => {
-      profile.policies = [{
-        roleId: 'admin',
-        restrictedTo: [{ index: 'index', collections: ['foo']}]
-      }];
-
-      kuzzle.storageEngine.public.collectionExists.resolves(false);
-
-      await profile.validateDefinition({ force: true });
-
-      should(profile[_kuzzle].storageEngine.public.collectionExists)
-        .calledOnce()
-        .calledWith('index', 'foo');
-
-      should(kuzzle.log.warn).calledWith('The profile "test" gives access to non-existing collections "foo".');
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {

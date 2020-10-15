@@ -4,15 +4,29 @@ const _ = require('lodash');
 const should = require('should');
 const { Then } = require('cucumber');
 
-Then('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
-  const data = this.parseObject(dataTable),
-    policies = [];
+Then(/I create a (strict )?profile "(.*?)" with the following policies:/, async function (strict, profileId, dataTable) {
+  const data = this.parseObject(dataTable);
+  const policies = [];
 
   for (const [roleId, restrictedTo] of Object.entries(data)) {
     policies.push({ roleId, restrictedTo });
   }
 
-  this.props.result = await this.sdk.security.createProfile(profileId, {policies});
+  if (!strict) {
+    this.props.result = await this.sdk.security.createProfile(profileId, {
+      policies,
+    });
+  }
+  else {
+    // using sdk.query until createProfile handles the new "strict" option
+    this.props.result = await this.sdk.query({
+      controller: 'security',
+      action: 'createProfile',
+      _id: profileId,
+      body: { policies },
+      strict: true,
+    });
+  }
 });
 
 Then(/I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/, async function (not, method, roleId, dataTable) {
@@ -35,17 +49,41 @@ Then(/I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/, async
   }
 });
 
-Then(/I am (not )?able to get a role with id "(.*?)"/, async function (roleId, not) {
+Then(/I am (not )?able to get a role with id "(.*?)"/, async function (not, roleId) {
+  this.props.error = null;
+
   try {
     this.props.result = await this.sdk.security.getRole(roleId);
   }
   catch (e) {
     this.props.error = e;
+  }
 
-    if (not) {
-      return;
-    }
-    throw e;
+  if (not && !this.props.error) {
+    throw new Error(`Role ${roleId} exists`);
+  }
+
+  if (!not && this.props.error) {
+    throw this.props.error;
+  }
+});
+
+Then(/I am (not )?able to get a profile with id "(.*?)"/, async function (not, profileId) {
+  this.props.error = null;
+
+  try {
+    this.props.result = await this.sdk.security.getProfile(profileId);
+  }
+  catch (e) {
+    this.props.error = e;
+  }
+
+  if (not && !this.props.error) {
+    throw new Error(`Profile ${profileId} exists`);
+  }
+
+  if (!not && this.props.error) {
+    throw this.props.error;
   }
 });
 

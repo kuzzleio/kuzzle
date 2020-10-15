@@ -15,7 +15,7 @@ Creates a new profile or, if the provided profile identifier already exists, rep
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/profiles/<_id>[?refresh=wait_for][&force]
+URL: http://kuzzle:7512/profiles/<_id>[?refresh=wait_for][&strict]
 Method: PUT
 Body:
 ```
@@ -78,7 +78,7 @@ Body:
   },
   // Optional parameters
   "refresh": "wait_for",
-  "force": true
+  "strict": true
 }
 ```
 
@@ -90,8 +90,8 @@ Body:
 
 ### Optional:
 
-- `force` (default: `false`): if set to true, will allow the profile to be restricted on non-existing indexes or collections <SinceBadge version="auto-version"/>
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced profile is indexed (default: `"wait_for"`)
+- `strict` (default: `false`): if set to true, will only allow the profile to be restricted on existing indexes or collections <SinceBadge version="auto-version"/>
 
 ---
 

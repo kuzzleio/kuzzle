@@ -134,6 +134,23 @@ Feature: Security Controller
     And The role "anonymous" should match the default one
     And The role "default" should match the default one
 
+  @security
+  Scenario: Create a profile
+    Given an index "example"
+    And a collection "example":"one"
+    Then I create a strict profile "test-profile" with the following policies:
+      | default | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I am not able to get a profile with id "test-profile"
+    Then I create a strict profile "test-profile" with the following policies:
+      | default | [{ "index": "example2" }] |
+    And I am not able to get a profile with id "test-profile"
+    Then I create a strict profile "test-profile" with the following policies:
+      | default | [{ "index": "example", "collections": ["one"] }] |
+    And I am able to get a profile with id "test-profile"
+    Then I create a profile "test-profile2" with the following policies:
+      | default | [{ "index": "example2", "collections": ["one", "two"] }] |
+    And I am able to get a profile with id "test-profile"
+
   Scenario: Delete a profile
     Given I "create" a role "test-role" with the following API rights:
       | document | { "actions": { "create": true, "update": true } } |
