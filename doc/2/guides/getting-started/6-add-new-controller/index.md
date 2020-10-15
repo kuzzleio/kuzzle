@@ -38,7 +38,7 @@ The code above will register a `greeting` controller with a `sayHello` action.
 This action will use the `name` argument from the request and return a string.  
 
 ::: info
-Kuzzle will generate a default HTTP route of the following format if none are provided:   
+Kuzzle will generate a default HTTP route of the following format if none is provided:   
 `GET /_/<controller-name>/<action-name>`  
 Controller name and action name will be converted to `kebab-case`.
 :::
