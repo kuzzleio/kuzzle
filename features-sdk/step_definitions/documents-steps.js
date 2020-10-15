@@ -11,27 +11,16 @@ const
 Given(/I can( not)? create the following document:/, async function (not, dataTable) {
   const document = this.parseObject(dataTable);
 
-  const
-    index = document.index || this.props.index,
-    collection = document.collection || this.props.collection;
+  const index = document.index || this.props.index;
+  const collection = document.collection || this.props.collection;
 
-  try {
-    this.props.result = await this.sdk.document.create(
-      index,
-      collection,
-      document.body,
-      document._id);
+  await this.tryAction(
+    this.sdk.document.create(index, collection, document.body, document._id),
+    not,
+    'Document should not have been created');
 
-    if (not) {
-      return Promise.reject(new Error('Document should not have been created'));
-    }
-
+  if (!not) {
     this.props.documentId = this.props.result._id;
-  }
-  catch (error) {
-    if (!not) {
-      throw error;
-    }
   }
 });
 

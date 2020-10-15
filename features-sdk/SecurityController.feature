@@ -138,11 +138,13 @@ Feature: Security Controller
   Scenario: Create a profile
     Given an index "example"
     And a collection "example":"one"
-    Then I create a strict profile "test-profile" with the following policies:
+    Then I try to create a strict profile "test-profile" with the following policies:
       | default | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I got an error with id "services.storage.unknown_collection"
     And I am not able to get a profile with id "test-profile"
-    Then I create a strict profile "test-profile" with the following policies:
+    Then I try to create a strict profile "test-profile" with the following policies:
       | default | [{ "index": "example2" }] |
+    And I got an error with id "services.storage.unknown_index"
     And I am not able to get a profile with id "test-profile"
     Then I create a strict profile "test-profile" with the following policies:
       | default | [{ "index": "example", "collections": ["one"] }] |
@@ -288,7 +290,7 @@ Feature: Security Controller
       | body  | {"controllers" : {"functional-test-plugin/non-existing-controller": {"actions": { "manage": false } } } } |
       | force | true                                                                                                      |
     Then I am able to get a role with id "test-role-plugin2"
-    And The property "_source.controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
+    And The property "controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
       | manage | false |
 
   @security
