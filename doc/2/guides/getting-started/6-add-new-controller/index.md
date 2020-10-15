@@ -35,7 +35,7 @@ app.controller.register('greeting', {
 ```
 
 The code above will register a `greeting` controller with a `sayHello` action.  
-This action will use the `name` argument from the request and return a string.  
+This action uses the `name` argument from the request and returns a string.  
 
 ::: info
 Kuzzle will generate a default HTTP route of the following format if none is provided:   
