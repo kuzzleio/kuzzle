@@ -119,7 +119,7 @@ const watcher = chokidar.watch(script);
 watcher.add(config.watch.map(dir => path.join(config.cwd, dir)));
 
 watcher.on('change', async file => {
-  if (state === stateEnum.RUNNING) {
+  if (state !== stateEnum.STOPPING) {
     console.log(clc.green(`[RELOADER] Change detected on ${path.relative(config.cwd, file)}. Reloading...`));
     await stopProcess();
     startProcess();
