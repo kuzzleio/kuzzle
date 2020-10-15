@@ -143,6 +143,29 @@ describe('Test: security controller - profiles', () => {
       }
     });
 
+    it('should forward the strict option', async () => {
+      for (const strict of [ null, undefined, false ]) {
+        request.input.args.strict = strict;
+
+        await securityController.createOrReplaceProfile(request);
+
+        should(createOrReplaceStub).calledWithMatch(
+          createOrReplaceEvent,
+          request.input.resource._id,
+          request.input.body,
+          { strict: false, userId: 'userId' });
+      }
+
+      request.input.args.strict = true;
+      await securityController.createOrReplaceProfile(request);
+
+      should(createOrReplaceStub).calledWithMatch(
+        createOrReplaceEvent,
+        request.input.resource._id,
+        request.input.body,
+        { strict: true, userId: 'userId' });
+    });
+
     it('should throw if an invalid profile format is provided', async () => {
       request.input.body = null;
       await should(securityController.createOrReplaceProfile(request))
@@ -259,6 +282,29 @@ describe('Test: security controller - profiles', () => {
           request.input.body,
           { refresh: 'false', userId: 'userId' });
       }
+    });
+
+    it('should forward the strict option', async () => {
+      for (const strict of [ null, undefined, false ]) {
+        request.input.args.strict = strict;
+
+        await securityController.createProfile(request);
+
+        should(createStub).calledWithMatch(
+          createEvent,
+          request.input.resource._id,
+          request.input.body,
+          { strict: false, userId: 'userId' });
+      }
+
+      request.input.args.strict = true;
+      await securityController.createProfile(request);
+
+      should(createStub).calledWithMatch(
+        createEvent,
+        request.input.resource._id,
+        request.input.body,
+        { strict: true, userId: 'userId' });
     });
 
     it('should reject if an invalid profile format is provided', async () => {
@@ -573,6 +619,7 @@ describe('Test: security controller - profiles', () => {
     it('should forward provided options', async () => {
       request.input.args.refresh = false;
       request.input.args.retryOnConflict = 123;
+      request.input.args.strict = true;
 
       await securityController.updateProfile(request);
 
@@ -583,6 +630,7 @@ describe('Test: security controller - profiles', () => {
         {
           refresh: 'false',
           retryOnConflict: 123,
+          strict: true,
           userId: request.context.user._id,
         });
     });

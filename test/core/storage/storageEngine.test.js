@@ -47,18 +47,6 @@ describe('#core/storage/StorageEngine', () => {
       should(storageEngine.private.init).calledOnce();
     });
 
-    it('should register global storage events', async () => {
-      await storageEngine.init();
-
-      kuzzle.ask.restore();
-
-      await kuzzle.ask('core:storage:index:isValid', 'foo');
-      should(storageEngine.public.client.isIndexNameValid).calledWith('foo');
-
-      await kuzzle.ask('core:storage:collection:isValid', 'bar');
-      should(storageEngine.public.client.isCollectionNameValid).calledWith('bar');
-    });
-
     it('should throw if a private index and a public one share the same name', async () => {
       storageEngine.public.cache.listIndexes.resolves(['foo', 'bar', 'ohnoes']);
       storageEngine.private.cache.listIndexes.resolves(['baz', 'ohnoes', 'qux']);
