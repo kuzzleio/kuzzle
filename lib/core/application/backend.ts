@@ -394,7 +394,12 @@ class Logger extends ApplicationManager {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
 
-    this._kuzzle.log[level](`[${this._application.name}]: ${message}`);
+    if (typeof message === 'object') {
+      this._kuzzle.log[level](JSON.stringify(message));
+    }
+    else {
+      this._kuzzle.log[level](message);
+    }
   }
 }
 
