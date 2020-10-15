@@ -73,7 +73,7 @@ $ curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
   "collection": null,
   "index": null,
   "volatile": null,
-  "result": "Hello, undefined"
+  "result": "Hello, Yagmur"
 }
 ```
 
