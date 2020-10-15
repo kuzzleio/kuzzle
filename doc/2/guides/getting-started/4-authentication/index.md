@@ -78,6 +78,13 @@ When using Kourou with `--username` and `--password` flags, the [auth:login](/co
 :::
 
 :::: tabs
+::: tab Kourou
+
+```bash
+$ kourou auth:getCurrentUser --jwt <token>
+```
+
+:::
 ::: tab HTTP
 
 ``` bash
@@ -85,22 +92,14 @@ curl -H "Authorization: Bearer <token>" http://localhost:7512/_me
 ```
 
 :::
-::: tab Others
-
-Request payload format:
-
-```json
-{
-  "controller": "auth",
-  "action": "getCurrentUser",
-  "jwt: "<token>"
-}
-```
-
-You can try to send an authentication token with the WebSocket protocol with [wscat](https://www.npmjs.com/package/wscat):
+::: tab WebSocket
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --execute '{ "controller": "auth", "action": "getCurrentUser", "jwt": "<token>" }'
+$ npx wscat -c ws://localhost:7512 --execute '{
+  "controller": "auth",
+  "action": "getCurrentUser",
+  "jwt": "<token>"
+}'
 ```
 
 :::
