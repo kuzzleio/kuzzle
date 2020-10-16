@@ -21,7 +21,7 @@ Then(/I (try to )?create a (strict )?profile "(.*?)" with the following policies
       });
     }
     else {
-      // using sdk.query until createProfile handles the new "strict" option
+      // @todo replace sdk.query once createProfile handles the new "strict" option
       this.props.result = await this.sdk.query({
         controller: 'security',
         action: 'createProfile',
