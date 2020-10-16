@@ -3,7 +3,8 @@
 const should = require('should');
 const {
   Request,
-  BadRequestError
+  BadRequestError,
+  PreconditionError,
 } = require('kuzzle-common-objects');
 
 const Kuzzle = require('../../mocks/kuzzle.mock');
@@ -193,6 +194,8 @@ describe('Test: model/security/profile', () => {
       profile = new Profile();
       profile[_kuzzle] = kuzzle;
       profile._id = 'test';
+      kuzzle.storageEngine.public.indexExists.resolves(true);
+      kuzzle.storageEngine.public.collectionExists.resolves(true);
     });
 
     it('should reject if no policies are provided', () => {
@@ -272,23 +275,24 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid index name', () => {
+    it('should reject if restrictedTo points to an unknown index (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index'}]
       }];
 
-      kuzzle.storageEngine.internal.isIndexNameValid.returns(false);
+      kuzzle.storageEngine.public.indexExists.resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_index_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isIndexNameValid)
-            .calledOnce()
-            .calledWith('index');
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_index',
         });
+
+      should(profile[_kuzzle].storageEngine.public.indexExists)
+        .calledOnce()
+        .calledWith('index');
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -303,23 +307,24 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid collection name', () => {
+    it('should reject if restrictedTo points to an unknown collection (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', collections: ['foo']}]
       }];
 
-      kuzzle.storageEngine.internal.isCollectionNameValid.returns(false);
+      kuzzle.storageEngine.public.collectionExists.resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_collection_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isCollectionNameValid)
-            .calledOnce()
-            .calledWith('foo');
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_collection',
         });
+
+      should(profile[_kuzzle].storageEngine.public.collectionExists)
+        .calledOnce()
+        .calledWith('index', 'foo');
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {

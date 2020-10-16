@@ -382,18 +382,21 @@ describe('Test: security/profileRepository', () => {
         .be.rejectedWith(error);
     });
 
-    it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
+    it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', async () => {
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
       profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
+      kuzzle.storageEngine.public.indexExists.resolves(true);
+      kuzzle.storageEngine.public.collectionExists.resolves(true);
 
-      return profileRepository.validateAndSaveProfile(testProfile)
-        .then((result) => {
-          should(result)
-            .be.exactly(testProfile);
-          should(profileRepository.profiles).have.value('foo', testProfile);
-          should(kuzzle.emit)
-            .be.calledOnce()
-            .be.calledWith('core:profileRepository:save', {_id: testProfile._id, policies: testProfile.policies});
+      const result = await profileRepository.validateAndSaveProfile(testProfile);
+
+      should(result).be.exactly(testProfile);
+      should(profileRepository.profiles).have.value('foo', testProfile);
+      should(kuzzle.emit)
+        .be.calledOnce()
+        .be.calledWith('core:profileRepository:save', {
+          _id: testProfile._id,
+          policies: testProfile.policies,
         });
     });
 
