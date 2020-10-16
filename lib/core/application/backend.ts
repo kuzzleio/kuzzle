@@ -122,7 +122,7 @@ class ConfigManager extends ApplicationManager {
   constructor (application: Backend) {
     super(application);
 
-    this.content = require('../../config');
+    this.content = require('../../config').load();
   }
 
   /**
