@@ -3,6 +3,9 @@ Feature: Kuzzle functional tests
   Scenario: Http server does not crash on crafted request
     When I send the crafted HTTP multipart request
     Then Kuzzle is still up
+  
+  Scenario: Http call onto deprecated method should fail if properties are wrongly given
+    When I call a deprecated method I should have good properties
 
   Scenario: Admin reset database
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
