@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require('util');
+
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
@@ -249,7 +251,7 @@ describe('Backend', () => {
       should(application._controllers.greeting).not.be.undefined();
       should(application._controllers.greeting.actions.sayBye.http)
         .be.eql([
-          { verb: 'GET', path: '/greeting/say-bye' }
+          { verb: 'get', path: 'greeting/say-bye' }
         ]);
     });
   });
@@ -376,11 +378,11 @@ describe('Backend', () => {
         application.log.error('error');
         application.log.verbose({ info: 'verbose' });
 
-        should(application._kuzzle.log.debug).be.calledWith('debug');
-        should(application._kuzzle.log.info).be.calledWith('info');
-        should(application._kuzzle.log.warn).be.calledWith('warn');
-        should(application._kuzzle.log.error).be.calledWith('error');
-        should(application._kuzzle.log.verbose).be.calledWith(JSON.stringify({ info: 'verbose' }));
+        should(application._kuzzle.log.debug).be.calledWith(util.inspect('debug'));
+        should(application._kuzzle.log.info).be.calledWith(util.inspect('info'));
+        should(application._kuzzle.log.warn).be.calledWith(util.inspect('warn'));
+        should(application._kuzzle.log.error).be.calledWith(util.inspect('error'));
+        should(application._kuzzle.log.verbose).be.calledWith(util.inspect({ info: 'verbose' }));
       });
     });
   });

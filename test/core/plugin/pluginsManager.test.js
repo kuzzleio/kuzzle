@@ -240,7 +240,8 @@ describe('Plugin', () => {
         }
       };
 
-      should(() => pluginsManager._initApi(plugin)).throwError({ id: 'plugin.assert.invalid_controller_definition' })
+      should(() => pluginsManager._initApi(plugin))
+        .throwError({ id: 'plugin.assert.invalid_controller_definition' });
     });
   });
 
