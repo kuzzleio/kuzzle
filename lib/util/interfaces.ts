@@ -62,7 +62,7 @@ export interface ControllerDefinition {
         /**
          * HTTP verb.
          */
-        verb: string,
+        verb: 'get' | 'post' | 'put' | 'delete' | 'head',
         /**
          * Route path.
          * A route starting with `/` will be prefixed by `/_` otherwise the route

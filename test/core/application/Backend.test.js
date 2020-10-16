@@ -374,13 +374,13 @@ describe('Backend', () => {
         application.log.info('info');
         application.log.warn('warn');
         application.log.error('error');
-        application.log.verbose('verbose');
+        application.log.verbose({ info: 'verbose' });
 
-        should(application._kuzzle.log.debug).be.calledWith('[black-mesa]: debug');
-        should(application._kuzzle.log.info).be.calledWith('[black-mesa]: info');
-        should(application._kuzzle.log.warn).be.calledWith('[black-mesa]: warn');
-        should(application._kuzzle.log.error).be.calledWith('[black-mesa]: error');
-        should(application._kuzzle.log.verbose).be.calledWith('[black-mesa]: verbose');
+        should(application._kuzzle.log.debug).be.calledWith('debug');
+        should(application._kuzzle.log.info).be.calledWith('info');
+        should(application._kuzzle.log.warn).be.calledWith('warn');
+        should(application._kuzzle.log.error).be.calledWith('error');
+        should(application._kuzzle.log.verbose).be.calledWith(JSON.stringify({ info: 'verbose' }));
       });
     });
   });
