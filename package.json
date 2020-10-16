@@ -70,7 +70,6 @@
     "ms": "^2.1.2",
     "murmurhash-native": "^3.5.0",
     "passport": "^0.4.1",
-    "project-name-generator": "^2.1.9",
     "rc": "1.2.8",
     "semver": "^7.3.2",
     "sorted-array": "^2.0.4",
