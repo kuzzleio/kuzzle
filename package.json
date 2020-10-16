@@ -125,6 +125,7 @@
     "plugins/**/*.js",
     "plugins/**/*.d.ts",
     "plugins/**/*.json",
+    "plugins/**/*.lua",
     "plugins/**/LICENSE.md",
     "plugins/**/README.md",
     "plugins/**/.keep",
