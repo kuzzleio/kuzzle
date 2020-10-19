@@ -34,11 +34,11 @@ This time could have been used for many other things:
  - 100% coverage by automated tests
  - implementation of devops best practices
  - marketing of your product
- - etc
+ - ...
 
 It is on the basis of this failure to optimize development time that we decided to start developing Kuzzle 5 years ago and that we have been devoting all our efforts to it ever since.
 
-## How it work
+## How it works
 
 Kuzzle is a backend with ready-to-use features that can be extended in the same way as any framework.
 
