@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
@@ -22,7 +21,7 @@ class KuzzleMock extends Kuzzle {
     _instance = this;
 
     // we need a deep copy here
-    this.config = _.merge({}, config);
+    this.config = JSON.parse(JSON.stringify(config));
 
     // ========== EVENTS ==========
 

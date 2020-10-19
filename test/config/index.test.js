@@ -25,6 +25,7 @@ describe('lib/config/index.js', () => {
 
   afterEach(() => {
     mockRequire.stopAll();
+    mockRequire.reRequire('../../lib/config');
   });
 
   describe('#loadConfig', () => {
