@@ -4,49 +4,59 @@ const _ = require('lodash');
 const should = require('should');
 const { Then } = require('cucumber');
 
-Then('I create a profile {string} with the following policies:', async function (profileId, dataTable) {
-  const data = this.parseObject(dataTable),
-    policies = [];
+Then(/I (try to )?create a (strict )?profile "(.*?)" with the following policies:/, async function (trying, strict, profileId, dataTable) {
+  const data = this.parseObject(dataTable);
+  const policies = [];
+
+  this.props.error = null;
 
   for (const [roleId, restrictedTo] of Object.entries(data)) {
     policies.push({ roleId, restrictedTo });
   }
 
-  this.props.result = await this.sdk.security.createProfile(profileId, {policies});
+  try {
+    if (!strict) {
+      this.props.result = await this.sdk.security.createProfile(profileId, {
+        policies,
+      });
+    }
+    else {
+      // @todo replace sdk.query once createProfile handles the new "strict" option
+      this.props.result = await this.sdk.query({
+        controller: 'security',
+        action: 'createProfile',
+        _id: profileId,
+        body: { policies },
+        strict: true,
+      });
+    }
+  }
+  catch (e) {
+    if (trying) {
+      this.props.error = e;
+      return;
+    }
+    throw e;
+  }
 });
 
 Then(/I (can not )?"(.*?)" a role "(.*?)" with the following API rights:/, async function (not, method, roleId, dataTable) {
-  const
-    controllers = this.parseObject(dataTable),
-    options = {
-      force: not ? false : true
-    };
+  const controllers = this.parseObject(dataTable);
+  const options = {
+    force: not ? false : true
+  };
 
-  try {
-    this.props.result = await this.sdk.security[method + 'Role'](roleId, { controllers }, options);
-  }
-  catch (e) {
-    this.props.error = e;
-
-    if (not) {
-      return;
-    }
-    throw e;
-  }
+  await this.tryAction(
+    this.sdk.security[method + 'Role'](roleId, { controllers }, options),
+    not);
 });
 
-Then(/I am (not )?able to get a role with id "(.*?)"/, async function (roleId, not) {
-  try {
-    this.props.result = await this.sdk.security.getRole(roleId);
-  }
-  catch (e) {
-    this.props.error = e;
+Then(/I am (not )?able to get a role with id "(.*?)"/, function (not, roleId) {
+  return this.tryAction(this.sdk.security.getRole(roleId), not);
+});
 
-    if (not) {
-      return;
-    }
-    throw e;
-  }
+Then(/I am (not )?able to get a profile with id "(.*?)"/, async function (not, profileId) {
+  return this.tryAction(this.sdk.security.getProfile(profileId), not, `Profile ${profileId} exists`);
 });
 
 Then('I am able to find {int} roles by searching controller:', async function (count, dataTable) {
@@ -67,28 +77,16 @@ Then('I am able to mGet roles and get {int} roles with the following ids:', asyn
   this.props.result = await this.sdk.security.mGetRoles(roleIds);
 });
 
-Then(/I (can not )?delete the role "(.*?)"/, async function (not, roleId) {
-  try {
-    await this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' });
-  }
-  catch (e) {
-    if (not) {
-      return;
-    }
-    throw e;
-  }
+Then(/I (can not )?delete the role "(.*?)"/, function (not, roleId) {
+  return this.tryAction(
+    this.sdk.security.deleteRole(roleId, { refresh: 'wait_for' }),
+    not);
 });
 
-Then(/I (can not )?delete the profile "(.*?)"/, async function (not, profileId) {
-  try {
-    await this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' });
-  }
-  catch (e) {
-    if (not) {
-      return;
-    }
-    throw e;
-  }
+Then(/I (can not )?delete the profile "(.*?)"/, function (not, profileId) {
+  return this.tryAction(
+    this.sdk.security.deleteProfile(profileId, { refresh: 'wait_for' }),
+    not);
 });
 
 Then('I delete the user {string}', async function (userId) {

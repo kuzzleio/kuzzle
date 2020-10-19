@@ -13,17 +13,16 @@ describe('Redis', () => {
   let kuzzle;
   let redis;
   let config;
-  let redisBuildClient;
-  let redisBuildClusterClient;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    redisBuildClient = Redis.prototype._buildClient;
-    redisBuildClusterClient = Redis.prototype._buildClusterClient;
-
-    Redis.prototype._buildClient = sinon.spy(() => new RedisClientMock());
-    Redis.prototype._buildClusterClient = sinon.spy(() => new RedisClientMock());
+    sinon
+      .stub(Redis.prototype, '_buildClient')
+      .callsFake(() => new RedisClientMock());
+    sinon
+      .stub(Redis.prototype, '_buildClusterClient')
+      .callsFake(() => new RedisClientMock());
 
     config = {
       node: {
@@ -36,8 +35,8 @@ describe('Redis', () => {
   });
 
   afterEach(() => {
-    Redis.prototype._buildClient = redisBuildClient;
-    Redis.prototype._buildClusterClient = redisBuildClusterClient;
+    Redis.prototype._buildClient.restore();
+    Redis.prototype._buildClusterClient.restore();
   });
 
   it('should init a redis client with default (0) database', async () => {
@@ -57,8 +56,9 @@ describe('Redis', () => {
   });
 
   it('should raise an error if unable to connect', () => {
-    Redis.prototype._buildClient = () => new RedisClientMock(
-      new Error('connection error'));
+    Redis.prototype._buildClient
+      .returns(new RedisClientMock(new Error('connection error')));
+
     const testredis = new Redis(kuzzle, config);
 
     return should(testredis.init()).be.rejected();
@@ -235,5 +235,35 @@ db5:keys=1,expires=0,avg_ttl=0
     await redis.init();
 
     should(redis._buildClient).be.called();
+  });
+
+  describe('#store', () => {
+    beforeEach(() => {
+      return redis.init();
+    });
+
+    it('should create a key/value pair with default options', async () => {
+      await redis.store('foo', 'bar');
+
+      should(redis.client.set).calledWith('foo', 'bar');
+    });
+
+    it('should send an NX option if the "onlyIfNew" option is set', async () => {
+      await redis.store('foo', 'bar', { onlyIfNew: true });
+
+      should(redis.client.set).calledWith('foo', 'bar', 'NX');
+    });
+
+    it('should send a PX option if the "ttl" option is set', async () => {
+      await redis.store('foo', 'bar', { ttl: 123 });
+
+      should(redis.client.set).calledWith('foo', 'bar', 'PX', 123);
+    });
+
+    it('should mix NX and PX options if needed', async () => {
+      await redis.store('foo', 'bar', { onlyIfNew: true, ttl: 456 });
+
+      should(redis.client.set).calledWith('foo', 'bar', 'NX', 'PX', 456);
+    });
   });
 });
