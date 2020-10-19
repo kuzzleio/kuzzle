@@ -13,6 +13,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
 
 const ES = require('../../../lib/service/storage/elasticsearch');
+const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
 
 describe('Test: ElasticSearch service', () => {
   let kuzzle;
@@ -57,7 +58,7 @@ describe('Test: ElasticSearch service', () => {
       const esInternal = new ES(
         kuzzle,
         kuzzle.config.services.storageEngine,
-        'internal');
+        scopeEnum.PRIVATE);
 
       should(esPublic._kuzzle).be.exactly(kuzzle);
       should(esPublic.config).be.exactly(kuzzle.config.services.storageEngine);
@@ -114,7 +115,7 @@ describe('Test: ElasticSearch service', () => {
       //   the 2 results contained in the stubbed result of _client.scroll
       // 10: scrollTTL of 10s
       should(kuzzle.ask)
-        .calledWith('core:cache:internal:store', redisKey, 3, 10);
+        .calledWith('core:cache:internal:store', redisKey, 3, { ttl: 10000 });
 
       should(elasticsearch._client.clearScroll).not.called();
 
@@ -233,7 +234,7 @@ describe('Test: ElasticSearch service', () => {
         'core:cache:internal:store',
         sinon.match.string,
         1,
-        sinon.match.number);
+        sinon.match.object);
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
         scrollId: 'scroll-id',
@@ -284,7 +285,7 @@ describe('Test: ElasticSearch service', () => {
         'core:cache:internal:store',
         sinon.match.string,
         1,
-        ms(elasticsearch.config.defaults.scrollTTL) / 1000);
+        { ttl: ms(elasticsearch.config.defaults.scrollTTL) });
 
       should(result).match({
         aggregations: { some: 'aggregs' },
@@ -328,7 +329,7 @@ describe('Test: ElasticSearch service', () => {
         'core:cache:internal:store',
         sinon.match.string,
         0,
-        30);
+        { ttl: 30000 });
     });
 
     it('should return a rejected promise if a search fails', async () => {
@@ -1266,7 +1267,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#batchExecute', () => {
+  describe('#mExecute', () => {
     it('should call the callback method with each batch returned by ES', async () => {
       const hits1 = {
         hits: [21, 42, 84],
@@ -1295,7 +1296,7 @@ describe('Test: ElasticSearch service', () => {
         _scroll_id: 'scroll-id'
       });
 
-      const result = await elasticsearch.batchExecute(
+      const result = await elasticsearch.mExecute(
         index,
         collection,
         { match: 21 },
@@ -1317,7 +1318,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject if the query is empty', () => {
-      const promise = elasticsearch.batchExecute(
+      const promise = elasticsearch.mExecute(
         index,
         collection,
         'not an object',
@@ -1382,7 +1383,7 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       _checkMappings = elasticsearch._checkMappings;
 
-      elasticsearch.collectionExists = sinon.stub().resolves(false);
+      elasticsearch.hasCollection = sinon.stub().resolves(false);
       elasticsearch._client.indices.create.resolves({});
       elasticsearch._checkMappings = sinon.stub().resolves();
     });
@@ -1397,7 +1398,7 @@ describe('Test: ElasticSearch service', () => {
         collection,
         { mappings, settings });
 
-      should(elasticsearch.collectionExists).be.calledWith(index, collection);
+      should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch._checkMappings).be.calledWithMatch({
         properties: mappings.properties
       });
@@ -1549,12 +1550,12 @@ describe('Test: ElasticSearch service', () => {
         settings = { index: { blocks: { write: true } } },
         mappings = { properties: { city: { type: 'keyword' } } };
 
-      elasticsearch.collectionExists = sinon.stub().resolves(true);
+      elasticsearch.hasCollection = sinon.stub().resolves(true);
       elasticsearch.updateCollection = sinon.stub().resolves({});
 
       await elasticsearch.createCollection(index, collection, { mappings, settings });
 
-      should(elasticsearch.collectionExists).be.calledWith(index, collection);
+      should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch.updateCollection).be.calledWithMatch(index, collection, {
         settings: { index: { blocks: { write: true } } },
         mappings: { properties: { city: { type: 'keyword' } } }
@@ -2513,15 +2514,12 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if client fails', () => {
+    it('should return a rejected promise if client fails', async () => {
       elasticsearch._client.indices.refresh.rejects(esClientError);
 
-      const promise = elasticsearch.refreshCollection(index, collection);
+      await should(elasticsearch.refreshCollection(index, collection)).rejected();
 
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
-        });
+      should(elasticsearch._esWrapper.formatESError).calledWith(esClientError);
     });
   });
 
@@ -2556,12 +2554,12 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#indexExists', () => {
+  describe('#hasIndex', () => {
     it('should call list indexes and return true if index exists', () => {
       elasticsearch.listIndexes = sinon.stub().resolves(
         ['nepali', 'nyc-open-data']);
 
-      const promise = elasticsearch.indexExists('nepali');
+      const promise = elasticsearch.hasIndex('nepali');
 
       return promise
         .then(result => {
@@ -2575,7 +2573,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.listIndexes = sinon.stub().resolves(
         ['nepali', 'nyc-open-data']);
 
-      const promise = elasticsearch.indexExists('vietnam');
+      const promise = elasticsearch.hasIndex('vietnam');
 
       return promise
         .then(result => {
@@ -2586,11 +2584,11 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#collectionExists', () => {
+  describe('#hasCollection', () => {
     it('should call list collections and return true if collection exists', () => {
       elasticsearch.listCollections = sinon.stub().resolves(['liia', 'mehry']);
 
-      const promise = elasticsearch.collectionExists('nepali', 'liia');
+      const promise = elasticsearch.hasCollection('nepali', 'liia');
 
       return promise
         .then(result => {
@@ -2603,7 +2601,7 @@ describe('Test: ElasticSearch service', () => {
     it('should call list collections and return false if collection does not exists', () => {
       elasticsearch.listCollections = sinon.stub().resolves(['liia', 'mehry']);
 
-      const promise = elasticsearch.collectionExists('nepali', 'lfiduras');
+      const promise = elasticsearch.hasCollection('nepali', 'lfiduras');
 
       return promise
         .then(result => {
@@ -3743,7 +3741,10 @@ describe('Test: ElasticSearch service', () => {
 
     beforeEach(() => {
       publicES = new ES(kuzzle, kuzzle.config.services.storageEngine);
-      internalES = new ES(kuzzle, kuzzle.config.services.storageEngine, 'internal');
+      internalES = new ES(
+        kuzzle,
+        kuzzle.config.services.storageEngine,
+        scopeEnum.PRIVATE);
     });
 
     describe('#_getESIndex', () => {

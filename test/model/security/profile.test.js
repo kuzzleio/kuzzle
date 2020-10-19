@@ -194,8 +194,8 @@ describe('Test: model/security/profile', () => {
       profile = new Profile();
       profile[_kuzzle] = kuzzle;
       profile._id = 'test';
-      kuzzle.storageEngine.public.indexExists.resolves(true);
-      kuzzle.storageEngine.public.collectionExists.resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
     });
 
     it('should reject if no policies are provided', () => {
@@ -266,7 +266,7 @@ describe('Test: model/security/profile', () => {
     it('should reject if restrictedTo is given an invalid attribute', () => {
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{ index: 'index', foo: 'bar' }]
+        restrictedTo: [{ index: 'index', foo: 'bar' }],
       }];
 
       return should(profile.validateDefinition())
@@ -281,7 +281,7 @@ describe('Test: model/security/profile', () => {
         restrictedTo: [{ index: 'index'}]
       }];
 
-      kuzzle.storageEngine.public.indexExists.resolves(false);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(false);
 
       await profile.validateDefinition();
 
@@ -290,9 +290,7 @@ describe('Test: model/security/profile', () => {
           id: 'services.storage.unknown_index',
         });
 
-      should(profile[_kuzzle].storageEngine.public.indexExists)
-        .calledOnce()
-        .calledWith('index');
+      should(kuzzle.ask).calledWith('core:storage:public:index:exist', 'index');
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -313,7 +311,7 @@ describe('Test: model/security/profile', () => {
         restrictedTo: [{ index: 'index', collections: ['foo']}]
       }];
 
-      kuzzle.storageEngine.public.collectionExists.resolves(false);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(false);
 
       await profile.validateDefinition();
 
@@ -322,9 +320,7 @@ describe('Test: model/security/profile', () => {
           id: 'services.storage.unknown_collection',
         });
 
-      should(profile[_kuzzle].storageEngine.public.collectionExists)
-        .calledOnce()
-        .calledWith('index', 'foo');
+      should(kuzzle.ask).calledWith('core:storage:public:collection:exist', 'index', 'foo');
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {
