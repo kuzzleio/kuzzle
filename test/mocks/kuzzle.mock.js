@@ -1,11 +1,10 @@
 'use strict';
 
-const _ = require('lodash');
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
 const Kuzzle = require('../../lib/kuzzle');
-const config = require('../../lib/config');
+const configLoader = require('../../lib/config');
 
 const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
 
@@ -15,12 +14,14 @@ let _instance;
 
 class KuzzleMock extends Kuzzle {
   constructor () {
+    const config = configLoader.load();
+
     super(config);
 
     _instance = this;
 
     // we need a deep copy here
-    this.config = _.merge({}, config);
+    this.config = JSON.parse(JSON.stringify(config));
 
     // ========== EVENTS ==========
 

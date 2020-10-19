@@ -32,6 +32,7 @@ import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
+import kuzzleConfig from '../../config';
 
 import {
   JSONObject,
@@ -122,7 +123,7 @@ class ConfigManager extends ApplicationManager {
   constructor (application: Backend) {
     super(application);
 
-    this.content = require('../../config');
+    this.content = kuzzleConfig.load();
   }
 
   /**
