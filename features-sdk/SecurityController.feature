@@ -134,6 +134,25 @@ Feature: Security Controller
     And The role "anonymous" should match the default one
     And The role "default" should match the default one
 
+  @security
+  Scenario: Create a profile
+    Given an index "example"
+    And a collection "example":"one"
+    Then I try to create a strict profile "test-profile" with the following policies:
+      | default | [{ "index": "example", "collections": ["one", "two"] }] |
+    And I got an error with id "services.storage.unknown_collection"
+    And I am not able to get a profile with id "test-profile"
+    Then I try to create a strict profile "test-profile" with the following policies:
+      | default | [{ "index": "example2" }] |
+    And I got an error with id "services.storage.unknown_index"
+    And I am not able to get a profile with id "test-profile"
+    Then I create a strict profile "test-profile" with the following policies:
+      | default | [{ "index": "example", "collections": ["one"] }] |
+    And I am able to get a profile with id "test-profile"
+    Then I create a profile "test-profile2" with the following policies:
+      | default | [{ "index": "example2", "collections": ["one", "two"] }] |
+    And I am able to get a profile with id "test-profile"
+
   Scenario: Delete a profile
     Given I "create" a role "test-role" with the following API rights:
       | document | { "actions": { "create": true, "update": true } } |
@@ -271,7 +290,7 @@ Feature: Security Controller
       | body  | {"controllers" : {"functional-test-plugin/non-existing-controller": {"actions": { "manage": false } } } } |
       | force | true                                                                                                      |
     Then I am able to get a role with id "test-role-plugin2"
-    And The property "_source.controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
+    And The property "controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
       | manage | false |
 
   @security

@@ -1,7 +1,6 @@
 'use strict';
 
 const should = require('should');
-const rewire = require('rewire');
 const {
   Request,
   RequestContext,
@@ -10,7 +9,7 @@ const {
 
 const Kuzzle = require('../../mocks/kuzzle.mock');
 
-const Statistics = rewire('../../../lib/core/statistics/statistics');
+const Statistics = require('../../../lib/core/statistics/statistics');
 
 describe('Test: statistics core component', () => {
   let request;
@@ -316,12 +315,10 @@ describe('Test: statistics core component', () => {
     should(response.hits[1].timestamp).be.a.Number();
   });
 
-  it('should write statistics frames in cache', () => {
-    const writeStats = Statistics.__get__('writeStats');
-
+  it('should write statistics frames in cache', async () => {
     stats.currentStats = Object.assign({}, fakeStats);
 
-    writeStats.call(stats);
+    await stats.writeStats();
 
     should(stats.currentStats.completedRequests).be.empty();
     should(stats.currentStats.failedRequests).be.empty();
@@ -329,7 +326,7 @@ describe('Test: statistics core component', () => {
       'core:cache:internal:store',
       '{stats/}' + stats.lastFrame,
       JSON.stringify(fakeStats),
-      stats.ttl);
+      { ttl: stats.ttl });
   });
 
   it('should reject the promise if the cache returns an error', () => {

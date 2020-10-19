@@ -23,8 +23,8 @@ describe('Test: security controller - profiles', () => {
       {controller: 'security'},
       {user: {_id: 'userId'}});
     kuzzle = new KuzzleMock();
-    kuzzle.internalIndex.get.resolves({});
-    kuzzle.internalIndex.getMapping.resolves({
+    kuzzle.ask.withArgs('core:storage:private:document:get').resolves({});
+    kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
       internalIndex: {
         mappings: {
           profiles: {
@@ -51,34 +51,38 @@ describe('Test: security controller - profiles', () => {
       }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
-    it('should update the profile mapping', () => {
-      kuzzle.internalIndex.updateMapping.resolves(foo);
+    it('should update the profile mapping', async () => {
+      kuzzle.ask.withArgs('core:storage:private:mappings:update').resolves(foo);
       request.input.body = foo;
 
-      return securityController.updateProfileMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.updateMapping).be.calledOnce();
-          should(kuzzle.internalIndex.updateMapping).be.calledWith('profiles', request.input.body);
+      const response = await securityController.updateProfileMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:mappings:update',
+        kuzzle.internalIndex.index,
+        'profiles',
+        request.input.body);
+
+      should(response).be.instanceof(Object);
+      should(response).match(foo);
     });
   });
 
   describe('#getProfileMapping', () => {
-    it('should fulfill with a response object', () => {
-      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+    it('should fulfill with a response object', async () => {
+      kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
+        properties: { foo: 'bar' },
+      });
 
-      return securityController.getProfileMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.getMapping)
-            .be.calledOnce()
-            .be.calledWith('profiles');
+      const response = await securityController.getProfileMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match({ mapping: { foo: 'bar' } });
-        });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:mappings:get',
+        kuzzle.internalIndex.index,
+        'profiles');
+
+      should(response).be.instanceof(Object);
+      should(response).match({ mapping: { foo: 'bar' } });
     });
   });
 
@@ -137,6 +141,29 @@ describe('Test: security controller - profiles', () => {
           request.input.body,
           { refresh: 'false', userId: 'userId' });
       }
+    });
+
+    it('should forward the strict option', async () => {
+      for (const strict of [ null, undefined, false ]) {
+        request.input.args.strict = strict;
+
+        await securityController.createOrReplaceProfile(request);
+
+        should(createOrReplaceStub).calledWithMatch(
+          createOrReplaceEvent,
+          request.input.resource._id,
+          request.input.body,
+          { strict: false, userId: 'userId' });
+      }
+
+      request.input.args.strict = true;
+      await securityController.createOrReplaceProfile(request);
+
+      should(createOrReplaceStub).calledWithMatch(
+        createOrReplaceEvent,
+        request.input.resource._id,
+        request.input.body,
+        { strict: true, userId: 'userId' });
     });
 
     it('should throw if an invalid profile format is provided', async () => {
@@ -255,6 +282,29 @@ describe('Test: security controller - profiles', () => {
           request.input.body,
           { refresh: 'false', userId: 'userId' });
       }
+    });
+
+    it('should forward the strict option', async () => {
+      for (const strict of [ null, undefined, false ]) {
+        request.input.args.strict = strict;
+
+        await securityController.createProfile(request);
+
+        should(createStub).calledWithMatch(
+          createEvent,
+          request.input.resource._id,
+          request.input.body,
+          { strict: false, userId: 'userId' });
+      }
+
+      request.input.args.strict = true;
+      await securityController.createProfile(request);
+
+      should(createStub).calledWithMatch(
+        createEvent,
+        request.input.resource._id,
+        request.input.body,
+        { strict: true, userId: 'userId' });
     });
 
     it('should reject if an invalid profile format is provided', async () => {
@@ -569,6 +619,7 @@ describe('Test: security controller - profiles', () => {
     it('should forward provided options', async () => {
       request.input.args.refresh = false;
       request.input.args.retryOnConflict = 123;
+      request.input.args.strict = true;
 
       await securityController.updateProfile(request);
 
@@ -579,6 +630,7 @@ describe('Test: security controller - profiles', () => {
         {
           refresh: 'false',
           retryOnConflict: 123,
+          strict: true,
           userId: request.context.user._id,
         });
     });

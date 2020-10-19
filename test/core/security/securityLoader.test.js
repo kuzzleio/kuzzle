@@ -15,7 +15,6 @@ describe('security/securityLoader', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.ask.restore();
     loader = new SecurityLoader(kuzzle);
     return loader.init();
   });
@@ -23,6 +22,7 @@ describe('security/securityLoader', () => {
   it('should register a global "security:load" event', async () => {
     sinon.stub(loader, 'load');
 
+    kuzzle.ask.restore();
     await kuzzle.ask('core:security:load', 'json', 'opts');
 
     should(loader.load).calledWith('json', 'opts');

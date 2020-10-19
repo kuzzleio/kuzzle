@@ -418,7 +418,7 @@ describe('Backend', () => {
     it('should allows to construct an ES Client', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
-      application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
+      application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
       should(application.storage.Client).be.a.Function();
 
       const client = new application.storage.Client({ maxRetries: 42 });

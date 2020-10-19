@@ -78,17 +78,17 @@ describe('#notifier.notifyDocuments', () => {
           'core:cache:internal:store',
           `{notif/${index}/${collection}}/foo`,
           JSON.stringify(rooms),
-          ttl)
+          { ttl })
         .calledWith(
           'core:cache:internal:store',
           `{notif/${index}/${collection}}/bar`,
           JSON.stringify(rooms),
-          ttl)
+          { ttl })
         .calledWith(
           'core:cache:internal:store',
           `{notif/${index}/${collection}}/baz`,
           JSON.stringify(rooms),
-          ttl);
+          { ttl });
     });
 
     it('should put the result rooms in cache forever (TTL = 0)', async () => {
@@ -140,7 +140,7 @@ describe('#notifier.notifyDocuments', () => {
           'core:cache:internal:store',
           `{notif/${index}/${collection}}/bar`,
           JSON.stringify(['foo', 'bar']),
-          ttl);
+          { ttl });
 
       should(kuzzle.ask.withArgs('core:cache:internal:del'))
         .calledOnce()
