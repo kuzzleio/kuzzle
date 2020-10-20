@@ -138,6 +138,9 @@ After({ tags: '@login' }, async function () {
 // realtime hooks ==============================================================
 
 After({ tags: '@realtime' }, function () {
+  if (!this.props.subscriptions) {
+    return;
+  }
   const promises = Object.values(this.props.subscriptions)
     .map(({ unsubscribe }) => unsubscribe());
 
