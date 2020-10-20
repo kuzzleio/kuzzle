@@ -146,40 +146,6 @@ describe('Test: router.httpRequest', () => {
     });
   });
 
-  it('should register the swagger JSON auto-generator route', (done) => {
-    httpRequest.url = '/swagger.json';
-    httpRequest.method = 'GET';
-
-    routeController.http.route(httpRequest, result => {
-      try {
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.status).be.eql(200);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-  });
-
-  it('should register the swagger YAML auto-generator route', (done) => {
-    httpRequest.url = '/swagger.yml';
-    httpRequest.method = 'GET';
-
-    routeController.http.route(httpRequest, result => {
-      try {
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/yaml');
-        should(result.response.status).be.eql(200);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-  });
-
   it('should register plugins HTTP routes', (done) => {
     httpRequest.url = '/foo/bar/baz';
     httpRequest.method = 'GET';

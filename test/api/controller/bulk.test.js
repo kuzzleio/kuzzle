@@ -50,7 +50,7 @@ describe('Test the bulk controller', () => {
 
       request.input.body = { bulkData };
 
-      controller.publicStorage.import.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
         items: ['fake', 'data'],
         errors: []
       });
@@ -59,8 +59,12 @@ describe('Test the bulk controller', () => {
     it('should trigger the proper methods and resolve to a valid response', async () => {
       const response = await controller.import(request);
 
-      should(controller.publicStorage.import)
-        .be.calledWith(index, collection, bulkData, { refresh: 'false', userId: null });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:bulk',
+        index,
+        collection,
+        bulkData,
+        { refresh: 'false', userId: null });
 
       should(response).match({
         successes: ['fake', 'data'],
@@ -69,7 +73,7 @@ describe('Test the bulk controller', () => {
     });
 
     it('should handle errors', async () => {
-      controller.publicStorage.import.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
         items: [],
         errors: ['fake', 'data']
       });
@@ -96,12 +100,14 @@ describe('Test the bulk controller', () => {
       request.input.body = _source;
       request.input.resource._id = _id;
 
-      controller.publicStorage.createOrReplace.resolves({
-        _id,
-        _source,
-        _version: 1,
-        result: 'created',
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:createOrReplace')
+        .resolves({
+          _id,
+          _source,
+          _version: 1,
+          result: 'created',
+        });
 
       notifyStub = kuzzle.ask.withArgs(
         'core:realtime:document:notify',
@@ -114,7 +120,8 @@ describe('Test the bulk controller', () => {
       const response = await controller.write(request);
 
       should(notifyStub).not.called();
-      should(controller.publicStorage.createOrReplace).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:createOrReplace',
         index,
         collection,
         _id,
@@ -131,13 +138,15 @@ describe('Test the bulk controller', () => {
     it('should send "document written" notifications if asked to', async () => {
       request.input.args.notify = true;
 
-      controller.publicStorage.createOrReplace.resolves({
-        _id,
-        _source,
-        _version: 1,
-        result: 'created',
-        created: true,
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:createOrReplace')
+        .resolves({
+          _id,
+          _source,
+          _version: 1,
+          result: 'created',
+          created: true,
+        });
 
       await controller.write(request);
 
@@ -173,10 +182,12 @@ describe('Test the bulk controller', () => {
         { _id: 'magl', _source: { name: 'Maglor' }, _version: 1, created: true }
       ];
 
-      controller.publicStorage.mCreateOrReplace.resolves({
-        items: mCreateOrReplaceResult,
-        errors: []
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:mCreateOrReplace')
+        .resolves({
+          items: mCreateOrReplaceResult,
+          errors: []
+        });
 
       notifyMChangesStub = kuzzle.ask.withArgs(
         'core:realtime:document:mNotify',
@@ -189,7 +200,8 @@ describe('Test the bulk controller', () => {
       const response = await controller.mWrite(request);
 
       should(notifyMChangesStub).not.be.called();
-      should(controller.publicStorage.mCreateOrReplace).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreateOrReplace',
         index,
         collection,
         documents,
@@ -229,19 +241,22 @@ describe('Test the bulk controller', () => {
       request.input.args.refresh = 'wait_for';
       request.input.body = { query };
 
-      controller.publicStorage.deleteByQuery.resolves({
-        deleted: 2
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:deleteByQuery')
+        .resolves({
+          deleted: 2,
+        });
     });
 
-    it('should call deleteByQuery with fetch=false', async () => {
+    it('should call deleteByQuery with fetch=false and size=-1', async () => {
       const response = await controller.deleteByQuery(request);
 
-      should(controller.publicStorage.deleteByQuery).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteByQuery',
         index,
         collection,
         query,
-        { refresh: 'wait_for', fetch: false });
+        { refresh: 'wait_for', fetch: false, size: -1 });
 
       should(response.deleted).be.eql(2);
     });

@@ -32,11 +32,13 @@ import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
+import kuzzleConfig from '../../config';
 
 import {
   JSONObject,
   ControllerDefinition,
-  BasePlugin
+  BasePlugin,
+  Controller
 } from '../../util/interfaces';
 
 const assertionError = kerror.wrap('plugin', 'assert');
@@ -121,7 +123,7 @@ class ConfigManager extends ApplicationManager {
   constructor (application: Backend) {
     super(application);
 
-    this.content = require('../../config');
+    this.content = kuzzleConfig.load();
   }
 
   /**
@@ -159,7 +161,7 @@ class ControllerManager extends ApplicationManager {
    * Registers a new controller.
    *
    * @example
-   * register('greeting', {
+   * app.controller.register('greeting', {
    *   actions: {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
@@ -179,6 +181,70 @@ class ControllerManager extends ApplicationManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
+    this._add(name, definition);
+  }
+
+  /**
+   * Uses a new controller class.
+   *
+   * The controller class must:
+   *  - call the super constructor with the application instance
+   *  - extend the "Controller" class
+   *  - define the "definition" property
+   *  - (optional) define the "name" property
+   *
+   * The controller name will be inferred from the class name.
+   *   e.g. "PaymentSolutionController" will become "payment-solution"
+   *
+   * @example
+   *
+   * class EmailController extends Controller {
+   *   constructor (app) {
+   *     super(app);
+   *
+   *     this.definition = {
+   *       actions: {
+   *         send: {
+   *           handler: this.send
+   *         }
+   *       }
+   *     };
+   *   }
+   *
+   *   async send (request: Request) {
+   *     // ...
+   *   }
+   * }
+   *
+   * app.controller.use(new EmailController(app));
+   *
+   * @param controller Controller class
+   */
+  use (controller: Controller) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'controller');
+    }
+
+    for (const [action, definition] of Object.entries(controller.definition.actions)) {
+      if (typeof definition.handler !== 'function') {
+        throw assertionError.get(
+          'invalid_controller_definition',
+          name,
+          `Handler for action "${action}" is not a function.`);
+      }
+
+      definition.handler = definition.handler.bind(controller);
+    }
+
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
+    }
+
+    this._add(controller.name, controller.definition);
+  }
+
+  private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
     Plugin.checkControllerDefinition(name, definition, { application: true });
@@ -355,8 +421,8 @@ class StorageManager extends ApplicationManager {
 
       this._Client = function StorageClient (clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
-          ...kuzzle.storageEngine.config.client,
-          ...clientConfig
+          ...kuzzle.config.services.storageEngine.client,
+          ...clientConfig,
         });
       } as any;
     }
@@ -370,7 +436,8 @@ class StorageManager extends ApplicationManager {
    */
   get client (): Client {
     if (! this._client) {
-      this._client = Elasticsearch.buildClient(this._kuzzle.storageEngine.config.client);
+      this._client = Elasticsearch
+        .buildClient(this._kuzzle.config.services.storageEngine.client);
     }
 
     return this._client;

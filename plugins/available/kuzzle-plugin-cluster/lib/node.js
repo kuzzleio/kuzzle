@@ -24,6 +24,7 @@ const Bluebird = require('bluebird');
 const debug = require('debug')('kuzzle:cluster');
 const debugNotify = require('debug')('kuzzle:cluster:notify');
 const debugSync = require('debug')('kuzzle:cluster:sync');
+const debugHeartbeat = require('debug')('kuzzle:cluster:heartbeat');
 const zeromq = require('zeromq');
 const {
   Request,
@@ -125,8 +126,7 @@ class Node {
         // Currently only used by tests for clean exits
         this.heartbeatTimer = setInterval(
           () => this._heartbeat(),
-          this.config.timers.heartbeat
-        );
+          this.config.timers.heartbeat);
 
         return this.join();
       });
@@ -185,22 +185,16 @@ class Node {
     }
 
     switch (data.event) {
-      case 'indexCache:add':
-        this.kuzzle.storageEngine.indexCache.add({
-          index: data.index,
-          collection: data.collection,
-          scope: data.scope,
-          notify: false
-        });
-        break;
-      case 'indexCache:remove':
-        this.kuzzle.storageEngine.indexCache.remove({
-          index: data.index,
-          collection: data.collection,
-          scope: data.scope,
-          notify: false
-        });
-        break;
+      case 'storage:cache:add':
+        return this.kuzzle.ask(
+          `core:storage:${data.scope}:cache:add`,
+          data.index,
+          data.collection);
+      case 'storage:cache:remove':
+        return this.kuzzle.ask(
+          `core:storage:${data.scope}:cache:remove`,
+          data.index,
+          data.collection);
       case 'profile':
         return this.kuzzle.ask('core:security:profile:invalidate', data.id);
       case 'role':
@@ -324,7 +318,8 @@ class Node {
       this.context.log('warn', `[cluster] no heartbeat received in time for ${node.pub}. removing node`);
       this._removeNode(node.pub);
 
-      // send a rejoin request to lost node in case this is a temp issue (overload/network congestion..)
+      // send a rejoin request to lost node in case this is a temp issue
+      // (overload/network congestion..)
       this._remoteJoin(remoteNode);
     }, this.config.timers.heartbeat * 2);
   }
@@ -376,17 +371,15 @@ class Node {
   async _onSubMessage (buffer) {
     const [room, data] = JSON.parse(buffer);
 
-    if (['cluster:sync', 'cluster:notify:user', 'cluster:notify:document'].indexOf(room) < 0) {
-      // merges & notifications have their own debug level
-      debug('[sub][%s] %o', room, data);
+    if (room === 'cluster:heartbeat') {
+      debugHeartbeat('Heartbeat from: %s', data.pub);
+      this._onHeartbeat(data);
+      return;
     }
 
-    if (room === 'cluster:heartbeat') {
-      this._onHeartbeat(data);
-    }
-    else if (room === 'cluster:notify:document') {
+    if (room === 'cluster:notify:document') {
       debugNotify('doc %o', data);
-      await this.kuzzle.ask(
+      return this.kuzzle.ask(
         'core:realtime:document:dispatch',
         data.rooms,
         new Request(data.request.data, data.request.options),
@@ -394,16 +387,25 @@ class Node {
         data.action,
         data.content);
     }
-    else if (room === 'cluster:notify:user') {
+
+    if (room === 'cluster:notify:user') {
       debugNotify('user %o', data);
-      this.kuzzle.ask(
+      return this.kuzzle.ask(
         'core:realtime:user:sendMessage',
         data.room,
         new Request(data.request.data, data.request.options),
         data.scope,
         data.content);
     }
-    else if (room === 'cluster:ready') {
+
+    if (room === 'cluster:sync') {
+      this.sync(data);
+      return;
+    }
+
+    debug('[sub][%s] %o', room, data);
+
+    if (room === 'cluster:ready') {
       if (data.pub !== this.uuid && !this.pool[data.pub]) {
         // an unknown node is marked as ready, we are not anymore
         this.context.log('warn', `[cluster] unknown node ready: ${data.pub}`);
@@ -418,9 +420,6 @@ class Node {
     }
     else if (room === 'cluster:remove') {
       this._removeNode(data.pub);
-    }
-    else if (room === 'cluster:sync') {
-      this.sync(data);
     }
     else if (room === 'cluster:admin:dump') {
       this.kuzzle.janitor.dump(data.suffix);

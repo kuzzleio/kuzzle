@@ -99,7 +99,7 @@ describe('Plugin Context', () => {
         const esClient = new context.constructors.ESClient();
 
         should(esClient.connectionPool.connections[0].url.origin)
-          .be.eql(kuzzle.storageEngine.config.client.node);
+          .be.eql(kuzzle.config.services.storageEngine.client.node);
       });
     });
 

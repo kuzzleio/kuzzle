@@ -1,9 +1,9 @@
 'use strict';
 
-const
-  config = require('../../lib/config'),
-  { Kuzzle, WebSocket, Http } = require('kuzzle-sdk'),
-  { setWorldConstructor } = require('cucumber');
+const { setWorldConstructor } = require('cucumber');
+const { Kuzzle, WebSocket, Http } = require('kuzzle-sdk');
+
+const config = require('../../lib/config');
 
 require('./assertions');
 
@@ -16,7 +16,7 @@ class KuzzleWorld {
     this._port = process.env.KUZZLE_PORT || '7512';
     this._protocol = process.env.KUZZLE_PROTOCOL || 'websocket';
 
-    this.kuzzleConfig = config;
+    this.kuzzleConfig = config.load();
 
     // Intermediate steps should store values inside this object
     this.props = {};
@@ -91,6 +91,34 @@ class KuzzleWorld {
     }
 
     return new Kuzzle(protocol);
+  }
+
+  /**
+   * Await the promise provided in the argument, and throw an error depending
+   * on whether we expect the action to succeed or not
+   *
+   * @param  {Promise} promise
+   * @param  {boolean} failureExpected
+   * @param  {string} [message] optional custom error message
+   * @throws If expectations are not met
+   */
+  async tryAction (promise, failureExpected, message) {
+    this.props.error = null;
+
+    try {
+      this.props.result = await promise;
+    }
+    catch (e) {
+      this.props.error = e;
+    }
+
+    if (failureExpected && !this.props.error) {
+      throw new Error(message || 'Expected action to fail');
+    }
+
+    if (!failureExpected && this.props.error) {
+      throw this.props.error;
+    }
   }
 }
 

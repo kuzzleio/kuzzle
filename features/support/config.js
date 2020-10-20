@@ -1,9 +1,8 @@
 'use strict';
 
-const
-  rc = require('rc'),
-  /** @type KuzzleConfiguration */
-  kuzzleConfig = require('../../lib/config');
+const rc = require('rc');
+
+const kuzzleConfig = require('../../lib/config');
 
 module.exports = rc('kuzzle', {
   scheme: 'http',
@@ -11,7 +10,7 @@ module.exports = rc('kuzzle', {
   port: 7512,
   services: {
     storageEngine: {
-      commonMapping: kuzzleConfig.services.storageEngine.commonMapping
+      commonMapping: kuzzleConfig.load().services.storageEngine.commonMapping
     }
   }
 });

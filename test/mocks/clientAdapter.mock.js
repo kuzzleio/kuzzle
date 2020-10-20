@@ -1,52 +1,36 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  ClientAdapter = require('../../lib/core/storage/clientAdapter');
+const sinon = require('sinon');
+const ClientAdapter = require('../../lib/core/storage/clientAdapter');
 
 class ClientAdapterMock extends ClientAdapter {
-  constructor (storageClient, indexCache) {
-    super(storageClient, indexCache);
+  constructor (kuzzle, scope) {
+    super(kuzzle, scope);
 
-    this.init = sinon.stub().resolves();
-    this.info = sinon.stub().resolves();
-    this.scroll = sinon.stub().resolves();
-    this.search = sinon.stub().resolves();
-    this.get = sinon.stub().resolves();
-    this.mGet = sinon.stub().resolves();
-    this.count = sinon.stub().resolves();
-    this.create = sinon.stub().resolves();
-    this.createOrReplace = sinon.stub().resolves();
-    this.update = sinon.stub().resolves();
-    this.replace = sinon.stub().resolves();
-    this.delete = sinon.stub().resolves();
-    this.deleteByQuery = sinon.stub().resolves();
-    this.updateByQuery = sinon.stub().resolves();
-    this.createIndex = sinon.stub().resolves();
-    this.createCollection = sinon.stub().resolves();
-    this.getMapping = sinon.stub().resolves();
-    this.updateMapping = sinon.stub().resolves();
-    this.truncateCollection = sinon.stub().resolves();
-    this.import = sinon.stub().resolves();
-    this.listCollections = sinon.stub().resolves();
-    this.listIndexes = sinon.stub().resolves();
-    this.listAliases = sinon.stub().resolves();
-    this.deleteIndexes = sinon.stub().resolves();
-    this.deleteIndex = sinon.stub().resolves();
-    this.refreshCollection = sinon.stub().resolves();
-    this.exists = sinon.stub().resolves();
-    this.indexExists = sinon.stub().resolves();
-    this.collectionExists = sinon.stub().resolves();
-    this.mCreate = sinon.stub().resolves();
-    this.mCreateOrReplace = sinon.stub().resolves();
-    this.mUpdate = sinon.stub().resolves();
-    this.mReplace = sinon.stub().resolves();
-    this.mDelete = sinon.stub().resolves();
-    this.deleteCollection = sinon.stub().resolves();
-    this.isIndexNameValid = sinon.stub().returns(true);
-    this.isCollectionNameValid = sinon.stub().returns(true);
-    this.loadMappings = sinon.stub().resolves();
-    this.loadFixtures = sinon.stub().resolves();
+    sinon.stub(this, 'init').callsFake(() => {
+      this.registerCollectionEvents();
+      this.registerIndexEvents();
+      this.registerDocumentEvents();
+      this.registerMappingEvents();
+      this.registerCacheEvents();
+
+      this.kuzzle.onAsk(
+        `core:storage:${this.scope}:info:get`,
+        sinon.stub().resolves());
+    });
+
+    sinon.stub(this, 'createIndex').resolves();
+    sinon.stub(this, 'createCollection').resolves();
+    sinon.stub(this, 'deleteIndex').resolves();
+    sinon.stub(this, 'deleteIndexes').resolves();
+    sinon.stub(this, 'deleteCollection').resolves();
+    sinon.stub(this, 'populateCache').resolves();
+    sinon.stub(this, 'loadMappings').resolves();
+    sinon.stub(this, 'loadFixtures').resolves();
+    sinon.stub(this.cache, 'listIndexes').resolves([]);
+
+    sinon.stub(this.client, 'isIndexNameValid').resolves(true);
+    sinon.stub(this.client, 'isCollectionNameValid').resolves(true);
   }
 }
 

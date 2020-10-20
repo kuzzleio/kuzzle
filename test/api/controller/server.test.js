@@ -2,6 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
+const yaml = require('js-yaml');
 const {
   Request,
   ExternalServiceError
@@ -104,31 +105,33 @@ describe('ServerController', () => {
 
   describe('#healthCheck', () => {
     beforeEach(() => {
-      kuzzle.storageEngine.public.info.resolves({status: 'green'});
+      kuzzle.ask.withArgs('core:storage:public:info:get').resolves({
+        status: 'green',
+      });
     });
 
-    it('should return a 200 response with status "green" if storageEngine status is "green" and Redis is OK', () => {
-      return serverController.healthCheck(request)
-        .then(response => {
-          should(request.response.error).be.null();
-          should(response.status).be.exactly('green');
-          should(response.services.internalCache).be.exactly('green');
-          should(response.services.memoryStorage).be.exactly('green');
-          should(response.services.storageEngine).be.exactly('green');
-        });
+    it('should return a 200 response with status "green" if ES status is "green" and Redis is OK', async () => {
+      const response = await serverController.healthCheck(request);
+
+      should(request.response.error).be.null();
+      should(response.status).be.exactly('green');
+      should(response.services.internalCache).be.exactly('green');
+      should(response.services.memoryStorage).be.exactly('green');
+      should(response.services.storageEngine).be.exactly('green');
     });
 
-    it('should return a 200 response with status "green" if storageEngine status is "yellow" and Redis is OK', () => {
-      kuzzle.storageEngine.public.info.resolves({status: 'yellow'});
+    it('should return a 200 response with status "green" if ES status is "yellow" and Redis is OK', async () => {
+      kuzzle.ask.withArgs('core:storage:public:info:get').resolves({
+        status: 'yellow',
+      });
 
-      return serverController.healthCheck(request)
-        .then(response => {
-          should(request.response.error).be.null();
-          should(response.status).be.exactly('green');
-          should(response.services.internalCache).be.exactly('green');
-          should(response.services.memoryStorage).be.exactly('green');
-          should(response.services.storageEngine).be.exactly('green');
-        });
+      const response = await serverController.healthCheck(request);
+
+      should(request.response.error).be.null();
+      should(response.status).be.exactly('green');
+      should(response.services.internalCache).be.exactly('green');
+      should(response.services.memoryStorage).be.exactly('green');
+      should(response.services.storageEngine).be.exactly('green');
     });
 
     it('should return 200 response with status "green" if storageEngine status is "green"', () => {
@@ -170,32 +173,32 @@ describe('ServerController', () => {
         });
     });
 
-    it('should return a 503 response with status "red" if storageEngine status is "red"', () => {
-      kuzzle.storageEngine.public.info.resolves({status: 'red'});
+    it('should return a 503 response with status "red" if storageEngine status is "red"', async () => {
+      kuzzle.ask.withArgs('core:storage:public:info:get').resolves({
+        status: 'red',
+      });
 
-      return serverController.healthCheck(request)
-        .then(response => {
-          should(request.response.error).be.instanceOf(ExternalServiceError);
-          should(request.response.status).be.exactly(500);
-          should(response.status).be.exactly('red');
-          should(response.services.internalCache).be.exactly('green');
-          should(response.services.memoryStorage).be.exactly('green');
-          should(response.services.storageEngine).be.exactly('red');
-        });
+      const response = await serverController.healthCheck(request);
+
+      should(request.response.error).be.instanceOf(ExternalServiceError);
+      should(request.response.status).be.exactly(500);
+      should(response.status).be.exactly('red');
+      should(response.services.internalCache).be.exactly('green');
+      should(response.services.memoryStorage).be.exactly('green');
+      should(response.services.storageEngine).be.exactly('red');
     });
 
-    it('should return a 503 response with status "red" if storageEngine is KO', () => {
-      kuzzle.storageEngine.public.info.rejects(new Error());
+    it('should return a 503 response with status "red" if storageEngine is KO', async () => {
+      kuzzle.ask.withArgs('core:storage:public:info:get').rejects(new Error());
 
-      return serverController.healthCheck(request)
-        .then(response => {
-          should(request.response.error).be.instanceOf(ExternalServiceError);
-          should(request.response.status).be.exactly(500);
-          should(response.status).be.exactly('red');
-          should(response.services.internalCache).be.exactly('green');
-          should(response.services.memoryStorage).be.exactly('green');
-          should(response.services.storageEngine).be.exactly('red');
-        });
+      const response = await serverController.healthCheck(request);
+
+      should(request.response.error).be.instanceOf(ExternalServiceError);
+      should(request.response.status).be.exactly(500);
+      should(response.status).be.exactly('red');
+      should(response.services.internalCache).be.exactly('green');
+      should(response.services.memoryStorage).be.exactly('green');
+      should(response.services.storageEngine).be.exactly('red');
     });
 
     it('should return a 503 response with status "red" if memoryStorage is KO', async () => {
@@ -298,7 +301,10 @@ describe('ServerController', () => {
     });
 
     it('should reject an error in case of error', () => {
-      kuzzle.storageEngine.public.info.rejects(new Error('foobar'));
+      kuzzle.ask
+        .withArgs('core:storage:public:info:get')
+        .rejects(new Error('foobar'));
+
       return should(serverController.info()).be.rejected();
     });
   });
@@ -339,6 +345,35 @@ describe('ServerController', () => {
             kuzzle.pluginsManager.controllers,
             kuzzle.pluginsManager.routes
           ]);
+        });
+    });
+  });
+
+  describe('#openapi', () => {
+    it('should return JSON formated OpenAPI specifications by default', () => {
+      return serverController.openapi(request)
+        .then((response) => {
+          response.should.be.an.Object();
+          response.openapi.should.be.a.String();
+        });
+    });
+
+    it('should return JSON formated OpenAPI specifications if specified', () => {
+      request.input.args.format = 'json';
+      return serverController.openapi(request)
+        .then((response) => {
+          response.should.be.an.Object();
+          response.openapi.should.be.a.String();
+        });
+    });
+
+    it('should return YAML formated OpenAPI specifications if specified', () => {
+      request.input.args.format = 'yaml';
+      return serverController.openapi(request)
+        .then((response) => {
+          const parsedResponse = yaml.load(response);
+          parsedResponse.should.be.an.Object();
+          parsedResponse.openapi.should.be.a.String();
         });
     });
   });

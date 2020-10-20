@@ -20,6 +20,12 @@ describe('CacheEngine', () => {
     sinon.stub(cacheEngine.internal);
     cacheEngine.public.commands = new RedisClientMock();
     cacheEngine.internal.commands = new RedisClientMock();
+
+    cacheEngine.internal.client = {
+      defineCommand: sinon.stub().callsFake(name => {
+        cacheEngine.internal.client[name] = sinon.stub().resolves();
+      }),
+    };
   });
 
   describe('#init', () => {
@@ -61,6 +67,17 @@ describe('CacheEngine', () => {
 
       await kuzzle.ask('core:cache:internal:store', 'key', 'value', 'ttl');
       should(cacheEngine.internal.store).calledWith('key', 'value', 'ttl');
+
+      // /!\ the "script:*" event tests below must be executed in order
+      await kuzzle.ask('core:cache:internal:script:define', 'name', 'keys', 'script');
+      should(cacheEngine.internal.client.defineCommand).calledWith('name', {
+        lua: 'script',
+        numberOfKeys: 'keys',
+      });
+      should(cacheEngine.internal.client.name).be.a.Function();
+
+      await kuzzle.ask('core:cache:internal:script:execute', 'name', 'foo', 'bar');
+      should(cacheEngine.internal.client.name).calledWith('foo', 'bar');
     });
 
     it('should register "cache:public" events', async () => {

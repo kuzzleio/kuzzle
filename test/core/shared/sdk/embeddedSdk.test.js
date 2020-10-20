@@ -12,7 +12,7 @@ describe('EmbeddedSDK', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.started = true;
+    kuzzle.state = KuzzleMock.states.RUNNING;
 
     embeddedSdk = new EmbeddedSDK(kuzzle);
   });

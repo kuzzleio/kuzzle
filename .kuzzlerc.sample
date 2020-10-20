@@ -127,7 +127,7 @@
     "kuzzle-plugin-logger": {
       "services": {
         "stdout": {
-          "level": "warning"
+          "level": "info"
         }
       }
     },
@@ -262,7 +262,8 @@
             },
             "server": {
               "actions": {
-                "publicApi": true
+                "publicApi": true,
+                "openapi": true
               }
             }
           }
