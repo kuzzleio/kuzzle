@@ -2,6 +2,7 @@
 
 const { setWorldConstructor } = require('cucumber');
 const { Kuzzle, WebSocket, Http } = require('kuzzle-sdk');
+const _ = require('lodash');
 
 const config = require('../../lib/config');
 
@@ -40,19 +41,25 @@ class KuzzleWorld {
     return this._protocol;
   }
 
-  parseObject (dataTable) {
-    if (typeof dataTable.rowsHash !== 'function') {
-      throw new Error('Argument is not a datatTable');
-    }
+  parseObject(dataTable) {
+    const rawContent = dataTable.rowsHash();
+    const content = {};
 
-    const content = dataTable.rowsHash();
+    for (const [path, value] of Object.entries(rawContent)) {
+      if (value.includes('_AGO_')) {
+        // format: "_5m_AGO_"
+        const timeAgo = ms(value.split('_')[1]);
 
-    for (const key of Object.keys(content)) {
-      content[key] = JSON.parse(content[key]);
+        _.set(content, path, this.props.now - timeAgo);
+      }
+      else {
+        _.set(content, path, eval(`var o = ${value}; o`));
+      }
     }
 
     return content;
   }
+
 
   parseObjectArray (dataTable) {
     const
