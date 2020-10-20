@@ -45,7 +45,7 @@ A production deployment must include a reverse proxy like Nginx to [securize the
 
 ## Prepare our Docker Compose deployment
 
-We are going to write a `docker-compose.yml` file that describe our services.  
+We are going to write a `docker-compose.yml` file that describes our services.  
 
 First, create a `docker/` directory: `mkdir docker/`
 
