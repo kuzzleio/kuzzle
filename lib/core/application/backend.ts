@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import util from 'util';
 
 import fs from 'fs';
 import _ from 'lodash';
@@ -165,7 +166,7 @@ class ControllerManager extends ApplicationManager {
    *   actions: {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
-   *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+   *       http: [{ verb: 'post', path: 'greeting/hello/:name' }]
    *     }
    *   }
    * })
@@ -265,7 +266,7 @@ class ControllerManager extends ApplicationManager {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
         // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'GET', path: `/${kebabCase(controllerName)}/${kebabCase(action)}` }];
+        definition.http = [{ verb: 'get', path: `${kebabCase(controllerName)}/${kebabCase(action)}` }];
       }
     }
   }
@@ -395,7 +396,7 @@ class Logger extends ApplicationManager {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
 
-    this._kuzzle.log[level](`[${this._application.name}]: ${message}`);
+    this._kuzzle.log[level](util.inspect(message));
   }
 }
 
