@@ -80,7 +80,12 @@ Returns an object with the following properties:
 
 - `hits`: array of object. Each object describes a found API key:
   - `_id`: API key ID
-  - `_source`: API key definition without the `token` field
+  - `_source`: API key content without the `token` field
+    - `userId`: user kuid
+    - `expiresAt`: expiration date in UNIX micro-timestamp format (`-1` if the token never expires)
+    - `ttl`: original ttl
+    - `description`: description
+    - `fingerprint`: SHA256 hash of the authentication token
 - `total`: total number of API keys found. Depending on pagination options, this can be greater than the actual number of API keys in a single result page
 
 ```js
@@ -96,7 +101,11 @@ Returns an object with the following properties:
       {
         "_id": "api-key-1",
         "_source": {
-          // API key content
+          "userId": "mWakSm4BWtbu6xy6NY8K",
+          "expiresAt": -1,
+          "ttl": -1,
+          "description": "Sigfox callback authentication token",
+          "fingerprint": "4ee98cb8c614e99213e7695f822e42325d86c93cfaf39cb40e860939e784c8e6"
         }
       },
       {
