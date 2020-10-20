@@ -106,7 +106,7 @@ We are going to use a multi-stage Docker file to build the dependencies and then
 Create the `deployment/kuzzle.dockerfile` file with the following content:
 
 ```dockerfile
-# builder imager
+# builder image
 FROM node:12-stretch-slim as builder
 
 RUN  set -x \
