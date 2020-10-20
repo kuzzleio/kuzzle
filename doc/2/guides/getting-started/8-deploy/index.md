@@ -103,7 +103,7 @@ Kuzzle needs compiled dependencies for the cluster and the realtime engine.
 
 We are going to use a multi-stage Docker file to build the dependencies and then use the [node:12-stretch-slim](https://hub.docker.com/_/node?tab=description) image to run the application.
 
-Create the `deployment/kuzzle.dockerfile` file with the following content:
+Create the `docker/kuzzle.dockerfile` file with the following content:
 
 ```dockerfile
 # builder image
