@@ -50,8 +50,3 @@ When you start Kuzzle, you automatically have access to an API exposing the foll
  - Realtime engine
  - Integrated cluster mode
  - and more!
-
-| . | . |
-| --- | --- |
-| ![zz](./feature-data-storage.png) storage and access | ![zz](./feature-api.png) Multi protocol API (HTTP, WebSocket, MQTT |
-| LOL | LIL |
