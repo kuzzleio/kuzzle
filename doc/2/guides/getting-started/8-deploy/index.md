@@ -10,7 +10,7 @@ order: 800
 
 Kuzzle is just a Node.js application that also needs Elasticsearch and Redis to run.  
 
-Thus, there is an infinite way of deploying a Kuzzle application.  
+The only specifity is that Kuzzle need to compile C and C++ dependencies so the `npm install` will also be looking for `python`, `make` and `g++` packages.   
 
 At Kuzzle we like to use Docker and Docker Compose to quickly deploy applications.  
 In this guide we will see how to deploy a Kuzzle application on a remote server.
@@ -21,7 +21,7 @@ In this guide we will see how to deploy a Kuzzle application on a remote server.
 
 ::: info
 In this guide we will perform a basic deployment of a Kuzzle application.  
-For critical production deployments, we strongly recommend to deploy your application in [cluster](/core/2/guides/some-link) mode to take advantage of high availability and scalability.  
+For production deployments, we strongly recommend to deploy your application with the [cluster](/core/2/guides/some-link) mode to take advantage of high availability and scalability.  
 Our team can bring its expertise and support for such deployments: [get a quote](https://info.kuzzle.io/contact-us)
 :::
 
@@ -112,7 +112,6 @@ FROM node:12-stretch-slim as builder
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
-       python \
        make \
        g++ \
        python \
