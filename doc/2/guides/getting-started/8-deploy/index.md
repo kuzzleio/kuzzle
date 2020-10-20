@@ -21,7 +21,7 @@ In this guide we will see how to deploy a Kuzzle application on a remote server.
 
 ::: info
 In this guide we will perform a basic deployment of a Kuzzle application.  
-For production deployments, we strongly recommend to deploy your application with the [cluster](/core/2/guides/some-link) mode to take advantage of high availability and scalability.  
+For production deployments, we strongly recommend to deploy your application in [cluster mode](/core/2/guides/some-link) to take advantage of high availability and scalability.  
 Our team can bring its expertise and support for such deployments: [get a quote](https://info.kuzzle.io/contact-us)
 :::
 
