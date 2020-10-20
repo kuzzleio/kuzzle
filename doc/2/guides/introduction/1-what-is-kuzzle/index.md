@@ -13,7 +13,6 @@ If you're on this page it's probably because you need a backend for your mobile,
 Once again you had been preparing to develop a backend from scratch, not really from scratch because you probably planned to use a framework like Fastify or Nest.js to make it easier for you.  
 This kind of framework allows you to develop faster by providing a predefined structure, classes and configurations.
 
-
 However, you will still have to develop the majority of the basics features:
  - storing and searching data
  - permission management
@@ -51,36 +50,49 @@ When you start Kuzzle, you automatically have access to an API exposing the foll
  - Integrated cluster mode
  - and more!
 
-Kuzzle is available as a NPM package and can be started with few lines of code:
 
-:::: tabs
-::: tab Javascript
+## Complete ecosystem
 
-```js
-const { Backend } = require('kuzzle');
+In addition to Kuzzle, we are developing many other projects to facilitate the use of our backend.   
 
-const app = new Backend('pegasus');
+All these projects are also available under the Apache-2 license on [Github](https://github.com/kuzzleio).
 
-app.start()
-  .then(() => {
-    app.log.info('Successfully started!')
-  });
-```
+### Admin Console
 
-:::
+The [Admin Console](/core/2/some-link) is a Single Page Application (SPA) written in Vue.js.  
 
-::: tab Typescript
+It is used to manage its data and the user permissions system.
 
-```js
-import { Backend } from 'kuzzle'
+As it is a SPA, no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://console.kuzzle.io](http://console.kuzzle.io).
 
-const app = new Backend('pegasus')
+### SDKs
 
-app.start()
-  .then(() => {
-    app.log.info('Successfully started!')
-  })
-```
+We develop many SDKs to facilitate the use of Kuzzle in applications.  
 
-:::
-::::
+These SDKs are available for the most common languages and the majority of frontend development platforms:
+ - [Javascript / Typescript](/sdk/js/7) : [Node](/sdk/js/7/getting-started/node-js/), [React](/sdk/js/7/getting-started/react/standalone/), [React Native](/sdk/js/7/getting-started/react-native/), [Vue.js](/sdk/js/7/getting-started/vuejs/standalone/), Angular, etc
+ - [Dart](/sdk/dart/2) : [Flutter](/sdk/dart/2/getting-started/flutter/)
+ - [Csharp](/sdk/csharp/2) : Xamarin, [.NET](/sdk/csharp/2/getting-started/standalone/)
+ - [Java / Kotlin](/sdk/some/link) : Android, JVM
+
+### Kourou
+
+Kourou is a command line interface that facilitates development with Kuzzle.
+
+It can be used in particular to execute any API action or even code snippets directly.
+
+[See the dedicated guide](/some/link/kourou)
+
+### Business plugins
+
+We also develop and distribute plugins for Kuzzle.  
+
+These plugins allow you to use the functionalities of other services such as [Amazon S3](https://docs.kuzzle.io/official-plugins/s3/2) or [Prometheus](https://github.com/kuzzleio/kuzzle-plugin-prometheus).
+
+The community is also able to develop and distribute its own plugins to enrich the ecosystem.
+
+### Meet the community
+
+We federate a community of developers using Kuzzle around the world.
+
+Whether you want to ask a question about [StackOverflow](https://stackoverflow.com/questions/ask?tags=kuzzle), check out the [Kuzzle awesome list](https://github.com/kuzzleio/awesome-kuzzle) or discuss using Kuzzle on [Discord](http://join.discord.kuzzle.io), the community and the core team will be there to help you.
