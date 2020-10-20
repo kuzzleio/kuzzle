@@ -3,6 +3,7 @@
 const { setWorldConstructor } = require('cucumber');
 const { Kuzzle, WebSocket, Http } = require('kuzzle-sdk');
 const _ = require('lodash');
+const ms = require('ms');
 
 const config = require('../../lib/config');
 
@@ -53,7 +54,7 @@ class KuzzleWorld {
         _.set(content, path, this.props.now - timeAgo);
       }
       else {
-        _.set(content, path, eval(`var o = ${value}; o`));
+        _.set(content, path, eval(`var o = ${value}; o`)); // eslint-disable-line no-eval
       }
     }
 
