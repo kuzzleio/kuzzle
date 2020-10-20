@@ -14,7 +14,7 @@ Kuzzle integrates an advanced realtime engine. It can work in a classic pub/sub 
 
 A filter system also allows clients to receive notifications only according to their interest in certain types of documents.
 
-Subscription to realtime notifications is client-side and does not require additional server-side code.
+Subscription to realtime notifications is performed client-side and does not require additional server-side code.
 
 ### Subscribe to changes
 
@@ -71,7 +71,7 @@ Again, we are going to subscribe to notifications but only for documents where:
 This filter must be written using Koncorde Filter DSL, which is a little inspired by Elasticsearch DSL:
 
 ::: info
-Koncorde is part of Kuzzle Realtime Engine and handles subscription filters.
+Koncorde is part of the Kuzzle Realtime Engine and handles subscription filters.
 :::
 
 ```json
@@ -110,7 +110,7 @@ $ kourou realtime:subscribe nyc-open-data yellow-taxi '{
 }'
 ```
 
-Then we are going to create some documents:
+Then we create 10 documents using the [`sdk:execute` command in Kourou](https://github.com/kuzzleio/kourou#kourou-sdkexecute):
 
 ```bash
 $ kourou sdk:execute --code '
@@ -123,7 +123,7 @@ $ kourou sdk:execute --code '
   }'
 ```
 
-<details><summary>You should receive only those 3 notifications:</summary>
+<details><summary>You should receive only the following 3 notifications (that correspond with the filters specified in the subscription):</summary>
 
 ```bash
  🚀 Kourou - Subscribes to realtime notifications
