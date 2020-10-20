@@ -50,3 +50,37 @@ When you start Kuzzle, you automatically have access to an API exposing the foll
  - Realtime engine
  - Integrated cluster mode
  - and more!
+
+Kuzzle is available as a NPM package and can be started with few lines of code:
+
+:::: tabs
+::: tab Javascript
+
+```js
+const { Backend } = require('kuzzle');
+
+const app = new Backend('pegasus');
+
+app.start()
+  .then(() => {
+    app.log.info('Successfully started!')
+  });
+```
+
+:::
+
+::: tab Typescript
+
+```js
+import { Backend } from 'kuzzle'
+
+const app = new Backend('pegasus')
+
+app.start()
+  .then(() => {
+    app.log.info('Successfully started!')
+  })
+```
+
+:::
+::::
