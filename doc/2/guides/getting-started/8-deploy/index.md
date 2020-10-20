@@ -47,9 +47,9 @@ A production deployment must include a reverse proxy like Nginx to [securize the
 
 We are going to write a `docker-compose.yml` file that describe our services.  
 
-First, create a `deploy/` directory: `mkdir deploy/`
+First, create a `docker/` directory: `mkdir docker/`
 
-Then create the `deploy/docker-compose.yml` file and paste the following content:
+Then create the `docker/docker-compose.yml` file and paste the following content:
 
 ```yaml
 ---
@@ -57,8 +57,11 @@ version: "3"
 
 services:
   kuzzle:
-    image: kuzzleio/kuzzle:2
-    restart: always 
+    build:
+      context: ../
+      dockerfile: docker/kuzzle.dockerfile
+    command: node /var/app/app.js
+    restart: always
     container_name: kuzzle
     ports:
       - "7512:7512"
@@ -74,10 +77,10 @@ services:
 
   redis:
     image: redis:5
+    command: redis-server --appendonly yes
     restart: always
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
@@ -93,3 +96,59 @@ volumes:
   redis-data:
     driver: local
 ```
+
+This configuration allows to run a Kuzzle application with Node.js alongside Elasticsearch and Redis.
+
+Kuzzle needs compiled dependencies for the cluster and the realtime engine.  
+
+We are going to use a multi-stage Docker file to build the dependencies and then use the [node:12-stretch-slim](https://hub.docker.com/_/node?tab=description) image to run the application.
+
+Create the `deployment/kuzzle.dockerfile` file with the following content:
+
+```dockerfile
+# builder imager
+FROM node:12-stretch-slim as builder
+
+RUN  set -x \
+  && apt-get update && apt-get install -y \
+       curl \
+       python \
+       make \
+       g++ \
+       python \
+       libzmq3-dev
+
+ADD . /var/app
+
+WORKDIR /var/app
+
+RUN  npm install --production
+
+# run image
+FROM node:12-stretch-slim
+
+COPY --from=builder /var/app /var/app
+```
+
+## Deploy on your remote server
+
+Now we are going to use `scp` (SSH copy) to copy our application on the remote server.  
+
+```bash
+$ scp -r ../playground <user>@<server-ip>:.
+```
+
+Then simply connect to your server and run your application with Docker Compose:
+
+```bash
+$ ssh <user>@<server-ip>
+
+[...]
+
+$ docker-compose -f docker/docker-compose.yml up -d
+```
+
+Your Kuzzle application is now up and running on port 7512!
+
+Learn more about:
+ - [Deployment](/core/2/api/some-links)
