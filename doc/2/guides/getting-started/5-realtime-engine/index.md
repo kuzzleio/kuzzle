@@ -68,7 +68,7 @@ Again, we are going to subscribe to notifications but only for documents where:
   - `age` is greater than `30`
   - `city` is equal to `Antalya`
 
-This filter must be written using Koncorde Filter DSL, which is a little inspired by Elasticsearch DSL:
+This filter must be written using [Koncorde Filter DSL](/core/2/some-link), which is a little inspired by Elasticsearch DSL:
 
 ::: info
 Koncorde is part of the Kuzzle Realtime Engine and handles subscription filters.
