@@ -48,14 +48,14 @@ Feature: Plugin context
     Then I should have receive "1" notifications for "test":"answer"
 
   # accessors.realtime.registerSubscription ===================================
-
+  @realtime
   Scenario: Register and unregister a new subscription
     Given a collection "nyc-open-data":"yellow-taxi"
     When I successfully execute the action "functional-test-plugin/accessors":"registerSubscription"
     Then I should receive a result matching:
       | acknowledged | "OK" |
-    And The result should contain a property roomId of type string
-    And The result should contain a property connectionId of type string
+    And The result should contain a property "roomId" of type "string"
+    And The result should contain a property "connectionId" of type "string"
     When I unsubscribe from the current room via the plugin
     Then I should receive a result matching:
       | acknowledged | "OK" |

@@ -141,7 +141,7 @@ class FunctionalTestPlugin {
   // accessors.registerSubscription related methods ============================
 
   async registerSubscription(request) {
-    const roomId = await this.context.accessors.subscription.register(
+    const result = await this.context.accessors.subscription.register(
       request.context.connection.id,
       'nyc-open-data',
       'yellow-taxi',
@@ -155,12 +155,12 @@ class FunctionalTestPlugin {
     return {
       acknowledged: 'OK',
       connectionId: request.context.connection.id,
-      roomId
+      roomId: result.roomId
     };
   }
 
   async unregisterSubscription(request) {
-    const connectionId = request.input.body.roomId || 
+    const connectionId = request.input.body.connectionId || 
             request.context.connection.id,
       roomId = request.input.body.roomId;
 
