@@ -10,7 +10,7 @@ Adds or removes [real-time subscriptions](/core/2/guides/essentials/real-time) f
 
 ## `register`
 
-Registers a new realtime subscription on behalf of a client. The subscription works exactly like the one created by the [`realtime:subscribe` API endpoint](/api/controllers/realtime/subscribe/index.md). The notifications will be sent to the connection identified by the `Request` object passed to the method.
+Registers a new realtime subscription on behalf of a client. The subscription works exactly like the one created by the [`realtime:subscribe` API endpoint](/api/controllers/realtime/subscribe/index.md). The notifications will be sent to the connection identified by the connection identifier passed to the method.
 
 ---
 
