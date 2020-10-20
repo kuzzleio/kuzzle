@@ -54,6 +54,7 @@ class KuzzleWorld {
         _.set(content, path, this.props.now - timeAgo);
       }
       else {
+        console.log({ path, v: eval(`var o = ${value}; o`)})
         _.set(content, path, eval(`var o = ${value}; o`)); // eslint-disable-line no-eval
       }
     }
