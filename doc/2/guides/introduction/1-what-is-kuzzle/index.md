@@ -10,10 +10,10 @@ order: 100
 
 If you're on this page it's probably because you need a backend for your mobile, web or IoT application.
 
-Once again you had been preparing to develop a backend from scratch, not really from scratch because you probably planned to use a framework like Fastify or Nest.js to make it easier for you.  
-This kind of framework allows you to develop faster by providing a predefined structure, classes and configurations.
+Once again you had been preparing to develop a backend from scratch... Well, maybe not entirely from scratch, because you probably planned to use some kind of framework (and there are a lot of them!) to make it easier for you.  
+Those frameworks allow you to develop faster by providing a predefined structure, classes and configurations.
 
-However, you will still have to develop the majority of the basics features:
+However, you will still have to develop the majority of the basic features:
  - storing and searching data
  - permission management
  - user authentication
