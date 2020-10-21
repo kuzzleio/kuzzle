@@ -58,3 +58,12 @@ Feature: Server Controller
     Then The property "services" of the result should match:
       | memoryStorage | "green" |
       | storageEngine | "green" |
+
+  # server:publicApi ========================================================================
+  Scenario: Http call onto deprecated method should print a warning when NODE_ENV=development
+    When I call the deprecated publicApi method 
+    Then I should receive a deprecation notice
+
+  Scenario: Http call onto deprecated method should print a warning when NODE_ENV=production
+    When I call the deprecated publicApi method
+    Then I shouldn't receive a deprecation notice

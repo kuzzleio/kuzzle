@@ -2,6 +2,8 @@
 
 const should = require('should');
 const { Request } = require('kuzzle-common-objects');
+
+const httpsRoutes = require('../../../../lib/config/httpRoutes');
 const Router = require('../../../../lib/core/network/router');
 const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
@@ -31,6 +33,21 @@ describe('Test: router.httpRequest', () => {
     httpRequest = new HttpMessage(
       {id: 'requestId'},
       {url: '', method: '', headers: {}});
+  });
+
+  it('deprecated method should have good properties', done => {
+    const deprecatedRoutes = httpsRoutes.filter(route => route.deprecated);
+
+    try {
+      for (const route of deprecatedRoutes) {
+        const { deprecated } = route;
+        should(deprecated).have.property('since');
+        should(deprecated).have.property('message');
+      }
+      done();
+    } catch (error) {
+      done(error);
+    }
   });
 
   it('should register GET routes from the config/httpRoutes file', done => {

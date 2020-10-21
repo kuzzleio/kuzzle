@@ -3,6 +3,7 @@
 const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
+const httpsRoutes = require('../../../../lib/config/httpRoutes');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const Router = require('../../../../lib/core/network/httpRouter');
 const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
@@ -622,6 +623,21 @@ describe('core/network/httpRouter', () => {
           done(e);
         }
       });
+    });
+
+    it('deprecated method should have good properties', done => {
+      const deprecatedRoutes = httpsRoutes.filter(route => route.deprecated);
+  
+      try {
+        for (const route of deprecatedRoutes) {
+          const { deprecated } = route;
+          should(deprecated).have.property('since');
+          should(deprecated).have.property('message');
+        }
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 });

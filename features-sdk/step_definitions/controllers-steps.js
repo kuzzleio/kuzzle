@@ -4,7 +4,8 @@ const assert = require('assert');
 
 const _ = require('lodash');
 const should = require('should');
-const { Then } = require('cucumber');
+const { Then, When } = require('cucumber');
+
 
 Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async function (expectSuccess, controller, action, dataTable) {
   const args = this.parseObject(dataTable);
@@ -164,4 +165,42 @@ Then('I got an error with id {string}', function (id) {
   assert(this.props.error !== null, 'Expected the previous step to return an error');
 
   assert(this.props.error.id === id, `Expected error to have id "${id}", but got "${this.props.error.id}"`);
+});
+
+When('I call the deprecated publicApi method', async function () {
+  if (process.env.KUZZLE_PROTOCOL !== 'http') {
+    return;
+  }
+
+  if (process.env.NODE_ENV !== 'development') {
+    return;
+  }
+
+  const response = await this.sdk.query({
+    controller: 'server',
+    action: 'publicApi'
+  });
+
+  this.props.deprecations = response.deprecations;
+});
+
+Then('I should receive a deprecation notice', async function () {
+  if (process.env.KUZZLE_PROTOCOL !== 'http') {
+    return;
+  }
+
+  if (process.env.NODE_ENV !== 'development') {
+    return;
+  }
+
+  should(this.props.deprecations).deepEqual([{ 'version': '2.5.0', 'message': 'http://kuzzle:7512/_openapi' }]);
+  this.props.deprecations = undefined;
+});
+
+Then('I shouldn\'t receive a deprecation notice', async function () {
+  if (process.env.KUZZLE_PROTOCOL !== 'http') {
+    return;
+  }
+
+  should(this.props.deprecations).equal(undefined);
 });
