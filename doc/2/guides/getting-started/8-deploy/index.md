@@ -112,8 +112,8 @@ FROM node:12-stretch-slim as builder
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
-       make \
        g++ \
+       make \
        python \
        libzmq3-dev
 
