@@ -702,5 +702,19 @@
   //
   "realtime": {
     "pcreSupport": false
+  },
+
+  // [cluster]
+  // Kuzzle Cluster confiugration
+  //   * minimumNodes:
+  //       The minimum number of nodes required by the cluster. It should be set
+  //       to AT LEAST to ((total number of nodes / 2) + 1), to ensure that the
+  //       cluster continues to work correctly even in the face of a networok
+  //       split. If there are fewer nodes available than the configured
+  //       minimum, the entire cluster stops accepting requests, until there are
+  //       enough nodes available again.
+  //       In this example, we plan to run a cluster of 3 nodes.
+  "cluster": {
+    "minimumNodes": 2
   }
 }
