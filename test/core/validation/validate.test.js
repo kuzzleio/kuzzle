@@ -326,29 +326,30 @@ describe('Test: validation.validate', () => {
         .be.rejectedWith(error);
     });
 
-    it('should get the full document from the DB in case of an update', () => {
-      const
-        verbose = false,
-        request = new Request({
-          index,
-          collection,
-          controller: 'document',
-          action: 'update',
-          _id: 'foo'
-        });
-      kuzzle.storageEngine.public.get.resolves({ _id: 'foo' });
+    it('should get the full document from the DB in case of an update', async () => {
+      const verbose = false;
+      const request = new Request({
+        index,
+        collection,
+        controller: 'document',
+        action: 'update',
+        _id: 'foo'
+      });
+
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
+        _id: 'foo',
+      });
+
       validation.specification = {};
 
-      return validation.validate(request, verbose)
-        .then(result => {
-          should(result).be.eql(request);
-          should(kuzzle.storageEngine.public.get).be.calledOnce();
-          should(kuzzle.storageEngine.public.get).be.calledWith(
-            index,
-            collection,
-            'foo'
-          );
-        });
+      const result = await validation.validate(request, verbose);
+
+      should(result).be.eql(request);
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:get',
+        index,
+        collection,
+        'foo');
     });
   });
 

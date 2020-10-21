@@ -3,7 +3,8 @@
 const should = require('should');
 const {
   Request,
-  BadRequestError
+  BadRequestError,
+  PreconditionError,
 } = require('kuzzle-common-objects');
 
 const Kuzzle = require('../../mocks/kuzzle.mock');
@@ -193,6 +194,8 @@ describe('Test: model/security/profile', () => {
       profile = new Profile();
       profile[_kuzzle] = kuzzle;
       profile._id = 'test';
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
     });
 
     it('should reject if no policies are provided', () => {
@@ -263,7 +266,7 @@ describe('Test: model/security/profile', () => {
     it('should reject if restrictedTo is given an invalid attribute', () => {
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{ index: 'index', foo: 'bar' }]
+        restrictedTo: [{ index: 'index', foo: 'bar' }],
       }];
 
       return should(profile.validateDefinition())
@@ -272,23 +275,22 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid index name', () => {
+    it('should reject if restrictedTo points to an unknown index (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index'}]
       }];
 
-      kuzzle.storageEngine.internal.isIndexNameValid.returns(false);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_index_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isIndexNameValid)
-            .calledOnce()
-            .calledWith('index');
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_index',
         });
+
+      should(kuzzle.ask).calledWith('core:storage:public:index:exist', 'index');
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -303,23 +305,22 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid collection name', () => {
+    it('should reject if restrictedTo points to an unknown collection (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', collections: ['foo']}]
       }];
 
-      kuzzle.storageEngine.internal.isCollectionNameValid.returns(false);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_collection_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isCollectionNameValid)
-            .calledOnce()
-            .calledWith('foo');
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_collection',
         });
+
+      should(kuzzle.ask).calledWith('core:storage:public:collection:exist', 'index', 'foo');
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {
