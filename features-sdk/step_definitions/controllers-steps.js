@@ -14,7 +14,8 @@ Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async f
   try {
     const response = await this.sdk.query({ controller, action, ...args });
 
-    this.props = response;
+    this.props.result = response.result;
+    this.props.response = response;
   }
   catch (error) {
     if (expectSuccess) {
@@ -31,7 +32,8 @@ Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with body:$/, async f
   try {
     const response = await this.sdk.query({ controller, action, body });
 
-    this.props = response;
+    this.props.result = response.result;
+    this.props.response = response;
   }
   catch (error) {
     if (expectSuccess) {
@@ -46,7 +48,8 @@ Then(/I (successfully )?execute the action "(.*?)":"(.*?)"$/, async function (ex
   try {
     const response = await this.sdk.query({ controller, action });
 
-    this.props = response;
+    this.props.result = response.result;
+    this.props.response = response;
   }
   catch (error) {
     if (expectSuccess) {
@@ -170,13 +173,11 @@ Then('I got an error with id {string}', function (id) {
 
 Then('The response should contains an array of {string} in the response matching:', async function (key, dataTable) {
   const array = this.parseObjectArray(dataTable);
-  should(this.props[key]).deepEqual(array);
-
-  this.props = undefined;
+  should(this.props.response[key]).deepEqual(array);
 });
 
 Then('The response should contains a {string} property equals to undefined', async function (key) {
-  should(this.props[key]).equal(undefined);
+  should(this.props.response[key]).equal(undefined);
 });
 
 Then('I send a HTTP {string} request with:', async function (method, dataTable) {
@@ -192,4 +193,5 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
   const response = await requestPromise(options);
 
   this.props.result = response.result;
+  this.props.response = response;
 });
