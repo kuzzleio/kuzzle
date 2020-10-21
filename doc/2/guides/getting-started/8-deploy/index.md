@@ -18,6 +18,7 @@ In this guide we will see how to deploy a Kuzzle application on a remote server.
 **Prerequisites:**
   - A SSH access to a remote server running on Linux
   - [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/) installed on this server
+  - A Kuzzle application
 
 ::: info
 In this guide we will perform a basic deployment of a Kuzzle application.  
