@@ -3,8 +3,10 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockrequire = require('mock-require');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+
 const BaseModel = require('../../../lib/model/storage/baseModel');
 const ApiKey = require('../../../lib/model/storage/apiKey');
 
@@ -20,8 +22,6 @@ describe('ApiKey', () => {
 
     StorageEngine = mockrequire.reRequire('../../../lib/core/storage/storageEngine');
     storageEngine = new StorageEngine(kuzzle);
-
-    sinon.stub(storageEngine, '_populateIndexCache');
 
     return storageEngine.init();
   });
@@ -64,7 +64,6 @@ describe('ApiKey', () => {
     it('should create a new API key and generate a token', async () => {
       const apiKey = await ApiKey.create(
         user,
-        'connectionId',
         'expiresIn',
         'Sigfox API key',
         { creatorId: 'aschen', refresh: 'wait_for' });
@@ -89,7 +88,6 @@ describe('ApiKey', () => {
     it('should allow to specify the API key ID', async () => {
       const apiKey = await ApiKey.create(
         user,
-        'connectionId',
         'expiresIn',
         'Sigfox API key',
         { apiKeyId: 'my-api-key-id' });

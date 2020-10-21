@@ -25,7 +25,6 @@ describe('Test: security/roleRepository', () => {
     fakeRole._id = 'foo';
 
     kuzzle = new KuzzleMock();
-    kuzzle.ask.restore();
 
     profileRepositoryMock = {
       searchProfiles: sinon.stub(),
@@ -77,10 +76,7 @@ describe('Test: security/roleRepository', () => {
     });
   });
 
-
   describe('#mGet', () => {
-    const mGetEvent = 'core:security:role:mGet';
-
     beforeEach(() => {
       sinon.stub(roleRepository, 'loadOneFromDatabase');
     });
@@ -88,7 +84,8 @@ describe('Test: security/roleRepository', () => {
     it('should register a mGet event', async () => {
       sinon.stub(roleRepository, 'loadRoles');
 
-      await kuzzle.ask(mGetEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:mGet', 'foo');
 
       should(roleRepository.loadRoles).calledWith('foo');
     });
@@ -97,7 +94,7 @@ describe('Test: security/roleRepository', () => {
       roleRepository.roles.set(fakeRole._id, fakeRole);
       roleRepository.loadOneFromDatabase = sinon.stub();
 
-      const result = await kuzzle.ask(mGetEvent, [fakeRole._id]);
+      const result = await roleRepository.loadRoles([fakeRole._id]);
 
       should(result).be.eql([fakeRole]);
       should(roleRepository.loadOneFromDatabase).not.called();
@@ -120,7 +117,7 @@ describe('Test: security/roleRepository', () => {
       roleRepository.loadOneFromDatabase.withArgs('role2').resolves(role2);
       roleRepository.loadOneFromDatabase.withArgs('role4').resolves(role4);
 
-      const result = await kuzzle.ask(mGetEvent, [
+      const result = await roleRepository.loadRoles([
         'role1',
         'role2',
         'role3',
@@ -139,8 +136,6 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#get', () => {
-    const getEvent = 'core:security:role:get';
-
     beforeEach(() => {
       sinon.stub(roleRepository, 'loadOneFromDatabase');
     });
@@ -148,7 +143,8 @@ describe('Test: security/roleRepository', () => {
     it('should register a "get" event', async () => {
       sinon.stub(roleRepository, 'load');
 
-      await kuzzle.ask(getEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:get', 'foo');
 
       should(roleRepository.load).calledWithMatch('foo');
     });
@@ -156,7 +152,7 @@ describe('Test: security/roleRepository', () => {
     it('should load the role directly from the cache, if present', async () => {
       roleRepository.roles.set(fakeRole._id, fakeRole);
 
-      const result = await kuzzle.ask(getEvent, fakeRole._id);
+      const result = await roleRepository.load(fakeRole._id);
 
       should(result).be.exactly(fakeRole);
     });
@@ -166,7 +162,7 @@ describe('Test: security/roleRepository', () => {
         .withArgs(fakeRole._id)
         .resolves(fakeRole);
 
-      const result = await kuzzle.ask(getEvent, fakeRole._id);
+      const result = await roleRepository.load(fakeRole._id);
 
       should(result).be.exactly(fakeRole);
       should(roleRepository.roles).have.key(fakeRole._id, fakeRole);
@@ -174,12 +170,11 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#search', () => {
-    const searchEvent = 'core:security:role:search';
-
     it('should register a "search" event', async () => {
       sinon.stub(roleRepository, 'searchRole');
 
-      await kuzzle.ask(searchEvent, 'foo', 'bar');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:search', 'foo', 'bar');
 
       should(roleRepository.searchRole).calledWith('foo', 'bar');
     });
@@ -245,39 +240,39 @@ describe('Test: security/roleRepository', () => {
 
       let result;
 
-      result = await kuzzle.ask(searchEvent, ['foo']);
+      result = await roleRepository.searchRole(['foo']);
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(3);
       should(result.hits).match([roles.default, roles.foo, roles.foobar]);
 
-      result = await kuzzle.ask(searchEvent, ['bar']);
+      result = await roleRepository.searchRole(['bar']);
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(3);
       should(result.hits).match([roles.default, roles.bar, roles.foobar]);
 
-      result = await kuzzle.ask(searchEvent, ['foo', 'bar']);
+      result = await roleRepository.searchRole(['foo', 'bar']);
       should(result.total).be.exactly(4);
       should(result.hits.length).be.exactly(4);
       should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
 
-      result = await kuzzle.ask(searchEvent, ['baz']);
+      result = await roleRepository.searchRole(['baz']);
       should(result.total).be.exactly(1);
       should(result.hits.length).be.exactly(1);
       should(result.hits).match([roles.default]);
 
-      result = await kuzzle.ask(searchEvent, ['foo'], {from: 1});
+      result = await roleRepository.searchRole(['foo'], {from: 1});
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.foo, roles.foobar]);
       should(result.hits).not.match([roles.default]);
 
-      result = await kuzzle.ask(searchEvent, ['foo'], {size: 2});
+      result = await roleRepository.searchRole(['foo'], {size: 2});
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.default, roles.foo]);
       should(result.hits).not.match([roles.foobar]);
 
-      result = await kuzzle.ask(searchEvent, ['foo', 'bar'], {
+      result = await roleRepository.searchRole(['foo', 'bar'], {
         from: 1,
         size: 2
       });
@@ -290,8 +285,6 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#delete', () => {
-    const deleteEvent = 'core:security:role:delete';
-
     beforeEach(() => {
       sinon.stub(roleRepository, 'deleteFromDatabase').resolves();
       sinon.stub(roleRepository, 'load')
@@ -302,7 +295,8 @@ describe('Test: security/roleRepository', () => {
     it('should register a "delete" event', async () => {
       sinon.stub(roleRepository, 'deleteById').resolves();
 
-      await kuzzle.ask(deleteEvent, 'foo', 'bar');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:delete', 'foo', 'bar');
 
       should(roleRepository.deleteById).calledWith('foo', 'bar');
     });
@@ -314,7 +308,7 @@ describe('Test: security/roleRepository', () => {
 
         roleRepository.load.withArgs(id).resolves(role);
 
-        await should(kuzzle.ask(deleteEvent, id))
+        await should(roleRepository.deleteById(id))
           .rejectedWith(BadRequestError, { id: 'security.role.cannot_delete' });
 
         should(kuzzle.emit).not.be.called();
@@ -328,7 +322,7 @@ describe('Test: security/roleRepository', () => {
         hits: [fakeRole._id]
       });
 
-      await should(kuzzle.ask(deleteEvent, fakeRole._id))
+      await should(roleRepository.deleteById(fakeRole._id))
         .rejectedWith(PreconditionError, { id: 'security.role.in_use' });
 
       should(kuzzle.emit).not.be.called();
@@ -339,7 +333,7 @@ describe('Test: security/roleRepository', () => {
       profileRepositoryMock.searchProfiles.resolves({total: 0});
       roleRepository.roles.set(fakeRole._id, fakeRole);
 
-      await kuzzle.ask(deleteEvent, fakeRole._id);
+      await roleRepository.deleteById(fakeRole._id);
 
       should(roleRepository.deleteFromDatabase)
         .be.calledOnce()
@@ -355,7 +349,7 @@ describe('Test: security/roleRepository', () => {
 
       roleRepository.load.withArgs(fakeRole._id).rejects(error);
 
-      return should(kuzzle.ask(deleteEvent, fakeRole._id)).rejectedWith(error);
+      return should(roleRepository.deleteById(fakeRole._id)).rejectedWith(error);
     });
   });
 
@@ -469,7 +463,9 @@ describe('Test: security/roleRepository', () => {
       sinon.stub(roleRepository, 'persistToDatabase').resolves();
       sinon.stub(roleRepository, 'loadOneFromDatabase').resolves(fakeRole);
 
-      roleRepository.indexStorage._storageEngine.get.resolves({});
+      kuzzle.ask
+        .withArgs('core:storage:private:document:get')
+        .resolves({});
 
       await roleRepository.validateAndSaveRole(fakeRole);
 
@@ -731,8 +727,6 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#create', () => {
-    const createEvent = 'core:security:role:create';
-
     beforeEach(() => {
       sinon.stub(roleRepository, 'validateAndSaveRole');
     });
@@ -740,7 +734,8 @@ describe('Test: security/roleRepository', () => {
     it('should register a "create" event', async () => {
       sinon.stub(roleRepository, 'create');
 
-      await kuzzle.ask(createEvent, 'foo', 'bar', 'baz');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:create', 'foo', 'bar', 'baz');
 
       should(roleRepository.create).calledWith('foo', 'bar', 'baz');
     });
@@ -753,7 +748,7 @@ describe('Test: security/roleRepository', () => {
         foo: 'foo',
       };
 
-      await kuzzle.ask(createEvent, 'foobar', content, {
+      await roleRepository.create('foobar', content, {
         refresh: 'refresh',
         userId: 'userId',
       });
@@ -780,14 +775,12 @@ describe('Test: security/roleRepository', () => {
     it('should resolve to the validateAndSaveRole result', () => {
       roleRepository.validateAndSaveRole.resolves('foobar');
 
-      return should(kuzzle.ask(createEvent, 'foo', {}, {}))
+      return should(roleRepository.create('foo', {}, {}))
         .fulfilledWith('foobar');
     });
   });
 
   describe('#createOrReplace', () => {
-    const createOrReplaceEvent = 'core:security:role:createOrReplace';
-
     beforeEach(() => {
       sinon.stub(roleRepository, 'validateAndSaveRole');
     });
@@ -795,7 +788,8 @@ describe('Test: security/roleRepository', () => {
     it('should register a "createOrReplace" event', async () => {
       sinon.stub(roleRepository, 'createOrReplace');
 
-      await kuzzle.ask(createOrReplaceEvent, 'foo', 'bar', 'baz');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:createOrReplace', 'foo', 'bar', 'baz');
 
       should(roleRepository.createOrReplace).calledWith('foo', 'bar', 'baz');
     });
@@ -808,7 +802,7 @@ describe('Test: security/roleRepository', () => {
         foo: 'foo',
       };
 
-      await kuzzle.ask(createOrReplaceEvent, 'foobar', content, {
+      await roleRepository.createOrReplace('foobar', content, {
         refresh: 'refresh',
         userId: 'userId',
       });
@@ -835,14 +829,12 @@ describe('Test: security/roleRepository', () => {
     it('should resolve to the validateAndSaveRole result', () => {
       roleRepository.validateAndSaveRole.resolves('foobar');
 
-      return should(kuzzle.ask(createOrReplaceEvent, 'foo', {}, {}))
+      return should(roleRepository.createOrReplace('foo', {}, {}))
         .fulfilledWith('foobar');
     });
   });
 
   describe('#truncate', () => {
-    const truncateEvent = 'core:security:role:truncate';
-
     beforeEach(() => {
       sinon.stub(Repository.prototype, 'truncate').resolves();
     });
@@ -854,7 +846,8 @@ describe('Test: security/roleRepository', () => {
     it('should register a "truncate" event', async () => {
       sinon.stub(roleRepository, 'truncate');
 
-      await kuzzle.ask(truncateEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:truncate', 'foo');
 
       should(roleRepository.truncate).calledWith('foo');
     });
@@ -886,8 +879,6 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#update', () => {
-    const updateEvent = 'core:security:role:update';
-
     beforeEach(() => {
       sinon.stub(roleRepository, 'validateAndSaveRole');
       sinon.stub(roleRepository, 'load').resolves(fakeRole);
@@ -896,7 +887,8 @@ describe('Test: security/roleRepository', () => {
     it('should register a "update" event', async () => {
       sinon.stub(roleRepository, 'update');
 
-      await kuzzle.ask(updateEvent, 'foo', 'bar', 'baz');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:update', 'foo', 'bar', 'baz');
 
       should(roleRepository.update).calledWith('foo', 'bar', 'baz');
     });
@@ -905,7 +897,7 @@ describe('Test: security/roleRepository', () => {
       const error = new Error('foo');
       roleRepository.load.rejects(new Error('foo'));
 
-      return should(kuzzle.ask(updateEvent, 'foo', {}, {}))
+      return should(roleRepository.update('foo', {}, {}))
         .rejectedWith(error);
     });
 
@@ -917,7 +909,7 @@ describe('Test: security/roleRepository', () => {
         foo: 'foo',
       };
 
-      await kuzzle.ask(updateEvent, 'foobar', content, {
+      await roleRepository.update('foobar', content, {
         refresh: 'refresh',
         userId: 'userId',
       });
@@ -942,18 +934,17 @@ describe('Test: security/roleRepository', () => {
     it('should resolve to the validateAndSaveRole result', () => {
       roleRepository.validateAndSaveRole.resolves('foobar');
 
-      return should(kuzzle.ask(updateEvent, 'foo', {}, {}))
+      return should(roleRepository.update('foo', {}, {}))
         .fulfilledWith('foobar');
     });
   });
 
   describe('#sanityCheck', () => {
-    const sanityCheckEvent = 'core:security:verify';
-
     it('should register a "verify" event', async () => {
       sinon.stub(roleRepository, 'sanityCheck');
 
-      await kuzzle.ask(sanityCheckEvent);
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:verify');
 
       should(roleRepository.sanityCheck).calledOnce();
     });
@@ -969,7 +960,7 @@ describe('Test: security/roleRepository', () => {
 
       sinon.stub(roleRepository, 'checkRolePluginsRights').resolves();
 
-      await kuzzle.ask(sanityCheckEvent);
+      await roleRepository.sanityCheck();
 
       should(roleRepository.checkRolePluginsRights)
         .calledWithMatch(role1, { force: true, forceWarn: true })
@@ -979,12 +970,11 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#invalidate', () => {
-    const invalidateEvent = 'core:security:role:invalidate';
-
     it('should register an "invalidate" event', async () => {
       sinon.stub(roleRepository, 'invalidate');
 
-      await kuzzle.ask(invalidateEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:role:invalidate', 'foo');
 
       should(roleRepository.invalidate).calledWith('foo');
     });
@@ -993,7 +983,7 @@ describe('Test: security/roleRepository', () => {
       roleRepository.roles.set('foo', 'bar');
       roleRepository.roles.set('baz', 'qux');
 
-      await kuzzle.ask(invalidateEvent, 'baz');
+      await roleRepository.invalidate('baz');
 
       should(roleRepository.roles).has.key('foo');
       should(roleRepository.roles).not.has.key('baz');
@@ -1003,7 +993,7 @@ describe('Test: security/roleRepository', () => {
       roleRepository.roles.set('foo', 'bar');
       roleRepository.roles.set('baz', 'qux');
 
-      await kuzzle.ask(invalidateEvent);
+      await roleRepository.invalidate();
 
       should(roleRepository.roles).be.empty();
     });

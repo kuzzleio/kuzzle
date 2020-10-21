@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require('util');
+
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
@@ -249,7 +251,7 @@ describe('Backend', () => {
       should(application._controllers.greeting).not.be.undefined();
       should(application._controllers.greeting.actions.sayBye.http)
         .be.eql([
-          { verb: 'GET', path: '/greeting/say-bye' }
+          { verb: 'get', path: 'greeting/say-bye' }
         ]);
     });
   });
@@ -374,13 +376,13 @@ describe('Backend', () => {
         application.log.info('info');
         application.log.warn('warn');
         application.log.error('error');
-        application.log.verbose('verbose');
+        application.log.verbose({ info: 'verbose' });
 
-        should(application._kuzzle.log.debug).be.calledWith('[black-mesa]: debug');
-        should(application._kuzzle.log.info).be.calledWith('[black-mesa]: info');
-        should(application._kuzzle.log.warn).be.calledWith('[black-mesa]: warn');
-        should(application._kuzzle.log.error).be.calledWith('[black-mesa]: error');
-        should(application._kuzzle.log.verbose).be.calledWith('[black-mesa]: verbose');
+        should(application._kuzzle.log.debug).be.calledWith(util.inspect('debug'));
+        should(application._kuzzle.log.info).be.calledWith(util.inspect('info'));
+        should(application._kuzzle.log.warn).be.calledWith(util.inspect('warn'));
+        should(application._kuzzle.log.error).be.calledWith(util.inspect('error'));
+        should(application._kuzzle.log.verbose).be.calledWith(util.inspect({ info: 'verbose' }));
       });
     });
   });
@@ -418,7 +420,7 @@ describe('Backend', () => {
     it('should allows to construct an ES Client', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
-      application._kuzzle.storageEngine.config.client.node = 'http://es:9200';
+      application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
       should(application.storage.Client).be.a.Function();
 
       const client = new application.storage.Client({ maxRetries: 42 });
