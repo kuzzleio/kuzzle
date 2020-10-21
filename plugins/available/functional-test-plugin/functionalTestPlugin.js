@@ -175,12 +175,10 @@ class FunctionalTestPlugin {
     }
 
     for (const document of documents) {
-      console.log(document)
       for (const [field, value] of Object.entries(pipe.payload)) {
         /* eslint-disable-next-line no-eval */
         _.set(document, field, eval(value));
       }
-      console.log(document)
     }
 
     return documents;
