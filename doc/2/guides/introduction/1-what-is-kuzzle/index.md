@@ -43,8 +43,6 @@ Kuzzle is a backend with ready-to-use features that can be extended in the same 
 
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
-![ss](./feature-data-storage.png)
-
 <CustomTable :items="[
   { text: 'Data storage and access', icon: 'feature-data-storage.png' },
   { text: 'Advanced permission system', icon: 'feature-acl.png' },
