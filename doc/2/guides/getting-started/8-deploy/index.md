@@ -151,3 +151,4 @@ Your Kuzzle application is now up and running on port 7512!
 
 Learn more about:
  - [Deployment](/core/2/api/some-links)
+ - [Setup Kuzzle with SSL](/core/2/some-link)
