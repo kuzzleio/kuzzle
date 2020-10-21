@@ -8,9 +8,9 @@ order: 100
 
 # What is Kuzzle
 
-If you're on this page it's probably because you need a backend for your mobile, web or IoT application.
+If you're on this page it's probably because **you need a backend** for your mobile, web or IoT application.
 
-Once again you had been preparing to develop a backend from scratch... Well, maybe not entirely from scratch, because you probably planned to use some kind of framework (and there are a lot of them!) to make it easier for you.  
+Once again you had been **preparing to develop a backend from scratch**... Well, maybe not entirely from scratch, because you probably planned to use some kind of framework (and there are a lot of them!) to make it easier for you.  
 Those frameworks allow you to develop faster by providing a predefined structure, classes and configurations.
 
 However, you will still have to develop the majority of the basic features:
@@ -19,13 +19,13 @@ However, you will still have to develop the majority of the basic features:
  - user authentication
  - access to data and functionalities through an API
 
-Each of these features will take time. Time to develop but also time to:
+Each of **these features will take time**. Time to develop but also time to:
  - debug
  - test 
  - maintain
  - secure
 
-In short, you were going to spend a lot of time on code that doesn't bring any value to your users but is nevertheless essential.
+In short, you were going to spend a lot of time on **code that doesn't bring any value to your users** but is nevertheless essential.
 
 This time could have been used for many other things:
  - development of business functionalities
@@ -39,7 +39,7 @@ It is on the basis of this failure to optimize development time that we decided 
 
 ## How it works
 
-Kuzzle is a backend with ready-to-use features that can be extended in the same way as any framework.
+Kuzzle is a **backend with ready-to-use features** that can be extended in the same way as any framework.
 
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
