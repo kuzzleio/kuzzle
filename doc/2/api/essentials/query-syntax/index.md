@@ -59,7 +59,7 @@ $ curl -X POST -H  "Content-Type: application/json" "http://localhost:7512/_quer
 The body of the query will be processed by Kuzzle as a standard query.
 
 ::: warning
-This endpoint does not allow to benefit from the advantages of the cache system integrated to HTTP via URLS.
+This endpoint does not allow to benefit from the advantages of the cache system integrated to HTTP via URLs.
 :::
 
 ---
