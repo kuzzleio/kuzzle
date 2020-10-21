@@ -2,8 +2,6 @@
 
 const { setWorldConstructor } = require('cucumber');
 const { Kuzzle, WebSocket, Http } = require('kuzzle-sdk');
-const _ = require('lodash');
-const ms = require('ms');
 
 const config = require('../../lib/config');
 
