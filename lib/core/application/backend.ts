@@ -26,7 +26,7 @@ import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
 import PluginLogger from 'kuzzle-plugin-logger';
-import { SchemaConfig } from 'kuzzle-graphql'
+import { SchemaConfig } from '../../api/graphql/schema'
 
 import Kuzzle from '../../kuzzle';
 import Plugin from '../plugin/plugin';

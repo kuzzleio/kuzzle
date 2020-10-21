@@ -56,6 +56,7 @@
     "eventemitter3": "^4.0.4",
     "graphql": "^15.3.0",
     "graphql-tools": "^6.0.18",
+    "handlebars": "^4.7.6",
     "inquirer": "^7.3.3",
     "ioredis": "^4.17.3",
     "ip": "^1.1.5",
