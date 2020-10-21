@@ -634,6 +634,7 @@ describe('core/network/httpRouter', () => {
           should(deprecated).have.property('since');
           should(deprecated).have.property('message');
         }
+        done();
       } catch (error) {
         done(error);
       }
