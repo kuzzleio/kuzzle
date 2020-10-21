@@ -1,0 +1,218 @@
+'use strict';
+
+const should = require('should');
+
+
+const { KuzzleGraphql } = require('../../lib/api/graphql/kuzzle-graphql'); 
+
+describe('Generate type', () => {
+
+  it('should throw if no config is provided for the collection', () => {
+    const configuration = {
+      titi: {
+        toto: {
+          typeName: 'Toto',
+          properties: {}
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+    should(kgql.generateType.bind(kgql, 'titi', 'books', {})).throw('No config found for collection books');
+  });
+
+  it('should throw if the mapping is malformed', () => {
+    const configuration = {
+      titi: {
+        toto: {
+          typeName: 'Toto',
+          properties: {}
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+    should(kgql.generateType.bind(kgql, 'titi', 'toto', {})).throw('Malformed mapping for collection toto (no properties)');
+  });
+
+  it('should generate a type for a very simple collection', () => {
+    const configuration = {
+      library: {
+        books: {
+          typeName: 'Book',
+          properties: {
+            title: {
+              nullable: false
+            },
+            comments: {
+              plural: true,
+              nullableElements: false
+            },
+            authors: {
+              nullable: false,
+              plural: true,
+              nullableElements: false,
+              type: 'Author'
+            }
+          }
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+    const booksMapping = {
+      properties: {
+        title: {
+          type: 'keyword'
+        },
+        pages: {
+          type: 'integer'
+        },
+        comments: {
+          type: 'text'
+        },
+        authors: {
+          type: 'keyword'
+        }
+      }
+    };
+
+    const gqlType = kgql.generateType('library', 'books', booksMapping);
+    should(gqlType).equal(`type Book {
+  id: ID!
+  title: String!
+  pages: Int
+  comments: [String!]
+  authors: [Author!]!
+}`);
+  });
+
+});
+
+describe('Generate schema', () => {
+
+  it('should generate a simple schema', () => {
+    const configuration = {
+      library: {
+        books: {
+          typeName: 'Book',
+          properties: {}
+        },
+        authors: {
+          typeName: 'Author',
+          properties: {}
+        }
+      }
+    };
+    const mappings = {
+      library: {
+        books: {
+          properties: {}
+        },
+        authors: {
+          properties: {}
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+    const gqlSchema = kgql.generateSchema(mappings);
+
+    should(gqlSchema).equal(`type Book {
+  id: ID!
+}
+type Author {
+  id: ID!
+}
+
+type Query {
+  getBook(id: ID!): Book
+  getAuthor(id: ID!): Author
+}
+
+schema {
+  query: Query
+}`);
+
+  });
+});
+
+describe('Generate resolvers', () => {
+
+  it('should generate the loader creator', () => {
+    const configuration = {
+      library: {
+        books: {
+          typeName: 'Book',
+          properties: {}
+        },
+        authors: {
+          typeName: 'Author',
+          properties: {}
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+    const kuzzleMock = {
+      funnel: {
+        checkRights: () => { },
+        processRequest: () => { }
+      }
+    };
+    const loaderCreator = kgql.generateLoaderCreator(kuzzleMock);
+
+    should(typeof loaderCreator).equal('function');
+
+    const loaders = loaderCreator();
+
+    should(loaders).have.ownProperty('getBook');
+    should(loaders).have.ownProperty('getAuthor');
+
+    should(loaders.getBook).type('object');
+    should(loaders.getAuthor).type('object');
+
+    should(loaders.getBook).have.property('load');
+    should(loaders.getAuthor).have.property('load');
+  });
+
+  it('should generate the resolver map', () => {
+    const configuration = {
+      library: {
+        books: {
+          typeName: 'Book',
+          properties: {
+            title: {
+              nullable: false
+            },
+            comments: {
+              plural: true,
+              nullableElements: false
+            },
+            author: {
+              nullable: false,
+              type: 'Author',
+              isForeingKey: true
+            }
+          }
+        },
+        authors: {
+          typeName: 'Author',
+          properties: {}
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+
+    const resolverMap = kgql.generateResolverMap();
+
+    should(resolverMap).have.ownProperty('Query');
+
+    should(resolverMap.Query).have.ownProperty('getBook');
+    should(resolverMap.Query).have.ownProperty('getAuthor');
+
+    should(resolverMap.Query.getBook).type('function');
+    should(resolverMap.Query.getAuthor).type('function');
+
+    should(resolverMap).have.ownProperty('Book');
+
+    should(resolverMap.Book).have.ownProperty('author');
+    should(resolverMap.Book.author).type('function');
+  });
+
+});
