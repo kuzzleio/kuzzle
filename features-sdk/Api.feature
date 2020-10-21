@@ -10,6 +10,6 @@ Feature: API
       | collection | "yellow-taxi"                   |
       | _id        | "foobar-1"                      |
       | body       | { "name": "Aschen", "age": 27 } |
-    And The document "foobar-1" content match:
+    Then The document "foobar-1" content match:
       | name | "Aschen" |
       | age  | 27       |
