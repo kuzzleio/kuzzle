@@ -10,7 +10,7 @@ order: 800
 
 Kuzzle is just a Node.js application that also needs Elasticsearch and Redis to run.  
 
-The only specifity is that Kuzzle need to compile C and C++ dependencies so the `npm install` will also be looking for `python`, `make` and `g++` packages.   
+The only specifity is that Kuzzle needs to compile C and C++ dependencies so the `npm install` will also be looking for `python`, `make` and `g++` packages.   
 
 At Kuzzle we like to use Docker and Docker Compose to quickly deploy applications.  
 In this guide we will see how to deploy a Kuzzle application on a remote server.
@@ -21,7 +21,7 @@ In this guide we will see how to deploy a Kuzzle application on a remote server.
 
 ::: info
 In this guide we will perform a basic deployment of a Kuzzle application.  
-For production deployments, we strongly recommend to deploy your application with the [cluster](/core/2/guides/some-link) mode to take advantage of high availability and scalability.  
+For production deployments, we strongly recommend to deploy your application in [cluster mode](/core/2/guides/some-link) to take advantage of high availability and scalability.  
 Our team can bring its expertise and support for such deployments: [get a quote](https://info.kuzzle.io/contact-us)
 :::
 
@@ -45,7 +45,7 @@ A production deployment must include a reverse proxy like Nginx to [securize the
 
 ## Prepare our Docker Compose deployment
 
-We are going to write a `docker-compose.yml` file that describe our services.  
+We are going to write a `docker-compose.yml` file that describes our services.  
 
 First, create a `docker/` directory: `mkdir docker/`
 
@@ -103,7 +103,7 @@ Kuzzle needs compiled dependencies for the cluster and the realtime engine.
 
 We are going to use a multi-stage Docker file to build the dependencies and then use the [node:12-stretch-slim](https://hub.docker.com/_/node?tab=description) image to run the application.
 
-Create the `deployment/kuzzle.dockerfile` file with the following content:
+Create the `docker/kuzzle.dockerfile` file with the following content:
 
 ```dockerfile
 # builder image
