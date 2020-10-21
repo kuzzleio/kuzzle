@@ -41,15 +41,20 @@ It is on the basis of this failure to optimize development time that we decided 
 
 Kuzzle is a backend with ready-to-use features that can be extended in the same way as any framework.
 
-When you start Kuzzle, you automatically have access to an API exposing the following features:
- - Data storage and access
- - Advanced permission system
- - Multi authentication
- - Multi protocol API (Http, WebSocket, MQTT)
- - Realtime engine
- - Integrated cluster mode
- - and more!
+When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
+![ss](./feature-data-storage.png)
+
+<CustomTable :items="[
+  { text: 'Data storage and access', icon: 'feature-data-storage.png' },
+  { text: 'Advanced permission system', icon: 'feature-acl.png' },
+  { text: 'Multi authentication', icon: 'feature-auth.png' },
+  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'feature-api.png' },
+  { text: 'Realtime engine', icon: 'feature-realtime.png' },
+  { text: 'Integrated cluster mode', icon: 'feature-cluster.png' },
+]"/>
+
+Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/some-link) or [modifying API methods behavior](/core/2/some-link).
 
 ## Complete ecosystem
 
