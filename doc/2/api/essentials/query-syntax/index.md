@@ -41,6 +41,27 @@ If the form field holds a file, then the corresponding JSON key will refer to an
 - `mimetype`: MIME type
 - `file`: file content, encoded in base64
 
+### JSON query endpoint
+
+Kuzzle also exposes an endpoint to send queries using the standard JSON request format used by other protocols.  
+
+This makes it possible to avoid with the use of HTTP routes and to send queries via the HTTP protocol in the same way as for other protocols.
+
+This endpoint is accessible on the route `POST http://<host>:<port>/_query`:
+
+```bash
+$ curl -X POST -H  "Content-Type: application/json" "http://localhost:7512/_query" --data '{
+  "controller":"server", 
+  "action":"now" 
+}'
+```
+
+The body of the query will be processed by Kuzzle as a standard query.
+
+::: warning
+This endpoint does not allow to benefit from the advantages of the cache system integrated to HTTP via URLS.
+:::
+
 ---
 
 ## Other protocols
