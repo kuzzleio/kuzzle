@@ -45,7 +45,7 @@ If the form field holds a file, then the corresponding JSON key will refer to an
 
 Kuzzle also exposes an endpoint to send queries using the standard JSON request format used by other protocols.  
 
-This makes it possible to avoid with the use of HTTP routes and to send queries via the HTTP protocol in the same way as for other protocols.
+This makes it possible to avoid the use of the REST API and to send queries via the HTTP protocol the same way as for any other protocols.
 
 This endpoint is accessible on the route `POST http://<host>:<port>/_query`:
 
