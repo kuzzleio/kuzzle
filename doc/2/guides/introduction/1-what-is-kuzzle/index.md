@@ -2,7 +2,7 @@
 code: false
 type: page
 title: What is Kuzzle
-description: Why are we spending so much time developing this backend?
+description: Why are we spending so much time developing our backend?
 order: 100
 ---
 
@@ -25,7 +25,7 @@ Each of these features will take time. Time to develop but also time to:
  - maintain
  - secure
 
-In short, once again you were going to spend a lot of time on code that doesn't bring any value to your users but is nevertheless essential.
+In short, you were going to spend a lot of time on code that doesn't bring any value to your users but is nevertheless essential.
 
 This time could have been used for many other things:
  - development of business functionalities
@@ -66,7 +66,7 @@ The [Admin Console](/core/2/some-link) is a Single Page Application (SPA) writte
 
 It is used to manage its data and the user permissions system.
 
-As it is a SPA, no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://console.kuzzle.io](http://console.kuzzle.io).
+As it is a single-page application (SPA), no data related to your Kuzzle instances will pass through our servers, so you can use the online version available at [http://console.kuzzle.io](http://console.kuzzle.io).
 
 ### SDKs
 
