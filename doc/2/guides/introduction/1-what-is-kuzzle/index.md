@@ -66,7 +66,7 @@ The [Admin Console](/core/2/some-link) is a Single Page Application (SPA) writte
 
 It is used to manage its data and the user permissions system.
 
-As it is a single-page application (SPA), no data related to your Kuzzle instances will pass through our servers, so you can use the online version available at [http://console.kuzzle.io](http://console.kuzzle.io).
+As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://console.kuzzle.io](http://console.kuzzle.io).
 
 ### SDKs
 
