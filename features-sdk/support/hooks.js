@@ -73,19 +73,22 @@ After(async function () {
   }
 });
 
-Before({ tags: 'production' }, async function () {
+Before({ tags: '@production' }, async function () {
+  console.log('production');
   if (process.env.NODE_ENV !== 'production') {
     return 'skipped';
   }
 });
 
 Before({ tags: '@development' }, async function () {
+  console.log('development');
   if (process.env.NODE_ENV !== 'development') {
     return 'skipped';
   }
 });
 
 Before({ tags: '@http' }, async function () {
+  console.log('http');
   if (process.env.KUZZLE_PROTOCOL !== 'http') {
     return 'skipped';
   }

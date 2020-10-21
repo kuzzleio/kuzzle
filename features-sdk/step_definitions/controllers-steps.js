@@ -176,7 +176,7 @@ Then('The response should contains an array of {string} in the response matching
   should(this.props.response[key]).deepEqual(array);
 });
 
-Then('The response should contains a {string} property equals to undefined', async function (key) {
+Then('The response should contains a {string} equals to undefined', async function (key) {
   should(this.props.response[key]).equal(undefined);
 });
 
