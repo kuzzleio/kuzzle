@@ -43,20 +43,14 @@ class KuzzleWorld {
   }
 
   parseObject(dataTable) {
-    const rawContent = dataTable.rowsHash();
-    const content = {};
+    if (typeof dataTable.rowsHash !== 'function') {
+      throw new Error('Argument is not a datatTable');
+    }
 
-    for (const [path, value] of Object.entries(rawContent)) {
-      if (value.includes('_AGO_')) {
-        // format: "_5m_AGO_"
-        const timeAgo = ms(value.split('_')[1]);
+    const content = dataTable.rowsHash();
 
-        _.set(content, path, this.props.now - timeAgo);
-      }
-      else {
-        console.log({ path, v: eval(`var o = ${value}; o`)})
-        _.set(content, path, eval(`var o = ${value}; o`)); // eslint-disable-line no-eval
-      }
+    for (const key of Object.keys(content)) {
+      content[key] = JSON.parse(content[key]);
     }
 
     return content;
