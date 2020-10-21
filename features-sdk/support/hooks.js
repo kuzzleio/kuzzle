@@ -7,7 +7,7 @@ const
   testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
-async function resetSecurityDefault (sdk) {
+async function resetSecurityDefault(sdk) {
   await sdk.query({
     controller: 'admin',
     action: 'resetSecurity',
@@ -70,6 +70,18 @@ After(async function () {
 
   if (this.sdk && typeof this.sdk.disconnect === 'function') {
     this.sdk.disconnect();
+  }
+});
+
+Before({ tags: '@development' }, async function () {
+  if (process.env.NODE_ENV !== 'development') {
+    return 'skipped';
+  }
+});
+
+Before({ tags: '@http' }, async function () {
+  if (process.env.KUZZLE_PROTOCOL !== 'http') {
+    return 'skipped';
   }
 });
 

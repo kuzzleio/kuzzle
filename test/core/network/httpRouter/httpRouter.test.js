@@ -625,7 +625,7 @@ describe('core/network/httpRouter', () => {
       });
     });
 
-    it('deprecated method should have good properties', done => {
+    it('should ensure that deprecated routes have the correct properties', done => {
       const deprecatedRoutes = httpsRoutes.filter(route => route.deprecated);
   
       try {
@@ -634,7 +634,6 @@ describe('core/network/httpRouter', () => {
           should(deprecated).have.property('since');
           should(deprecated).have.property('message');
         }
-        done();
       } catch (error) {
         done(error);
       }

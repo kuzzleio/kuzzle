@@ -60,10 +60,16 @@ Feature: Server Controller
       | storageEngine | "green" |
 
   # server:publicApi ========================================================================
+  @development
+  @http
   Scenario: Http call onto deprecated method should print a warning when NODE_ENV=development
-    When I call the deprecated publicApi method 
-    Then I should receive a deprecation notice
+    When I execute the action "server":"publicApi"
+    Then The response should contains an array of "deprecations" in the response matching:
+      | version | message                       |
+      | "2.5.0" | "http://kuzzle:7512/_openapi" |
 
-  Scenario: Http call onto deprecated method should not print a warning when NODE_ENV=production
-    When I call the deprecated publicApi method
-    Then I shouldn't receive a deprecation notice
+  # server:publicApi ========================================================================
+  @http
+  Scenario: Http call onto deprecated method should not print a warning when NODE_ENV!==development
+    When I execute the action "server":"publicApi"
+    Then The response should contains a "deprecations" property equals to undefined
