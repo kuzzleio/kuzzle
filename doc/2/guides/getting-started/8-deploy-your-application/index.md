@@ -8,9 +8,9 @@ order: 800
 
 # Deploy
 
-Kuzzle is just a Node.js application that also needs Elasticsearch and Redis to run.  
+Kuzzle is just a Node.js application that also needs [Elasticsearch](https://www.elastic.co/what-is/elasticsearch) and [Redis](https://redis.io/topics/introduction) to run.  
 
-The only specifity is that Kuzzle needs to compile C and C++ dependencies so the `npm install` will also be looking for `python`, `make` and `g++` packages.   
+The only specifity is that **Kuzzle needs to compile C and C++ dependencies** so the `npm install` will also be looking for `python`, `make` and `g++` packages.   
 
 At Kuzzle we like to use Docker and Docker Compose to quickly deploy applications.  
 In this guide we will see how to deploy a Kuzzle application on a remote server.
@@ -48,9 +48,9 @@ A production deployment must include a reverse proxy like Nginx to [securize the
 
 We are going to write a `docker-compose.yml` file that describes our services.  
 
-First, create a `docker/` directory: `mkdir docker/`
+First, create a `deployment/` directory: `mkdir deployment/`
 
-Then create the `docker/docker-compose.yml` file and paste the following content:
+Then create the `deployment/docker-compose.yml` file and paste the following content:
 
 ```yaml
 ---
@@ -60,7 +60,7 @@ services:
   kuzzle:
     build:
       context: ../
-      dockerfile: docker/kuzzle.dockerfile
+      dockerfile: deployment/kuzzle.dockerfile
     command: node /var/app/app.js
     restart: always
     container_name: kuzzle
@@ -102,9 +102,9 @@ This configuration allows to run a Kuzzle application with Node.js alongside Ela
 
 Kuzzle needs compiled dependencies for the cluster and the realtime engine.  
 
-We are going to use a multi-stage Docker file to build the dependencies and then use the [node:12-stretch-slim](https://hub.docker.com/_/node?tab=description) image to run the application.
+We are going to use a [multi-stage Dockerfile](https://docs.docker.com/develop/develop-images/multistage-build/) to build the dependencies and then use the [node:12-stretch-slim](https://hub.docker.com/_/node?tab=description) image to run the application.
 
-Create the `docker/kuzzle.dockerfile` file with the following content:
+Create the `deployment/kuzzle.dockerfile` file with the following content:
 
 ```dockerfile
 # builder image
@@ -145,7 +145,7 @@ $ ssh <user>@<server-ip>
 
 [...]
 
-$ docker-compose -f docker/docker-compose.yml up -d
+$ docker-compose -f deployment/docker-compose.yml up -d
 ```
 
 Your Kuzzle application is now up and running on port 7512!
