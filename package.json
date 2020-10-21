@@ -82,7 +82,7 @@
     "winston-transport": "^4.4.0",
     "ws": "^7.3.1",
     "yargs": "^15.4.1",
-    "zeromq": "^5.2.0"
+    "zeromq": "^6.0.0-beta.5"
   },
   "repository": {
     "type": "git",

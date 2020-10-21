@@ -706,6 +706,8 @@
 
   // [cluster]
   // Kuzzle Cluster confiugration
+  //   * ipv6:
+  //       If true, asks nodes to use IPv6 to connect to each others
   //   * minimumNodes:
   //       The minimum number of nodes required by the cluster. It should be set
   //       to AT LEAST to ((total number of nodes / 2) + 1), to ensure that the
@@ -714,7 +716,22 @@
   //       minimum, the entire cluster stops accepting requests, until there are
   //       enough nodes available again.
   //       In this example, we plan to run a cluster of 3 nodes.
+  //  * ports:
+  //       The network TCP ports allowing cluster nodes to send messages to each
+  //       others. Cluster nodes MUST be able to open those ports between
+  //       themselves.
+  //       There is no need to expose these ports publicly.
+  //       * request:
+  //          used for requests from a node to another one
+  //       * sync:
+  //          used to propagate heartbeats, state changes, and various sync
+  //          messages
   "cluster": {
-    "minimumNodes": 2
+    "ipv6": false,
+    "minimumNodes": 2,
+    "ports": {
+      "request": 7510,
+      "sync": 7511,
+    }
   }
 }
