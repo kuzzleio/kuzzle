@@ -73,6 +73,12 @@ After(async function () {
   }
 });
 
+Before({ tags: 'production' }, async function () {
+  if (process.env.NODE_ENV !== 'production') {
+    return 'skipped';
+  }
+});
+
 Before({ tags: '@development' }, async function () {
   if (process.env.NODE_ENV !== 'development') {
     return 'skipped';

@@ -69,6 +69,7 @@ Feature: Server Controller
       | "2.5.0" | "http://kuzzle:7512/_openapi" |
 
   # server:publicApi ========================================================================
+  @production
   @http
   Scenario: Http call onto deprecated method should not print a warning when NODE_ENV!==development
     When I execute the action "server":"publicApi"
