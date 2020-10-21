@@ -2,7 +2,7 @@
 code: false
 type: branch
 title: Introduction
-description: Discover why Kuzzle is different
+description: Kuzzle presentation and key concepts
 order: 100
 ---
 
