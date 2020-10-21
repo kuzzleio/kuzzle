@@ -40,7 +40,7 @@ class KuzzleWorld {
     return this._protocol;
   }
 
-  parseObject (dataTable) {
+  parseObject(dataTable) {
     if (typeof dataTable.rowsHash !== 'function') {
       throw new Error('Argument is not a datatTable');
     }
@@ -53,6 +53,7 @@ class KuzzleWorld {
 
     return content;
   }
+
 
   parseObjectArray (dataTable) {
     const
