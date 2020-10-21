@@ -13,7 +13,6 @@ Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async f
 
   try {
     const response = await this.sdk.query({ controller, action, ...args });
-    console.log(response);
 
     this.props = response;
   }
