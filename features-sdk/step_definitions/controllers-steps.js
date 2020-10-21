@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 
+const requestPromise = require('request-promise');
 const _ = require('lodash');
 const should = require('should');
 const { Then, When } = require('cucumber');
@@ -203,4 +204,19 @@ Then('I shouldn\'t receive a deprecation notice', async function () {
   }
 
   should(this.props.deprecations).equal(undefined);
+});
+
+Then('I send a HTTP {string} request with:', async function (method, dataTable) {
+  const body = this.parseObject(dataTable);
+
+  const options = {
+    url: `http://${this._host}:${this._port}/_query`,
+    json: true,
+    method,
+    body,
+  };
+
+  const response = await requestPromise(options);
+
+  this.props.result = response.result;
 });
