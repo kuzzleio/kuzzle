@@ -18,7 +18,7 @@ Kuzzle organizes the data storage in 4 levels:
 
 An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.
 
-The **collections have mappings** that characterize the way Elasticsearch will index the data for the search.
+The **collections have mappings** that characterize the way Elasticsearch will index the data for searches.
 
 ::: info
 It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
