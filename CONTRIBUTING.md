@@ -39,6 +39,22 @@ cd kuzzle
 docker-compose up
 ```
 
+### ENOSPC error
+
+On some Linux environments, you may get `ENOSPC` errors from the filesystem watcher, because of limits set too low.
+
+If that happens, simply raise the limits on the number of files that can be watched:
+
+`sudo sysctl -w fs.inotify.max_user_watches=524288`
+
+That configuration change will last until the next reboot. 
+
+To make it permanent, add the following line to your `/etc/sysctl.conf` file:
+
+```
+fs.inotify.max_user_watches=524288
+```
+
 You can now access the Kuzzle HTTP/WebSocket API through the following URL: `http://localhost:7512`.
 This is the entrypoint for the loadbalancer: API requests are then forwarded to kuzzle individual kuzzle nodes (round-robin).
 
