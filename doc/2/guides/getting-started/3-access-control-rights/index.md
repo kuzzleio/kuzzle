@@ -8,7 +8,7 @@ order: 300
 
 # Access Control Rights
 
-As in any backend, Kuzzle allows you to restrict access to its features, depending on the querying users.
+As in any backend, Kuzzle allows you to **restrict access to its features**, depending on the querying users.
 
 The permissions system is designed following a standard model and is structured in 3 dimensions:
  - **role**: whitelist of allowed API actions
@@ -16,8 +16,6 @@ The permissions system is designed following a standard model and is structured 
  - **user**: combination of one or more profiles
 
 ![roles, profiles and users](./role-profile-user.png)
-
-See the [in-depth guide](/core/2/guides/some-link-for-acl-in-depth) for more details.
 
 ### Create our first restricted user
 
@@ -218,4 +216,9 @@ $ kourou security:updateRole '{
 This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
 :::
 
-Learn more about permissions: [Access Control Rights](/core/2/some-link)
+Learn more about:
+  - [Rights management system](/core/2/some-link)
+
+::: info
+Next guide :arrow_forward: [Authentication](/core/2/guides/getting-started/4-authentication/)
+:::

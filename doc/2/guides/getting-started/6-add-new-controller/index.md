@@ -8,10 +8,10 @@ order: 600
 
 # Add new Controller
 
-The Kuzzle API is composed of actions grouped in controllers.  
+The Kuzzle API is composed of **actions grouped in controllers**.  
 A controller is a logical container that groups several actions together.
 
-Each action receives a Kuzzle request in parameter and is in charge of returning a result which will be transmitted in the response.
+Each action receives a [Request object](/core/2/some-link) in parameter and is in charge of returning a result which will be transmitted in the response.
 
 ## Register a new Controller
 
@@ -21,13 +21,12 @@ For this, we need to use the [Backend.controller.register](/core/2/some-link) me
 
 This method takes the controller name and a [ControllerDefinition](/core/2/api/some-link) which defines the controller actions:
 
-
 ```js
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async request => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.input.args.name}`
       }
     }
   }
@@ -40,7 +39,8 @@ This action uses the `name` argument from the request and returns a string.
 ::: info
 Kuzzle will generate a default HTTP route of the following format if none is provided:   
 `GET /_/<controller-name>/<action-name>`  
-Controller name and action name will be converted to `kebab-case`.
+Controller name and action name will be converted to `kebab-case`.  
+See our in-depth guide to learn how to declare your own HTTP routes: [Registering and using controllers](/core/2/some-link)
 :::
 
 We can now test our new action:
@@ -96,4 +96,8 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 Learn more about:
  - [Registering and using controllers](/core/2/some-link)
- - [API Request format](/core/2/some-link)
+ - [API Request and Response format](/core/2/some-link)
+
+::: info
+Next guide :arrow_forward: [Modify API behavior](/core/2/guides/getting-started/7-modify-api-behavior/)
+:::

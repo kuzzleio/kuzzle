@@ -8,7 +8,7 @@ order: 400
 
 # Authentication
 
-Kuzzle authentication system is multi-strategy based. This means that the same user can authenticate in several different ways.
+Kuzzle authentication system is **multi-strategy based**. This means that the same user can **authenticate in several different ways**.
 
 For example, the same user can authenticate with the `local` strategy with an username and a password pair but also with the `oauth` strategy using an external provider such as Facebook or Google.
 
@@ -39,7 +39,7 @@ $ kourou security:createUser '{
 
 ### Getting an authentication token
 
-Kuzzle uses authentication tokens to identify user sessions.  
+Kuzzle uses **authentication tokens** to identify user sessions.  
 
 First we need to get one with the [auth:login](/core/2/api/controllers/auth/login) action. This action takes the `strategy` used as a mean to authenticate, and any additional information needed by that strategy.
 
@@ -71,7 +71,7 @@ Since removing rights to the `auth:login` action from anonymous users would mean
 
 ### Using an authentication token
 
-Now that we have a token, we must pass it to API queries, either in the HTTP headers or in the request payload, depending on what network protocol is used.
+Now that we have a token, we must pass it to API requests, either in the **HTTP headers** or in the **Kuzzle request payload**, depending on what network protocol is used.
 
 ::: info
 When using Kourou with `--username` and `--password` flags, the [auth:login](/core/2/api/controllers/auth/login) action is called and the received token is automatically used along with subsequent requests.
@@ -103,6 +103,28 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 ```
 
 :::
+
+::: tab Javascript
+
+```bash
+$ kourou sdk:execute --code '
+  sdk.jwt = "<jwt>";
+
+  console.log(await sdk.auth.getCurrentUser());
+'
+```
+
+::: info
+Kourou is able to [execute](/core/2/api/kourou/commands/sdk/execute) Javascript code snippets.  
+A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/sdk/js/7), connected to Kuzzle and authenticated if credentials are provided.
+::: 
+
 ::::
 
-Learn how to integrate a new strategy with a [strategy plugin](/core/2/some-link).
+
+Learn more about:
+  - [Integrate a new authentication strategy](/core/2/some-link)
+
+::: info
+Next guide :arrow_forward: [Realtime Engine](/core/2/guides/getting-started/5-realtime-engine/)
+:::

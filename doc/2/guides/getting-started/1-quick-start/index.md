@@ -10,7 +10,7 @@ order: 100
 
 Kuzzle is a Node.js application that can be installed on every platforms.
 
-It only requires two services: Elasticsearch and Redis.
+It only requires two services: [Elasticsearch](https://www.elastic.co/what-is/elasticsearch) and [Redis](https://redis.io/topics/introduction).
 
 In this guide we will use Docker and Docker Compose to run those services.
 
@@ -87,7 +87,7 @@ Now visit [http://localhost:7512](http://localhost:7512) with your browser. You 
 We can also use the [Admin Console](/core/2/some-page-about-ac) which allows to manage your data, your users and your rights.
 
 ::: info
-The Admin Console is a Single Page Application written in Vue.js and using the Javascript SDK.  
+The Admin Console is a [Single Page Application](https://www.wikiwand.com/en/Single-page_application) written in Vue.js and using the [Javascript SDK](/sdk/js/7).  
 No data related to your connection to Kuzzle will pass through our servers.
 :::
 
@@ -100,3 +100,7 @@ Click on `Create Connection` and then select your connection on the dropdown men
 When asked for credentials, just choose `Login as Anonymous`.
 
 You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
+
+::: info
+Next guide :arrow_forward: [Storing and accessing your data](/core/2/guides/getting-started/2-storing-and-accessing-data/)
+:::

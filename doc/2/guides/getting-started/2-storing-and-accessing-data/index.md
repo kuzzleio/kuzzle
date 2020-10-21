@@ -18,7 +18,7 @@ Kuzzle organizes the data storage in 4 levels:
 
 An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.
 
-The collections have mappings that characterize the way Elasticsearch will index the data for the search.
+The **collections have mappings** that characterize the way Elasticsearch will index the data for the search.
 
 ::: info
 It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
@@ -33,6 +33,12 @@ If you're more familiar with the way relational databases store data, here is an
 | schema                       | mappings                  |
 | line                         | document                  |
 | column                       | field                     |
+
+::: info
+Kuzzle uses Elasticsearch as a NoSQL document storage.  
+There is some limitations since Elasticsearch is primarly designed to be a search engine.  
+Learn more about those limitations in our in-depth guides: [Database mappings](/core/2/guides/some-link) and [Querying Elasticsearch](/core/2/guides/some-link)
+::: 
 
 ### Prepare the database
 
@@ -95,7 +101,7 @@ Select the `nyc-open-data` index and then the `yellow-taxi` collection. You shou
 
 ### Search for documents
 
-Kuzzle directly exposes Elasticsearch's query language in a secure way. 
+Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) in a secure way. 
 
 We'll now use that to search for the documents we're interested in.
 
@@ -206,4 +212,8 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 
 Learn more about:
   - [Database mappings](/core/2/guides/some-link)
-  - [Querying Elasticsearch]()(/core/2/guides/some-link).
+  - [Querying Elasticsearch](/core/2/guides/some-link)
+
+::: info
+Next guide :arrow_forward: [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights/)
+:::

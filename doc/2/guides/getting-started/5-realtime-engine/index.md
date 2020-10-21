@@ -8,13 +8,13 @@ order: 500
 
 # Realtime Engine
 
-Kuzzle integrates an advanced realtime engine. It can work in a classic pub/sub mode but also as a realtime database notification engine.
+Kuzzle integrates an **advanced realtime engine**. It can work in a classic pub/sub mode but also as a realtime database notification engine.
 
 **Any change occuring on the database can generate a realtime notification** about the creation, modification and deletion of documents.
 
 A filter system also allows clients to receive notifications only according to their interest in certain types of documents.
 
-Subscription to realtime notifications is performed client-side and does not require additional server-side code.
+Subscription to realtime notifications is **performed client-side and does not require additional server-side code.**
 
 ### Subscribe to changes
 
@@ -62,7 +62,7 @@ Then you should receive a notification about the created document in your termin
 
 ### Use subscription filters
 
-Kuzzle allows you to use filters to receive only the notifications matching specific types of documents.  
+Kuzzle allows you to **use filters** to receive only the notifications **matching specific types of documents**.  
 
 Again, we are going to subscribe to notifications but only for documents where:
   - `age` is greater than `30`
@@ -122,6 +122,12 @@ $ kourou sdk:execute --code '
     });
   }'
 ```
+
+::: info
+Kourou is able to [execute](/core/2/api/kourou/commands/sdk/execute) Javascript code snippets.  
+A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/sdk/js/7), connected to Kuzzle and authenticated if credentials are provided.
+::: 
+
 
 <details><summary>You should receive only the following 3 notifications (that correspond with the filters specified in the subscription):</summary>
 
@@ -186,3 +192,7 @@ Learn more about:
  - [Koncorde Filter DSL](/core/2/some-link).
  - [Kuzzle Realtime Engine](/core/2/some-link).
  - Javascript SDK [realtime.subscribe](/sdk/js/7/controllers/realtime/subscribe) method
+
+::: info
+Next guide :arrow_forward: [Add new controller](/core/2/guides/getting-started/5-add-new-controller/)
+:::

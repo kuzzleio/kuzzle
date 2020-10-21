@@ -8,19 +8,19 @@ order: 700
 
 # Modify API behavior
 
-Kuzzle allows to modify API actions behavior with a very precise middleware-like system.  
+Kuzzle allows to modify API actions behavior with a **very precise middleware-like system**.  
 
-This system makes it possible to modify the execution flow of requests processed by Kuzzle.
+This system makes it possible to **modify the execution flow of requests** processed by Kuzzle.
 
 ## Events
 
-Every time a request is executed, Kuzzle emits several events to allow changing the life cycle of the processing request.
+Every time a request is executed, **Kuzzle emits several events** to allow changing the life cycle of the processing request.
 
 There are many different events available, you can see the complete list here: [Kuzzle events](/core/2/api/some-link).
 
 ### API events
 
-The most frequently used events are those emitted directly by the API action that is being executed. Kuzzle emits one event before it starts processing the action, and another one before sending the response back to the client.
+The most frequently used events are those **emitted directly by the API action that is being executed**. Kuzzle emits one event before it starts processing the action, and another one before sending the response back to the client.
 
 The format of those events is the following:
  - `<controller>:before<Action>`: emitted before processing
@@ -54,11 +54,11 @@ Be careful to only use documented events. Some events are for internal use and a
 
 ## Plugging to events with Pipes
 
-Pipes are functions plugged to events, called synchronously by Kuzzle, and receiving information regarding that event.
+Pipes are **functions plugged to events**, called **synchronously** by Kuzzle, and **receiving information** regarding that event.
 
 Pipes can:
-  - Decide to abort a task. If a pipe throws an error, Kuzzle interrupts the task, and forwards a standardized version of the thrown error to the originating user
-  - Change the received information. Kuzzle will use the updated information upon resuming the task
+  - **Abort a task**. If a pipe throws an error, Kuzzle interrupts the task, and forwards a standardized version of the thrown error to the originating user
+  - **Change the received information**. Kuzzle will use the updated information upon resuming the task
 
 ![pipe workflow](./pipes-workflow.png)
 
@@ -80,7 +80,7 @@ app.pipe.register('server:afterNow', async request => {
 
 ::: info
 You can register several pipes on the same action, Kuzzle will execute them sequentially.  
-However Kuzzle provides no guarantee on the pipes execution order, so pipes should not make assumptions about what other pipes are (or are not) executed before.
+However Kuzzle **provides no guarantee on the pipes execution order**, so pipes should not make assumptions about what other pipes are (or are not) executed before.
 :::
 
 Now we can call the action with Kourou:
@@ -102,3 +102,7 @@ $ kourou server:now
 Learn more about:
  - [Kuzzle events](/core/2/api/some-links)
  - [Pipe and hooks](/core/2/guides/some-link)
+
+::: info
+Next guide :arrow_forward: [Deploy your application](/core/2/guides/getting-started/8-deploy-your-application/)
+:::
