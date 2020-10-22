@@ -199,16 +199,14 @@ describe('Generate resolvers', () => {
 
     const loaders = loaderCreator();
 
-    should(loaders).have.ownProperty('getBook');
-    should(loaders).have.ownProperty('getAuthor');
-    should(loaders).have.ownProperty('mGetBook');
-    should(loaders).have.ownProperty('mGetAuthor');
+    should(loaders).have.ownProperty('Book');
+    should(loaders).have.ownProperty('Author');
 
-    should(loaders.getBook).type('object');
-    should(loaders.getAuthor).type('object');
+    should(loaders.Book).type('object');
+    should(loaders.Author).type('object');
 
-    should(loaders.getBook).have.property('load');
-    should(loaders.getAuthor).have.property('load');
+    should(loaders.Book).have.property('load');
+    should(loaders.Author).have.property('load');
   });
 
   it('should generate the resolver map', () => {
@@ -245,9 +243,13 @@ describe('Generate resolvers', () => {
 
     should(resolverMap.Query).have.ownProperty('getBook');
     should(resolverMap.Query).have.ownProperty('getAuthor');
+    should(resolverMap.Query).have.ownProperty('mGetBook');
+    should(resolverMap.Query).have.ownProperty('mGetAuthor');
 
     should(resolverMap.Query.getBook).type('function');
     should(resolverMap.Query.getAuthor).type('function');
+    should(resolverMap.Query.mGetBook).type('function');
+    should(resolverMap.Query.mGetAuthor).type('function');
 
     should(resolverMap).have.ownProperty('Book');
 
