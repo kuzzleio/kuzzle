@@ -21,7 +21,9 @@ An index brings together several collections, which in turn contain several docu
 The **collections have mappings** that define the way Elasticsearch will index the data for searches.
 
 ::: info
+By default Elasticsearch will try to infer the type of the fields introduced by documents.  
 It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
+Learn more about [mappings dynamic policy](/core/2/some-link)
 :::
 
 If you're more familiar with the way relational databases store data, here is an analogy. Bear in mind that this is only to give you a rough point of comparison with a relational database, the similarities end here:

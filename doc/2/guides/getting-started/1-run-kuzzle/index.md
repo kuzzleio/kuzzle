@@ -106,5 +106,5 @@ Learn more about:
  - [Installing and running Kuzzle](/core/2/some-link)
 
 ::: info
-Next guide :arrow_forward: [Run Kuzzle](/core/2/guides/getting-started/2-run-kuzzle/)
+Next guide :arrow_forward: [Store and Access Data](/core/2/guides/getting-started/2-store-and-access-data/)
 :::
