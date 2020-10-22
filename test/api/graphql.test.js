@@ -1,8 +1,6 @@
 'use strict';
 
 const should = require('should');
-
-
 const { KuzzleGraphql } = require('../../lib/api/graphql/kuzzle-graphql'); 
 
 describe('Generate type', () => {
@@ -123,6 +121,30 @@ describe('Generate type', () => {
 });
 
 describe('Generate schema', () => {
+
+  it('should generate an empty schema', () => {
+    const configuration = {};
+    const mappings = {
+      library: {
+        books: {
+          properties: {}
+        },
+        authors: {
+          properties: {}
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+    const gqlSchema = kgql.generateSchema(mappings);
+
+    should(gqlSchema).equal(`
+type Query {
+}
+
+schema {
+  query: Query
+}`);
+  });
 
   it('should generate a simple schema', () => {
     const configuration = {
