@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Access Control Rights
+title: Set up Permissions
 description: Define user rights
 order: 300
 ---
 
-# Access Control Rights
+# Set up Permissions
 
 As in any backend, Kuzzle allows you to **restrict access to its features**, depending on the querying users.
 
@@ -220,5 +220,5 @@ Learn more about:
   - [Rights management](/core/2/some-link)
 
 ::: info
-Next guide :arrow_forward: [Authentication](/core/2/guides/getting-started/4-authentication/)
+Next guide :arrow_forward: [Authenticate Users](/core/2/guides/getting-started/4-authenticate-users/)
 :::

@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Authentication
-description: Authenticate users
+title: Authenticate Users
+description: Use the multi-authentication system
 order: 400
 ---
 
-# Authentication
+# Authenticate Users
 
 Kuzzle authentication system is **multi-strategy based**. This means that the same user can **authenticate in several different ways**.
 
@@ -128,5 +128,5 @@ Learn more about:
   - [Integrate a new authentication strategy](/core/2/some-link)
 
 ::: info
-Next guide :arrow_forward: [Realtime Engine](/core/2/guides/getting-started/5-realtime-engine/)
+Next guide :arrow_forward: [Subscribe to Realtime Notifications](/core/2/guides/getting-started/5-subscribe-realtime-notifications/)
 :::

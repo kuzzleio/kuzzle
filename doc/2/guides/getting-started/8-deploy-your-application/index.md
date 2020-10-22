@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Deploy your application
+title: Deploy your Application
 description: Deploy your Kuzzle application on a remote server
 order: 800
 ---
 
-# Deploy
+# Deploy your Application
 
 Kuzzle is just a Node.js application that also needs [Elasticsearch](https://www.elastic.co/what-is/elasticsearch) and [Redis](https://redis.io/topics/introduction) to run.  
 

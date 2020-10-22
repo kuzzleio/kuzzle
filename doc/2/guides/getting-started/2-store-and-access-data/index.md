@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Storing and accessing Data
+title: Store and Access Data
 description: Create and retrieve documents
 order: 200
 ---
 
-# Storing and accessing Data
+# Store and access Data
 
 Now that Kuzzle is running, we are going to create some documents.
 
@@ -215,5 +215,5 @@ Learn more about:
   - [Querying Elasticsearch](/core/2/guides/some-link)
 
 ::: info
-Next guide :arrow_forward: [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights/)
+Next guide :arrow_forward: [Set up Permissions](/core/2/guides/getting-started/3-set-up-permissions/)
 :::

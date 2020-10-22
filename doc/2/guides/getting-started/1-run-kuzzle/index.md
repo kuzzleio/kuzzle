@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Quick Start
-description: Scaffold your first application and run it
+title: Run Kuzzle
+description: Run your first Kuzzle application
 order: 100
 ---
 
-# Quick Start
+# Run Kuzzle
 
 Kuzzle is a Node.js application that can be installed on every platforms.
 
@@ -106,5 +106,5 @@ Learn more about:
  - [Installing and running Kuzzle](/core/2/some-link)
 
 ::: info
-Next guide :arrow_forward: [Storing and accessing your data](/core/2/guides/getting-started/2-storing-and-accessing-data/)
+Next guide :arrow_forward: [Run Kuzzle](/core/2/guides/getting-started/2-run-kuzzle/)
 :::

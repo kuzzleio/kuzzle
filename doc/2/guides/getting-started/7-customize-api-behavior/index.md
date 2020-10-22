@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Modify API behavior
+title: Customize API Behavior
 description: Use the fine-grained middleware-like system
 order: 700
 ---
 
-# Modify API behavior
+# Customize API Behavior
 
 Kuzzle allows to modify API actions behavior with a **very precise middleware-like system**.  
 
@@ -104,5 +104,5 @@ Learn more about:
  - [Pipe and hooks](/core/2/guides/some-link)
 
 ::: info
-Next guide :arrow_forward: [Deploy your application](/core/2/guides/getting-started/8-deploy-your-application/)
+Next guide :arrow_forward: [Deploy your Application](/core/2/guides/getting-started/8-deploy-your-application/)
 :::

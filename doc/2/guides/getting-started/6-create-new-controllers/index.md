@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Add new Controller
+title: Create new Controllers
 description: Extends Kuzzle API with new actions
 order: 600
 ---
 
-# Add new Controller
+# Create new Controllers
 
 The Kuzzle API is composed of **actions grouped in controllers**.  
 A controller is a logical container that groups several actions together.
@@ -99,5 +99,5 @@ Learn more about:
  - [API Request and Response format](/core/2/some-link)
 
 ::: info
-Next guide :arrow_forward: [Modify API behavior](/core/2/guides/getting-started/7-modify-api-behavior/)
+Next guide :arrow_forward: [Customize API Behavior](/core/2/guides/getting-started/7-customize-api-behavior/)
 :::

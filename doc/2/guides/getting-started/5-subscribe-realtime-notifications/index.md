@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Realtime Engine
-description: Subscribe to realtime notifications from the database
+title: Subscribe to Realtime Notifications
+description: Use the Realtime Engine to subscribe to database change
 order: 500
 ---
 
-# Realtime Engine
+# Subscribe to Realtime Notifications
 
 Kuzzle integrates an **advanced realtime engine**. It can work in a classic pub/sub mode but also as a realtime database notification engine.
 
@@ -194,5 +194,5 @@ Learn more about:
  - Javascript SDK [realtime.subscribe](/sdk/js/7/controllers/realtime/subscribe) method
 
 ::: info
-Next guide :arrow_forward: [Add new controller](/core/2/guides/getting-started/5-add-new-controller/)
+Next guide :arrow_forward: [Create new Controllers](/core/2/guides/getting-started/5-create-new-controllers/)
 :::
