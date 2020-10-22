@@ -99,7 +99,7 @@ $ kourou server:now
  [✔] Successfully executed "server:now
 ```
 
-Learn more about:
+Going further:
  - [Kuzzle Event System](/core/2/api/some-links)
 
 ::: info

@@ -151,6 +151,6 @@ $ docker-compose -f deployment/docker-compose.yml up -d
 
 Your Kuzzle application is now up and running on port 7512!
 
-Learn more about:
+Going further:
  - [Deployment](/core/2/api/some-links)
  - [Setup Kuzzle with SSL](/core/2/some-link)

@@ -217,7 +217,7 @@ $ kourou security:updateRole '{
 This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
 :::
 
-Learn more about:
+Going further:
   - [Rights management](/core/2/some-link)
 
 ::: info

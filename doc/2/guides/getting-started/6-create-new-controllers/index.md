@@ -94,7 +94,7 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 ::::
 
 
-Learn more about:
+Going further:
  - [API Controllers](/core/2/some-link)
 
 ::: info

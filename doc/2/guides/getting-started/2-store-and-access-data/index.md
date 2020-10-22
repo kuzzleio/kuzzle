@@ -212,7 +212,7 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 
 </details>
 
-Learn more about:
+Going further:
   - [Database mappings](/core/2/guides/some-link)
   - [Querying Elasticsearch](/core/2/guides/some-link)
 

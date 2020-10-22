@@ -102,7 +102,7 @@ When asked for credentials, just choose `Login as Anonymous`.
 
 You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
 
-Learn more about:
+Going further:
  - [Installing and running Kuzzle](/core/2/some-link)
 
 ::: info

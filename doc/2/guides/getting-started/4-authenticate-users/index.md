@@ -122,7 +122,7 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
 ::::
 
 
-Learn more about:
+Going further:
   - [Local strategy](/core/2/some-link)
   - [OAuth strategy](/core/2/some-link)
   - [Integrate a new authentication strategy](/core/2/some-link)
