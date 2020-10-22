@@ -1,5 +1,5 @@
-import DataLoader from 'dataloader'
-import { Request, RequestResponse } from 'kuzzle-common-objects'
+import DataLoader from 'dataloader';
+import { Request, RequestResponse } from 'kuzzle-common-objects';
 
 /**
  * Generates a Dataloader for a given type.
@@ -32,7 +32,7 @@ export const generateLoader =
                     return {
                       ...success._source,
                       id
-                    }
+                    };
                   }
                   const notFoundId = response.result.errors.find(
                     erroredId => erroredId === id
@@ -47,4 +47,4 @@ export const generateLoader =
       } catch (error) {
         return Promise.reject(error);
       }
-    })
+    });

@@ -26,7 +26,7 @@ import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
 import PluginLogger from 'kuzzle-plugin-logger';
-import { SchemaConfig } from '../../api/graphql/schema'
+import { SchemaConfig } from '../../api/graphql/schema';
 
 import Kuzzle from '../../kuzzle';
 import Plugin from '../plugin/plugin';
@@ -447,19 +447,19 @@ class StorageManager extends ApplicationManager {
 }
 
 class GraphQLManager extends ApplicationManager {
-  private _enabled: boolean = false;
+  private _enabled = false;
 
   constructor(application: Backend) {
-    super(application)
+    super(application);
   }
 
   use(config: SchemaConfig) {
-    this._application._gqlSchemaConfig = config
-    this._enabled = true
+    this._application._gqlSchemaConfig = config;
+    this._enabled = true;
   }
 
   get enabled(): boolean {
-    return this._enabled
+    return this._enabled;
   }
 }
 

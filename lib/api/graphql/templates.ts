@@ -11,7 +11,7 @@ type Query {
 
 schema {
   query: Query
-}`
+}`;
 
 export const typeTemplate =
   `type {{typeName}} {
@@ -19,4 +19,4 @@ export const typeTemplate =
   {{#each properties}}
   {{@key}}: {{#if this.plural}}[{{/if}}{{this.type}}{{#if this.plural}}{{#unless this.nullableElements}}!{{/unless}}]{{/if}}{{#unless this.nullable}}!{{/unless}}
   {{/each}}
-}`
+}`;
