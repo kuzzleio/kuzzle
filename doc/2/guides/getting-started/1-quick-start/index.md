@@ -88,7 +88,7 @@ Now visit [http://localhost:7512](http://localhost:7512) with your browser. You 
 We can also use the [Admin Console](/core/2/some-page-about-ac) which allows to manage your data, your users and your rights.
 
 ::: info
-The Admin Console is a [Single Page Application](https://www.wikiwand.com/en/Single-page_application) written in Vue.js and using the [Javascript SDK](/sdk/js/7).  
+The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application) written in Vue.js and using the [Javascript SDK](/sdk/js/7).  
 No data related to your connection to Kuzzle will pass through our servers.
 :::
 
