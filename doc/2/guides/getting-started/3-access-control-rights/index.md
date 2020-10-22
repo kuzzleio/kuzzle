@@ -217,7 +217,7 @@ This will use the [security:createUser](/core/2/api/controllers/security/create-
 :::
 
 Learn more about:
-  - [Rights management system](/core/2/some-link)
+  - [Rights management](/core/2/some-link)
 
 ::: info
 Next guide :arrow_forward: [Authentication](/core/2/guides/getting-started/4-authentication/)
