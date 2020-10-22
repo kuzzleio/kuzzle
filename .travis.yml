@@ -95,23 +95,23 @@ jobs:
       script:
         - .ci/sonar.sh
 
-    - stage: Unit Tests & Linters
-      name: Documentation dead links
-      language: node_js
-      node_js: 12
-      cache:
-        directories:
-          - $HOME/.gem/specs
-      install:
-        - gem install typhoeus
-        - npm ci --silent
-      before_script:
-        - npm run doc-prepare
-        - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
-        - $(npm bin)/kuzdoc framework:link -d /core/2/ -v 2
-      script:
-        - cd doc/framework/
-        - HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/
+    # - stage: Unit Tests & Linters
+    #   name: Documentation dead links
+    #   language: node_js
+    #   node_js: 12
+    #   cache:
+    #     directories:
+    #       - $HOME/.gem/specs
+    #   install:
+    #     - gem install typhoeus
+    #     - npm ci --silent
+    #   before_script:
+    #     - npm run doc-prepare
+    #     - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
+    #     - $(npm bin)/kuzdoc framework:link -d /core/2/ -v 2
+    #   script:
+    #     - cd doc/framework/
+    #     - HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/
 
     - stage: Unit Tests & Linters
       name: Error codes check
