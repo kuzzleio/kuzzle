@@ -159,7 +159,9 @@ type Author {
 
 type Query {
   getBook(id: ID!): Book
+  mGetBook([id: ID!]!): [Book]
   getAuthor(id: ID!): Author
+  mGetAuthor([id: ID!]!): [Author]
 }
 
 schema {
@@ -199,6 +201,8 @@ describe('Generate resolvers', () => {
 
     should(loaders).have.ownProperty('getBook');
     should(loaders).have.ownProperty('getAuthor');
+    should(loaders).have.ownProperty('mGetBook');
+    should(loaders).have.ownProperty('mGetAuthor');
 
     should(loaders.getBook).type('object');
     should(loaders.getAuthor).type('object');

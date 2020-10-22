@@ -1,7 +1,14 @@
 import DataLoader from 'dataloader'
 import { Request, RequestResponse } from 'kuzzle-common-objects'
 
-// TODO plural loaders
+/**
+ * Generates a Dataloader for a given type.
+ * 
+ * @param kuzzle The Kuzzle Core instance
+ * @param indexName 
+ * @param collectionName 
+ * @param typeName 
+ */
 export const generateLoader =
   (kuzzle, indexName: string, collectionName: string, typeName: string): DataLoader<string, any, any> =>
     new DataLoader(ids => {

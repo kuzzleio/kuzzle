@@ -77,9 +77,9 @@ export class KuzzleGraphql {
         schema.queries.push(
           `${this.generateQueryGet(typeConf.typeName)}(id: ID!): ${typeConf.typeName}`
         )
-        // schema.queries.push(
-        //   `${this.generateQueryMget(typeConf.typeName)}([id: ID!]!): [${typeConf.typeName}]`
-        // )
+        schema.queries.push(
+          `${this.generateQueryMget(typeConf.typeName)}([id: ID!]!): [${typeConf.typeName}]`
+        )
         // schema.queries.push(
         //   `${this.generateQuerySearch(typeConf.typeName)}(filters: Object!): [${typeConf.typeName}]`
         // )
@@ -133,6 +133,9 @@ export class KuzzleGraphql {
         result.Query[this.generateQueryGet(type.typeName)]
           = (parent, { id }, { loaders }) => loaders[this.generateQueryGet(type.typeName)].load(id)
 
+        result.Query[this.generateQueryMget(type.typeName)]
+          = (parent, { ids }, { loaders }) => loaders[this.generateQueryMget(type.typeName)].loadMany(ids)
+
         // foreign keys
         const foreignKeyProperties: Dictionary<TypePropertyConfig>
           = pickBy(type.properties, (value: TypePropertyConfig) => value.isForeingKey === true)
@@ -143,9 +146,11 @@ export class KuzzleGraphql {
           }
           if (type.properties[propertyName].plural === true) {
             result[type.typeName][propertyName]
-              = (parent, values, { loaders }) => Promise.all(
-                parent[propertyName].map(id => loaders[this.generateQueryGet(config.type)].load(id))
-              )
+              = (parent, values, { loaders }) =>
+                loaders[this.generateQueryGet(config.type)].loadMany(parent[propertyName])
+            // Promise.all(
+            //   parent[propertyName].map(id => loaders[this.generateQueryGet(config.type)].load(id))
+            // )
           } else {
             result[type.typeName][propertyName]
               = (parent, id, { loaders }) => loaders[this.generateQueryGet(config.type)].load(id)
@@ -161,6 +166,8 @@ export class KuzzleGraphql {
     return () => transform(this._config, (result, types: Dictionary<TypeConfig>, indexName) => {
       forIn(types, (type: TypeConfig, collectionName: string) => {
         result[this.generateQueryGet(type.typeName)] =
+          generateLoader(kuzzle, indexName, collectionName, type.typeName)
+        result[this.generateQueryMget(type.typeName)] =
           generateLoader(kuzzle, indexName, collectionName, type.typeName)
       })
     }, {})
