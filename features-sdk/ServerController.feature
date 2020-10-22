@@ -65,7 +65,7 @@ Feature: Server Controller
     When I execute the action "server":"publicApi"
     Then The response should contains an array of "deprecations" in the response matching:
       | version | message                       |
-      | "2.5.0" | "http://kuzzle:7512/_openapi" |
+      | "2.5.0" | "Use this route instead: http://kuzzle:7512/_openapi" |
 
   # server:publicApi ========================================================================
   @production @http
