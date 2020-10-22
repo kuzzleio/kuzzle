@@ -101,6 +101,9 @@ export class KuzzleGraphql {
     }
 
     const config: TypeConfig = this._config[indexName][collectionName]
+    if (!config.properties) {
+      config.properties = {}
+    }
 
     const gqlType: TypeConfig = {
       typeName: config.typeName,

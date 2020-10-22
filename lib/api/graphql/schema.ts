@@ -6,7 +6,7 @@ export interface SchemaConfig {
 
 export interface TypeConfig {
   typeName: string
-  properties: {
+  properties?: {
     [propertyName: string]: TypePropertyConfig
   }
 }

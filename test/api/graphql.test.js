@@ -33,7 +33,43 @@ describe('Generate type', () => {
     should(kgql.generateType.bind(kgql, 'titi', 'toto', {})).throw('Malformed mapping for collection toto (no properties)');
   });
 
-  it('should generate a type for a very simple collection', () => {
+  it('should generate type with default properties if no properties are defined in the type config', () => {
+    const configuration = {
+      library: {
+        books: {
+          typeName: 'Book'
+        }
+      }
+    };
+    const kgql = new KuzzleGraphql(configuration);
+    const booksMapping = {
+      properties: {
+        title: {
+          type: 'keyword'
+        },
+        pages: {
+          type: 'integer'
+        },
+        comments: {
+          type: 'text'
+        },
+        authors: {
+          type: 'keyword'
+        }
+      }
+    };
+
+    const gqlType = kgql.generateType('library', 'books', booksMapping);
+    should(gqlType).equal(`type Book {
+  id: ID!
+  title: String
+  pages: Int
+  comments: String
+  authors: String
+}`);
+  });
+
+  it('should generate a type for a simple collection', () => {
     const configuration = {
       library: {
         books: {
