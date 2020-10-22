@@ -7,8 +7,8 @@ import { schemaTemplate, typeTemplate } from './templates';
 
 const defaultPropertyConfig = {
   nullable: true,
-  plural: false,
-  nullableElements: true
+  nullableElements: true,
+  plural: false
 };
 
 // TODO These might be already defined in the graphql-js package
@@ -23,10 +23,10 @@ export class KuzzleGraphql {
   private _config: SchemaConfig
 
   // TODO complete this with all types
-  private _esToGql: Object = {
+  private _esToGql = {
+    integer: GQL_INT,
     keyword: GQL_STRING,
-    text: GQL_STRING,
-    integer: GQL_INT
+    text: GQL_STRING
     // Question: What about Date type resolver?
   }
 
@@ -37,8 +37,8 @@ export class KuzzleGraphql {
   public generateSchemaFromTypes(types) {
     const schemaHandlebars = handlebars.compile(schemaTemplate);
     const schema = {
-      types: [],
-      queries: []
+      queries: [],
+      types: []
     };
 
     forIn(types, (type: string, typeName: string) => {
@@ -57,8 +57,8 @@ export class KuzzleGraphql {
     const schemaHandlebars = handlebars.compile(schemaTemplate);
 
     const schema = {
-      types: [],
-      queries: []
+      queries: [],
+      types: []
     };
 
     Object.keys(mappings).forEach((indexName: string) => {
@@ -106,8 +106,8 @@ export class KuzzleGraphql {
     }
 
     const gqlType: TypeConfig = {
-      typeName: config.typeName,
-      properties: {}
+      properties: {},
+      typeName: config.typeName
     };
 
     gqlType.properties = mapValues(mapping.properties, (value, key) => {
@@ -126,8 +126,8 @@ export class KuzzleGraphql {
     return typeHandlebars(gqlType);
   }
 
-  public generateResolverMap(): Object {
-    return transform(this._config, (result, types: Dictionary<TypeConfig>, indexName) => {
+  public generateResolverMap() {
+    return transform(this._config, (result, types: Dictionary<TypeConfig>) => {
 
       forIn(types, (type: TypeConfig) => {
         result.Query[this.generateQueryGet(type.typeName)]
@@ -158,7 +158,7 @@ export class KuzzleGraphql {
     });
   }
 
-  public generateLoaderCreator(kuzzle): Function {
+  public generateLoaderCreator(kuzzle) {
     return () => transform(this._config, (result, types: Dictionary<TypeConfig>, indexName) => {
       forIn(types, (type: TypeConfig, collectionName: string) => {
         result[type.typeName] =

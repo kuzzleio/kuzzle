@@ -647,12 +647,12 @@ export class Backend {
 
     const options = {
       fixtures: this._support.fixtures,
+      graphql: this._gqlSchemaConfig,
       mappings: this._support.mappings,
       plugins: this._plugins,
       secretsFile: this._secretsFile,
       securities: this._support.securities,
-      vaultKey: this._vaultKey,
-      graphql: this._gqlSchemaConfig
+      vaultKey: this._vaultKey
     };
 
     await this._kuzzle.start(application, options);
