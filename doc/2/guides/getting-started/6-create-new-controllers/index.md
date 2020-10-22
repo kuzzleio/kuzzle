@@ -34,13 +34,13 @@ app.controller.register('greeting', {
 ```
 
 The code above will register a `greeting` controller with a `sayHello` action.  
-This action uses the `name` argument from the request and returns a string.  
+We defined a handler function that uses the `name` argument from the request and returns a Promise resolving to a string.  
 
 ::: info
 Kuzzle will generate a default HTTP route of the following format if none is provided:   
 `GET /_/<controller-name>/<action-name>`  
 Controller name and action name will be converted to `kebab-case`.  
-See our in-depth guide to learn how to declare your own HTTP routes: [Registering and using controllers](/core/2/some-link)
+See our in-depth guide to learn how to [declare your own HTTP routes](/core/2/some-link)
 :::
 
 We can now test our new action:
@@ -95,8 +95,7 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 
 Learn more about:
- - [Registering and using controllers](/core/2/some-link)
- - [API Request and Response format](/core/2/some-link)
+ - [API Controllers](/core/2/some-link)
 
 ::: info
 Next guide :arrow_forward: [Customize API Behavior](/core/2/guides/getting-started/7-customize-api-behavior/)

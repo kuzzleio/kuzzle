@@ -108,26 +108,27 @@ Create the `deployment/kuzzle.dockerfile` file with the following content:
 
 ```dockerfile
 # builder image
-FROM node:12-stretch-slim as builder
+FROM node:12.18.1-stretch-slim as builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
-       g++ \
-       make \
        python \
+       make \
+       g++ \
        libzmq3-dev
 
 ADD . /var/app
 
 WORKDIR /var/app
 
-RUN  npm install --production
+RUN  npm install && npm run build && npm prune --production
 
 # run image
-FROM node:12-stretch-slim
+FROM node:12.18.1-stretch-slim
 
 COPY --from=builder /var/app /var/app
+
 ```
 
 ## Deploy on your remote server

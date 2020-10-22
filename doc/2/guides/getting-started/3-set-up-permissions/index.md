@@ -8,7 +8,7 @@ order: 300
 
 # Set up Permissions
 
-As in any backend, Kuzzle allows you to **restrict access to its features**, depending on the querying users.
+As in any backend, Kuzzle allows you to **restrict access to its features and data**, depending on the querying users.
 
 The permissions system is designed following a standard model and is structured in 3 dimensions:
  - **role**: whitelist of allowed API actions
@@ -44,12 +44,11 @@ The following role description gives access to [auth:getCurrentUser](/core/2/api
 
 Copy the above role and then run this command: `kourou security:createRole --id dummy --body-editor`
 
+A text editor should open itself: replace the existing body by the copied role definition and then exit the editor.
+
 ::: info
 This will use the [security:createRole](/core/2/api/controllers/security/create-role) API action.
 :::
-
-
-A text editor should open itself: replace the existing body by the copied role definition and then exit the editor.
 
 ::: info
 If you have trouble with the integrated text editor, you can try to run the command directly as well:  
@@ -71,6 +70,7 @@ $ kourou security:createRole '{
 }' --id dummy
 ```
 :::
+
 
 
 You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://console.kuzzle.io)
@@ -141,7 +141,8 @@ By default, the `anonymous` role gives access to all API actions. This is intend
 It's recommended to use the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action to create an administrator user, and to restrict anonymous user rights.
 
 ::: info
-The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.
+The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.  
+The `reset` option allows to restrict `anonymous` default rights in the same time.
 :::
 
 This way you can always access the complete API through this admin account.

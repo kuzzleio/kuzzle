@@ -16,7 +16,7 @@ For example, the same user can authenticate with the `local` strategy with an us
 Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) under the hood, and therefore there are 300+ strategies readily available. (LDAP, OpenID, Active Directory, x509, etc.)  
 :::
 
-We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide, when creating a user, we had to provide credentials for the `local` strategy, but we could have provided more strategies (provided the right strategy plugins are installed):
+We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide, when creating a user, we had to provide credentials for the `local` strategy, but we could have provided more strategies (provided the right strategy plugins are used):
 
 ```bash
 $ kourou security:createUser '{
@@ -81,7 +81,7 @@ When using Kourou with `--username` and `--password` flags, the [auth:login](/co
 ::: tab Kourou
 
 ```bash
-$ kourou auth:getCurrentUser --jwt <token>
+$ kourou auth:getCurrentUser -a jwt=<token>
 ```
 
 :::
@@ -108,7 +108,7 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 ```bash
 $ kourou sdk:execute --code '
-  sdk.jwt = "<jwt>";
+  sdk.jwt = "<token>";
 
   console.log(await sdk.auth.getCurrentUser());
 '

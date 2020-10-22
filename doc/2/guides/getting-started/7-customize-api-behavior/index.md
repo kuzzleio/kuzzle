@@ -100,8 +100,7 @@ $ kourou server:now
 ```
 
 Learn more about:
- - [Kuzzle events](/core/2/api/some-links)
- - [Pipe and hooks](/core/2/guides/some-link)
+ - [Kuzzle Event System](/core/2/api/some-links)
 
 ::: info
 Next guide :arrow_forward: [Deploy your Application](/core/2/guides/getting-started/8-deploy-your-application/)
