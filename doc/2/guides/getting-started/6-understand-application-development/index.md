@@ -97,7 +97,7 @@ In order to use the API actions, Kuzzle exposes the [Embedded SDK](/core/2/some-
 You can acces it through the [Backend.sdk](/core/2/some-link) property.  
 
 ::: info
-The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which is directly connected to the API and does not go through the network.  
+The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which is directly connected to the API and does not send requests through the network.  
 :::
 
 You can access the following controllers from the API:
