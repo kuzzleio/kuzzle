@@ -111,6 +111,9 @@ You can access the following controllers from the API:
 - [server](/sdk/js/7/controllers/server)
 - [realtime](/sdk/js/7/controllers/realtime)
 
+::: info 
+The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to Kuzzle API.
+:::
 
 **Example:** Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method
 ```js
