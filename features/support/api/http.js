@@ -34,7 +34,6 @@ class HttpApi {
 
     this.encoding = 'identity';
     this.expectedEncoding = 'identity';
-    this.contentType = 'application/json';
   }
 
   _getRequest (index, collection, controller, action, args) {
@@ -238,7 +237,7 @@ class HttpApi {
         }
       }
     }
-    else if (this.contentType === 'application/json') {
+    else {
       options.json = true;
     }
 
