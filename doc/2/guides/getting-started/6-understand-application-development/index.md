@@ -42,7 +42,7 @@ When the application is in the `instantiated` state, it exposes methods allowing
  - `hooks`: execute asynchronous processing
  - `plugins`: add whole set of features
 
-**Example:** _Registering a new Controller with [Backend.controller.register](/core/2/some-link) method_
+**Example:** _Registering a new Controller with the [Backend.controller.register](/core/2/some-link) method_
 ```js
 // before application startup
 app.controller.register('greeting', {
