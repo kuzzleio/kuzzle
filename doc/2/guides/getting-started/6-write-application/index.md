@@ -69,10 +69,10 @@ We will see in detail how to add controllers and pipes in the next chapters of t
 Once the application has started, methods to interact with your Kuzzle application become available.
 
 In particular, those methods make it possible to:
- - use the [Embedded SDK](/core/2/some-link) to use the API
- - trigger events
- - log messages
- - and more..!
+ - Use the [Embedded SDK](/core/2/some-link) to use the API
+ - Trigger Events
+ - Log Messages
+ - And much more!
 
 **Example:** Use the Embedded SDK to create an index after startup with the [index.create](/sdk/js/7/controllers/index/create) method
 ```js
