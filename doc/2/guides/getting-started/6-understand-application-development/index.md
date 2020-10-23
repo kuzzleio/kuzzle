@@ -38,7 +38,7 @@ There are two categories of functionalities:
 
 When theg application is in the instanciated state, it exposes methods to **register new features** in Kuzzle core, like:
  - `controllers`: extend the API
- - `pipes`: modify API behavior
+ - `pipes`: modify the API behavior
  - `hooks`: execute asynchronous processing
  - `plugins`: add whole set of features
 
