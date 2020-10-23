@@ -7,6 +7,7 @@ const _ = require('lodash');
 const should = require('should');
 const { Then } = require('cucumber');
 
+
 Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async function (expectSuccess, controller, action, dataTable) {
   const args = this.parseObject(dataTable);
 
@@ -14,6 +15,7 @@ Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async f
     const response = await this.sdk.query({ controller, action, ...args });
 
     this.props.result = response.result;
+    this.props.response = response;
   }
   catch (error) {
     if (expectSuccess) {
@@ -31,6 +33,7 @@ Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with body:$/, async f
     const response = await this.sdk.query({ controller, action, body });
 
     this.props.result = response.result;
+    this.props.response = response;
   }
   catch (error) {
     if (expectSuccess) {
@@ -46,6 +49,7 @@ Then(/I (successfully )?execute the action "(.*?)":"(.*?)"$/, async function (ex
     const response = await this.sdk.query({ controller, action });
 
     this.props.result = response.result;
+    this.props.response = response;
   }
   catch (error) {
     if (expectSuccess) {
@@ -167,6 +171,15 @@ Then('I got an error with id {string}', function (id) {
   assert(this.props.error.id === id, `Expected error to have id "${id}", but got "${this.props.error.id}"`);
 });
 
+Then('The response should contains an array of {string} in the response matching:', async function (key, dataTable) {
+  const array = this.parseObjectArray(dataTable);
+  should(this.props.response[key]).deepEqual(array);
+});
+
+Then('The response should contains a {string} equals to undefined', async function (key) {
+  should(this.props.response[key]).equal(undefined);
+});
+
 Then('I send a HTTP {string} request with:', async function (method, dataTable) {
   const body = this.parseObject(dataTable);
 
@@ -180,4 +193,5 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
   const response = await requestPromise(options);
 
   this.props.result = response.result;
+  this.props.response = response;
 });
