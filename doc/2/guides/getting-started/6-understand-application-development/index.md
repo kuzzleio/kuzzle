@@ -78,7 +78,7 @@ In particular, they make it possible to:
 ```js
 app.start()
   .then(async () => {
-    // interact with Kuzzle API to creates a new index if it does not exists
+    // interact with Kuzzle API to create a new index if it does not already exist
     if (! await app.sdk.index.exists('nyc-open-data')) {
       await app.sdk.index.create('nyc-open-data')
     }
