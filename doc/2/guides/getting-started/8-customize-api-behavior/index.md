@@ -57,7 +57,7 @@ Be careful to only use documented events. Some events are for internal use and a
 Pipes are **functions plugged to events**, called **synchronously** by Kuzzle, and **receiving information** regarding that event.
 
 Pipes can:
-  - **Abort a task**. If a pipe throws an error, Kuzzle interrupts the task, and forwards a standardized version of the thrown error to the originating user
+  - **Abort a task**. If a pipe throws an error, Kuzzle interrupts the task, and forwards a standardized version of the thrown error to the originating client
   - **Change the received information**. Kuzzle will use the updated information upon resuming the task
 
 ![pipe workflow](./pipes-workflow.png)

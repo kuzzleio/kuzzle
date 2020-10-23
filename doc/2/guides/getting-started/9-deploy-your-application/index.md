@@ -10,7 +10,7 @@ order: 900
 
 Kuzzle is just a Node.js application that also needs [Elasticsearch](https://www.elastic.co/what-is/elasticsearch) and [Redis](https://redis.io/topics/introduction) to run.  
 
-The only specifity is that **Kuzzle needs to compile C and C++ dependencies** so the `npm install` will also be looking for `python`, `make` and `g++` packages.   
+The only specifity is that **Kuzzle needs to compile C and C++ dependencies** so a successful `npm install` execution needs the `python`, `make` and `g++` packages.   
 
 At Kuzzle we like to use Docker and Docker Compose to quickly deploy applications.  
 In this guide we will see how to deploy a Kuzzle application on a remote server.

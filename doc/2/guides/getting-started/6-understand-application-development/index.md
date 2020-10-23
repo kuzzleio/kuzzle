@@ -6,7 +6,7 @@ description: Discover the framework capabilities
 order: 600
 ---
 
-# Understand Application Development
+# Write an Application
 
 Kuzzle is **fully extensible** like any framework. This extensibility is available through the development of an application.
 
@@ -16,7 +16,7 @@ Several classes and methods are available to developers so that they can develop
 
 The [Backend](/core/2/some-link) class is the entrypoint of any Kuzzle application.  
 
-First we need to instantiate it with our application name:
+First we need to instantiate it with an application name:
 
 ```js
 import { Backend } from 'kuzzle'
@@ -62,13 +62,13 @@ Once the features have been registered, it is possible to start our Kuzzle appli
 Once the application has been started with the [Backend.start](/core/2/some-link) method, **it is no longer possible to register new features**.
 :::
 
-We will see in detail how to add controllers and pipes in the next chapters of this Getting Started.
+We will see in detail how to add controllers and pipes in the next chapters of this guide.
 
 ## Interact with the application
 
-Once the application is started, it provides methods to interact with your Kuzzle application.
+Once the application has started, methods to interact with your Kuzzle application become available.
 
-In particular, they make it possible to:
+In particular, those methods make it possible to:
  - use the [Embedded SDK](/core/2/some-link) to use the API
  - trigger events
  - log messages
@@ -87,7 +87,7 @@ app.start()
 ```
 
 ::: warning
-These methods interact directly with Kuzzle API and internal modules and are therefore not available until the application has been started with the [Backend.start](/core/2/some-link) method.
+These methods interact directly with the Kuzzle API and with internal modules. Therefore they aren't available until the application has been started with the [Backend.start](/core/2/some-link) method.
 :::
 
 ### Embedded SDK

@@ -8,7 +8,7 @@ order: 100
 
 # Run Kuzzle
 
-Kuzzle is a Node.js application that can be installed on every platforms.
+Kuzzle is a Node.js application that can be installed on a large number of environments.
 
 It only requires two services: [Elasticsearch](https://www.elastic.co/what-is/elasticsearch) and [Redis](https://redis.io/topics/introduction).
 

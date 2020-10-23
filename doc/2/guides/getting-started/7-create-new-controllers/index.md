@@ -11,7 +11,7 @@ order: 700
 The Kuzzle API is composed of **actions grouped in controllers**.  
 A controller is a logical container that groups several actions together.
 
-Each action receives a [Request object](/core/2/some-link) in parameter and is in charge of returning a result which will be transmitted in the response.
+Each action receives a [Request object](/core/2/some-link) argument, and is in charge of returning a result which will be transmitted in the response.
 
 ## Register a new Controller
 
@@ -39,7 +39,7 @@ We defined a handler function that uses the `name` argument from the request and
 ::: info
 Kuzzle will generate a default HTTP route of the following format if none is provided:   
 `GET /_/<controller-name>/<action-name>`  
-Controller name and action name will be converted to `kebab-case`.  
+Controller names and action names are converted to `kebab-case` in auto-generated URLs.  
 See our in-depth guide to learn how to [declare your own HTTP routes](/core/2/some-link)
 :::
 
