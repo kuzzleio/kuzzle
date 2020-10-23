@@ -3,7 +3,7 @@ code: false
 type: page
 title: Customize API Behavior
 description: Use the fine-grained middleware-like system
-order: 700
+order: 800
 ---
 
 # Customize API Behavior

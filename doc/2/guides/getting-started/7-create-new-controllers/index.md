@@ -3,7 +3,7 @@ code: false
 type: page
 title: Create new Controllers
 description: Extends Kuzzle API with new actions
-order: 600
+order: 700
 ---
 
 # Create new Controllers

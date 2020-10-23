@@ -3,7 +3,7 @@ code: false
 type: page
 title: Deploy your Application
 description: Deploy your Kuzzle application on a remote server
-order: 800
+order: 900
 ---
 
 # Deploy your Application
