@@ -126,7 +126,7 @@ await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
 The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to Kuzzle API.  
 :::
 
-**Example:** _Execute a custom controller action with the [query](/sdk/js/7/controllers/document/create) method_
+**Example:** _Execute a custom controller action with the [query](/sdk/js/7/core-classes/kuzzle/query) method_
 ```js
 // after application startup
 
