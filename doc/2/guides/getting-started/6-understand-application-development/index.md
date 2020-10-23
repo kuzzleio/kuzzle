@@ -118,9 +118,18 @@ The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be us
 **Example:** Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method
 ```js
 // after application startup
+
+// creates a document
 await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
   name: 'Aschen',
   age: 27
+})
+
+// execute a custom controller action
+await app.sdk.query({
+  controller: 'greeting',
+  action: 'name',
+  name: 'Aschen'
 })
 ```
 
