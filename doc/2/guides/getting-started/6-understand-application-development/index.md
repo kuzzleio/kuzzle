@@ -42,7 +42,7 @@ When theg application is in the instanciated state, it exposes methods to **regi
  - `hooks`: execute asynchronous processing
  - `plugins`: add whole set of features
 
-**Example:** Registering a new Controller with [Backend.controller.register](/core/2/some-link) method
+**Example:** _Registering a new Controller with [Backend.controller.register](/core/2/some-link) method_
 ```js
 // before application startup
 app.controller.register('greeting', {
@@ -115,7 +115,7 @@ You can access the following controllers from the API:
 The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to Kuzzle API.  
 :::
 
-**Example:** Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method
+**Example:** _Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method_
 ```js
 // after application startup
 
@@ -124,6 +124,11 @@ await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
   name: 'Aschen',
   age: 27
 })
+```
+
+**Example:** _Execute a custom controller action with the [query](/sdk/js/7/controllers/document/create) method_
+```js
+// after application startup
 
 // execute a custom controller action
 await app.sdk.query({
