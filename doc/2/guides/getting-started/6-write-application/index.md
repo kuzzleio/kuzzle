@@ -100,17 +100,6 @@ You can access it through the [Backend.sdk](/core/2/some-link) property.
 The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which is directly connected to the API and does not send requests through the network.  
 :::
 
-You can access the following controllers from the API:
-- [auth](/sdk/js/7/controllers/auth)
-- [bulk](/sdk/js/7/controllers/bulk)
-- [collection](/sdk/js/7/controllers/collection)
-- [document](/sdk/js/7/controllers/document)
-- [index](/sdk/js/7/controllers/index)
-- [memoryStorage (ms)](/sdk/js/7/controllers/ms)
-- [security](/sdk/js/7/controllers/security)
-- [server](/sdk/js/7/controllers/server)
-- [realtime](/sdk/js/7/controllers/realtime)
-
 **Example:** _Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method_
 ```js
 // after application startup
