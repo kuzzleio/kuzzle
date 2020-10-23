@@ -87,7 +87,18 @@ $ npx wscat -c ws://localhost:7512 --execute '{
   "name": "Yagmur"
 }'
 
-{"requestId":"a6f4f5b6-1aa2-4cf9-9724-12b12575c047","status":200,"error":null,"controller":"greeting","action":"sayHello","collection":null,"index":null,"volatile":null,"result":"Hello, Yagmur","room":"a6f4f5b6-1aa2-4cf9-9724-12b12575c047"}
+{
+  "requestId": "a6f4f5b6-1aa2-4cf9-9724-12b12575c047",
+  "status": 200,
+  "error": null,
+  "controller": "greeting",
+  "action": "sayHello",
+  "collection": null,
+  "index": null,
+  "volatile": null,
+  "result": "Hello, Yagmur",
+  "room": "a6f4f5b6-1aa2-4cf9-9724-12b12575c047"
+}
 ```
 
 :::
