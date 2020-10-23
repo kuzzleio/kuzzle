@@ -8,7 +8,7 @@ order: 400
 
 # Authenticate Users
 
-Kuzzle authentication system is **multi-strategy based**. This means that the same user can **authenticate in several different ways**.
+Kuzzle's authentication system is **multi-strategy based**. This means that the same user can **authenticate in several different ways**.
 
 For example, the same user can authenticate with the `local` strategy with an username and a password pair but also with the `oauth` strategy using an external provider such as Facebook or Google.
 
