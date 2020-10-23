@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Customize API Behavior
+title: Customize the API Behavior
 description: Use the fine-grained middleware-like system
 order: 800
 ---
