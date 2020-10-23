@@ -11,10 +11,10 @@ order: 200
 Now that Kuzzle is running, we are going to create some documents.
 
 Kuzzle organizes the data storage in 4 levels: 
-  - indexes
-  - collections
-  - documents
-  - fields
+  - Indexes
+  - Collections
+  - Documents
+  - Fields
 
 An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.
 

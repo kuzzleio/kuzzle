@@ -80,7 +80,7 @@ $ curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
 :::
 ::: tab WebSocket
 
-```js
+```bash
 $ npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
