@@ -153,9 +153,13 @@ app.controller.register('greeting', {
 // Start the application
 app.start()
   .then(async () => {
+<<<<<<< HEAD
     // Now we can interact with Kuzzle API
 
     // Interact with Kuzzle API to creates a new index if it does not exists
+=======
+    // Now we can interact with Kuzzle API to create a new index if it does not exists
+>>>>>>> 1afe445bae1e78a686cb06c1843c55e1e45331cc
     if (! await app.sdk.index.exists('nyc-open-data')) {
       await app.sdk.index.create('nyc-open-data')
     }
