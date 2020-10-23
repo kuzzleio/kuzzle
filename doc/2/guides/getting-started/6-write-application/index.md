@@ -104,6 +104,8 @@ The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which 
 ```js
 // after application startup
 
+// [...]
+
 // creates a document
 await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
   name: 'Aschen',
@@ -118,6 +120,8 @@ The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be us
 **Example:** _Execute a custom controller action with the [query](/sdk/js/7/core-classes/kuzzle/query) method_
 ```js
 // after application startup
+
+// [...]
 
 // execute a custom controller action
 await app.sdk.query({
