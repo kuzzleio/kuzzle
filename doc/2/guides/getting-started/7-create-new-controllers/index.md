@@ -19,6 +19,10 @@ We are going to modify the `app.ts` file to register a controller to expose new 
 
 For this, we need to use the [Backend.controller.register](/core/2/some-link) method.
 
+::: info
+You can also declare [Controller class](/core/2/some-link) for a better code organization.  
+:::
+
 This method takes the controller name and a [ControllerDefinition](/core/2/api/some-link) which defines the controller actions:
 
 ```js
