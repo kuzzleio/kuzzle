@@ -78,10 +78,7 @@ In particular, they make it possible to:
 ```js
 app.start()
   .then(async () => {
-    // log some message
-    app.log.info('Application started')
-
-    // creates a new index if it does not exists
+    // interact with Kuzzle API to creates a new index if it does not exists
     if (! await app.sdk.index.exists('nyc-open-data')) {
       await app.sdk.index.create('nyc-open-data')
     }
@@ -124,3 +121,34 @@ await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
 })
 ```
 
+## Complete example
+
+```js
+import { Backend } from 'kuzzle'
+
+// instantiate an application
+const app = new Backend('playground')
+
+// register a new controller
+app.controller.register('greeting', {
+  actions: {
+    sayHello: {
+      handler: async request => {
+        return `Hello, ${request.input.args.name}`
+      }
+    }
+  }
+})
+
+// start the application
+app.start()
+  .then(async () => {
+    // now we can interact with Kuzzle API
+
+    // interact with Kuzzle API to creates a new index if it does not exists
+    if (! await app.sdk.index.exists('nyc-open-data')) {
+      await app.sdk.index.create('nyc-open-data')
+    }
+  })
+  .catch(console.error)
+```
