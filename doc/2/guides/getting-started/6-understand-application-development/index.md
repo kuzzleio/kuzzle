@@ -27,7 +27,7 @@ const app = new Backend('playground')
 An application has two states: `instantiated` and `started`. The classes and methods that can be used depend on the state the application is in. 
 
 ::: info
-Calling the [Backend.start](/core/2/some-link) method will start your application and change it's state to `started`.
+Calling the [Backend.start](/core/2/some-link) method will start your application and change its state to `started`.
 :::
 
 There are two categories of functionalities:
