@@ -44,7 +44,7 @@ When the application is in the `instantiated` state, it exposes methods allowing
 
 **Example:** _Registering a new Controller with the [Backend.controller.register](/core/2/some-link) method_
 ```js
-// before application startup
+// Before application startup
 app.controller.register('greeting', {
   actions: {
     sayHello: {
@@ -78,7 +78,7 @@ In particular, those methods make it possible to:
 ```js
 app.start()
   .then(async () => {
-    // interact with Kuzzle API to create a new index if it does not already exist
+    // Interact with Kuzzle API to create a new index if it does not already exist
     if (! await app.sdk.index.exists('nyc-open-data')) {
       await app.sdk.index.create('nyc-open-data')
     }
@@ -102,28 +102,26 @@ The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which 
 
 **Example:** _Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method_
 ```js
-// after application startup
+// After application startup
 
 // [...]
 
-// creates a document
+// Creates a document
 await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
   name: 'Aschen',
   age: 27
 })
 ```
 
-::: info 
 The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to the Kuzzle API.  
-:::
 
 **Example:** _Execute a custom controller action with the [query](/sdk/js/7/core-classes/kuzzle/query) method_
 ```js
-// after application startup
+// After application startup
 
 // [...]
 
-// execute a custom controller action
+// Execute a custom controller action
 await app.sdk.query({
   controller: 'greeting',
   action: 'name',
@@ -136,12 +134,12 @@ await app.sdk.query({
 ```js
 import { Backend } from 'kuzzle'
 
-// instantiate an application
+// Instantiate an application
 const app = new Backend('playground')
 
-// now we can register features
+// Now we can register features
 
-// register a new controller
+// Register a new controller
 app.controller.register('greeting', {
   actions: {
     sayHello: {
@@ -152,12 +150,12 @@ app.controller.register('greeting', {
   }
 })
 
-// start the application
+// Start the application
 app.start()
   .then(async () => {
-    // now we can interact with Kuzzle API
+    // Now we can interact with Kuzzle API
 
-    // interact with Kuzzle API to creates a new index if it does not exists
+    // Interact with Kuzzle API to creates a new index if it does not exists
     if (! await app.sdk.index.exists('nyc-open-data')) {
       await app.sdk.index.create('nyc-open-data')
     }
