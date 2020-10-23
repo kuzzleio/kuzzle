@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Understand Application Development
+title: Write an Application
 description: Discover the framework capabilities
 order: 600
 ---
