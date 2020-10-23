@@ -123,7 +123,7 @@ await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
 ```
 
 ::: info 
-The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to Kuzzle API.  
+The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to the Kuzzle API.  
 :::
 
 **Example:** _Execute a custom controller action with the [query](/sdk/js/7/core-classes/kuzzle/query) method_
