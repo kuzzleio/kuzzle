@@ -36,7 +36,7 @@ There are two categories of functionalities:
 
 ## Register new features
 
-When theg application is in the instanciated state, it exposes methods to **register new features** in Kuzzle core, like:
+When the application is in the `instantiated` state, it exposes methods allowing to **register new features** to Kuzzle, such as:
  - `controllers`: extend the API
  - `pipes`: modify the API behavior
  - `hooks`: execute asynchronous processing
