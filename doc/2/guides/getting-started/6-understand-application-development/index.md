@@ -36,7 +36,7 @@ There are two categories of functionalities:
 
 ## Register new features
 
-When my application is in the instanciated state, it exposes methods to **register new features** in Kuzzle core, like:
+When the application is in the instanciated state, it exposes methods to **register new features** in Kuzzle core, like:
  - `controllers`: extend the API
  - `pipes`: modify API behavior
  - `hooks`: execute asynchronous processing
@@ -66,7 +66,7 @@ We will see in detail how to add controllers and pipes in the next chapters of t
 
 ## Interact with the application
 
-Une fois l'application dans l'état démarrée, elle propose des méthodes pour intéragir avec votre application Kuzzle.
+Once the application is started, it provides methods to interact with your Kuzzle application.
 
 In particular, they make it possible to:
  - use the [Embedded SDK](/core/2/some-link) to use the API
@@ -94,7 +94,7 @@ These methods interact directly with Kuzzle API and internal modules and are the
 
 In order to use the API actions, Kuzzle exposes the [Embedded SDK](/core/2/some-link) through the [Backend](/core/2/some-link) class.  
 
-You can acces it through the [Backend.sdk] property.  
+You can acces it through the [Backend.sdk](/core/2/some-link) property.  
 
 ::: info
 The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which is directly connected to the API and does not go through the network.  
