@@ -8,7 +8,7 @@ order: 600
 
 # Understand Application Development
 
-Kuzzle is fully extensible like any framework. This extensibility is available through the development of an application.
+Kuzzle is **fully extensible** like any framework. This extensibility is available through the development of an application.
 
 Several classes and methods are available to developers so that they can develop their new business functionalities.
 
@@ -36,7 +36,7 @@ There are two categories of functionalities:
 
 ## Register new features
 
-When the application is in the instanciated state, it exposes methods to **register new features** in Kuzzle core, like:
+When theg application is in the instanciated state, it exposes methods to **register new features** in Kuzzle core, like:
  - `controllers`: extend the API
  - `pipes`: modify API behavior
  - `hooks`: execute asynchronous processing
@@ -59,7 +59,7 @@ app.controller.register('greeting', {
 Once the features have been registered, it is possible to start our Kuzzle application with the [Backend.start](/core/2/some-link) method.
 
 ::: warning
-Once the application has been started with the [Backend.start](/core/2/some-link) method, it is no longer possible to register new features.
+Once the application has been started with the [Backend.start](/core/2/some-link) method, **it is no longer possible to register new features**.
 :::
 
 We will see in detail how to add controllers and pipes in the next chapters of this Getting Started.
@@ -74,7 +74,7 @@ In particular, they make it possible to:
  - log messages
  - and more..!
 
-**Example:** Use the Embedded SDK to create an index after startup
+**Example:** Use the Embedded SDK to create an index after startup with the [index.create](/sdk/js/7/controllers/index/create) method
 ```js
 app.start()
   .then(async () => {
