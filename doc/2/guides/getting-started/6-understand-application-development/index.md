@@ -34,7 +34,7 @@ There are two categories of functionalities:
  - `registration`: available **before** starting the application
  - `interaction`: available **after** starting the application
 
-### Register new features
+## Register new features
 
 When my application is in the instanciated state, it exposes methods to **register new features** in Kuzzle core, like:
  - `controllers`: extend the API
@@ -64,7 +64,7 @@ Once the application has been started with the [Backend.start](/core/2/some-link
 
 We will see in detail how to add controllers and pipes in the next chapters of this Getting Started.
 
-### Interact with the application
+## Interact with the application
 
 Une fois l'application dans l'état démarrée, elle propose des méthodes pour intéragir avec votre application Kuzzle.
 
@@ -90,7 +90,7 @@ app.start()
 These methods interact directly with Kuzzle API and internal modules and are therefore not available until the application has been started with the [Backend.start](/core/2/some-link) method.
 :::
 
-## Embedded SDK
+### Embedded SDK
 
 In order to use the API actions, Kuzzle exposes the [Embedded SDK](/core/2/some-link) through the [Backend](/core/2/some-link) class.  
 
