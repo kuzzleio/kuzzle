@@ -6,7 +6,7 @@ description: Use the fine-grained middleware-like system
 order: 800
 ---
 
-# Customize API Behavior
+# Customize the API Behavior
 
 Kuzzle allows to modify API actions behavior with a **very precise middleware-like system**.  
 
