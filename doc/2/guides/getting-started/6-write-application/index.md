@@ -66,7 +66,7 @@ We will see in detail how to add controllers and pipes in the next chapters of t
 
 ## Interact with the application
 
-Once the application has started, methods to interact with your Kuzzle application become available.
+Once the application has started, methods to interact with it become available.
 
 In particular, those methods make it possible to:
  - Use the [Embedded SDK](/core/2/some-link) to use the API

@@ -101,6 +101,7 @@ $ kourou server:now
 
 Going further:
  - [Kuzzle Event System](/core/2/api/some-links)
+ - [Execute asynchronous action with hooks](/core/2/some-link)
 
 ::: info
 Next guide :arrow_forward: [Deploy your Application](/core/2/guides/getting-started/8-deploy-your-application/)
