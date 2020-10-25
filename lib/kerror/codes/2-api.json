@@ -128,6 +128,12 @@
           "code": 9,
           "message": "Admin user is already set.",
           "class": "PreconditionError"
+        },
+        "too_many_login_requests": {
+          "description": "The request has been refused because logins attempts per second has been exceeded for this user",
+          "code": 10,
+          "message": "Rejected: requests for logins per second exceeded for this user.",
+          "class": "TooManyLoginRequestsError"
         }
       }
     }
