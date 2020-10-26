@@ -121,6 +121,12 @@
           "code": 2,
           "message": "The configuration value set for \"%s\" is outside the allowed range (allowed: %s)",
           "class": "InternalError"
+        },
+        "cannot_parse": {
+          "description": "The kuzzlerc configuration file is badly formatted.",
+          "code": 3,
+          "message": "Unable to read kuzzlerc configuration file: %s",
+          "class": "InternalError"
         }
       }
     },
