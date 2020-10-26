@@ -102,9 +102,12 @@ When asked for credentials, just choose `Login as Anonymous`.
 
 You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
 
-Going further:
- - [Installing and running Kuzzle](/core/2/some-link)
 
 ::: info
-Next guide :arrow_forward: [Store and Access Data](/core/2/guides/getting-started/2-store-and-access-data/)
+Going further:
+ - [Installing and running Kuzzle](/core/2/some-link)
 :::
+
+<GuidesLinks 
+  :next="{ text: 'Store and Access Data', url: '/core/2/guides/getting-started/2-store-and-access-data/' }"
+/>

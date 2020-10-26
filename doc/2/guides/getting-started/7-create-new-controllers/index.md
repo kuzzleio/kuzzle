@@ -108,10 +108,12 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 :::
 ::::
 
-
+::: info
 Going further:
  - [API Controllers](/core/2/some-link)
-
-::: info
-Next guide :arrow_forward: [Customize API Behavior](/core/2/guides/getting-started/7-customize-api-behavior/)
 :::
+
+<GuidesLinks 
+  :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/6-write-application/' }" 
+  :next="{ text: 'Customize API Behavior', url: '/core/2/guides/getting-started/8-customize-api-behavior/' }" 
+/>

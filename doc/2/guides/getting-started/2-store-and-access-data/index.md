@@ -212,10 +212,13 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 
 </details>
 
+::: info
 Going further:
   - [Database mappings](/core/2/guides/some-link)
   - [Querying Elasticsearch](/core/2/guides/some-link)
-
-::: info
-Next guide :arrow_forward: [Set up Permissions](/core/2/guides/getting-started/3-set-up-permissions/)
 :::
+
+<GuidesLinks 
+  :prev="{ text: 'Run Kuzzle', url: '/core/2/guides/getting-started/1-run-kuzzle' }" 
+  :next="{ text: 'Set up Permissions', url: '/core/2/guides/getting-started/3-set-up-permissions' }" 
+/>

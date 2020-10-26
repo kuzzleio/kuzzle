@@ -43,13 +43,13 @@ Kuzzle is a **backend with ready-to-use features** that can be extended in the s
 
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
-<CustomTable :items="[
-  { text: 'Data storage and access', icon: 'feature-data-storage.png' },
-  { text: 'Advanced permission system', icon: 'feature-acl.png' },
-  { text: 'Multi authentication', icon: 'feature-auth.png' },
-  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'feature-api.png' },
-  { text: 'Realtime engine', icon: 'feature-realtime.png' },
-  { text: 'Integrated cluster mode', icon: 'feature-cluster.png' },
+<IconTable :items="[
+  { text: 'Data storage and access', icon: 'guides/introduction/1-what-is-kuzzle/feature-data-storage.png' },
+  { text: 'Advanced permission system', icon: 'guides/introduction/1-what-is-kuzzle/feature-acl.png' },
+  { text: 'Multi authentication', icon: 'guides/introduction/1-what-is-kuzzle/feature-auth.png' },
+  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'guides/introduction/1-what-is-kuzzle/feature-api.png' },
+  { text: 'Realtime engine', icon: 'guides/introduction/1-what-is-kuzzle/feature-realtime.png' },
+  { text: 'Integrated cluster mode', icon: 'guides/introduction/1-what-is-kuzzle/feature-cluster.png' },
 ]"/>
 
 Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/some-link) or [modifying API methods behavior](/core/2/some-link).

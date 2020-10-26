@@ -162,3 +162,15 @@ app.start()
   })
   .catch(console.error)
 ```
+
+::: info
+Going further:
+ - [Backend class](/core/2/some-link)
+ - [API Controllers](/core/2/some-link)
+ - [Kuzzle Event System](/core/2/api/some-links)
+:::
+
+<GuidesLinks
+  :prev="{ text: 'Subscribe to Realtime Notifications', url: '/core/2/guides/getting-started/5-subscribe-realtime-notifications/' }" 
+  :next="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/7-create-new-controllers' }" 
+/>

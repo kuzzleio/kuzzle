@@ -217,9 +217,12 @@ $ kourou security:updateRole '{
 This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
 :::
 
+::: info
 Going further:
   - [Rights management](/core/2/some-link)
-
-::: info
-Next guide :arrow_forward: [Authenticate Users](/core/2/guides/getting-started/4-authenticate-users/)
 :::
+
+<GuidesLinks 
+  :prev="{ text: 'Store and Access Data', url: '/core/2/guides/getting-started/2-store-and-access-data/' }"
+  :next="{ text: 'Authenticate Users', url: '/core/2/guides/getting-started/4-authenticate-users/' }" 
+/>

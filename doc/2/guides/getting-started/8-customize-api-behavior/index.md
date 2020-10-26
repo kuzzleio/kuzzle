@@ -99,10 +99,13 @@ $ kourou server:now
  [✔] Successfully executed "server:now
 ```
 
+::: info
 Going further:
  - [Kuzzle Event System](/core/2/api/some-links)
  - [Execute asynchronous action with hooks](/core/2/some-link)
-
-::: info
-Next guide :arrow_forward: [Deploy your Application](/core/2/guides/getting-started/8-deploy-your-application/)
 :::
+
+<GuidesLinks
+  :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/7-create-new-controllers' }" 
+  :next="{ text: 'Deploy your Application', url: '/core/2/guides/getting-started/9-deploy-your-application/' }" 
+/>
