@@ -157,9 +157,11 @@ When defining a controller action, it is also possible to **specify one or more 
 This property is at the same level as `handler` and **represents an array of routes**.  
 Each route is an object containing a `verb` and a `path` property.
 
-When the `path` property starts with a `/` then the route is added as is, otherwise the route will be prefixed with `/_/`.
-
 The following HTTP verbs are available: `get`, `post`, `put`, `delete`, `head`.
+
+::: info
+When the `path` property starts with a `/` then the route is added as is, otherwise the route will be prefixed with `/_/`.
+:::
 
 ```js
 app.controller.register('greeting', {
@@ -362,9 +364,9 @@ More informations about the [RequestContext](/core/2/some-link) class properties
 
 ## Response format
 
-A Kuzzle Response is a standardized result. This format is shared by all API actions, including routes added by controller plugins.
+Kuzzle Response are **standardized**. This format is shared by all API actions, including custom controller actions.
 
-A Kuzzle Response is a JSON object with the following format:
+A Kuzzle Response is a **JSON object** with the following format:
 
 | Property     | Description                                                                                         |
 | ------------ | --------------------------------------------------------------------------------------------------- |
@@ -417,9 +419,9 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 #### Return a custom response
 
-In some cases it may be necessary to return a response that differs from the standard API format.
+In some cases it may be necessary to **return a response that differs** from the standard API response format.
 
-This may be to send a smaller JSON response for constrained environments, to perform HTTP redirection or to return another mime type such as CSV, an image, a PDF document, etc.
+This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another mime** type such as CSV, an image, a PDF document, etc.
 
 For this it is possible to use the method [Request.setResult](/core/2/some-lin):
 
