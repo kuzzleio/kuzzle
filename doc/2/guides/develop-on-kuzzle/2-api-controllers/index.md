@@ -8,15 +8,17 @@ order: 200
 
 # API Controllers
 
-Kuzzle allows to extend its existing API using controllers. Controllers are logical containers containing several actions.  
+Kuzzle allows to extend its existing API using Controllers. Controllers are **logical containers containing several actions**.  
 
-These actions are then processed like any other API action and can be executed by the users through the different mechanisms to secure and normalize requests.
+These actions are then **processed like any other API action** and can be executed by the users through the different mechanisms to secure and normalize requests.
 
 ## Add a new Controller
 
-Each controller therefore has several actions. Each of these actions is associated with a function called [handler](/core/2/guides/develop-on-kuzzle/2-api-controllers#action-handler).
+Each controller therefore has several actions. Each of these **actions is associated with a function** called [handler](/core/2/guides/develop-on-kuzzle/2-api-controllers#action-handler).
 
+::: info
 The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/some-link) interface.  
+:::
 
 We have chosen to allow users to add controllers in two different ways in order to best adapt to their needs.  
 
@@ -30,9 +32,9 @@ By convention, a controller action is identified with the name of the controller
 
 ### Register a Controller
 
-The [Backend.controller.register](/core/2/some-link) method allows to add a new controller using a Plain Old Javascript Object (POJO) complying with the [ControllerDefinition](/core/2/some-link) interface.  
+The [Backend.controller.register](/core/2/some-link) method allows to add a new controller using a **Plain Old Javascript Object (POJO) complying with the [ControllerDefinition](/core/2/some-link) interface**.  
 
-This method takes in parameter the name of the controller followed by its definition:
+This method takes in parameter the **name** of the controller followed by its **definition**:
 
 ```js
 app.controller.register('greeting', {
@@ -51,7 +53,7 @@ This is faster to develop but maintenance can be costly in the long run for larg
 
 ### Use a Controller class
 
-The [Backend.controller.use](/core/2/some-link) method allows to add a new controller using a class inheriting from the [Controller](/core/2/some-link) class.  
+The [Backend.controller.use](/core/2/some-link) method allows to add a new controller using a **class inheriting from the [Controller](/core/2/some-link) class**.  
 
 This class must respect the following conventions:
  - extend the `Controller` class
@@ -100,9 +102,9 @@ This way of doing things takes longer to develop but it allows you to have a bet
 
 ## Handler Function
 
-The handler is the function that will be called each time our API action is executed.
+The handler is the function that will **be called each time our API action is executed**.
 
-This function takes a [Request object](/core/2/some-link) as a parameter and must return a `Promise` resolving on the result to be returned to the client.
+This function **takes a [Request object](/core/2/some-link)** as a parameter and **must return a `Promise`** resolving on the result to be returned to the client.
 
 This function is defined in the `handler` property of an action. Its signature is as follows: `(request: Request) => Promise<any>`.
 
@@ -119,7 +121,7 @@ app.controller.register('greeting', {
 })
 ```
 
-The result returned by our `handler` will be converted to JSON format and integrated into the standard Kuzzle response in the `result` property.
+The result returned by our `handler` will be **converted to JSON format** and integrated into the standard Kuzzle response in the `result` property.
 
 ```bash
 $ npx wscat -c ws://localhost:7512 --execute '{
@@ -146,11 +148,11 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 The execution of an API action through the HTTP protocol is significantly different from other protocols.  
 
-Indeed, the HTTP protocol uses verbs and routes in order to address an action whereas the other protocols only use the controller and action name in their JSON payloads.
+Indeed, **the HTTP protocol uses verbs and routes** in order to address an action whereas the other protocols only use the controller and action name in their JSON payloads.
 
 ### Define a HTTP route
 
-When defining a controller action, it is also possible to specify one or more HTTP routes that will execute our action using the `http` property.
+When defining a controller action, it is also possible to **specify one or more HTTP routes** that will execute our action using the `http` property.
 
 This property is at the same level as `handler` and takes an array of routes as a parameter.  
 Each route is an object consisting of the `verb` and `path` properties.
@@ -173,7 +175,7 @@ app.controller.register('greeting', {
 })
 ```
 
-When the `path' starts with a `/` then the route is added as is, otherwise the route will be prefixed with `/_/`.
+When the `path` starts with a `/` then the route is added as is, otherwise the route will be prefixed with `/_/`.
 
 It is possible to define paths with url parameters. These parameters will be captured and then integrated into the [Request Input](/core/2/guides/develop-on-kuzzle/2-api-controllers#request-input).
 
@@ -201,7 +203,7 @@ The following HTTP verbs are available: `get`, `post`, `put`, `delete`, `head`.
 
 ### Default route
 
-If the `http` property is not set, then Kuzzle will generate a default route so that the action can be called from the HTTP protocol.
+If the `http` property is not set, then Kuzzle will **generate a default route** so that the action can be called from the HTTP protocol.
 
 This default generated route has the following format: `GET http://<host>:<port>/_/<controller>/<action>`.
 
@@ -209,12 +211,12 @@ The name of the controller and the action will be converted to `kebab-case` form
 
 ::: info
 It is possible to prevent the generation of a default HTTP route by providing an empty table to the `http` property.  
-By doing this, the action can never be executed from the HTTP protocol.
+By doing this, **the action can never be executed from the HTTP protocol**.
 :::
 
 ## Request Input
 
-The handler of an API action receives an instance of [Request object](/core/2/some-link). This object represents an API request and contains both the input and client information as well as the response that will be returned.
+The `handler` of an API action receives an instance of [Request object](/core/2/some-link). This object represents an API request and **contains both the input and client information**.
 
 The arguments of requests sent to the Kuzzle API are available in the [Request.input](/core/2/some-link) property.
 
@@ -273,7 +275,7 @@ app.controller.register('greeting', {
 
 ### Other protocols
 
-Other protocols directly use JSON payloads.  
+Other protocols directly **use JSON payloads**.  
 
 These payloads contain all the information at the first level:
 
