@@ -278,6 +278,10 @@ app.controller.register('greeting', {
 })
 ```
 
+::: info
+See the [Request Payload](/core/2/api/essentials/query-syntax#http) page for more information about using the API with HTTP.
+::: 
+
 ### Other protocols
 
 Other protocols directly **use JSON payloads**.  
@@ -320,6 +324,11 @@ app.controller.register('greeting', {
 `_id`, `index` and `collection` are specific Kuzzle inputs and the will end up in the `request.input.resource` property.
 :::
 
+::: info
+See the [Request Payload](/core/2/api/essentials/query-syntax#other-protocols) page for more information about using the API with other protocols.
+::: 
+
+
 ## Request Context
 
 Information about **the client that executes an API action** are available in the [Request.context](/core/2/some-link) property.
@@ -353,6 +362,96 @@ More informations about the [RequestContext](/core/2/some-link) class properties
 
 ## Response format
 
-## Use custom Controller Action
+A Kuzzle Response is a standardized result. This format is shared by all API actions, including routes added by controller plugins.
+
+A Kuzzle Response is a JSON object with the following format:
+
+| Property     | Description                                                                                         |
+| ------------ | --------------------------------------------------------------------------------------------------- |
+| `action`     | API action                                                                          |
+| `collection` | Collection name, or `null` if no collection was involved                                       |
+| `controller` | API controller                                                                             |
+| `error`      | [KuzzleError](/core/2/api/essentials/error-handling) object, or `null` if there was no error                |
+| `index`      | Index name, or `null` if no index was involved                                                 |
+| `requestId`  | Request unique identifier                                                                           |
+| `result`     | Action result, or `null` if an error occured                                                         |
+| `status`     | Response status, using [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) |
+| `volatile`   | Arbitrary data repeated from the initial request                                                    |
+The `result` property will contain the return of the action `handler` function.
+
+For example, when calling this controller action:
+```js
+app.controller.register('greeting', {
+  actions: {
+    sayHello: {
+      handler: async (request: Request) => {
+        return `Hello, ${request.input.args.name}`
+      }
+    }
+  }
+})
+```
+
+The following response will be sent:
+
+```bash
+$ npx wscat -c ws://localhost:7512 --execute '{
+  "controller": "greeting",
+  "action": "sayHello",
+  "name": "Yagmur"
+}'
+
+{
+  "requestId": "a6f4f5b6-1aa2-4cf9-9724-12b12575c047",
+  "status": 200,
+  "error": null,
+  "controller": "greeting",
+  "action": "sayHello",
+  "collection": null,
+  "index": null,
+  "volatile": null,
+  "result": "Hello, Yagmur", # <= handler function return value
+  "room": "a6f4f5b6-1aa2-4cf9-9724-12b12575c047"
+}
+```
+
+#### Return a custom response
+
+In some cases it may be necessary to return a response that differs from the standard API format.
+
+This may be to send a smaller JSON response for constrained environments, to perform HTTP redirection or to return another mime type such as CSV, an image, a PDF document, etc.
+
+For this it is possible to use the method [Request.setResult](/core/2/some-lin):
+
+```js
+app.controller.register('files', {
+  actions: {
+    csv: {
+      handler: async request => {
+        const csv = 'name,age\naschen,27\ncener,28\n'
+
+        request.setResult(null, {
+          headers: {
+            'content-type': 'text/csv'
+          },
+          raw: true
+        })
+
+        return csv
+      }
+    }
+  }
+})
+```
+
+The response will only contain the CSV document:
+
+```bash
+$ curl localhost:7512/_/files/csv
+
+name,age
+aschen,27
+cener,28
+```
 
 ## Allow access to a custom Controller Action
