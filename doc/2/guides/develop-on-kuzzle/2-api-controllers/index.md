@@ -323,7 +323,7 @@ app.controller.register('greeting', {
 ```
 
 ::: warning
-`_id`, `index` and `collection` are specific Kuzzle inputs and the will end up in the `request.input.resource` property.
+`_id`, `index` and `collection` are **specific Kuzzle inputs** and the will end up in the `request.input.resource` property.
 :::
 
 ::: info
