@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 
+const requestPromise = require('request-promise');
 const _ = require('lodash');
 const should = require('should');
 const { Then } = require('cucumber');
@@ -164,4 +165,19 @@ Then('I got an error with id {string}', function (id) {
   assert(this.props.error !== null, 'Expected the previous step to return an error');
 
   assert(this.props.error.id === id, `Expected error to have id "${id}", but got "${this.props.error.id}"`);
+});
+
+Then('I send a HTTP {string} request with:', async function (method, dataTable) {
+  const body = this.parseObject(dataTable);
+
+  const options = {
+    url: `http://${this._host}:${this._port}/_query`,
+    json: true,
+    method,
+    body,
+  };
+
+  const response = await requestPromise(options);
+
+  this.props.result = response.result;
 });

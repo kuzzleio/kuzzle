@@ -7,7 +7,7 @@ const rewire = require('rewire');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
-const config = require('../../lib/config');
+const config = require('../../lib/config').load();
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
