@@ -20,15 +20,15 @@ Each controller therefore has several actions. Each of these **actions is associ
 The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/some-link) interface.  
 :::
 
-We have chosen to allow users to add controllers in two different ways in order to best adapt to their needs.  
-
-These two ways are very similar and expose the same functionalities.  
+By convention, a controller action is identified with the name of the controller followed by the action separated by a colon: `<controller>:<action>` (e.g. [document:create](/core/2/api/controllers/document/create)).
 
 ::: warning
 Controllers must be added to the application before the application is started with the [Backend.start](/core/2/some-link) method.
 :::
 
-By convention, a controller action is identified with the name of the controller followed by the action separated by a colon: `<controller>:<action>` (e.g. [document:create](/core/2/api/controllers/document/create)).
+We have chosen to allow users to add controllers in two different ways in order to best adapt to their needs.  
+
+These two ways are very similar and expose the same functionalities.  
 
 ### Register a Controller
 
@@ -104,7 +104,7 @@ This way of doing things takes longer to develop but it allows you to have a bet
 
 The handler is the function that will **be called each time our API action is executed**.
 
-This function **takes a [Request object](/core/2/some-link)** as a parameter and **must return a `Promise`** resolving on the result to be returned to the client.
+This function **takes a [Request object](/core/2/some-link)** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
 
 This function is defined in the `handler` property of an action. Its signature is as follows: `(request: Request) => Promise<any>`.
 
@@ -152,10 +152,14 @@ Indeed, **the HTTP protocol uses verbs and routes** in order to address an actio
 
 ### Define a HTTP route
 
-When defining a controller action, it is also possible to **specify one or more HTTP routes** that will execute our action using the `http` property.
+When defining a controller action, it is also possible to **specify one or more HTTP routes** available to execute our action using the `http` property.
 
-This property is at the same level as `handler` and takes an array of routes as a parameter.  
-Each route is an object consisting of the `verb` and `path` properties.
+This property is at the same level as `handler` and **represents an array of routes**.  
+Each route is an object containing a `verb` and a `path` property.
+
+When the `path` property starts with a `/` then the route is added as is, otherwise the route will be prefixed with `/_/`.
+
+The following HTTP verbs are available: `get`, `post`, `put`, `delete`, `head`.
 
 ```js
 app.controller.register('greeting', {
@@ -175,7 +179,9 @@ app.controller.register('greeting', {
 })
 ```
 
-When the `path` starts with a `/` then the route is added as is, otherwise the route will be prefixed with `/_/`.
+::: warning
+It is recommended to let Kuzzle prefix the routes with `/_/` in order not avoid conflict with the existing routes of the standard API.
+:::
 
 It is possible to define paths with url parameters. These parameters will be captured and then integrated into the [Request Input](/core/2/guides/develop-on-kuzzle/2-api-controllers#request-input).
 
@@ -195,28 +201,23 @@ app.controller.register('greeting', {
 })
 ```
 
-::: warning
-It is recommended to let Kuzzle prefix the routes with `/_/` in order not to conflict with the existing routes of the standard API.
-:::
-
-The following HTTP verbs are available: `get`, `post`, `put`, `delete`, `head`.
-
 ### Default route
 
 If the `http` property is not set, then Kuzzle will **generate a default route** so that the action can be called from the HTTP protocol.
 
-This default generated route has the following format: `GET http://<host>:<port>/_/<controller>/<action>`.
+This default generated route has the following format: `GET http://<host>:<port>/_/<controller-name>/<action-name>`.
 
-The name of the controller and the action will be converted to `kebab-case` format. For example the default route of the `sayHello` action will be: `GET http://<host>:<port>/_/greeting/say-hello`.
+The name of the controller and the action will be converted to `kebab-case` format.  
+For example the default route of the `sayHello` action will be: `GET http://<host>:<port>/_/greeting/say-hello`.
 
 ::: info
-It is possible to prevent the generation of a default HTTP route by providing an empty table to the `http` property.  
+It is possible to prevent the generation of a default HTTP route by providing an empty array to the `http` property.  
 By doing this, **the action can never be executed from the HTTP protocol**.
 :::
 
 ## Request Input
 
-The `handler` of an API action receives an instance of [Request object](/core/2/some-link). This object represents an API request and **contains both the input and client information**.
+The `handler` of an API action receives an instance of [Request object](/core/2/some-link). This object represents an API request and **contains both the client input and client contextual information**.
 
 The arguments of requests sent to the Kuzzle API are available in the [Request.input](/core/2/some-link) property.
 
@@ -224,17 +225,17 @@ The main available properties are the following:
  - `controller`: API controller name
  - `action`: API action name
  - `resource`: Kuzzle specifics arguments (`_id`, `index` and `collection`)
- - `args`: top level arguments
+ - `args`: arguments
  - `body`: body content
 
 ### HTTP
 
 With HTTP, there are 3 types of input parameters:
- - URL parameters (e.g. `/greeting/hello/:name`)
- - Query arguments (e.g. `/greeting/hello?name=aschen`)
+ - URL parameters (__e.g. `/greeting/hello/:name`__)
+ - Query arguments (__e.g. `/greeting/hello?name=aschen`__)
  - Request body
 
-URL parameters and query arguments can be found in the `request.input.args` property unless it is a resource (`_id`, `index` and `collection`).
+URL parameters and query arguments can be found in the `request.input.args` property **unless it is a Kuzzle specific argument** (`_id`, `index` and `collection`), in that case they can be found in the `request.input.resource` property.
 
 The content of the query body can be found in the `request.input.body` property 
 
@@ -246,12 +247,16 @@ For example, with the following request input:
 
 ```bash
 # Route: "POST /greeting/hello/:name" 
-$ curl -X POST -H  "Content-Type: application/json" "localhost:7512/_/greeting/hello/aschen?_id=JkkZN62jLSA&age=27" --data '{
-  "city" : "Antalya" 
-}'
+$ curl \
+  -X POST \
+  -H  "Content-Type: application/json" \
+  "localhost:7512/_/greeting/hello/aschen?_id=JkkZN62jLSA&age=27" \
+  --data '{
+    "city" : "Antalya" 
+  }'
 ```
 
-We can retrieve them in the Request object passed to the `handler`:
+We can retrieve them in the [Request object](/core/2/some-link) passed to the `handler`:
 
 ```js
 import assert from 'assert'
@@ -277,7 +282,7 @@ app.controller.register('greeting', {
 
 Other protocols directly **use JSON payloads**.  
 
-These payloads contain all the information at the first level:
+These payloads contain all the information directly:
 
 ```bash
 $ npx wscat -c ws://localhost:7512 --execute '{
@@ -292,7 +297,7 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 }'
 ```
 
-We can retrieve them in the Request object passed to the `handler`:
+We can retrieve them in the [Request object](/core/2/some-link) passed to the `handler`:
 
 ```js
 import assert from 'assert'
@@ -317,7 +322,7 @@ app.controller.register('greeting', {
 
 ## Request Context
 
-Information about the client that executes an API action are available in the [Request.context](/core/2/some-link) property.
+Information about **the client that executes an API action** are available in the [Request.context](/core/2/some-link) property.
 
 The available properties are as follows:
  - [connection](/core/2/some-link): information about the connection
@@ -333,7 +338,7 @@ app.controller.register('greeting', {
     sayHello: {
       handler: async (request: Request) => {
         // Unauthenticated users are anonymous 
-        // and anonymous user ID is "-1"
+        // and the anonymous user ID is "-1"
         assert(request.context.user._id === '-1')
         assert(request.context.connection.protocol === 'http')
       },
