@@ -458,9 +458,9 @@ cener,28
 
 ## Use a custom Controller Action
 
-Comme nous l'avons vu, les actions de contrôleurs peuvent être executées via les différents protocols.
+As we have seen, controller actions can be executed via different protocols.
 
-Nous allons explorer les diverses possibilitées qui s'offrent à nous pour executer nos routes d'API.
+We will explore the various possibilities available to execute API actions.
 
 ```js
 app.controller.register('greeting', {
@@ -476,20 +476,20 @@ app.controller.register('greeting', {
 
 ### HTTP
 
-Pour utiliser notre action au travers protocol HTTP, nous pouvons utiliser CURL:
+To execute our action through HTTP protocol CURL can be used:
 
 ```bash
 $ curl http://localhost:7512/_/greeting/say-hello?name=Yagmur
 ```
 
 ::: info
-La route générée par défaut utilise le verbe GET.  
-Il est donc possible de l'ouvrir directement dans votre navigateur: [http://localhost:7512/_/greeting/say-hello?name=Yagmur](http://localhost:7512/_/greeting/say-hello?name=Yagmur)
+Default generated route uses `GET` verb.  
+It is therefore possible to open it directly in a browser: [http://localhost:7512/_/greeting/say-hello?name=Yagmur](http://localhost:7512/_/greeting/say-hello?name=Yagmur)
 :::
 
 ### WebSocket
 
-Pour utiliser notre action au travers du protocol WebSocket, nous allons utiliser [wscat]():
+To execute an action through the WebSocket protocol [wscat](https://www.npmjs.com/package/wscat) can be used:
 
 ```bash
 $ npx wscat -c ws://localhost:7512 --execute '{
@@ -501,13 +501,13 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 ### Kourou
 
-Depuis un terminal, vous pouvez utiliser [Kourou](/core/2/some-link), la CLI de Kuzzle, pour executer une action:
+From a terminal [Kourou](/core/2/some-link), the Kuzzle CLI, can be used to execute an action:
 
 ```bash
 $ kourou greeting:sayHello --arg name=Yagmur
 ```
 
-Il est possible de passer plusieurs arguments en répétant le flag `--arg <arg>=<value>` ou encore spécifier un body avec le flag `--body '{}'`.  
+It is possible to pass multiple arguments by repeating the `--arg <arg>=<value>` flag or specify a body with the `--body '{}'` flag.  
 
 ::: info
 More info about [Kourou](/core/2/some-link).
@@ -515,7 +515,7 @@ More info about [Kourou](/core/2/some-link).
 
 ### SDK
 
-Depuis l'un des [SDKs](/sdk), il est possible d'utiliser la méthode `query` qui prend en paramètre un request payload.  
+From one of the [SDKs](/sdk), it is possible to use the `query` method which takes as parameter a [Request Payload](/core/2/some-link).  
 
 :::: tabs
 ::: Javascript
@@ -549,11 +549,11 @@ final response = await kuzzle.query({
 
 ## Allow access to a custom Controller Action
 
-Dans le système de gestion des droits, ce sont les rôles qui gèrent les accès aux actions d'API.  
+In the rights management system, role are managing access to API actions.  
 
-Ils fonctionnent selon un principe de liste blanche en listant les controleurs et actions auquels ils ont accès.
+They operate on a whitelist principle by listing the controllers and actions they have access to.
 
-Ainsi, pour autoriser l'accès à l'action `greeting:sayHello`, je peux écrire le rôle suivant:
+So, to allow access to the `greeting:sayHello` action, the following role can be written:
 
 ```bash
 $ kourou security:createRole '{
@@ -567,14 +567,14 @@ $ kourou security:createRole '{
 }' --id steward
 ```
 
-Il est également possible de d'utiliser un wildcard `*` pour donner accès à toutes les actions d'un contrôleur:
+It is also possible to use a wildcard (`*`) to give access to all the actions of a controller:
 
 ```bash
 $ kourou security:createRole '{
   controllers: {
     greeting: {
       actions: {
-        '*': true
+        "*": true
       }
     }
   }
