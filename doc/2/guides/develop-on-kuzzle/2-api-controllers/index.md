@@ -456,4 +456,131 @@ aschen,27
 cener,28
 ```
 
+## Use a custom Controller Action
+
+Comme nous l'avons vu, les actions de contrôleurs peuvent être executées via les différents protocols.
+
+Nous allons explorer les diverses possibilitées qui s'offrent à nous pour executer nos routes d'API.
+
+```js
+app.controller.register('greeting', {
+  actions: {
+    sayHello: {
+      handler: async (request: Request) => {
+        return `Hello, ${request.input.args.name}`
+      }
+    }
+  }
+})
+```
+
+### HTTP
+
+Pour utiliser notre action au travers protocol HTTP, nous pouvons utiliser CURL:
+
+```bash
+$ curl http://localhost:7512/_/greeting/say-hello?name=Yagmur
+```
+
+::: info
+La route générée par défaut utilise le verbe GET.  
+Il est donc possible de l'ouvrir directement dans votre navigateur: [http://localhost:7512/_/greeting/say-hello?name=Yagmur](http://localhost:7512/_/greeting/say-hello?name=Yagmur)
+:::
+
+### WebSocket
+
+Pour utiliser notre action au travers du protocol WebSocket, nous allons utiliser [wscat]():
+
+```bash
+$ npx wscat -c ws://localhost:7512 --execute '{
+  "controller": "greeting",
+  "action": "sayHello",
+  "name": "Yagmur"
+}'
+```
+
+### Kourou
+
+Depuis un terminal, vous pouvez utiliser [Kourou](/core/2/some-link), la CLI de Kuzzle, pour executer une action:
+
+```bash
+$ kourou greeting:sayHello --arg name=Yagmur
+```
+
+Il est possible de passer plusieurs arguments en répétant le flag `--arg <arg>=<value>` ou encore spécifier un body avec le flag `--body '{}'`.  
+
+::: info
+More info about [Kourou](/core/2/some-link).
+:::
+
+### SDK
+
+Depuis l'un des [SDKs](/sdk), il est possible d'utiliser la méthode `query` qui prend en paramètre un request payload.  
+
+:::: tabs
+::: Javascript
+
+Using the Javascript SDK [Kuzzle.query](/sdk/js/7/core-classes/kuzzle/query) method:
+
+```js
+const response = await kuzzle.query({
+  controller: 'greeting',
+  action: 'sayHello',
+  name: 'Yagmur'
+})
+```
+
+:::
+::: Dart
+
+Using the Dart SDK [Kuzzle.query](/sdk/dart/2/core-classes/kuzzle/query) method:
+
+```dart
+final response = await kuzzle.query({
+  'controller': 'greeting',
+  'action': 'sayHello',
+  'name': 'Yagmur'
+});
+```
+
+:::
+::::
+
+
 ## Allow access to a custom Controller Action
+
+Dans le système de gestion des droits, ce sont les rôles qui gèrent les accès aux actions d'API.  
+
+Ils fonctionnent selon un principe de liste blanche en listant les controleurs et actions auquels ils ont accès.
+
+Ainsi, pour autoriser l'accès à l'action `greeting:sayHello`, je peux écrire le rôle suivant:
+
+```bash
+$ kourou security:createRole '{
+  controllers: {
+    greeting: {
+      actions: {
+        sayHello: true
+      }
+    }
+  }
+}' --id steward
+```
+
+Il est également possible de d'utiliser un wildcard `*` pour donner accès à toutes les actions d'un contrôleur:
+
+```bash
+$ kourou security:createRole '{
+  controllers: {
+    greeting: {
+      actions: {
+        '*': true
+      }
+    }
+  }
+}' --id steward
+```
+
+::: info
+More info about the [Rights Management System](/core/2/some-link)
+:::
