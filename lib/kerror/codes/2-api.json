@@ -133,7 +133,7 @@
           "description": "The request has been refused because logins attempts per second has been exceeded for this user",
           "code": 10,
           "message": "Rejected: requests for logins per second exceeded for this user.",
-          "class": "TooManyLoginRequestsError"
+          "class": "TooManyRequestsError"
         }
       }
     }
