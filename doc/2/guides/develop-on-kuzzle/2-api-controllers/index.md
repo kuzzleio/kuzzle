@@ -227,7 +227,7 @@ The main available properties are the following:
  - `controller`: API controller name
  - `action`: API action name
  - `resource`: Kuzzle specifics arguments (`_id`, `index` and `collection`)
- - `args`: arguments
+ - `args`: additional arguments
  - `body`: body content
 
 ### HTTP
@@ -242,7 +242,7 @@ URL parameters and query arguments can be found in the `request.input.args` prop
 The content of the query body can be found in the `request.input.body` property 
 
 ::: info
-The request body must be in JSON format.
+The request body must either be in JSON format or submitted as an HTTP form (URL encoded or multipart form data)
 :::
 
 For example, with the following request input:
@@ -323,7 +323,7 @@ app.controller.register('greeting', {
 ```
 
 ::: warning
-`_id`, `index` and `collection` are **specific Kuzzle inputs** and the are available in the `request.input.resource` property.
+`_id`, `index` and `collection` are **specific Kuzzle inputs** and are available in the `request.input.resource` property.
 :::
 
 ::: info
@@ -421,9 +421,9 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 In some cases it may be necessary to **return a response that differs** from the standard API response format.
 
-This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another mime** type such as CSV, an image, a PDF document, etc.
+This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another MIME type** such as CSV, an image, a PDF document, etc.
 
-For this it is possible to use the method [Request.setResult](/core/2/some-lin):
+For this it is possible to use the method [Request.setResult](/core/2/some-lin) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
 
 ```js
 app.controller.register('files', {
