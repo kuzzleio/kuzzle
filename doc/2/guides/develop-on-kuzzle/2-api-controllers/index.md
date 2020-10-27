@@ -8,13 +8,13 @@ order: 200
 
 # API Controllers
 
-Kuzzle allows to extend its existing API using Controllers. Controllers are **logical containers containing several actions**.  
+Kuzzle allows to extend its existing API using Controllers. Controllers are **logical containers of actions**.  
 
-These actions are then **processed like any other API action** and can be executed by the users through the different mechanisms to secure and normalize requests.
+These actions are then **processed like any other API action** and can be executed through the different mechanisms to secure and normalize requests.
 
 ## Add a new Controller
 
-Each controller therefore has several actions. Each of these **actions is associated with a function** called [handler](/core/2/guides/develop-on-kuzzle/2-api-controllers#action-handler).
+Each controller can therefore have several actions. Each of these **actions is associated with a function** called [handler](/core/2/guides/develop-on-kuzzle/2-api-controllers#action-handler).
 
 ::: info
 The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/some-link) interface.  
@@ -26,9 +26,9 @@ By convention, a controller action is identified with the name of the controller
 Controllers must be added to the application before the application is started with the [Backend.start](/core/2/some-link) method.
 :::
 
-We have chosen to allow users to add controllers in two different ways in order to best adapt to their needs.  
+We have chosen to allow developers to add controllers in two different ways in order to best adapt to their needs.  
 
-These two ways are very similar and expose the same functionalities.  
+These two ways are very similar and achieve the same goal.  
 
 ### Register a Controller
 
@@ -106,7 +106,7 @@ The handler is the function that will **be called each time our API action is ex
 
 This function **takes a [Request object](/core/2/some-link)** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
 
-This function is defined in the `handler` property of an action. Its signature is as follows: `(request: Request) => Promise<any>`.
+This function is defined in the `handler` property of an action. Its signature is: `(request: Request) => Promise<any>`.
 
 ```js
 app.controller.register('greeting', {
@@ -182,7 +182,7 @@ app.controller.register('greeting', {
 ```
 
 ::: warning
-It is recommended to let Kuzzle prefix the routes with `/_/` in order not avoid conflict with the existing routes of the standard API.
+It is recommended to let Kuzzle prefix the routes with `/_/` in order to avoid conflict with the existing routes of the standard API.
 :::
 
 It is possible to define paths with url parameters. These parameters will be captured and then integrated into the [Request Input](/core/2/guides/develop-on-kuzzle/2-api-controllers#request-input).
@@ -214,7 +214,7 @@ For example the default route of the `sayHello` action will be: `GET http://<hos
 
 ::: info
 It is possible to prevent the generation of a default HTTP route by providing an empty array to the `http` property.  
-By doing this, **the action can never be executed from the HTTP protocol**.
+By doing this, **the action will not be available through the HTTP protocol**.
 :::
 
 ## Request Input
@@ -227,7 +227,7 @@ The main available properties are the following:
  - `controller`: API controller name
  - `action`: API action name
  - `resource`: Kuzzle specifics arguments (`_id`, `index` and `collection`)
- - `args`: arguments
+ - `args`: additional arguments
  - `body`: body content
 
 ### HTTP
@@ -242,7 +242,7 @@ URL parameters and query arguments can be found in the `request.input.args` prop
 The content of the query body can be found in the `request.input.body` property 
 
 ::: info
-The request body must be in JSON format.
+The request body must either be in JSON format or submitted as an HTTP form (URL encoded or multipart form data)
 :::
 
 For example, with the following request input:
@@ -323,7 +323,7 @@ app.controller.register('greeting', {
 ```
 
 ::: warning
-`_id`, `index` and `collection` are **specific Kuzzle inputs** and the will end up in the `request.input.resource` property.
+`_id`, `index` and `collection` are **specific Kuzzle inputs** and are available in the `request.input.resource` property.
 :::
 
 ::: info
@@ -421,9 +421,9 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 In some cases it may be necessary to **return a response that differs** from the standard API response format.
 
-This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another mime** type such as CSV, an image, a PDF document, etc.
+This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another MIME type** such as CSV, an image, a PDF document, etc.
 
-For this it is possible to use the method [Request.setResult](/core/2/some-lin):
+For this it is possible to use the method [Request.setResult](/core/2/some-lin) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
 
 ```js
 app.controller.register('files', {
