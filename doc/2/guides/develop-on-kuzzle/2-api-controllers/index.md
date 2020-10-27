@@ -476,20 +476,20 @@ app.controller.register('greeting', {
 
 ### HTTP
 
-To execute our action through HTTP protocol CURL can be used:
+Our action can be executed through the HTTP protocol by using an HTTP client (cURL, HTTPie, Postman, ...):
 
 ```bash
 $ curl http://localhost:7512/_/greeting/say-hello?name=Yagmur
 ```
 
 ::: info
-Default generated route uses `GET` verb.  
-It is therefore possible to open it directly in a browser: [http://localhost:7512/_/greeting/say-hello?name=Yagmur](http://localhost:7512/_/greeting/say-hello?name=Yagmur)
+Default generated routes use the `GET` verb.  
+It is therefore possible to open them directly in a browser: [http://localhost:7512/_/greeting/say-hello?name=Yagmur](http://localhost:7512/_/greeting/say-hello?name=Yagmur)
 :::
 
 ### WebSocket
 
-To execute an action through the WebSocket protocol [wscat](https://www.npmjs.com/package/wscat) can be used:
+To execute our action through the WebSocket protocol, we will be using [wscat](https://www.npmjs.com/package/wscat):
 
 ```bash
 $ npx wscat -c ws://localhost:7512 --execute '{
@@ -501,7 +501,7 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 ### Kourou
 
-From a terminal [Kourou](/core/2/some-link), the Kuzzle CLI, can be used to execute an action:
+From a terminal, [Kourou](/core/2/some-link), the Kuzzle CLI, can be used to execute an action:
 
 ```bash
 $ kourou greeting:sayHello --arg name=Yagmur
@@ -515,7 +515,7 @@ More info about [Kourou](/core/2/some-link).
 
 ### SDK
 
-From one of the [SDKs](/sdk), it is possible to use the `query` method which takes as parameter a [Request Payload](/core/2/some-link).  
+From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [Request Payload](/core/2/some-link) as a parameter.
 
 :::: tabs
 ::: Javascript
@@ -549,9 +549,9 @@ final response = await kuzzle.query({
 
 ## Allow access to a custom Controller Action
 
-In the rights management system, role are managing access to API actions.  
+In the rights management system, roles are managing access to API actions.  
 
-They operate on a whitelist principle by listing the controllers and actions they have access to.
+They operate on a whitelist principle by listing the controllers and actions they give access to.
 
 So, to allow access to the `greeting:sayHello` action, the following role can be written:
 
@@ -567,7 +567,7 @@ $ kourou security:createRole '{
 }' --id steward
 ```
 
-It is also possible to use a wildcard (`*`) to give access to all the actions of a controller:
+It is also possible to use a wildcard (`*`) to give access to all of a controller's actions:
 
 ```bash
 $ kourou security:createRole '{
