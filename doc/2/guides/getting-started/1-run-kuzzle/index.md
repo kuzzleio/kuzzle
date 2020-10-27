@@ -20,7 +20,7 @@ In this guide we will use Docker and Docker Compose to run those services.
  - [Docker](https://docs.docker.com/engine/install/)
  - [Docker Compose](https://docs.docker.com/compose/install/)
  - [Kourou](https://github.com/kuzzleio/kourou)
- - Compile toolchain: g++, make and python
+ - Compile toolchain: a C++ compiler (g++, clang, ...), make and python
 
 Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI.
 

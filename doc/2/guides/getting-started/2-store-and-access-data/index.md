@@ -6,7 +6,7 @@ description: Create and retrieve documents
 order: 200
 ---
 
-# Store and access Data
+# Store and Access Data
 
 Now that Kuzzle is running, we are going to create some documents.
 
@@ -38,7 +38,7 @@ If you're more familiar with the way relational databases store data, here is an
 
 ::: info
 Kuzzle uses Elasticsearch as a NoSQL document storage.  
-Elasticsearch is primarly designed to be a search engine, so there are limitations when using it as a database.  
+Elasticsearch is primarily designed to be a search engine, so there are limitations when using it as a database.  
 Learn more about those limitations in our in-depth guides: [Database mappings](/core/2/guides/some-link) and [Querying Elasticsearch](/core/2/guides/some-link)
 ::: 
 
