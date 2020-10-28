@@ -44,11 +44,11 @@ Kuzzle is a **backend with ready-to-use features** that can be extended in the s
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
 <IconTable :items="[
-  { text: 'Data storage and access', icon: 'guides/introduction/1-what-is-kuzzle/feature-data-storage.png' },
-  { text: 'Advanced permission system', icon: 'guides/introduction/1-what-is-kuzzle/feature-acl.png' },
-  { text: 'Multi authentication', icon: 'guides/introduction/1-what-is-kuzzle/feature-auth.png' },
-  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'guides/introduction/1-what-is-kuzzle/feature-api.png' },
-  { text: 'Realtime engine', icon: 'guides/introduction/1-what-is-kuzzle/feature-realtime.png' },
+  { text: 'Data storage and access', icon: 'guides/introduction/1-what-is-kuzzle/feature-data-storage.svg' },
+  { text: 'Advanced permission system', icon: 'guides/introduction/1-what-is-kuzzle/feature-acl.svg' },
+  { text: 'Multi authentication', icon: 'guides/introduction/1-what-is-kuzzle/feature-auth.svg' },
+  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'guides/introduction/1-what-is-kuzzle/feature-api.svg' },
+  { text: 'Realtime engine', icon: 'guides/introduction/1-what-is-kuzzle/feature-realtime.svg' },
   { text: 'Integrated cluster mode', icon: 'guides/introduction/1-what-is-kuzzle/feature-cluster.png' },
 ]"/>
 
