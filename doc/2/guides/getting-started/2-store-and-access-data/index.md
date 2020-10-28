@@ -1,27 +1,29 @@
 ---
 code: false
 type: page
-title: Storing and accessing Data
+title: Store and Access Data
 description: Create and retrieve documents
 order: 200
 ---
 
-# Storing and accessing Data
+# Store and Access Data
 
 Now that Kuzzle is running, we are going to create some documents.
 
 Kuzzle organizes the data storage in 4 levels: 
-  - indexes
-  - collections
-  - documents
-  - fields
+  - Indexes
+  - Collections
+  - Documents
+  - Fields
 
 An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.
 
-The collections have mappings that characterize the way Elasticsearch will index the data for the search.
+The **collections have mappings** that define the way Elasticsearch will index the data for searches.
 
 ::: info
+By default Elasticsearch will try to infer the type of the fields introduced by documents.  
 It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
+Learn more about [mappings dynamic policy](/core/2/some-link)
 :::
 
 If you're more familiar with the way relational databases store data, here is an analogy. Bear in mind that this is only to give you a rough point of comparison with a relational database, the similarities end here:
@@ -33,6 +35,12 @@ If you're more familiar with the way relational databases store data, here is an
 | schema                       | mappings                  |
 | line                         | document                  |
 | column                       | field                     |
+
+::: info
+Kuzzle uses Elasticsearch as a NoSQL document storage.  
+Elasticsearch is primarily designed to be a search engine, so there are limitations when using it as a database.  
+Learn more about those limitations in our in-depth guides: [Database mappings](/core/2/guides/some-link) and [Querying Elasticsearch](/core/2/guides/some-link)
+::: 
 
 ### Prepare the database
 
@@ -95,7 +103,7 @@ Select the `nyc-open-data` index and then the `yellow-taxi` collection. You shou
 
 ### Search for documents
 
-Kuzzle directly exposes Elasticsearch's query language in a secure way. 
+Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) in a secure way. 
 
 We'll now use that to search for the documents we're interested in.
 
@@ -204,6 +212,13 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 
 </details>
 
-Learn more about:
+::: info
+Going further:
   - [Database mappings](/core/2/guides/some-link)
-  - [Querying Elasticsearch]()(/core/2/guides/some-link).
+  - [Querying Elasticsearch](/core/2/guides/some-link)
+:::
+
+<GuidesLinks 
+  :prev="{ text: 'Run Kuzzle', url: '/core/2/guides/getting-started/1-run-kuzzle' }" 
+  :next="{ text: 'Set up Permissions', url: '/core/2/guides/getting-started/3-set-up-permissions' }" 
+/>
