@@ -550,9 +550,9 @@ final response = await kuzzle.query({
 
 ## Allow access to a custom Controller Action
 
-In the rights management system, role are managing access to API actions.  
+In the rights management system, **[roles](/core/2/some-link) are managing access to API actions**.  
 
-They operate on a whitelist principle by listing the controllers and actions they have access to.
+They operate on a whitelist principle by **listing the controllers and actions they have access to**.
 
 So, to allow access to the `greeting:sayHello` action, the following role can be written:
 
@@ -583,5 +583,5 @@ $ kourou security:createRole '{
 ```
 
 ::: info
-More info about the [Rights Management System](/core/2/some-link)
+More info about [Permissions](/core/2/some-link)
 :::
