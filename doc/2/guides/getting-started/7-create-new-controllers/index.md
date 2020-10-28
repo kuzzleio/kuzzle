@@ -1,17 +1,17 @@
 ---
 code: false
 type: page
-title: Add new Controller
+title: Create new Controllers
 description: Extends Kuzzle API with new actions
-order: 600
+order: 700
 ---
 
-# Add new Controller
+# Create new Controllers
 
-The Kuzzle API is composed of actions grouped in controllers.  
+The Kuzzle API is composed of **actions grouped in controllers**.  
 A controller is a logical container that groups several actions together.
 
-Each action receives a Kuzzle request in parameter and is in charge of returning a result which will be transmitted in the response.
+Each action receives a [Request object](/core/2/some-link) argument, and is in charge of returning a result which will be transmitted in the response.
 
 ## Register a new Controller
 
@@ -19,15 +19,18 @@ We are going to modify the `app.ts` file to register a controller to expose new 
 
 For this, we need to use the [Backend.controller.register](/core/2/some-link) method.
 
-This method takes the controller name and a [ControllerDefinition](/core/2/api/some-link) which defines the controller actions:
+::: info
+You can also declare [Controller class](/core/2/some-link) for a better code organization.  
+:::
 
+This method takes the controller name and a [ControllerDefinition](/core/2/api/some-link) which defines the controller actions:
 
 ```js
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async request => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.input.args.name}`
       }
     }
   }
@@ -35,12 +38,13 @@ app.controller.register('greeting', {
 ```
 
 The code above will register a `greeting` controller with a `sayHello` action.  
-This action uses the `name` argument from the request and returns a string.  
+We defined a handler function that uses the `name` argument from the request and returns a Promise resolving to a string.  
 
 ::: info
 Kuzzle will generate a default HTTP route of the following format if none is provided:   
 `GET /_/<controller-name>/<action-name>`  
-Controller name and action name will be converted to `kebab-case`.
+Controller names and action names are converted to `kebab-case` in auto-generated URLs.  
+See our in-depth guide to learn how to [declare your own HTTP routes](/core/2/some-link)
 :::
 
 We can now test our new action:
@@ -80,20 +84,36 @@ $ curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
 :::
 ::: tab WebSocket
 
-```js
+```bash
 $ npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
   "name": "Yagmur"
 }'
 
-{"requestId":"a6f4f5b6-1aa2-4cf9-9724-12b12575c047","status":200,"error":null,"controller":"greeting","action":"sayHello","collection":null,"index":null,"volatile":null,"result":"Hello, Yagmur","room":"a6f4f5b6-1aa2-4cf9-9724-12b12575c047"}
+{
+  "requestId": "a6f4f5b6-1aa2-4cf9-9724-12b12575c047",
+  "status": 200,
+  "error": null,
+  "controller": "greeting",
+  "action": "sayHello",
+  "collection": null,
+  "index": null,
+  "volatile": null,
+  "result": "Hello, Yagmur",
+  "room": "a6f4f5b6-1aa2-4cf9-9724-12b12575c047"
+}
 ```
 
 :::
 ::::
 
+::: info
+Going further:
+ - [API Controllers](/core/2/some-link)
+:::
 
-Learn more about:
- - [Registering and using controllers](/core/2/some-link)
- - [API Request format](/core/2/some-link)
+<GuidesLinks 
+  :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/6-write-application/' }" 
+  :next="{ text: 'Customize API Behavior', url: '/core/2/guides/getting-started/8-customize-api-behavior/' }" 
+/>
