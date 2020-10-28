@@ -116,19 +116,12 @@ Examples of hooks usage:
 
 ### Registering a hook
 
-We need to use the [Backend.pipe.register](/core/2/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
-
-Each event has a different payload.  
-The pipe handler function **must return a promise resolving to the received payload**.  
-
-::: info
-When an event has more than one payload then the first one must be returned. (e.g. [Generic Document Events](/core/2//core/2/some-link))
-:::
+We need to use the [Backend.hook.register](/core/2/some-link) method to register new hooks.   This method takes an event name as its first parameter, followed by the hook handler function.
 
 **Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to notify user registration_
 
 ```js
-app.pipe.register('security:afterCreateRestrictedUser', async (request: Request) => {
+app.hook.register('security:afterCreateRestrictedUser', async (request: Request) => {
   try {
     await app.sdk.realtime.publish('admin', 'new-user', request.context.user)
   }
@@ -143,7 +136,6 @@ app.pipe.register('security:afterCreateRestrictedUser', async (request: Request)
 When a hook handler function returns a rejected promise or throw an error then the [hook:onError](/core/2/some-link) is triggered.  
 
 Handler function attached to this event will receive the following arguments:
-
 | Arguments    | Type     | Description                                   |
 |--------------|----------|-----------------------------------------------|
 | `pluginName` | `String` | Application or plugin name                    |
@@ -151,7 +143,7 @@ Handler function attached to this event will receive the following arguments:
 | `error`      | `Error`  | Error object                                  |
 
 ```js
-app.pipe.register(
+app.hook.register(
   'hook:onError', 
   async (pluginName: string, event: string, error: Error) => {
     app.log.error(`Error occured on event "${event}": ${error}`)
