@@ -2,9 +2,8 @@
 code: false
 type: page
 title: Data Storage
-description: tbd
+description: Understand how to store documents
 order: 100
 ---
 
 # Data Storage
-
