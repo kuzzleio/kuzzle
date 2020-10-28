@@ -2,7 +2,7 @@
 code: false
 type: page
 title: Export and Import Data
-description: tbd
+description: Export and import data from Kuzzle. Backup and restore Kuzzle cluster.
 order: 600
 ---
 
