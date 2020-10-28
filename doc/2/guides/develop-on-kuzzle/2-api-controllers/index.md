@@ -430,7 +430,7 @@ app.controller.register('files', {
   actions: {
     csv: {
       handler: async request => {
-        const csv = 'name,age\naschen,27\ncener,28\n'
+        const csv = 'name,age\naschen,27\ncaner,28\n'
 
         request.setResult(null, {
           headers: {
@@ -453,7 +453,7 @@ $ curl localhost:7512/_/files/csv
 
 name,age
 aschen,27
-cener,28
+caner,28
 ```
 
 ## Use a custom Controller Action
@@ -531,6 +531,7 @@ const response = await kuzzle.query({
 ```
 
 :::
+
 ::: Dart
 
 Using the Dart SDK [Kuzzle.query](/sdk/dart/2/core-classes/kuzzle/query) method:
