@@ -41,7 +41,7 @@ describe('Test: security/userRepository', () => {
       token: tokenRepositoryMock,
     });
 
-    return userRepository.init({ indexStorage: kuzzle.internalIndex });
+    return userRepository.init();
   });
 
   describe('#anonymous', () => {

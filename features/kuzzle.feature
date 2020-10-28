@@ -103,6 +103,18 @@ Feature: Kuzzle functional tests
     Then I should receive a document id
     Then I'm able to get the document
 
+  @http
+  Scenario: Send a x-www-form-urlencoded message
+    When I create a document using an URL encoded form
+    Then I should receive a document id
+    Then I'm able to get the document
+
+  @http
+  Scenario: Send a multipart/form-data message
+    When I create a document using a multipart form
+    Then I should receive a document id
+    Then The multipart document was correctly created
+
   @validation
   Scenario: Publish a realtime message
     When I publish a message

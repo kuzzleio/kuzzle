@@ -58,3 +58,17 @@ Feature: Server Controller
     Then The property "services" of the result should match:
       | memoryStorage | "green" |
       | storageEngine | "green" |
+
+  # server:publicApi ========================================================================
+  @development @http
+  Scenario: Http call onto deprecated method should print a warning when NODE_ENV=development
+    When I execute the action "server":"publicApi"
+    Then The response should contains an array of "deprecations" in the response matching:
+      | version | message                       |
+      | "2.5.0" | "Use this route instead: http://kuzzle:7512/_openapi" |
+
+  # server:publicApi ========================================================================
+  @production @http
+  Scenario: Http call onto deprecated method should not print a warning when NODE_ENV=production
+    When I execute the action "server":"publicApi"
+    Then The response should contains a "deprecations" equals to undefined

@@ -1,14 +1,12 @@
 'use strict';
 
-const _ = require('lodash');
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
-const IndexStorageMock = require('./indexStorage.mock');
-const ClientAdapterMock = require('./clientAdapter.mock');
-
 const Kuzzle = require('../../lib/kuzzle');
-const config = require('../../lib/config');
+const configLoader = require('../../lib/config');
+
+const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
 
 const foo = { foo: 'bar' };
 
@@ -16,12 +14,14 @@ let _instance;
 
 class KuzzleMock extends Kuzzle {
   constructor () {
+    const config = configLoader.load();
+
     super(config);
 
     _instance = this;
 
     // we need a deep copy here
-    this.config = _.merge({}, config);
+    this.config = JSON.parse(JSON.stringify(config));
 
     // ========== EVENTS ==========
 
@@ -95,28 +95,7 @@ class KuzzleMock extends Kuzzle {
 
     this.shutdown = sinon.stub();
 
-    this.storageEngine = {
-      init: sinon.stub().resolves(),
-      indexCache: {
-        add: sinon.stub().resolves(),
-        remove: sinon.stub().resolves(),
-        exists: sinon.stub().resolves(),
-        listIndexes: sinon.stub().resolves(),
-        listCollections: sinon.stub().resolves()
-      },
-      public: new ClientAdapterMock(),
-      internal: new ClientAdapterMock(),
-      config: this.config.services.storageEngine
-    };
-
-    this.internalIndex = new IndexStorageMock(
-      'kuzzle',
-      this.storageEngine.internal);
-
-    this.internalIndex._bootstrap = {
-      startOrWait: sinon.stub().resolves(),
-      createInitialSecurities: sinon.stub().resolves()
-    };
+    this.internalIndex = new InternalIndexHandlerMock(this);
 
     this.passport = {
       use: sinon.stub(),
