@@ -382,3 +382,8 @@ There are multiple ways of adding a business logic layer on top of the standard 
 ::: info
 More information about dynamic rules with pipes: [Event System](/core/2/some-link)
 ::: 
+
+## Load permissions
+
+admin controller
+kaaf
