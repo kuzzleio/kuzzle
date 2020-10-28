@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Kuzzle Event System
+title: Event System
 description: Interact with Internal Events
 order: 300
 ---
 
-# Kuzzle Event System
+# Event System
 
 Most of the **internal tasks performed by Kuzzle trigger events**.
 
@@ -54,7 +54,7 @@ Each event has a different payload.
 The pipe handler function **must return a promise resolving to the received payload**.  
 
 ::: info
-When an event has more than one payload then the first one must be returned. (e.g. [Generic Events](guides/develop-on-kuzzle/3-kuzzle-event-system#generic-events))
+When an event has more than one payload then only the first argument of the handler function must be returned. (e.g. [Generic Document Events](/core/2/some-link))
 :::
 
 **Example:** _Changing the result of the [server:now](/core/2/api/controllers/server/now) API action_
@@ -95,7 +95,7 @@ app.pipe.register(
 ```
 
 ::: info
-[Generic Document Events](/core/2/guides/develop-on-kuzzle/3-kuzzle-event-system#generic-document-events) have a payload consisting of two arguments: an array of documents and the original [Request object](/core/2/some-link)
+[Generic Document Events](/core/2/core/2/some-link) have a payload consisting of two arguments: an array of documents and the original [Request object](/core/2/some-link)
 :::
 
 ## Hooks
@@ -122,7 +122,7 @@ Each event has a different payload.
 The pipe handler function **must return a promise resolving to the received payload**.  
 
 ::: info
-When an event has more than one payload then the first one must be returned. (e.g. [Generic Events](/core/2/guides/develop-on-kuzzle/3-kuzzle-event-system#generic-events))
+When an event has more than one payload then the first one must be returned. (e.g. [Generic Document Events](/core/2//core/2/some-link))
 :::
 
 **Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to notify user registration_

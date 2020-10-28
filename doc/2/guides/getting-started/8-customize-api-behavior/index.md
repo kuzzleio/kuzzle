@@ -8,7 +8,7 @@ order: 800
 
 # Customize the API Behavior
 
-<!-- Duplicate with guides/develop-on-kuzzle/3-kuzzle-event-system -->
+<!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
 
 Kuzzle allows to modify API actions behavior with a **very precise middleware-like system**.  
 
@@ -56,7 +56,7 @@ Be careful to only use documented events. Some events are for internal use and a
 
 ## Plugging to events with Pipes
 
-<!-- Duplicate with guides/develop-on-kuzzle/3-kuzzle-event-system -->
+<!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
 
 Pipes are **functions plugged to events**, called **synchronously** by Kuzzle, and **receiving information** regarding that event.
 
@@ -72,14 +72,14 @@ Each event carries a different payload. **This payload must be returned by the p
 
 ### Registering a pipe
 
-<!-- Duplicate with guides/develop-on-kuzzle/3-kuzzle-event-system -->
+<!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
 
 We need to use the [Backend.pipe.register](/core/2/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
 
 In this example, we are going to change the return value of the `server:now` action to make it return a formatted date string instead of a UNIX timestamp:
 
 ```js
-app.pipe.register('server:afterNow', async request => {
+app.pipe.register('server:afterNow', async (request: Request) => {
   request.result.now = (new Date()).toUTCString()
 
   return request
@@ -109,8 +109,7 @@ $ kourou server:now
 
 ::: info
 Going further:
- - [Kuzzle Event System](/core/2/api/some-links)
- - [Execute asynchronous action with hooks](/core/2/some-link)
+ - [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
 :::
 
 <GuidesLinks
