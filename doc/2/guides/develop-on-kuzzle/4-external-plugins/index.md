@@ -8,11 +8,11 @@ order: 400
 
 # External Plugins
 
-Kuzzle allows to add **whole set of features via plugins**.
+You can **extend Kuzzle's features** via plugins.
 
-Plugins are **intended to be reused** between several applications by proposing generic functionalities.
+Plugins are **intended to be reused** between several applications by proposing generic features.
 
-There are 3 categories of functionalities for plugins:
+Plugins allow you to achieve three main goals:
  - extension and modification of the API
  - integration of an authentication strategy
  - integration of a network protocol
