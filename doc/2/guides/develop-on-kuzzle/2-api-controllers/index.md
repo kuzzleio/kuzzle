@@ -533,7 +533,6 @@ const response = await kuzzle.query({
 ```
 
 :::
-
 ::: tab Dart
 
 Using the Dart SDK [Kuzzle.query](/sdk/dart/2/core-classes/kuzzle/query) method:
