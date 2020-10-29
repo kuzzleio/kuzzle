@@ -520,7 +520,7 @@ More info about [Kourou](/core/2/some-link).
 From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [Request Payload](/core/2/some-link) as a parameter.
 
 :::: tabs
-::: Javascript
+::: tab Javascript
 
 Using the Javascript SDK [Kuzzle.query](/sdk/js/7/core-classes/kuzzle/query) method:
 
@@ -534,7 +534,7 @@ const response = await kuzzle.query({
 
 :::
 
-::: Dart
+::: tab Dart
 
 Using the Dart SDK [Kuzzle.query](/sdk/dart/2/core-classes/kuzzle/query) method:
 
