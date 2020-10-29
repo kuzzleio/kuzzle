@@ -10,9 +10,7 @@ order: 300
 
 Most of the **internal tasks performed by Kuzzle trigger events**.
 
-These events allow to **perform additional** actions and even to **modify their behavior**.  
-
-Kuzzle provides two mechanisms to connect to events, **pipes** and **hooks**.
+Kuzzle enables to attach business-logic to these events by defining **hooks** (which allow to perform additional actions when the event triggers) and **pipes** (which change the behavior of the standard logic when the event triggers).
 
 ::: info
 The complete list of events is available here: [Internal Events List](/core/2/some-link)
@@ -24,7 +22,7 @@ The complete list of events is available here: [Internal Events List](/core/2/so
 
 Kuzzle allows to modify API actions behavior with a **very precise middleware-like system**.  
 
-This system makes it possible to **modify the execution flow of requests** processed by Kuzzle.
+This system allows to **modify the execution flow of requests** processed by Kuzzle.
 
 Pipes are **functions plugged to events**, called **synchronously** by Kuzzle, and **receiving information** regarding that event.
 
@@ -37,7 +35,9 @@ Pipes can:
 ::: warning
 Each event carries a different payload. **This payload must be returned by the pipe function** so Kuzzle can continue its execution process.
 :::
-
+::: warning
+The execution order of the pipes is decided by Kuzzle at runtime. Your pipes should be independent from one another.
+:::
 Examples of pipes usage:
  - [dynamic right restrictions](/core/2/some-link)
  - [synchronize with another database](/core/2/some-link)
@@ -107,7 +107,7 @@ Hooks are **functions plugged to events**, called **asynchronously** by Kuzzle, 
 ![hook workflow](./hooks-workflow.png)
 
 ::: info
-In general hooks are used to perform background tasks who may slow the request execution process.
+In general hooks are used to perform background tasks which may slow down the request execution process.
 :::
 
 Examples of hooks usage:
