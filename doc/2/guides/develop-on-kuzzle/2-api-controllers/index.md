@@ -433,10 +433,12 @@ app.controller.register('files', {
         const csv = 'name,age\naschen,27\ncaner,28\n'
 
         request.setResult(null, {
+          raw: true,
           headers: {
-            'content-type': 'text/csv'
-          },
-          raw: true
+            'Content-Length': csv.length.toString(),
+            'Content-Type': 'text/csv',
+            'Content-Disposition': 'attachment; filename="export.csv"'
+          }
         })
 
         return csv
