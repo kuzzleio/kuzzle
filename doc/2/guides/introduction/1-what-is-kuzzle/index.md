@@ -51,40 +51,35 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
     <div class="IconTable-item-text">
       Data storage and access
     </div>
-  </div> 
-  <div class="IconTable-item">
+  </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-acl.svg"/>
     </div>
     <div class="IconTable-item-text">
       Advanced permission system
     </div>
-  </div>
-  <div class="IconTable-item">
+  </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-auth.svg"/>
     </div>
     <div class="IconTable-item-text">
       Multi authentication
     </div>
-  </div>
-  <div class="IconTable-item">
+  </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-api.svg"/>
     </div>
     <div class="IconTable-item-text">
       Multi protocol API (Http, WebSocket, MQTT)
     </div>
-  </div>
-  <div class="IconTable-item">
+  </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-realtime.svg"/>
     </div>
     <div class="IconTable-item-text">
       Realtime engine
     </div>
-  </div>
-  <div class="IconTable-item">
+  </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-cluster.svg"/>
     </div>
