@@ -27,7 +27,7 @@ The process is as follows:
 
 ![kuzzle-pub-sub](./pub-sub.png)
 
-Subscription to a room is done via the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) method. It takes 3 parameters, used to describe a specific room:
+Subscription to a room is done via the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) method. It takes 3 parameters, used to **describe a specific room**:
  - Name of an index,
  - Name of a collection,
  - Subscription filters contained in the `body` of the request.
@@ -37,18 +37,6 @@ In order to use Kuzzle in Pub/Sub mode only, the index and collection do not nee
 <br/>
 These information are only used to define an **ephemeral room** between several clients.
 :::
-
-```json
- {
-   "controller": "realtime",
-   "action": "subscribe",
-   "index": "nyc-open-data",
-   "collection": "yellow-taxi",
-   "body": {
-     // Subscription filters
-   }
- }
-```
 
 First, subscribe to realtime notifications:
 
@@ -71,24 +59,6 @@ $ kourou realtime:subscribe nyc-open-data yellow-taxi
 
 Then clients wishing to post messages in this room must use the [realtime:publish](/core/2/api/controllers/realtime/publish) method by specifying the same index and collection names:
 
-```json
- {
-   "controller": "realtime",
-   "action": "publish",
-   "index": "nyc-open-data",
-   "collection": "yellow-taxi",
-   "body": {
-     "name": "Manwë",
-     "licence": "B",
-     "car": "berline",
-     "position": {
-        "lat": 43.6073913,
-        "lon": 3.9109057
-     }
-   }
- }
-```
-
 Then you can also use [Kourou](/core/2/some-link) in another terminal to publish a message:  
 ```bash
 $ kourou realtime:publish nyc-open-data yellow-taxi '{
@@ -102,7 +72,7 @@ $ kourou realtime:publish nyc-open-data yellow-taxi '{
   }'
 ```
 
-Customers subscribing to this channel will receive the following notification:
+Clients subscribing to this channel will receive the following notification:
 
 <details><summary>Click to expand</summary>
 <pre>
@@ -110,7 +80,11 @@ Customers subscribing to this channel will receive the following notification:
   "status": 200,
   "requestId": "644bc890-9c14-4a8f-afcc-afef444fd6f7",
   "timestamp": 1558690506519,
-  "volatile": null,
+  "volatile": {
+    "client":"kourou@0.16.0",
+    "sdkInstanceId":"4640598e-41d5-4145-9386-439d4394f96f",
+    "sdkName":"js@7.4.1"
+  },
   "index": "nyc-open-data",
   "collection": "yellow-taxi",
   "controller": "realtime",  // Controller who trigger the notification
@@ -165,18 +139,6 @@ The specified index and collection **must exist in the database** to receive dat
 
 When changes occur on this collection (eg: document creation, modification or deletion), Kuzzle will send notifications to the corresponding subscribers.
 
-```json
- {
-   "controller": "realtime",
-   "action": "subscribe",
-   "index": "nyc-open-data",
-   "collection": "yellow-taxi",
-   "body": {
-     // subscription filters
-   }
- }
-```
-
 First, we need to create the index and the collection and then subscribe to database notifications:
 
 ```bash
@@ -195,21 +157,8 @@ $ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
 
 Creating a document with the [document:create](/core/2/api/controllers/document/create) method corresponds to a change in the database, so **clients subscribing to notifications in this collection will be notified**.
 
-```json
-{
-  "controller": "document",
-  "action": "create",
-  "index": "nyc-open-data",
-  "collection": "yellow-taxi",
-  "body": {
-    "name": "Morgoth",
-    "car": "limousine",
-    "licence": "B"
-  }
-}
-```
 
-Then, you can create a document with [Kourou](/core/2/some-link)
+Create a document with [Kourou](/core/2/some-link) to trigger a Database Notification:
 ```bash
 $ kourou document:create nyc-open-data yellow-taxi '{
     controller: "document",
@@ -224,7 +173,7 @@ $ kourou document:create nyc-open-data yellow-taxi '{
   }'
 ```
 
-Customers subscribing to the changes in this collection will receive the following notification:
+Clients subscribing to changes in this collection will receive the following notification:
 
 <details><summary>Click to expand</summary>
 <pre>
@@ -233,7 +182,7 @@ Customers subscribing to the changes in this collection will receive the followi
   "requestId": "556e8499-8edc-488c-ab7c-2f6aa9d12acd",
   "timestamp": 1558781280054,
   "volatile": {
-    "client":"Kourou@0.16.0",
+    "client":"kourou@0.16.0",
     "sdkInstanceId":"4640598e-41d5-4145-9386-439d4394f96f",
     "sdkName":"js@7.4.1"
   },
@@ -308,6 +257,10 @@ It is also possible to combine [terms](/core/2/guides/cookbooks/realtime-api/ter
   }
 }
 ```
+
+::: info
+More info about [subscription filters terms and operands](/core/2/some-link)
+:::
 
 Each subscription filter **defines a scope**. All documents in the collection can be either **inside or outside this scope**.
 
@@ -400,16 +353,24 @@ This parameter can take 4 values:
    "collection": "yellow-taxi",
    "body": {
    },
-   "user": "all" // Receive notification when a user enters or exits the room
+   "user": "all" 
  }
 ```
 
 Payload to send with wscat:
-```json
-{"controller":"realtime","action":"subscribe","index":"nyc-open-data","collection":"yellow-taxi","body":{},"users":"all"}
+```bash
+# Use the "users" option to receive notification when a user enters or exits the room
+$ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
+  "controller": "realtime",
+  "action": "subscribe",
+  "index": "nyc-open-data",
+  "collection": "yellow-taxi",
+  "body": {},
+  "users": "all" 
+}'
 ```
 
-If a second client subscribes to the same notifications, then the client will receive the following notification:
+If a second client subscribes to the same notifications, then the first client will receive the following notification:
 
 <details><summary>Click to expand</summary>
 <pre>
@@ -440,20 +401,6 @@ More information about the [User Notification format](/core/2/api/essentials/not
 
 When a request containing volatile data triggers a realtime notification, these **volatile data are included in the notification that will be sent** to the subscribing clients.
 
-For example, if a client subscribes to the following notifications:
-
-```json
- {
-   "controller": "realtime",
-   "action": "subscribe",
-   "index": "nyc-open-data",
-   "collection": "yellow-taxi",
-   "body": {
-     // subscription filters
-   }
- }
-```
-
 First, subscribe to realtime notifications:
 ```bash
 $ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
@@ -465,25 +412,7 @@ $ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
 }'
 ```
 
-If another client publishes a message in the room specifying volatile data:
-
-```json
- {
-   "controller": "realtime",
-   "action": "publish",
-   "index": "nyc-open-data",
-   "collection": "yellow-taxi",
-   "body": {
-     "name": "Ulmo",
-     "licence": "B"
-   },
-   "volatile": {
-     "senderName": "Eru Ilúvatar"
-   }
- }
-```
-
-Then, in another terminal you can send this payload
+Then, in another terminal you can publishes a message in the room specifying volatile data:
 ```bash
 $ npx wscat -c ws://localhost:7512 --wait 300 --execute ' {
    "controller": "realtime",
