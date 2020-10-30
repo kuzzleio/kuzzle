@@ -15,9 +15,9 @@ This API uses the **JSON format** to communicate with a **standardized request a
 ## Multi Protocol
 
 The Kuzzle API is accessible by default through 3 protocols:
- - HTTP
- - WebSocket
- - MQTT
+ - [HTTP](/core/2/api/api-protocols/1-http)
+ - [WebSocket]((/core/2/api/api-protocols/2-websocket))
+ - [MQTT](/core/2/api/api-protocols/3-mqtt)
 
 Each protocol has advantages and disadvantages. The choice of a protocol must therefore be adapted to a situation and a use.
 
