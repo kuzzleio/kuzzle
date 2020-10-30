@@ -1,10 +1,10 @@
 ---
 code: false
 type: page
-title: Querying
+title: Core Modules
 description: tbd
 order: 200
 ---
 
-# Querying
+# Core Modules
 

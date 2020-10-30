@@ -3,7 +3,7 @@ code: false
 type: page
 title: Permissions
 description: Configure fine-grained permissions to your data and features
-order: 300
+order: 400
 ---
 
 <!-- need rewrite -->
