@@ -295,9 +295,9 @@ Example:
 
 Users can be assigned multiple profiles. These profiles will give them access to API actions via roles and their access will be limited by any restrictions defined in the profiles.
 
-Users are internal documents stored by Kuzzle. They contain two properties:
- - `content`: profiles list and custom content
- - `credentials`: available authentication credentials
+Users are internal documents divided into two properties:
+ - `content`: profiles list and custom content (stored by Kuzzle)
+ - `credentials`: available authentication credentials (stored by [Authentication Plugins](/core/2/guides/write-plugins/3-integrate-authentication-strategy))
 
 ::: warning
 The information contained in the `credentials` property are never returned and can only be accessed by the plugin that added the associated [authentication strategy](/core/2/guides/write-plugins/3-integrate-authentication-strategy).
