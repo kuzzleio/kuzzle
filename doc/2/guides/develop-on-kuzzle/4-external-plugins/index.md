@@ -12,12 +12,15 @@ Kuzzle allows to add **whole set of features via plugins**.
 
 Plugins are **intended to be reused** between several applications by proposing generic functionalities.
 
-There are 3 categories of functionalities for plugins:
+There are 2 categories of functionalities for plugins:
  - extension and modification of the API
  - integration of an authentication strategy
- - integration of a network protocol
 
-These feature categories are not exclusive and although it is not recommended, a plugin can embed features belonging to the 3 categories.
+These feature categories are not exclusive and although it is not recommended, a plugin can embed features belonging to the 2 categories.
+
+::: info
+New network protocols can also be integrated to Kuzzle API by writting a [Protocol](/core/2/some-link).
+::: 
 
 ## Inside a plugin
 
@@ -29,12 +32,11 @@ They can create new controllers or register pipes and hooks like applications.
 The controllers registered by the plugins are prefixed by the plugin name in order to avoid any conflict.
 :::
 
-In addition to the standard features available in an application, plugins can also integrate [authentication strategies](/core/2/some-link) and [network protocols](/core/2/some-link).
+In addition to the standard features available in an application, plugins can also integrate [authentication strategies](/core/2/some-link).
 
 ::: info
 More information about features available to plugins: [Write Plugins](/core/2/guides/write-plugins)
 :::
-
 
 ## Use a plugin
 
