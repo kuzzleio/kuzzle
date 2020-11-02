@@ -18,7 +18,7 @@ You can think of a **profile as a group of users that share the same permissions
 The **profiles** themselves are made up of **different groups of permissions**, these groups are called roles.
 
 A profile is linked to a set of roles, and each role defines a set of permissions.  
-For example, in the diagram below, the `editor` profile is has all permissions, the `contributor` has a subset of the permissions, and the `default` profile has only default permissions:
+For example, in the diagram below, the `editor` profile has all permissions, the `contributor` has fewer permissions, and the `default` profile has only default permissions:
 
 ![Users, Profiles and Roles](./profiles-roles.png)
 
@@ -34,7 +34,7 @@ To secure your application you will need to create an administrator account by u
 
 ::: info
 The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.  
-The `reset` option allows to restrict `anonymous` default rights in the same time.
+The `reset` option allows to restrict `anonymous` default rights at the same time.
 :::
 
 ```bash
@@ -57,7 +57,7 @@ You can then use the [Admin Console](http://console.kuzzle.io) or Kuzzle API to 
 
 ## Roles
 
-Les roles permettent de définir une liste d'action d'API qui seront authorisées.
+A role details a set of allowed API actions.
 
 A **role can be defined using a hierarchical JSON object** where permissions are outlined by `controller` and `action`.
 
@@ -101,7 +101,7 @@ As an example, below is the role definition that Kuzzle uses to request authoriz
 
 ```
 
-In the above role definition, anonymous users can perform the following actions [auth:login](/core/2/api/controllers/auth/login), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and [auth:getMyRights](/core/2/api/controllers/auth/get-my-rights).
+In the above role definition, anonymous users can perform the following actions: [auth:login](/core/2/api/controllers/auth/login), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and [auth:getMyRights](/core/2/api/controllers/auth/get-my-rights).
 
 ::: info
 Default roles and profiles used once the administrator account is created with the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action can be configured under the [security.default](/core/2/guides/advanced/8-configuration) configuration key.
@@ -293,7 +293,7 @@ Example:
 
 ## Users
 
-Users can be assigned multiple profiles. These profiles will give them access to API actions via roles and their access will be limited by any restrictions defined in the profiles.
+Users can have multiple profiles assigned to them. These profiles will give them access to API actions via roles, and their access will be limited by any restrictions defined in the profiles.
 
 Users are internal documents stored by Kuzzle. They contain two properties:
  - `content`: profiles list and custom content
@@ -340,7 +340,7 @@ Those data must be stored in the `content` property alongside the profile list:
 ```
 
 ::: info
-As any other collection, the `users` collection has an associated mapping who can be edited using the [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping/) API action.
+As any other collection, the `users` collection has an associated mapping that can be edited using the [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping/) API action.
 :::
 
 ### Associated API actions
