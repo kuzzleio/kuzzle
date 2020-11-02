@@ -8,11 +8,11 @@ order: 400
 
 # External Plugins
 
-Kuzzle allows to add **whole set of features via plugins**.
+You can **extend Kuzzle's features** via plugins.
 
-Plugins are **intended to be reused** between several applications by proposing generic functionalities.
+Plugins are **intended to be reused** between several applications by proposing generic features.
 
-There are 2 categories of functionalities for plugins:
+Plugins allow you to achieve two main goals:
  - extension and modification of the API
  - integration of an authentication strategy
 
@@ -69,5 +69,5 @@ app.plugin.use(new PluginS3(), { name: 'minio' })
 ```
 
 ::: info
-Existing Kuzzle plugins can be found under the [kuzzle-plugin](https://github.com/topics/kuzzle-plugin) Github topic.
+Existing Kuzzle plugins may be found under the [kuzzle-plugin](https://github.com/topics/kuzzle-plugin) Github topic.
 :::
