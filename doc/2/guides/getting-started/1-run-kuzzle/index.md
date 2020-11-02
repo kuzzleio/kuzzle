@@ -38,10 +38,14 @@ First, we will initialize a new application using Kourou:
 ```bash
 $ kourou app:scaffold playground
  
- 🚀 Kourou - Scaffolds a new Kuzzle application
+  🚀 Kourou - Scaffolds a new Kuzzle application
  
- [ℹ] Scaffold a new Kuzzle application in playground/
- [✔] Scaffolding complete. Start to develop you application in ./playground/
+  ✔ Creating "playground/" directory
+  ✔ Creating and rendering application files
+  ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
+
+ [✔] Scaffolding complete! Use "npm run dev:docker" to run your application
+
 ```
 
 This will create the following files and directories:
@@ -76,9 +80,7 @@ app.start()
   .catch(console.error)
 ```
 
-First we need to install Kuzzle dependencies directly with Docker: `npm run install:docker`.
-
-Then, we can run our first application with `npm run dev:docker`
+We can now run our first application with `npm run dev:docker`
 
 ::: info
 Under the hood, the command `npm run dev:docker` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) inside the Docker container to run the application.
