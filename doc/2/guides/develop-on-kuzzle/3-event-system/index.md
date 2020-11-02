@@ -79,6 +79,8 @@ When the pipe handler function returns a rejected promise, Kuzzle abort the curr
 
 If the error is one of the [available default errors](/core/2/some-link) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginInternalError](/core/2/some-link).
 
+<!-- @todo throw an internal kuzzle error and not a default one -->
+
 **Example:** _Limit reading access to documents to their creator_
 ```js
 app.pipe.register(
@@ -86,7 +88,7 @@ app.pipe.register(
     async (documents: Document[], request: Request) => {
       for (const document of documents) {
         if (request.context.user._id !== document._source._kuzzle_info.creator) {
-          throw new Error('Unauthorized access')
+          throw new app.kerror.ForbiddenError('Unauthorized access')
         }
       }
 
