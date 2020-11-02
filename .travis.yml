@@ -58,7 +58,7 @@ jobs:
     # Unit Tests & Linters
     # ---------------------------------------
     - stage: Unit Tests & Linters
-      name: Node 12.16.3 - Unit Tests & ESLint
+      name: Node 12.16.3 - Unit Tests
       os: linux
       language: node_js
       cache: npm
@@ -66,13 +66,25 @@ jobs:
       install:
         - npm ci --silent
       script:
-        - npm run --silent test:lint
         - npm run test:unit:coverage
       after_script:
         - npm run codecov
 
     - stage: Unit Tests & Linters
-      name: Node 12.18.1 - Unit Tests & ESLint
+      name: Node 12.18.1 - Unit Tests
+      os: linux
+      language: node_js
+      cache: npm
+      node_js: 12.18.1
+      install:
+        - npm ci --silent
+      script:
+        - npm run test:unit:coverage
+      after_script:
+        - npm run codecov
+
+    - stage: Unit Tests & Linters
+      name: Node 12.18.1 - ESLint
       os: linux
       language: node_js
       cache: npm
@@ -81,9 +93,6 @@ jobs:
         - npm ci --silent
       script:
         - npm run --silent test:lint
-        - npm run test:unit:coverage
-      after_script:
-        - npm run codecov
 
     - stage: Unit Tests & Linters
       name: SonarCloud
