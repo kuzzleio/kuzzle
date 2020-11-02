@@ -14,7 +14,7 @@ These actions are then **processed like any other API action** and can be execut
 
 ## Add a new Controller
 
-Each controller can therefore have several actions. Each of these **actions is associated with a function** called [handler](/core/2/guides/develop-on-kuzzle/2-api-controllers#action-handler).
+Each controller can therefore have several actions. Each of these **actions is associated with a function** called [handler](/core/2/guides/develop-on-kuzzle/2-api-controllers#handler-function).
 
 ::: info
 The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/some-link) interface.  
