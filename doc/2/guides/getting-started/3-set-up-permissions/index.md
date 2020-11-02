@@ -73,7 +73,7 @@ $ kourou security:createRole '{
 
 
 
-You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://console.kuzzle.io)
+You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://next-console.kuzzle.io)
 
 ![Admin Console roles display](./admin-console-roles.png)
 
@@ -95,7 +95,7 @@ This will use the [security:createProfile](/core/2/api/controllers/security/crea
 
 Now we have a `dummy` profile which gives access to the API actions allowed by the `dummy` role.
 
-You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://console.kuzzle.io)
+You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://next-console.kuzzle.io)
 
 ![Admin Console profiles display](./admin-console-profiles.png)
 
@@ -124,7 +124,7 @@ This will use the [security:createUser](/core/2/api/controllers/security/create-
 :::
 
 
-You should see your newly created role in the `Security > Users` section of the [Admin Console](http://console.kuzzle.io)
+You should see your newly created role in the `Security > Users` section of the [Admin Console](http://next-console.kuzzle.io)
 
 ![Admin Console users display](./admin-console-users.png)
 
@@ -215,11 +215,6 @@ $ kourou security:updateRole '{
 ```
 
 This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
-:::
-
-::: info
-Going further:
-  - [Rights management](/core/2/some-link)
 :::
 
 <GuidesLinks 

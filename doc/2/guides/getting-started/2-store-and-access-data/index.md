@@ -95,7 +95,7 @@ $ kourou document:create nyc-open-data yellow-taxi '{
 This will use the [document:create](/core/2/api/controllers/document/create) API action.
 :::
 
-Finally, we are going to use the [Admin Console](http://console.kuzzle.io) to look at what we have created.
+Finally, we are going to use the [Admin Console](http://next-console.kuzzle.io) to look at what we have created.
 
 Select the `nyc-open-data` index and then the `yellow-taxi` collection. You should see one document in this collection.
 
@@ -211,12 +211,6 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 ```
 
 </details>
-
-::: info
-Going further:
-  - [Database mappings](/core/2/guides/some-link)
-  - [Querying Elasticsearch](/core/2/guides/some-link)
-:::
 
 <GuidesLinks 
   :prev="{ text: 'Run Kuzzle', url: '/core/2/guides/getting-started/1-run-kuzzle' }" 
