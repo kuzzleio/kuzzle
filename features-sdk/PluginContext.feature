@@ -39,10 +39,26 @@ Feature: Plugin context
       | body       | {}         |
     Then I should have receive "1" notifications for "test":"answer"
     # should not be subscribed anymore
+    # (see the hook 'kuzzle:state:live' in the plugin)
     When I successfully execute the action "realtime":"publish" with args:
       | index      | "test"     |
       | collection | "question" |
       | body       | {}         |
+    # check that no new notification has been received
     Then I should have receive "1" notifications for "test":"answer"
 
-  # @todo add cluster tests
+  # accessors.realtime.registerSubscription ===================================
+  @realtime
+  Scenario: Register and unregister a new subscription
+    Given a collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "functional-test-plugin/accessors":"registerSubscription"
+    Then I should receive a result matching:
+      | acknowledged | "OK" |
+    And The result should contain a property "roomId" of type "string"
+    And The result should contain a property "connectionId" of type "string"
+    When I unsubscribe from the current room via the plugin
+    Then I should receive a result matching:
+      | acknowledged | "OK" |
+
+
+# @todo add cluster tests

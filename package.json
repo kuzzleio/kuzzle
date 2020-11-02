@@ -7,6 +7,7 @@
     "kuzzle": "./bin/start-kuzzle-server"
   },
   "scripts": {
+    "start:dev": "node docker/scripts/reloader.js --inspect=0.0.0.0:9229 -r ts-node/register docker/scripts/start-kuzzle-dev.ts --enable-plugins functional-test-plugin",
     "prepublishOnly": "npm run build",
     "build": "npm run build-ts",
     "build-ts": "tsc",

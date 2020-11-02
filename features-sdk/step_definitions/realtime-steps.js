@@ -22,6 +22,22 @@ Then('I subscribe to {string}:{string} notifications', async function (index, co
   };
 });
 
+Then('I unsubscribe from the current room via the plugin', async function () {
+  const roomId = this.props.result.roomId;
+  const connectionId = this.props.result.connectionId;
+  
+  const response = await this.sdk.query({ 
+    controller: 'functional-test-plugin/accessors',
+    action: 'unregisterSubscription',
+    body: {
+      roomId,
+      connectionId
+    }
+  });
+
+  this.props.result = response.result;
+});
+
 Then('I should have receive {string} notifications for {string}:{string}', function (rawNumber, index, collection) {
   const expectedCount = parseInt(rawNumber, 10);
 
