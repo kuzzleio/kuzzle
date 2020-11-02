@@ -102,7 +102,7 @@ app.pipe.register(
 
 ## Hooks
 
-Kuzzle allows to execute additional tasks upon events with **very precise middleware-like system**.  
+Kuzzle allows to execute additional logic upon events.  
 
 Hooks are **functions plugged to events**, called **asynchronously** by Kuzzle, and **receiving information** regarding that event.
 
