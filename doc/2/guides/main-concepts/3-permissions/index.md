@@ -6,8 +6,6 @@ description: Configure fine-grained permissions to your data and features
 order: 300
 ---
 
-<!-- need rewrite -->
-
 # Permissions
 
 Kuzzle provides a full set of functionalities to configure fine-grained permissions to your data and features.
@@ -385,5 +383,91 @@ More information about dynamic rules with pipes: [Event System](/core/2/some-lin
 
 ## Load permissions
 
-admin controller
-kaaf
+### Kourou
+
+It is possible to load a set of permission definitions containing roles, profiles and users with the [admin:loadSecurities](/core/2/api/controllers/admin/load-securities) action.  
+
+The permissions definition format is the following:
+
+```js
+{
+  "roles": {
+    "role-id": {
+      /* role definition */
+    }
+  },
+  "profiles": {
+    "profile-id": {
+      /* profile definition */
+    }
+  },
+  "users": {
+    "user-id": {
+      /* user definition */
+    }
+  }
+}
+```
+
+<!-- Duplicate section with /core/2/api/controllers/admin/load-securities -->
+
+The roles, profiles and users definitions follow the same structure as in the body parameter of their corresponding API actions:
+
+ - [security:createRole](/core/2/api/controllers/security/create-role)
+ - [security:createProfile](/core/2/api/controllers/security/create-profile)
+ - [security:createUser](/core/2/api/controllers/security/create-user)
+
+::: warning
+By default, Kuzzle prevents existing user overwriting.  
+You can either skip or overwrite existing users with the `onExistingUsers` option.
+:::
+
+<details><summary>Load permissions with Kourou</summay>
+
+First, create a file `permissions.json` with the permissions definition in JSON format:
+
+```js
+// permissions.json
+{
+  "roles": {
+    "driver": {
+      "controllers": {
+        "auth": {
+          "actions": {
+            "*": "*"
+          }
+        }
+      }
+    }
+  },
+
+  "profiles": {
+    "driver": {
+      "policies": [
+        { "roleId": ["driver"] }
+      ]
+    }
+  },
+
+  "users": {
+    "aschen": {
+      "content": {
+        "profileIds": ["driver"]
+      }
+    }
+  }
+}
+```
+
+Then use Kourou to execute the [admin:loadSecurities](/core/2/api/controllers/admin/load-securities) action:
+
+```bash
+$ kourou admin:loadSecurities < permissions.json
+```
+
+::: info
+Kourou can read an API action body content from the standard output.
+:::
+
+
+</details>
