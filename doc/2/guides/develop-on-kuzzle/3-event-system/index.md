@@ -75,9 +75,9 @@ This warning can be configured under the [plugins.pipeWarnTime](/core/2/main-con
 
 ### Aborting a task
 
-When the pipe handler function returns a rejected promise, Kuzzle abort the current task.
+When the pipe handler function returns a rejected promise or throws an error, Kuzzle aborts the current task.
 
-If the error is one of the [available default errors](/core/2/some-link) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginInternalError](/core/2/some-link).
+If the error is one of the [available default errors](/core/2/some-link) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/some-link) error.
 
 **Example:** _Limit reading access to documents to their creator_
 ```js
@@ -107,7 +107,7 @@ Hooks are **functions plugged to events**, called **asynchronously** by Kuzzle, 
 ![hook workflow](./hooks-workflow.png)
 
 ::: info
-In general hooks are used to perform background tasks which may slow down the request execution process.
+In general, hooks are used to perform background tasks which may otherwise slow down the request execution process.
 :::
 
 Examples of hooks usage:
