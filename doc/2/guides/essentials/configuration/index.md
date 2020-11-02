@@ -21,7 +21,7 @@ You can write your custom config parameters in a `.kuzzlerc` and store it in `$H
 ```json
 {
   "services": {
-    "db": {
+    "storageEngine": {
       "client": {
         "host": "http://localhost:9200",
         "apiVersion": "5.4"
@@ -58,7 +58,7 @@ services:
       - redis
       - elasticsearch
     environment:
-      - kuzzle_services__db__client__host=http://elasticsearch:9200
+      - kuzzle_services__storageEngine__client__host=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
       - NODE_ENV=production
