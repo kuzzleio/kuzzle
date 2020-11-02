@@ -262,7 +262,7 @@ If a user has several profiles with rate limits, the most permissive limit appli
 :::
 
 ::: warning
-Since unauthenticated users share the same user identifier, a rate limit set on the `anonymous` profile is applied to **all anonymous requests cumulated**, per second and per node. Except for the `auth:login` route, which is statically controlled in Kuzzle's configuration files.
+Since unauthenticated users share the same user identifier, a rate limit set on the `anonymous` profile is applied to **all anonymous requests cumulated**, per second and per node. Except for the `auth:login` route, which is handled separately to allow users to log in to their account even if Kuzzle gets overloaded by anonymous requests.
 :::
 
 Example:
