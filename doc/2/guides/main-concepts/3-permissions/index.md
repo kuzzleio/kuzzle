@@ -15,7 +15,7 @@ Kuzzle provides a full set of functionalities to configure fine-grained permissi
 Kuzzle's security layer links users to one or more profiles.
 You can think of a **profile as a group of users that share the same permissions**.
 
-The **profiles** themselves are made up of **different groups of permissions**, these groups are called roles.
+The **profiles** themselves are made of **different groups of permissions**, these groups are called roles.
 
 A profile is linked to a set of roles, and each role defines a set of permissions.  
 For example, in the diagram below, the `editor` profile has all permissions, the `contributor` has fewer permissions, and the `default` profile has only default permissions:
@@ -247,7 +247,7 @@ Three different profiles can be created using that same role, each with varying 
 ```
 
 ::: info
-Role restriction on indexes and collections can be used to **easily build multi-tenant application** were different groups of users cannot see each other data.
+Role restriction on indexes and collections can be used to **easily build multi-tenant application** where different groups of users cannot see each other data.
 :::
 
 ### Rate limit
