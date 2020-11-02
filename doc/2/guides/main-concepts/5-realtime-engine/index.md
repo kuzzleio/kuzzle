@@ -10,7 +10,7 @@ order: 500
 
 Kuzzle includes his **own high-performance Realtime Engine** for sending notifications to clients connected through the API.
 
-Realtime capabilities requires the use of a **persistent communication protocol** such as WebSocket or MQTT.
+Realtime capabilities require the use of a **persistent communication protocol** such as WebSocket or MQTT.
 
 Kuzzle offers 2 different ways of doing realtime:
  - Volatile Pub/Sub System (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-realtime-applications))
@@ -22,7 +22,7 @@ Kuzzle's Realtime Engine allows you to do **Pub/Sub in dedicated communication c
 
 The process is as follows:
  - A first client subscribes to a particular room,
- - A second client client posts a message in this room,
+ - A second client posts a message in that room,
  - The first client receives a notification.
 
 ![kuzzle-pub-sub](./pub-sub.png)
@@ -137,7 +137,7 @@ Subscription to a database changes is done via the [realtime:subscribe](/core/2/
 The specified index and collection **must exist in the database** to receive database notifications.
 :::
 
-When changes occur on this collection (eg: document creation, modification or deletion), Kuzzle will send notifications to the corresponding subscribers.
+When changes occur on this collection (e.g. document creation, modification or deletion), Kuzzle will send notifications to the corresponding subscribers.
 
 First, we need to create the index and the collection and then subscribe to database notifications:
 
@@ -145,7 +145,7 @@ First, we need to create the index and the collection and then subscribe to data
 # Creates index and collection
 $ kourou collection:create nyc-open-data yellow-taxi
 
-# Subscribe to database notifications
+# Subscribes to database notifications
 $ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
   "controller": "realtime",
   "action": "subscribe",
@@ -218,7 +218,7 @@ More information about the [Document Notification format](/core/2/api/essentials
 
 ## Subscription Filters
 
-When a client subscribes to realtime notifications, whether in Pub/Sub or Database Notification, he can **specify a set of subscription filters**.
+When a client subscribes to realtime notifications, whether in Pub/Sub or Database Notification, they can **specify a set of subscription filters**.
 These filters allow the client to tell Kuzzle exactly **which documents they are interested in and only receive notifications about them**.
 
 ::: info
@@ -412,7 +412,7 @@ $ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
 }'
 ```
 
-Then, in another terminal you can publishes a message in the room specifying volatile data:
+Then, in another terminal you can publish a message in the room specifying volatile data:
 ```bash
 $ npx wscat -c ws://localhost:7512 --wait 300 --execute ' {
    "controller": "realtime",

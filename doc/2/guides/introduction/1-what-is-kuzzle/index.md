@@ -98,4 +98,4 @@ The community is also able to develop and distribute its own plugins to enrich t
 
 We federate a community of developers using Kuzzle around the world.
 
-Whether you want to ask a question about [StackOverflow](https://stackoverflow.com/questions/ask?tags=kuzzle), check out the [Kuzzle awesome list](https://github.com/kuzzleio/awesome-kuzzle), watch our video on [YouTube](https://www.youtube.com/channel/UCHcEzVQoH10YSyxc7jD3SMw/videos) discuss Kuzzle usage on [Discord](http://join.discord.kuzzle.io), the community and the core team will be there to help you.
+Whether you want to ask a question on [StackOverflow](https://stackoverflow.com/questions/ask?tags=kuzzle), check out the [Kuzzle awesome list](https://github.com/kuzzleio/awesome-kuzzle), watch our video on [YouTube](https://www.youtube.com/channel/UCHcEzVQoH10YSyxc7jD3SMw/videos), or discuss Kuzzle on [Discord](http://join.discord.kuzzle.io), the community and the core team will be there to help you.
