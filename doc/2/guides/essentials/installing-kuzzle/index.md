@@ -194,10 +194,6 @@ The package installation can take a few minutes. Once it completes, install Kuzz
 ```bash
 #!/bin/bash
 
-# init submodules to install defaults kuzzle plugins
-git submodule init
-git submodule update
-
 # install dependencies for all enabled plugins
 for PLUGIN in ./plugins/enabled/*; do
   if [ -d "${PLUGIN}" ]; then
@@ -206,52 +202,41 @@ for PLUGIN in ./plugins/enabled/*; do
 done
 ```
 
+Lastly, you need to compile typescript scripts before you can run Kuzzle:
+
+```bash
+# compile typescript scripts
+npm run build
+```
+
 #### Configure Kuzzle components
 
 Kuzzle uses Elasticsearch and Redis as a persistent and key-value store, respectively. If you are running these components on the same machine as your Kuzzle installation then no additional configuration is needed. If; however, you are running them on another host, you will need to create or update the `.kuzzlerc` file in your installation folder.
 
 Please refer to the [configuration section](/core/2/guides/essentials/configuration) for more details.
 
-### Setup Nodemon
+### Start Kuzzle 
 
-Now that you have installed Kuzzle and loaded its plugins, let's install nodemon. Run the following command to install nodemon using NPM as a global package so that it can be run from anywhere on your machine:
+Now that you have installed Kuzzle and its plugins, you can start it.
 
-```bash
-sudo npm install -g nodemon
-```
-
-Nodemon will automatically reload Kuzzle when it detects changes in the code.  
-
-Now we are gonna run Kuzzle, don't forget to add the Node.js debugger entrypoint if you want to debug either the Chrome inspector or your IDE.
-
-Run the following commands:
 
 ```bash
-nodemon --inspect=0.0.0.0:9229 bin/start-kuzzle-server
+./bin/start-kuzzle-server
 ```
 
-You should then see the following display on your terminal:
-
-```
-[2020-21-42 09:40:48+00:00] - Starting Kuzzle...
-[nodemon] 2.0.4
-[nodemon] to restart at any time, enter `rs`
-[nodemon] watching path(s): *.*
-[nodemon] watching extensions: js,mjs,json
-[nodemon] starting `node --inspect=0.0.0.0:9229  bin/start-kuzzle-server`
-[ℹ] Starting Kuzzle server
-
-[...]
-
-```
-
-You should see the following message if Kuzzle successfully started (it may take a few seconds):
+After a few seconds, you should see the following message appear: 
 
 ```bash
-[✔] Kuzzle server ready
+[✔] Kuzzle <version> is ready (node name: <unique node name>)
 ```
 
 Kuzzle can now be reached at the following URL, using either HTTP or WebSocket: `http://localhost:7512/`
+
+::: info
+If you need to start a development stack instead for developping plugins or for contributing to Kuzzle, then you should take a look at our [CONTRIBUTING](https://github.com/kuzzleio/kuzzle/blob/master/CONTRIBUTING.md) documentation.
+
+This documentation explains how to start a development stack, complete with a few cluster nodes, a debugger, an auto-reloader, and with debug messages.
+:::
 
 ### Troubleshooting
 
