@@ -118,16 +118,11 @@ Examples of hooks usage:
 
 We need to use the [Backend.hook.register](/core/2/some-link) method to register new hooks.   This method takes an event name as its first parameter, followed by the hook handler function.
 
-**Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to notify user registration_
+**Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to log user registration_
 
 ```js
 app.hook.register('security:afterCreateRestrictedUser', async (request: Request) => {
-  try {
-    await app.sdk.realtime.publish('admin', 'new-user', request.context.user)
-  }
-  catch (error) {
-    app.log.error(`Error when publishing new user: ${error}`)
-  }
+  app.log.info(`New user registered: ${JSON.stringify(request.context.user)}`)
 })
 ```
 
