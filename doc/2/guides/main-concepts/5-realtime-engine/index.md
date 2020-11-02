@@ -8,7 +8,7 @@ order: 500
 
 # Realtime Engine
 
-Kuzzle includes his **own high-performance Realtime Engine** for sending notifications to clients connected through the API.
+Kuzzle is shipped with its own **high-performance Realtime Engine** for sending notifications to clients connected through the API.
 
 Realtime capabilities require the use of a **persistent communication protocol** such as WebSocket or MQTT.
 
@@ -429,7 +429,7 @@ $ npx wscat -c ws://localhost:7512 --wait 300 --execute ' {
  }'
 ```
 
-Each client who subscribes to the room will receive the following notification:
+Each client subscribing to the room will receive the following notification:
 
 <details><summary>Click to expand</summary>
 <pre>
@@ -464,5 +464,5 @@ Each client who subscribes to the room will receive the following notification:
 </details>
 
 ::: info
-SDKs and Kourou use volatile data to send additional informations like the client name or version.
+SDKs and Kourou use volatile data to send additional information like the client name or version.
 :::
