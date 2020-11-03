@@ -16,6 +16,14 @@ Some of these features are only available during the `setup` phase of the applic
 The `runtime` phase starts after calling the [Backend.start](/core/2/some-link) method.
 :::
 
+Those features are exposed through the properties of the [Backend](/core/2/some-link) class:
+ - [sdk](/core/2/guides/develop-on-kuzzle/1-core-modules#embedded-sdk): modified version of the [Javascript SDK](/sdk/js/7) to execute API actions
+ - [storage](/core/2/guides/develop-on-kuzzle/1-core-modules#storage-client): use Node.js Elasticsearch client to send direct requests to Elasticsearch
+ - [log](/core/2/guides/develop-on-kuzzle/1-core-modules#internal-logger): internal logger
+ - [trigger](/core/2/guides/develop-on-kuzzle/1-core-modules#trigger-events): trigger internal or custom events
+ - [kerror](/core/2/guides/develop-on-kuzzle/1-core-modules#error-manager): error manager
+ - [config](/core/2/guides/develop-on-kuzzle/1-core-modules#configuration): access and modify configuration
+
 ## Embedded SDK
 
 ::: warning
