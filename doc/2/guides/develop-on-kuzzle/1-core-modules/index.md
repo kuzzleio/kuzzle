@@ -320,3 +320,24 @@ app.controller.register('greeting', {
 TODO: add ImplementationError
 
 ## Configuration
+
+The configuration of Kuzzle is also accessible through the [Backend.config](/core/2/some-link) property.
+
+It is possible to consult or modify values of the configuration. 
+
+The set of keys that can be configured is available in the file [.kuzzlerc.sample](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)
+
+::: info
+See the [Configuration](/core/2/guides/advanced/8-configuration) guide for more informations on how to configure Kuzzle.
+:::
+
+**Example:** _Change configuration values_
+```js
+// Read a configuration value
+console.log(`Kuzzle will listen on port ${app.config.content.server.port}`)
+
+// Set log level to verbose
+app.config.set(
+  'plugins.kuzzle-plugin-logger.services.stdout.level', 
+  'verbose')
+```
