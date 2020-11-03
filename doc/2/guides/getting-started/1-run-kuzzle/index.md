@@ -37,7 +37,7 @@ If you want to run Kuzzle directly from you computer, you can check out the [Ins
 First, we will initialize a new application using Kourou:
 
 ```bash
-$ kourou app:scaffold playground
+kourou app:scaffold playground
  
   🚀 Kourou - Scaffolds a new Kuzzle application
  

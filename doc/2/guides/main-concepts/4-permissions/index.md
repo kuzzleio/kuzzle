@@ -36,7 +36,7 @@ The `reset` option allows to restrict `anonymous` default rights at the same tim
 :::
 
 ```bash
-$ kourou security:createFirstAdmin '{
+kourou security:createFirstAdmin '{
   credentials: {
     local: {
       username: "admin",
@@ -462,7 +462,7 @@ First, create a file `permissions.json` with the permissions definition in JSON 
 Then use Kourou to execute the [admin:loadSecurities](/core/2/api/controllers/admin/load-securities) action:
 
 ```bash
-$ kourou admin:loadSecurities < permissions.json
+kourou admin:loadSecurities < permissions.json
 ```
 
 ::: info

@@ -26,7 +26,7 @@ First, we are going to create a new role with the [security:createRole](/core/2/
 The following role description gives access to [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and to the [server:info](/core/2/api/controllers/auth/get-current-user) actions only.
 
 ```bash
-$ kourou security:createRole '{
+kourou security:createRole '{
   controllers: {
     auth: {
       actions: {
@@ -55,7 +55,7 @@ You should see your newly created role in the `Security > Roles` section of the 
 Then, we are going to create a profile which uses our newly created role. For this we will use the [security:createProfile](/core/2/api/controllers/security/create-profile) action.
 
 ```bash
-$ kourou security:createProfile '{
+kourou security:createProfile '{
   policies: [
     { roleId: "dummy" }
   ]
@@ -79,7 +79,7 @@ Finally, we need a user attached to the `dummy` profile. The API action to creat
 Users need to have at least one assigned profile. We also will have to give our user some credentials to be able to log in with it.
 
 ```bash
-$ kourou security:createUser '{
+kourou security:createUser '{
   content: {
     profileIds: ["dummy"]
   },
@@ -121,7 +121,7 @@ The `reset` option allows to restrict `anonymous` default rights in the same tim
 This way you can always access the complete API through this admin account.
 
 ```bash
-$ kourou security:createFirstAdmin '{
+kourou security:createFirstAdmin '{
   credentials: {
     local: {
       username: "admin",
@@ -138,7 +138,7 @@ Try to run the following command: `kourou server:now`
 You should get the following error because now the anonymous user is restricted to only a few API actions:
 
 ```bash
-$ kourou server:now
+kourou server:now
 
 [ℹ] Unknown command "server:now", fallback to API method
  
@@ -159,7 +159,7 @@ Run the same command, authenticating with the user we just created: `kourou serv
 We are allowed to use this API action because we are now authenticated with a user with sufficient rights.
 
 ```bash
-$ kourou server:now --username yagmur --password password
+kourou server:now --username yagmur --password password
 
 [ℹ] Unknown command "server:now", fallback to API method
  
@@ -176,7 +176,7 @@ $ kourou server:now --username yagmur --password password
 ::: info
 You can now reset anonymous rights to default to make the rest of this tutorial easier:
 ```bash
-$ kourou security:updateRole '{
+kourou security:updateRole '{
   controllers: {
     "*": {
       actions: {

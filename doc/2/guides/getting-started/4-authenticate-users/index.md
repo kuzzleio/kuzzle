@@ -22,7 +22,7 @@ We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-acce
 # This command will only works if the "ldap" strategy 
 # is made available through the correct authentication plugin
 
-$ kourou security:createUser '{
+kourou security:createUser '{
   content: {
     profileIds: ["dummy"]
   },
@@ -49,7 +49,7 @@ First we need to get one with the [auth:login](/core/2/api/controllers/auth/logi
 In our example we will use the [local](/core/2/some-link) strategy so we have to provide a `username` and a `password`:
 
 ```bash
-$ kourou auth:login -a strategy=local -a username=yagmur -a password=password
+kourou auth:login -a strategy=local -a username=yagmur -a password=password
 [ℹ] Unknown command "auth:login", fallback to API method
  
  🚀 Kourou - Executes an API query.
@@ -84,7 +84,7 @@ When using Kourou with `--username` and `--password` flags, the [auth:login](/co
 ::: tab Kourou
 
 ```bash
-$ kourou auth:getCurrentUser -a jwt=<token>
+kourou auth:getCurrentUser -a jwt=<token>
 ```
 
 :::
@@ -98,7 +98,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:7512/_me
 ::: tab WebSocket
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --execute '{
+npx wscat -c ws://localhost:7512 --execute '{
   "controller": "auth",
   "action": "getCurrentUser",
   "jwt": "<token>"
@@ -110,7 +110,7 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 ::: tab Javascript
 
 ```bash
-$ kourou sdk:execute --code '
+kourou sdk:execute --code '
   sdk.jwt = "<token>";
 
   console.log(await sdk.auth.getCurrentUser());

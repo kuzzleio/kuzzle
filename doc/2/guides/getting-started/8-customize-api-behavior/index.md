@@ -94,7 +94,7 @@ However Kuzzle **provides no guarantee on the pipes execution order**, so pipes 
 Now we can call the action with Kourou:
 
 ```bash
-$ kourou server:now
+kourou server:now
 
 [ℹ] Unknown command "server:now", fallback to API method
  

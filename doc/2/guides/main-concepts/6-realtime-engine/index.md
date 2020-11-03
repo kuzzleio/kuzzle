@@ -41,7 +41,7 @@ These information are only used to define an **ephemeral room** between several 
 First, subscribe to realtime notifications:
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --wait 20 --execute '{
+npx wscat -c ws://localhost:7512 --wait 20 --execute '{
   "controller": "realtime",
   "action": "subscribe",
   "index": "nyc-open-data",
@@ -53,7 +53,7 @@ $ npx wscat -c ws://localhost:7512 --wait 20 --execute '{
 ::: info
 You can also use [Kourou](/core/2/some-link) to subscribe to realtime notifications:  
 ```bash
-$ kourou realtime:subscribe nyc-open-data yellow-taxi
+kourou realtime:subscribe nyc-open-data yellow-taxi
 ```
 ::: 
 
@@ -61,7 +61,7 @@ Then clients wishing to post messages in this room must use the [realtime:publis
 
 Then you can also use [Kourou](/core/2/some-link) in another terminal to publish a message:  
 ```bash
-$ kourou realtime:publish nyc-open-data yellow-taxi '{
+kourou realtime:publish nyc-open-data yellow-taxi '{
     name: "Manwë",
     licence: "B",
     car: "berline",
@@ -143,10 +143,10 @@ First, we need to create the index and the collection and then subscribe to data
 
 ```bash
 # Creates index and collection
-$ kourou collection:create nyc-open-data yellow-taxi
+kourou collection:create nyc-open-data yellow-taxi
 
 # Subscribes to database notifications
-$ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
+npx wscat -c ws://localhost:7512 --wait 300 --execute '{
   "controller": "realtime",
   "action": "subscribe",
   "index": "nyc-open-data",
@@ -160,7 +160,7 @@ Creating a document with the [document:create](/core/2/api/controllers/document/
 
 Create a document with [Kourou](/core/2/some-link) to trigger a Database Notification:
 ```bash
-$ kourou document:create nyc-open-data yellow-taxi '{
+kourou document:create nyc-open-data yellow-taxi '{
     controller: "document",
     action: "create",
     index: "nyc-open-data",
@@ -360,7 +360,7 @@ This parameter can take 4 values:
 Payload to send with wscat:
 ```bash
 # Use the "users" option to receive notification when a user enters or exits the room
-$ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
+npx wscat -c ws://localhost:7512 --wait 300 --execute '{
   "controller": "realtime",
   "action": "subscribe",
   "index": "nyc-open-data",
@@ -403,7 +403,7 @@ When a request containing volatile data triggers a realtime notification, these 
 
 First, subscribe to realtime notifications:
 ```bash
-$ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
+npx wscat -c ws://localhost:7512 --wait 300 --execute '{
   "controller": "realtime",
   "action": "subscribe",
   "index": "nyc-open-data",
@@ -414,7 +414,7 @@ $ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
 
 Then, in another terminal you can publish a message in the room specifying volatile data:
 ```bash
-$ npx wscat -c ws://localhost:7512 --wait 300 --execute ' {
+npx wscat -c ws://localhost:7512 --wait 300 --execute ' {
    "controller": "realtime",
    "action": "publish",
    "index": "nyc-open-data",
