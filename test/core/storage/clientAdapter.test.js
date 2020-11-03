@@ -179,17 +179,22 @@ describe('#core/storage/ClientAdapter', () => {
       }
     });
 
-    describe('#index:mDelete', () => {
+    describe.only('#index:mDelete', () => {
       it('should register an "index:mDelete" event', async () => {
         const indexes = ['foo', 'bar', 'baz'];
 
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:storage:${adapter.scope}:index:mDelete`, indexes);
+          adapter.client.deleteIndexes.resolves(indexes);
+
+          const deleted = await kuzzle.ask(
+            `core:storage:${adapter.scope}:index:mDelete`,
+            indexes);
 
           should(publicAdapter.client.deleteIndexes).calledWith(indexes);
           should(publicAdapter.cache.removeIndex).calledWith('foo');
           should(publicAdapter.cache.removeIndex).calledWith('bar');
           should(publicAdapter.cache.removeIndex).calledWith('baz');
+          should(deleted).eql(indexes);
         }
       });
 
