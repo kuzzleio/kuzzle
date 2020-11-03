@@ -125,7 +125,7 @@ User permissions are not applied even when the [EmbeddedSDK.as](/core/2/some-lin
 Realtime subscriptions should be made using the [realtime controller](/sdk/js/7/controllers/realtime) just after the application startup.
 
 ::: warning
-You should avoid making subscriptions at runtime because that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
+You should avoid making dynamic subscriptions at runtime because that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
 :::
 
 The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
@@ -168,7 +168,6 @@ This behavior is suitable for synchronizing RAM cache amongst cluster nodes for 
 ```js
 app.start()
   .then(async () => {
-
     await app.sdk.realtime.subscribe(
       'nyc-open-data',
       'yellow-taxi',
@@ -319,7 +318,7 @@ app.controller.register('greeting', {
         }
 
         return `Hello, ${request.input.args.name}`
-       }
+      }
     }
   }
 })
