@@ -8,8 +8,6 @@ order: 600
 
 # Realtime Engine
 
-<!-- need rewrite -->
-
 Kuzzle includes his own realtime engine for sending notifications to clients connected through the API.
 
 Realtime capabilities requires the use of a persistent communication protocol such as WebSocket or MQTT.
@@ -17,16 +15,6 @@ Realtime capabilities requires the use of a persistent communication protocol su
 Kuzzle offers 2 different ways of doing realtime:
  - volatile Pub/Sub system (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-realtime-applications))
  - realtime database notifications (see example on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-realtime-engine))
-
-### wscat
-
-This guide provides examples that use the Kuzzle API directly through a command line WebSocket client: [wscat](https://github.com/websockets/wscat).
-
-To install it you can type the following command: `npm install -g wscat`.
-
-The sample requests are to be sent directly to wscat after connecting to your Kuzzle server with the command `wscat --connect localhost:7512`.
-
-It is of course possible to send the payloads provided with a different WebSocket client than wscat.
 
 ## Pub/Sub
 

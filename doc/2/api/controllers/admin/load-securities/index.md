@@ -10,13 +10,13 @@ title: loadSecurities
 
 Load roles, profiles and users into the storage layer.
 
+<!-- Duplicate section with /core/2/guides/main-concepts/3-permissions -->
+
 The roles, profiles and users definitions follow the same structure as in the body parameter of their corresponding API actions:
 
  - [security:createRole](/core/2/api/controllers/security/create-role)
  - [security:createProfile](/core/2/api/controllers/security/create-profile)
  - [security:createUser](/core/2/api/controllers/security/create-user)
-
-If users already exist, they will be deleted and then created again.
 
 ::: warning
 By default, Kuzzle prevents existing user overwriting.  
