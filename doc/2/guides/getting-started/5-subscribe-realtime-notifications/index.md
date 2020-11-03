@@ -21,7 +21,7 @@ Subscription to realtime notifications is **performed client-side and does not r
 First, we need to subscribe to changes occuring in a specific collection:
 
 ```bash
-$ kourou realtime:subscribe nyc-open-data yellow-taxi
+kourou realtime:subscribe nyc-open-data yellow-taxi
 ```
 
 ::: info
@@ -32,7 +32,7 @@ Kourou is now waiting for realtime notifications about changes in our collection
 
 We are going to create a new document in the Admin Console to trigger one!
 
-Open the [Admin Console](http://console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document. 
+Open the [Admin Console](http://next-console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document. 
 
 Then you should receive a notification about the created document in your terminal:
 
@@ -94,7 +94,7 @@ Koncorde is part of the Kuzzle Realtime Engine and handles subscription filters.
 Now we can subscribe again with our filter:
 
 ```bash
-$ kourou realtime:subscribe nyc-open-data yellow-taxi '{
+kourou realtime:subscribe nyc-open-data yellow-taxi '{
   and: [
     {
       range: {
@@ -113,7 +113,7 @@ $ kourou realtime:subscribe nyc-open-data yellow-taxi '{
 Then we create 10 documents using the [`sdk:execute` command in Kourou](https://github.com/kuzzleio/kourou#kourou-sdkexecute):
 
 ```bash
-$ kourou sdk:execute --code '
+kourou sdk:execute --code '
   for (let i = 1; i <= 10; i++) {
     await sdk.document.create("nyc-open-data", "yellow-taxi", {
       name: `Yagmur-${i}`,
