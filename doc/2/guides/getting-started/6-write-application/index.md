@@ -167,7 +167,7 @@ app.start()
 Going further:
  - [Backend class](/core/2/some-link)
  - [API Controllers](/core/2/some-link)
- - [Kuzzle Event System](/core/2/api/some-links)
+ - [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
 :::
 
 <GuidesLinks
