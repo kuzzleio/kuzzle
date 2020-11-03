@@ -124,14 +124,6 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
 
 ::::
 
-
-::: info
-Going further:
-  - [Local strategy](/core/2/some-link)
-  - [OAuth strategy](/core/2/some-link)
-  - [Integrate a new authentication strategy](/core/2/some-link)
-:::
-
 <GuidesLinks 
   :prev="{ text: 'Set up Permissions', url: '/core/2/guides/getting-started/3-set-up-permissions' }" 
   :next="{ text: 'Subscribe to Realtime Notifications', url: '/core/2/guides/getting-started/5-subscribe-realtime-notifications/' }" 

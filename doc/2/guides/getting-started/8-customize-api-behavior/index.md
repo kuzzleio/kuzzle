@@ -107,11 +107,6 @@ kourou server:now
  [✔] Successfully executed "server:now
 ```
 
-::: info
-Going further:
- - [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
-:::
-
 <GuidesLinks
   :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/7-create-new-controllers' }" 
   :next="{ text: 'Deploy your Application', url: '/core/2/guides/getting-started/9-deploy-your-application/' }" 
