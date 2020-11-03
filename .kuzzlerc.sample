@@ -708,6 +708,9 @@
   // Kuzzle Cluster confiugration
   //   * ipv6:
   //       If true, asks nodes to use IPv6 to connect to each others
+  //   * joinTimeout:
+  //       The cluster join timeout (in ms): if that timeout is reached before
+  //       the node could join the cluster, it will kill itself.
   //   * minimumNodes:
   //       The minimum number of nodes required by the cluster. It should be set
   //       to AT LEAST to ((total number of nodes / 2) + 1), to ensure that the
@@ -722,12 +725,14 @@
   //       themselves.
   //       There is no need to expose these ports publicly.
   //       * request:
-  //          used for requests from a node to another one
+  //          used for requests from a node to another one (handshake, full
+  //          state requests, ...
   //       * sync:
-  //          used to propagate heartbeats, state changes, and various sync
+  //          used to propagate heartbeats, state changes, and other sync
   //          messages
   "cluster": {
     "ipv6": false,
+    "joinTimeout": 60000,
     "minimumNodes": 2,
     "ports": {
       "request": 7510,

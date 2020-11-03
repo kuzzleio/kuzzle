@@ -1,0 +1,21 @@
+package fullstate;
+
+syntax="proto3";
+
+message FullState {
+  message NodeSubscribers {
+    string nodeId = 1;
+    uint64 subscribers = 2;
+    uint64 lastMessageId = 3;
+  }
+
+  message RealtimeRoom {
+    string roomId = 1;
+    // array of polymorphic objects, needs to be stringified beforehand
+    string filters = 2;
+
+    repeated NodeSubscribers nodes = 3;
+  }
+
+  repeated RealtimeRoom rooms = 1;
+}

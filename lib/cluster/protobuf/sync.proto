@@ -1,0 +1,72 @@
+// sync messages definitions
+package sync;
+
+syntax="proto3";
+
+message Heartbeat {
+  uint64 lastMessageId = 1;
+  string address = 2;
+}
+
+message NewRealtimeRoom {
+  uint64 messageId = 1;
+  string index = 2;
+  string collection = 3;
+  string roomId = 4;
+
+  // serialized JSON
+  string filters = 5;
+}
+
+message Subscription {
+  uint64 messageId = 1;
+  string roomId = 2;
+}
+
+message Unsubscription {
+  uint64 messageId = 1;
+  string roomId = 2;
+}
+
+message DocumentNotification {
+  uint64 messageId = 1;
+  repeated string channels = 2;
+  uint32 status = 3;
+  string requestId = 4;
+  uint64 timestamp = 5;
+  string index = 6;
+  string collection = 7;
+  string controller = 8;
+  string action = 9;
+  string protocol = 10;
+  string scope = 11;
+
+  // serialized JSON
+  string volatile = 12;
+  string result = 13;
+}
+
+message UserNotification {
+  uint64 messageId = 1;
+  repeated string channels = 2;
+  uint32 status = 3;
+  uint64 timestamp = 4;
+  string index = 5;
+  string collection = 6;
+  string controller = 7;
+  string action = 8;
+  string protocol = 9;
+  string user = 10;
+
+  // serialized JSON
+  string volatile = 11;
+}
+
+message ServerNotification {
+  uint64 messageId = 1;
+  repeated string channels = 2;
+  uint32 status = 3;
+  string info = 4;
+  string message = 5;
+  string type = 6;
+}
