@@ -46,9 +46,9 @@ Then you should receive a notification about the created document in your termin
  {
   "_id": "dvIdJ3UB1MqPtuLKxKDS",
   "_source": {
-    "name": "Aschen",
-    "city": "Antalya",
-    "age": 27,
+    "name": "Nerwin",
+    "city": "Montreal",
+    "age": 26,
     "_kuzzle_info": {
       "author": "-1",
       "createdAt": 1602679063751,
@@ -66,7 +66,7 @@ Kuzzle allows you to **use filters** to receive only the notifications **matchin
 
 Again, we are going to subscribe to notifications but only for documents where:
   - `age` is greater than `30`
-  - `city` is equal to `Antalya`
+  - `city` is equal to `Montreal`
 
 This filter must be written using [Koncorde Filter DSL](/core/2/some-link), which is a little inspired by Elasticsearch DSL:
 
@@ -84,7 +84,7 @@ Koncorde is part of the Kuzzle Realtime Engine and handles subscription filters.
     },
     {
       "equals": {
-        "city": "Antalya"
+        "city": "Montreal"
       }
     }
   ]
@@ -103,7 +103,7 @@ kourou realtime:subscribe nyc-open-data yellow-taxi '{
     },
     {
       equals: {
-        city: "Antalya"
+        city: "Montreal"
       }
     }
   ]
@@ -116,8 +116,8 @@ Then we create 10 documents using the [`sdk:execute` command in Kourou](https://
 kourou sdk:execute --code '
   for (let i = 1; i <= 10; i++) {
     await sdk.document.create("nyc-open-data", "yellow-taxi", {
-      name: `Yagmur-${i}`,
-      city: i % 2 ? "Antalya" : "Istanbul",
+      name: `Nerwin-${i}`,
+      city: i % 2 ? "Montreal" : "Montpellier",
       age: 27 + i
     });
   }'
@@ -140,8 +140,8 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
  {
   "_id": "hfI3J3UB1MqPtuLKwaCh",
   "_source": {
-    "name": "Yagmur-5",
-    "city": "Antalya",
+    "name": "Nerwin-5",
+    "city": "Montreal",
     "age": 32,
     "_kuzzle_info": {
       "author": "-1",
@@ -156,8 +156,8 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
  {
   "_id": "h_I3J3UB1MqPtuLKwaDE",
   "_source": {
-    "name": "Yagmur-7",
-    "city": "Antalya",
+    "name": "Nerwin-7",
+    "city": "Montreal",
     "age": 34,
     "_kuzzle_info": {
       "author": "-1",
@@ -172,8 +172,8 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
  {
   "_id": "ifI3J3UB1MqPtuLKwaDn",
   "_source": {
-    "name": "Yagmur-9",
-    "city": "Antalya",
+    "name": "Nerwin-9",
+    "city": "Montreal",
     "age": 36,
     "_kuzzle_info": {
       "author": "-1",
