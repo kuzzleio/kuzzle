@@ -188,10 +188,6 @@ It is possible to overload the configuration used by default by instantiating a 
 **Example:** _Send a request directly to Elasticsearch_
 
 ```js
-// After application startup
-
-// [...]
-
 // Elasticsearch request to create a document
 const esRequest =  {
   body: {
@@ -256,11 +252,29 @@ app.start()
 More info about [Internal Logger](/core/2/guides/advanced/10-internal-logger) configuration and usage.
 :::
 
-## Trigger custom Events
+## Trigger Events
 
 ::: warning
 You can only trigger custom events in the `runtime` phase, after application startup.
 ::: 
+
+Internal or custom events can be triggered with the [Backend.trigger](/core/2/some-link) method.
+
+Pipes and hooks can be plugged on custom events as well as on internal events.
+
+::: info
+It's considered as a good practice to prefix your event name with your application name.
+:::
+
+**Example:** _Trigger a custom event_
+
+```js
+await app.trigger('app-name/file-available', fileUrl);
+```
+
+::: warning
+If an internal event is triggered, the payload must be the same as the original event.
+:::
 
 ## Error Manager
 
