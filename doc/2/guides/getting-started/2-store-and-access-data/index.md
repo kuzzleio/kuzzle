@@ -65,7 +65,7 @@ Then, we are going to create a collection inside this index. We will provide the
 Run the following command to create our `yellow-taxi` collection: 
 
 ```bash
-$ kourou collection:create nyc-open-data yellow-taxi '{
+kourou collection:create nyc-open-data yellow-taxi '{
   properties: {
     name: { type: "keyword" },
     city: { type: "keyword" },
@@ -84,7 +84,7 @@ This will use the [collection:create](/core/2/api/controllers/collection/create)
 Now we have a collection ready to receive documents, again use Kourou to create one:
 
 ```bash
-$ kourou document:create nyc-open-data yellow-taxi '{
+kourou document:create nyc-open-data yellow-taxi '{
   name: "Yagmur",
   city: "Antalya",
   age: 27
@@ -95,7 +95,7 @@ $ kourou document:create nyc-open-data yellow-taxi '{
 This will use the [document:create](/core/2/api/controllers/document/create) API action.
 :::
 
-Finally, we are going to use the [Admin Console](http://console.kuzzle.io) to look at what we have created.
+Finally, we are going to use the [Admin Console](http://next-console.kuzzle.io) to look at what we have created.
 
 Select the `nyc-open-data` index and then the `yellow-taxi` collection. You should see one document in this collection.
 
@@ -110,7 +110,7 @@ We'll now use that to search for the documents we're interested in.
 First, we need to create more documents:
 
 ```bash
-$ kourou sdk:execute --code '
+kourou sdk:execute --code '
   for (let i = 1; i <= 10; i++) {
     await sdk.document.create("nyc-open-data", "yellow-taxi", {
       name: `Yagmur-${i}`,
@@ -149,7 +149,7 @@ For this, we need to write a [boolean query](https://www.elastic.co/guide/en/ela
 And to execute this query we are going to use Kourou again:
 
 ```bash
-$ kourou document:search nyc-open-data yellow-taxi '{
+kourou document:search nyc-open-data yellow-taxi '{
   bool: {
     must: [
       {
@@ -211,12 +211,6 @@ $ kourou document:search nyc-open-data yellow-taxi '{
 ```
 
 </details>
-
-::: info
-Going further:
-  - [Database mappings](/core/2/guides/some-link)
-  - [Querying Elasticsearch](/core/2/guides/some-link)
-:::
 
 <GuidesLinks 
   :prev="{ text: 'Run Kuzzle', url: '/core/2/guides/getting-started/1-run-kuzzle' }" 
