@@ -109,7 +109,7 @@ app.controller.register('drivers', {
         return app.sdk.as(originalUser).document.create(
           'nyc-open-data',
           'yellow-taxi',
-          { licence: 'B' });
+          { name: 'Aschen' })
        }
     }
   }
