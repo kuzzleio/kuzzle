@@ -247,10 +247,10 @@ describe('Plugin Context', () => {
 
       should(context.accessors).be.an.Object().and.not.be.empty();
       should(context.accessors).have.properties(
-        ['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
+        ['execute', 'validation', 'storage', 'trigger', 'subscription', 'strategies', 'sdk']);
     });
 
-    it('should adds the plugin name in logs', done => {
+    it('should add the plugin name in logs', done => {
       context.log.info('foobar');
 
       process.nextTick(() => {
@@ -306,6 +306,60 @@ describe('Plugin Context', () => {
       const sdk = context.accessors.sdk;
 
       should(sdk).be.instanceOf(EmbeddedSDK);
+    });
+
+    it('should expose a realtime accessor', () => {
+      const subscription = context.accessors.subscription;
+
+      should(subscription.register).be.a.Function();
+      should(subscription.unregister).be.a.Function();
+    });
+
+    describe('#accessors.subscription functions', () => {
+      it('should call register with the right ask and argument', async () => {
+        const customRequest = new Request(
+          {
+            action: 'subscribe',
+            body: {
+              equals: {
+                name: 'Luca'
+              }
+            },
+            collection: 'yellow-taxi',
+            controller: 'realtime',
+            index: 'nyc-open-data',
+          },
+          {
+            connectionId: 'superid',
+          });
+  
+        await context.accessors.subscription.register(
+          customRequest.context.connection.id,
+          customRequest.input.index,
+          customRequest.input.collection,
+          customRequest.input.body
+        );
+  
+        should(kuzzle.ask).be.calledWith('core:realtime:subscribe', sinon.match(
+          {
+            context: {
+              connection: {
+                id: customRequest.context.connection.id
+              }
+            },
+            input: {
+              body: customRequest.input.body,
+              collection: customRequest.input.collection,
+              index: customRequest.input.index
+            }
+          }
+        ));
+      });
+
+      it('should call unregister with the right ask and argument', async () => {
+        await context.accessors.subscription.unregister('connectionId', 'roomId', false);
+        should(kuzzle.ask).be.calledWithExactly('core:realtime:unsubscribe', 'connectionId', 'roomId', false);
+      });
     });
 
     describe('#trigger', () => {
