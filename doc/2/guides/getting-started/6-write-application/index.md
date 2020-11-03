@@ -30,10 +30,6 @@ An application has two phases: `setup` and `runtime`. The classes and methods th
 Calling the [Backend.start](/core/2/some-link) method will start your application and change its state to `started`.
 :::
 
-There are two categories of functionalities:
- - `registration`: available **before** starting the application
- - `interaction`: available **after** starting the application
-
 ## Register new features
 
 When the application is in the `instantiated` state, it exposes methods allowing to **register new features** to Kuzzle, such as:
