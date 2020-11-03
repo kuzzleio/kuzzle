@@ -179,7 +179,7 @@ describe('#core/storage/ClientAdapter', () => {
       }
     });
 
-    describe.only('#index:mDelete', () => {
+    describe('#index:mDelete', () => {
       it('should register an "index:mDelete" event', async () => {
         const indexes = ['foo', 'bar', 'baz'];
 
