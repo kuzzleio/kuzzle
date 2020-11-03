@@ -92,7 +92,7 @@ The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/S
 No data related to your connection to Kuzzle will pass through our servers.
 :::
 
-First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follow:
+First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://next-console.kuzzle.io) in your browser and then fill the form as follow:
 
 ![Admin Console create connection form](./admin-console-create-connection.png)
 

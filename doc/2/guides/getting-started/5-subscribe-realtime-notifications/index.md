@@ -32,7 +32,7 @@ Kourou is now waiting for realtime notifications about changes in our collection
 
 We are going to create a new document in the Admin Console to trigger one!
 
-Open the [Admin Console](http://console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document. 
+Open the [Admin Console](http://next-console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document. 
 
 Then you should receive a notification about the created document in your terminal:
 
