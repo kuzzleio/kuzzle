@@ -25,34 +25,6 @@ First, we are going to create a new role with the [security:createRole](/core/2/
 
 The following role description gives access to [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and to the [server:info](/core/2/api/controllers/auth/get-current-user) actions only.
 
-```js
-{
-  controllers: {
-    auth: {
-      actions: {
-        getCurrentUser: true
-      }
-    },
-    server: {
-      actions: {
-        now: true
-      }
-    }
-  }
-}
-```
-
-Copy the above role and then run this command: `kourou security:createRole --id dummy --body-editor`
-
-A text editor should open itself: replace the existing body by the copied role definition and then exit the editor.
-
-::: info
-This will use the [security:createRole](/core/2/api/controllers/security/create-role) API action.
-:::
-
-::: info
-If you have trouble with the integrated text editor, you can try to run the command directly as well:  
-
 ```bash
 $ kourou security:createRole '{
   controllers: {
@@ -69,9 +41,10 @@ $ kourou security:createRole '{
   }
 }' --id dummy
 ```
+
+::: info
+This will use the [security:createRole](/core/2/api/controllers/security/create-role) API action.
 :::
-
-
 
 You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://next-console.kuzzle.io)
 

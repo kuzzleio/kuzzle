@@ -19,6 +19,9 @@ Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) under the hood, a
 We saw that in the [Access Control Rights](/core/2/guides/getting-started/3-access-control-rights) guide, when creating a user, we had to provide credentials for the [local](/core/2/some-link) strategy, but we could have provided more strategies (provided the right strategy plugins are used):
 
 ```bash
+# This command will only works if the "ldap" strategy 
+# is made available through the correct authentication plugin
+
 $ kourou security:createUser '{
   content: {
     profileIds: ["dummy"]
