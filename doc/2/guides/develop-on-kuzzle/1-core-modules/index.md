@@ -349,3 +349,7 @@ app.config.set(
   'plugins.kuzzle-plugin-logger.services.stdout.level', 
   'verbose')
 ```
+
+::: warning
+It's not possible to change the configuration after the application as started
+:::
