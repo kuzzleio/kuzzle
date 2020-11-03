@@ -14,25 +14,25 @@ Once again you had been **preparing to develop a backend from scratch**... Well,
 Those frameworks allow you to develop faster by providing a predefined structure, classes and configurations.
 
 However, you will still have to develop the majority of the basic features:
- - storing and searching data
- - permission management
- - user authentication
- - access to data and functionalities through an API
+ - Storing and searching data
+ - Permission management
+ - User authentication
+ - Access to data and functionalities through an API
 
 Each of **these features will take time**. Time to develop but also time to:
- - debug
- - test 
- - maintain
- - secure
+ - Debug
+ - Test 
+ - Maintain
+ - Secure
 
 In short, you were going to spend a lot of time on **code that doesn't bring any value to your users** but is nevertheless essential.
 
 This time could have been used for many other things:
- - development of business functionalities
+ - Development of business functionalities
  - UI / UX of frontend applications
  - 100% coverage by automated tests
- - implementation of devops best practices
- - marketing of your product
+ - Implementation of devops best practices
+ - Marketing of your product
  - ...
 
 It is on the basis of this failure to optimize development time that we decided to start developing Kuzzle 5 years ago and that we have been devoting all our efforts to it ever since.
@@ -43,14 +43,14 @@ Kuzzle is a **backend with ready-to-use features** that can be extended in the s
 
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
-<CustomTable :items="[
-  { text: 'Data storage and access', icon: 'feature-data-storage.png' },
-  { text: 'Advanced permission system', icon: 'feature-acl.png' },
-  { text: 'Multi authentication', icon: 'feature-auth.png' },
-  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'feature-api.png' },
-  { text: 'Realtime engine', icon: 'feature-realtime.png' },
-  { text: 'Integrated cluster mode', icon: 'feature-cluster.png' },
-]"/>
+<!-- <IconTable :items="[
+  { text: 'Data storage and access', icon: 'guides/introduction/1-what-is-kuzzle/feature-data-storage.svg' },
+  { text: 'Advanced permission system', icon: 'guides/introduction/1-what-is-kuzzle/feature-acl.svg' },
+  { text: 'Multi authentication', icon: 'guides/introduction/1-what-is-kuzzle/feature-auth.svg' },
+  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'guides/introduction/1-what-is-kuzzle/feature-api.svg' },
+  { text: 'Realtime engine', icon: 'guides/introduction/1-what-is-kuzzle/feature-realtime.svg' },
+  { text: 'Integrated cluster mode', icon: 'guides/introduction/1-what-is-kuzzle/feature-cluster.svg' },
+]"/> -->
 
 Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/some-link) or [modifying API methods behavior](/core/2/some-link).
 
