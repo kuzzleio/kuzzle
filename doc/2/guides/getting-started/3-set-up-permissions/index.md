@@ -25,36 +25,8 @@ First, we are going to create a new role with the [security:createRole](/core/2/
 
 The following role description gives access to [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and to the [server:info](/core/2/api/controllers/auth/get-current-user) actions only.
 
-```js
-{
-  controllers: {
-    auth: {
-      actions: {
-        getCurrentUser: true
-      }
-    },
-    server: {
-      actions: {
-        now: true
-      }
-    }
-  }
-}
-```
-
-Copy the above role and then run this command: `kourou security:createRole --id dummy --body-editor`
-
-A text editor should open itself: replace the existing body by the copied role definition and then exit the editor.
-
-::: info
-This will use the [security:createRole](/core/2/api/controllers/security/create-role) API action.
-:::
-
-::: info
-If you have trouble with the integrated text editor, you can try to run the command directly as well:  
-
 ```bash
-$ kourou security:createRole '{
+kourou security:createRole '{
   controllers: {
     auth: {
       actions: {
@@ -69,11 +41,12 @@ $ kourou security:createRole '{
   }
 }' --id dummy
 ```
+
+::: info
+This will use the [security:createRole](/core/2/api/controllers/security/create-role) API action.
 :::
 
-
-
-You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://console.kuzzle.io)
+You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://next-console.kuzzle.io)
 
 ![Admin Console roles display](./admin-console-roles.png)
 
@@ -82,7 +55,7 @@ You should see your newly created role in the `Security > Roles` section of the 
 Then, we are going to create a profile which uses our newly created role. For this we will use the [security:createProfile](/core/2/api/controllers/security/create-profile) action.
 
 ```bash
-$ kourou security:createProfile '{
+kourou security:createProfile '{
   policies: [
     { roleId: "dummy" }
   ]
@@ -95,7 +68,7 @@ This will use the [security:createProfile](/core/2/api/controllers/security/crea
 
 Now we have a `dummy` profile which gives access to the API actions allowed by the `dummy` role.
 
-You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://console.kuzzle.io)
+You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://next-console.kuzzle.io)
 
 ![Admin Console profiles display](./admin-console-profiles.png)
 
@@ -106,7 +79,7 @@ Finally, we need a user attached to the `dummy` profile. The API action to creat
 Users need to have at least one assigned profile. We also will have to give our user some credentials to be able to log in with it.
 
 ```bash
-$ kourou security:createUser '{
+kourou security:createUser '{
   content: {
     profileIds: ["dummy"]
   },
@@ -124,7 +97,7 @@ This will use the [security:createUser](/core/2/api/controllers/security/create-
 :::
 
 
-You should see your newly created role in the `Security > Users` section of the [Admin Console](http://console.kuzzle.io)
+You should see your newly created role in the `Security > Users` section of the [Admin Console](http://next-console.kuzzle.io)
 
 ![Admin Console users display](./admin-console-users.png)
 
@@ -148,7 +121,7 @@ The `reset` option allows to restrict `anonymous` default rights in the same tim
 This way you can always access the complete API through this admin account.
 
 ```bash
-$ kourou security:createFirstAdmin '{
+kourou security:createFirstAdmin '{
   credentials: {
     local: {
       username: "admin",
@@ -165,7 +138,7 @@ Try to run the following command: `kourou server:now`
 You should get the following error because now the anonymous user is restricted to only a few API actions:
 
 ```bash
-$ kourou server:now
+kourou server:now
 
 [ℹ] Unknown command "server:now", fallback to API method
  
@@ -186,7 +159,7 @@ Run the same command, authenticating with the user we just created: `kourou serv
 We are allowed to use this API action because we are now authenticated with a user with sufficient rights.
 
 ```bash
-$ kourou server:now --username yagmur --password password
+kourou server:now --username yagmur --password password
 
 [ℹ] Unknown command "server:now", fallback to API method
  
@@ -203,7 +176,7 @@ $ kourou server:now --username yagmur --password password
 ::: info
 You can now reset anonymous rights to default to make the rest of this tutorial easier:
 ```bash
-$ kourou security:updateRole '{
+kourou security:updateRole '{
   controllers: {
     "*": {
       actions: {
@@ -215,11 +188,6 @@ $ kourou security:updateRole '{
 ```
 
 This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
-:::
-
-::: info
-Going further:
-  - [Rights management](/core/2/some-link)
 :::
 
 <GuidesLinks 

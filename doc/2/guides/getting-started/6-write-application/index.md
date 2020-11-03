@@ -24,7 +24,7 @@ import { Backend } from 'kuzzle'
 const app = new Backend('playground')
 ```
 
-An application has two states: `instantiated` and `started`. The classes and methods that can be used **depend on the state the application is in**. 
+An application has two phases: `setup` and `runtime`. The classes and methods that can be used **depend on the phase the application is in**. 
 
 ::: info
 Calling the [Backend.start](/core/2/some-link) method will start your application and change its state to `started`.
@@ -162,13 +162,6 @@ app.start()
   })
   .catch(console.error)
 ```
-
-::: info
-Going further:
- - [Backend class](/core/2/some-link)
- - [API Controllers](/core/2/some-link)
- - [Kuzzle Event System](/core/2/api/some-links)
-:::
 
 <GuidesLinks
   :prev="{ text: 'Subscribe to Realtime Notifications', url: '/core/2/guides/getting-started/5-subscribe-realtime-notifications/' }" 

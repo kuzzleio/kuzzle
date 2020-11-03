@@ -8,6 +8,8 @@ order: 800
 
 # Customize the API Behavior
 
+<!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
+
 Kuzzle allows to modify API actions behavior with a **very precise middleware-like system**.  
 
 This system makes it possible to **modify the execution flow of requests** processed by Kuzzle.
@@ -54,24 +56,30 @@ Be careful to only use documented events. Some events are for internal use and a
 
 ## Plugging to events with Pipes
 
+<!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
+
 Pipes are **functions plugged to events**, called **synchronously** by Kuzzle, and **receiving information** regarding that event.
 
 Pipes can:
-  - **Abort a task**. If a pipe throws an error, Kuzzle interrupts the task, and forwards a standardized version of the thrown error to the originating client
   - **Change the received information**. Kuzzle will use the updated information upon resuming the task
+  - **Abort a task**. If a pipe throws an error, Kuzzle interrupts the task, and forwards a standardized version of the thrown error to the originating client
 
 ![pipe workflow](./pipes-workflow.png)
 
-Each event carries a different payload. This payload must be returned in the pipe function so Kuzzle can continue its execution process.
+::: warning
+Each event carries a different payload. **This payload must be returned by the pipe function** so Kuzzle can continue its execution process.
+:::
 
 ### Registering a pipe
+
+<!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
 
 We need to use the [Backend.pipe.register](/core/2/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
 
 In this example, we are going to change the return value of the `server:now` action to make it return a formatted date string instead of a UNIX timestamp:
 
 ```js
-app.pipe.register('server:afterNow', async request => {
+app.pipe.register('server:afterNow', async (request: Request) => {
   request.result.now = (new Date()).toUTCString()
 
   return request
@@ -86,7 +94,7 @@ However Kuzzle **provides no guarantee on the pipes execution order**, so pipes 
 Now we can call the action with Kourou:
 
 ```bash
-$ kourou server:now
+kourou server:now
 
 [ℹ] Unknown command "server:now", fallback to API method
  
@@ -98,12 +106,6 @@ $ kourou server:now
  }
  [✔] Successfully executed "server:now
 ```
-
-::: info
-Going further:
- - [Kuzzle Event System](/core/2/api/some-links)
- - [Execute asynchronous action with hooks](/core/2/some-link)
-:::
 
 <GuidesLinks
   :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/7-create-new-controllers' }" 

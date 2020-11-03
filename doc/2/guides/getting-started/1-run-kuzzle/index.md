@@ -20,46 +20,51 @@ In this guide we will use Docker and Docker Compose to run those services.
  - [Docker](https://docs.docker.com/engine/install/)
  - [Docker Compose](https://docs.docker.com/compose/install/)
  - [Kourou](https://github.com/kuzzleio/kourou)
- - Compile toolchain: a C++ compiler (g++, clang, ...), make and python
 
 Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI.
 
 You can install Kourou globally by using NPM: `npm install -g kourou`
+
+::: warning
+Kuzzle uses compiled C++ dependencies so a compile toolchain (a C++ compiler like g++ or clang, make and python) is necessary to run `npm install kuzzle`.  
+For the sake of simplicity we will use a Docker and Docker Compose throughout this guide.  
+If you want to run Kuzzle directly from you computer, you can check out the [Installing and Running](/core/2/guides/advanced/4-installing-and-running) guide.
+::: 
 
 ### Let's go!
 
 First, we will initialize a new application using Kourou:
 
 ```bash
-$ kourou app:scaffold playground
+kourou app:scaffold playground
  
- 🚀 Kourou - Scaffolds a new Kuzzle application
+  🚀 Kourou - Scaffolds a new Kuzzle application
  
- [ℹ] Scaffold a new Kuzzle application in playground/
- [ℹ] Installing latest Kuzzle version via NPM...
- [✔] Scaffolding complete. Start to develop you application in ./playground/
+  ✔ Creating "playground/" directory
+  ✔ Creating and rendering application files
+  ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
+
+ [✔] Scaffolding complete! Use "npm run dev:docker" to run your application
+
 ```
 
 This will create the following files and directories:
 
 ```
 playground/
-├── app.ts               < application entrypoint        
+├── lib                  < application code
 ├── .eslintignore
 ├── .eslintrc.json
 ├── .gitignore
 ├── .kuzzlerc            < kuzzle configuration file
-├── lib                  < application code
+├── app.ts               < application entrypoint        
+├── docker-compose.yml   < Docker Compose configuration
 ├── .mocharc.json
 ├── package.json
 ├── package-lock.json
 ├── README.md
 └── tsconfig.json
 ```
-
-Now we have to run Kuzzle services, namely Elasticsearch and Redis.
-
-Again you can use Kourou for that: `kourou app:start-services`
 
 The `app.ts` file contain the basic code to run a Kuzzle application. This file is meant to be executed with Node.js as any application.
 
@@ -75,10 +80,10 @@ app.start()
   .catch(console.error)
 ```
 
-We can now run our first application with `npm run dev`
+We can now run our first application with `npm run dev:docker`
 
 ::: info
-Under the hood, the command `npm run dev` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) to run the application.
+Under the hood, the command `npm run dev:docker` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) inside the Docker container to run the application.
 :::
 
 Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
@@ -92,7 +97,7 @@ The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/S
 No data related to your connection to Kuzzle will pass through our servers.
 :::
 
-First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follow:
+First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://next-console.kuzzle.io) in your browser and then fill the form as follow:
 
 ![Admin Console create connection form](./admin-console-create-connection.png)
 
@@ -101,12 +106,6 @@ Click on `Create Connection` and then select your connection on the dropdown men
 When asked for credentials, just choose `Login as Anonymous`.
 
 You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
-
-
-::: info
-Going further:
- - [Installing and running Kuzzle](/core/2/some-link)
-:::
 
 <GuidesLinks 
   :next="{ text: 'Store and Access Data', url: '/core/2/guides/getting-started/2-store-and-access-data/' }"

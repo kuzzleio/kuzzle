@@ -3,7 +3,7 @@ code: false
 type: page
 title: Kuzzle Event System
 description: Interact with Internal Events
-order: 300
+order: 400
 ---
 
 # Kuzzle Event System

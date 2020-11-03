@@ -58,7 +58,7 @@ The mapping associated with each collection will also be exported and saved next
 
 ```bash
 # Export index "nyc-open-data" to directory "./dump/nyc-open-data"
-$ kourou index:export nyc-open-data ./dump/
+kourou index:export nyc-open-data ./dump/
 
  🚀 Kourou - Export an entire index content (JSONL format)
  
@@ -92,7 +92,7 @@ It is possible to import only the data with the `--no-mappings` option.
 :::
 
 ```bash
-$ kourou index:import ./nyc-open-data       
+kourou index:import ./nyc-open-data       
  
  🚀 Kourou - Import a previously dumped index
  

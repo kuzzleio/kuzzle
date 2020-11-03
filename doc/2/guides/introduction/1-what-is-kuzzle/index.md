@@ -43,6 +43,7 @@ Kuzzle is a **backend with ready-to-use features** that can be extended in the s
 
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
+
 <div class="IconTable">
   <div class="IconTable-item">
     <div class="IconTable-item-icon">
@@ -89,7 +90,8 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
   </div>
 </div>
 
-Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/some-link) or [modifying API methods behavior](/core/2/some-link).
+
+Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/2-api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/3-kuzzle-event-system#pipe).
 
 ## Complete ecosystem
 
@@ -103,7 +105,7 @@ The [Admin Console](/core/2/some-link) is a Single Page Application (SPA) writte
 
 It is used to manage its data and the user permissions system.
 
-As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://console.kuzzle.io](http://console.kuzzle.io).
+As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://next-console.kuzzle.io](http://next-console.kuzzle.io).
 
 ### SDKs
 
@@ -135,4 +137,4 @@ The community is also able to develop and distribute its own plugins to enrich t
 
 We federate a community of developers using Kuzzle around the world.
 
-Whether you want to ask a question about [StackOverflow](https://stackoverflow.com/questions/ask?tags=kuzzle), check out the [Kuzzle awesome list](https://github.com/kuzzleio/awesome-kuzzle) or discuss Kuzzle usage on [Discord](http://join.discord.kuzzle.io), the community and the core team will be there to help you.
+Whether you want to ask a question on [StackOverflow](https://stackoverflow.com/questions/ask?tags=kuzzle), check out the [Kuzzle awesome list](https://github.com/kuzzleio/awesome-kuzzle), watch our video on [YouTube](https://www.youtube.com/channel/UCHcEzVQoH10YSyxc7jD3SMw/videos), or discuss Kuzzle on [Discord](http://join.discord.kuzzle.io), the community and the core team will be there to help you.

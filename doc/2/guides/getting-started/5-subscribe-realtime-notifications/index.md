@@ -21,7 +21,7 @@ Subscription to realtime notifications is **performed client-side and does not r
 First, we need to subscribe to changes occuring in a specific collection:
 
 ```bash
-$ kourou realtime:subscribe nyc-open-data yellow-taxi
+kourou realtime:subscribe nyc-open-data yellow-taxi
 ```
 
 ::: info
@@ -32,7 +32,7 @@ Kourou is now waiting for realtime notifications about changes in our collection
 
 We are going to create a new document in the Admin Console to trigger one!
 
-Open the [Admin Console](http://console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document. 
+Open the [Admin Console](http://next-console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document. 
 
 Then you should receive a notification about the created document in your terminal:
 
@@ -46,9 +46,9 @@ Then you should receive a notification about the created document in your termin
  {
   "_id": "dvIdJ3UB1MqPtuLKxKDS",
   "_source": {
-    "name": "Aschen",
-    "city": "Antalya",
-    "age": 27,
+    "name": "Nerwin",
+    "city": "Montreal",
+    "age": 26,
     "_kuzzle_info": {
       "author": "-1",
       "createdAt": 1602679063751,
@@ -66,7 +66,7 @@ Kuzzle allows you to **use filters** to receive only the notifications **matchin
 
 Again, we are going to subscribe to notifications but only for documents where:
   - `age` is greater than `30`
-  - `city` is equal to `Antalya`
+  - `city` is equal to `Montreal`
 
 This filter must be written using [Koncorde Filter DSL](/core/2/some-link), which is a little inspired by Elasticsearch DSL:
 
@@ -84,7 +84,7 @@ Koncorde is part of the Kuzzle Realtime Engine and handles subscription filters.
     },
     {
       "equals": {
-        "city": "Antalya"
+        "city": "Montreal"
       }
     }
   ]
@@ -94,7 +94,7 @@ Koncorde is part of the Kuzzle Realtime Engine and handles subscription filters.
 Now we can subscribe again with our filter:
 
 ```bash
-$ kourou realtime:subscribe nyc-open-data yellow-taxi '{
+kourou realtime:subscribe nyc-open-data yellow-taxi '{
   and: [
     {
       range: {
@@ -103,7 +103,7 @@ $ kourou realtime:subscribe nyc-open-data yellow-taxi '{
     },
     {
       equals: {
-        city: "Antalya"
+        city: "Montreal"
       }
     }
   ]
@@ -113,11 +113,11 @@ $ kourou realtime:subscribe nyc-open-data yellow-taxi '{
 Then we create 10 documents using the [`sdk:execute` command in Kourou](https://github.com/kuzzleio/kourou#kourou-sdkexecute):
 
 ```bash
-$ kourou sdk:execute --code '
+kourou sdk:execute --code '
   for (let i = 1; i <= 10; i++) {
     await sdk.document.create("nyc-open-data", "yellow-taxi", {
-      name: `Yagmur-${i}`,
-      city: i % 2 ? "Antalya" : "Istanbul",
+      name: `Nerwin-${i}`,
+      city: i % 2 ? "Montreal" : "Montpellier",
       age: 27 + i
     });
   }'
@@ -140,8 +140,8 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
  {
   "_id": "hfI3J3UB1MqPtuLKwaCh",
   "_source": {
-    "name": "Yagmur-5",
-    "city": "Antalya",
+    "name": "Nerwin-5",
+    "city": "Montreal",
     "age": 32,
     "_kuzzle_info": {
       "author": "-1",
@@ -156,8 +156,8 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
  {
   "_id": "h_I3J3UB1MqPtuLKwaDE",
   "_source": {
-    "name": "Yagmur-7",
-    "city": "Antalya",
+    "name": "Nerwin-7",
+    "city": "Montreal",
     "age": 34,
     "_kuzzle_info": {
       "author": "-1",
@@ -172,8 +172,8 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
  {
   "_id": "ifI3J3UB1MqPtuLKwaDn",
   "_source": {
-    "name": "Yagmur-9",
-    "city": "Antalya",
+    "name": "Nerwin-9",
+    "city": "Montreal",
     "age": 36,
     "_kuzzle_info": {
       "author": "-1",
@@ -187,13 +187,6 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
 ```
 
 </details>
-
-::: info
-Going further:
- - [Koncorde Filter DSL](/core/2/some-link).
- - [Kuzzle Realtime Engine](/core/2/some-link).
- - Javascript SDK [realtime.subscribe](/sdk/js/7/controllers/realtime/subscribe) method
-:::
 
 <GuidesLinks 
   :prev="{ text: 'Authenticate Users', url: '/core/2/guides/getting-started/4-authenticate-users/' }" 

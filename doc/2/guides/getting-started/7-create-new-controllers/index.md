@@ -53,7 +53,7 @@ We can now test our new action:
 ::: tab Kourou
 
 ```bash
-$ kourou greeting:sayHello --arg name=Yagmur
+kourou greeting:sayHello --arg name=Yagmur
 [ℹ] Unknown command "greeting:sayHello", fallback to API method
  
  🚀 Kourou - Executes an API query.
@@ -67,7 +67,7 @@ $ kourou greeting:sayHello --arg name=Yagmur
 ::: tab HTTP
 
 ```bash
-$ curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
+curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
 {
   "requestId": "383e016a-447e-4138-aa53-c07c9fd5c923",
   "status": 200,
@@ -85,7 +85,7 @@ $ curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
 ::: tab WebSocket
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --execute '{
+npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
   "name": "Yagmur"
@@ -107,11 +107,6 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 
 :::
 ::::
-
-::: info
-Going further:
- - [API Controllers](/core/2/some-link)
-:::
 
 <GuidesLinks 
   :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/6-write-application/' }" 
