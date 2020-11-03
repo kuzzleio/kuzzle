@@ -190,8 +190,8 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
 
 ::: info
 Going further:
- - [Koncorde Filter DSL](/core/2/some-link).
- - [Kuzzle Realtime Engine](/core/2/some-link).
+ - [Koncorde Filter DSL](/core/2/some-link)
+ - [Realtime Engine](/core/2/guides/main-concepts/5-realtime-engine)
  - Javascript SDK [realtime.subscribe](/sdk/js/7/controllers/realtime/subscribe) method
 :::
 
