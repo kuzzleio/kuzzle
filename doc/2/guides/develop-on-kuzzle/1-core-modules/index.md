@@ -2,7 +2,7 @@
 code: false
 type: page
 title: Core Modules
-description: tbd
+description: Classes and methods available to interact with Kuzzle features
 order: 200
 ---
 
@@ -18,7 +18,7 @@ The `runtime` phase starts after calling the [Backend.start](/core/2/some-link) 
 
 Those features are exposed through the properties of the [Backend](/core/2/some-link) class:
  - [sdk](/core/2/guides/develop-on-kuzzle/1-core-modules#embedded-sdk): modified version of the [Javascript SDK](/sdk/js/7) to execute API actions
- - [storage](/core/2/guides/develop-on-kuzzle/1-core-modules#storage-client): use Node.js Elasticsearch client to send direct requests to Elasticsearch
+ - [storage](/core/2/guides/develop-on-kuzzle/1-core-modules#storage-client): use an Elasticsearch client to send direct requests to Elasticsearch
  - [log](/core/2/guides/develop-on-kuzzle/1-core-modules#internal-logger): internal logger
  - [trigger](/core/2/guides/develop-on-kuzzle/1-core-modules#trigger-events): trigger internal or custom events
  - [kerror](/core/2/guides/develop-on-kuzzle/1-core-modules#error-manager): error manager
@@ -26,7 +26,7 @@ Those features are exposed through the properties of the [Backend](/core/2/some-
 
 ## Embedded SDK
 
-::: warning
+::: info
 The Embedded SDK is available only in the `runtime` phase, after application startup.
 ::: 
 
@@ -34,7 +34,7 @@ The Embedded SDK is available only in the `runtime` phase, after application sta
 
 In order to use the API actions, Kuzzle exposes the [Embedded SDK](/core/2/some-link).  
 
-The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which is directly connected to the API and **does not send requests through the network**.  
+The Embedded SDK is a **modified version of the [Javascript SDK](/sdk/js/7)** which is directly connected to the API and **does not send requests through the network**.  
 
 You can access it through the [Backend.sdk](/core/2/some-link) property. 
 
@@ -74,7 +74,7 @@ await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
 
 <!-- Duplicate /core/2/guides/getting-started/6-write-application -->
 
-The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to the Kuzzle API.  
+The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to **send custom requests to the Kuzzle API**.  
 
 **Example:** _Execute a custom controller action with the [query](/sdk/js/7/core-classes/kuzzle/query) method_
 ```js
@@ -92,9 +92,9 @@ await app.sdk.query({
 
 ### User impersonation
 
-By default, when using the embedded SDK, requests made to Kuzzle API don't have the same context as the original request received by the plugin.
+By default, when using the Embedded SDK, requests **don't have the same context as the original request** received by Kuzzle.
 
-Typically, the `request.context.user` property is not set and thus [Kuzzle metadata](/core/2/some-link) will not be set when creating or updating documents.
+Typically, the `request.context.user` property is not set and thus **[Kuzzle metadata](/core/2/some-link) will not be set when creating or updating documents**.
 
 It is possible to use the same user context as the original request with the Embedded SDK, for this purpose it is necessary to use the [EmbeddedSDK.as](/core/2/some-link) method.
 
@@ -122,17 +122,17 @@ User permissions are not applied even when the [EmbeddedSDK.as](/core/2/some-lin
 
 ### Backend Realtime Subscriptions
 
-Realtime subscriptions should be made using the [realtime controller](/sdk/js/7/controllers/realtime) just after the application startup.
+Realtime subscriptions should be made using the [Realtime Controller](/sdk/js/7/controllers/realtime) **just after the application startup**.
 
 ::: warning
-You should avoid making dynamic subscriptions at runtime because that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
+You should **avoid making dynamic subscriptions at runtime because** that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
 :::
 
 The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
 
 #### propagate: false (default)
 
-With `propagate: false`, the callback function is executed only on the node on which a notification is generated (only one execution).
+With `propagate: false`, the callback function is **executed only one node**, the one on which the notification is generated (only one execution).
 
 ::: info 
 This behavior is suitable for most usage like sending emails, write in the database, call an external API, etc.
@@ -156,12 +156,11 @@ app.start()
 
 #### propagate: true
 
-With `propagate: true`, notifications are propagated to all nodes of a cluster, executing all callback functions.
+With `propagate: true`, notifications are propagated to all nodes of a cluster, **executing the callback function on each nodes**.
 
 ::: info 
 This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
 :::
-
 
 **Example:**
 
@@ -183,9 +182,9 @@ app.start()
 
 Kuzzle uses and exposes [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
 
-It is possible to interact directly with Elasticsearch through clients exposed in the [Backend.storage](/core/2/some-link) property.
+It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/some-link) property.
 
-This property offers the possibility to instantiate a new client or to use a pre-instantiated client. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
+This property offers the possibility to **instantiate a new client** or to **use a lazy-instantiated client**. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
 
 ::: info
 It is possible to overload the configuration used by default by instantiating a new Ealsticsearch client with the constructor [Backend.storage.Client](/core/2/some-link).
@@ -219,13 +218,13 @@ Kuzzle use an [internal naming system](/core/2/guides/main-concepts/2-data-stora
 
 ## Internal Logger
 
-::: warning
+::: info
 The Internal Logger is available only in the `runtime` phase, after application startup.
 ::: 
 
 Kuzzle exposes an internal logger with 5 priority levels:
- - debug (not printed by default)
- - verbose (not printed by default)
+ - debug _(not printed by default)_
+ - verbose _(not printed by default)_
  - info
  - warn
  - error
@@ -261,11 +260,11 @@ More info about [Internal Logger](/core/2/guides/advanced/10-internal-logger) co
 
 ## Trigger Events
 
-::: warning
+::: info
 You can only trigger custom events in the `runtime` phase, after application startup.
 ::: 
 
-Internal or custom events can be triggered with the [Backend.trigger](/core/2/some-link) method.
+**Internal or custom events can be triggered** with the [Backend.trigger](/core/2/some-link) method.
 
 Pipes and hooks can be plugged on custom events as well as on internal events.
 
@@ -285,7 +284,7 @@ If an internal event is triggered, the payload must be the same as the original 
 
 ## Error Manager
 
-Kuzzle exposes it's standard errors through an Error Manager class available under the [Backend.kerror](/core/2/some-link) property.
+Kuzzle exposes it's **standard errors** through an Error Manager class available under the [Backend.kerror](/core/2/some-link) property.
 
 The following constructors are available directly in the [Backend.kerror](/core/2/some-link) property:
   - [Backend.kerror.KuzzleError](/core/2/some-link#some-anchor)
@@ -324,13 +323,15 @@ app.controller.register('greeting', {
 })
 ```
 
-TODO: add ImplementationError
-
 ## Configuration
+
+::: info
+You can only change configuration in the `setup` phase, before application startup.
+::: 
 
 The configuration of Kuzzle is also accessible through the [Backend.config](/core/2/some-link) property.
 
-It is possible to consult or modify values of the configuration. 
+It is possible to **consult or modify values of the configuration**. 
 
 The set of keys that can be configured is available in the file [.kuzzlerc.sample](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)
 
@@ -348,7 +349,3 @@ app.config.set(
   'plugins.kuzzle-plugin-logger.services.stdout.level', 
   'verbose')
 ```
-
-::: warning
-It's not possible to change the configuration after the application as started
-:::
