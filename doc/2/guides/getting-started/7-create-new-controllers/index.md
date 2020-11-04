@@ -9,7 +9,7 @@ order: 700
 # Create new Controllers
 
 The Kuzzle API is composed of **actions grouped in controllers**.  
-A controller is a logical container that groups several actions together.
+A controller is a **logical container** that groups several actions together.
 
 Each action receives a [Request object](/core/2/some-link) argument, and is in charge of returning a result which will be transmitted in the response.
 

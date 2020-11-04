@@ -71,27 +71,10 @@ Again, we are going to subscribe to notifications but only for documents where:
 This filter must be written using [Koncorde Filter DSL](/core/2/some-link), which is a little inspired by Elasticsearch DSL:
 
 ::: info
-Koncorde is part of the Kuzzle Realtime Engine and handles subscription filters.
+Koncorde is part of the Realtime Engine and handles subscription filters.
 :::
 
-```json
-{
-  "and": [
-    {
-      "range": {
-        "age": { "gt": 30 }
-      },
-    },
-    {
-      "equals": {
-        "city": "Montreal"
-      }
-    }
-  ]
-}
-```
-
-Now we can subscribe again with our filter:
+Now we can subscribe again with a filter:
 
 ```bash
 kourou realtime:subscribe nyc-open-data yellow-taxi '{

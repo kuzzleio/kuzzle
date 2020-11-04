@@ -27,12 +27,12 @@ const app = new Backend('playground')
 An application has two phases: `setup` and `runtime`. The classes and methods that can be used **depend on the phase the application is in**. 
 
 ::: info
-Calling the [Backend.start](/core/2/some-link) method will start your application and change its state to `started`.
+Calling the [Backend.start](/core/2/some-link) method will start your application and change it's phase to `runtime`.
 :::
 
 ## Register new features
 
-When the application is in the `instantiated` state, it exposes methods allowing to **register new features** to Kuzzle, such as:
+When the application is in the `setup` phase, it exposes methods allowing to **register new features** to Kuzzle, such as:
  - `controllers`: extend the API
  - `pipes`: modify the API behavior
  - `hooks`: execute asynchronous processing
@@ -70,7 +70,7 @@ In particular, those methods make it possible to:
  - Log Messages
  - And much more!
 
-**Example:** Use the Embedded SDK to create an index after startup with the [index.create](/sdk/js/7/controllers/index/create) method
+**Example:** _Use the Embedded SDK to create an index after startup with the [index.create](/sdk/js/7/controllers/index/create) method_
 ```js
 app.start()
   .then(async () => {
@@ -83,7 +83,7 @@ app.start()
 ```
 
 ::: warning
-These methods interact directly with the Kuzzle API and with internal modules. Therefore they aren't available until the application has been started with the [Backend.start](/core/2/some-link) method.
+Some methods interact directly with the Kuzzle API and with internal modules. Therefore they aren't available until the application has been started with the [Backend.start](/core/2/some-link) method.
 :::
 
 ### Embedded SDK
@@ -120,7 +120,7 @@ The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be us
 // Execute a custom controller action
 await app.sdk.query({
   controller: 'greeting',
-  action: 'name',
+  action: 'sayHello',
   name: 'Aschen'
 })
 ```

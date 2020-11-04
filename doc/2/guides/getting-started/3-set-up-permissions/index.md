@@ -40,17 +40,13 @@ kourou security:createRole '{
 }' --id dummy
 ```
 
-::: info
-This will use the [security:createRole](/core/2/api/controllers/security/create-role) API action.
-:::
-
 You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://next-console.kuzzle.io)
 
 ![Admin Console roles display](./admin-console-roles.png)
 
 ## Profile
 
-Then, we are going to create a profile which uses our newly created role. For this we will use the [security:createProfile](/core/2/api/controllers/security/create-profile) action.
+Then, we are going to create a profile which uses our newly created role. For this we will use the [security:createProfile](/core/2/api/controllers/security/create-profile) action:
 
 ```bash
 kourou security:createProfile '{
@@ -59,10 +55,6 @@ kourou security:createProfile '{
   ]
 }' --id dummy
 ```
-
-::: info
-This will use the [security:createProfile](/core/2/api/controllers/security/create-profile) API action.
-:::
 
 Now we have a `dummy` profile which gives access to the API actions allowed by the `dummy` role.
 
@@ -76,6 +68,7 @@ Finally, we need a user attached to the `dummy` profile. The API action to creat
 
 Users need to have at least one assigned profile. We also will have to give our user some credentials to be able to log in with it.
 
+For this we will use the [security:createUser](/core/2/api/controllers/security/create-user) action:
 ```bash
 kourou security:createUser '{
   content: {
@@ -89,11 +82,6 @@ kourou security:createUser '{
   }
 }'
 ```
-
-::: info
-This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
-:::
-
 
 You should see your newly created role in the `Security > Users` section of the [Admin Console](http://next-console.kuzzle.io)
 
@@ -154,7 +142,7 @@ kourou server:now
 
 Run the same command, authenticating with the user we just created: `kourou server:now --username yagmur --password password`
 
-We are allowed to use this API action because we are now authenticated with a user with sufficient rights.
+We are allowed to use this API action because **we are now authenticated with a user** with sufficient rights.
 
 ```bash
 kourou server:now --username yagmur --password password
@@ -184,8 +172,6 @@ kourou security:updateRole '{
   }
 }' --id anonymous --username admin --password password
 ```
-
-This will use the [security:createUser](/core/2/api/controllers/security/create-user) API action.
 :::
 
 <GuidesLinks 
