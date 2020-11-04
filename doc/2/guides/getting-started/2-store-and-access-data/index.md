@@ -66,10 +66,12 @@ Run the following command to create our `yellow-taxi` collection:
 
 ```bash
 kourou collection:create nyc-open-data yellow-taxi '{
-  properties: {
-    name: { type: "keyword" },
-    city: { type: "keyword" },
-    age: { type: "integer" }
+  mappings: {
+    properties: {
+      name: { type: "keyword" },
+      city: { type: "keyword" },
+      age: { type: "integer" }
+    }
   }
 }'
 ```
