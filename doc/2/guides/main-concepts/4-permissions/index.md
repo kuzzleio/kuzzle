@@ -422,7 +422,7 @@ By default, Kuzzle prevents existing user overwriting.
 You can either skip or overwrite existing users with the `onExistingUsers` option.
 :::
 
-<details><summary>Load permissions with Kourou</summay>
+**Example:** _Load permissions with Kourou_
 
 First, create a file `permissions.json` with the permissions definition in JSON format:
 
@@ -468,6 +468,3 @@ kourou admin:loadSecurities < permissions.json
 ::: info
 Kourou can read an API action body content from the standard output.
 :::
-
-
-</details>
