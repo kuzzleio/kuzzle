@@ -108,7 +108,7 @@ Refer to the Elasticsearch documentation for an exhaustive list of available typ
 
 #### Arrays
 
-With Elasticsearch, every field can be an array. 
+With Elasticsearch, **every field can be an array**. 
 
 To store an array of value, you can just send it as-is instead of a single value:
 ```bash
