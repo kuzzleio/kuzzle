@@ -81,7 +81,7 @@ For an exhaustive list of configuration parameters, please refer to the [kuzzler
 ## Use Backend.config property
 
 ::: info
-You can only change configuration in the `setup` phase, before application startup.
+You can change the configuration only in the `setup` phase, before starting the application.
 ::: 
 
 The configuration of Kuzzle is also accessible through the [Backend.config](/core/2/some-link) property.

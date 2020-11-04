@@ -114,10 +114,10 @@ The `propagate` option defines if, for that subscription, notifications should b
 
 ### propagate: false (default)
 
-With `propagate: false`, the callback function is **executed only one node**, the one on which the notification is generated (only one execution).
+With `propagate: false`only the node who generates the notification will execute the callback function
 
 ::: info 
-This behavior is suitable for most usage like sending emails, write in the database, call an external API, etc.
+This behavior is suitable for most usage like sending emails, write to the database, call an external API, etc.
 :::
 
 **Example:**
