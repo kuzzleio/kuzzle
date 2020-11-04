@@ -1,30 +1,12 @@
 ---
 code: false
 type: page
-title: Core Modules
-description: Classes and methods available to interact with Kuzzle features
+title: Embedded SDK
+description: Execute API action from backend code
 order: 200
 ---
 
-# Core Modules
-
-Kuzzle offers a set of classes and methods through the [Backend](/core/2/some-link) class.
-
-Some of these features are only available during the `setup` phase of the application while others are only available during the `runtime` phase.
-
-::: info
-The `runtime` phase starts after calling the [Backend.start](/core/2/some-link) method.
-:::
-
-Those features are exposed through the properties of the [Backend](/core/2/some-link) class:
- - [sdk](/core/2/guides/develop-on-kuzzle/1-core-modules#embedded-sdk): modified version of the [Javascript SDK](/sdk/js/7) to execute API actions
- - [storage](/core/2/guides/develop-on-kuzzle/1-core-modules#storage-client): use an Elasticsearch client to send direct requests to Elasticsearch
- - [log](/core/2/guides/develop-on-kuzzle/1-core-modules#internal-logger): internal logger
- - [trigger](/core/2/guides/develop-on-kuzzle/1-core-modules#trigger-events): trigger internal or custom events
- - [kerror](/core/2/guides/develop-on-kuzzle/1-core-modules#error-manager): error manager
- - [config](/core/2/guides/develop-on-kuzzle/1-core-modules#configuration): access and modify configuration
-
-## Embedded SDK
+# Embedded SDK
 
 ::: info
 The Embedded SDK is available only in the `runtime` phase, after application startup.
@@ -38,7 +20,7 @@ The Embedded SDK is a **modified version of the [Javascript SDK](/sdk/js/7)** wh
 
 You can access it through the [Backend.sdk](/core/2/some-link) property. 
 
-### Controllers
+## Controllers
 
 The following controllers are available in the embedded SDK:
 
@@ -47,14 +29,14 @@ The following controllers are available in the embedded SDK:
 - [collection](/sdk/js/7/controllers/collection)
 - [document](/sdk/js/7/controllers/document)
 - [index](/sdk/js/7/controllers/index)
-- [memoryStorage (ms)](/sdk/js/7/controllers/ms)
+- [ms (memoryStorage)](/sdk/js/7/controllers/ms)
 - [security](/sdk/js/7/controllers/security)
 - [server](/sdk/js/7/controllers/server)
 - [realtime](/sdk/js/7/controllers/realtime)
 
 ::: warning
 The behavior of the [realtime:subscribe](/sdk/js/7/controllers/realtime) method is slightly different when it's used with the Embedded SDK.  
-Learn more about [Backend Realtime Subscriptions](/core/2/guides/develop-on-kuzzle/1-core-module#backend-realtime-subscriptions)
+Learn more about [Backend Realtime Subscriptions](/core/2/guides/develop-on-kuzzle/1-embedded-sdk#backend-realtime-subscriptions)
 :::
 
 **Example:** _Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method_
@@ -70,7 +52,7 @@ await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
 })
 ```
 
-### Query method
+## Query method
 
 <!-- Duplicate /core/2/guides/getting-started/6-write-application -->
 
@@ -90,7 +72,7 @@ await app.sdk.query({
 })
 ```
 
-### User impersonation
+## User impersonation
 
 By default, when using the Embedded SDK, requests **don't have the same context as the original request** received by Kuzzle.
 
@@ -120,7 +102,7 @@ app.controller.register('drivers', {
 User permissions are not applied even when the [EmbeddedSDK.as](/core/2/some-link) method is used.
 :::
 
-### Backend Realtime Subscriptions
+## Backend Realtime Subscriptions
 
 Realtime subscriptions should be made using the [Realtime Controller](/sdk/js/7/controllers/realtime) **just after the application startup**.
 
@@ -130,7 +112,7 @@ You should **avoid making dynamic subscriptions at runtime because** that can le
 
 The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
 
-#### propagate: false (default)
+### propagate: false (default)
 
 With `propagate: false`, the callback function is **executed only one node**, the one on which the notification is generated (only one execution).
 
@@ -154,7 +136,7 @@ app.start()
   })
 ```
 
-#### propagate: true
+### propagate: true
 
 With `propagate: true`, notifications are propagated to all nodes of a cluster, **executing the callback function on each nodes**.
 
