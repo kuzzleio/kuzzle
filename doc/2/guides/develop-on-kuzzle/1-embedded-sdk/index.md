@@ -67,7 +67,7 @@ The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be us
 // Execute a custom controller action
 await app.sdk.query({
   controller: 'greeting',
-  action: 'name',
+  action: 'sayHello',
   name: 'Aschen'
 })
 ```
