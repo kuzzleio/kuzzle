@@ -135,16 +135,18 @@ For this, we need to write a [boolean query](https://www.elastic.co/guide/en/ela
 
 ```js
 {
-  must: [
-    {
-      range: {
-        age: { gt: 30 }
+  bool: {
+    must: [
+      {
+        range: {
+          age: { gt: 30 }
+        }
+      },
+      {
+        term: { city: "Antalya" }
       }
-    },
-    {
-      term: { city: "Antalya" }
-    }
-  ]
+    ]
+  }
 }
 ```
 
