@@ -17,9 +17,7 @@ The permissions system is designed following a standard model and is structured 
 
 ![roles, profiles and users](./role-profile-user.png)
 
-### Create our first restricted user
-
-#### Role
+## Role
 
 First, we are going to create a new role with the [security:createRole](/core/2/api/controllers/security/create-role) action.
 
@@ -50,7 +48,7 @@ You should see your newly created role in the `Security > Roles` section of the 
 
 ![Admin Console roles display](./admin-console-roles.png)
 
-#### Profile
+## Profile
 
 Then, we are going to create a profile which uses our newly created role. For this we will use the [security:createProfile](/core/2/api/controllers/security/create-profile) action.
 
@@ -72,7 +70,7 @@ You should see your newly created profile in the `Security > Profiles` section o
 
 ![Admin Console profiles display](./admin-console-profiles.png)
 
-#### User
+## User
 
 Finally, we need a user attached to the `dummy` profile. The API action to create a user is [security:createUser](/core/2/api/controllers/security/create-user).
 
@@ -101,7 +99,7 @@ You should see your newly created role in the `Security > Users` section of the 
 
 ![Admin Console users display](./admin-console-users.png)
 
-### Creating an administrator account, and restricting anonymous user rights
+## Creating an administrator account, and restricting anonymous user rights
 
 When you are not authenticated, your requests are executed as the `anonymous` user.
 
