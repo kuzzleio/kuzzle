@@ -163,3 +163,43 @@ Read documents: single vs m*, limits
 ## Bulk Actions
 Bulk: no limits
 
+## Direct Access to Elasticsearch
+
+Kuzzle uses and exposes [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
+
+It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/some-link) property.
+
+This property offers the possibility to **instantiate a new client** or to **use a lazy-instantiated client**. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
+
+::: info
+It is possible to overload the configuration used by default by instantiating a new Ealsticsearch client with the constructor [Backend.storage.Client](/core/2/some-link).
+:::
+
+
+**Example:** _Send a request directly to Elasticsearch_
+
+```js
+// Elasticsearch request to create a document
+const esRequest =  {
+  body: {
+    name: 'Aschen',
+    age: 27
+  },
+  // Internal name of the index "nyc-open-data" and the collection "yellow-taxi"
+  index: '%nyc-open-data.yellow-taxi',
+  op_type: 'create'
+}
+
+// Use directly an Elasticsearch client instance
+await app.storage.client.index(esRequest)
+
+// Instantiate and use a new client
+const esClient = new app.storage.Client()
+await esClient.index(esRequest)
+```
+
+::: warning
+Kuzzle use an [internal naming system](/core/2/guides/main-concepts/2-data-storage#some-anchor) to map Elasticsearch index names with Kuzzle indexes and collections names.
+:::
+
+
