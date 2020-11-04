@@ -8,6 +8,16 @@ message Heartbeat {
   string address = 2;
 }
 
+message NodeEvicted {
+  string nodeId = 1;
+  string reason = 2;
+  string evictor = 3;
+}
+
+message NodeShutdown {
+  string nodeId = 1;
+}
+
 message NewRealtimeRoom {
   uint64 messageId = 1;
   string index = 2;

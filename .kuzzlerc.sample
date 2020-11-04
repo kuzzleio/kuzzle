@@ -706,6 +706,10 @@
 
   // [cluster]
   // Kuzzle Cluster confiugration
+  //   * heartbeat:
+  //       Delay between 2 heartbeat frames. A higher value means less
+  //       reactivity for detecting dead nodes, while a lower value might mean
+  //       erroneous node evictions on slow networks.
   //   * ipv6:
   //       If true, asks nodes to use IPv6 to connect to each others
   //   * joinTimeout:
@@ -731,6 +735,7 @@
   //          used to propagate heartbeats, state changes, and other sync
   //          messages
   "cluster": {
+    "heartbeat": 2000,
     "ipv6": false,
     "joinTimeout": 60000,
     "minimumNodes": 2,
