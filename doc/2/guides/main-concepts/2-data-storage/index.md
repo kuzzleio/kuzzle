@@ -42,7 +42,7 @@ There are 3 root fields for mapping configuration:
  - [dynamic]((/core/2/guides/main-concepts/2-data-storage#mappings-dynamic-policy): dynamic mapping policy against new fields
  - [_meta]((/core/2/guides/main-concepts/2-data-storage#mappings-metadata): collection metadata
 
-The following API methods can be used to modify these mappings:
+The following API actions can be used to modify these mappings:
  - [collection:create](/core/2/api/controllers/collection/create)
  - [collection:update](/core/2/api/controllers/collection/update)
  - [admin:loadMappings](/core/2/api/controllers/admin/load-mappings)
@@ -86,13 +86,15 @@ The following mapping must first be defined:
 ```bash
 # Create the collection with the correct mappings
 kourou collection:create ktm-open-data thamel-taxi '{
-  properties: {
-    category: { type: "keyword" },
-    distance: { type: "integer" },
-    position: { type: "geo_point" },
-    driver: {
-      properties: {
-        name: { type: "keyword" }
+  mappings: {
+    properties: {
+      category: { type: "keyword" },
+      distance: { type: "integer" },
+      position: { type: "geo_point" },
+      driver: {
+        properties: {
+          name: { type: "keyword" }
+        }
       }
     }
   }
@@ -112,35 +114,148 @@ kourou document:create ktm-open-data thamel-taxi '{
 }'
 ```
 
+::: info
+Refer to the Elasticsearch documentation for an exhaustive list of available types: [Elasticsearch mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-types.html)
+:::
+
 #### Arrays
 
 With Elasticsearch, every field can be an array. 
 
 To store an array of value, you can just send it as-is instead of a single value:
-
 ```bash
 # Create a document with an array of category
 kourou document:create ktm-open-data thamel-taxi '{
-  category: ["limousine", "SUV"],
+  category: ["limousine", "suv"],
+}' --id document-1
+```
+
+If you want to **modify an existing array**, you need to **send it entirely**:
+```bash
+# Add the "4x4" value to the category array
+kourou document:update ktm-open-data thamel-taxi '{
+  category: ["limousine", "suv", "4x4"],
 }'
 ```
 
-Nested objects can be represented in two differents ways:
- - [object](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/object.html): used to store JSON objects
- - [nested](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/nested.html): used to store array of JSON objects
 ::: info
-Refer to the Elasticsearch documentation for an exhaustive list of available types: [Elasticsearch mapping types](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-types.html)
+If you need to frequently insert and remove values to an field then you should either use a nested object instead or use a [scripting language](https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting-painless.html) to modify the array.  
+For security reason, Kuzzle only support the usage of scripts through the [Integrated Elasticsearch Client](/core/2/guides/main-concepts/2-data-storage#integrated-elasticsearch-client)
 :::
 
+Nested fields arrays can be represented in two differents ways:
+ - [object](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/object.html): used to store JSON objects
+ - [nested](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/nested.html): used to store array of structured JSON objects
 
+The choice of a type rather than another one modifies the way Elasticsearch will index the field. If there is a **need to search inside your object array** then you should choose the `nested` type otherwise the default `object` type will be **less resource intensive**.
 
-Mappings: Property: types principaux, admin controller
-
-### Mappings Metadata
-Mappings: Meta
+**Example:** _Create a collection with an `object` type and a `nested` type_
+```bash
+kourou collection:create ktm-open-data thamel-taxi '{
+  mappings: {
+    properties: {
+      drivers: {
+        properties: {
+          name: { type: "keyword" },
+          age: { type: "integer" }
+        }
+      },
+      cars: {
+        type: "nested",
+        properties: {
+          name: { type: "keyword" },
+          year: { type: "integer" }
+        }
+      }
+    }
+  }
+}'
+```
 
 ### Mappings Dynamic Policy
-Mappings: Dynamic
+
+For each collection, you can set the **policy against new fields that are not referenced** in the collection mapping by modifying the `dynamic` root field.
+
+The value of this configuration will change the way Elasticsearch manages the creation of new fields that are not declared in the collection mapping.
+  - `"true"`: stores the document and updates the collection mapping with the inferred type
+  - `"false"`: stores the document and does not update the collection mapping (fields are not indexed)
+  - `"strict"`: rejects the document
+
+::: info
+Kuzzle will accept either string or boolean values for the dynamic property but it's advised to always use string values.
+:::
+
+Refer to Elasticsearch documentation for more informations: [Elasticsearch dynamic mapping](https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html)
+
+The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/essentials/configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
+
+::: warning
+We advise not to let Elasticsearch dynamically infer the type of new fields in production.  
+This can be a problem because then the mapping cannot be modified.
+:::
+
+It is also possible to specify a **different dynamic mapping policy for nested fields**. This can be useful in imposing a strict policy on the collection while allowing the introduction of new fields in a specific location.
+
+**Example:** _Use a different policy for a nested field_
+```bash
+kourou collection:create ktm-open-data thamel-taxi '{
+  mappings: {
+    dynamic: "strict",
+    properties: {
+      category: { type: "keyword" },
+      characteristics: {
+        dynamic: "false",
+        properties: {}
+      }
+    }
+  }
+}'
+```
+
+Then if you try to create a document with a field that is not referenced you will get an error:
+```bash
+kourou document:create ktm-open-data thamel-taxi '{
+  category: "suv",
+  ecologic: false
+}'
+```
+
+But you can create a document with a non-referenced field inside the `characteristics` field:
+```bash
+kourou document:create ktm-open-data thamel-taxi '{
+  category: "suv",
+  characteristics: {
+    argus: 4200
+  }
+}'
+```
+
+### Mappings Metadata
+
+Elasticsearch allows the **definition of metadata that is stored next to the collections** in the root field `_meta`.
+These metadata are ignored by Elasticsearch, they can contain any type of information specific to your application.
+
+::: warning
+Unlike the properties types definition, new collection metadata are not merged with the old one.
+
+If you set the `_meta` field in your request, the old value will be overwritten.
+:::
+
+Refer to Elasticsearch documentation for more informations: [Elasticsearch mapping meta field](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-meta-field.html)
+
+**Example:** _Create a collection with metadata_
+```bash
+kourou collection:create ktm-open-data thamel-taxi '{
+  _meta: {
+    postgresTable: "thamelTaxi"
+  }
+}'
+```
+
+These metadata can be retrieved with the [collection:getMapping](/core/2/api/controllers/collection/get-mapping) API action:
+```bash
+kourou collection:getMapping ktm-open-data thamel-taxi
+```
 
 ### Load Mappings
 
@@ -163,7 +278,7 @@ Read documents: single vs m*, limits
 ## Bulk Actions
 Bulk: no limits
 
-## Direct Access to Elasticsearch
+## Integrated Elasticsearch Client
 
 Kuzzle uses and exposes [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
 
