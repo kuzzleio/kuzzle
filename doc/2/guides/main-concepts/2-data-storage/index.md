@@ -38,9 +38,9 @@ Elasticsearch is **primarily designed to be a search engine**, so there are **li
 With Elasticsearch, it is possible to **define mappings for collections**. These mappings allow you to configure the way Elasticsearch will handle these collections.
 
 There are 3 root fields for mapping configuration:
- - [properties](/core/2/guides/main-concepts/2-data-storage#mappings-properties: collection types definition
- - [dynamic]((/core/2/guides/main-concepts/2-data-storage#mappings-dynamic-policy): dynamic mapping policy against new fields
- - [_meta]((/core/2/guides/main-concepts/2-data-storage#mappings-metadata): collection metadata
+ - [properties](/core/2/guides/main-concepts/2-data-storage#mappings-properties): collection types definition
+ - [dynamic](/core/2/guides/main-concepts/2-data-storage#mappings-dynamic-policy): dynamic mapping policy against new fields
+ - [_meta](/core/2/guides/main-concepts/2-data-storage#mappings-metadata): collection metadata
 
 The following API actions can be used to modify these mappings:
  - [collection:create](/core/2/api/controllers/collection/create)
@@ -67,24 +67,10 @@ The main types are the following:
 Nested fields can be declared by using the `properties` key instead of `type`. Then you can define nested fields inside this object.
 :::
 
-**Example:** _Declaring a mapping to correctly store this document_
-```js
-{
-  "category": "limousine",
-  "distance": 120990,
-  "position": {
-    "lat": 27.730400,
-    "lon": 85.328467
-  },
-  "driver": {
-    "name": "liia mery"
-  }
-}
-```
+**Example:** _Declaring a collection mappings to correctly index a document_
 
-The following mapping must first be defined:
+The following mapping must be defined first:
 ```bash
-# Create the collection with the correct mappings
 kourou collection:create ktm-open-data thamel-taxi '{
   mappings: {
     properties: {
@@ -99,8 +85,10 @@ kourou collection:create ktm-open-data thamel-taxi '{
     }
   }
 }'
+```
 
-# Create our document
+Then we can create a document which is going to be correctly indexed:
+```bash
 kourou document:create ktm-open-data thamel-taxi '{
   category: "limousine",
   distance: 120990,
