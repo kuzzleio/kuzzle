@@ -12,8 +12,10 @@ Most of the **internal tasks performed by Kuzzle trigger events**.
 
 Kuzzle enables to attach business-logic to these events by defining **hooks** (which allow to perform additional actions when the event triggers) and **pipes** (which change the behavior of the standard logic when the event triggers).
 
-::: info
 The complete list of events is available here: [Internal Events List](/core/2/some-link)
+
+::: info
+You can display events triggered by Kuzzle by setting the `DEBUG` environment variable to `kuzzle:events:*`.
 :::
 
 ## Pipe
@@ -149,4 +151,28 @@ app.hook.register(
 
 ::: info
 To prevent infinite loops, if a hook attached to the `hook:onError` event fails, it won't trigger any other events.
+:::
+
+## Trigger Events
+
+::: info
+You can only trigger custom events in the `runtime` phase, after application startup.
+::: 
+
+**Internal or custom events can be triggered** with the [Backend.trigger](/core/2/some-link) method.
+
+Pipes and hooks can be plugged on custom events as well as on internal events.
+
+::: info
+It's considered as a good practice to prefix your event name with your application name.
+:::
+
+**Example:** _Trigger a custom event_
+
+```js
+await app.trigger('app-name/file-available', fileUrl);
+```
+
+::: warning
+If an internal event is triggered, the payload must be the same as the original event.
 :::
