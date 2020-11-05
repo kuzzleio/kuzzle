@@ -636,5 +636,3 @@ await esClient.index(esRequest)
 ::: warning
 Kuzzle use an [internal naming system](/core/2/guides/main-concepts/2-data-storage#some-anchor) to map Elasticsearch index names with Kuzzle indexes and collections names.
 :::
-
-
