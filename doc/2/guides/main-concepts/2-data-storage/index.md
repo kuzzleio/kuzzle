@@ -8,7 +8,7 @@ order: 200
 
 # Data Storage
 
-Kuzzle uses Elasticsearch as a NoSQL document storage.
+Kuzzle uses Elasticsearch as a **NoSQL document storage**.
 
 The data storage is organized in 4 levels: 
   - Indexes
@@ -16,7 +16,7 @@ The data storage is organized in 4 levels:
   - Documents
   - Fields
 
-An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.
+An **index** brings together several **collections**, which in turn contain several **documents**, each of which is composed of several **fields**.
 
 If you're more familiar with the way relational databases store data, here is an analogy. Bear in mind that this is only to give you a rough point of comparison with a relational database, the similarities end here:
 
