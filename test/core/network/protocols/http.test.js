@@ -203,7 +203,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {message: 'Maximum HTTP request size exceeded.'});
       });
@@ -260,7 +260,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {message: 'Too many encodings.'});
       });
@@ -273,7 +273,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {message: 'Unsupported compression algorithm "foobar".'});
       });
@@ -394,7 +394,7 @@ describe('/lib/core/network/protocols/http', () => {
 
             should(protocol._replyWithError)
               .be.calledWithMatch(
-                { url: request.url, method: request.method },
+                { path: request.url, url: request.url, method: request.method },
                 response,
                 { message: 'Maximum HTTP request size exceeded.' });
             done();
@@ -415,7 +415,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {
               id: 'network.http.unexpected_error',

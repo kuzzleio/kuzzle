@@ -1,10 +1,11 @@
 'use strict';
 
-const
-  _ = require('lodash'),
-  rp = require('request-promise'),
-  routes = require('../../../lib/config/httpRoutes'),
-  zlib = require('zlib');
+const zlib = require('zlib');
+
+const _ = require('lodash');
+const rp = require('request-promise');
+
+const routes = require('../../../lib/config/httpRoutes');
 
 function checkAlgorithm(algorithm) {
   const
@@ -210,13 +211,15 @@ class HttpApi {
    * @param options
    * @returns {Promise.<IncomingMessage>}
    */
-  callApi (options) {
+  async callApi (options) {
     if (!options.headers) {
       options.headers = {};
     }
 
     if (this.world.currentUser && this.world.currentUser.token) {
-      options.headers = _.extend(options.headers, {authorization: 'Bearer ' + this.world.currentUser.token});
+      options.headers = _.extend(options.headers, {
+        authorization: `Bearer ${this.world.currentUser.token}`,
+      });
     }
 
     if (options.body && this.encoding !== 'identity') {
@@ -228,11 +231,13 @@ class HttpApi {
       for(const algorithm of algorithms) {
         if (algorithm === 'gzip') {
           options.body = zlib.gzipSync(options.body);
-        } else if (algorithm === 'deflate') {
+        }
+        else if (algorithm === 'deflate') {
           options.body = zlib.deflateSync(options.body);
         }
       }
-    } else {
+    }
+    else {
       options.json = true;
     }
 
@@ -246,16 +251,15 @@ class HttpApi {
 
     options.forever = true;
 
-    return rp(options)
-      .then(response => {
-        // we need to manually parse the stringified json if
-        // we sent a compressed buffer through the request module
-        if (options.body && this.encoding !== 'identity') {
-          return JSON.parse(response);
-        }
+    const response = await rp(options);
 
-        return response;
-      });
+    // we need to manually parse the stringified json if
+    // we sent a compressed buffer through the request module
+    if (options.body && this.encoding !== 'identity') {
+      return JSON.parse(response);
+    }
+
+    return response;
   }
 
   callMemoryStorage (command, args) {
@@ -496,7 +500,7 @@ class HttpApi {
 
   deleteIndexes () {
     const options = {
-      url: this.apiPath('_mdelete'),
+      url: this.apiPath('_mDelete'),
       method: 'DELETE'
     };
 
@@ -1337,6 +1341,22 @@ class HttpApi {
   decode(algorithm) {
     checkAlgorithm(algorithm);
     this.expectedEncoding = algorithm;
+  }
+
+  urlEncodedCreate (form) {
+    return this.callApi({
+      form,
+      method: 'POST',
+      url: this.apiPath(`${this.world.fakeIndex}/${this.world.fakeCollection}/_create`),
+    });
+  }
+
+  multipartCreate (formData) {
+    return this.callApi({
+      formData,
+      method: 'POST',
+      url: this.apiPath(`${this.world.fakeIndex}/${this.world.fakeCollection}/_create`),
+    });
   }
 }
 

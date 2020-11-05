@@ -99,7 +99,7 @@ describe('Plugin', () => {
   describe('#init', () => {
     beforeEach(() => {
       pluginsManager._initControllers = sinon.stub();
-      pluginsManager._initApi = sinon.stub();
+      pluginsManager._initApi = sinon.stub().resolves();
       pluginsManager._initAuthenticators = sinon.stub();
       pluginsManager._initStrategies = sinon.stub();
       pluginsManager._initHooks = sinon.stub();
@@ -183,8 +183,78 @@ describe('Plugin', () => {
   });
 
   describe('#_initApi', () => {
-    it('', () => {
+    beforeEach(() => {
+      plugin.instance.api = {
+        email: {
+          actions: {
+            send: {
+              handler: sinon.stub().resolves()
+            },
+            receive: {
+              handler: sinon.stub().resolves(),
+              http: [
+                { verb: 'get', path: '/path-from-root' },
+                { verb: 'post', path: 'path-with-leading-underscore' }
+              ]
+            }
+          }
+        }
+      };
+    });
 
+    it('should create a BaseController and add corresponding actions', async () => {
+      await pluginsManager._initApi(plugin);
+
+      const emailController = pluginsManager.controllers.get('email');
+      should(emailController).be.instanceOf(BaseController);
+      should(emailController.__actions).be.eql(new Set(['send', 'receive']));
+      should(emailController.send).be.a.Function();
+      should(emailController.receive).be.a.Function();
+    });
+
+    it('should add http routes', async () => {
+      await pluginsManager._initApi(plugin);
+
+      should(pluginsManager.routes).match([
+        {
+          action: 'receive',
+          controller: 'email',
+          path: '/path-from-root',
+          verb: 'get'
+        },
+        {
+          action: 'receive',
+          controller: 'email',
+          path: '/_/path-with-leading-underscore',
+          verb: 'post'
+        }
+      ]);
+    });
+
+    it('should throw an error if the controller definition is invalid', () => {
+      plugin.instance.api = {
+        email: {
+          actions: {
+            handelr: sinon.stub().resolves()
+          }
+        }
+      };
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
+    });
+
+    it('should throw an error when trying to override a native controller', () => {
+      plugin.instance.api = {
+        document: {
+          actions: {
+            handler: sinon.stub().resolves()
+          }
+        }
+      };
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
     });
   });
 

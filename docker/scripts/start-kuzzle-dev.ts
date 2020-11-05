@@ -112,7 +112,7 @@ app.controller.register('tests', {
       handler: async (request: Request) => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
-      http: [{ verb: 'POST', path: '/hello/:name' }]
+      http: [{ verb: 'post', path: '/hello/:name' }]
     },
 
     // Trigger custom event
@@ -148,7 +148,7 @@ app.controller.register('tests', {
         return response.body;
       },
       http: [
-        { verb: 'POST', path: '/tests/storage-client/:index' }
+        { verb: 'post', path: '/tests/storage-client/:index' }
       ]
     }
   }

@@ -7,7 +7,7 @@ const
   testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
-async function resetSecurityDefault (sdk) {
+async function resetSecurityDefault(sdk) {
   await sdk.query({
     controller: 'admin',
     action: 'resetSecurity',
@@ -70,6 +70,24 @@ After(async function () {
 
   if (this.sdk && typeof this.sdk.disconnect === 'function') {
     this.sdk.disconnect();
+  }
+});
+
+Before({ tags: '@production' }, async function () {
+  if (process.env.NODE_ENV !== 'production') {
+    return 'skipped';
+  }
+});
+
+Before({ tags: '@development' }, async function () {
+  if (process.env.NODE_ENV !== 'development') {
+    return 'skipped';
+  }
+});
+
+Before({ tags: '@http' }, async function () {
+  if (process.env.KUZZLE_PROTOCOL !== 'http') {
+    return 'skipped';
   }
 });
 
@@ -138,6 +156,9 @@ After({ tags: '@login' }, async function () {
 // realtime hooks ==============================================================
 
 After({ tags: '@realtime' }, function () {
+  if (!this.props.subscriptions) {
+    return;
+  }
   const promises = Object.values(this.props.subscriptions)
     .map(({ unsubscribe }) => unsubscribe());
 

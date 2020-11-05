@@ -29,6 +29,7 @@ description: Error codes definitions
 | plugin.assert.no_name_provided<br/><pre>0x0401000b</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Cannot infer plugin name. No constructor method and no name provided | The plugin does not have a constructor method and no name has been provided. |
 | plugin.assert.invalid_controller_definition<br/><pre>0x0401000c</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Incorrect "%s" controller definition: %s | The controller definition is incorrect. |
 | plugin.assert.invalid_application_name<br/><pre>0x0401000d</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Application name "%s" is invalid. Application names must be in kebab-case. | The application name is invalid. Application names can only contain lowercase letters and dashes. |
+| plugin.assert.duplicated_api_definition<br/><pre>0x0401000e</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Cannot define new controllers in the "api" and the "controllers" objects at the same time | You cannot use the "api" and the "controllers" objects at the same time. Use the "api" object to define controllers. |
 
 ---
 
