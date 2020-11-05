@@ -80,7 +80,7 @@ Typically, the `request.context.user` property is not set and thus **[Kuzzle met
 
 It is possible to use the same user context as the original request with the Embedded SDK, for this purpose it is necessary to use the [EmbeddedSDK.as](/core/2/some-link) method.
 
-**Example:** _Creating a document as the original API user to preserv Kuzzle metadata_
+**Example:** _Creating a document as the original API user to preserve Kuzzle metadata_
 ```js
 app.controller.register('drivers', {
   actions: {
