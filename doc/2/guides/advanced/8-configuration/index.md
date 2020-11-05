@@ -91,7 +91,7 @@ It is possible to **consult or modify values of the configuration**.
 The set of keys that can be configured is available in the file [.kuzzlerc.sample](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)
 
 ::: info
-See the [Configuration](/core/2/guides/advanced/8-configuration) guide for more informations on how to configure Kuzzle.
+See the [Configuration](/core/2/guides/advanced/8-configuration) guide for more information on how to configure Kuzzle.
 :::
 
 **Example:** _Change configuration values_
