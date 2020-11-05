@@ -38,16 +38,16 @@ Elasticsearch is **primarily designed to be a search engine**, so there are **li
 Elasticsearch does not have this notion of our two levels document-oriented storage.  
 
 ::: info
-As the word `index` refers to Kuzzle indexes but also Elasticsearch indexes, we will rather use the term `indices` (also present in Elasticsearch documentation) for their indexes in order to avoid confusion.
+As the word index refers to Kuzzle indexes but also Elasticsearch indexes, we will rather **use the term indices for Elasticsearch indexes** to avoid confusion (also present in Elasticsearch documentation).
 :::
 
 Kuzzle indexes and collections are emulated in Elasticsearch in the following way:
- - `indexes` **does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`)
- - `collections` **correspond to Elasticsearch indexes** with all their properties (e.g. [mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html), [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings), etc)
+ - **indexes does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`)
+ - **collections correspond to Elasticsearch indexes** with all their properties (e.g. [mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html), [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings), etc)
 
 Kuzzle distinguish two types of storage: 
   - **private**: internal Kuzzle index, plugin private indexes
-  - **public**: users indexes
+  - **public**: indexes available through Kuzzle API
 
 Elasticsearch indices must comply to the following naming convention:
  - **private**: `%<kuzzle-index-name>.<kuzzle-collection-name>`
@@ -56,7 +56,30 @@ Elasticsearch indices must comply to the following naming convention:
 You can list Elasticsearch indices with this command:
 ```bash
 kourou es:indices:cat
+
+[
+  # Kuzzle private indices
+  "%kuzzle.api-keys",
+  "%kuzzle.config",
+  "%kuzzle.profiles",
+  "%kuzzle.roles",
+  "%kuzzle.users",
+  "%kuzzle.validations",
+
+  # Plugin auth local private indices
+  "%plugin-kuzzle-plugin-auth-passport-local.config",
+  "%plugin-kuzzle-plugin-auth-passport-local.users",
+
+  # Public indices available through the API
+  "&ktm-open-data._kuzzle_keep",
+  "&ktm-open-data.thamel-taxi"
+]
+
 ```
+
+::: info
+You can use the [admin:resetDatabase](/core/2/api/controllers/admin/reset-database) action to delete every public indexes.
+:::
 
 ## Collection Mappings
 
