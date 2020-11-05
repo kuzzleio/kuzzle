@@ -85,12 +85,14 @@ If the error is one of the [available default errors](/core/2/some-link) then th
 
 **Example:** _Limit reading access to documents to their creator_
 ```js
+import { Document, Request, Backend, ForbiddenError } from 'kuzzle'
+
 app.pipe.register(
     'generic:document:beforeGet', 
     async (documents: Document[], request: Request) => {
       for (const document of documents) {
         if (request.context.user._id !== document._source._kuzzle_info.creator) {
-          throw new app.kerror.ForbiddenError('Unauthorized access')
+          throw new ForbiddenError('Unauthorized access')
         }
       }
 
