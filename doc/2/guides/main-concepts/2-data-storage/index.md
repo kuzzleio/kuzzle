@@ -479,7 +479,7 @@ kourou document:update ktm-open-data thamel-taxi '{
 
 ### Write Multiple Documents
 
-If you need to **create multiple documents at once**, it is recommended to use one of the `m*` actions.  
+If you need to **write multiple documents at once**, it is recommended to use one of the `m*` actions.  
 
 ::: info
 If you need to create large volume of documents the fastest way possible then you should use the [bulk:import](/core/2/api/controllers/bulk/import) action.
@@ -519,17 +519,84 @@ kourou document:mCreate ktm-open-data thamel-taxi '{
 
 ### Write Limit
 
-Kuzzle imposes a limit to the number of documents that can be written by the same request.
+Kuzzle imposes a **limit to the number of documents that can be written by the same request**.
 
 This limit ensures that Kuzzle and Elasticsearch are not overloaded by writing too many documents at once.
 
 By default, this limit is `200` documents per request. It is possible to configure this value in the `limits.documentsWriteCount` key in the [configuration](/core/2/guides/advanced/8-configuration) file.
 
 ## Read Documents
-Read documents: single vs m*, limits
+
+Kuzzle exposes methods to read documents. There is two way of retrieving documents:
+ - by document `_id`
+ - with a [search query](/core/2/guides/main-concepts/3-querying)
+
+### Retrieve Documents by _id
+
+**Example:** _Retrieve a document by it's `_id` with [document:get](/core/2/api/controllers/document/get)_
+```bash
+kourou document:createOrReplace ktm-open-data thamel-taxi '{
+  driver: {
+    name: "liia mery"
+  }
+}' --id liia
+
+kourou document:get ktm-open-data thamel-taxi --id liia
+```
+
+It's also possible to retrieve multiple documents at once with the [document:mGet]([document:get](/core/2/api/controllers/document/get)) action.
+
+This methods takes an array of IDs in the request body.
+
+**Example:** _Retrieve multiple documents_
+```bash
+kourou document:createOrReplace ktm-open-data thamel-taxi '{
+  driver: {
+    name: "aschen"
+  }
+}' --id aschen
+
+kourou document:mGet ktm-open-data thamel-taxi '{
+  ids: ["liia", "aschen"]
+}'
+```
+
+### Search for Documents
+
+Searches can be made to retrieve only the documents you want.
+
+These searches are done by **writing Elasticsearch queries**.
+
+You can consult the dedicated guide: [Querying](/core/2/guides/advanced/3-querying)
+
+### Read Limit
+
+Kuzzle imposes a **limit to the number of documents that can be returned by the same request**.
+
+This limit ensures that Kuzzle and Elasticsearch are not overloaded by returning too many documents at once.
+
+By default, this limit is `10000` documents per request. It is possible to configure this value in the `limits.documentsFetchCount` key in the [configuration](/core/2/guides/advanced/8-configuration) file.
 
 ## Bulk Actions
-Bulk: no limits
+
+To perform lower level actions, it is possible to use the [bulk](/core/2/api/controllers/bulk) controller.
+
+The actions of this controller may not follow some of the API principles such as:
+ - adding [Kuzzle Metadata](/core/2/guides/main-concepts/2-data-storage#kuzzle-metadata)
+ - triggering [Database Notifications](/core/2/guides/main-concepts/6-realtime-engine#database-notifications) 
+ - application of [Data Validation](/core/2/guides/advanced/9-data-validation) rules
+ - respect of [write limit](/core/2/guides/main-concepts/2-data-storage#some-anchor)
+
+The following actions are available:
+ - [bulk:write](/core/2/api/controllers/bulk/write): write a document
+ - [bulk:mWrite](/core/2/api/controllers/bulk/m-write): write multiple documents
+ - [bulk:import](/core/2/api/controllers/bulk/import): import documents as fast as possible
+ - [bulk:deleteByQuery](/core/2/api/controllers/bulk/write): deletes large volume of documents matching a query
+
+::: warning
+Bulk actions are intended to be used by administrator and scripts.  
+It is considered harmful to let end users execute those actions.
+:::
 
 ## Integrated Elasticsearch Client
 
