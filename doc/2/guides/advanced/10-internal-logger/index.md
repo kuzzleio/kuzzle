@@ -25,7 +25,7 @@ By default, the **logs are printed to stdout**.
 ## Usage in an Application
 
 ::: info
-The Internal Logger is available only in the `runtime` phase, after application startup.
+The Internal Logger is available only during the `runtime` phase, after the application has started.
 ::: 
 
 Messages will be logged using the [util.inspect](https://nodejs.org/api/util.html#util_util_inspect_object_options) method from Node.js.
