@@ -33,9 +33,34 @@ Elasticsearch is **primarily designed to be a search engine**, so there are **li
  - no transaction system
  - [near realtime search](/core/2/guides/main-concepts/3-querying#some-anchor)
 
+## Internal Representation
+
+Elasticsearch does not have this notion of our two levels document-oriented storage.  
+
+::: info
+As the word `index` refers to Kuzzle indexes but also Elasticsearch indexes, we will rather use the term `indices` (also present in Elasticsearch documentation) for their indexes in order to avoid confusion.
+:::
+
+Kuzzle indexes and collections are emulated in Elasticsearch in the following way:
+ - `indexes` **does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`)
+ - `collections` **correspond to Elasticsearch indexes** with all their properties (e.g. [mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html), [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings), etc)
+
+Kuzzle distinguish two types of storage: 
+  - **private**: internal Kuzzle index, plugin private indexes
+  - **public**: users indexes
+
+Elasticsearch indices must comply to the following naming convention:
+ - **private**: `%<kuzzle-index-name>.<kuzzle-collection-name>`
+ - **public**: `&<kuzzle-index-name>.<kuzzle-collection-name>`
+
+You can list Elasticsearch indices with this command:
+```bash
+kourou es:indices:cat
+```
+
 ## Collection Mappings
 
-With Elasticsearch, it is possible to **define mappings for collections**. These mappings allow you to configure the way Elasticsearch will handle these collections.
+With Elasticsearch, it is possible to **define mappings for collections**. These mappings refers to [Elasticsearch mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html) and allow you to configure the way Elasticsearch will handle these collections.
 
 There are 3 root fields for mapping configuration:
  - [properties](/core/2/guides/main-concepts/2-data-storage#mappings-properties): collection types definition
@@ -247,18 +272,258 @@ kourou collection:getMapping ktm-open-data thamel-taxi
 
 ### Load Mappings
 
-admin
+It is possible to **load mappings from several collections** at once using the [admin:loadMappings](/core/2/api/controllers/admin/load-mappings) action.  
 
-boot kuzzle
+This action takes as parameter a definition of a set of indexes and collections with their associated mappings.  
+
+The expected format is the following:
+```js
+{
+  "<index>": {
+    "<collection>": {
+      "properties": {
+        "<field>": {}
+      }
+    }
+  },
+  "<index>": {
+    "<collection>": {
+      "properties": {
+        "<field>": {}
+      }
+    }
+  }
+}
+
+```
+
+::: info
+It is recommended to **save the mappings of your application in a JSON file**.
+:::
+
+```bash
+# Create a file containing the mappings
+echo '
+{
+  "nyc-open-data": {
+    "yellow-tax": {
+      "properties": {
+        "name": { "type": "keyword" },
+        "age": { "type": "integer" }
+      }
+    }
+  }
+}
+' > mappings.json
+
+# Load it with Kourou
+kourou admin:loadMappings < mappings.json
+```
+
+::: info
+Kourou can read file content and put it the request body.
+:::
+
+<!-- 
+  @todo load at startup with Kaaf
+-->
 
 ## Collection Settings
-Settings (indices ES)
+
+In addition mappings, Elasticsearch exposes [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings) that allow to finely configure the behavior of a collection.
+
+Those settings allows to configure [custom analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-custom-analyzer.html) for example.
+
+
+```bash
+kourou collection:create ktm-open-data:yellow-taxi '{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_custom_analyzer": {
+          "type": "custom", 
+          "tokenizer": "standard",
+          "char_filter": [
+            "html_strip"
+          ],
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ]
+        }
+      }
+    }
+  }
+}'
+```
+
+::: warning
+While updating the collection settings, the collection will be [closed](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/indices-close.html) until the new configuration has been applied.
+:::
+
 
 ## Kuzzle Metadata
-Kuzzle metadata: comment elles sont MAJ
+
+Whenever a **document is created, updated or deleted**, Kuzzle will **add or update the document's metadata**. Those metadata provides information about the document's lifecycle.
+
+::: info
+You can bypass metadata automatic creation by using [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions.
+:::
+
+Metadata can be viewed in the document's `_kuzzle_info` field and contains the following properties:
+
+- `author`: [unique identifier](/core/2/some-link) of the user who created the document.
+- `createdAt`: timestamp of document creation (create or replace), in epoch-milliseconds format.
+- `updatedAt`: timestamp of last document update in epoch-milliseconds format, or `null` if no update has been made.
+- `updater`: [unique identifier](/core/2/some-link) of the user that updated the document, or `null` if the document has never been updated.
+
+Here is an example of a Kuzzle response, containing a document's `_id` and `_source` fields:
+
+```bash
+kourou document:create ktm-open-data thamel-taxi '{
+  driver: {
+    name: "liia mery"
+  }
+}'
+
+# Created document
+{
+  "_id": "bfKYl3UBKAwUi8z83JJG",
+  "_source": {
+    "driver": {
+      "name": "liia mery"
+    },
+    "_kuzzle_info": {
+      "author": "-1", # Anonymous user ID
+      "createdAt": 1604566178884,
+      "updatedAt": null,
+      "updater": null
+    }
+  }
+}
+```
+
+::: info
+Metadata cannot be edited manually (except with [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions). Kuzzle will discard any `_kuzzle_info` property sent in document content.  
+::: 
+
+### Metadata mappings
+
+Kuzzle metadata default mappings is defined with default collection mappings under the key `services.storageEngine.commonMapping` of the [configuration](/core/2/guides/advanced/8-configuration) file.
+
+```js
+{
+  "services": {
+    // [...]
+    "storageEngine": {
+      // [...]
+      "commonMapping": {
+        "dynamic": "false",
+        "properties": {
+          "_kuzzle_info": {
+            "properties": {
+              "author":     { "type": "keyword" },
+              "createdAt":  { "type": "date" },
+              "updatedAt":  { "type": "date" },
+              "updater":    { "type": "keyword" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Query on metadata
+
+Kuzzle allows **search requests to access metadata directly**. This means that you'll have to search in the `_kuzzle_info` document property.
+
+For example, to sort documents by creation date, we can use the following search query:
+
+```bash
+kourou document:search ktm-open-data thamel-taxi --sort '{
+  "_kuzzle_info.createdAt": "asc" 
+}'
+```
 
 ## Write Documents
-Write documents: single vs m*, update vs replace/create, limits
+
+Kuzzle exposes many methods for writing documents. Most of them are actions of the [document](/core/2/api/controllers/document) controller.
+
+### Write Single Document
+
+Actions that allow writing a single document take the content of the document to be written in the request `body`.
+
+Apart from the [document:create](/core/2/api/controllers/document/create) action, they also take the document `_id` as a parameter.
+
+**Example:** _Create a document with the [document:createOrReplace](/core/2/api/controllers/document/create-or-replace) action_
+
+```bash
+kourou document:createOrReplace ktm-open-data thamel-taxi '{
+  driver: {
+    name: "liia mery"
+  }
+}' --id liia
+```
+
+The [document:update](/core/2/api/controllers/document/update) action differs from other write actions because it takes a partial content with the field to update in the request `body`.
+
+**Example:** _Partially update a document with the [document:createOrReplace](/core/2/api/controllers/document/create-or-replace) action_
+
+```bash
+kourou document:update ktm-open-data thamel-taxi '{
+  category: "limousine"
+}' --id liia
+```
+
+### Write Multiple Documents
+
+If you need to **create multiple documents at once**, it is recommended to use one of the `m*` actions.  
+
+::: info
+If you need to create large volume of documents the fastest way possible then you should use the [bulk:import](/core/2/api/controllers/bulk/import) action.
+:::
+
+These actions work in the same way as single document actions (`createOrReplace` becomes `mCreateOrReplace`, `update` becomes `mUpdate`, etc) but by taking an array of documents in the `body` request.
+
+**Example:** _Create multiple documents with the [document:mCreate](/core/2/api/controllers/document/m-create) action_
+
+<!-- 
+  @todo deprecate "body" and use "content" instead
+-->
+
+```bash
+kourou document:mCreate ktm-open-data thamel-taxi '{
+  documents: [
+    {
+      _id: "liia-mery",
+      body: {
+        driver: {
+          name: "liia mery"
+        },
+        category: "limousine"
+      }
+    },
+    {
+      body: {
+        driver: {
+          name: "aschen"
+        },
+        category: "suv"
+      }
+    }
+  ]
+}'
+```
+
+### Write Limit
+
+Kuzzle imposes a limit to the number of documents that can be written by the same request.
+
+This limit ensures that Kuzzle and Elasticsearch are not overloaded by writing too many documents at once.
+
+By default, this limit is `200` documents per request. It is possible to configure this value in the `limits.documentsWriteCount` key in the [configuration](/core/2/guides/advanced/8-configuration) file.
 
 ## Read Documents
 Read documents: single vs m*, limits
