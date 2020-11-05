@@ -8,7 +8,7 @@ order: 1000
 
 # Internal Logger
 
-Kuzzle use [Winston](https://github.com/winstonjs/winston) to log messages.  
+Kuzzle uses [Winston](https://github.com/winstonjs/winston) to log messages.  
 
 The internal logger has 5 priority levels:
  - debug _(not printed by default)_
