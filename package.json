@@ -61,7 +61,7 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^3.0.0",
-    "kuzzle-common-objects": "^5.0.0",
+    "kuzzle-common-objects": "^5.0.2",
     "kuzzle-plugin-auth-passport-local": "^6.2.0",
     "kuzzle-plugin-logger": "^2.0.7",
     "kuzzle-sdk": "^7.4.1",
@@ -90,7 +90,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.164",
+    "@types/lodash": "^4.14.165",
     "@typescript-eslint/eslint-plugin": "^4.6.1",
     "@typescript-eslint/parser": "^4.6.1",
     "async": "^3.2.0",
@@ -99,7 +99,7 @@
     "cucumber": "^6.0.5",
     "eslint": "^7.12.1",
     "js-yaml": "^3.14.0",
-    "kuzdoc": "^1.2.2",
+    "kuzdoc": "^1.4.0",
     "mocha": "^8.2.1",
     "mock-require": "^3.0.3",
     "mqtt": "^4.2.4",
