@@ -2,7 +2,7 @@
 code: false
 type: page
 title: Data Storage
-description: Understand how works the underlaying document storage engine
+description: Understand how works the underlying document storage engine
 order: 200
 ---
 
@@ -45,9 +45,9 @@ Kuzzle indexes and collections are emulated in Elasticsearch in the following wa
  - **indexes does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`)
  - **collections correspond to Elasticsearch indexes** with all their properties (e.g. [mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html), [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings), etc)
 
-Kuzzle distinguish two types of storage: 
-  - **private**: internal Kuzzle index, plugin private indexes
-  - **public**: indexes available through Kuzzle API
+Kuzzle distinguishes two types of storage: 
+  - **private**: internal Kuzzle index, plugin private indexes. Those indexes can never be accessed directly from the Kuzzle API
+  - **public**: indexes available through the Kuzzle API
 
 Elasticsearch indices must comply to the following naming convention:
  - **private**: `%<kuzzle-index-name>.<kuzzle-collection-name>`
@@ -83,9 +83,9 @@ You can use the [admin:resetDatabase](/core/2/api/controllers/admin/reset-databa
 
 ## Collection Mappings
 
-With Elasticsearch, it is possible to **define mappings for collections**. These mappings refers to [Elasticsearch mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html) and allow you to configure the way Elasticsearch will handle these collections.
+With Elasticsearch, it is possible to **define mappings for collections**. These mappings refer to [Elasticsearch mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html) and allow you to configure the way Elasticsearch will store and reference document fields in these collections.
 
-There are 3 root fields for mapping configuration:
+There are 3 root fields for mappings configuration:
  - [properties](/core/2/guides/main-concepts/2-data-storage#mappings-properties): collection types definition
  - [dynamic](/core/2/guides/main-concepts/2-data-storage#mappings-dynamic-policy): dynamic mapping policy against new fields
  - [_meta](/core/2/guides/main-concepts/2-data-storage#mappings-metadata): collection metadata
@@ -117,7 +117,7 @@ Nested fields can be declared by using the `properties` key instead of `type`. T
 
 **Example:** _Declaring a collection mappings to correctly index a document_
 
-The following mapping must be defined first:
+The following mappings must be defined first:
 ```bash
 kourou collection:create ktm-open-data thamel-taxi '{
   mappings: {
@@ -158,7 +158,7 @@ Refer to the Elasticsearch documentation for an exhaustive list of available typ
 
 With Elasticsearch, **every field can be an array**. 
 
-To store an array of value, you can just send it as-is instead of a single value:
+To store an array of values, you can just send it as-is instead of a single value:
 ```bash
 # Create a document with an array of category
 kourou document:create ktm-open-data thamel-taxi '{
@@ -166,7 +166,7 @@ kourou document:create ktm-open-data thamel-taxi '{
 }' --id document-1
 ```
 
-If you want to **modify an existing array**, you need to **send it entirely**:
+If you want to **modify an existing array**, you need to **send it in its entirety**:
 ```bash
 # Add the "4x4" value to the category array
 kourou document:update ktm-open-data thamel-taxi '{
@@ -175,8 +175,8 @@ kourou document:update ktm-open-data thamel-taxi '{
 ```
 
 ::: info
-If you need to frequently insert and remove values to an field then you should either use a nested object instead or use a [scripting language](https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting-painless.html) to modify the array.  
-For security reason, Kuzzle only support the usage of scripts through the [Integrated Elasticsearch Client](/core/2/guides/main-concepts/2-data-storage#integrated-elasticsearch-client)
+If you need to frequently insert and remove values to a field then you should either use a nested object instead or use a [scripting language](https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting-painless.html) to modify the array.  
+For security reasons, Kuzzle does not provide any access to scripts through its API. Scripts are only supported through the [Integrated Elasticsearch Client](/core/2/guides/main-concepts/2-data-storage#integrated-elasticsearch-client) available to applications and to plugins.
 :::
 
 Nested fields arrays can be represented in two differents ways:
@@ -212,9 +212,9 @@ kourou collection:create ktm-open-data thamel-taxi '{
 
 For each collection, you can set the **policy against new fields that are not referenced** in the collection mapping by modifying the `dynamic` root field.
 
-The value of this configuration will change the way Elasticsearch manages the creation of new fields that are not declared in the collection mapping.
-  - `"true"`: stores the document and updates the collection mapping with the inferred type
-  - `"false"`: stores the document and does not update the collection mapping (fields are not indexed)
+The value of this configuration will change the way Elasticsearch manages the creation of new fields that are not declared in the collection mappings.
+  - `"true"`: stores the document and updates the collection mapping with the inferred type 
+  - `"false"`: stores the document and does not update the collection mappings (fields are not indexed)
   - `"strict"`: rejects the document
 
 ::: info
@@ -227,7 +227,7 @@ The default policy for new collections is `"true"` and is configurable in the [k
 
 ::: warning
 We advise not to let Elasticsearch dynamically infer the type of new fields in production.  
-This can be a problem because then the mapping cannot be modified.
+Allowing dynamic fields can be a problem because then the mappings cannot be modified, not to mention the cost of indexing potentially unwanted new fields.
 :::
 
 It is also possible to specify a **different dynamic mapping policy for nested fields**. This can be useful in imposing a strict policy on the collection while allowing the introduction of new fields in a specific location.
@@ -277,7 +277,7 @@ Unlike the properties types definition, new collection metadata are not merged w
 If you set the `_meta` field in your request, the old value will be overwritten.
 :::
 
-Refer to Elasticsearch documentation for more informations: [Elasticsearch mapping meta field](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-meta-field.html)
+Refer to Elasticsearch documentation for more information: [Elasticsearch mapping meta field](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping-meta-field.html)
 
 **Example:** _Create a collection with metadata_
 ```bash
@@ -355,7 +355,7 @@ Kourou can read file content and put it the request body.
 
 In addition mappings, Elasticsearch exposes [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings) that allow to finely configure the behavior of a collection.
 
-Those settings allows to configure [custom analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-custom-analyzer.html) for example.
+These settings allow to configure [custom analyzers](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-custom-analyzer.html) for example.
 
 
 ```bash
@@ -387,7 +387,7 @@ While updating the collection settings, the collection will be [closed](https://
 
 ## Kuzzle Metadata
 
-Whenever a **document is created, updated or deleted**, Kuzzle will **add or update the document's metadata**. Those metadata provides information about the document's lifecycle.
+Whenever a **document is created, updated or deleted**, Kuzzle will **add or update the document's metadata**. These metadata provide information about the document's lifecycle.
 
 ::: info
 You can bypass metadata automatic creation by using [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions.
@@ -550,8 +550,8 @@ By default, this limit is `200` documents per request. It is possible to configu
 
 ## Read Documents
 
-Kuzzle exposes methods to read documents. There is two way of retrieving documents:
- - by document `_id`
+Kuzzle exposes methods to read documents. There are two way of retrieving documents:
+ - using a document unique identifier (`_id` field)
  - with a [search query](/core/2/guides/main-concepts/3-querying)
 
 ### Retrieve Documents by _id
@@ -614,23 +614,23 @@ The following actions are available:
  - [bulk:write](/core/2/api/controllers/bulk/write): write a document
  - [bulk:mWrite](/core/2/api/controllers/bulk/m-write): write multiple documents
  - [bulk:import](/core/2/api/controllers/bulk/import): import documents as fast as possible
- - [bulk:deleteByQuery](/core/2/api/controllers/bulk/write): deletes large volume of documents matching a query
+ - [bulk:deleteByQuery](/core/2/api/controllers/bulk/write): delete large volume of documents matching a query
 
 ::: warning
-Bulk actions are intended to be used by administrator and scripts.  
+Bulk actions are intended to be used by administrators and scripts.  
 It is considered harmful to let end users execute those actions.
 :::
 
 ## Integrated Elasticsearch Client
 
-Kuzzle uses and exposes [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
+Kuzzle uses and exposes the [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
 
 It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/some-link) property.
 
 This property offers the possibility to **instantiate a new client** or to **use a lazy-instantiated client**. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
 
 ::: info
-It is possible to overload the configuration used by default by instantiating a new Ealsticsearch client with the constructor [Backend.storage.Client](/core/2/some-link).
+It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.Client](/core/2/some-link).
 :::
 
 
@@ -657,5 +657,5 @@ await esClient.index(esRequest)
 ```
 
 ::: warning
-Kuzzle use an [internal naming system](/core/2/guides/main-concepts/2-data-storage#some-anchor) to map Elasticsearch index names with Kuzzle indexes and collections names.
+Kuzzle uses an [internal naming system](/core/2/guides/main-concepts/2-data-storage#some-anchor) to map Elasticsearch index names with Kuzzle indexes and collections names.
 :::
