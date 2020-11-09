@@ -52,12 +52,12 @@ kourou sdk:execute --code '
 
 
 ::: warning
-This considerably lengthens the time needed for a request because Elasticsearch will wait a maximum of one second for the background indexing task to be performed.
+This **considerably lengthens the time needed for a request** because Elasticsearch will wait a maximum of one second for the background indexing task to be performed.
 :::
 
 ### Manual Refresh
 
-It is possible to request a manual refresh of the documents of a collection with the [collection:refresh](/core/2/api/controllers/collection/refresh)action.
+It is possible to request a manual refresh of the documents of a collection with the [collection:refresh](/core/2/api/controllers/collection/refresh) action.
 
 This action **can take up to a second** to refresh the underlying Elasticsearch indice.
 
@@ -85,7 +85,7 @@ kourou sdk:execute --code '
 
 Elasticsearch [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) allows to perform advanced searches in its data.
 
-Elasticsearch brings **clauses to look for a value in a particular field**.
+Elasticsearch brings **"clauses" to look for a value in a particular field**.
 
 Clauses can be used directly or composed with a [Boolean Query](/core/2/guides/main-concepts/3-querying#boolean-query).
 
@@ -338,24 +338,26 @@ The search action will return a `scrollId` that you have to use with the [docume
 
 **Example:** _Paginate search with scroll_
 ```bash
-kourou sdk:query document:search -i ktm-open-data -c thamel-taxi -a scroll=30s -a size=2
-{
-  "hits": [
-    {
-      "_id": "aschen",
-        # ...
-      }
-    },
-    {
-      "_id": "jenow",
-        # ...
-      }
-    }
-  ],
-  "remaining": 2,
-  "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
-  "total": 4
-}
+kourou sdk:query document:search \
+  -i ktm-open-data -c thamel-taxi -a scroll=30s -a size=2
+
+# {
+#   "hits": [
+#     {
+#       "_id": "aschen",
+#         # ...
+#       }
+#     },
+#     {
+#       "_id": "jenow",
+#         # ...
+#       }
+#     }
+#   ],
+#   "remaining": 2,
+#   "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
+#   "total": 4
+# }
 ```
 
 Then we have to pass the `scrollId` parameter to the [document:scroll](/core/2/api/controllers/document/scroll) action:
@@ -398,54 +400,55 @@ You have to provide a sort combination that will **always identify one item only
 **Example:** _Use sort and size to navigate through pages of results_
 
 ```bash
-kourou sdk:query document:search -i ktm-open-data -c thamel-taxi -a size=2 --body '{
-  sort: [
-    { _id: "desc" }
-  ],
-}'
+kourou sdk:query document:search \
+  -i ktm-open-data -c thamel-taxi -a size=2 --body '{
+    sort: [
+      { _id: "desc" }
+    ],
+  }'
 
-{
-  "hits": [
-    {
-      "_id": "liaa",
-        # ...
-      }
-    },
-    {
-      "_id": "jenow",
-        # ...
-      }
-    }
-  ],
-  "total": 4
-}
-
+# {
+#   "hits": [
+#     {
+#       "_id": "liaa",
+#         # ...
+#       }
+#     },
+#     {
+#       "_id": "jenow",
+#         # ...
+#       }
+#     }
+#   ],
+#   "total": 4
+# }
 ```
 
 Then we will include the `_id` of the last document in the `search_after` parameter:
 ```bash
-kourou sdk:query document:search -i ktm-open-data -c thamel-taxi -a size=2 --body '{
-  sort: [
-    { _id: "desc" }
-  ],
-  search_after: ["jenow"]
-}'
+kourou sdk:query document:search \
+  -i ktm-open-data -c thamel-taxi -a size=2 --body '{
+    sort: [
+      { _id: "desc" }
+    ],
+    search_after: ["jenow"]
+  }'
 
-{
-  "hits": [
-    {
-      "_id": "domisol",
-        # ...
-      }
-    },
-    {
-      "_id": "aschen",
-        # ...
-      }
-    }
-  ],
-  "total": 4
-}
+# {
+#   "hits": [
+#     {
+#       "_id": "domisol",
+#         # ...
+#       }
+#     },
+#     {
+#       "_id": "aschen",
+#         # ...
+#       }
+#     }
+#   ],
+#   "total": 4
+# }
 ```
 
 ::: info
