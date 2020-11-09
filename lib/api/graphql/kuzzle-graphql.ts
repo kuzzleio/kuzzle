@@ -126,36 +126,37 @@ export class KuzzleGraphql {
     return typeHandlebars(gqlType);
   }
 
-  public generateResolverMap() {
-    return transform(this._config, (result, types: Dictionary<TypeConfig>) => {
-
-      forIn(types, (type: TypeConfig) => {
-        result.Query[this.generateQueryGet(type.typeName)]
-          = (parent, { id }, { loaders }) => loaders[type.typeName].load(id);
-
-        result.Query[this.generateQueryMget(type.typeName)]
-          = (parent, { ids }, { loaders }) => loaders[type.typeName].loadMany(ids);
-
-        // foreign keys
-        const foreignKeyProperties: Dictionary<TypePropertyConfig>
-          = pickBy(type.properties, (value: TypePropertyConfig) => value.isForeingKey === true);
-
-        forIn(foreignKeyProperties, (config: TypePropertyConfig, propertyName: string) => {
-          if (!result[type.typeName]) {
-            result[type.typeName] = {};
-          }
-          if (type.properties[propertyName].plural === true) {
-            result[type.typeName][propertyName]
-              = (parent, values, { loaders }) => loaders[config.type].loadMany(parent[propertyName]);
-          } else {
-            result[type.typeName][propertyName]
-              = (parent, id, { loaders }) => loaders[config.type].load(id);
-          }
-        });
-      });
-    }, {
+  public generateResolverMap(types) {
+    const result = {
       Query: {}
+    }
+
+    forIn(types, (type: TypeConfig) => {
+      result.Query[this.generateQueryGet(type.typeName)]
+        = (parent, { id }, { loaders }) => loaders[type.typeName].load(id);
+
+      result.Query[this.generateQueryMget(type.typeName)]
+        = (parent, { ids }, { loaders }) => loaders[type.typeName].loadMany(ids);
+
+      // foreign keys
+      const foreignKeyProperties: Dictionary<TypePropertyConfig>
+        = pickBy(type.properties, (value: TypePropertyConfig) => value.isForeingKey === true);
+
+      forIn(foreignKeyProperties, (config: TypePropertyConfig, propertyName: string) => {
+        if (!result[type.typeName]) {
+          result[type.typeName] = {};
+        }
+        if (type.properties[propertyName].plural === true) {
+          result[type.typeName][propertyName]
+            = (parent, values, { loaders }) => loaders[config.type].loadMany(parent[propertyName]);
+        } else {
+          result[type.typeName][propertyName]
+            = (parent, id, { loaders }) => loaders[config.type].load(id);
+        }
+      });
     });
+
+    return result;
   }
 
   public generateLoaderCreator(kuzzle) {

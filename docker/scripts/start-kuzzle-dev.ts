@@ -11,7 +11,7 @@ import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
 
-async function loadAdditionalPlugins () {
+async function loadAdditionalPlugins() {
   const additionalPluginsIndex = process.argv.indexOf('--enable-plugins');
   const additionalPlugins = additionalPluginsIndex > -1
     ? process.argv[additionalPluginsIndex + 1].split(',')
@@ -38,7 +38,7 @@ async function loadAdditionalPlugins () {
   }
 }
 
-if (! process.env.TRAVIS) {
+if (!process.env.TRAVIS) {
   // Easier debug
   app.hook.register('request:onError', (request: Request) => {
     console.log(request.error);
@@ -160,6 +160,39 @@ if (process.env.SECRETS_FILE_PREFIX) {
 }
 app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
+
+app.graphql.use({
+  library: {
+    books: {
+      typeName: 'Book',
+      properties: {
+        authors: {
+          isForeingKey: true,
+          type: 'Author',
+          nullable: true,
+          nullableElements: false
+        },
+        title: {
+          nullable: false
+        },
+        year: {
+          nullable: false
+        }
+      }
+    },
+    authors: {
+      typeName: 'Author',
+      properties: {
+        firstName: {
+          nullable: false
+        },
+        lastName: {
+          nullable: false
+        }
+      }
+    }
+  }
+})
 
 loadAdditionalPlugins()
   .then(() => app.start())
