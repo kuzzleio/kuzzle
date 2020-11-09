@@ -12,6 +12,29 @@ Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/
 
 It is possible for a client to send requests to **retrieve documents from any authorized collection**.
 
+Search query can be passed in the body of the [document:search](/core/2/api/controllers/document/search) action, they will be forwarded to Elasticsearch [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-search.html) endpoint.
+
+Elasticsearch support a lot for top level keyword in a search query root level. For security reasons Kuzzle only support the following keywords:
+  - `aggregations`
+  - `aggs`
+  - `collapse`
+  - `explain`
+  - `from`
+  - `highlight`
+  - `query`
+  - `search_after`
+  - `search_timeout`
+  - `size`
+  - `sort`
+  - `_name`
+  - `_source`
+  - `_source_excludes`
+  - `_source_includes`
+
+::: info
+Any other keyword will be ignored by Kuzzle and not followed to Elasticsearch.
+:::
+
 ## Near Realtime
 
 When documents are written in Elasticsearch, **they must then be indexed by the search engine in order to be available in the search results**.
