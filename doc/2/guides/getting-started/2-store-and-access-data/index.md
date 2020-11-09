@@ -112,7 +112,7 @@ We'll now use that to search for the documents we're interested in.
 First, we need to create more documents:
 
 ```bash
-kourou sdk:execute --code '
+kourou sdk:execute '
   for (let i = 1; i <= 10; i++) {
     await sdk.document.create("nyc-open-data", "yellow-taxi", {
       name: `Yagmur-${i}`,

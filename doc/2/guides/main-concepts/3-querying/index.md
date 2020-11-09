@@ -41,7 +41,7 @@ When documents are written in Elasticsearch, **they must then be indexed by the 
 
 This indexing is a background task managed by Elasticsearch that can take up to a second.
 
-This means that when documents are written through Kuzzle API, **it can take up to a second before they are made available in the search results**. This operation is called the "refresh" of an indice.
+This means that when documents are written through Kuzzle API, **it can take up to a second before they are made available in the search results**. This operation is called the _refresh_ of a collection.
 
 ::: info
 This concerns only the results of the [document:search](/core/2/api/controllers/document/search) action.
@@ -50,18 +50,18 @@ The documents are always available via their unique identifiers and the [documen
 
 However, there are mechanisms to control the availability of new documents.
 
-### `refresh: 'wait_for'` option
+### Wait for Indexation
 
 Most of the actions of the document controller accept an additional option that is passed by Kuzzle to Elasticsearch: [refresh](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-refresh.html).
 
-When the value of this option is `wait_for`, then Elasticsearch (and thus Kuzzle) will **return answer to the request only when the document has been indexed** to be available in the search.
+When the value of this option is `wait_for`, then Elasticsearch (and thus Kuzzle) will **respond to the request only when the document has been indexed** to be available in the search.
 
 **Example:** _Create document and wait for the collection to be refreshed_ 
 ```bash
-kourou sdk:execute --code '
+kourou sdk:execute '
   await sdk.document.createOrReplace(
-    "nyc-open-data",
-    "yellow-taxi",
+    "ktm-open-data",
+    "thamel-taxi",
     "document-1",
     {
       age: 27,
@@ -69,7 +69,7 @@ kourou sdk:execute --code '
     },
     { refresh: "wait_for" });
   
-  return sdk.document.search("nyc-open-data", "yellow-taxi");
+  return sdk.document.search("ktm-open-data", "thamel-taxi");
 '
 ```
 
@@ -84,13 +84,13 @@ It is possible to request a manual refresh of the documents of a collection with
 
 This action **can take up to a second** to refresh the underlying Elasticsearch indice.
 
-**Example:** _Creates documents and then refresh the collection_ 
+**Example:** _Creates documents and then refresh the collection before searching it_ 
 ```bash
-kourou sdk:execute --code '
+kourou sdk:execute '
   for (let i = 20; i--; ) {
     await sdk.document.createOrReplace(
-      "nyc-open-data",
-      "yellow-taxi",
+      "ktm-open-data",
+      "thamel-taxi",
       "document-" + i,
       {
         age: 27 + i,
@@ -98,9 +98,9 @@ kourou sdk:execute --code '
       });
   }
 
-  await sdk.collection.refresh("nyc-open-data", "yellow-taxi");
+  await sdk.collection.refresh("ktm-open-data", "thamel-taxi");
   
-  return sdk.document.search("nyc-open-data", "yellow-taxi");
+  return sdk.document.search("ktm-open-data", "thamel-taxi");
 '
 ```
 
@@ -108,7 +108,7 @@ kourou sdk:execute --code '
 
 Elasticsearch [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) allows to perform advanced searches in its data.
 
-Elasticsearch brings **"clauses" to look for a value in a particular field**.
+Elasticsearch brings **_clauses_ to look for a value in a particular field**.
 
 Clauses can be used directly or composed with a [Boolean Query](/core/2/guides/main-concepts/3-querying#boolean-query).
 
@@ -201,7 +201,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 ```
 
 ::: info
-The search query content will be injected in the body inside the `query` property:
+The search query content will be injected in the request body inside the `query` property:
 ```js
 {
   query: {
@@ -293,7 +293,7 @@ kourou document:search ktm-open-data thamel-taxi '{
   bool: {
     should: [
       { term: { city: "Siccieu" } },
-      { term: { city: "Katmandu" } },
+      { term: { city: "Kathmandu" } },
     ]
   }
 }'
@@ -341,74 +341,130 @@ There is a limit of 10000 documents that can be retrieved with a request and the
 
 Those methods are explained in the next sections and they are already implemented in our SDKs in the `SearchResult` class. (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK)
 
-### Paginate with Scroll Cursor
+All the methods explained here are available by default in our SDKs through the `SearchResult` class. This class allows to navigate through your paginated results with ease by calling the `SearchResult.next` method.
 
-The `scroll` parameter can be specified in the search query to allows the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action to **use a cursors to move through paginated results**.
+**Example:** _Paginate search result using the scroll method_
+:::: tabs
 
-The **results from a scroll request are frozen**, and reflect the state of the collection at the time the initial search request.  
-For that reason, this action is **guaranteed to return consistent results**, even if documents are updated or deleted in the database between two pages retrieval.
+::: Javascript
 
-This is the **most consistent way to paginate results**, however, this comes at a **higher computing cost** for the server.
+```js
+let result = await sdk.document.search('ktm-open-data', 'thamel-taxi', {
+  query: {
+    term: { city: 'Antalya' }
+  }
+},
+{ scroll: '5s' });
 
-To use this pagination method, you need to pass a `scroll` parameter with a duration. This duration corresponds to the **time during which Elasticsearch will keep your results frozen**. This duration will be refreshed at each call of the [document:scroll](/core/2/api/controllers/document/scroll) action.
-
-::: info
-The value of the `scroll` option should be the time needed to process one page of results.  
-This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/advanced/8-configuration) key.
-:::
-
-The search action will return a `scrollId` that you have to use with the [document:scroll](/core/2/api/controllers/document/scroll) to get the next page of results.
-
-**Example:** _Paginate search with scroll_
-```bash
-kourou sdk:query document:search \
-  -i ktm-open-data -c thamel-taxi -a scroll=30s -a size=2
-
-# {
-#   "hits": [
-#     {
-#       "_id": "aschen",
-#         # ...
-#       }
-#     },
-#     {
-#       "_id": "jenow",
-#         # ...
-#       }
-#     }
-#   ],
-#   "remaining": 2,
-#   "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
-#   "total": 4
-# }
-```
-
-Then we have to pass the `scrollId` parameter to the [document:scroll](/core/2/api/controllers/document/scroll) action:
-```bash
-kourou sdk:query document:scroll -a scrollId=<scroll-id>
-{
-  "hits": [
-    {
-      "_id": "liia",
-        # ...
-      }
-    },
-    {
-      "_id": "domisol",
-        # ...
-      }
-    }
-  ],
-  "remaining": 0,
-  "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
-  "total": 4
+while (result) {
+  console.log(result.hits);
+  result = await result.next();
 }
 ```
 
-::: warning
-When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.
-It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.
 :::
+::: Dart
+
+
+```dart
+var result = await kuzzle
+  .document
+  .search('ktm-open-data', 'thamel-taxi', query: {
+    'query': {
+      'term': {
+        'city': 'Antalya'
+      }
+    }
+  },
+  { 'scroll': '5s' });
+
+while (result) {
+  print(result.hits);
+  result = await result.next();
+}
+```
+
+:::
+
+::: Kotlin
+
+```kotlin
+val term: ConcurrentHashMap<String, Any?> =
+  ConcurrentHashMap<String, Any?>().apply {
+    put("city", "Antalya")
+  }
+val query: ConcurrentHashMap<String, Any?> =
+  ConcurrentHashMap<String, Any?>().apply {
+    put("term", term)
+  }
+val searchQuery: ConcurrentHashMap<String, Any?> =
+  ConcurrentHashMap<String, Any?>().apply {
+    put("query", query)
+  }
+val options: ConcurrentHashMap<String, Any?> =
+  ConcurrentHashMap<String, Any?>().apply {
+    put("scroll", "5s)
+  }
+
+val results = kuzzle
+  .documentController
+  .search("ktm-open-data", "thamel-taxi", searchQuery, options).get();
+
+while (result) {
+  println(result.hits);
+
+  result = result.next().get();
+}
+```
+
+:::
+
+::: Csharp
+
+```csharp
+SearchOptions options = new SearchOptions();
+options.Scroll = "5s";
+
+SearchResults result = await kuzzle.Document.SearchAsync(
+    "ktm-open-data",
+    "thamel-taxi",
+    JObject.Parse(@"{
+      ""query"": {
+        ""term"": {
+          ""city"": ""Antalya""
+        }
+      }
+    }"),
+    options);
+
+while (result) {
+  Console.Out.WriteLine(result.hits);
+  result = result.NextAsync();
+}
+```
+
+:::
+
+::::
+
+### Paginate with `from` and `size`
+
+Pagination can be done by incrementing the `from` parameter value to retrieve further results.
+
+It's the fastest pagination method available, but also the less consistent.
+
+::: info
+Because this method does not freeze the search results between two calls, there can be missing or duplicated documents between two result pages.  
+Also it's not possible to retrieve more than 10000 documents with this method.
+:::
+
+**Example:** _Use sort and size to navigate through pages of results_
+
+```bash
+kourou document:search ktm-open-data thamel-taxi --from 0 --size 2
+
+kourou document:search ktm-open-data thamel-taxi --from 2 --size 2
+```
 
 ### Paginate with `search_after`
 
@@ -480,21 +536,73 @@ This method efficiently mitigates the costs of scroll searches, but returns less
 Also it's not possible to retrieve more than 10000 documents with this method.
 :::
 
-### Paginate with `from` and `size`
+### Paginate with Scroll Cursor
 
-Pagination can be done by incrementing the `from` parameter value to retrieve further results.
+The `scroll` parameter can be specified in the search query to allows the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action to **use a cursors to move through paginated results**.
 
-It's the fastest pagination method available, but also the less consistent.
+The **results from a scroll request are frozen**, and reflect the state of the collection at the time the initial search request.  
+For that reason, this action is **guaranteed to return consistent results**, even if documents are updated or deleted in the database between two pages retrieval.
+
+This is the **most consistent way to paginate results**, however, this comes at a **higher computing cost** for the server.
+
+To use this pagination method, you need to pass a `scroll` parameter with a duration. This duration corresponds to the **time during which Elasticsearch will keep your results frozen**. This duration will be refreshed at each call of the [document:scroll](/core/2/api/controllers/document/scroll) action.
 
 ::: info
-Because this method does not freeze the search results between two calls, there can be missing or duplicated documents between two result pages.  
-Also it's not possible to retrieve more than 10000 documents with this method.
+The value of the `scroll` option should be the time needed to process one page of results.  
+This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/advanced/8-configuration) key.
 :::
 
-**Example:** _Use sort and size to navigate through pages of results_
+The search action will return a `scrollId` that you have to use with the [document:scroll](/core/2/api/controllers/document/scroll) to get the next page of results.
 
+**Example:** _Paginate search with scroll_
 ```bash
-kourou document:search ktm-open-data thamel-taxi --from 0 --size 2
+kourou sdk:query document:search \
+  -i ktm-open-data -c thamel-taxi -a scroll=30s -a size=2
 
-kourou document:search ktm-open-data thamel-taxi --from 2 --size 2
+# {
+#   "hits": [
+#     {
+#       "_id": "aschen",
+#         # ...
+#       }
+#     },
+#     {
+#       "_id": "jenow",
+#         # ...
+#       }
+#     }
+#   ],
+#   "remaining": 2,
+#   "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
+#   "total": 4
+# }
 ```
+
+Then we have to pass the `scrollId` parameter to the [document:scroll](/core/2/api/controllers/document/scroll) action:
+```bash
+kourou sdk:query document:scroll -a scrollId=<scroll-id>
+
+# {
+#   "hits": [
+#     {
+#       "_id": "liia",
+#         # ...
+#       }
+#     },
+#     {
+#       "_id": "domisol",
+#         # ...
+#       }
+#     }
+#   ],
+#   "remaining": 0,
+#   "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
+#   "total": 4
+# }
+```
+
+::: warning
+When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.
+It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.
+:::
+

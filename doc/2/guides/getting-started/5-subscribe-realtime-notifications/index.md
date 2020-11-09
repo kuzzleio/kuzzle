@@ -96,7 +96,7 @@ kourou realtime:subscribe nyc-open-data yellow-taxi '{
 Then we create 10 documents using the [`sdk:execute` command in Kourou](https://github.com/kuzzleio/kourou#kourou-sdkexecute):
 
 ```bash
-kourou sdk:execute --code '
+kourou sdk:execute '
   for (let i = 1; i <= 10; i++) {
     await sdk.document.create("nyc-open-data", "yellow-taxi", {
       name: `Nerwin-${i}`,

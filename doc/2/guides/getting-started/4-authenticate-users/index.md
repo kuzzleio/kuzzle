@@ -110,7 +110,7 @@ npx wscat -c ws://localhost:7512 --execute '{
 ::: tab Javascript
 
 ```bash
-kourou sdk:execute --code '
+kourou sdk:execute '
   sdk.jwt = "<token>";
 
   console.log(await sdk.auth.getCurrentUser());
