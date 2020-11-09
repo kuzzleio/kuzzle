@@ -36,19 +36,17 @@ When the value of this option is `wait_for`, then Elasticsearch (and thus Kuzzle
 **Example:** _Create document and wait for the collection to be refreshed_ 
 ```bash
 kourou sdk:execute --code '
-    await sdk.document.createOrReplace(
-      "nyc-open-data",
-      "yellow-taxi",
-      "document-1",
-      {
-        age: 27,
-        city: "Tirana" 
-      },
-      { refresh: "wait_for" });
+  await sdk.document.createOrReplace(
+    "nyc-open-data",
+    "yellow-taxi",
+    "document-1",
+    {
+      age: 27,
+      city: "Tirana" 
+    },
+    { refresh: "wait_for" });
   
-  return sdk.document.search(
-      "nyc-open-data",
-      "yellow-taxi");
+  return sdk.document.search("nyc-open-data", "yellow-taxi");
 '
 ```
 
@@ -77,13 +75,9 @@ kourou sdk:execute --code '
       });
   }
 
-  await sdk.collection.refresh(
-    "nyc-open-data",
-    "yellow-taxi");
+  await sdk.collection.refresh("nyc-open-data", "yellow-taxi");
   
-  return sdk.document.search(
-      "nyc-open-data",
-      "yellow-taxi");
+  return sdk.document.search("nyc-open-data", "yellow-taxi");
 '
 ```
 
