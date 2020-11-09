@@ -37,7 +37,7 @@ If a non-standard error is thrown, Kuzzle will instead return a standard `Plugin
 
 **Example:** _Throw a PreconditionError when an action parameter is missing_
 ```js
-import { Backend, ForbiddenError } from 'kuzzle'
+import { Backend, PreconditionError } from 'kuzzle'
 
 app.controller.register('greeting', {
   actions: {
