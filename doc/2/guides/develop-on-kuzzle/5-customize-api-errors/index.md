@@ -32,7 +32,7 @@ The following constructors are available directly in the `kuzzle` package:
   - [BadRequestError](/core/2/some-link#some-anchor)
 
 ::: info
-If a non-standard error is thrown then Kuzzle will include it in a `PluginImplementationError`.
+If a non-standard error is thrown, Kuzzle will instead return a standard `PluginImplementationError` error, embedding the thrown error.
 :::
 
 **Example:** _Throw a PreconditionError when an action parameter is missing_

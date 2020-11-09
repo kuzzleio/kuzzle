@@ -9,7 +9,7 @@ order: 200
 # Embedded SDK
 
 ::: info
-The Embedded SDK is available only in the `runtime` phase, after application startup.
+The Embedded SDK is available only during the `runtime` phase, after the application has started.
 ::: 
 
 <!-- Duplicate /core/2/guides/getting-started/6-write-application -->
@@ -80,7 +80,7 @@ Typically, the `request.context.user` property is not set and thus **[Kuzzle met
 
 It is possible to use the same user context as the original request with the Embedded SDK, for this purpose it is necessary to use the [EmbeddedSDK.as](/core/2/some-link) method.
 
-**Example:** _Creating a document as the original API user to preserv Kuzzle metadata_
+**Example:** _Creating a document as the original API user to preserve Kuzzle metadata_
 ```js
 app.controller.register('drivers', {
   actions: {
@@ -99,15 +99,18 @@ app.controller.register('drivers', {
 ```
 
 ::: warning
-User permissions are not applied even when the [EmbeddedSDK.as](/core/2/some-link) method is used.
+User permissions are applied only once, when a request is received by Kuzzle through the exposed API.  
+If a request is authorized, then all subsequent calls to the API performed with [EmbeddedSDK.as](/core/2/some-link) are always authorized, even if they are made to execute API actions that a user is normally forbidden from.
 :::
 
 ## Backend Realtime Subscriptions
 
-Realtime subscriptions should be made using the [Realtime Controller](/sdk/js/7/controllers/realtime) **just after the application startup**.
+Realtime subscriptions should be made using the [Realtime Controller](/sdk/js/7/controllers/realtime) **just after the application has started**.  
+
+Realtime subscriptions performed by an application are used so that an application gets notified about changes, and can act upon them. The behavior is much the same than when a client subscribes, but since the entity performing the subscription is different (client vs. application), the feature accessible by an application has some new options to fine tune how notifications are propagated across a Kuzzle cluster.
 
 ::: warning
-You should **avoid making dynamic subscriptions at runtime because** that can lead to unwanted behavior, since the subscriptions won't be replicated on other cluster nodes.
+You should **avoid making dynamic subscriptions at runtime**, because that can lead to unwanted behavior, since those subscriptions won't be replicated to other cluster nodes.
 :::
 
 The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
@@ -138,7 +141,7 @@ app.start()
 
 ### propagate: true
 
-With `propagate: true`, notifications are propagated to all nodes of a cluster, **executing the callback function on each nodes**.
+With `propagate: true`, notifications are propagated to all nodes of a cluster, **executing the callback function on all nodes**.
 
 ::: info 
 This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
