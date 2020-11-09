@@ -59,7 +59,7 @@ This considerably lengthens the time needed for a request because Elasticsearch 
 
 ### Manual Refresh
 
-It is possible to request a refresh of the documents of a collection with the [collection:refresh](/core/2/api/controllers/collection/refresh)action.
+It is possible to request a manual refresh of the documents of a collection with the [collection:refresh](/core/2/api/controllers/collection/refresh)action.
 
 This action **can take up to a second** to refresh the underlying Elasticsearch indice.
 
@@ -98,7 +98,9 @@ Clauses can be used directly or composed with a [Boolean Query](/core/2/guides/m
 **Example:** _Simple top level clause: "city" field must be equal to "Antalya"_
 ```js
 {
-  term: { city: "Antalya" }
+  query: {
+    term: { city: "Antalya" }
+  }
 }
 ```
 
@@ -106,7 +108,7 @@ Clauses can be used directly or composed with a [Boolean Query](/core/2/guides/m
 
 Throughout this guide we will use this set of documents to perform search queries:
 
-<details><summary>Create some documents</summary>
+<details><summary>Create a collection and some documents</summary>
 
 ```bash
 kourou collection:create ktm-open-data thamel-taxi '{
@@ -115,21 +117,7 @@ kourou collection:create ktm-open-data thamel-taxi '{
       city: { type: "keyword" },
       name: { type: "keyword" },
       age: { type: "integer" },
-      description: { type: "text" },
-      position: { type: "geo_point" },
-      drivers: {
-        properties: {
-          name: { type: "keyword" },
-          age: { type: "integer" }
-        }
-      },
-      cars: {
-        type: "nested",
-        properties: {
-          name: { type: "keyword" },
-          year: { type: "integer" }
-        }
-      }
+      description: { type: "text" }
     }
   }
 }'
@@ -157,7 +145,7 @@ kourou document:mCreate ktm-open-data thamel-taxi '{
     { 
       _id: "liia",
       body: {
-        city: "Katmandu",
+        city: "Kathmandu",
         name: "Liaa",
         age: 30,
         description: "Little Princes is great"
@@ -195,9 +183,20 @@ kourou document:search ktm-open-data thamel-taxi '{
 }'
 ```
 
+::: info
+The search query content will be injected in the body inside the `query` property:
+```js
+{
+  query: {
+    term: { name: "Jenow" }
+  }
+}
+```
+:::
+
 ### `match` clause
 
-The [match](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-match-query.html) clause allows to returns documents that match a provided `text`, `number`, `date` or `boolean` field.
+The [match](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-match-query.html) clause allows to returns documents **that match (could be approximately)** a provided `text`, `number`, `date` or `boolean` field.
 
 The match query is the standard query for **performing a full-text search**, including options for fuzzy matching.
 
@@ -214,7 +213,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ### `range` clause
 
-The [range](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-range-query.html) clause allows to returns documents that contain terms within a provided range.
+The [range](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-range-query.html) clause allows to returns documents **that contain value within a provided range**.
 
 It can be used with `number` and `date` fields but also with `keyword` even if it's less common.
 
@@ -234,7 +233,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ### `ids` clause
 
-The [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) clause allows to returns document based on their IDs (`_id` field).
+The [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) clause allows to returns document **based on their IDs** (`_id` field).
 
 **Example:** _Search for documents with their ids_ 
 ```bash
@@ -251,13 +250,13 @@ If you only have an `ids` clause in your search query then you should rather use
 
 ## Boolean Query
 
-Il est possible de combiner plusieurs clauses dans une même requête en utilisant une [Boolean Query](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-bool-query.html).
+It is possible to **combine several clauses in the same query** by using a [Boolean Query](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-bool-query.html).
 
 The following 4 operands are available:
- - `must`: The clause must appear in matching documents and will contribute to the score.
- - `filter`: The clause must appear in matching documents. The score of the query will be ignored.
- - `should`: The clause should appear in the matching document.
- - `must_not`: The clause must not appear in the matching documents. The score of the query will be ignored.
+ - `must`: The clause **must appear** in matching documents and will contribute to the score.
+ - `filter`: The clause **must appear** in matching documents. The score of the query will be ignored.
+ - `should`: The clause **should appear** in the matching document.
+ - `must_not`: The clause **must not appear** in the matching documents. The score of the query will be ignored.
 
 **Example:** _Combining clauses to create an "AND" like search query_
 ```bash
@@ -285,7 +284,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ## Sorting
 
-Elasticsearch offers the possibility to [sort the results](https://www.elastic.co/guide/en/elasticsearch/reference/current/sort-search-results.html) by one or more fields.
+Elasticsearch offers the possibility to **[sort the results](https://www.elastic.co/guide/en/elasticsearch/reference/current/sort-search-results.html) by one or more fields**.
 
 **Example:** _Sort by multiple fields_
 ```bash
@@ -295,7 +294,7 @@ kourou document:search ktm-open-data thamel-taxi --sort '[
 ]'
 ```
 
-A very common sort with Kuzzle is to use [Kuzzle Metadata]() to sort by creation date:
+A very common sort with Kuzzle is to use [Kuzzle Metadata](/core/2/guides/main-concepts/2-data-storage#kuzzle-metadata) to sort by creation date:
 
 ```bash
 kourou document:search ktm-open-data thamel-taxi --sort '[
@@ -320,11 +319,14 @@ They allow to find all documents matching a search query.
 ::: info
 By default, the [document:search](/core/2/api/controllers/document/search) action returns only 10 documents.  
 The number of returned documents can be changed with the `size` option.  
+There is a limit of 10000 documents that can be retrieved with a request and the limit can be configured under the `limits.documentsFetchCount` [configuration](/core/2/guides/advanced/advanced/8-configuration) key.
 :::
+
+Those methods are explained in the next sections and they are already implemented in our SDKs in the `SearchResult` class. (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK)
 
 ### Paginate with Scroll Cursor
 
-The `scroll` parameter can be specified in the search query to allows the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action to use a cursors to paginate results.
+The `scroll` parameter can be specified in the search query to allows the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action to **use a cursors to move through paginated results**.
 
 The **results from a scroll request are frozen**, and reflect the state of the collection at the time the initial search request.  
 For that reason, this action is **guaranteed to return consistent results**, even if documents are updated or deleted in the database between two pages retrieval.
@@ -335,7 +337,7 @@ To use this pagination method, you need to pass a `scroll` parameter with a dura
 
 ::: info
 The value of the `scroll` option should be the time needed to process one page of results.  
-This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` configuration key.
+This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/advanced/8-configuration) key.
 :::
 
 The search action will return a `scrollId` that you have to use with the [document:scroll](/core/2/api/controllers/document/scroll) to get the next page of results.
@@ -386,7 +388,7 @@ kourou sdk:query document:scroll -a scrollId=<scroll-id>
 
 ::: warning
 When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.
-It can lead to memory leaks if ascroll duration too great is provided, or if too many scroll sessions are open simultaneously.
+It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.
 :::
 
 ### Paginate with `search_after`
