@@ -89,9 +89,9 @@ kourou sdk:execute --code '
 
 ## Basic Querying
 
-Le [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) d'Elasticsearch est très complet et permet de faire des recherches très avancées dans ses données.
+Elasticsearch [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) allows to perform advanced searches in its data.
 
-Elasticsearch brings clauses to look for a value in a particular field.
+Elasticsearch brings **clauses to look for a value in a particular field**.
 
 Clauses can be used directly or composed with a [Boolean Query](/core/2/guides/main-concepts/3-querying#boolean-query).
 
@@ -164,7 +164,7 @@ kourou document:mCreate ktm-open-data thamel-taxi '{
       }
     },
     { 
-      _id: "doremi",
+      _id: "domisol",
       body: {
         city: "Siccieu",
         name: "Dominique",
@@ -185,7 +185,7 @@ The [term](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl
 Term clause should be used on fields with the [keyword](/core/2/guides/main-concepts/2-data-storage#mappings-properties) type.
 
 ::: info
-You can use the term query to find documents based on a precise value such as a price, a product ID, or a username.
+You can use the `term` clause to find documents based on a precise value such as a price, a product ID, or a username.
 :::
 
 **Example:** _Search for documents containing an exact field value_ 
@@ -200,6 +200,10 @@ kourou document:search ktm-open-data thamel-taxi '{
 The [match](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-match-query.html) clause allows to returns documents that match a provided `text`, `number`, `date` or `boolean` field.
 
 The match query is the standard query for **performing a full-text search**, including options for fuzzy matching.
+
+::: info
+The `match` clause to find documents with fields containing a value. The `match` clause as well as the content of a `text` fields are [analyzed](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-analyzers.html) by Elasticsearch before performing the query.
+:::
 
 **Example:** _Search for documents containing an approximate field value_ 
 ```bash
@@ -281,13 +285,194 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ## Sorting
 
-Elasticsearch offre le possibilité de trier les résultats par un ou plusieurs field.
+Elasticsearch offers the possibility to [sort the results](https://www.elastic.co/guide/en/elasticsearch/reference/current/sort-search-results.html) by one or more fields.
 
-Sorting
+**Example:** _Sort by multiple fields_
+```bash
+kourou document:search ktm-open-data thamel-taxi --sort '[
+  { city: "asc" },
+  { age: "desc" }
+]'
+```
+
+A very common sort with Kuzzle is to use [Kuzzle Metadata]() to sort by creation date:
+
+```bash
+kourou document:search ktm-open-data thamel-taxi --sort '[
+  { "_kuzzle_info.createdAt": "asc" }
+]'
+```
+
+Finally, if you want to always ensure the same order for your results you can sort on the `_id` field:
+
+```bash
+kourou document:search ktm-open-data thamel-taxi --sort '[
+  { "_id": "asc" }
+]'
+```
 
 ## Pagination
-Pagination: scroll vs size from
-limits
 
-## Aggregations
-Lien vers aggregations + exemple
+[Several pagination methods](https://www.elastic.co/guide/en/elasticsearch/reference/current/paginate-search-results.html) are available using Elasticsearch and Kuzzle.
+
+They allow to find all documents matching a search query.
+
+::: info
+By default, the [document:search](/core/2/api/controllers/document/search) action returns only 10 documents.  
+The number of returned documents can be changed with the `size` option.  
+:::
+
+### Paginate with Scroll Cursor
+
+The `scroll` parameter can be specified in the search query to allows the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action to use a cursors to paginate results.
+
+The **results from a scroll request are frozen**, and reflect the state of the collection at the time the initial search request.  
+For that reason, this action is **guaranteed to return consistent results**, even if documents are updated or deleted in the database between two pages retrieval.
+
+This is the **most consistent way to paginate results**, however, this comes at a **higher computing cost** for the server.
+
+To use this pagination method, you need to pass a `scroll` parameter with a duration. This duration corresponds to the **time during which Elasticsearch will keep your results frozen**. This duration will be refreshed at each call of the [document:scroll](/core/2/api/controllers/document/scroll) action.
+
+::: info
+The value of the `scroll` option should be the time needed to process one page of results.  
+This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` configuration key.
+:::
+
+The search action will return a `scrollId` that you have to use with the [document:scroll](/core/2/api/controllers/document/scroll) to get the next page of results.
+
+**Example:** _Paginate search with scroll_
+```bash
+kourou sdk:query document:search -i ktm-open-data -c thamel-taxi -a scroll=30s -a size=2
+{
+  "hits": [
+    {
+      "_id": "aschen",
+        # ...
+      }
+    },
+    {
+      "_id": "jenow",
+        # ...
+      }
+    }
+  ],
+  "remaining": 2,
+  "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
+  "total": 4
+}
+```
+
+Then we have to pass the `scrollId` parameter to the [document:scroll](/core/2/api/controllers/document/scroll) action:
+```bash
+kourou sdk:query document:scroll -a scrollId=<scroll-id>
+{
+  "hits": [
+    {
+      "_id": "liia",
+        # ...
+      }
+    },
+    {
+      "_id": "domisol",
+        # ...
+      }
+    }
+  ],
+  "remaining": 0,
+  "scrollId": "DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAACUWblZVaDV4UnNTck9mLU9wczZUVlBkUQ==",
+  "total": 4
+}
+```
+
+::: warning
+When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.
+It can lead to memory leaks if ascroll duration too great is provided, or if too many scroll sessions are open simultaneously.
+:::
+
+### Paginate with `search_after`
+
+Pagination can be done by using the [search_after](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-search-after) parameter.
+
+This method allows to navigate through result pages by providing values that identify the next documents.
+
+::: warning
+You have to provide a sort combination that will **always identify one item only**. The recommended way is to use the field `_id` which is certain to contain one unique value for each document.
+:::
+
+**Example:** _Use sort and size to navigate through pages of results_
+
+```bash
+kourou sdk:query document:search -i ktm-open-data -c thamel-taxi -a size=2 --body '{
+  sort: [
+    { _id: "desc" }
+  ],
+}'
+
+{
+  "hits": [
+    {
+      "_id": "liaa",
+        # ...
+      }
+    },
+    {
+      "_id": "jenow",
+        # ...
+      }
+    }
+  ],
+  "total": 4
+}
+
+```
+
+Then we will include the `_id` of the last document in the `search_after` parameter:
+```bash
+kourou sdk:query document:search -i ktm-open-data -c thamel-taxi -a size=2 --body '{
+  sort: [
+    { _id: "desc" }
+  ],
+  search_after: ["jenow"]
+}'
+
+{
+  "hits": [
+    {
+      "_id": "domisol",
+        # ...
+      }
+    },
+    {
+      "_id": "aschen",
+        # ...
+      }
+    }
+  ],
+  "total": 4
+}
+```
+
+::: info
+Because this method does not freeze the search results between two calls, **there can be missing or duplicated documents between two result pages**.  
+This method efficiently mitigates the costs of scroll searches, but returns less consistent results: it's a middle ground, **ideal for real-time search requests**.  
+Also it's not possible to retrieve more than 10000 documents with this method.
+:::
+
+### Paginate with `from` and `size`
+
+Pagination can be done by incrementing the `from` parameter value to retrieve further results.
+
+It's the fastest pagination method available, but also the less consistent.
+
+::: info
+Because this method does not freeze the search results between two calls, there can be missing or duplicated documents between two result pages.  
+Also it's not possible to retrieve more than 10000 documents with this method.
+:::
+
+**Example:** _Use sort and size to navigate through pages of results_
+
+```bash
+kourou document:search ktm-open-data thamel-taxi --from 0 --size 2
+
+kourou document:search ktm-open-data thamel-taxi --from 2 --size 2
+```
