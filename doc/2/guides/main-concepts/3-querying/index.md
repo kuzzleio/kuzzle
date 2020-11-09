@@ -14,7 +14,7 @@ It is possible for a client to send requests to **retrieve documents from any au
 
 Search query can be passed in the body of the [document:search](/core/2/api/controllers/document/search) action, they will be forwarded to Elasticsearch [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-search.html) endpoint.
 
-Elasticsearch support a lot for top level keyword in a search query root level. For security reasons Kuzzle only support the following keywords:
+Elasticsearch support many keyword in a search query root level. For security reasons Kuzzle only support the following keywords:
   - `aggregations`
   - `aggs`
   - `collapse`
