@@ -1,1 +1,30 @@
-{}
+{
+  "library": {
+    "books": {
+      "properties": {
+        "pageCount": {
+          "type": "integer"
+        },
+        "authors": {
+          "type": "keyword"
+        },
+        "title": {
+          "type": "text"
+        },
+        "year": {
+          "type": "integer"
+        }
+      }
+    },
+    "authors": {
+      "properties": {
+        "firstName": {
+          "type": "keyword"
+        },
+        "lastName": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}

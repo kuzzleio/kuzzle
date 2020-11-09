@@ -166,12 +166,12 @@ app.graphql.use({
     books: {
       typeName: 'Book',
       properties: {
-        authors: {
-          isForeingKey: true,
-          type: 'Author',
-          nullable: true,
-          nullableElements: false
-        },
+        // authors: {
+        //   isForeingKey: true,
+        //   type: 'Author',
+        //   nullable: true,
+        //   nullableElements: false
+        // },
         title: {
           nullable: false
         },

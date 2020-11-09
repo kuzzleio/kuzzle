@@ -48,6 +48,9 @@ export class KuzzleGraphql {
       schema.queries.push(
         `${this.generateQueryGet(typeName)}(id: ID!): ${typeName}`
       );
+      // schema.queries.push(
+      //   `${this.generateQueryMget(typeName)}([id: ID!]!): [${typeName}]`
+      // );
     });
 
     return schemaHandlebars(schema);
@@ -77,9 +80,9 @@ export class KuzzleGraphql {
         schema.queries.push(
           `${this.generateQueryGet(typeConf.typeName)}(id: ID!): ${typeConf.typeName}`
         );
-        schema.queries.push(
-          `${this.generateQueryMget(typeConf.typeName)}([id: ID!]!): [${typeConf.typeName}]`
-        );
+        // schema.queries.push(
+        //   `${this.generateQueryMget(typeConf.typeName)}([id: ID!]!): [${typeConf.typeName}]`
+        // );
         // schema.queries.push(
         //   `${this.generateQuerySearch(typeConf.typeName)}(filters: Object!): [${typeConf.typeName}]`
         // )
@@ -135,8 +138,8 @@ export class KuzzleGraphql {
       result.Query[this.generateQueryGet(type.typeName)]
         = (parent, { id }, { loaders }) => loaders[type.typeName].load(id);
 
-      result.Query[this.generateQueryMget(type.typeName)]
-        = (parent, { ids }, { loaders }) => loaders[type.typeName].loadMany(ids);
+      // result.Query[this.generateQueryMget(type.typeName)]
+      //   = (parent, { ids }, { loaders }) => loaders[type.typeName].loadMany(ids);
 
       // foreign keys
       const foreignKeyProperties: Dictionary<TypePropertyConfig>
