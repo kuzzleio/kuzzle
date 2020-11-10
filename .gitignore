@@ -78,4 +78,6 @@ lib/util/interfaces.js
 lib/core/shared/sdk/embeddedSdk.js
 features-sdk/support/application/functional-tests-app.js
 /index.js
+docker/scripts/functional-tests-controller.js
+docker/scripts/start-kuzzle-dev.js
 
