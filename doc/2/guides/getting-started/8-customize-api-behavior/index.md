@@ -94,7 +94,7 @@ However Kuzzle **provides no guarantee on the pipes execution order**, so pipes 
 Now we can call the action with Kourou:
 
 ```bash
-$ kourou server:now
+kourou server:now
 
 [ℹ] Unknown command "server:now", fallback to API method
  
@@ -106,11 +106,6 @@ $ kourou server:now
  }
  [✔] Successfully executed "server:now
 ```
-
-::: info
-Going further:
- - [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
-:::
 
 <GuidesLinks
   :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/7-create-new-controllers' }" 

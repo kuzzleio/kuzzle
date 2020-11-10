@@ -124,7 +124,7 @@ app.controller.register('greeting', {
 The result returned by our `handler` will be **converted to JSON format** and integrated into the standard Kuzzle response in the `result` property.
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --execute '{
+npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
   "name": "Yagmur"
@@ -249,7 +249,7 @@ For example, with the following request input:
 
 ```bash
 # Route: "POST /greeting/hello/:name" 
-$ curl \
+curl \
   -X POST \
   -H  "Content-Type: application/json" \
   "localhost:7512/_/greeting/hello/aschen?_id=JkkZN62jLSA&age=27" \
@@ -291,7 +291,7 @@ Other protocols directly **use JSON payloads**.
 These payloads contain all the information directly:
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --execute '{
+npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
   "_id": "JkkZN62jLSA",
@@ -397,7 +397,7 @@ app.controller.register('greeting', {
 The following response will be sent:
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --execute '{
+npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
   "name": "Yagmur"
@@ -453,7 +453,7 @@ app.controller.register('files', {
 The response will only contain the CSV document:
 
 ```bash
-$ curl localhost:7512/_/files/csv
+curl localhost:7512/_/files/csv
 
 name,age
 aschen,27
@@ -508,7 +508,7 @@ app.controller.register('greeting', {
 Our action can be executed through the HTTP protocol by using an HTTP client (cURL, HTTPie, Postman, ...):
 
 ```bash
-$ curl http://localhost:7512/_/greeting/say-hello?name=Yagmur
+curl http://localhost:7512/_/greeting/say-hello?name=Yagmur
 ```
 
 ::: info
@@ -521,7 +521,7 @@ It is therefore possible to open them directly in a browser: [http://localhost:7
 To execute our action through the WebSocket protocol, we will be using [wscat](https://www.npmjs.com/package/wscat):
 
 ```bash
-$ npx wscat -c ws://localhost:7512 --execute '{
+npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
   "name": "Yagmur"
@@ -533,7 +533,7 @@ $ npx wscat -c ws://localhost:7512 --execute '{
 From a terminal, [Kourou](/core/2/some-link), the Kuzzle CLI, can be used to execute an action:
 
 ```bash
-$ kourou greeting:sayHello --arg name=Yagmur
+kourou greeting:sayHello --arg name=Yagmur
 ```
 
 It is possible to pass multiple arguments by repeating the `--arg <arg>=<value>` flag or specify a body with the `--body '{}'` flag.  
@@ -585,7 +585,7 @@ They operate on a whitelist principle by **listing the controllers and actions t
 So, to allow access to the `greeting:sayHello` action, the following role can be written:
 
 ```bash
-$ kourou security:createRole '{
+kourou security:createRole '{
   controllers: {
     greeting: {
       actions: {
@@ -599,7 +599,7 @@ $ kourou security:createRole '{
 It is also possible to use a wildcard (`*`) to give access to all of a controller's actions:
 
 ```bash
-$ kourou security:createRole '{
+kourou security:createRole '{
   controllers: {
     greeting: {
       actions: {

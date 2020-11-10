@@ -43,14 +43,53 @@ Kuzzle is a **backend with ready-to-use features** that can be extended in the s
 
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
-<!-- <IconTable :items="[
-  { text: 'Data storage and access', icon: 'guides/introduction/1-what-is-kuzzle/feature-data-storage.svg', href: '/core/2/guides/main-concepts/1-data-storage' },
-  { text: 'Advanced permission system', icon: 'guides/introduction/1-what-is-kuzzle/feature-acl.svg', href: '/core/2/guides/main-concepts/3-permissions' },
-  { text: 'Multi authentication', icon: 'guides/introduction/1-what-is-kuzzle/feature-auth.svg', href: '/core/2/guides/main-concepts/4-authentication' },
-  { text: 'Multi protocol API (Http, WebSocket, MQTT)', icon: 'guides/introduction/1-what-is-kuzzle/feature-api.svg' },
-  { text: 'Realtime engine', icon: 'guides/introduction/1-what-is-kuzzle/feature-realtime.svg', href: '/core/2/guides/main-concepts/5-realtime-engine' },
-  { text: 'Integrated cluster mode', icon: 'guides/introduction/1-what-is-kuzzle/feature-cluster.svg', href: '/core/2/guides/advanced/5-cluster-scalability' },
-]"/> -->
+
+<div class="IconTable">
+  <div class="IconTable-item">
+    <div class="IconTable-item-icon">
+      <img src="./feature-data-storage.svg"/>
+    </div>
+    <div class="IconTable-item-text">
+      Data storage and access
+    </div>
+  </div><div class="IconTable-item">
+    <div class="IconTable-item-icon">
+      <img src="./feature-acl.svg"/>
+    </div>
+    <div class="IconTable-item-text">
+      Advanced permission system
+    </div>
+  </div><div class="IconTable-item">
+    <div class="IconTable-item-icon">
+      <img src="./feature-auth.svg"/>
+    </div>
+    <div class="IconTable-item-text">
+      Multi authentication
+    </div>
+  </div><div class="IconTable-item">
+    <div class="IconTable-item-icon">
+      <img src="./feature-api.svg"/>
+    </div>
+    <div class="IconTable-item-text">
+      Multi protocol API (Http, WebSocket, MQTT)
+    </div>
+  </div><div class="IconTable-item">
+    <div class="IconTable-item-icon">
+      <img src="./feature-realtime.svg"/>
+    </div>
+    <div class="IconTable-item-text">
+      Realtime engine
+    </div>
+  </div><div class="IconTable-item">
+    <div class="IconTable-item-icon">
+      <img src="./feature-cluster.svg"/>
+    </div>
+    <div class="IconTable-item-text">
+      Integrated cluster mode
+    </div>
+  </div>
+</div>
+
 
 Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/2-api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/3-kuzzle-event-system#pipe).
 
@@ -66,7 +105,7 @@ The [Admin Console](/core/2/some-link) is a Single Page Application (SPA) writte
 
 It is used to manage its data and the user permissions system.
 
-As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://console.kuzzle.io](http://console.kuzzle.io).
+As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://next-console.kuzzle.io](http://next-console.kuzzle.io).
 
 ### SDKs
 

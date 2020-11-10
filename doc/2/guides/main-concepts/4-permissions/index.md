@@ -36,7 +36,7 @@ The `reset` option allows to restrict `anonymous` default rights at the same tim
 :::
 
 ```bash
-$ kourou security:createFirstAdmin '{
+kourou security:createFirstAdmin '{
   credentials: {
     local: {
       username: "admin",
@@ -422,7 +422,7 @@ By default, Kuzzle prevents existing user overwriting.
 You can either skip or overwrite existing users with the `onExistingUsers` option.
 :::
 
-<details><summary>Load permissions with Kourou</summay>
+**Example:** _Load permissions with Kourou_
 
 First, create a file `permissions.json` with the permissions definition in JSON format:
 
@@ -462,12 +462,9 @@ First, create a file `permissions.json` with the permissions definition in JSON 
 Then use Kourou to execute the [admin:loadSecurities](/core/2/api/controllers/admin/load-securities) action:
 
 ```bash
-$ kourou admin:loadSecurities < permissions.json
+kourou admin:loadSecurities < permissions.json
 ```
 
 ::: info
 Kourou can read an API action body content from the standard output.
 :::
-
-
-</details>
