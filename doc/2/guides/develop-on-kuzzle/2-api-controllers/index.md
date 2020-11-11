@@ -90,6 +90,10 @@ class GreetingController extends Controller {
 }
 ```
 
+::: info
+If the handler function is an instance method of the controller then the context will be automatically bound to the controller instance.
+:::
+
 Once you have defined your controller class, you can instantiate it and pass it to the `Backend.controller.use` method:
 
 ```js
