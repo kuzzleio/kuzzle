@@ -255,7 +255,7 @@ describe('Backend', () => {
               handler: this.sayHello
             },
           }
-        }
+        };
       }
 
       async sayHello () {}
@@ -273,6 +273,13 @@ describe('Backend', () => {
       should(application._controllers.greeting).not.be.undefined();
       should(application._controllers.greeting.actions.sayHello.handler.name)
         .be.eql('bound sayHello');
+    });
+
+    it('should uses the name property for controller name', () => {
+      controller.name = 'bonjour';
+      application.controller.use(controller);
+
+      should(application._controllers.bonjour).not.be.undefined();
     });
 
     it('should rejects if the controller instance is invalid', () => {
