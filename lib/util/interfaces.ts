@@ -21,6 +21,7 @@
 
 import { Request } from 'kuzzle-common-objects';
 import { Backend } from '../core/application/backend';
+import { PluginContext } from '../core/plugin/pluginContext'
 
 /**
  * An interface representing an object with string key and any value
@@ -66,7 +67,7 @@ export interface ControllerDefinition {
         /**
          * Route path.
          * A route starting with `/` will be prefixed by `/_` otherwise the route
-         * will be prefixed by `/_/<application-name>/`
+         * will be prefixed by `/_/<application-name>/`.
          */
         path: string
       }>
@@ -90,6 +91,17 @@ export abstract class Controller {
 
   /**
    * Controller definition
+   *
+   * @example
+   *
+   * {
+   *   actions: {
+   *     sayHello: {
+   *       handler: async request => `Hello, ${request.input.args.name}`,
+   *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+   *     }
+   *   }
+   * }
    */
   public definition: ControllerDefinition;
 
@@ -98,8 +110,152 @@ export abstract class Controller {
   }
 }
 
-export interface BasePlugin {
-  init: (config: JSONObject, context: any) => Promise<any> | any
+/**
+ * Type for handler attached to Kuzzle events. Either hooks or pipes.
+ * `(...payload: any) => Promise<any>`
+ */
+export type EventHandler = (...payload: any) => Promise<any>
+
+/**
+ * Plugins must implements this interface.
+ */
+export abstract class Plugin {
+  /**
+   * Plugin context.
+   *
+   * Must be set in the plugin init() method before use.
+   */
+  protected context?: PluginContext;
+
+  /**
+   * Plugin config.
+   *
+   * Must be set in the plugin init() method before use.
+   */
+  protected config?: JSONObject;
+
+  /**
+   * Define new API controllers.
+   *
+   * @example
+   *
+   * this.api = {
+   *   email: {
+   *     actions: {
+   *       send: {
+   *         handler: async request => ...,
+   *         http: [{ verb: 'post', path: '/email/send' }]
+   *       }
+   *     }
+   *   }
+   * }
+   */
+  public api?: {
+    /**
+     * Name of the API controller.
+     *
+     * It will be prefixed with the plugin name: <plugin-name>/<controller-name>
+     */
+    [controller: string]: ControllerDefinition
+  }
+
+  /**
+   * Define hooks on Kuzzle events.
+   *
+   * @see https://docs.kuzzle.io/core/2/plugins/guides/hooks/
+   *
+   * @example
+   *
+   * this.hooks = {
+   *   'security:afterCreateUser': async (request: Request) => ...
+   * }
+   */
+  public hooks?: {
+    /**
+     * Event name or wildcard event.
+     */
+    [event: string]: Array<EventHandler> | EventHandler
+  }
+
+  /**
+   * Define pipes on Kuzzle events.
+   *
+   * @see https://docs.kuzzle.io/core/2/plugins/guides/pipes/
+   *
+   * @example
+   *
+   * this.pipes = {
+   *   'document:afterCreate': async (request: Request) => ...
+   * }
+   */
+  public pipes?: {
+    /**
+     * Event name or wildcard event.
+     */
+    [event: string]: Array<EventHandler> | EventHandler
+  }
+
+  /**
+   * Define authenticator classes used by strategies.
+   *
+   * @see https://docs.kuzzle.io/core/2/plugins/guides/strategies/overview
+   */
+  public authenticators?: {
+    /**
+     * The key is the authenticator name and the value is the class.
+     */
+    [name: string]: any
+  }
+
+  /**
+   * Define authentications strategies.
+   *
+   * @see https://docs.kuzzle.io/core/2/plugins/guides/strategies/overview
+   */
+  public strategies?: {
+    /**
+     * Strategy name and definition.
+     */
+    [name: string]: {
+      /**
+       * Strategy configuration.
+       */
+      config: {
+        /**
+         * Name of a registered authenticator to use with this strategy.
+         */
+        authenticator: string,
+        [key: string]: any
+      },
+      /**
+       * Strategy methods.
+       *
+       * Each method must be exposed by the plugin
+       * under the same name as specified.
+       */
+      methods: {
+        afterRegister?: string,
+        create: string,
+        delete: string,
+        exists: string,
+        getById?: string,
+        getInfo?: string,
+        update: string,
+        validate: string,
+        verify: string,
+      }
+    }
+  }
+
+  /**
+   * Plugin initialization method.
+   *
+   * Will be called during plugin initialization before Kuzzle starts to serve
+   * requests.
+   *
+   * @see https://docs.kuzzle.io/core/2/plugins/guides/manual-setup/init-function/
+   */
+  abstract init (config: JSONObject, context: PluginContext): Promise<any> | any
 }
 
 /**

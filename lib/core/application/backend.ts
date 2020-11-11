@@ -28,7 +28,7 @@ import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
 import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
-import Plugin from '../plugin/plugin';
+import PluginObject from '../plugin/plugin';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
@@ -38,7 +38,7 @@ import kuzzleConfig from '../../config';
 import {
   JSONObject,
   ControllerDefinition,
-  BasePlugin,
+  Plugin,
   Controller
 } from '../../util/interfaces';
 
@@ -234,7 +234,12 @@ class ControllerManager extends ApplicationManager {
           `Handler for action "${action}" is not a function.`);
       }
 
-      definition.handler = definition.handler.bind(controller);
+      // if the function handler is an instance method,
+      // bound the context to controller instance
+      const handlerName = definition.handler.name
+      if (handlerName && typeof controller[handlerName] === 'function') {
+        definition.handler = definition.handler.bind(controller);
+      }
     }
 
     if (! controller.name) {
@@ -248,7 +253,7 @@ class ControllerManager extends ApplicationManager {
   private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, definition, { application: true });
+    PluginObject.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -257,18 +262,7 @@ class ControllerManager extends ApplicationManager {
         'A controller with this name already exists');
     }
 
-    this._generateMissingRoutes(name, definition);
-
     this._application._controllers[name] = definition;
-  }
-
-  private _generateMissingRoutes (controllerName: string, controllerDefinition: ControllerDefinition) {
-    for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
-      if (! definition.http) {
-        // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'get', path: `${kebabCase(controllerName)}/${kebabCase(action)}` }];
-      }
-    }
   }
 }
 
@@ -321,7 +315,7 @@ class PluginManager extends ApplicationManager {
    *    - `manifest`: Manually add a manifest definition (deprecated)
    */
   use (
-    plugin: BasePlugin,
+    plugin: Plugin,
     options: { name?: string, manifest?: JSONObject } = {}
   ) : void {
     if (this._application.started) {
@@ -337,7 +331,7 @@ class PluginManager extends ApplicationManager {
     }
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_plugin_name', name);
     }
 
@@ -413,7 +407,7 @@ class StorageManager extends ApplicationManager {
   /**
    * Storage client constructor.
    * (Currently Elasticsearch)
-   *
+   * @todo rename in ESClient
    * @param clientConfig Overload configuration for the underlaying storage client
    */
   get Client (): new (clientConfig?: any) => Client {
@@ -434,6 +428,7 @@ class StorageManager extends ApplicationManager {
   /**
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
+   * @todo rename in esClient
    */
   get client (): Client {
     if (! this._client) {
@@ -472,7 +467,6 @@ export class Backend {
 
   /**
    * Errors manager
-   * @todo add type
    */
   public kerror: any;
 
@@ -559,7 +553,7 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
 
@@ -611,7 +605,7 @@ export class Backend {
       { name: 'kuzzle-plugin-auth-passport-local' });
     this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
 
-    const application = new Plugin(
+    const application = new PluginObject(
       this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });
