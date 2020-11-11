@@ -244,15 +244,52 @@ describe('Backend', () => {
         application.controller.register('greeting', definition);
       }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
     });
+  });
 
-    it('should generate default http routes if they are not provided', () => {
-      application.controller.register('greeting', definition);
+  describe('ControllerManager#use', () => {
+    class GreetingController {
+      constructor () {
+        this.definition = {
+          actions: {
+            sayHello: {
+              handler: this.sayHello
+            },
+          }
+        }
+      }
+
+      async sayHello () {}
+    }
+
+    let controller;
+
+    beforeEach(() => {
+      controller = new GreetingController();
+    });
+
+    it('should uses a new controller instance', () => {
+      application.controller.use(controller);
 
       should(application._controllers.greeting).not.be.undefined();
-      should(application._controllers.greeting.actions.sayBye.http)
-        .be.eql([
-          { verb: 'get', path: 'greeting/say-bye' }
-        ]);
+      should(application._controllers.greeting.actions.sayHello.handler.name)
+        .be.eql('bound sayHello');
+    });
+
+    it('should rejects if the controller instance is invalid', () => {
+      controller.definition.actions.sayHello.handler = {};
+
+      should(() => {
+        application.controller.use(controller);
+      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
+    });
+
+    it('should rejects if the name is already taken', () => {
+      application.controller.use(controller);
+      const controller2 = new GreetingController();
+
+      should(() => {
+        application.controller.use(controller2);
+      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
     });
   });
 

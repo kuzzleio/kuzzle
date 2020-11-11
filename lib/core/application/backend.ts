@@ -226,11 +226,16 @@ class ControllerManager extends ApplicationManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
+    }
+
     for (const [action, definition] of Object.entries(controller.definition.actions)) {
       if (typeof definition.handler !== 'function') {
         throw assertionError.get(
           'invalid_controller_definition',
-          name,
+          controller.name,
           `Handler for action "${action}" is not a function.`);
       }
 
@@ -240,11 +245,6 @@ class ControllerManager extends ApplicationManager {
       if (handlerName && typeof controller[handlerName] === 'function') {
         definition.handler = definition.handler.bind(controller);
       }
-    }
-
-    if (! controller.name) {
-      controller.name = kebabCase(controller.constructor.name)
-        .replace('-controller', '');
     }
 
     this._add(controller.name, controller.definition);

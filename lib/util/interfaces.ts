@@ -21,7 +21,7 @@
 
 import { Request } from 'kuzzle-common-objects';
 import { Backend } from '../core/application/backend';
-import { PluginContext } from '../core/plugin/pluginContext'
+import { PluginContext } from '../core/plugin/pluginContext';
 
 /**
  * An interface representing an object with string key and any value
@@ -98,7 +98,7 @@ export abstract class Controller {
    *   actions: {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
-   *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+   *       http: [{ verb: 'post', path: '/greeting/hello/:name' }]
    *     }
    *   }
    * }
@@ -153,8 +153,6 @@ export abstract class Plugin {
   public api?: {
     /**
      * Name of the API controller.
-     *
-     * It will be prefixed with the plugin name: <plugin-name>/<controller-name>
      */
     [controller: string]: ControllerDefinition
   }
