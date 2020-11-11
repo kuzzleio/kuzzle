@@ -407,14 +407,14 @@ class StorageManager extends ApplicationManager {
   /**
    * Storage client constructor.
    * (Currently Elasticsearch)
-   * @todo rename in ESClient
+   *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get Client (): new (clientConfig?: any) => Client {
+  get ESClient (): new (clientConfig?: any) => Client {
     if (! this._Client) {
       const kuzzle = this._kuzzle;
 
-      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
+      this._Client = function ESClient (clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
           ...kuzzle.config.services.storageEngine.client,
           ...clientConfig,
@@ -428,9 +428,8 @@ class StorageManager extends ApplicationManager {
   /**
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
-   * @todo rename in esClient
    */
-  get client (): Client {
+  get esClient (): Client {
     if (! this._client) {
       this._client = Elasticsearch
         .buildClient(this._kuzzle.config.services.storageEngine.client);
