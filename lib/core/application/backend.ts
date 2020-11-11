@@ -236,7 +236,7 @@ class ControllerManager extends ApplicationManager {
 
       // if the function handler is an instance method,
       // bound the context to controller instance
-      const handlerName = definition.handler.name
+      const handlerName = definition.handler.name;
       if (handlerName && typeof controller[handlerName] === 'function') {
         definition.handler = definition.handler.bind(controller);
       }
