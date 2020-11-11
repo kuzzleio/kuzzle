@@ -59,9 +59,8 @@ class FunctionalTestPlugin {
     this.activatedPipes = {};
 
     this.controllers.pipes = {
-      deactivateAll: this.pipesDeactivateAll,
-      manage: this.pipesManage,
-      // keep a pipe definition with a string even if it's deprecated
+      deactivateAll: 'pipesDeactivateAll',
+      manage: 'pipesManage',
       testReturn: 'pipesTestReturn'
     };
 
