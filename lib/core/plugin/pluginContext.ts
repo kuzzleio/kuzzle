@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
 
 import Bluebird from 'bluebird';
 import Koncorde from 'koncorde';
@@ -114,7 +113,7 @@ export class PluginContext {
      *
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
-    execute: (request: Request, callback?: Function) => Promise<Request>,
+    execute: (request: Request, callback?: any) => Promise<Request>,
 
     /**
      * Adds or removes realtime subscriptions from the backend.
@@ -216,6 +215,7 @@ export class PluginContext {
   constructor (kuzzle, pluginName) {
     // we have a circular dependency between Kuzzle and the plugins.
     // We cannot get Kuzzle constructor from the global scope
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const Kuzzle = require('../../kuzzle');
 
     this.config = JSON.parse(JSON.stringify(kuzzle.config));
@@ -261,6 +261,7 @@ export class PluginContext {
         pluginIndex,
         storeScopeEnum.PRIVATE);
 
+      // eslint-disable-next-line no-inner-declarations
       function PluginContextRepository (
         collection: string,
         ObjectConstructor: any = null)
@@ -288,6 +289,7 @@ export class PluginContext {
         } as Repository;
       }
 
+      // eslint-disable-next-line no-inner-declarations
       function PluginContextESClient () {
         return Elasticsearch
           .buildClient(kuzzle.config.services.storageEngine.client);
@@ -295,12 +297,12 @@ export class PluginContext {
 
       this.constructors = {
         BaseValidationType: require('../validation/baseType'),
+        ESClient: PluginContextESClient as unknown as new () => Client,
         Koncorde: Koncorde as any,
+        Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
         Request: instantiateRequest as any,
         RequestContext: RequestContext as any,
         RequestInput: RequestInput as any,
-        Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
-        ESClient: PluginContextESClient as unknown as new () => Client
       };
 
       Object.freeze(this.constructors);
@@ -321,11 +323,17 @@ export class PluginContext {
       /* context.accessors ================================================== */
 
       this.accessors = {
+        execute: (request, callback) => execute(kuzzle, request, callback),
+        sdk: new EmbeddedSDK(kuzzle),
         storage: {
           bootstrap: collections => pluginStore.init(collections),
           createCollection: (collection, mappings) => (
             pluginStore.createCollection(collection, { mappings })
           )
+        },
+        strategies: {
+          add: curryAddStrategy(kuzzle, pluginName),
+          remove: curryRemoveStrategy(kuzzle, pluginName)
         },
         subscription: {
           register: (connectionId, index, collection, filters) => {
@@ -351,19 +359,13 @@ export class PluginContext {
               connectionId, roomId, notify
             )
         },
-        execute: (request, callback) => execute(kuzzle, request, callback),
+        trigger: (eventName, payload) => (
+          kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
+        ),
         validation: {
           addType: kuzzle.validation.addType.bind(kuzzle.validation),
           validate: kuzzle.validation.validate.bind(kuzzle.validation)
         },
-        strategies: {
-          add: curryAddStrategy(kuzzle, pluginName),
-          remove: curryRemoveStrategy(kuzzle, pluginName)
-        },
-        trigger: (eventName, payload) => (
-          kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
-        ),
-        sdk: new EmbeddedSDK(kuzzle)
       };
 
       // @todo freeze the "accessors" object once we don't have
