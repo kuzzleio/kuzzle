@@ -286,15 +286,15 @@ export class PluginContext {
           search: (...args) => pluginRepository.search(...args),
           update: (...args) => pluginRepository.update(...args)
         } as Repository;
-      };
+      }
 
       function PluginContextESClient () {
         return Elasticsearch
           .buildClient(kuzzle.config.services.storageEngine.client);
-      };
+      }
 
       this.constructors = {
-        BaseValidationType: require('../validation/baseType') as any,
+        BaseValidationType: require('../validation/baseType'),
         Koncorde: Koncorde as any,
         Request: instantiateRequest as any,
         RequestContext: RequestContext as any,
