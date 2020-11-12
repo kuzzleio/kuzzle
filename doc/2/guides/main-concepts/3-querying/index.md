@@ -232,7 +232,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 The [range](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-range-query.html) clause allows to return documents **that contain value within a provided range**.
 
-It can be used with `number` and `date` fields, but also with `keyword` ones, even if it's less common.
+It can be used with `number` or `date` fields (but not limited to).
 
 Range boundaries are defined using `gt` (greather than), `lt` (lower than), `gte` (greather than or equal) and `lte` (lower than or equal).
 
