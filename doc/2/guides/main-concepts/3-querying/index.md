@@ -230,7 +230,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ### `range` clause
 
-The [range](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-range-query.html) clause allows to returns documents **that contain value within a provided range**.
+The [range](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-range-query.html) clause allows to return documents **that contain value within a provided range**.
 
 It can be used with `number` and `date` fields, but also with `keyword` ones, even if it's less common.
 
