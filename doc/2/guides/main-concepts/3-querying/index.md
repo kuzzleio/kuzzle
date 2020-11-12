@@ -14,7 +14,7 @@ It is possible for a client to send requests to **retrieve documents from any au
 
 Search query can be passed in the body of the [document:search](/core/2/api/controllers/document/search) action, then will be forwarded to Elasticsearch [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-search.html) endpoint.
 
-Elasticsearch supports many keyword in a search query root level. For security reasons Kuzzle only supports the following keywords:
+Elasticsearch supports many keywords in a search query root level. For security reasons Kuzzle only supports the following keywords:
   - `aggregations`
   - `aggs`
   - `collapse`
@@ -32,16 +32,16 @@ Elasticsearch supports many keyword in a search query root level. For security r
   - `_source_includes`
 
 ::: info
-Any other keyword will be ignored by Kuzzle and not followed to Elasticsearch.
+If any other keyword is present in a search query, Kuzzle will abort the request and return an error to the client.
 :::
 
 ## Near Realtime
 
-When documents are written in Elasticsearch, **they must then be indexed by the search engine in order to be available in the search results**.
+When documents are written in Elasticsearch, **they must then be indexed by the search engine in order to be available in search results**.
 
 This indexing is a background task managed by Elasticsearch that can take up to a second.
 
-This means that when documents are written through Kuzzle API, **it can take up to a second before they are made available in the search results**. This operation is called the _refresh_ of a collection.
+This means that when documents are written through the Kuzzle API, **it can take up to a second before they are made available in the search results**. This operation is called the _refresh_ of a collection.
 
 ::: info
 This concerns only the results of the [document:search](/core/2/api/controllers/document/search) action.
@@ -54,9 +54,9 @@ However, there are mechanisms to control the availability of new documents.
 
 Most of the actions of the document controller accept an additional option that is passed by Kuzzle to Elasticsearch: [refresh](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-refresh.html).
 
-When the value of this option is `wait_for`, then Elasticsearch (and thus Kuzzle) will **respond to the request only when the document has been indexed** to be available in the search.
+When the value of this option is `wait_for`, then Elasticsearch (and thus Kuzzle) will **respond to the request only when the document has been indexed**.
 
-**Example:** _Create document and wait for the collection to be refreshed_ 
+**Example:** _Create a document and wait for the collection to be refreshed_ 
 ```bash
 kourou sdk:execute '
   await sdk.document.createOrReplace(
@@ -84,7 +84,7 @@ It is possible to request a manual refresh of the documents of a collection with
 
 This action **can take up to a second** to refresh the underlying Elasticsearch indice.
 
-**Example:** _Creates documents and then refresh the collection before searching it_ 
+**Example:** _Create documents and then refresh the collection before searching it_ 
 ```bash
 kourou sdk:execute '
   for (let i = 20; i--; ) {
@@ -106,7 +106,7 @@ kourou sdk:execute '
 
 ## Basic Querying
 
-Elasticsearch [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) allows to perform advanced searches in its data.
+Elasticsearch's [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) allows to perform advanced searches in its data.
 
 Elasticsearch brings **_clauses_ to look for a value in a particular field**.
 
@@ -185,9 +185,9 @@ kourou document:mCreate ktm-open-data thamel-taxi '{
 
 ### `term` clause
 
-The [term](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-term-query.html) clause allows to returns documents that **contain an exact value** in a provided field.
+The [term](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-term-query.html) clause allows to return documents that **contain an exact value** in a provided field.
 
-Term clause should be used on fields with the [keyword](/core/2/guides/main-concepts/2-data-storage#mappings-properties) type.
+This clause should be used on fields with the [keyword](/core/2/guides/main-concepts/2-data-storage#mappings-properties) type.
 
 ::: info
 You can use the `term` clause to find documents based on a precise value such as a price, a product ID, or a username.
@@ -213,15 +213,15 @@ The search query content will be injected in the request body inside the `query`
 
 ### `match` clause
 
-The [match](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-match-query.html) clause allows to returns documents **that match (could be approximately)** a provided `text`, `number`, `date` or `boolean` field.
+The [match](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-match-query.html) clause allows to returns documents **that approximately match** a provided `text`, `number`, `date` or `boolean` field.
 
-The match query is the standard query for **performing a full-text search**, including options for fuzzy matching.
+The match query is the standard query for **performing a full-text search**. As thus, it includes options for fuzzy matching.
 
 ::: info
 The `match` clause to find documents with fields containing a value. The `match` clause as well as the content of a `text` fields are [analyzed](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-analyzers.html) by Elasticsearch before performing the query.
 :::
 
-**Example:** _Search for documents containing an approximate field value_ 
+**Example:** _Search for documents roughly matching the provided field value_ 
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   match: { description: "java" }
@@ -232,9 +232,9 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 The [range](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-range-query.html) clause allows to returns documents **that contain value within a provided range**.
 
-It can be used with `number` and `date` fields but also with `keyword` even if it's less common.
+It can be used with `number` and `date` fields, but also with `keyword` ones, even if it's less common.
 
-The range is defined by it's boundary with `gt` (greather than), `lt` (lower than), `gte` (greather than or equal) and `lte` (lower than or equal).
+Range boundaries are defined using `gt` (greather than), `lt` (lower than), `gte` (greather than or equal) and `lte` (lower than or equal).
 
 **Example:** _Search for documents where the "age" field is between 30 and 42_ 
 ```bash
@@ -250,7 +250,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ### `ids` clause
 
-The [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) clause allows to returns document **based on their IDs** (`_id` field).
+The [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) clause allows to return document **based on their IDs** (`_id` field).
 
 **Example:** _Search for documents with their ids_ 
 ```bash
@@ -336,14 +336,14 @@ They allow to find all documents matching a search query.
 ::: info
 By default, the [document:search](/core/2/api/controllers/document/search) action returns only 10 documents.  
 The number of returned documents can be changed with the `size` option.  
-There is a limit of 10000 documents that can be retrieved with a request and the limit can be configured under the `limits.documentsFetchCount` [configuration](/core/2/guides/advanced/advanced/8-configuration) key.
+There is a limit of 10000 documents that can be retrieved with a single search request, without pagination.
 :::
 
 Those methods are explained in the next sections and they are already implemented in our SDKs in the `SearchResult` class. (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK)
 
 All the methods explained here are available by default in our SDKs through the `SearchResult` class. This class allows to navigate through your paginated results with ease by calling the `SearchResult.next` method.
 
-**Example:** _Paginate search result using the scroll method_
+**Example:** _Paginate search results using the scroll method_
 :::: tabs
 
 ::: tab Javascript
@@ -418,26 +418,26 @@ while (result) {
 ::: tab Csharp
 
 ```csharp
-SearchOptions options = new SearchOptions();
-options.Scroll = "5s";
+SearchOptions options = new SearchOptions {
+  Scroll = "5s"
+};
 
 SearchResults result = await kuzzle.Document.SearchAsync(
     "ktm-open-data",
     "thamel-taxi",
     JObject.Parse(@"{
-      ""query"": {
-        ""term"": {
-          ""city"": ""Antalya""
+      query: {
+        term: {
+          city: 'Antalya'
         }
       }
     }"),
     options);
 
-while (result) {
+while (result != null) {
   Console.Out.WriteLine(result.hits);
-  result = result.NextAsync();
+  result = await result.NextAsync();
 }
-```
 
 :::
 
@@ -529,12 +529,11 @@ kourou sdk:query document:search \
 ::: info
 Because this method does not freeze the search results between two calls, **there can be missing or duplicated documents between two result pages**.  
 This method efficiently mitigates the costs of scroll searches, but returns less consistent results: it's a middle ground, **ideal for real-time search requests**.  
-Also it's not possible to retrieve more than 10000 documents with this method.
 :::
 
 ### Paginate with Scroll Cursor
 
-The `scroll` parameter can be specified in the search query to allows the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action to **use a cursors to move through paginated results**.
+The `scroll` parameter can be specified in the search query to allow the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action. This option creates **a forward-only cursor** to move through paginated results.
 
 The **results from a scroll request are frozen**, and reflect the state of the collection at the time the initial search request.  
 For that reason, this action is **guaranteed to return consistent results**, even if documents are updated or deleted in the database between two pages retrieval.
@@ -598,14 +597,19 @@ kourou sdk:query document:scroll -a scrollId=<scroll-id>
 ```
 
 ::: warning
-When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.
-It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.
+When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep consistent results during the entire scroll session.
+It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.  
+
+By default, Kuzzle sets a maximum scroll duration of 1 minute. This can be changed in the kuzzlerc configuration file under the key `services.storageEngine.maxScrollDuration`.
 :::
 
+::: info
+Kuzzle automatically destroys scroll cursors that have been consumed. Invoking the `document:scroll` action on a scroll ID whose results have been completely fetched will lead to an "unknown scroll ID" error.
+:::
 ## Aggregations
 
 Elasticsearch allows data to be **grouped together** to **build complex summaries** of the data through a mechanism called aggregations.
 
 This mechanism allows to **structure the data returned in the response** in order to easily build dashboards, graphs, maps, etc.
 
-More informations on [Elasticsearch Aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-aggregations.html)
+More information on [Elasticsearch Aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-aggregations.html)
