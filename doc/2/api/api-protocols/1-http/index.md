@@ -10,16 +10,16 @@ order: 100
 
 The HTTP protocol is widely used to build APIs.  
 
-This protocol consumes **less energy** and allows easily **compression** or **caching** of requests.  
+This protocol consumes **less energy** and easily allows **compression** or **caching** of requests.  
 
 ::: info
 The use of the HTTP protocol is recommended when the client is in an environment requiring energy saving. (e.g. IoT device, smartphone)
 :::
 
-However it is **quite slow** because each request requires to establish a new connection to the server.  
+However it can be **quite slow** because each request usually requires to establish a new connection to the server. Some clients, such as browsers, keep connections open to speed things up, but you shouldn't count on that.  
 
 ::: warning
-The HTTP protocol cannot maintain a persistent connection and therefore it is not possible to use the features of the [Realtime Engine](/core/2/guides/main-concepts/6-realtime) 
+The HTTP protocol is not meant to maintain persistent connections. It is therefore not possible to use Kuzzle's [Realtime Engine](/core/2/guides/main-concepts/6-realtime) 
 ::: 
 
 ### Configuration

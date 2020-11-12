@@ -8,14 +8,14 @@ order: 200
 
 # WebSocket
 
-The WebSocket protocol is a fairly widespread web standard. It allows to **establish a bi-directional communication channel** between a client and a server.
+The WebSocket protocol is a fairly widespread web standard. It allows to **establish a bidirectional communication channel** between a client and a server.
 
 Due to the persistent nature of its connection, the WebSocket protocol **consumes more energy than HTTP**.
 
-However, it is much **more efficient in sending requests** than HTTP because it does not need to establish a new connection each time.
+However, it is much **more efficient in sending requests** than HTTP because it does not need to establish a new connection for each new request.
 
 ::: info
-The use of the **WebSocket protocol is recommanded** whenever it's possible.  
+The use of the **WebSocket protocol is recommended** whenever possible.  
 This protocol should be used by default for web applications, machine-to-machine connections, users scripts and CLI.
 :::
 

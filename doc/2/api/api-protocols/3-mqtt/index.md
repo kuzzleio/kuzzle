@@ -10,7 +10,7 @@ order: 300
 
 MQTT is a lightweight messaging protocol designed for IoT devices and optimized for **high-latency** or **unreliable networks**.  
 
-It establish a **bi-directional communication channel** between a client and a server.
+It establishes a **bidirectional communication channel** between a client and a server.
 
 ::: warning
 The MQTT protocol is disabled by default.
@@ -103,15 +103,16 @@ Each time a subscription is sent, a dedicated MQTT topic is created, named after
 Here are the steps to perform a Kuzzle subscription using MQTT:
 
 - Send a subscription request to Kuzzle
-- Listen to the request's response to ge the `channel` identifier
+- Listen to the request's response to get the `channel` identifier
 - Subscribe to the MQTT topic named after this channel identifier
 
 Example using [MQTT Node module](https://www.npmjs.com/package/mqtt):
 
 ```js
-const mqtt = require('mqtt'),
-  client = mqtt.connect({ host: 'localhost' }),
-  channels = [];
+const mqtt = require('mqtt');
+
+const client = mqtt.connect({ host: 'localhost' });
+const channels = [];
 
 // Sending a volatile message
 client.publish(
@@ -160,7 +161,7 @@ If `allowPubSub` is set to `true`, clients are only forbidden to publish to the 
 Wildcards subcriptions are not allowed
 :::
 
-If a client tries to publich to an unauthorized topic, his connection will immediately be shut down by the server.
+If a client tries to publish to an unauthorized topic, his connection will immediately be shut down by the server.
 
 ### Subscribing
 
