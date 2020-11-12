@@ -442,7 +442,7 @@ Once this number of requests is reached, new requests are stored in a queue befo
 
 ### Documents Limits
 
-Kuzzle limite le nombre de documents pouvant être lu ou écrit avec la même requête.  
+Kuzzle limits the number of documents that can be read or written with the same request.
 
 **Associated configuration keys:**
  - `limits.documentsFetchCount` (`10000`): maximum number of documents that can be fetched by a single API request
