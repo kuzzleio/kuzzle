@@ -201,7 +201,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 ```
 
 ::: info
-The search query content will be injected in the request body inside the `query` property:
+With Kourou the search query content will be injected in the request body inside the `query` property:
 ```js
 {
   query: {
@@ -339,7 +339,7 @@ The number of returned documents can be changed with the `size` option.
 There is a limit of 10000 documents that can be retrieved with a single search request, without pagination.
 :::
 
-Those methods are explained in the next sections and they are already implemented in our SDKs in the `SearchResult` class. (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK)
+Those **methods are explained in the next sections and they are already implemented in our SDKs** in the `SearchResult` class. (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK)
 
 All the methods explained here are available by default in our SDKs through the `SearchResult` class. This class allows to navigate through your paginated results with ease by calling the `SearchResult.next` method.
 
@@ -600,7 +600,9 @@ kourou sdk:query document:scroll -a scrollId=<scroll-id>
 When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep consistent results during the entire scroll session.
 It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.  
 
-By default, Kuzzle sets a maximum scroll duration of 1 minute. This can be changed in the kuzzlerc configuration file under the key `services.storageEngine.maxScrollDuration`.
+
+By default, Kuzzle sets a maximum scroll duration of 1 minute.  
+This can be changed in the kuzzlerc configuration file under the key `services.storageEngine.maxScrollDuration`.
 :::
 
 ::: info
