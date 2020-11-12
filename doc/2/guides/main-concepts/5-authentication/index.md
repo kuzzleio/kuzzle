@@ -54,6 +54,10 @@ kourou security:createUser '{
 }' --id mylehuong
 ```
 
+::: info
+Most of the [security](/core/2/api/controllers/security) controller actions use the `kuid` to identify users.
+:::
+
 ## Credentials
 
 In Kuzzle, a user's credentials are composed of a **list of authentication strategies and their respective profile data**.
@@ -191,7 +195,9 @@ Each password policy is an object with the following properties:
 * `appliesTo.profiles`: n array of `profile` ids the policy applies to.
 * `appliesTod.roles`: an array of `role` ids the policy applies to.
 
-> At least one of `users`, `profiles` or `roles` properties must be set if `appliesTo` is an object.
+::: info
+At least one of `users`, `profiles` or `roles` properties must be set if `appliesTo` is an object.
+:::
 
 ### Optional properties
 
@@ -201,7 +207,13 @@ Each password policy is an object with the following properties:
 * `mustChangePasswordIfSetByAdmin`: if set to `true`, when the password is set for a user by someone else, the user will receive a `resetPasswordToken` upon next login and will have to change her password before being allowed to log in again.
 * `passwordRegex`: a string representation of a regular expression to test on new passwords.
 
-**Examples:**
+**Example:**
+
+_No user can use a password that includes the login and the password must be at least 6 chars long._
+
+_Editors and admin users passwords expire every 30 days and the password must be at least 8 chars long and include at least one letter and one digit._
+
+_Admin users passwords must either be 24 or more chars long, or include a lower case char, an upper case char, a digit and a special char._
 
 ```json
 {
@@ -230,12 +242,6 @@ Each password policy is an object with the following properties:
 }
 ```
 
-In the example above, no user can use a password that includes the login and the password must be at least 6 chars long.
-
-Editors and admin users passwords expire every 30 days and the password must be at least 8 chars long and include at least one letter and one digit.
-
-Admin users passwords must either be 24 or more chars long, or include a lower case char, an upper case char, a digit and a special char.
-
 ## `oauth` Strategy
 
 This plugin allows to authenticate with OAuth providers such as Facebook, Twitter, etc by using [Passport.js OAuth2](http://www.passportjs.org/docs/oauth2-api/).
@@ -252,50 +258,50 @@ const app = new Backend('tirana')
 app.plugin.use(new PluginOAuth())
 ```
 
+This strategy allows to create user in Kuzzle if they don't already exists when they login for the first time.
+
 ### `oauth` Strategy Configuration
 
 Once installed, the OAuth plugin can be configured under the `plugins.kuzzle-plugin-auth-passport-oauth` configuration key.
-
-| Name                        | Default value   | Type   | Description                                                                                                      |
-|-----------------------------|-----------------|--------|------------------------------------------------------------------------------------------------------------------|
-| ``strategies``              | ``{}``          | Object | List of the providers you want to use with passport                                                              |
-| ``credentials``             | ``{}``          | Object | Credentials provided by the provider                                                                             |
-| ``persist``                 | ``{}``          | Object | Attributes you want to persist in the user credentials object if the user doesn't exist                          |
-| ``scope``                   | ``[]``          | Array  | List of fields in the OAUTH 2.0 scope of access                                                                  |
-| ``identifierAttribute``     |                 | String | Attribute from the profile of the provider to use as unique identifier if you want to persist the user in Kuzzle |
-| ``defaultProfile``          | ``["default"]`` | Array  | Profiles of the new persisted user                                                                               |
-| ``kuzzleAttributesMapping`` | ``{}``          | Object | Mapping of attributes to persist in the user persisted in Kuzzle                                                 |
-| ``passportStrategy``        | ``''``          | String | Strategy name for passport (eg. google-oauth20 while the name of the provider is google)                         |
 
 Here is an example of a configuration:
 
 ```js
 {
+  // List of the providers you want to use with passport
   "strategies": {
     "facebook": {
+      // Strategy name for passport (eg. google-oauth20 while the name of the provider is google)
       "passportStrategy": "facebook",
+      // Credentials provided by the provider  
       "credentials": {
         "clientID": "<your-client-id>",
         "clientSecret": "<your-client-secret>",
         "callbackURL": "http://localhost:8080/_login/facebook",
         "profileFields": ["id", "name", "picture", "email", "gender"]
       },
+      // Attributes you want to persist in the user credentials object if the user doesn't exist
       "persist": [
         "picture.data.url",
         "last_name",
         "first_name",
         "email"
       ],
+      // List of fields in the OAUTH 2.0 scope of access
       "scope": [
         "email",
         "public_profile"
       ],
+      //Mapping of attributes to persist in the user persisted in Kuzzle
       "kuzzleAttributesMapping": {
-        "userMail": "email" // will store the attribute "email" as "userEmail" into the user credentials object
+        // will store the attribute "email" from oauth provider as "userEmail" into the user credentials object
+        "userMail": "email" 
       },
+      // Attribute from the profile of the provider to use as unique identifier if you want to persist the user in Kuzzle
       "identifierAttribute": "email"
     }
   },
+  // Profiles of the new persisted user
   "defaultProfiles": [
     "default"
   ]
