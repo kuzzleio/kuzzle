@@ -58,27 +58,62 @@ kourou security:createUser '{
 
 In Kuzzle, a user's credentials are composed of a **list of authentication strategies and their respective profile data**.
 
-For instance, if a user registered on Kuzzle with both Facebook (OAuth) and local authentication strategies, then their credentials would look like this:
-```js
-{
-  "facebook": {
-    "kuid": "<Kuzzle User IDentifier>",
-    "login": "Myy",
-    "email": "my@lehuong.vn"
+They must be provided at the creation of a user in the `credentials` property of the user's content passed in the `body` of the query.
+
+**Example:** _Create an user with `local` credentials_
+```bash
+kourou security:createUser '{
+  content: {
+    profileIds: ["default"]
   },
-  "local": {
-    "kuid": "<Kuzzle User IDentifier>"
-    "username": "my-le-huong",
-    "password": "**********"
+  credentials: {
+    local: {
+      username: "mylehuong",
+      password: "password"
+    }
   }
-}
+}'
+```
+
+They will then be **stored by the plugin** in charge of the `local` strategy in a **secure storage space** accessible only with the code of this plugin.
+
+It is possible to manipulate a user's credentials:
+ - [security:getCredentials](/core/2/api/controllers/security/get-credentials): retrieve credentials information for a strategy
+ - [security:createCredentials](/core/2/api/controllers/security/create-credentials): create new credentials another strategy
+ - [security:deleteCredentials](/core/2/api/controllers/security/delete-credentials): delete credentials for a strategy
+
+When a user wants to authenticate to Kuzzle, he must choose a strategy and then provide the information requested by the strategy.
+
+For example for the `local` strategy it is required to provide a `username` and a `password`:
+
+```bash
+kourou auth:login -a strategy=local --body '{
+  username: "mylehuong",
+  password: "password"
+}'
 ```
 
 ## Authentication Token
 
-L'authentification se fait avec l'action [auth:login](/core/2/api/controllers/auth/login).
-Les tokens d'authentification 
-pas jwt, révocable
+Authentication is performed using the [auth:login](/core/2/api/controllers/auth/login) API action.  
+
+This action requires the name of the strategy to be used as well as any information necessary for this strategy.
+
+When authentication is successful, Kuzzle returns an authentication token. This token has a validity of 2 hours by default, then it will be necessary to refresh it or to ask for a new one.
+
+::: info
+It is possible to request a token authentication valid for more than 2 hours with the argument `expiresIn`.  
+The default validity period is configurable under the key `security.jwt.expiresIn`.  
+It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
+:::
+
+This token must then be provided in requests to the Kuzzle API to authenticate the user.
+
+::: warning
+For historical reasons the API terminology uses the term `jwt` but Kuzzle authentication tokens only have in common with JSON Web Tokens the algorithms used to generate and verify them.
+:::
+
+révocable
 obtension (+ limit)
 Token expiration, event (only if rt sub), 
 refresh token
