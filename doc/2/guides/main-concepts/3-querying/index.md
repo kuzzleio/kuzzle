@@ -12,9 +12,9 @@ Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/
 
 It is possible for a client to send requests to **retrieve documents from any authorized collection**.
 
-Search query can be passed in the body of the [document:search](/core/2/api/controllers/document/search) action, they will be forwarded to Elasticsearch [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-search.html) endpoint.
+Search query can be passed in the body of the [document:search](/core/2/api/controllers/document/search) action, then will be forwarded to Elasticsearch [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-search.html) endpoint.
 
-Elasticsearch support many keyword in a search query root level. For security reasons Kuzzle only support the following keywords:
+Elasticsearch supports many keyword in a search query root level. For security reasons Kuzzle only supports the following keywords:
   - `aggregations`
   - `aggs`
   - `collapse`
@@ -367,7 +367,7 @@ while (result) {
 
 
 ```dart
-var result = await kuzzle
+final result = await kuzzle
   .document
   .search('ktm-open-data', 'thamel-taxi', query: {
     'query': {
@@ -376,7 +376,7 @@ var result = await kuzzle
       }
     }
   },
-  { 'scroll': '5s' });
+  'scroll': '5s');
 
 while (result) {
   print(result.hits);
@@ -401,14 +401,10 @@ val searchQuery: ConcurrentHashMap<String, Any?> =
   ConcurrentHashMap<String, Any?>().apply {
     put("query", query)
   }
-val options: ConcurrentHashMap<String, Any?> =
-  ConcurrentHashMap<String, Any?>().apply {
-    put("scroll", "5s)
-  }
 
 val results = kuzzle
   .documentController
-  .search("ktm-open-data", "thamel-taxi", searchQuery, options).get();
+  .search("ktm-open-data", "thamel-taxi", searchQuery, "1s").get();
 
 while (result) {
   println(result.hits);
