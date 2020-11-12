@@ -606,3 +606,10 @@ When using a cursor with the `scroll` option, Elasticsearch has to duplicate the
 It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.
 :::
 
+## Aggregations
+
+Elasticsearch allows data to be **grouped together** to **build complex summaries** of the data through a mechanism called aggregations.
+
+This mechanism allows to **structure the data returned in the response** in order to easily build dashboards, graphs, maps, etc.
+
+More informations on [Elasticsearch Aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-aggregations.html)
