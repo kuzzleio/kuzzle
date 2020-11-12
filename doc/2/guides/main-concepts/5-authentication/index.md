@@ -127,9 +127,231 @@ It is possible to use the [auth:refreshToken](/core/2/api/controllers/auth/refre
 
 ## `local` Strategy
 
-password policies
+The `local` allows users to authenticate with a `username` and a `password`.  
+
+Thoses informations must be passed to the [auth:login](/core/2/api/controllers/auth/login) API action body:
+```bash
+kourou auth:login -a strategy=local --body '{
+  username: "mylehuong",
+  password: "password"
+}'
+```
+
+### `local` Strategy Configuration
+
+The strategy can be configured under the `plugins.kuzzle-plugin-auth-passport-local` configuration key.
+
+```js
+{
+  "plugins": {
+    // [...]
+
+    "kuzzle-plugin-auth-passport-local": {
+
+      // one of the supported encryption algorithms
+      // (run crypto.getHashes() to get the complete list).
+      "algorithm": "sha512",
+      
+      // boolean and controlling if the password is stretched or not.
+      "stretching": true,
+
+      // describes how the hashed password is stored in the database
+      // https://nodejs.org/api/buffer.html#buffer_buf_tostring_encoding_start_end
+      "digest": "hex",
+
+      // determines whether the hashing algorithm uses crypto.createHash (hash)
+      // or crypto.createHmac (hmac).
+      // https://nodejs.org/api/crypto.html
+      "encryption": "hmac",
+
+      // if true, kuzzle will refuse any credentials update or deletion,
+      // unless the currently valid password is provided
+      // or if the change is performed via the security controller
+      "requirePassword": false,
+
+      // a positive time representation of the delay after which a
+      // reset password token expires (see ms for possible formats).
+      "resetPasswordExpiresIn": -1, 
+
+      // set of additional rules to apply to users, or to groups of users
+      "passwordPolicies": []
+    }
+  }
+}
+```
+
+### Password Policies
+
+Password policies can be used to define a **set of additional rules to apply to users**, or to groups of users.
+
+Each password policy is an object with the following properties:
+
+* `appliesTo`: (mandatory). can be either set to the `*` to match all users, or an object.
+* `appliesTo.users`: an array of user `kuids` the policy applies to.
+* `appliesTo.profiles`: n array of `profile` ids the policy applies to.
+* `appliesTod.roles`: an array of `role` ids the policy applies to.
+
+> At least one of `users`, `profiles` or `roles` properties must be set if `appliesTo` is an object.
+
+### Optional properties
+
+* `expiresAfter`: a positive time representation of the delay after which a password expires (see [ms](https://www.npmjs.com/package/ms) for possible formats). Users with expired passwords are given a `resetPasswordToken` when logging in and must change their password to be allowed to log in again.
+* `forbidLoginInPassword`: if set to `true`, prevent users to use their username in part of the password. The check is case-**in**sensitive.
+* `forbidReusedPasswordCount`: the number of passwords to store in history and check against when a new password is set.
+* `mustChangePasswordIfSetByAdmin`: if set to `true`, when the password is set for a user by someone else, the user will receive a `resetPasswordToken` upon next login and will have to change her password before being allowed to log in again.
+* `passwordRegex`: a string representation of a regular expression to test on new passwords.
+
+**Examples:**
+
+```json
+{
+  "passwordPolicies": [
+    {
+      "appliesTo": "*",
+      "forbidLoginPassword": true,
+      "passwordRegex": ".{6,}"
+    },
+    {
+      "appliesTo": {
+        "profiles": ["editor"],
+        "roles": ["admin"]
+      },
+      "expiresAfter": "30d",
+      "mustChangePasswordIfSetByAdmin": true,
+      "passwordRegex": "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.{8,})"
+    },
+    {
+      "appliesTo": {
+        "roles": ["admin"]
+      },
+      "passwordRegex": "^(((?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*\\W)(?=.{8,}))|(?=.{24,}))"
+    }
+  ]
+}
+```
+
+In the example above, no user can use a password that includes the login and the password must be at least 6 chars long.
+
+Editors and admin users passwords expire every 30 days and the password must be at least 8 chars long and include at least one letter and one digit.
+
+Admin users passwords must either be 24 or more chars long, or include a lower case char, an upper case char, a digit and a special char.
 
 ## `oauth` Strategy
 
-install
-config from README
+This plugin allows to authenticate with OAuth providers such as Facebook, Twitter, etc by using [Passport.js OAuth2](http://www.passportjs.org/docs/oauth2-api/).
+
+This plugin is not shipped by default with Kuzzle and must be installed via NPM: `npm install kuzzle-plugin-auth-passport-oauth`
+
+Then you need to instantiate it and use it within your application:
+```js
+import PluginOAuth from 'kuzzle-plugin-auth-passport-oauth' 
+import { Backend } from 'kuzzle'
+
+const app = new Backend('tirana')
+
+app.plugin.use(new PluginOAuth())
+```
+
+### `oauth` Strategy Configuration
+
+Once installed, the OAuth plugin can be configured under the `plugins.kuzzle-plugin-auth-passport-oauth` configuration key.
+
+| Name                        | Default value   | Type   | Description                                                                                                      |
+|-----------------------------|-----------------|--------|------------------------------------------------------------------------------------------------------------------|
+| ``strategies``              | ``{}``          | Object | List of the providers you want to use with passport                                                              |
+| ``credentials``             | ``{}``          | Object | Credentials provided by the provider                                                                             |
+| ``persist``                 | ``{}``          | Object | Attributes you want to persist in the user credentials object if the user doesn't exist                          |
+| ``scope``                   | ``[]``          | Array  | List of fields in the OAUTH 2.0 scope of access                                                                  |
+| ``identifierAttribute``     |                 | String | Attribute from the profile of the provider to use as unique identifier if you want to persist the user in Kuzzle |
+| ``defaultProfile``          | ``["default"]`` | Array  | Profiles of the new persisted user                                                                               |
+| ``kuzzleAttributesMapping`` | ``{}``          | Object | Mapping of attributes to persist in the user persisted in Kuzzle                                                 |
+| ``passportStrategy``        | ``''``          | String | Strategy name for passport (eg. google-oauth20 while the name of the provider is google)                         |
+
+Here is an example of a configuration:
+
+```js
+{
+  "strategies": {
+    "facebook": {
+      "passportStrategy": "facebook",
+      "credentials": {
+        "clientID": "<your-client-id>",
+        "clientSecret": "<your-client-secret>",
+        "callbackURL": "http://localhost:8080/_login/facebook",
+        "profileFields": ["id", "name", "picture", "email", "gender"]
+      },
+      "persist": [
+        "picture.data.url",
+        "last_name",
+        "first_name",
+        "email"
+      ],
+      "scope": [
+        "email",
+        "public_profile"
+      ],
+      "kuzzleAttributesMapping": {
+        "userMail": "email" // will store the attribute "email" as "userEmail" into the user credentials object
+      },
+      "identifierAttribute": "email"
+    }
+  },
+  "defaultProfiles": [
+    "default"
+  ]
+}
+```
+
+**identifierAttribute**
+
+This attribute will be used to identify your users. It has to be unique.  
+
+You need to choose an attribute declared in the `persist` array.
+
+**Attributes Persistence**
+
+Attributes declared in the `persist` array will be persisted in the credentials object and not in the user content.  
+
+For example, if you have the following configuration:
+```js
+{
+  "strategies": {
+    "facebook": {
+      "persist": ["email", "first_name", "picture.data.url"],
+      "kuzzleAttributesMapping": {
+        "picture.data.url": "avatar_url"
+      }
+    }
+  }
+}
+```
+
+And your OAuth provider will send you the following `_json` payload:
+```js
+{
+  "email": "gfreeman@black-mesa.xen",
+  "first_name": "gordon",
+  "last_name": "freeman",
+  "picture": {
+    "data": {
+      "url": "http://avatar.url"
+    }
+  }
+}
+```
+
+The created user content will be:
+```js
+{
+  "content": {
+    "profileIds": ["default"]
+  },
+  "credentials": {
+    "facebook": {
+      "email": "gfreeman@black-mesa.xen",
+      "first_name": "gordon",
+      "avatar_url": "http://avatar.url"
+    }
+  }
+}
+```

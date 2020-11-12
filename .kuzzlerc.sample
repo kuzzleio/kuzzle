@@ -146,15 +146,15 @@
     //      determines whether the hashing algorithm uses crypto.createHash (hash)
     //      or crypto.createHmac (hmac).
     //      https://nodejs.org/api/crypto.html
+    //   * requirePassword
+    //      if true, kuzzle will refuse any credentials update or deletion,
+    //      unless the currently valid password is provided
+    //      or if the change is performed via the security controller
     //   * resetPasswordExpiresIn
     //      a positive time representation of the delay after which a
     //      reset password token expires (see ms for possible formats).
     //      Users with expired passwords are given a resetPasswordToken when
     //      logging in and must change their password to be allowed to log in again
-    //   * requirePassword
-    //      if true, kuzzle will refuse any credentials update or deletion,
-    //      unless the currently valid password is provided
-    //      or if the change is performed via the security controller
     //   * passwordPolicies
     //      set of additional rules to apply to users, or to groups of users
     //      See the documentation at https://docs.kuzzle.io/core/2/guides/main-concepts/5-authentication#password-policies
@@ -164,6 +164,7 @@
       "digest": "hex",
       "encryption": "hmac",
       "requirePassword": false,
+      "resetPasswordExpiresIn": -1,
       "passwordPolicies": []
     }
 
