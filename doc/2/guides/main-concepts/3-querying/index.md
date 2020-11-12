@@ -12,7 +12,7 @@ Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/
 
 It is possible for a client to send requests to **retrieve documents from any authorized collection**.
 
-Search query can be passed in the body of the [document:search](/core/2/api/controllers/document/search) action, then will be forwarded to Elasticsearch [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-search.html) endpoint.
+Search queries can be passed in the body of the [document:search](/core/2/api/controllers/document/search) action, which will be forwarded to Elasticsearch [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-search.html) endpoint.
 
 Elasticsearch supports many keywords in a search query root level. For security reasons Kuzzle only supports the following keywords:
   - `aggregations`
@@ -218,7 +218,7 @@ The [match](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-ds
 The match query is the standard query for **performing a full-text search**. As thus, it includes options for fuzzy matching.
 
 ::: info
-The `match` clause to find documents with fields containing a value. The `match` clause as well as the content of a `text` fields are [analyzed](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-analyzers.html) by Elasticsearch before performing the query.
+The `match` clause as well as the content of a `text` fields are [analyzed](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-analyzers.html) by Elasticsearch before performing the query.
 :::
 
 **Example:** _Search for documents roughly matching the provided field value_ 
@@ -250,9 +250,9 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ### `ids` clause
 
-The [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) clause allows to return document **based on their IDs** (`_id` field).
+The [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) clause allows to search documents **based on their IDs** (`_id` field).
 
-**Example:** _Search for documents with their ids_ 
+**Example:** _Search for documents by id_ 
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   ids: {
@@ -270,12 +270,12 @@ If you only have an `ids` clause in your search query then you should rather use
 It is possible to **combine several clauses in the same query** by using a [Boolean Query](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-bool-query.html).
 
 The following 4 operands are available:
- - `must`: The clause **must appear** in matching documents and will contribute to the score.
- - `filter`: The clause **must appear** in matching documents. The score of the query will be ignored.
- - `should`: The clause **should appear** in the matching document.
- - `must_not`: The clause **must not appear** in the matching documents. The score of the query will be ignored.
+ - `must`: Documents **must satisfy all the clauses** (logical `AND`), which will contribute to the score.
+ - `filter`: Documents **must satisfy all the clauses** (logical `AND`), which will NOT contribute to the score.
+ - `should`: Documents **must satisfy some of the clauses** (logical `OR`).
+ - `must_not`: Documents **must NOT satisfy any the clauses** (logical `NOT`). The score of the query will be ignored.
 
-**Example:** _Combining clauses to create an "AND" like search query_
+**Example:** _Combining clauses to create an "AND"-like search query_
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   bool: {
@@ -287,7 +287,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 }'
 ```
 
-**Example:** _Combining clauses to create an "OR" like search query_
+**Example:** _Combining clauses to create an "OR"-like search query_
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   bool: {
@@ -301,7 +301,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ## Sorting
 
-Elasticsearch offers the possibility to **[sort the results](https://www.elastic.co/guide/en/elasticsearch/reference/current/sort-search-results.html) by one or more fields**.
+Elasticsearch enables to **[sort the results](https://www.elastic.co/guide/en/elasticsearch/reference/current/sort-search-results.html) by one or more fields**.
 
 **Example:** _Sort by multiple fields_
 ```bash
@@ -598,7 +598,7 @@ kourou sdk:query document:scroll -a scrollId=<scroll-id>
 
 ::: warning
 When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep consistent results during the entire scroll session.
-It **can lead to memory leaks** if a scroll duration too great is provided, or if too many scroll sessions are open simultaneously.  
+It **can lead to memory issues** if a scroll duration too high is provided, or if too many scroll sessions are open simultaneously.  
 
 
 By default, Kuzzle sets a maximum scroll duration of 1 minute.  
