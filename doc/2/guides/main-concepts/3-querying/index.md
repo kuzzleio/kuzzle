@@ -346,7 +346,7 @@ All the methods explained here are available by default in our SDKs through the 
 **Example:** _Paginate search result using the scroll method_
 :::: tabs
 
-::: Javascript
+::: tab Javascript
 
 ```js
 let result = await sdk.document.search('ktm-open-data', 'thamel-taxi', {
@@ -363,7 +363,7 @@ while (result) {
 ```
 
 :::
-::: Dart
+::: tab Dart
 
 
 ```dart
@@ -386,7 +386,7 @@ while (result) {
 
 :::
 
-::: Kotlin
+::: tab Kotlin
 
 ```kotlin
 val term: ConcurrentHashMap<String, Any?> =
@@ -415,7 +415,7 @@ while (result) {
 
 :::
 
-::: Csharp
+::: tab Csharp
 
 ```csharp
 SearchOptions options = new SearchOptions();
