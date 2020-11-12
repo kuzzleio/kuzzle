@@ -376,9 +376,9 @@ final result = await kuzzle
       }
     }
   },
-  'scroll': '5s');
+  scroll: '5s');
 
-while (result) {
+while (result != null) {
   print(result.hits);
   result = await result.next();
 }
