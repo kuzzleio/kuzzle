@@ -99,7 +99,7 @@ Authentication is performed using the [auth:login](/core/2/api/controllers/auth/
 
 This action requires the name of the strategy to be used as well as any information necessary for this strategy.
 
-When authentication is successful, Kuzzle returns an authentication token. This token has a validity of 2 hours by default, then it will be necessary to refresh it or to ask for a new one.
+When authentication is successful, **Kuzzle returns an authentication token**. This token has a validity of 2 hours by default, then it will be necessary to refresh it or to ask for a new one.
 
 ::: info
 It is possible to request a token authentication valid for more than 2 hours with the argument `expiresIn`.  
@@ -107,16 +107,23 @@ The default validity period is configurable under the key `security.jwt.expiresI
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
 :::
 
-This token must then be provided in requests to the Kuzzle API to authenticate the user.
+This token must then be [provided in requests to Kuzzle API](/core/2/some-link) to authenticate the user.
 
 ::: warning
 For historical reasons the API terminology uses the term `jwt` but Kuzzle authentication tokens only have in common with JSON Web Tokens the algorithms used to generate and verify them.
 :::
 
-révocable
-obtension (+ limit)
-Token expiration, event (only if rt sub), 
-refresh token
+Authentication tokens are revocable using the [auth:logout](/core/2/api/controllers/auth/logout) API action.
+
+### Authentication Token Expiration
+
+Authentication **token expires after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.  
+
+::: info
+If the customer had subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server event](/core/2/some-link).
+:::
+
+It is possible to use the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to increase the duration of a still valid token authentication.
 
 ## `local` Strategy
 

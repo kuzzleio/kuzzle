@@ -93,7 +93,7 @@
   // (see https://docs.kuzzle.io/guide/1/essentials/plugins/)
   "plugins": {
     // [Common]
-    //   * bootstrapLockTimeout
+    //  * bootstrapLockTimeout
     //        Maximum amount of time (in milliseconds)
     //        to wait for a concurrent plugin bootstrap
     //   * pipeWarnTime:
@@ -132,8 +132,32 @@
       }
     },
 
-    // plugin auth local strategy
-    // see https://github.com/kuzzleio/kuzzle-plugin-passport-local
+    // [Kuzzle Plugin Auth Passport Local]
+    //   * algorithm
+    //      one of the supported encryption algorithms
+    //      (run crypto.getHashes() to get the complete list).
+    //      Examples: sha256, sha512, blake2b512, whirlpool, ...
+    //   * stretching
+    //      boolean and controlling if the password is stretched or not.
+    //   * digest
+    //      describes how the hashed password is stored in the database
+    //      https://nodejs.org/api/buffer.html#buffer_buf_tostring_encoding_start_end
+    //   * encryption
+    //      determines whether the hashing algorithm uses crypto.createHash (hash)
+    //      or crypto.createHmac (hmac).
+    //      https://nodejs.org/api/crypto.html
+    //   * resetPasswordExpiresIn
+    //      a positive time representation of the delay after which a
+    //      reset password token expires (see ms for possible formats).
+    //      Users with expired passwords are given a resetPasswordToken when
+    //      logging in and must change their password to be allowed to log in again
+    //   * requirePassword
+    //      if true, kuzzle will refuse any credentials update or deletion,
+    //      unless the currently valid password is provided
+    //      or if the change is performed via the security controller
+    //   * passwordPolicies
+    //      set of additional rules to apply to users, or to groups of users
+    //      See the documentation at https://docs.kuzzle.io/core/2/guides/main-concepts/5-authentication#password-policies
     "kuzzle-plugin-auth-passport-local": {
       "algorithm": "sha512",
       "stretching": true,
