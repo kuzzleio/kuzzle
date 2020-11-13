@@ -104,10 +104,10 @@ Authentication is performed using the [auth:login](/core/2/api/controllers/auth/
 
 This action requires the name of the strategy to be used as well as any information necessary for this strategy.
 
-When authentication is successful, **Kuzzle returns an authentication token**. This token has a validity of 2 hours by default, then it will be necessary to refresh it or to ask for a new one.
+When authentication is successful, **Kuzzle returns an authentication token**. This token has a validity of 1 hours by default, then it will be necessary to ask for a new one with either [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) or [auth:login](/core/2/api/controllers/auth/login).
 
 ::: info
-It is possible to request a token authentication valid for more than 2 hours with the argument `expiresIn`.  
+It is possible to request a token authentication valid for more than 1 hours with the argument `expiresIn`.  
 The default validity period is configurable under the key `security.jwt.expiresIn`.  
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
 :::
@@ -119,6 +119,10 @@ For historical reasons the API terminology uses the term `jwt` but Kuzzle authen
 :::
 
 Authentication tokens are revocable using the [auth:logout](/core/2/api/controllers/auth/logout) API action.
+
+::: info
+It's also possible to revoke every authentication tokens of a user with the [security:revokeTokens](/core/2/api/controllers/security/revoke-tokens/).
+:::
 
 ### Authentication Token Expiration
 
