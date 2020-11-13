@@ -16,7 +16,7 @@ However, it is much **more efficient in sending requests** than HTTP because it 
 
 ::: info
 The use of the **WebSocket protocol is recommended** whenever possible.  
-This protocol should be used by default for web applications, machine-to-machine connections, users scripts and CLI.
+This protocol should be used by default for web applications, machine-to-machine connections, users scripts and CLIs.
 :::
 
 ### Configuration

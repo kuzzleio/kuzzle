@@ -57,9 +57,9 @@ The protocol can be configured via the [kuzzlerc configuration file](/core/2/gui
 
 By default, the MQTT protocol listens to the `Kuzzle/request` MQTT topic (see [configuration](#configuration)) for requests to the [Kuzzle API](/core/2/api/essentials/connecting-to-kuzzle).
 
-It then forwards Kuzzle response to the `Kuzzle/response` MQTT topic, **and only to the client who made the initial request**.
+It then forwards Kuzzle responses to the `Kuzzle/response` MQTT topic, **and only to the client who made the initial request**.
 
-The order of responses is not guaranteed to be the same than the order of requests. To link a response to its original request, use the `requestId` attribute: the response will have the same `requestId` than the one provided in the request.
+The order of responses is not guaranteed to be the same as the order of the requests. To link a response to its original request, use the `requestId` attribute: the response will have the same `requestId` than the one provided in the request.
 
 Example using [MQTT Node module](https://www.npmjs.com/package/mqtt): _to use a CLI client, you will need to enable development mode. Please refer to [the dedicated section below](#development-mode) for instruction and examples_
 
@@ -158,10 +158,10 @@ If `allowPubSub` is set to `false`, clients can only publish to the `requestTopi
 If `allowPubSub` is set to `true`, clients are only forbidden to publish to the `responseTopic` topic (defaults to `Kuzzle/response`).
 
 :::warning
-Wildcards subcriptions are not allowed
+Wildcard subcriptions are not allowed
 :::
 
-If a client tries to publish to an unauthorized topic, his connection will immediately be shut down by the server.
+If a client tries to publish to an unauthorized topic, their connection will immediately be shut down by the server.
 
 ### Subscribing
 
@@ -171,7 +171,7 @@ Subscription attempts to the `requestTopic` topic (defaults to `Kuzzle/request`)
 
 The MQTT `Kuzzle/response` topic is by default a special topic that acts as a private channel. Each client receives its own responses only, offering a simple first security layer.
 
-While this behavior is urgently recommended in production, it can bring a small drawback when testing and developing applications: it does not allow using most CLI tools.
+While this behavior is highly recommended in production, it can bring a small drawback when testing and developing applications: it does not allow using most CLI tools.
 Many CLI tools, such as Mosquitto offer two separate binaries, one for subscribing and one for publishing. These act as two different clients and the subscriber won't receive any response sent to the publisher by default.
 
 To use these tools, one can enable the **development mode**, in which `Kuzzle/response` will act as a regular public topic.
