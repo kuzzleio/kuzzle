@@ -19,16 +19,9 @@
  * limitations under the License.
  */
 
-import { Request } from 'kuzzle-common-objects';
+import { Request, JSONObject } from '../../index';
 import { Backend } from '../core/application/backend';
 import { PluginContext } from '../core/plugin/pluginContext';
-
-/**
- * An interface representing an object with string key and any value
- */
-export interface JSONObject {
-  [key: string]: JSONObject | any
-}
 
 /**
  * API controller definition.
@@ -254,45 +247,4 @@ export abstract class Plugin {
    * @see https://docs.kuzzle.io/core/2/plugins/guides/manual-setup/init-function/
    */
   abstract init (config: JSONObject, context: PluginContext): Promise<any> | any
-}
-
-/**
- * Kuzzle API request
- *
- * @see https://docs.kuzzle.io/core/2/api/essentials/query-syntax/#other-protocols
- */
-export interface KuzzleRequest extends JSONObject {
-  controller: string;
-  action: string;
-  index?: string;
-  collection?: string;
-  _id?: string;
-  jwt?: string;
-  volatile?: JSONObject;
-  body?: JSONObject;
-  [key: string]: any;
-}
-
-/**
- * Kuzzle API response
- *
- * @see https://docs.kuzzle.io/core/2/api/essentials/kuzzle-response/
- */
-export interface KuzzleResponse extends JSONObject {
-  controller: string;
-  action: string;
-  index?: string;
-  collection?: string;
-  error?: {
-    id: string;
-    code: number;
-    message: string;
-    status: number;
-    stack?: string;
-  };
-  requestId: string;
-  result: any;
-  status: number;
-  volatile?: JSONObject;
-  room?: string;
 }

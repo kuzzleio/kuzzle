@@ -36,11 +36,11 @@ import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
 
 import {
-  JSONObject,
   ControllerDefinition,
   Plugin,
   Controller
 } from '../../util/interfaces';
+import { JSONObject } from '../../../index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');

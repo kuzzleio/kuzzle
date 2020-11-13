@@ -19,9 +19,18 @@
  * limitations under the License.
  */
 
-import { Kuzzle, RealtimeController, Notification, JSONObject, ScopeOption, UserOption } from '../../../../../sdk-javascript';
+// import from kuzzle-sdk
+import {
+  Kuzzle,
+  KuzzleRequest,
+  KuzzleResponse,
+  RealtimeController,
+  Notification,
+  JSONObject,
+  ScopeOption,
+  UserOption
+} from '../../../../index';
 
-import { KuzzleRequest, KuzzleResponse } from '../../../util/interfaces';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import kerror from '../../../kerror';

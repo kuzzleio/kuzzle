@@ -22,6 +22,16 @@
 
 import Bluebird from 'bluebird';
 import Koncorde from 'koncorde';
+import { Client } from '@elastic/elasticsearch';
+
+import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
+import PluginRepository from './pluginRepository';
+import Store from '../shared/store';
+import Elasticsearch from '../../service/storage/elasticsearch';
+import { isPlainObject } from '../../util/safeObject';
+import Promback from '../../util/promback';
+import kerror from '../../kerror';
+import storeScopeEnum from '../storage/storeScopeEnum';
 import {
   BadRequestError,
   ExternalServiceError,
@@ -40,18 +50,8 @@ import {
   RequestContext,
   RequestInput,
   Request,
-} from 'kuzzle-common-objects';
-import { Client } from '@elastic/elasticsearch';
-
-import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
-import PluginRepository from './pluginRepository';
-import Store from '../shared/store';
-import Elasticsearch from '../../service/storage/elasticsearch';
-import { isPlainObject } from '../../util/safeObject';
-import Promback from '../../util/promback';
-import kerror from '../../kerror';
-import storeScopeEnum from '../storage/storeScopeEnum';
-import { JSONObject } from 'kuzzle-sdk/src/utils/interfaces';
+  JSONObject,
+} from '../../../index';
 
 const contextError = kerror.wrap('plugin', 'context');
 
