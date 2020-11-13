@@ -336,7 +336,8 @@ They allow to find all documents matching a search query.
 ::: info
 By default, the [document:search](/core/2/api/controllers/document/search) action returns only 10 documents.  
 The number of returned documents can be changed with the `size` option.  
-There is a limit of 10000 documents that can be retrieved with a single search request, without pagination.
+Elasticsearch does not allow a `search` request to return more than 10000 documents, no matter what pagination parameters are set.  
+See the available [Pagination](/core/2/guides/main-concepts/3-querying#pagination) action methods to get more results.
 :::
 
 Those **methods are explained in the next sections and they are already implemented in our SDKs** in the `SearchResult` class. (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK)
