@@ -19,17 +19,16 @@
  * limitations under the License.
  */
 
-// import from kuzzle-sdk
 import {
-  Kuzzle,
   KuzzleRequest,
   KuzzleResponse,
   RealtimeController,
   Notification,
   JSONObject,
   ScopeOption,
-  UserOption
-} from '../../../../index';
+  UserOption,
+  Kuzzle,
+ } from 'kuzzle-sdk'
 
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';

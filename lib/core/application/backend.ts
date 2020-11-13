@@ -313,10 +313,11 @@ class PluginManager extends ApplicationManager {
    * @param options - Additionnal options
    *    - `name`: Specify plugin name instead of using the class name.
    *    - `manifest`: Manually add a manifest definition (deprecated)
+   *    - `deprecationWarning`: If false, does not display deprecation warnings
    */
   use (
     plugin: Plugin,
-    options: { name?: string, manifest?: JSONObject } = {}
+    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
   ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
@@ -343,7 +344,7 @@ class PluginManager extends ApplicationManager {
       throw assertionError.get('init_not_found', name);
     }
 
-    this._application._plugins[name] = { manifest: options.manifest, plugin };
+    this._application._plugins[name] = { options, plugin };
   }
 }
 
@@ -601,8 +602,10 @@ export class Backend {
     // we need to load the default plugins
     this.plugin.use(
       new PluginPassportAuthLocal(),
-      { name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
+      { name: 'kuzzle-plugin-auth-passport-local', deprecationWarning: false });
+    this.plugin.use(
+      new PluginLogger(),
+      { name: 'kuzzle-plugin-logger', deprecationWarning: false });
 
     const application = new PluginObject(
       this._kuzzle,
