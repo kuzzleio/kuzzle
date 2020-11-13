@@ -10,4 +10,4 @@ export * from 'koncorde';
 
 export * from 'kuzzle-common-objects';
 
-export * from 'kuzzle-sdk';
+export { ScopeOption, DocumentContent, Document, DocumentHit, DocumentNotification, KuzzleMetadata } from '../sdk-javascript';

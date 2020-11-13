@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Kuzzle } from 'kuzzle-sdk';
+import { Kuzzle, RealtimeController, Notification, JSONObject, ScopeOption, UserOption } from '../../../../../sdk-javascript';
 
 import { KuzzleRequest, KuzzleResponse } from '../../../util/interfaces';
 import FunnelProtocol from './funnelProtocol';
@@ -28,10 +28,63 @@ import kerror from '../../../kerror';
 
 const contextError = kerror.wrap('plugin', 'context');
 
+interface EmbeddedRealtime extends RealtimeController {
+  /**
+   * Subscribes by providing a set of filters: messages, document changes
+   * and, optionally, user events matching the provided filters will generate
+   * real-time notifications.
+   *
+   * @see https://docs.kuzzle.io/core/2/guides/main-concepts/6-realtime-engine/
+   *
+   * @param index Index name
+   * @param collection Collection name
+   * @param filters Optional subscription filters
+   * @param callback Callback function to handle notifications
+   * @param options Additional options
+   *    - `scope` Subscribe to document entering or leaving the scope. (default: 'all')
+   *    - `users` Subscribe to users entering or leaving the room. (default: 'none')
+   *    - `subscribeToSelf` Subscribe to notifications fired by our own queries. (default: true)
+   *    - `volatile` Subscription information sent alongside notifications
+   *    - `propagate` Propagate the callback execution on each cluster node
+   *
+   * @returns A string containing the room ID
+   */
+  subscribe (
+    index: string,
+    collection: string,
+    filters: JSONObject,
+    callback: (notification: Notification) => void | Promise<void>,
+    options?: {
+      /**
+       * Subscribe to document entering or leaving the scope. (default: 'all')
+       */
+      scope?: ScopeOption;
+      /**
+       * Subscribe to users entering or leaving the room. (default: 'none')
+       */
+      users?: UserOption;
+      /**
+       * Subscribe to notifications fired by our own queries. (default: true)
+       */
+      subscribeToSelf?: boolean;
+      /**
+       * Subscription information sent alongside notifications
+       */
+      volatile?: JSONObject;
+      /**
+       * Propagate the callback execution on each cluster node (default: false)
+       */
+      propagate?: boolean;
+    }
+  ): Promise<string>
+}
+
 /**
  * Kuzzle embedded SDK to make API calls inside applications or plugins.
  */
 export class EmbeddedSDK extends Kuzzle {
+  realtime: EmbeddedRealtime;
+
   /**
    * @param kuzzle - Kuzzle object
    * @param user - User to impersonate the SDK with
