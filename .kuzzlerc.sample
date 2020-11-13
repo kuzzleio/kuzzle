@@ -320,7 +320,7 @@
     //       bytes ("b" or none), kilobytes ("kb"), megabytes ("mb"), gigabytes
     //       ("gb") or terabytes ("tb")
     //   * port:
-    //       The http+websocket port to listen
+    //       The listening port for HTTP and WebSocket
     "maxRequestSize": "1mb",
     "port": 7512,
     // [logs]
@@ -384,8 +384,7 @@
         // * enabled:
         //    Set to true to enable MQTT support
         // * allowPubSub
-        //    Allow MQTT pub/sub capabilities or restrict to Kuzzle requests
-        //    only
+        //    Allow MQTT pub/sub capabilities or restrict to Kuzzle requests only
         // * developmentMode
         //    Switches responseTopic back to a regular public topic
         // * disconnectDelay
@@ -396,8 +395,8 @@
         // * responseTopic
         //    Name of the topic clients should listen to get requests result
         // * server
-        //    Constructor options passed to underlying mqtt server.
-        //    See mosca documentation for further reference.
+        //    Constructor options passed to underlying MQTT server.
+        //    See aedes documentation for further reference: https://github.com/moscajs/aedes
         "enabled": false,
         "allowPubSub": false,
         "developmentMode": false,

@@ -368,6 +368,8 @@ More informations about the [RequestContext](/core/2/some-link) class properties
 
 ## Response format
 
+<!-- Duplicated from /core/2/guides/main-concepts/1-api -->
+
 Kuzzle Response are **standardized**. This format is shared by all API actions, including custom controller actions.
 
 A Kuzzle Response is a **JSON object** with the following format:
