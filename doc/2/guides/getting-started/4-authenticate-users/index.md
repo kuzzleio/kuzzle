@@ -49,7 +49,11 @@ First we need to get one with the [auth:login](/core/2/api/controllers/auth/logi
 In our example we will use the [local](/core/2/some-link) strategy so we have to provide a `username` and a `password`:
 
 ```bash
-kourou auth:login -a strategy=local -a username=yagmur -a password=password
+kourou auth:login -a strategy=local --body '{
+  username: "yagmur",
+  password: "password"
+}'
+
 [ℹ] Unknown command "auth:login", fallback to API method
  
  🚀 Kourou - Executes an API query.
