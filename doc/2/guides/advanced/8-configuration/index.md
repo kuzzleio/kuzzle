@@ -86,7 +86,7 @@ You can change the configuration only in the `setup` phase, before starting the 
 
 The configuration of Kuzzle is also accessible through the [Backend.config](/core/2/some-link) property.
 
-It is possible to **consult or modify values of the configuration**. 
+It is possible to **read or edit values of the configuration**. 
 
 The set of keys that can be configured is available in the file [.kuzzlerc.sample](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)
 

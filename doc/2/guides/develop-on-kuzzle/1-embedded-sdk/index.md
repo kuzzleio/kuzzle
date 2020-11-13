@@ -107,20 +107,20 @@ If a request is authorized, then all subsequent calls to the API performed with 
 
 Realtime subscriptions should be made using the [Realtime Controller](/sdk/js/7/controllers/realtime) **just after the application has started**.  
 
-Realtime subscriptions performed by an application are used so that an application gets notified about changes, and can act upon them. The behavior is much the same than when a client subscribes, but since the entity performing the subscription is different (client vs. application), the feature accessible by an application has some new options to fine tune how notifications are propagated across a Kuzzle cluster.
+Realtime subscriptions performed by an application are used so that an application gets notified about changes, and can act upon them. The behavior is the same as when a client subscribes, but since the entity performing the subscription is different (client vs. application), the feature accessible by an application has some new options to fine tune how notifications are propagated across a Kuzzle cluster.
 
 ::: warning
 You should **avoid making dynamic subscriptions at runtime**, because that can lead to unwanted behavior, since those subscriptions won't be replicated to other cluster nodes.
 :::
 
-The `propagate` option defines if, for that subscription, the callback execution should be propagated to all cluster nodes, or if only the node generating the notification should execute it's callback.
+The `propagate` option defines if, for that subscription, the callback execution should be propagated to all cluster nodes, or if only the node generating the notification should execute its callback.
 
 ### propagate: false (default)
 
 With `propagate: false` only the node who generates the notification will execute the callback function
 
 ::: info 
-This behavior is suitable for most usage like sending emails, write to the database, call an external API, etc.
+This behavior is suitable for most usages like sending emails, write to the database, call an external API, etc.
 :::
 
 **Example:**

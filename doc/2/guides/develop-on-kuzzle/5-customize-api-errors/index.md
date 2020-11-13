@@ -10,7 +10,7 @@ order: 600
 
 It is possible to customize the errors that we want to return in case of failure of an API request.
 
-Kuzzle offers a set of standard errors corresponding to particular situations with customizable messages (e.g. `NotFoundError`,` ForbiddenError`, etc.)
+Kuzzle offers a set of standard errors corresponding to specific situations with customizable messages (e.g. `NotFoundError`,` ForbiddenError`, etc.)
 
 ## Standard Errors
 

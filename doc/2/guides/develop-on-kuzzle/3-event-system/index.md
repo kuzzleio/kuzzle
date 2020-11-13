@@ -166,7 +166,7 @@ You can only trigger custom events during the `runtime` phase, after the applica
 Pipes and hooks can be plugged on custom events as well as on internal events.
 
 ::: info
-It's considered as a good practice to prefix your event name with your application name.
+It's considered a good practice to prefix your event name with your application name.
 :::
 
 **Example:** _Trigger a custom event_
