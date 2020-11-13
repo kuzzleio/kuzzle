@@ -113,11 +113,11 @@ Realtime subscriptions performed by an application are used so that an applicati
 You should **avoid making dynamic subscriptions at runtime**, because that can lead to unwanted behavior, since those subscriptions won't be replicated to other cluster nodes.
 :::
 
-The `propagate` option defines if, for that subscription, notifications should be propagated to (and processed by) all cluster nodes, or if only the node having received the triggering event should handle it.
+The `propagate` option defines if, for that subscription, the callback execution should be propagated to all cluster nodes, or if only the node generating the notification should execute it's callback.
 
 ### propagate: false (default)
 
-With `propagate: false`only the node who generates the notification will execute the callback function
+With `propagate: false` only the node who generates the notification will execute the callback function
 
 ::: info 
 This behavior is suitable for most usage like sending emails, write to the database, call an external API, etc.
@@ -141,7 +141,7 @@ app.start()
 
 ### propagate: true
 
-With `propagate: true`, notifications are propagated to all nodes of a cluster, **executing the callback function on all nodes**.
+With `propagate: true`, the callback function will be **executed on all nodes of the cluster**.
 
 ::: info 
 This behavior is suitable for synchronizing RAM cache amongst cluster nodes for example.
