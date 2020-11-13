@@ -60,7 +60,7 @@ Most of the [security](/core/2/api/controllers/security) controller actions use 
 
 ## Credentials
 
-In Kuzzle, a user's credentials are composed of a **list of authentication strategies and their respective profile data**.
+In Kuzzle, user credentials are composed of a **list of authentication strategies and their respective profile data**.
 
 They must be provided at the creation of a user in the `credentials` property of the user's content passed in the `body` of the query.
 
@@ -79,16 +79,16 @@ kourou security:createUser '{
 }'
 ```
 
-They will then be **stored by the plugin** in charge of the `local` strategy in a **secure storage space** accessible only with the code of this plugin.
+They will then be **stored by the plugin** in charge of the `local` strategy in a **secure storage space** accessible only from the plugin's scope.
 
 It is possible to manipulate a user's credentials:
  - [security:getCredentials](/core/2/api/controllers/security/get-credentials): retrieve credentials information for a strategy
- - [security:createCredentials](/core/2/api/controllers/security/create-credentials): create new credentials another strategy
+ - [security:createCredentials](/core/2/api/controllers/security/create-credentials): create new credentials for another strategy
  - [security:deleteCredentials](/core/2/api/controllers/security/delete-credentials): delete credentials for a strategy
 
-When a user wants to authenticate to Kuzzle, he must choose a strategy and then provide the information requested by the strategy.
+When a user wants to authenticate to Kuzzle, they must choose a strategy and then provide the information requested by it.
 
-For example for the `local` strategy it is required to provide a `username` and a `password`:
+For instance, the `local` strategy requires a `username` and a `password`:
 
 ```bash
 kourou auth:login -a strategy=local --body '{
@@ -103,10 +103,10 @@ Authentication is performed using the [auth:login](/core/2/api/controllers/auth/
 
 This action requires the name of the strategy to be used as well as any information necessary for this strategy.
 
-When authentication is successful, **Kuzzle returns an authentication token**. This token has a validity of 2 hours by default, then it will be necessary to refresh it or to ask for a new one.
+When authentication is successful, **Kuzzle returns an authentication token**. This token has a validity of 2 hours by default. After this delay, you will need to refresh it or ask for a new one.
 
 ::: info
-It is possible to request a token authentication valid for more than 2 hours with the argument `expiresIn`.  
+It is possible to request an authentication token valid for more than 1 hour with the argument `expiresIn`.  
 The default validity period is configurable under the key `security.jwt.expiresIn`.  
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
 :::
@@ -121,19 +121,19 @@ Authentication tokens are revocable using the [auth:logout](/core/2/api/controll
 
 ### Authentication Token Expiration
 
-Authentication **token expires after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.  
+**Authentication tokens expire after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.  
 
 ::: info
-If the customer had subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server event](/core/2/some-link).
+If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server event](/core/2/some-link).
 :::
 
-It is possible to use the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to increase the duration of a still valid token authentication.
+While an authentication token is still valid, it is possible to provide it to the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to request a new, fresher authentication token, without having to ask for credentials. 
 
 ## `local` Strategy
 
-The `local` allows users to authenticate with a `username` and a `password`.  
+The `local` strategy allows users to authenticate with a `username` and a `password`.  
 
-Thoses informations must be passed to the [auth:login](/core/2/api/controllers/auth/login) API action body:
+Those information must be passed to the [auth:login](/core/2/api/controllers/auth/login) API action body:
 ```bash
 kourou auth:login -a strategy=local --body '{
   username: "mylehuong",
@@ -192,7 +192,7 @@ Each password policy is an object with the following properties:
 
 * `appliesTo`: (mandatory). can be either set to the `*` to match all users, or an object.
 * `appliesTo.users`: an array of user `kuids` the policy applies to.
-* `appliesTo.profiles`: n array of `profile` ids the policy applies to.
+* `appliesTo.profiles`: an array of `profile` ids the policy applies to.
 * `appliesTod.roles`: an array of `role` ids the policy applies to.
 
 ::: info
@@ -201,10 +201,10 @@ At least one of `users`, `profiles` or `roles` properties must be set if `applie
 
 ### Optional properties
 
-* `expiresAfter`: a positive time representation of the delay after which a password expires (see [ms](https://www.npmjs.com/package/ms) for possible formats). Users with expired passwords are given a `resetPasswordToken` when logging in and must change their password to be allowed to log in again.
-* `forbidLoginInPassword`: if set to `true`, prevent users to use their username in part of the password. The check is case-**in**sensitive.
-* `forbidReusedPasswordCount`: the number of passwords to store in history and check against when a new password is set.
-* `mustChangePasswordIfSetByAdmin`: if set to `true`, when the password is set for a user by someone else, the user will receive a `resetPasswordToken` upon next login and will have to change her password before being allowed to log in again.
+* `expiresAfter`: the delay after which a password expires (see [ms](https://www.npmjs.com/package/ms) for possible formats). Users with expired passwords are given a `resetPasswordToken` when logging in and must change their password to be allowed to log in again.
+* `forbidLoginInPassword`: if set to `true`, prevents users to use their username in part of the password. The check is case-**in**sensitive.
+* `forbidReusedPasswordCount`: the number of passwords to store in history and checked against when a new password is set to prevent passwords reuse.
+* `mustChangePasswordIfSetByAdmin`: if set to `true`, whenever a password is set for a user by someone else, that user will receive a `resetPasswordToken` upon their next login and they will have to change their password before being allowed to log in again.
 * `passwordRegex`: a string representation of a regular expression to test on new passwords.
 
 **Example:**
@@ -258,7 +258,7 @@ const app = new Backend('tirana')
 app.plugin.use(new PluginOAuth())
 ```
 
-This strategy allows to create user in Kuzzle if they don't already exists when they login for the first time.
+This strategy allows to create users in Kuzzle if they don't already exist when they login for the first time.
 
 ### `oauth` Strategy Configuration
 
