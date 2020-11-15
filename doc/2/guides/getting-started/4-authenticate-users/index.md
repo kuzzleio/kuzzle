@@ -28,13 +28,13 @@ kourou security:createUser '{
   },
   credentials: {
     local: {
-      username: "yagmur",
+      username: "melis",
       password: "password"
     },
     ldap: {
       bindDN: "cn=root",
       searchBase: "ou=passport-ldapauth",
-      searchFilter: "(uid=yagmur)"
+      searchFilter: "(uid=melis)"
     }
   }
 }'
@@ -50,7 +50,7 @@ In our example we will use the [local](/core/2/some-link) strategy so we have to
 
 ```bash
 kourou auth:login -a strategy=local --body '{
-  username: "yagmur",
+  username: "melis",
   password: "password"
 }'
 

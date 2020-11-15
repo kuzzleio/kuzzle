@@ -24,7 +24,7 @@ Each user can then use one of the available strategies to authenticate himself.
 
 Users are identified by a unique identifier called the Kuzzle User IDentifier or `kuid`.  
 
-This is for example the `kuid` found in the Kuzzle Metadata of documents:
+This is for example the `kuid` found in the [Kuzzle Metadata](/core/2/guides/main-concepts/2-data-storage#kuzzle-metadata) of documents:
 
 ```json
 {
@@ -198,7 +198,7 @@ Each password policy is an object with the following properties:
 * `appliesTo`: (mandatory). can be either set to the `*` to match all users, or an object.
 * `appliesTo.users`: an array of user `kuids` the policy applies to.
 * `appliesTo.profiles`: an array of `profile` ids the policy applies to.
-* `appliesTod.roles`: an array of `role` ids the policy applies to.
+* `appliesTo.roles`: an array of `role` ids the policy applies to.
 
 ::: info
 At least one of `users`, `profiles` or `roles` properties must be set if `appliesTo` is an object.

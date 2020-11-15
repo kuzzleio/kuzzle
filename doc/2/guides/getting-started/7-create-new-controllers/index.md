@@ -53,13 +53,13 @@ We can now test our new action:
 ::: tab Kourou
 
 ```bash
-kourou greeting:sayHello --arg name=Yagmur
+kourou greeting:sayHello --arg name=Melis
 [ℹ] Unknown command "greeting:sayHello", fallback to API method
  
  🚀 Kourou - Executes an API query.
  
  [ℹ] Connecting to http://localhost:7512 ...
- "Hello, Yagmur"
+ "Hello, Melis"
  [✔] Successfully executed "greeting:sayHello"
 ```
 
@@ -67,7 +67,7 @@ kourou greeting:sayHello --arg name=Yagmur
 ::: tab HTTP
 
 ```bash
-curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
+curl "http://localhost:7512/_/greeting/say-hello?name=Melis&pretty"
 {
   "requestId": "383e016a-447e-4138-aa53-c07c9fd5c923",
   "status": 200,
@@ -77,7 +77,7 @@ curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
   "collection": null,
   "index": null,
   "volatile": null,
-  "result": "Hello, Yagmur"
+  "result": "Hello, Melis"
 }
 ```
 
@@ -88,7 +88,7 @@ curl "http://localhost:7512/_/greeting/say-hello?name=Yagmur&pretty"
 npx wscat -c ws://localhost:7512 --execute '{
   "controller": "greeting",
   "action": "sayHello",
-  "name": "Yagmur"
+  "name": "Melis"
 }'
 
 {
@@ -100,7 +100,7 @@ npx wscat -c ws://localhost:7512 --execute '{
   "collection": null,
   "index": null,
   "volatile": null,
-  "result": "Hello, Yagmur",
+  "result": "Hello, Melis",
   "room": "a6f4f5b6-1aa2-4cf9-9724-12b12575c047"
 }
 ```

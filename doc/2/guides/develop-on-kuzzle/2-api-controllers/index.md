@@ -218,7 +218,7 @@ For example the default route of the `sayHello` action will be: `GET http://<hos
 
 ::: info
 It is possible to prevent the generation of a default HTTP route by providing an empty array to the `http` property.  
-By doing this, **the action will not be available through the HTTP protocol**.
+By doing this, the action will only be available through the HTTP protocol with the [JSON Query Endpoint](/core/2/guides/main-concepts/1-api#json-query-endpoint).
 :::
 
 ## Request Input
@@ -579,6 +579,38 @@ final response = await kuzzle.query({
 ```
 
 :::
+
+::: tab Kotlin
+
+Using the JVM SDK [Kuzzle.query](/sdk/jvm/1/core-classes/kuzzle/query) method:
+
+```kotlin
+ConcurrentHashMap<String, Object> query = new ConcurrentHashMap<>();
+query.put("controller", "greeting");
+query.put("action", "sayHello");
+query.put("name", "Yagmur");
+
+Response res = kuzzle.query(query).get();
+```
+
+:::
+
+::: tab Csharp
+
+Using the Csharp SDK [Kuzzle.query](/sdk/csharp/2/core-classes/kuzzle/query-async/) method:
+
+```csharp
+JObject request = JObject.Parse(@"{
+  controller: 'greeting',
+  action: 'sayHello',
+  name: 'Yagmur'
+}");
+
+Response response = await kuzzle.QueryAsync(request);
+```
+:::
+
+
 ::::
 
 

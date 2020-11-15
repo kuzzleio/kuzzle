@@ -88,7 +88,7 @@ If the error is one of the [available default errors](/core/2/some-link) then th
 import { Document, Request, Backend, ForbiddenError } from 'kuzzle'
 
 app.pipe.register(
-    'generic:document:beforeGet', 
+    'generic:document:afterGet', 
     async (documents: Document[], request: Request) => {
       for (const document of documents) {
         if (request.context.user._id !== document._source._kuzzle_info.creator) {

@@ -644,7 +644,7 @@ const esRequest =  {
     age: 27
   },
   // Internal name of the index "nyc-open-data" and the collection "yellow-taxi"
-  index: '%nyc-open-data.yellow-taxi',
+  index: '&nyc-open-data.yellow-taxi',
   op_type: 'create'
 }
 

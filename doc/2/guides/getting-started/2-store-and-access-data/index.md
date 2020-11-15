@@ -87,9 +87,9 @@ Now we have a collection ready to receive documents, again use Kourou to create 
 
 ```bash
 kourou document:create nyc-open-data yellow-taxi '{
-  name: "Yagmur",
-  city: "Antalya",
-  age: 27
+  name: "Melis",
+  city: "Istanbul",
+  age: 25
 }'
 ```
 
@@ -115,9 +115,9 @@ First, we need to create more documents:
 kourou sdk:execute '
   for (let i = 1; i <= 10; i++) {
     await sdk.document.create("nyc-open-data", "yellow-taxi", {
-      name: `Yagmur-${i}`,
+      name: `Melis-${i}`,
       city: i % 2 ? "Antalya" : "Istanbul",
-      age: 27 + i
+      age: 25 + i
     });
   }'
 ```
@@ -169,7 +169,7 @@ kourou document:search nyc-open-data yellow-taxi '{
 }'
 ```
 
-<details><summary>You should retrieve the following 3 documents:</summary>
+<details><summary>You should retrieve the following 2 documents:</summary>
 
 ```bash
  🚀 Kourou - Searches for documents
@@ -177,7 +177,7 @@ kourou document:search nyc-open-data yellow-taxi '{
  [ℹ] Connecting to http://localhost:7512 ...
  [ℹ] Document ID: OYgZJnUBacNMjDl2504F
  Content: {
-  "name": "Yagmur-5",
+  "name": "Melis-7",
   "city": "Antalya",
   "age": 32,
   "_kuzzle_info": {
@@ -189,7 +189,7 @@ kourou document:search nyc-open-data yellow-taxi '{
 }
  [ℹ] Document ID: O4gZJnUBacNMjDl2504n
  Content: {
-  "name": "Yagmur-7",
+  "name": "Melis-9",
   "city": "Antalya",
   "age": 34,
   "_kuzzle_info": {
@@ -199,19 +199,7 @@ kourou document:search nyc-open-data yellow-taxi '{
     "updater": null
   }
 }
- [ℹ] Document ID: PYgZJnUBacNMjDl2505H
- Content: {
-  "name": "Yagmur-9",
-  "city": "Antalya",
-  "age": 36,
-  "_kuzzle_info": {
-    "author": "-1",
-    "createdAt": 1602662033222,
-    "updatedAt": null,
-    "updater": null
-  }
-}
- [✔] 3 documents fetched on a total of 3
+[✔] 2 documents fetched on a total of 2
 ```
 
 </details>

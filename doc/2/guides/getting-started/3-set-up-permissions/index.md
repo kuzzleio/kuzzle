@@ -76,7 +76,7 @@ kourou security:createUser '{
   },
   credentials: {
     local: {
-      username: "yagmur",
+      username: "melis",
       password: "password"
     }
   }
@@ -140,19 +140,19 @@ kourou server:now
 
 #### Try the API as an authenticated user
 
-Run the same command, authenticating with the user we just created: `kourou server:now --username yagmur --password password`
+Run the same command, authenticating with the user we just created: `kourou server:now --username melis --password password`
 
 We are allowed to use this API action because **we are now authenticated with a user** with sufficient rights.
 
 ```bash
-kourou server:now --username yagmur --password password
+kourou server:now --username melis --password password
 
 [ℹ] Unknown command "server:now", fallback to API method
  
  🚀 Kourou - Executes an API query.
  
  [ℹ] Connecting to http://localhost:7512 ...
- [ℹ] Loggued as yagmur.
+ [ℹ] Loggued as melis.
  {
   "now": 1602591681683
 }

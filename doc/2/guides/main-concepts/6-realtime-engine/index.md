@@ -62,14 +62,14 @@ Then clients wishing to post messages in this room must use the [realtime:publis
 Then you can also use [Kourou](/core/2/some-link) in another terminal to publish a message:  
 ```bash
 kourou realtime:publish nyc-open-data yellow-taxi '{
-    name: "Manwë",
-    licence: "B",
-    car: "berline",
-    position: {
-      lat: 43.6073913,
-      lon: 3.9109057
-    }
-  }'
+  name: "Manwë",
+  licence: "B",
+  car: "berline",
+  position: {
+    lat: 43.6073913,
+    lon: 3.9109057
+  }
+}'
 ```
 
 Clients subscribing to this channel will receive the following notification:
@@ -161,16 +161,16 @@ Creating a document with the [document:create](/core/2/api/controllers/document/
 Create a document with [Kourou](/core/2/some-link) to trigger a Database Notification:
 ```bash
 kourou document:create nyc-open-data yellow-taxi '{
-    controller: "document",
-    action: "create",
-    index: "nyc-open-data",
-    collection: "yellow-taxi",
-    body: {
-      name: "Morgoth",
-      car: "limousine",
-      licence: "B"
-    }
-  }'
+  controller: "document",
+  action: "create",
+  index: "nyc-open-data",
+  collection: "yellow-taxi",
+  body: {
+    name: "Morgoth",
+    car: "limousine",
+    licence: "B"
+  }
+}'
 ```
 
 Clients subscribing to changes in this collection will receive the following notification:
@@ -267,6 +267,10 @@ Each subscription filter **defines a scope**. All documents in the collection ca
 Once a client has subscribed to notifications with filters, they will receive notifications each time a document **enters or exits the scope** defined by the filters.
 
 ![subscription-filter-scope](./subscription-filter-scope.png)
+
+::: warning
+Notification about document exiting the scope will only be received for documents that previously entered the scope.
+:::
 
 This information is contained in the `scope` field of the notifications:
 

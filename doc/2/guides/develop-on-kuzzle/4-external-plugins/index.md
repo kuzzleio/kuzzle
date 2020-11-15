@@ -28,10 +28,6 @@ Plugins are classes that must implement the [Plugin](/core/2/some-link) interfac
 
 They can create new controllers or register pipes and hooks like applications.
 
-::: info
-The controllers registered by the plugins are prefixed by the plugin name in order to avoid any conflict.
-:::
-
 In addition to the standard features available in an application, plugins can also integrate [authentication strategies](/core/2/some-link).
 
 ::: info

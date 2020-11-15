@@ -347,6 +347,8 @@ Those **methods are explained in the next sections and they are already implemen
 
 ::: tab Javascript
 
+[SearchResult.next](/sdk/js/7/core-classes/search-result/next)
+
 ```js
 let result = await sdk.document.search('ktm-open-data', 'thamel-taxi', {
   query: {
@@ -364,6 +366,7 @@ while (result) {
 :::
 ::: tab Dart
 
+[SearchResult.next](/sdk/dart/2/core-classes/search-result/next)
 
 ```dart
 final result = await kuzzle
@@ -386,6 +389,8 @@ while (result != null) {
 :::
 
 ::: tab Kotlin
+
+[SearchResult.next](/sdk/jvm/1/core-classes/search-result/next)
 
 ```kotlin
 val term: ConcurrentHashMap<String, Any?> =
@@ -415,6 +420,8 @@ while (result) {
 :::
 
 ::: tab Csharp
+
+[SearchResult.next](/sdk/csharp/2/core-classes/search-result/next-async)
 
 ```csharp
 SearchOptions options = new SearchOptions {
@@ -551,7 +558,7 @@ The search action will return a `scrollId` that you have to use with the [docume
 **Example:** _Paginate search with scroll_
 ```bash
 kourou sdk:query document:search \
-  -i ktm-open-data -c thamel-taxi -a scroll=30s -a size=2
+  -i ktm-open-data -c thamel-taxi -a scroll=1s -a size=2
 
 # {
 #   "hits": [
