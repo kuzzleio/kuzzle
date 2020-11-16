@@ -172,6 +172,6 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
 </details>
 
 <GuidesLinks 
-  :prev="{ text: 'Authenticate Users', url: '/core/2/guides/getting-started/4-authenticate-users/' }" 
-  :next="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/6-write-application/' }" 
+  :prev="{ text: 'Authenticate Users', url: '/guides/getting-started/4-authenticate-users/' }" 
+  :next="{ text: 'Create new Controllers', url: '/guides/getting-started/6-write-application/' }" 
 />

@@ -205,6 +205,6 @@ kourou document:search nyc-open-data yellow-taxi '{
 </details>
 
 <GuidesLinks 
-  :prev="{ text: 'Run Kuzzle', url: '/core/2/guides/getting-started/1-run-kuzzle' }" 
-  :next="{ text: 'Set up Permissions', url: '/core/2/guides/getting-started/3-set-up-permissions' }" 
+  :prev="{ text: 'Run Kuzzle', url: '/guides/getting-started/1-run-kuzzle' }" 
+  :next="{ text: 'Set up Permissions', url: '/guides/getting-started/3-set-up-permissions' }" 
 />

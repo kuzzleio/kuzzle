@@ -175,6 +175,6 @@ kourou security:updateRole '{
 :::
 
 <GuidesLinks 
-  :prev="{ text: 'Store and Access Data', url: '/core/2/guides/getting-started/2-store-and-access-data/' }"
-  :next="{ text: 'Authenticate Users', url: '/core/2/guides/getting-started/4-authenticate-users/' }" 
+  :prev="{ text: 'Store and Access Data', url: '/guides/getting-started/2-store-and-access-data/' }"
+  :next="{ text: 'Authenticate Users', url: '/guides/getting-started/4-authenticate-users/' }" 
 />

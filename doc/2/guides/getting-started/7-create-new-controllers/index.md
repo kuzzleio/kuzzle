@@ -109,6 +109,6 @@ npx wscat -c ws://localhost:7512 --execute '{
 ::::
 
 <GuidesLinks 
-  :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/6-write-application/' }" 
-  :next="{ text: 'Customize API Behavior', url: '/core/2/guides/getting-started/8-customize-api-behavior/' }" 
+  :prev="{ text: 'Create new Controllers', url: '/guides/getting-started/6-write-application/' }" 
+  :next="{ text: 'Customize API Behavior', url: '/guides/getting-started/8-customize-api-behavior/' }" 
 />
