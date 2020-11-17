@@ -6,6 +6,8 @@ title: subscription
 
 # `subscription`
 
+<SinceBadge version="2.7.0"/>
+
 Adds or removes [real-time subscriptions](/core/2/guides/essentials/real-time) from the backend.
 
 ## `register`

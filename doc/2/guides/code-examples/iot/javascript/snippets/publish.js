@@ -13,9 +13,12 @@ try {
     body: {
       command: 'battery-report'
     }
-  }));
+  }), err => {
+    if (err) {
+      console.error(err)
+    }
+    client.end()
+  });
 } catch (error) {
   console.log(error.message);
-} finally {
-  client.end();
 }
