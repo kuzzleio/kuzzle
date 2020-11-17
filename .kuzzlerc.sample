@@ -728,19 +728,19 @@
   //       others. Cluster nodes MUST be able to open those ports between
   //       themselves.
   //       There is no need to expose these ports publicly.
-  //       * request:
-  //          used for requests from a node to another one (handshake, full
-  //          state requests, ...
+  //       * command:
+  //          used for issuing commands between nodes (handshakes, full
+  //          state requests, ...)
   //       * sync:
-  //          used to propagate heartbeats, state changes, and other sync
-  //          messages
+  //          one-way port to propagate sync information from a node to the
+  //          other ones
   "cluster": {
     "heartbeat": 2000,
     "ipv6": false,
     "joinTimeout": 60000,
     "minimumNodes": 2,
     "ports": {
-      "request": 7510,
+      "command": 7510,
       "sync": 7511,
     }
   }

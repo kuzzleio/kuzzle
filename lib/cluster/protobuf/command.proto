@@ -1,14 +1,19 @@
-package fullstate;
+// messages definition for issuing node commands and receiving the
+// corresponding responses
+package command;
 
 syntax="proto3";
 
-message FullState {
+// Full state response
+message FullstateResponse {
+  // Describes the nodes that have subscribed to a given realtime room
   message NodeSubscribers {
     string nodeId = 1;
     uint64 subscribers = 2;
     uint64 lastMessageId = 3;
   }
 
+  // Describes a realtime room
   message RealtimeRoom {
     string roomId = 1;
     // array of polymorphic objects, needs to be stringified beforehand
@@ -19,3 +24,4 @@ message FullState {
 
   repeated RealtimeRoom rooms = 1;
 }
+
