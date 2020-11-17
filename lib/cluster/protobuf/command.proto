@@ -25,3 +25,15 @@ message FullstateResponse {
   repeated RealtimeRoom rooms = 1;
 }
 
+// Handshake Request
+message HandshakeRequest {
+  string nodeId = 1;
+  uint64 lastMessageId = 2;
+  string ip = 3;
+}
+
+// Handshake response
+message HandshakeResponse {
+  bool added = 1;
+  uint64 lastMessageId = 2;
+}
