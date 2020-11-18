@@ -110,16 +110,18 @@ describe('QueryTranslator', () => {
       });
     });
 
-    it('can translate operator "not"', () => {
+    it.only('can translate operator "not"', () => {
       const operator = {
-        not: []
+        not: { exists: 'city' }
       };
 
       const esOperator = translator._translateOperator(...Object.entries(operator)[0]);
 
       should(esOperator).be.eql({
         bool: {
-          must_not: []
+          must_not: [
+            { exists: 'city' }
+          ]
         }
       });
     });
