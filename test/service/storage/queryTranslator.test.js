@@ -110,7 +110,7 @@ describe('QueryTranslator', () => {
       });
     });
 
-    it.only('can translate operator "not"', () => {
+    it('can translate operator "not"', () => {
       const operator = {
         not: { exists: 'city' }
       };
@@ -120,7 +120,7 @@ describe('QueryTranslator', () => {
       should(esOperator).be.eql({
         bool: {
           must_not: [
-            { exists: 'city' }
+            { exists: { field: 'city' } }
           ]
         }
       });
@@ -133,9 +133,9 @@ describe('QueryTranslator', () => {
         and: [
           { equals: { city: 'Antalya' } },
           {
-            not: [
-              { exists: 'age' }
-            ]
+            not: {
+              exists: 'age'
+            }
           }
         ]
       };
