@@ -125,7 +125,7 @@ describe('QueryTranslator', () => {
         }
       });
     });
-  })
+  });
 
   describe('translate', () => {
     it('can translate complexe filters', () => {
