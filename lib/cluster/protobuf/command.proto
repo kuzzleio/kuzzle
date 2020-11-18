@@ -5,7 +5,7 @@ package command;
 syntax="proto3";
 
 // Full state response
-message FullstateResponse {
+message FullStateResponse {
   // Describes the nodes that have subscribed to a given realtime room
   message NodeSubscribers {
     string nodeId = 1;
