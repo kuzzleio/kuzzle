@@ -8,7 +8,7 @@ describe('QueryTranslator', () => {
   const translator = new QueryTranslator();
 
   describe('_translateClause', () => {
-    it('can translate the term "equals"', () => {
+    it('can translate the clause "equals"', () => {
       const clause = {
         equals: { city: 'Istanbul' }
       };
@@ -20,7 +20,7 @@ describe('QueryTranslator', () => {
       });
     });
 
-    it('can translate the term "exists"', () => {
+    it('can translate the clause "exists"', () => {
       const clause = {
         exists: 'city'
       };
@@ -32,7 +32,7 @@ describe('QueryTranslator', () => {
       });
     });
 
-    it('can translate the term "ids"', () => {
+    it('can translate the clause "ids"', () => {
       const clause = {
         ids: {
           values: ['aschen', 'melis']
@@ -48,7 +48,7 @@ describe('QueryTranslator', () => {
       });
     });
 
-    it('can translate the term "missing"', () => {
+    it('can translate the clause "missing"', () => {
       const clause = {
         missing: 'city'
       };
@@ -64,7 +64,7 @@ describe('QueryTranslator', () => {
       });
     });
 
-    it('can translate the term "range"', () => {
+    it('can translate the clause "range"', () => {
       const clause = {
         range: {
           age: { gt: 25, gte: 25, lt: 27, lte: 27 }
