@@ -12,7 +12,7 @@ Most of the **internal tasks performed by Kuzzle trigger events**.
 
 Kuzzle enables to attach business-logic to these events by defining **hooks** (which allow to perform additional actions when the event triggers) and **pipes** (which change the behavior of the standard logic when the event triggers).
 
-The complete list of events is available here: [Internal Events List](/core/2/some-link)
+The complete list of events is available here: [Internal Events List](/core/2/references/some-link)
 
 ::: info
 You can display events triggered by Kuzzle by setting the `DEBUG` environment variable to `kuzzle:events:*`.
@@ -37,26 +37,28 @@ Pipes can:
 ::: warning
 Each event carries a different payload. **This payload must be returned by the pipe function** so Kuzzle can continue its execution process.
 :::
+
 ::: warning
 The execution order of the pipes is decided by Kuzzle at runtime. Your pipes should be independent from one another.
 :::
+
 Examples of pipes usage:
- - [dynamic right restrictions](/core/2/some-link)
- - [synchronize with another database](/core/2/some-link)
- - [hidding sensitive information from the response](/core/2/some-link)
+ - [dynamic right restrictions](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies)
+ - [synchronize with another database](https://github.com/kuzzleio/kuzzle-how-to/tree/master/replicate-to-sql-with-generic-events)
+ - hidding sensitive information from the response
 
 
 ### Registering a pipe
 
 <!-- Duplicate with guides/getting-started/8-customize-api-behavior -->
 
-We need to use the [Backend.pipe.register](/core/2/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
+We need to use the [Backend.pipe.register](/core/2/references/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
 
 Each event has a different payload.  
 The pipe handler function **must return a promise resolving to the received payload**.  
 
 ::: info
-When an event has more than one payload then only the first argument of the handler function must be returned. (e.g. [Generic Document Events](/core/2/some-link))
+When an event has more than one payload then only the first argument of the handler function must be returned. (e.g. [Generic Document Events](/core/2/references/some-link))
 :::
 
 **Example:** _Changing the result of the [server:now](/core/2/api/controllers/server/now) API action_
@@ -79,7 +81,7 @@ This warning can be configured under the [plugins.pipeWarnTime](/core/2/main-con
 
 When the pipe handler function returns a rejected promise or throws an error, Kuzzle aborts the current task.
 
-If the error is one of the [available default errors](/core/2/some-link) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/some-link) error.
+If the error is one of the [available default errors](/core/2/references/some-link) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/references/some-link) error.
 
 <!-- @todo throw an internal kuzzle error and not a default one -->
 
@@ -101,7 +103,7 @@ app.pipe.register(
 ```
 
 ::: info
-[Generic Document Events](/core/2/core/2/some-link) have a payload consisting of two arguments: an array of documents and the original [Request object](/core/2/some-link)
+[Generic Document Events](/core/2/core/2/references/some-link) have a payload consisting of two arguments: an array of documents and the original [Request object](/core/2/references/some-link)
 :::
 
 ## Hooks
@@ -117,12 +119,12 @@ In general, hooks are used to perform background tasks which may otherwise slow 
 :::
 
 Examples of hooks usage:
- - [enrich the request with external information](/core/2/some-link)
- - [notify user registration](/core/2/some-link)
+ - enrich the request with external information
+ - notify user registration
 
 ### Registering a hook
 
-We need to use the [Backend.hook.register](/core/2/some-link) method to register new hooks.   This method takes an event name as its first parameter, followed by the hook handler function.
+We need to use the [Backend.hook.register](/core/2/references/some-link) method to register new hooks.   This method takes an event name as its first parameter, followed by the hook handler function.
 
 **Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to log user registration_
 
@@ -134,7 +136,7 @@ app.hook.register('security:afterCreateRestrictedUser', async (request: Request)
 
 ### Handling errors
 
-When a hook handler function returns a rejected promise or throw an error then the [hook:onError](/core/2/some-link) is triggered.  
+When a hook handler function returns a rejected promise or throw an error then the [hook:onError](/core/2/references/some-link) is triggered.  
 
 Handler function attached to this event will receive the following arguments:
 | Arguments    | Type     | Description                                   |
@@ -161,7 +163,7 @@ To prevent infinite loops, if a hook attached to the `hook:onError` event fails,
 You can only trigger custom events during the `runtime` phase, after the application has started.
 ::: 
 
-**Internal or custom events can be triggered** with the [Backend.trigger](/core/2/some-link) method.
+**Internal or custom events can be triggered** with the [Backend.trigger](/core/2/references/some-link) method.
 
 Pipes and hooks can be plugged on custom events as well as on internal events.
 

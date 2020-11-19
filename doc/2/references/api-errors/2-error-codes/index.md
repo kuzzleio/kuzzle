@@ -1,8 +1,8 @@
 ---
 code: false
 type: branch
-title: Error Codes
+title: API Error Codes
 description: Exhaustive list of error codes
-order: 700
+order: 300
 ---
 

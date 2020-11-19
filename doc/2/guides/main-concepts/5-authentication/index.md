@@ -112,7 +112,28 @@ The default validity period is configurable under the key `security.jwt.expiresI
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
 :::
 
-This token must then be [provided in requests to Kuzzle API](/core/2/some-link) to authenticate the user.
+:::: tabs
+
+::: tab HTTP
+
+The authentication token must be provided in the `Authorization` header: `Authorization: Bearer <token>`.
+
+:::
+
+::: tab Others
+
+The authentication token must be provided in the payload with the `jwt` property:
+
+```js
+{
+  controller: "<controller>",
+  action: "<action>",
+
+  jwt: "<token>",
+}
+```
+
+::::
 
 ::: warning
 For historical reasons the API terminology uses the term `jwt` but Kuzzle authentication tokens only have in common with JSON Web Tokens the algorithms used to generate and verify them.
@@ -129,7 +150,7 @@ It's also possible to revoke every authentication tokens of a user with the [sec
 **Authentication tokens expire after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.  
 
 ::: info
-If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server event](/core/2/some-link).
+If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server event](/core/2/references/some-link).
 :::
 
 While an authentication token is still valid, it is possible to provide it to the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to request a new, fresher authentication token, without having to ask for credentials. 

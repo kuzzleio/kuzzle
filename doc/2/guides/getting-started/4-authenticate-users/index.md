@@ -10,13 +10,13 @@ order: 400
 
 Kuzzle's authentication system is **multi-strategy based**. This means that the same user can **authenticate in several different ways**.
 
-For example, the same user can authenticate with the [local](/core/2/some-link) strategy with an username and a password pair but also with the [oauth](/core/2/some-link) strategy using an external provider such as Facebook or Google.
+For example, the same user can authenticate with the [local](/core/2/guides/main-concepts/5-authentication#local-strategy) strategy with an username and a password pair but also with the [oauth](/core/2/guides/main-concepts/5-authentication#oauth-strategy) strategy using an external provider such as Facebook or Google.
 
 ::: info
 Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) under the hood, and therefore there are 300+ strategies readily available. (LDAP, OpenID, Active Directory, x509, etc.)  
 :::
 
-We saw that in the [Set Up Permission](/core/2/guides/getting-started/3-set-up-permissions) guide, when creating a user, we had to provide credentials for the [local](/core/2/some-link) strategy, but we could have provided more strategies (provided the right strategy plugins are used):
+We saw that in the [Set Up Permission](/core/2/guides/getting-started/3-set-up-permissions) guide, when creating a user, we had to provide credentials for the [local](/core/2/guides/main-concepts/5-authentication#local-strategy) strategy, but we could have provided more strategies (provided the right strategy plugins are used):
 
 ```bash
 # This command will only works if the "ldap" strategy 
@@ -46,7 +46,7 @@ Kuzzle uses **authentication tokens** to identify user sessions.
 
 First we need to get one with the [auth:login](/core/2/api/controllers/auth/login) action. This action takes the `strategy` used as a mean to authenticate, and any additional information needed by that strategy.
 
-In our example we will use the [local](/core/2/some-link) strategy so we have to provide a `username` and a `password`:
+In our example we will use the [local](/core/2/guides/main-concepts/5-authentication#local-strategy) strategy so we have to provide a `username` and a `password`:
 
 ```bash
 kourou auth:login -a strategy=local --body '{

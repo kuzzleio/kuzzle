@@ -24,11 +24,11 @@ New network protocols can also be integrated to Kuzzle API by writting a [Protoc
 
 ## Inside a plugin
 
-Plugins are classes that must implement the [Plugin](/core/2/some-link) interface.  
+Plugins are classes that must implement the [Plugin](/core/2/references/some-link) interface.  
 
 They can create new controllers or register pipes and hooks like applications.
 
-In addition to the standard features available in an application, plugins can also integrate [authentication strategies](/core/2/some-link).
+In addition to the standard features available in an application, plugins can also integrate [authentication strategies](/core/2/guides/write-plugins/3-integrate-authentication-strategy).
 
 ::: info
 More information about features available to plugins: [Write Plugins](/core/2/guides/write-plugins)
@@ -38,7 +38,7 @@ More information about features available to plugins: [Write Plugins](/core/2/gu
 
 Generally, plugins are distributed as NPM packages.  
 
-It is possible to use the [Backend.plugin.use](/core/2/some-link) method to use a plugin in your application.  
+It is possible to use the [Backend.plugin.use](/core/2/references/some-link) method to use a plugin in your application.  
 
 ::: info
 Plugins must be used before starting the application.

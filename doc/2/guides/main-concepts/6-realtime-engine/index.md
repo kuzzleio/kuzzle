@@ -39,6 +39,22 @@ These information are only used to define an **ephemeral room** between several 
 :::
 
 First, subscribe to realtime notifications:
+:::: tabs
+
+::: tab wscat
+
+:::
+
+::: tab kourou
+
+:::
+
+::::
+
+
+:::: tabs
+
+::: tab wscat
 
 ```bash
 npx wscat -c ws://localhost:7512 --wait 20 --execute '{
@@ -50,16 +66,21 @@ npx wscat -c ws://localhost:7512 --wait 20 --execute '{
 }'
 ```
 
-::: info
-You can also use [Kourou](/core/2/some-link) to subscribe to realtime notifications:  
+:::
+
+::: tab kourou
+
 ```bash
 kourou realtime:subscribe nyc-open-data yellow-taxi
 ```
-::: 
+
+:::
+
+::::
 
 Then clients wishing to post messages in this room must use the [realtime:publish](/core/2/api/controllers/realtime/publish) method by specifying the same index and collection names:
 
-Then you can also use [Kourou](/core/2/some-link) in another terminal to publish a message:  
+Then you can also use Kourou in another terminal to publish a message:  
 ```bash
 kourou realtime:publish nyc-open-data yellow-taxi '{
   name: "Manwë",
@@ -158,7 +179,7 @@ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
 Creating a document with the [document:create](/core/2/api/controllers/document/create) method corresponds to a change in the database, so **clients subscribing to notifications in this collection will be notified**.
 
 
-Create a document with [Kourou](/core/2/some-link) to trigger a Database Notification:
+Create a document with Kourou to trigger a Database Notification:
 ```bash
 kourou document:create nyc-open-data yellow-taxi '{
   controller: "document",

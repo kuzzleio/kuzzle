@@ -395,10 +395,10 @@ You can bypass metadata automatic creation by using [bulk:write](/core/2/api/con
 
 Metadata can be viewed in the document's `_kuzzle_info` field and contains the following properties:
 
-- `author`: [unique identifier](/core/2/some-link) of the user who created the document.
+- `author`: [kuzzle user identifier](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid) of the user who created the document.
 - `createdAt`: timestamp of document creation (create or replace), in epoch-milliseconds format.
 - `updatedAt`: timestamp of last document update in epoch-milliseconds format, or `null` if no update has been made.
-- `updater`: [unique identifier](/core/2/some-link) of the user that updated the document, or `null` if the document has never been updated.
+- `updater`: [kuzzle user identifier](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid) of the user that updated the document, or `null` if the document has never been updated.
 
 Here is an example of a Kuzzle response, containing a document's `_id` and `_source` fields:
 
@@ -625,12 +625,12 @@ It is considered harmful to let end users execute those actions.
 
 Kuzzle uses and exposes the [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
 
-It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/some-link) property.
+It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/references/some-link) property.
 
 This property offers the possibility to **instantiate a new client** or to **use a lazy-instantiated client**. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
 
 ::: info
-It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.Client](/core/2/some-link).
+It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.Client](/core/2/references/some-link).
 :::
 
 

@@ -299,7 +299,7 @@ Users are internal documents divided into two properties:
 
 ::: warning
 The information contained in the `credentials` property are never returned and can only be accessed by the plugin that added the associated [authentication strategy](/core/2/guides/write-plugins/3-integrate-authentication-strategy).
-More information about [Authentication](/core/2/some-link).
+More information about [Authentication](/core/2/guides/main-concepts/5-authentication).
 :::
 
 ### Profiles list
@@ -374,11 +374,11 @@ For instance, suppose you have a chat application and you want the users to only
 
 There are multiple ways of adding a business logic layer on top of the standard Kuzzle security one:
 
-* With a [Pipe](/core/2/guides/develop-on-kuzzle/3-event-system#pipes), you can listen to one or multiple [API events](/core/2/some-link), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
+* With a [Pipe](/core/2/guides/develop-on-kuzzle/3-event-system#pipes), you can listen to one or multiple [API events](/core/2/references/some-link), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
 * If all you need is to make sure that submitted documents follow a strict set of formatting rules, you can add [document validators](/core/2/guides/advanced/9-data-validation)
 
 ::: info
-More information about dynamic rules with pipes: [Event System](/core/2/some-link)
+More information about dynamic rules with pipes: [Event System](/core/2/guides/develop-on-kuzzle/3-event-system#pipes)
 ::: 
 
 ## Load permissions

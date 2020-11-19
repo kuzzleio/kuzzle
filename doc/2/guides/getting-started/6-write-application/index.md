@@ -14,7 +14,7 @@ Several classes and methods are available to developers so that they can develop
 
 ## The Backend class
 
-The [Backend](/core/2/some-link) class is the entrypoint of any Kuzzle application.  
+The [Backend](/core/2/references/some-link) class is the entrypoint of any Kuzzle application.  
 
 First we need to instantiate it with an application name:
 
@@ -27,7 +27,7 @@ const app = new Backend('playground')
 An application has two phases: `setup` and `runtime`. The classes and methods that can be used **depend on the phase the application is in**. 
 
 ::: info
-Calling the [Backend.start](/core/2/some-link) method will start your application and change it's phase to `runtime`.
+Calling the [Backend.start](/core/2/references/some-link) method will start your application and change it's phase to `runtime`.
 :::
 
 ## Register new features
@@ -38,7 +38,7 @@ When the application is in the `setup` phase, it exposes methods allowing to **r
  - `hooks`: execute asynchronous processing
  - `plugins`: add whole set of features
 
-**Example:** _Registering a new Controller with the [Backend.controller.register](/core/2/some-link) method_
+**Example:** _Registering a new Controller with the [Backend.controller.register](/core/2/references/some-link) method_
 ```js
 // Before application startup
 app.controller.register('greeting', {
@@ -52,10 +52,10 @@ app.controller.register('greeting', {
 })
 ```
 
-Once the features have been registered, it is possible to start our Kuzzle application with the [Backend.start](/core/2/some-link) method.
+Once the features have been registered, it is possible to start our Kuzzle application with the [Backend.start](/core/2/references/some-link) method.
 
 ::: warning
-Once the application has been started with the [Backend.start](/core/2/some-link) method, **it is no longer possible to register new features**.
+Once the application has been started with the [Backend.start](/core/2/references/some-link) method, **it is no longer possible to register new features**.
 :::
 
 We will see in detail how to add controllers and pipes in the next chapters of this guide.
@@ -65,7 +65,7 @@ We will see in detail how to add controllers and pipes in the next chapters of t
 Once the application has started, methods to interact with it become available.
 
 In particular, those methods make it possible to:
- - Use the [Embedded SDK](/core/2/some-link) to execute API actions
+ - Use the [Embedded SDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) to execute API actions
  - Trigger Events
  - Log Messages
  - And much more!
@@ -83,7 +83,7 @@ app.start()
 ```
 
 ::: warning
-Some methods interact directly with the Kuzzle API and with internal modules. Therefore they aren't available until the application has been started with the [Backend.start](/core/2/some-link) method.
+Some methods interact directly with the Kuzzle API and with internal modules. Therefore they aren't available until the application has been started with the [Backend.start](/core/2/references/some-link) method.
 :::
 
 ### Embedded SDK

@@ -17,13 +17,13 @@ These actions are then **processed like any other API action** and can be execut
 Each controller can therefore have several actions. Each of these **actions is associated with a function** called [handler](/core/2/guides/develop-on-kuzzle/2-api-controllers#handler-function).
 
 ::: info
-The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/some-link) interface.  
+The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/references/some-link) interface.  
 :::
 
 By convention, a controller action is identified with the name of the controller followed by the action separated by a colon: `<controller>:<action>` (e.g. [document:create](/core/2/api/controllers/document/create)).
 
 ::: warning
-Controllers must be added to the application before the application is started with the [Backend.start](/core/2/some-link) method.
+Controllers must be added to the application before the application is started with the [Backend.start](/core/2/references/some-link) method.
 :::
 
 We have chosen to allow developers to add controllers in two different ways in order to best adapt to their needs.  
@@ -32,7 +32,7 @@ These two ways are very similar and achieve the same goal.
 
 ### Register a Controller
 
-The [Backend.controller.register](/core/2/some-link) method allows to add a new controller using a **Plain Old Javascript Object (POJO) complying with the [ControllerDefinition](/core/2/some-link) interface**.  
+The [Backend.controller.register](/core/2/references/some-link) method allows to add a new controller using a **Plain Old Javascript Object (POJO) complying with the [ControllerDefinition](/core/2/references/some-link) interface**.  
 
 This method takes in parameter the **name** of the controller followed by its **definition**:
 
@@ -53,7 +53,7 @@ This is faster to develop but maintenance can be costly in the long run for larg
 
 ### Use a Controller class
 
-The [Backend.controller.use](/core/2/some-link) method allows to add a new controller using a **class inheriting from the [Controller](/core/2/some-link) class**.  
+The [Backend.controller.use](/core/2/references/some-link) method allows to add a new controller using a **class inheriting from the [Controller](/core/2/references/some-link) class**.  
 
 This class must respect the following conventions:
  - extend the `Controller` class
@@ -108,7 +108,7 @@ This way of doing things takes longer to develop but it allows you to have a bet
 
 The handler is the function that will **be called each time our API action is executed**.
 
-This function **takes a [Request object](/core/2/some-link)** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
+This function **takes a [Request object](/core/2/references/some-link)** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
 
 This function is defined in the `handler` property of an action. Its signature is: `(request: Request) => Promise<any>`.
 
@@ -223,9 +223,9 @@ By doing this, the action will only be available through the HTTP protocol with 
 
 ## Request Input
 
-The `handler` of an API action receives an instance of [Request object](/core/2/some-link). This object represents an API request and **contains both the client input and client contextual information**.
+The `handler` of an API action receives an instance of [Request object](/core/2/references/some-link). This object represents an API request and **contains both the client input and client contextual information**.
 
-The arguments of requests sent to the Kuzzle API are available in the [Request.input](/core/2/some-link) property.
+The arguments of requests sent to the Kuzzle API are available in the [Request.input](/core/2/references/some-link) property.
 
 The main available properties are the following:
  - `controller`: API controller name
@@ -262,7 +262,7 @@ curl \
   }'
 ```
 
-We can retrieve them in the [Request object](/core/2/some-link) passed to the `handler`:
+We can retrieve them in the [Request object](/core/2/references/some-link) passed to the `handler`:
 
 ```js
 import assert from 'assert'
@@ -307,7 +307,7 @@ npx wscat -c ws://localhost:7512 --execute '{
 }'
 ```
 
-We can retrieve them in the [Request object](/core/2/some-link) passed to the `handler`:
+We can retrieve them in the [Request object](/core/2/references/some-link) passed to the `handler`:
 
 ```js
 import assert from 'assert'
@@ -337,12 +337,12 @@ See the [Request Payload](/core/2/api/essentials/query-syntax#other-protocols) p
 
 ## Request Context
 
-Information about **the client that executes an API action** are available in the [Request.context](/core/2/some-link) property.
+Information about **the client that executes an API action** are available in the [Request.context](/core/2/references/some-link) property.
 
 The available properties are as follows:
- - [connection](/core/2/some-link): information about the connection
- - [user](/core/2/some-link): information about the user executing the request
- - (optional) [token](/core/2/some-link): information about the authentication token
+ - [connection](/core/2/references/some-link): information about the connection
+ - [user](/core/2/references/some-link): information about the user executing the request
+ - (optional) [token](/core/2/references/some-link): information about the authentication token
 
 Example:
 ```js
@@ -363,7 +363,7 @@ app.controller.register('greeting', {
 ```
 
 ::: info
-More informations about the [RequestContext](/core/2/some-link) class properties.
+More informations about the [RequestContext](/core/2/references/some-link) class properties.
 :::
 
 ## Response format
@@ -429,7 +429,7 @@ In some cases it may be necessary to **return a response that differs** from the
 
 This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another MIME type** such as CSV, an image, a PDF document, etc.
 
-For this it is possible to use the method [Request.setResult](/core/2/some-link) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
+For this it is possible to use the method [Request.setResult](/core/2/references/some-link) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
 
 **Example:** _Return a CSV file_
 
@@ -536,7 +536,7 @@ npx wscat -c ws://localhost:7512 --execute '{
 
 ### Kourou
 
-From a terminal, [Kourou](/core/2/some-link), the Kuzzle CLI, can be used to execute an action:
+From a terminal, [Kourou](/core/2/guides/advanced/11-kourou), the Kuzzle CLI, can be used to execute an action:
 
 ```bash
 kourou greeting:sayHello --arg name=Yagmur
@@ -545,12 +545,12 @@ kourou greeting:sayHello --arg name=Yagmur
 It is possible to pass multiple arguments by repeating the `--arg <arg>=<value>` flag or specify a body with the `--body '{}'` flag.  
 
 ::: info
-More info about [Kourou](/core/2/some-link).
+More info about [Kourou](/core/2/guides/advanced/11-kourou).
 :::
 
 ### SDK
 
-From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [Request Payload](/core/2/some-link) as a parameter.
+From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [Request Payload](/core/2/guides/main-concepts/1-api#others-protocol) as a parameter.
 
 :::: tabs
 ::: tab Javascript
@@ -616,7 +616,7 @@ Response response = await kuzzle.QueryAsync(request);
 
 ## Allow access to a custom Controller Action
 
-In the rights management system, **[roles](/core/2/some-link) are managing access to API actions**.  
+In the rights management system, **[roles](/core/2/guides/main-concepts/4-permissions#roles) are managing access to API actions**.  
 
 They operate on a whitelist principle by **listing the controllers and actions they give access to**.
 
@@ -649,5 +649,5 @@ kourou security:createRole '{
 ```
 
 ::: info
-More info about [Permissions](/core/2/some-link)
+More info about [Permissions](/core/2/guides/main-concepts/4-permissions)
 :::

@@ -74,7 +74,7 @@ Each event carries a different payload. **This payload must be returned by the p
 
 <!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
 
-We need to use the [Backend.pipe.register](/core/2/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
+We need to use the [Backend.pipe.register](/core/2/references/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
 
 In this example, we are going to change the return value of the `server:now` action to make it return a formatted date string instead of a UNIX timestamp:
 
