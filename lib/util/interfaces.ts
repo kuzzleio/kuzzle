@@ -118,14 +118,14 @@ export abstract class Plugin {
    *
    * Must be set in the plugin init() method before use.
    */
-  protected context?: PluginContext;
+  public context?: PluginContext;
 
   /**
    * Plugin config.
    *
    * Must be set in the plugin init() method before use.
    */
-  protected config?: JSONObject;
+  public config?: JSONObject;
 
   /**
    * Define new API controllers.
