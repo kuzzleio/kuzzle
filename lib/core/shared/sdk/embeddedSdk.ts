@@ -143,10 +143,6 @@ export class EmbeddedSDK extends Kuzzle {
       request.propagate = options.propagate === undefined || options.propagate === null
         ? false
         : options.propagate;
-
-      if (this.kuzzle.running && process.env.NODE_ENV !== 'production') {
-        this.kuzzle.log.warn('A realtime subscription has been made at runtime.\nRealtime subscriptions should only be made during Kuzzle initialization to ensure correct cluster replication.\nSee https://docs.kuzzle.io/core/2/plugins/plugin-context/accessors/sdk/#realtime-notifications for more information.');
-      }
     }
 
     return super.query(request, options);
