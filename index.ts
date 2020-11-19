@@ -10,4 +10,4 @@ export * from 'koncorde';
 
 export * from 'kuzzle-common-objects';
 
-export * from '../sdk-javascript';
+export * from 'kuzzle-sdk';
