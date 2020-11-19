@@ -18,7 +18,7 @@ This system makes it possible to **modify the execution flow of requests** proce
 
 Every time a request is executed, **Kuzzle emits several events** to allow changing the life cycle of the processing request.
 
-There are many different events available, you can see the complete list here: [Kuzzle events](/core/2/api/some-link).
+There are many different events available, you can see the complete list here: [Kuzzle events](/core/2/references/some-link).
 
 ### API events
 

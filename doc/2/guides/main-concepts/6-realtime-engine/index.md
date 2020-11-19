@@ -280,7 +280,7 @@ It is also possible to combine [terms](/core/2/guides/cookbooks/realtime-api/ter
 ```
 
 ::: info
-More info about [subscription filters terms and operands](/core/2/some-link)
+More info about [subscription filters terms and operands](/core/2/references/some-link)
 :::
 
 Each subscription filter **defines a scope**. All documents in the collection can be either **inside or outside this scope**.

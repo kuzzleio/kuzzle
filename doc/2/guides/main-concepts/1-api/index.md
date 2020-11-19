@@ -340,7 +340,7 @@ Errors returned by the Kuzzle API in the `error` part of a response are objects 
 | `id`      | <pre>string</pre> | Error unique identifier                                |
 | `code`    | <pre>number</pre> | Error unique code                                      |
 
-List of [Standard Kuzzle Error](/core/2/api/some-link)
+List of [Standard Kuzzle Error](/core/2/references/some-link)
 
 **Example:** _Receving a `network.http.url_not_found`_
 
