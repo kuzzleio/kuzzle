@@ -602,10 +602,10 @@ export class Backend {
     // we need to load the default plugins
     this.plugin.use(
       new PluginPassportAuthLocal(),
-      { name: 'kuzzle-plugin-auth-passport-local', deprecationWarning: false });
+      { deprecationWarning: false, name: 'kuzzle-plugin-auth-passport-local' });
     this.plugin.use(
       new PluginLogger(),
-      { name: 'kuzzle-plugin-logger', deprecationWarning: false });
+      { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
 
     const application = new PluginObject(
       this._kuzzle,

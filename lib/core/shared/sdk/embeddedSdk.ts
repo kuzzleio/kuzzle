@@ -28,7 +28,7 @@ import {
   ScopeOption,
   UserOption,
   Kuzzle,
-} from '../../../../../sdk-javascript'
+} from 'kuzzle-sdk';
 
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
