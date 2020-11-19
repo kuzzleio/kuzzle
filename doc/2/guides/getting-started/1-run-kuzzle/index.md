@@ -108,5 +108,5 @@ When asked for credentials, just choose `Login as Anonymous`.
 You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
 
 <GuidesLinks 
-  :next="{ text: 'Store and Access Data', url: '/core/2/guides/getting-started/2-store-and-access-data/' }"
+  :next="{ text: 'Store and Access Data', url: '/guides/getting-started/2-store-and-access-data/' }"
 />

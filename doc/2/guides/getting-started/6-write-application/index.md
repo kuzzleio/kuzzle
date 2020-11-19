@@ -160,6 +160,6 @@ app.start()
 ```
 
 <GuidesLinks
-  :prev="{ text: 'Subscribe to Realtime Notifications', url: '/core/2/guides/getting-started/5-subscribe-realtime-notifications/' }" 
-  :next="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/7-create-new-controllers' }" 
+  :prev="{ text: 'Subscribe to Realtime Notifications', url: '/guides/getting-started/5-subscribe-realtime-notifications/' }" 
+  :next="{ text: 'Create new Controllers', url: '/guides/getting-started/7-create-new-controllers' }" 
 />

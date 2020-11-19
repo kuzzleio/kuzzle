@@ -152,5 +152,5 @@ $ docker-compose -f deployment/docker-compose.yml up -d
 Your Kuzzle application is now up and running on port 7512!
 
 <GuidesLinks 
-  :prev="{ text: 'Customize API Behavior', url: '/core/2/guides/getting-started/8-customize-api-behavior/' }" 
+  :prev="{ text: 'Customize API Behavior', url: '/guides/getting-started/8-customize-api-behavior/' }" 
 />

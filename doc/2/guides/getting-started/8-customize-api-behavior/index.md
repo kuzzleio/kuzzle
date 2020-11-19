@@ -108,6 +108,6 @@ kourou server:now
 ```
 
 <GuidesLinks
-  :prev="{ text: 'Create new Controllers', url: '/core/2/guides/getting-started/7-create-new-controllers' }" 
-  :next="{ text: 'Deploy your Application', url: '/core/2/guides/getting-started/9-deploy-your-application/' }" 
+  :prev="{ text: 'Create new Controllers', url: '/guides/getting-started/7-create-new-controllers' }" 
+  :next="{ text: 'Deploy your Application', url: '/guides/getting-started/9-deploy-your-application/' }" 
 />

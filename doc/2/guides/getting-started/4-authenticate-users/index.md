@@ -129,7 +129,7 @@ A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/s
 ::::
 
 <GuidesLinks 
-  :prev="{ text: 'Set up Permissions', url: '/core/2/guides/getting-started/3-set-up-permissions' }" 
-  :next="{ text: 'Subscribe to Realtime Notifications', url: '/core/2/guides/getting-started/5-subscribe-realtime-notifications/' }" 
+  :prev="{ text: 'Set up Permissions', url: '/guides/getting-started/3-set-up-permissions' }" 
+  :next="{ text: 'Subscribe to Realtime Notifications', url: '/guides/getting-started/5-subscribe-realtime-notifications/' }" 
 />
 
