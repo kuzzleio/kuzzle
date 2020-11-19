@@ -1109,7 +1109,7 @@ describe('Plugin', () => {
       return should(() => {
         pluginsManager._initHooks(plugin);
       })
-        .be.throwError({ message: /Did you mean "foo"/ });
+        .be.throwError();
     });
   });
 
@@ -1222,7 +1222,7 @@ describe('Plugin', () => {
 
       return should(() => {
         pluginsManager._initPipes(plugin);
-      }).throwError({ message: /Did you mean "foo"/ });
+      }).throwError();
     });
 
     it('should attach pipes event and reject if an attached function return an error', () => {

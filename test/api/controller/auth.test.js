@@ -4,6 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
+
 const {
   Request,
   UnauthorizedError,
@@ -11,7 +12,6 @@ const {
   InternalError: KuzzleInternalError,
   PluginImplementationError
 } = require('../../../index');
-
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const AuthController = require('../../../lib/api/controller/auth');

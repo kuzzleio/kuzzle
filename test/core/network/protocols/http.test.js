@@ -486,15 +486,15 @@ describe('/lib/core/network/protocols/http', () => {
           .be.calledWithMatch(444, { 'x-foo': 'bar' });
 
         const expected = {
-          requestId: 'requestId',
-          status: 444,
-          error: null,
-          controller: null,
           action: null,
           collection: null,
+          controller: null,
+          error: null,
           index: null,
+          requestId: 'requestId',
+          result: 'content',
+          status: 444,
           volatile: null,
-          result: 'content'
         };
 
         should(response.end)
