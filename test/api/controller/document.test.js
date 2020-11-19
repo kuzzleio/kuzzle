@@ -38,7 +38,7 @@ describe('DocumentController', () => {
   });
 
   describe('#search', () => {
-    it('should forward to the store module', async () => {
+    beforeEach(() => {
       kuzzle.ask
         .withArgs('core:storage:public:document:search')
         .resolves({
@@ -49,6 +49,9 @@ describe('DocumentController', () => {
           scrollId: 'scrollId',
           total: 'total',
         });
+    });
+
+    it('should forward to the store module', async () => {
       request.input.body = { query: { bar: 'bar '} };
       request.input.args.from = 1;
       request.input.args.size = 3;
@@ -70,6 +73,14 @@ describe('DocumentController', () => {
         scrollId: 'scrollId',
         total: 'total',
       });
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
     });
 
     it('should reject if index contains a comma', () => {
@@ -105,7 +116,68 @@ describe('DocumentController', () => {
         .withArgs('core:storage:public:document:search')
         .rejects(new Error('foobar'));
 
-      return should(documentController.search(request)).be.rejectedWith('foobar');
+      return should(documentController.search(request)).rejectedWith('foobar');
+    });
+
+    describe('lang "koncorde"', () => {
+
+      beforeEach(() => {
+        request.input.args.lang = 'koncorde';
+        request.input.body = {
+          query: {
+            equals: { name: 'Melis' }
+          }
+        };
+
+        kuzzle.ask
+          .withArgs('core:storage:public:translate')
+          .resolves({
+            term: { name: 'Melis' }
+          });
+      });
+
+      it('should translate the filter before passing it to the storage engine', async () => {
+        await documentController.search(request);
+
+        should(kuzzle.ask).be.calledWith(
+          'core:storage:public:translate',
+          { equals: { name: 'Melis' } });
+
+        should(kuzzle.ask).be.calledWith(
+          'core:storage:public:document:search',
+          index,
+          collection,
+          { query: { term: { name: 'Melis' } } },
+          { from: 0, size: 10, scroll: undefined });
+      });
+
+      it('should validate the filter syntax with Koncorde', async () => {
+        await documentController.search(request);
+
+        should(kuzzle.koncorde.validate)
+          .be.calledWith({ equals: { name: 'Melis' } });
+      });
+
+      it('should reject if the query is not an object', () => {
+        request.input.body.query = undefined;
+
+        return should(documentController.search(request)).rejectedWith(
+          BadRequestError,
+          { id: 'api.assert.invalid_type' });
+      });
+
+      it('should reject when translation fail', () => {
+        const error = new Error('message');
+        error.keyword = { type: 'operator', name: 'n0t' };
+
+        kuzzle.ask
+          .withArgs('core:storage:public:translate')
+          .rejects(error);
+
+        return should(documentController.search(request)).rejectedWith(
+          BadRequestError,
+          { id: 'api.assert.koncorde_restricted_keyword' });
+      });
     });
   });
 

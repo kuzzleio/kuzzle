@@ -79,6 +79,69 @@ describe('QueryTranslator', () => {
         }
       });
     });
+
+    it('can translate the clause "geoBoundingBox"', () => {
+      const clause = {
+        geoBoundingBox: {
+          location: {}
+        }
+      };
+
+      const esClause = translator._translateClause(...Object.entries(clause)[0]);
+
+      should(esClause).be.eql({
+        geo_bounding_box: {
+          location: {}
+        }
+      });
+    });
+
+    it('can translate the clause "geoPolygon"', () => {
+      const clause = {
+        geoPolygon: {
+          location: {}
+        }
+      };
+
+      const esClause = translator._translateClause(...Object.entries(clause)[0]);
+
+      should(esClause).be.eql({
+        geo_polygon: {
+          location: {}
+        }
+      });
+    });
+
+    it('can translate the clause "geoDistance"', () => {
+      const clause = {
+        geoDistance: {
+          location: {}
+        }
+      };
+
+      const esClause = translator._translateClause(...Object.entries(clause)[0]);
+
+      should(esClause).be.eql({
+        geo_distance: {
+          location: {}
+        }
+      });
+    });
+    it('can translate the clause "geoDistanceRange"', () => {
+      const clause = {
+        geoDistanceRange: {
+          location: {}
+        }
+      };
+
+      const esClause = translator._translateClause(...Object.entries(clause)[0]);
+
+      should(esClause).be.eql({
+        geo_distance_range: {
+          location: {}
+        }
+      });
+    });
   });
 
   describe('_translateOperator', () => {

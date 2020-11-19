@@ -129,6 +129,49 @@ Feature: Document Controller
       | total     | 3 |
     And I should receive a "hits" array containing 1 elements
 
+  @mappings
+  Scenario: Search with Koncorde filters
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                                                |
+      | "document-1" | { "name": "Melis", "age": 25, "city": "Istanbul" }  |
+      | -            | { "age": 25, "city": "Istanbul" }                   |
+      | -            | { "name": "Aschen", "age": 27, "city": "Istanbul" } |
+    And I refresh the collection
+    When I search documents with the following query:
+      """
+      {
+        "and": [
+          {
+            "equals": {
+              "city": "Istanbul"
+            }
+          },
+          {
+            "exists": "name"
+          },
+          {
+            "not": {
+              "range": {
+                "age": {
+                  "gt": 25
+                }
+              }
+            }
+          }
+        ]
+      }
+      """
+    And with the following search options:
+      """
+      {
+        "lang": "koncorde"
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching:
+      | _id          |
+      | "document-1" |
 
   # document:exists ============================================================
 
@@ -487,10 +530,10 @@ Feature: Document Controller
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
     When I successfully execute the action "document":"delete" with args:
-      | index      | "nyc-open-data"        |
-      | collection | "yellow-taxi"          |
-      | _id        | "document-1"           |
-      | source     | true                   |
+      | index      | "nyc-open-data" |
+      | collection | "yellow-taxi"   |
+      | _id        | "document-1"    |
+      | source     | true            |
     Then I should receive a result matching:
       | _id     | "document-1"            |
       | _source | { "name": "document1" } |
