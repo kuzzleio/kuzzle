@@ -50,6 +50,7 @@ export class EmbeddedSDK extends Kuzzle {
 
   /**
    * Returns a new SDK impersonated with the provided user.
+   * Subsequent requests will use the user rights and thus can be rejected by Kuzzle
    *
    * @param user - User to impersonate the SDK with
    */
