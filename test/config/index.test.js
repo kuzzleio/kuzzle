@@ -3,8 +3,8 @@
 const mockRequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
-const { InternalError: KuzzleInternalError } = require('kuzzle-common-objects');
 
+const { InternalError: KuzzleInternalError } = require('../../index');
 const defaultConfig = require('../../lib/config/default.config');
 
 describe('lib/config/index.js', () => {

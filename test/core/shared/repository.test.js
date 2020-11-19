@@ -2,11 +2,11 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   InternalError: KuzzleInternalError,
   NotFoundError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const Repository = require('../../../lib/core/shared/repository');

@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Request } from 'kuzzle-common-objects';
+import { Request } from '../api/request';
 import { Backend } from '../core/application/backend';
 
 /**
@@ -141,4 +141,19 @@ export interface KuzzleResponse extends JSONObject {
   status: number;
   volatile?: JSONObject;
   room?: string;
+}
+
+/**
+ * Deprecation warning about a specific feature.
+ * Only available in developement mode (NODE_ENV=development)
+ */
+export interface Deprecation {
+  /**
+   * Version since the feature is deprecated
+   */
+  version: string;
+  /**
+   * Information about the deprecation, replacement, etc.
+   */
+  message: string;
 }

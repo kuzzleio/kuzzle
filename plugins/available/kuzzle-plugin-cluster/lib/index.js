@@ -29,8 +29,8 @@ const debug = require('debug')('kuzzle:cluster');
 const ip = require('ip');
 const { v4: uuid } = require('uuid');
 const IORedis = require('ioredis');
-const { Request } = require('kuzzle-common-objects');
 
+const { Request } = require('../../../../index');
 const Node = require('./node');
 
 IORedis.Promise = Bluebird;

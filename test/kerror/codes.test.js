@@ -1,6 +1,7 @@
 'use strict';
 
 const should = require('should');
+
 const {
   KuzzleError,
   UnauthorizedError,
@@ -16,7 +17,7 @@ const {
   ForbiddenError,
   ExternalServiceError,
   BadRequestError,
-} = require('kuzzle-common-objects');
+} = require('../../index');
 
 const { checkDomains } = require('../../lib/kerror/codes');
 

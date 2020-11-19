@@ -3,21 +3,23 @@
 const root = '../../../..';
 
 const mockrequire = require('mock-require');
-const HttpFormDataStream = require(`${root}/lib/core/network/service/httpFormDataStream`);
-const EntryPoint = require(`${root}/lib/core/network/entryPoint`);
-const ClientConnection = require(`${root}/lib/core/network/clientConnection`);
-const { HttpMessage } = require(`${root}/lib/core/network/protocols/http`);
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+
+const HttpFormDataStream = require('../../../../lib/core/network/service/httpFormDataStream');
+const EntryPoint = require('../../../../lib/core/network/entryPoint');
+const ClientConnection = require('../../../../lib/core/network/clientConnection');
+const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
+const KuzzleMock = require('../../../../test/mocks/kuzzle.mock');
 const should = require('should');
 const sinon = require('sinon');
 const { Writable } = require('stream');
-const errorMatcher = require(`${root}/test/util/errorMatcher`);
-const kerror = require(`${root}/lib/kerror`).wrap('network', 'http');
+const errorMatcher = require('../../../../test/util/errorMatcher');
 const {
   Request,
   SizeLimitError,
   BadRequestError
-} = require('kuzzle-common-objects');
+} = require('../../../../index');
+
+const kerror = require('../../../../lib/kerror').wrap('network', 'http');
 
 describe('/lib/core/network/protocols/http', () => {
   const gunzipMock = sinon.stub();

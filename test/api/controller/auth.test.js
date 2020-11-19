@@ -10,7 +10,7 @@ const {
   BadRequestError,
   InternalError: KuzzleInternalError,
   PluginImplementationError
-} = require('kuzzle-common-objects');
+} = require('../../../index');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
