@@ -13,9 +13,15 @@ const { RequestInput } = require('../../../lib/api/request/requestInput');
 
 describe('#Request', () => {
   let rq;
+  let nodeEnv;
 
   beforeEach(() => {
+    nodeEnv = process.env.NODE_ENV;
     rq = new Request({});
+  });
+
+  afterEach(() => {
+    process.env.NODE_ENV = nodeEnv;
   });
 
   it('should defaults other properties correctly', () => {

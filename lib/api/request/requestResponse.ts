@@ -23,13 +23,15 @@ import * as assert from '../../util/assertType';
 import { JSONObject, Deprecation } from '../../util/interfaces';
 import { KuzzleError } from '../../kerror/errors/kuzzleError';
 
+// private properties
+// \u200b is a zero width space, used to masquerade console.log output
 const _request = 'request\u200b';
 const _headers = 'headers\u200b';
 
 export class Headers {
   public headers: JSONObject;
   private namesMap: Map<string, string>;
-  private proxy: JSONObject;
+  private proxy: any;
 
   constructor() {
     this.namesMap = new Map();
@@ -63,7 +65,7 @@ export class Headers {
   removeHeader (name: string): boolean {
     assert.assertString('header name', name);
 
-    if (!name) {
+    if (! name) {
       return true;
     }
 
@@ -81,7 +83,7 @@ export class Headers {
   setHeader (name: string, value: string): boolean {
     assert.assertString('header name', name);
 
-    if (!name) {
+    if (! name) {
       return true;
     }
 

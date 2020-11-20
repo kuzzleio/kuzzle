@@ -37,7 +37,7 @@
     "doc-cloudfront": "kuzdoc repo:cloudfront -d /core/2/*",
     "doc-deploy": "npm run doc-upload && npm run doc-cloudfront",
     "doc-netlify": "npm run doc-prepare && kuzdoc repo:build -d / -v 2",
-    "doc-error-codes": "node doc/build-error-codes"
+    "doc-error-codes": "node -r ts-node/register doc/build-error-codes"
   },
   "directories": {
     "lib": "lib"
