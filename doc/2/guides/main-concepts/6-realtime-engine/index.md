@@ -135,7 +135,7 @@ Clients subscribing to this channel will receive the following notification:
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/2/api/objects/3-notifications#document-notification)
+More information about the [Document Notification format](/core/2/api/objects/notifications#document-notification)
 
 ::: warning
 Messages published with the [realtime:publish](/core/2/api/controllers/realtime/publish) method are not persisted in the database.
@@ -247,7 +247,7 @@ These filters are specified only on the client side and do not require server-si
 They are sent in the body of the request [realtime:subscribe](/core/2/api/controllers/realtime/subscribe)
 :::
 
-A filter is composed of [clauses](/core/2/api/koncorde-filter-syntax/1-clauses) that can be composed with [operators](/core/2/api/koncorde-filter-syntax/2-operators).
+A filter is composed of [clauses](/core/2/api/koncorde-filter-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filter-syntax/operators).
 
 For example if I want to receive only drivers with the `B` license:
 ```json
@@ -262,7 +262,7 @@ For example if I want to receive only drivers with the `B` license:
 }
 ```
 
-It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/1-clauses) between them with [operators](/core/2/api/koncorde-filter-syntax/2-operators) to refine my filter:
+It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/clauses) between them with [operators](/core/2/api/koncorde-filter-syntax/operators) to refine my filter:
 
 ```json
 {
@@ -280,7 +280,7 @@ It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/1-cl
 ```
 
 ::: info
-More info about subscription filters [clauses](/core/2/api/koncorde-filter-syntax/1-clauses) and [operators](/core/2/api/koncorde-filter-syntax/2-operators)
+More info about subscription filters [clauses](/core/2/api/koncorde-filter-syntax/clauses) and [operators](/core/2/api/koncorde-filter-syntax/operators)
 :::
 
 Each subscription filter **defines a scope**. All documents in the collection can be either **inside or outside this scope**.
@@ -418,7 +418,7 @@ If a second client subscribes to the same notifications, then the first client w
 </pre>
 </details>
 
-More information about the [User Notification format](/core/2/api/objects/3-notifications#user-notification)
+More information about the [User Notification format](/core/2/api/objects/notifications#user-notification)
 
 ### volatile
 

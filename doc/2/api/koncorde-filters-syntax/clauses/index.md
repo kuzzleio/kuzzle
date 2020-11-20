@@ -14,7 +14,7 @@ In this section, you will find an exhaustive listing of all the available clause
 
 Clauses allow you to **express a predicate to apply on a data stream**.  
 
-One clause can **constitute a filter on its own** or be **combined with other clauses** in the same filters using the [operators](/core/2/api/koncorde-filter-syntax/2-operators).
+One clause can **constitute a filter on its own** or be **combined with other clauses** in the same filters using the [operators](/core/2/api/koncorde-filter-syntax/operators).
 
 ## Testing Nested Fields
 
@@ -47,7 +47,7 @@ Here is a filter, testing for equality on the field `last` in the `name` object:
 
 ## Matching array values
 
-A few keywords, like [exists](/core/2/api/koncorde-filter-syntax/1-clauses#exists) or [missing](/core/2/api/koncorde-filter-syntax/1-clauses#missing), allow searching for array values.
+A few keywords, like [exists](/core/2/api/koncorde-filter-syntax/clauses#exists) or [missing](/core/2/api/koncorde-filter-syntax/clauses#missing), allow searching for array values.
 
 These values can be accessed with the following syntax: `<array path>[<value>]`  
 Only one array value per `exists`/`missing` keyword can be searched in this manner.
@@ -59,7 +59,7 @@ The array value must be provided using the JSON format:
 - Strings: the value must be enclosed in double quotes. Example: `foo["string value"]`
 - Numbers, booleans and `null` must be used as is. Examples: `foo[3.14]`, `foo[false]`, `foo[null]`
 
-Array values can be combined with [nested properties](/core/2/api/koncorde-filter-syntax/1-clauses#testing-nested-fields): `nested.array["value"]`
+Array values can be combined with [nested properties](/core/2/api/koncorde-filter-syntax/clauses#testing-nested-fields): `nested.array["value"]`
 
 ### Example
 
