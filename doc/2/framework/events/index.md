@@ -1,7 +1,7 @@
 ---
 code: false
 type: branch
-order: 200
-title: Framework Events
+order: 400
+title: Events
 description: Framework events reference
 ---

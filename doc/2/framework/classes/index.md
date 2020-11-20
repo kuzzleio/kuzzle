@@ -2,6 +2,6 @@
 code: false
 type: branch
 order: 100
-title: Framework Classes
+title: Classes
 description: Framework classes reference
 ---

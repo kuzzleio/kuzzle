@@ -1,8 +1,9 @@
 ---
 type: page
 code: false
-title: Realtime Events
-order: 225
+title: Realtime
+description: Realtime events list
+order: 100
 ---
 
 # Realtime events
