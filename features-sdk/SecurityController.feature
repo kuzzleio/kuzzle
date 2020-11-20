@@ -29,12 +29,13 @@ Feature: Security Controller
     # Refresh success on known collection
     When I successfully execute the action "security":"refresh" with args:
       | collection | "users" |
-    Then I successfully execute the action "security":"searchUsers"
+    Then I successfully execute the action "security":"searchUsers" with args:
+      | body | { "sort": "_id" } |
     And I should receive a "hits" array of objects matching:
       | _id            |
-      | "test-admin"   |
       | "aschen"       |
       | "default-user" |
+      | "test-admin"   |
     # Error on unknown collection
     When I execute the action "security":"refresh" with args:
       | collection | "frontend-security" |
