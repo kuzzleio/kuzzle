@@ -9,8 +9,8 @@ message FullStateResponse {
   // Describes the nodes that have subscribed to a given realtime room
   message NodeSubscribers {
     string nodeId = 1;
-    uint64 subscribers = 2;
-    uint64 lastMessageId = 3;
+    uint32 subscribers = 2;
+    uint32 lastMessageId = 3;
   }
 
   // Describes a realtime room
@@ -28,12 +28,12 @@ message FullStateResponse {
 // Handshake Request
 message HandshakeRequest {
   string nodeId = 1;
-  uint64 lastMessageId = 2;
+  uint32 lastMessageId = 2;
   string ip = 3;
 }
 
 // Handshake response
 message HandshakeResponse {
   bool added = 1;
-  uint64 lastMessageId = 2;
+  uint32 lastMessageId = 2;
 }

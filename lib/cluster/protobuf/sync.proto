@@ -5,24 +5,24 @@ package sync;
 syntax="proto3";
 
 message Heartbeat {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   string address = 2;
 }
 
 message NodeEvicted {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   string nodeId = 2;
   string reason = 3;
   string evictor = 4;
 }
 
 message NodeShutdown {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   string nodeId = 2;
 }
 
 message NewRealtimeRoom {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   string index = 2;
   string collection = 3;
   string roomId = 4;
@@ -32,17 +32,17 @@ message NewRealtimeRoom {
 }
 
 message Subscription {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   string roomId = 2;
 }
 
 message Unsubscription {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   string roomId = 2;
 }
 
 message DocumentNotification {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   repeated string channels = 2;
   uint32 status = 3;
   string requestId = 4;
@@ -60,7 +60,7 @@ message DocumentNotification {
 }
 
 message UserNotification {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   repeated string channels = 2;
   uint32 status = 3;
   uint64 timestamp = 4;
@@ -76,7 +76,7 @@ message UserNotification {
 }
 
 message ServerNotification {
-  uint64 messageId = 1;
+  uint32 messageId = 1;
   repeated string channels = 2;
   uint32 status = 3;
   string info = 4;
