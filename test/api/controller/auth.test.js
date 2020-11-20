@@ -61,14 +61,14 @@ describe('Test the auth controller', () => {
   });
 
   describe('#checkRights', () => {
-    let user;
+    let userObject;
 
     beforeEach(() => {
-      user = {
+      userObject = {
         isActionAllowed: sinon.stub().resolves(true)
       };
 
-      request.context.user = user;
+      request.context.user = userObject;
 
       request.input.body = {
         request: {
@@ -81,7 +81,7 @@ describe('Test the auth controller', () => {
     it('should check if the action is allowed for the user', async () => {
       const response = await authController.checkRights(request);
 
-      should(user.isActionAllowed).be.calledWithMatch({
+      should(userObject.isActionAllowed).be.calledWithMatch({
         input: {
           controller: 'document',
           action: 'create',
