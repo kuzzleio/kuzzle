@@ -11,27 +11,16 @@ const
 Given(/I can( not)? create the following document:/, async function (not, dataTable) {
   const document = this.parseObject(dataTable);
 
-  const
-    index = document.index || this.props.index,
-    collection = document.collection || this.props.collection;
+  const index = document.index || this.props.index;
+  const collection = document.collection || this.props.collection;
 
-  try {
-    this.props.result = await this.sdk.document.create(
-      index,
-      collection,
-      document.body,
-      document._id);
+  await this.tryAction(
+    this.sdk.document.create(index, collection, document.body, document._id),
+    not,
+    'Document should not have been created');
 
-    if (not) {
-      return Promise.reject(new Error('Document should not have been created'));
-    }
-
+  if (!not) {
     this.props.documentId = this.props.result._id;
-  }
-  catch (error) {
-    if (!not) {
-      throw error;
-    }
   }
 });
 
@@ -148,11 +137,42 @@ Then('with the following highlights:', function (highlightsRaw) {
   this.props.searchBody.highlight = highlights;
 });
 
+Then('with the following search options:', function (optionsRaw) {
+  const options = JSON.parse(optionsRaw);
+
+  this.props.searchOptions = options;
+});
+
 Then('I execute the search query', async function () {
-  this.props.result = await this.sdk.document.search(
-    this.props.index,
-    this.props.collection,
-    this.props.searchBody);
+  // temporary use of sdk.query until we add the new "remaining" property
+  // in the SDK's SearchResults class
+  const response = await this.sdk.query({
+    action: 'search',
+    body: this.props.searchBody,
+    collection: this.props.collection,
+    controller: 'document',
+    index: this.props.index,
+    ...this.props.searchOptions,
+  });
+
+  this.props.result = response.result;
+});
+
+Then('I scroll to the next page', async function () {
+  // temporary use of raw results, until the "remaining" propery is made
+  // available to the SearchResults SDK class
+  if (!this.props.result.scrollId) {
+    throw new Error('No scroll ID found');
+  }
+
+  const response = await this.sdk.query({
+    action: 'scroll',
+    controller: 'document',
+    scroll: '30s',
+    scrollId: this.props.result.scrollId,
+  });
+
+  this.props.result = response.result;
 });
 
 Then('I execute the search query with verb "GET"', async function () {
@@ -163,7 +183,7 @@ Then('I execute the search query with verb "GET"', async function () {
     collection: this.props.collection,
   };
   const options = {};
-  
+
   if (this.kuzzleConfig.PROTOCOL === 'http') {
     request.searchBody = JSON.stringify(this.props.searchBody);
     options.verb = 'GET';

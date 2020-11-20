@@ -3,12 +3,10 @@
 const sinon = require('sinon');
 const should = require('should');
 const {
-  errors: {
-    BadRequestError,
-    PreconditionError,
-    NotFoundError,
-    InternalError
-  }
+  BadRequestError,
+  PreconditionError,
+  NotFoundError,
+  InternalError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -29,8 +27,6 @@ describe('Test: security/profileRepository', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-
-    kuzzle.ask.restore();
 
     roleRepositoryMock = {
       loadRoles: sinon.stub(),
@@ -54,16 +50,15 @@ describe('Test: security/profileRepository', () => {
       {roleId: 'test2'}
     ];
 
-    return profileRepository.init({ indexStorage: kuzzle.internalIndex });
+    return profileRepository.init();
   });
 
   describe('#get', () => {
-    const getEvent = 'core:security:profile:get';
-
     it('should register a "get" event', async () => {
       sinon.stub(profileRepository, 'load');
 
-      await kuzzle.ask(getEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:get', 'foo');
 
       should(profileRepository.load).calledWith('foo');
     });
@@ -71,15 +66,21 @@ describe('Test: security/profileRepository', () => {
     it('should return a profile from memory cache', async () => {
       profileRepository.profiles.set('foo', testProfile);
 
-      const profile = await kuzzle.ask(getEvent, 'foo');
+      const profile = await profileRepository.load('foo');
 
       should(profile).be.exactly(testProfile);
     });
 
     it('should reject if the profile does not exist', () => {
-      profileRepository.indexStorage.get.rejects(new NotFoundError('Not found'));
+      kuzzle.ask
+        .withArgs(
+          'core:storage:private:document:get',
+          kuzzle.internalIndex.index,
+          'profiles',
+          'idontexist')
+        .rejects(new NotFoundError('Not found'));
 
-      return should(kuzzle.ask(getEvent, 'idontexist'))
+      return should(profileRepository.load('idontexist'))
         .rejectedWith(NotFoundError, { id: 'security.profile.not_found' });
     });
 
@@ -90,7 +91,7 @@ describe('Test: security/profileRepository', () => {
 
       try {
         sinon.stub(Repository.prototype, 'load').resolves(testProfile);
-        profile = await kuzzle.ask(getEvent, 'foo');
+        profile = await profileRepository.load('foo');
       }
       finally {
         Repository.prototype.load.restore();
@@ -102,8 +103,6 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#mGet', () => {
-    const mGetEvent = 'core:security:profile:mGet';
-
     beforeEach(() => {
       sinon.stub(profileRepository, 'loadOneFromDatabase');
     });
@@ -111,13 +110,14 @@ describe('Test: security/profileRepository', () => {
     it('should register a "mGet" event', async () => {
       sinon.stub(profileRepository, 'loadProfiles');
 
-      await kuzzle.ask(mGetEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:mGet', 'foo');
 
       should(profileRepository.loadProfiles).calledWith('foo');
     });
 
     it('should reject if profileIds is not an array of strings', () => {
-      return should(kuzzle.ask(mGetEvent, ['a string', {foo: 'bar'}]))
+      return should(profileRepository.loadProfiles(['a string', {foo: 'bar'}]))
         .be.rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "profileIds" (expected: string[])'
@@ -125,7 +125,7 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should resolve to an empty array if the input is empty', async () => {
-      const result = await kuzzle.ask(mGetEvent, []);
+      const result = await profileRepository.loadProfiles([]);
 
       should(result).eql([]);
       should(profileRepository.loadOneFromDatabase).not.called();
@@ -143,7 +143,7 @@ describe('Test: security/profileRepository', () => {
 
       profileRepository.profiles.set('p2', p2);
 
-      const result = await kuzzle.ask(mGetEvent, ['p1', 'p2', 'p3']);
+      const result = await profileRepository.loadProfiles(['p1', 'p2', 'p3']);
 
       should(result).eql([p1, p2, p3]);
       // should not load p2 from the database since it has been cached
@@ -166,7 +166,7 @@ describe('Test: security/profileRepository', () => {
       profileRepository.profiles.set('p2', p2);
       profileRepository.profiles.set('p3', p3);
 
-      const result = await kuzzle.ask(mGetEvent, ['p1', 'p2', 'p3']);
+      const result = await profileRepository.loadProfiles(['p1', 'p2', 'p3']);
 
       should(result).eql([p1, p2, p3]);
       // should not load p2 from the database since it has been cached
@@ -205,8 +205,6 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#delete', () => {
-    const deleteEvent = 'core:security:profile:delete';
-
     beforeEach(() => {
       sinon.stub(profileRepository, 'load').resolves(testProfile);
       sinon.stub(profileRepository, 'deleteFromCache').resolves();
@@ -219,7 +217,8 @@ describe('Test: security/profileRepository', () => {
     it('should register a "delete" event', async () => {
       sinon.stub(profileRepository, 'deleteById');
 
-      await kuzzle.ask(deleteEvent, 'foo', 'bar');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:delete', 'foo', 'bar');
 
       should(profileRepository.deleteById).calledWith('foo', 'bar');
     });
@@ -227,7 +226,7 @@ describe('Test: security/profileRepository', () => {
     it('should reject and not trigger any event if a user uses the profile about to be deleted', async () => {
       userRepositoryMock.search.resolves({ total: 1 });
 
-      await should(kuzzle.ask(deleteEvent, testProfile._id))
+      await should(profileRepository.deleteById(testProfile._id))
         .be.rejectedWith(PreconditionError, { id: 'security.profile.in_use' });
 
       should(userRepositoryMock.search).calledWithMatch(
@@ -243,7 +242,7 @@ describe('Test: security/profileRepository', () => {
       for (const id of ['anonymous', 'default', 'admin']) {
         testProfile._id = id;
 
-        await should(kuzzle.ask(deleteEvent, id))
+        await should(profileRepository.deleteById(id))
           .rejectedWith(BadRequestError, {
             id: 'security.profile.cannot_delete'
           });
@@ -258,7 +257,7 @@ describe('Test: security/profileRepository', () => {
     it('should call deleteFromDatabase, remove the profile from memory and trigger a "core:profileRepository:delete" event', async () => {
       profileRepository.profiles.set(testProfile._id, true);
 
-      await kuzzle.ask(deleteEvent, testProfile._id);
+      await profileRepository.deleteById(testProfile._id);
 
       should(profileRepository.deleteFromDatabase)
         .be.calledOnce()
@@ -272,7 +271,9 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should be able to handle the refresh option', async () => {
-      await kuzzle.ask(deleteEvent, testProfile._id, { refresh: 'wait_for' });
+      await profileRepository.deleteById(testProfile._id, {
+        refresh: 'wait_for',
+      });
 
       should(profileRepository.deleteFromDatabase)
         .be.calledOnce()
@@ -280,16 +281,28 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should be able to remove the profile from users when required', async () => {
-      userRepositoryMock.search.resolves({ total: 1, hits: [{...testProfile, profileIds: [testProfile._id]}]});
+      const user = {
+        _id: 'baz',
+        foo: 'bar',
+        profileIds: [ testProfile._id ],
+      };
+
+      userRepositoryMock.search.resolves({
+        hits: [ user ],
+        total: 1,
+      });
+
       profileRepository.profiles.set(testProfile._id, true);
 
-      await kuzzle.ask(deleteEvent, testProfile._id, { onAssignedUsers: 'remove' });
+      await profileRepository.deleteById(testProfile._id, {
+        onAssignedUsers: 'remove',
+      });
 
       should(userRepositoryMock.search).be.called();
 
       should(userRepositoryMock.update)
-        .be.called()
-        .be.calledWithMatch(testProfile._id, ['anonymous'], testProfile);
+        .be.calledOnce()
+        .be.calledWithMatch(user._id, ['anonymous'], user);
 
       should(profileRepository.deleteFromDatabase)
         .be.calledOnce()
@@ -326,12 +339,11 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#search', () => {
-    const searchEvent = 'core:security:profile:search';
-
     it('should register a "search" event', async () => {
       sinon.stub(profileRepository, 'searchProfiles');
 
-      await kuzzle.ask(searchEvent, 'foo', 'bar');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:search', 'foo', 'bar');
 
       should(profileRepository.searchProfiles).calledWith('foo', 'bar');
     });
@@ -340,13 +352,13 @@ describe('Test: security/profileRepository', () => {
       const opts = {from: 13, size: 42, scroll: 'foo'};
       profileRepository.search = sinon.spy();
 
-      await kuzzle.ask(searchEvent, null, opts);
+      await profileRepository.searchProfiles(null, opts);
 
       should(profileRepository.search)
         .be.calledOnce()
         .be.calledWith({query: {match_all: {}}}, opts);
 
-      await kuzzle.ask(searchEvent, ['role1', 'role2']);
+      await profileRepository.searchProfiles(['role1', 'role2']);
       should(profileRepository.search)
         .be.calledTwice()
         .be.calledWith({
@@ -358,6 +370,10 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#validateAndSaveProfile', () => {
+    beforeEach(() => {
+      kuzzle.ask.withArgs('core:storage:index:isValid').resolves(true);
+    });
+
     it('should throw if roles cannot be loaded', () => {
       const invalidProfile = new Profile();
       invalidProfile._id = 'awesomeProfile';
@@ -372,18 +388,21 @@ describe('Test: security/profileRepository', () => {
         .be.rejectedWith(error);
     });
 
-    it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', () => {
+    it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', async () => {
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
       profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
 
-      return profileRepository.validateAndSaveProfile(testProfile)
-        .then((result) => {
-          should(result)
-            .be.exactly(testProfile);
-          should(profileRepository.profiles).have.value('foo', testProfile);
-          should(kuzzle.emit)
-            .be.calledOnce()
-            .be.calledWith('core:profileRepository:save', {_id: testProfile._id, policies: testProfile.policies});
+      const result = await profileRepository.validateAndSaveProfile(testProfile);
+
+      should(result).be.exactly(testProfile);
+      should(profileRepository.profiles).have.value('foo', testProfile);
+      should(kuzzle.emit)
+        .be.calledOnce()
+        .be.calledWith('core:profileRepository:save', {
+          _id: testProfile._id,
+          policies: testProfile.policies,
         });
     });
 
@@ -457,8 +476,6 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#create', () => {
-    const createEvent = 'core:security:profile:create';
-
     beforeEach(() => {
       sinon.stub(profileRepository, 'validateAndSaveProfile');
       roleRepositoryMock.loadRoles.resolves([]);
@@ -467,7 +484,8 @@ describe('Test: security/profileRepository', () => {
     it('should register a "create" event', async () => {
       sinon.stub(profileRepository, 'create');
 
-      await kuzzle.ask(createEvent, 'foo', 'bar', 'baz');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:create', 'foo', 'bar', 'baz');
 
       should(profileRepository.create).calledWith('foo', 'bar', 'baz');
     });
@@ -480,7 +498,7 @@ describe('Test: security/profileRepository', () => {
         foo: 'foo',
       };
 
-      await kuzzle.ask(createEvent, 'foobar', content, {
+      await profileRepository.create('foobar', content, {
         refresh: 'refresh',
         userId: 'userId',
       });
@@ -507,14 +525,12 @@ describe('Test: security/profileRepository', () => {
     it('should resolve to the validateAndSaveProfile result', () => {
       profileRepository.validateAndSaveProfile.resolves('foobar');
 
-      return should(kuzzle.ask(createEvent, 'foo', {}, {}))
+      return should(profileRepository.create('foo', {}, {}))
         .fulfilledWith('foobar');
     });
   });
 
   describe('#createOrReplace', () => {
-    const createOrReplaceEvent = 'core:security:profile:createOrReplace';
-
     beforeEach(() => {
       sinon.stub(profileRepository, 'validateAndSaveProfile');
       roleRepositoryMock.loadRoles.resolves([]);
@@ -523,7 +539,8 @@ describe('Test: security/profileRepository', () => {
     it('should register a "createOrReplace" event', async () => {
       sinon.stub(profileRepository, 'createOrReplace');
 
-      await kuzzle.ask(createOrReplaceEvent, 'foo', 'bar', 'baz');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:createOrReplace', 'foo', 'bar', 'baz');
 
       should(profileRepository.createOrReplace).calledWith('foo', 'bar', 'baz');
     });
@@ -536,7 +553,7 @@ describe('Test: security/profileRepository', () => {
         foo: 'foo',
       };
 
-      await kuzzle.ask(createOrReplaceEvent, 'foobar', content, {
+      await profileRepository.createOrReplace('foobar', content, {
         refresh: 'refresh',
         userId: 'userId',
       });
@@ -563,14 +580,12 @@ describe('Test: security/profileRepository', () => {
     it('should resolve to the validateAndSaveProfile result', () => {
       profileRepository.validateAndSaveProfile.resolves('foobar');
 
-      return should(kuzzle.ask(createOrReplaceEvent, 'foo', {}, {}))
+      return should(profileRepository.createOrReplace('foo', {}, {}))
         .fulfilledWith('foobar');
     });
   });
 
   describe('#update', () => {
-    const updateEvent = 'core:security:profile:update';
-
     beforeEach(() => {
       sinon.stub(profileRepository, 'validateAndSaveProfile');
       sinon.stub(profileRepository, 'load').resolves(new Profile());
@@ -580,7 +595,8 @@ describe('Test: security/profileRepository', () => {
     it('should register a "update" event', async () => {
       sinon.stub(profileRepository, 'update');
 
-      await kuzzle.ask(updateEvent, 'foo', 'bar', 'baz');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:update', 'foo', 'bar', 'baz');
 
       should(profileRepository.update).calledWith('foo', 'bar', 'baz');
     });
@@ -589,7 +605,7 @@ describe('Test: security/profileRepository', () => {
       const error = new Error('foo');
       profileRepository.load.rejects(new Error('foo'));
 
-      return should(kuzzle.ask(updateEvent, 'foo', {}, {}))
+      return should(profileRepository.update('foo', {}, {}))
         .rejectedWith(error);
     });
 
@@ -601,7 +617,7 @@ describe('Test: security/profileRepository', () => {
         foo: 'foo',
       };
 
-      await kuzzle.ask(updateEvent, 'foobar', content, {
+      await profileRepository.update('foobar', content, {
         refresh: 'refresh',
         userId: 'userId',
       });
@@ -626,7 +642,7 @@ describe('Test: security/profileRepository', () => {
     it('should resolve to the validateAndSaveProfile result', () => {
       profileRepository.validateAndSaveProfile.resolves('foobar');
 
-      return should(kuzzle.ask(updateEvent, 'foo', {}, {}))
+      return should(profileRepository.update('foo', {}, {}))
         .fulfilledWith('foobar');
     });
   });
@@ -635,6 +651,7 @@ describe('Test: security/profileRepository', () => {
     it('should register a "scroll" event', async () => {
       sinon.stub(profileRepository, 'scroll');
 
+      kuzzle.ask.restore();
       await kuzzle.ask('core:security:profile:scroll', 'foo', 'bar');
 
       should(profileRepository.scroll).calledWith('foo', 'bar');
@@ -642,8 +659,6 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#truncate', () => {
-    const truncateEvent = 'core:security:profile:truncate';
-
     beforeEach(() => {
       sinon.stub(Repository.prototype, 'truncate').resolves();
     });
@@ -655,7 +670,8 @@ describe('Test: security/profileRepository', () => {
     it('should register a "truncate" event', async () => {
       sinon.stub(profileRepository, 'truncate');
 
-      await kuzzle.ask(truncateEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:truncate', 'foo');
 
       should(profileRepository.truncate).calledWith('foo');
     });
@@ -687,12 +703,11 @@ describe('Test: security/profileRepository', () => {
   });
 
   describe('#invalidate', () => {
-    const invalidateEvent = 'core:security:profile:invalidate';
-
     it('should register an "invalidate" event', async () => {
       sinon.stub(profileRepository, 'invalidate');
 
-      await kuzzle.ask(invalidateEvent, 'foo');
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:security:profile:invalidate', 'foo');
 
       should(profileRepository.invalidate).calledWith('foo');
     });
@@ -701,7 +716,7 @@ describe('Test: security/profileRepository', () => {
       profileRepository.profiles.set('foo', 'bar');
       profileRepository.profiles.set('baz', 'qux');
 
-      await kuzzle.ask(invalidateEvent, 'baz');
+      await profileRepository.invalidate('baz');
 
       should(profileRepository.profiles).has.key('foo');
       should(profileRepository.profiles).not.has.key('baz');
@@ -711,7 +726,7 @@ describe('Test: security/profileRepository', () => {
       profileRepository.profiles.set('foo', 'bar');
       profileRepository.profiles.set('baz', 'qux');
 
-      await kuzzle.ask(invalidateEvent);
+      await profileRepository.invalidate();
 
       should(profileRepository.profiles).be.empty();
     });

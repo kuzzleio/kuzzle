@@ -13,7 +13,7 @@ A search cursor is created by a [search](/core/2/api/controllers/document/search
 Results returned by a `scroll` request reflect the state of the index at the time of the initial search request, like a fixed snapshot. Subsequent changes to documents do not affect the scroll results.
 
 ::: info
-The maximum value for a scroll session can be configured under the configuration key `services.storage.maxScrollDuration`.
+The maximum value for a scroll session can be configured under the configuration key `services.storageEngine.maxScrollDuration`.
 :::
 
 ---
@@ -60,6 +60,7 @@ Returns a paginated search result set, with the following properties:
   - `_id`: document unique identifier
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
+- `remaining`: remaining documents that can be fetched <SinceBadge version="2.4.0"/>
 - `scrollId`: identifier to the next page of result. Can be different than the previous one(s)
 - `total`: total number of found documents. Usually greater than the number of documents in a result page
 

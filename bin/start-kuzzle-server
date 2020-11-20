@@ -23,13 +23,13 @@
 
 'use strict';
 
+/* eslint-disable no-console */
+
 const fs = require('fs');
 
 const yargs = require('yargs');
 
 const { Backend } = require('../index');
-const waitForEs = require('./wait-elasticsearch');
-
 
 function loadJson (path) {
   if (! path) {
@@ -52,12 +52,15 @@ async function startKuzzle (options = {}) {
       const PluginClass = require(`../plugins/available/${additionalPlugin}`);
       const manifest = require(`../plugins/available/${additionalPlugin}/manifest.json`);
       const plugin = new PluginClass();
+
       try {
         plugin.version = require(`../plugins/available/${additionalPlugin}/package.json`).version;
       }
-      catch (e) {}
+      catch (e) {
+        // ignore
+      }
 
-      app.plugin.use(plugin, { name: manifest.name });
+      app.plugin.use(plugin, { name: manifest.name, manifest });
     }
   }
 
@@ -67,13 +70,11 @@ async function startKuzzle (options = {}) {
 
   app._support.securities = loadJson(options.securities);
 
-  app.vault.key = options.vaultKey
+  app.vault.key = options.vaultKey;
 
   app.vault.file = options.secretsFile;
 
   app.version = '1.0.0';
-
-  await waitForEs();
 
   await app.start();
 

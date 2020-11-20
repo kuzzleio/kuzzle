@@ -4,17 +4,16 @@ const should = require('should');
 const sinon = require('sinon');
 const ms = require('ms');
 const {
-  errors: {
-    BadRequestError,
-    PreconditionError,
-    SizeLimitError,
-  }
+  BadRequestError,
+  PreconditionError,
+  SizeLimitError,
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
 
 const ES = require('../../../lib/service/storage/elasticsearch');
+const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
 
 describe('Test: ElasticSearch service', () => {
   let kuzzle;
@@ -59,7 +58,7 @@ describe('Test: ElasticSearch service', () => {
       const esInternal = new ES(
         kuzzle,
         kuzzle.config.services.storageEngine,
-        'internal');
+        scopeEnum.PRIVATE);
 
       should(esPublic._kuzzle).be.exactly(kuzzle);
       should(esPublic.config).be.exactly(kuzzle.config.services.storageEngine);
@@ -86,17 +85,20 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#scroll', () => {
     it('should be able to scroll an old search', async () => {
-      kuzzle.cacheEngine.internal.get.resolves('1');
+      const cacheStub = kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .resolves('1');
+
       elasticsearch._client.scroll.resolves({
         body: {
+          _scroll_id: 'azerty',
           hits: {
             hits: [
               {_id: 'foo', _source: {}},
               {_id: 'bar', _source: {}},
             ],
-            total: { value: 1000 }
+            total: { value: 1000 },
           },
-          _scroll_id: 'azerty'
         }
       });
 
@@ -104,38 +106,41 @@ describe('Test: ElasticSearch service', () => {
         scrollTTL: '10s'
       });
 
-      should(kuzzle.cacheEngine.internal.get).be.calledOnce();
+      should(cacheStub).calledOnce();
 
-      const redisKey = kuzzle.cacheEngine.internal.get.firstCall.args[0];
+      const redisKey = cacheStub.firstCall.args[1];
 
-      should(kuzzle.cacheEngine.internal.psetex)
-        .calledOnce()
-        // 10000: scrollTTL of 10s converted to millisecondes
-        // 3:
-        //   the redis key stub returns "1" (1 result fetched so far) +
-        //   the 2 results contained in the stubbed result of _client.scroll
-        .calledWith(redisKey, 10000, 3);
+      // 3:
+      //   the redis key stub returns "1" (1 result fetched so far) +
+      //   the 2 results contained in the stubbed result of _client.scroll
+      // 10: scrollTTL of 10s
+      should(kuzzle.ask)
+        .calledWith('core:cache:internal:store', redisKey, 3, { ttl: 10000 });
 
       should(elasticsearch._client.clearScroll).not.called();
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scroll: '10s',
         scrollId: 'i-am-scroll-id',
-        scroll: '10s'
       });
 
       should(result).be.match({
-        total: 1000,
+        aggregations: undefined,
         hits: [
           {_id: 'foo', _source: {}},
           {_id: 'bar', _source: {}},
         ],
+        remaining: 997,
         scrollId: 'azerty',
-        aggregations: undefined
+        total: 1000,
       });
     });
 
     it('should clear a scroll upon fetching its last page of results', async () => {
-      kuzzle.cacheEngine.internal.get.resolves('998');
+      const cacheStub = kuzzle.ask
+        .withArgs('core:cache:internal:get')
+        .resolves('998');
+
       elasticsearch._client.scroll.resolves({
         body: {
           hits: {
@@ -153,65 +158,68 @@ describe('Test: ElasticSearch service', () => {
         scrollTTL: '10s'
       });
 
-      should(kuzzle.cacheEngine.internal.get).be.calledOnce();
+      should(cacheStub).be.calledOnce();
 
-      const redisKey = kuzzle.cacheEngine.internal.get.firstCall.args[0];
+      const redisKey = cacheStub.firstCall.args[1];
 
-      should(kuzzle.cacheEngine.internal.psetex).not.called();
-      should(kuzzle.cacheEngine.internal.del).calledOnce().calledWith(redisKey);
+      should(kuzzle.ask).not.calledWith('core:cache:internal:store');
+      should(kuzzle.ask).calledWith('core:cache:internal:del', redisKey);
 
       should(elasticsearch._client.clearScroll)
         .calledOnce()
         .calledWithMatch({scrollId: 'azerty'});
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
+        scroll: '10s',
         scrollId: 'i-am-scroll-id',
-        scroll: '10s'
       });
 
       should(result).be.match({
-        total: 1000,
+        aggregations: undefined,
         hits: [
           {_id: 'foo', _source: {}},
           {_id: 'bar', _source: {}},
         ],
+        remaining: 0,
         scrollId: 'azerty',
-        aggregations: undefined
+        total: 1000,
       });
     });
 
     it('should reject promise if a scroll fails', async () => {
       elasticsearch._client.scroll.rejects(esClientError);
-      kuzzle.cacheEngine.internal.get.resolves('1');
+
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves('1');
 
       await should(elasticsearch.scroll('i-am-scroll-id')).be.rejected();
+
       should(elasticsearch._esWrapper.formatESError).calledWith(esClientError);
     });
 
     it('should reject if the scrollId does not exists in Kuzzle cache', async () => {
-      kuzzle.cacheEngine.internal.get.resolves(null);
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves(null);
 
       await should(elasticsearch.scroll('i-am-scroll-id')).be.rejectedWith({
         id: 'services.storage.unknown_scroll_id'
       });
 
-      should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
       should(elasticsearch._client.scroll).not.be.called();
     });
 
     it('should reject if the scroll duration is too great', async () => {
       elasticsearch._config.maxScrollDuration = '21m';
-      kuzzle.cacheEngine.internal.get.resolves('1');
 
       await should(elasticsearch.scroll('i-am-scroll-id', { scrollTTL: '42m' }))
         .be.rejectedWith({ id: 'services.storage.scroll_duration_too_great' });
 
-      should(kuzzle.cacheEngine.internal.pexpire).not.be.called();
       should(elasticsearch._client.scroll).not.be.called();
     });
 
     it('should default an explicitly null scrollTTL argument', async () => {
-      kuzzle.cacheEngine.internal.get.resolves('1');
+      const cacheStub = kuzzle.ask
+        .withArgs('core:cache:internal:get', sinon.match.string)
+        .resolves('1');
+
       elasticsearch._client.scroll.resolves({
         body: {
           hits: { hits: [], total: { value: 1000 } },
@@ -221,8 +229,13 @@ describe('Test: ElasticSearch service', () => {
 
       await elasticsearch.scroll('scroll-id', { scrollTTL: null });
 
-      should(kuzzle.cacheEngine.internal.get).be.called();
-      should(kuzzle.cacheEngine.internal.psetex).be.called();
+      should(cacheStub).calledOnce();
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        sinon.match.string,
+        1,
+        sinon.match.object);
+
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
         scrollId: 'scroll-id',
         scroll: elasticsearch.config.defaults.scrollTTL
@@ -235,20 +248,25 @@ describe('Test: ElasticSearch service', () => {
 
     beforeEach(() => {
       filter = {};
-
-      kuzzle.cacheEngine.internal.keys.resolves({ values: [] });
     });
 
     it('should be able to search documents', async () => {
       elasticsearch._client.search.resolves({
         body: {
+          aggregations: { some: 'aggregs' },
+          body: filter,
           hits: {
-            hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight', other: 'thing' } ],
+            hits: [
+              {
+                _id: 'liia',
+                _source: { city: 'Kathmandu' },
+                highlight: 'highlight',
+                other: 'thing'
+              }
+            ],
             total: { value: 1 },
           },
-          body: filter,
-          aggregations: { some: 'aggregs' },
-          _scroll_id: 'i-am-scroll-id'
+          _scroll_id: 'i-am-scroll-id',
         }
       });
 
@@ -263,14 +281,24 @@ describe('Test: ElasticSearch service', () => {
         trackTotalHits: true,
       });
 
-      should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
-        .be.eql(ms(elasticsearch.config.defaults.scrollTTL));
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        sinon.match.string,
+        1,
+        { ttl: ms(elasticsearch.config.defaults.scrollTTL) });
 
       should(result).match({
+        aggregations: { some: 'aggregs' },
+        hits: [
+          {
+            _id: 'liia',
+            _source: { city: 'Kathmandu' },
+            highlight: 'highlight',
+          },
+        ],
+        remaining: 0,
         scrollId: 'i-am-scroll-id',
-        hits: [ { _id: 'liia', _source: { city: 'Kathmandu' }, highlight: 'highlight' } ],
         total: 1,
-        aggregations: { some: 'aggregs' }
       });
     });
 
@@ -284,21 +312,24 @@ describe('Test: ElasticSearch service', () => {
 
       await elasticsearch.search(index, collection, filter, {
         from: 0,
-        size: 1,
         scroll: '30s',
+        size: 1,
       });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
-        index: esIndexName,
         body: filter,
         from: 0,
-        size: 1,
+        index: esIndexName,
         scroll: '30s',
+        size: 1,
         trackTotalHits: true,
       });
 
-      should(kuzzle.cacheEngine.internal.psetex.firstCall.args[1])
-        .be.eql(ms('30s'));
+      should(kuzzle.ask).calledWith(
+        'core:cache:internal:store',
+        sinon.match.string,
+        0,
+        { ttl: 30000 });
     });
 
     it('should return a rejected promise if a search fails', async () => {
@@ -323,13 +354,13 @@ describe('Test: ElasticSearch service', () => {
     it('should not save the scrollId in the cache if not present in response', async () => {
       elasticsearch._client.search.resolves({
         body: {
-          hits: { hits: [], total: { value: 0 } }
-        }
+          hits: { hits: [], total: { value: 0 } },
+        },
       });
 
       await elasticsearch.search(index, collection, {});
 
-      should(kuzzle.cacheEngine.internal.psetex).not.be.called();
+      should(kuzzle.ask).not.calledWith('core:cache:internal:store');
     });
 
     it('should return a rejected promise if the scroll duration is too great', async () => {
@@ -346,7 +377,6 @@ describe('Test: ElasticSearch service', () => {
       should(elasticsearch._client.search).not.be.called();
     });
   });
-
 
   describe('#get', () => {
     it('should allow getting a single document', () => {
@@ -1237,7 +1267,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#batchExecute', () => {
+  describe('#mExecute', () => {
     it('should call the callback method with each batch returned by ES', async () => {
       const hits1 = {
         hits: [21, 42, 84],
@@ -1266,7 +1296,7 @@ describe('Test: ElasticSearch service', () => {
         _scroll_id: 'scroll-id'
       });
 
-      const result = await elasticsearch.batchExecute(
+      const result = await elasticsearch.mExecute(
         index,
         collection,
         { match: 21 },
@@ -1288,7 +1318,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should reject if the query is empty', () => {
-      const promise = elasticsearch.batchExecute(
+      const promise = elasticsearch.mExecute(
         index,
         collection,
         'not an object',
@@ -1353,7 +1383,7 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       _checkMappings = elasticsearch._checkMappings;
 
-      elasticsearch.collectionExists = sinon.stub().resolves(false);
+      elasticsearch.hasCollection = sinon.stub().resolves(false);
       elasticsearch._client.indices.create.resolves({});
       elasticsearch._checkMappings = sinon.stub().resolves();
     });
@@ -1368,7 +1398,7 @@ describe('Test: ElasticSearch service', () => {
         collection,
         { mappings, settings });
 
-      should(elasticsearch.collectionExists).be.calledWith(index, collection);
+      should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch._checkMappings).be.calledWithMatch({
         properties: mappings.properties
       });
@@ -1468,17 +1498,64 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
+    it('should reject when an incorrect dynamic property value is provided', async () => {
+      const mappings1 = {
+        dynamic: null
+      };
+      const mappings2 = {
+        properties: {
+          user: {
+            properties: {
+              metadata: {
+                dynamic: 'notTooMuch'
+              }
+            }
+          }
+        }
+      };
+      const mappings3 = {
+        dynamic: true
+      };
+
+      await elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings3 });
+
+      should(elasticsearch._checkMappings).be.calledWithMatch({
+        dynamic: 'true'
+      });
+
+      await should(elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings1 })
+      ).be.rejectedWith({
+        message: /Dynamic property value should be a string./,
+        id: 'services.storage.invalid_mapping'
+      });
+
+      await should(elasticsearch.createCollection(
+        index,
+        collection,
+        { mappings: mappings2 })
+      ).be.rejectedWith({
+        message: /Incorrect dynamic property value/,
+        id: 'services.storage.invalid_mapping'
+      });
+    });
+
     it('should call updateCollection if the collection already exists', async () => {
       const
         settings = { index: { blocks: { write: true } } },
         mappings = { properties: { city: { type: 'keyword' } } };
 
-      elasticsearch.collectionExists = sinon.stub().resolves(true);
+      elasticsearch.hasCollection = sinon.stub().resolves(true);
       elasticsearch.updateCollection = sinon.stub().resolves({});
 
       await elasticsearch.createCollection(index, collection, { mappings, settings });
 
-      should(elasticsearch.collectionExists).be.calledWith(index, collection);
+      should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch.updateCollection).be.calledWithMatch(index, collection, {
         settings: { index: { blocks: { write: true } } },
         mappings: { properties: { city: { type: 'keyword' } } }
@@ -1790,7 +1867,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(elasticsearch.updateMapping(index, collection, newMapping))
         .be.rejectedWith({
-          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -1831,7 +1908,7 @@ describe('Test: ElasticSearch service', () => {
 
       return should(promise).be.rejected()
         .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
         });
     });
   });
@@ -2437,15 +2514,12 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should return a rejected promise if client fails', () => {
+    it('should return a rejected promise if client fails', async () => {
       elasticsearch._client.indices.refresh.rejects(esClientError);
 
-      const promise = elasticsearch.refreshCollection(index, collection);
+      await should(elasticsearch.refreshCollection(index, collection)).rejected();
 
-      return should(promise).be.rejected()
-        .then(() => {
-          should(elasticsearch._esWrapper.reject).be.calledWith(esClientError);
-        });
+      should(elasticsearch._esWrapper.formatESError).calledWith(esClientError);
     });
   });
 
@@ -2480,12 +2554,12 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#indexExists', () => {
+  describe('#hasIndex', () => {
     it('should call list indexes and return true if index exists', () => {
       elasticsearch.listIndexes = sinon.stub().resolves(
         ['nepali', 'nyc-open-data']);
 
-      const promise = elasticsearch.indexExists('nepali');
+      const promise = elasticsearch.hasIndex('nepali');
 
       return promise
         .then(result => {
@@ -2499,7 +2573,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.listIndexes = sinon.stub().resolves(
         ['nepali', 'nyc-open-data']);
 
-      const promise = elasticsearch.indexExists('vietnam');
+      const promise = elasticsearch.hasIndex('vietnam');
 
       return promise
         .then(result => {
@@ -2510,11 +2584,11 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe('#collectionExists', () => {
+  describe('#hasCollection', () => {
     it('should call list collections and return true if collection exists', () => {
       elasticsearch.listCollections = sinon.stub().resolves(['liia', 'mehry']);
 
-      const promise = elasticsearch.collectionExists('nepali', 'liia');
+      const promise = elasticsearch.hasCollection('nepali', 'liia');
 
       return promise
         .then(result => {
@@ -2527,7 +2601,7 @@ describe('Test: ElasticSearch service', () => {
     it('should call list collections and return false if collection does not exists', () => {
       elasticsearch.listCollections = sinon.stub().resolves(['liia', 'mehry']);
 
-      const promise = elasticsearch.collectionExists('nepali', 'lfiduras');
+      const promise = elasticsearch.hasCollection('nepali', 'lfiduras');
 
       return promise
         .then(result => {
@@ -3607,13 +3681,13 @@ describe('Test: ElasticSearch service', () => {
 
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mapping.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
 
       should(() => elasticsearch._checkMappings(mapping2))
         .throw({
-          message: 'Invalid mapping property "mapping.type".',
+          message: 'Invalid mapping property "mappings.type".',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -3634,7 +3708,7 @@ describe('Test: ElasticSearch service', () => {
 
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mapping.properties.car.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.properties.car.dinamic". Did you mean "dynamic" ?',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -3667,7 +3741,10 @@ describe('Test: ElasticSearch service', () => {
 
     beforeEach(() => {
       publicES = new ES(kuzzle, kuzzle.config.services.storageEngine);
-      internalES = new ES(kuzzle, kuzzle.config.services.storageEngine, 'internal');
+      internalES = new ES(
+        kuzzle,
+        kuzzle.config.services.storageEngine,
+        scopeEnum.PRIVATE);
     });
 
     describe('#_getESIndex', () => {

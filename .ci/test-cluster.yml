@@ -1,0 +1,81 @@
+version: '3.4'
+
+x-kuzzle-config: &kuzzle-config
+  image: kuzzleio/core-dev:2
+  command: >
+    sh -c "n $NODE_VERSION &&
+           ./bin/start-kuzzle-server --enable-plugins kuzzle-plugin-cluster"
+  volumes:
+    - "..:/var/app"
+  cap_add:
+    - SYS_PTRACE
+  ulimits:
+    nofile: 65536
+  sysctls:
+    - net.core.somaxconn=8192
+  depends_on:
+    - redis
+    - elasticsearch
+  environment:
+    - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+    - kuzzle_services__storageEngine__commonMapping__dynamic=true
+    - kuzzle_services__internalCache__node__host=redis
+    - kuzzle_services__memoryStorage__node__host=redis
+    - kuzzle_server__protocols__mqtt__enabled=true
+    - kuzzle_server__protocols__mqtt__developmentMode=false
+    - kuzzle_limits__loginsPerSecond=50
+    - NODE_ENV=development
+    - DEBUG=none
+    - SECRETS_FILE_PREFIX=/var/app/
+    # Travis env var must be propagated into the container
+    - TRAVIS
+    - TRAVIS_COMMIT
+    - TRAVIS_JOB_NUMBER
+    - TRAVIS_BRANCH
+    - TRAVIS_JOB_ID
+    - TRAVIS_PULL_REQUEST
+    - TRAVIS_REPO_SLUG
+    # cluster
+    - kuzzle_plugins__cluster__privileged=true
+    - kuzzle_plugins__cluster__minimumNodes=3
+
+services:
+  nginx:
+    image: nginx:1.19-alpine
+    container_name: kuzzle_nginx
+    depends_on:
+      - kuzzle_node_1
+      - kuzzle_node_2
+      - kuzzle_node_3
+    ports:
+      - "7512:7512"
+    volumes:
+      - ../docker/nginx-dev:/etc/nginx/conf.d
+
+  kuzzle_node_1:
+    <<: *kuzzle-config
+    container_name: kuzzle_node_1
+    ports:
+      - "17510:7512" # Kuzzle API port, used to check if it is up
+
+  kuzzle_node_2:
+    <<: *kuzzle-config
+    container_name: kuzzle_node_2
+    ports:
+      - "17511:7512"
+
+  kuzzle_node_3:
+    <<: *kuzzle-config
+    container_name: kuzzle_node_3
+    ports:
+      - "17512:7512"
+
+  redis:
+    image: redis:5
+    container_name: kuzzle_redis
+
+  elasticsearch:
+    image: kuzzleio/elasticsearch:7
+    container_name: kuzzle_elasticsearch
+    ulimits:
+      nofile: 65536

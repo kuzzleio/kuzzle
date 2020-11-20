@@ -1,24 +1,27 @@
 'use strict';
 
-const _ = require('lodash');
 const sinon = require('sinon');
-const Kuzzle = require('../../lib/kuzzle');
 const Bluebird = require('bluebird');
-const config = require('../../lib/config');
-const IndexStorageMock = require('./indexStorage.mock');
-const ClientAdapterMock = require('./clientAdapter.mock');
+
+const Kuzzle = require('../../lib/kuzzle');
+const configLoader = require('../../lib/config');
+
+const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
+
 const foo = { foo: 'bar' };
 
 let _instance;
 
 class KuzzleMock extends Kuzzle {
   constructor () {
-    super();
+    const config = configLoader.load();
+
+    super(config);
 
     _instance = this;
 
     // we need a deep copy here
-    this.config = _.merge({}, config);
+    this.config = JSON.parse(JSON.stringify(config));
 
     // ========== EVENTS ==========
 
@@ -86,85 +89,13 @@ class KuzzleMock extends Kuzzle {
       isNativeController : sinon.stub()
     };
 
-    this.hotelClerk = {
-      rooms: new Map(),
-      customers: new Map(),
-      getRealtimeCollections: sinon.stub(),
-      removeCustomerFromAllRooms: sinon.stub(),
-      addSubscription: sinon.stub().resolves(foo),
-      join: sinon.stub().resolves(foo),
-      removeSubscription: sinon.stub().resolves(foo),
-      countSubscription: sinon.stub().resolves(foo),
-      listSubscriptions: sinon.stub().resolves(foo),
-    };
-
     this.dumpGenerator = {
       dump: sinon.stub().resolves()
     };
 
     this.shutdown = sinon.stub();
 
-    this.storageEngine = {
-      init: sinon.stub().resolves(),
-      indexCache: {
-        add: sinon.stub().resolves(),
-        remove: sinon.stub().resolves(),
-        exists: sinon.stub().resolves(),
-        listIndexes: sinon.stub().resolves(),
-        listCollections: sinon.stub().resolves()
-      },
-      public: new ClientAdapterMock(),
-      internal: new ClientAdapterMock(),
-      config: this.config.services.storageEngine
-    };
-
-    this.cacheEngine = {
-      init: sinon.stub().resolves(),
-      internal: {
-        get: sinon.stub().resolves(),
-        del: sinon.stub().resolves(),
-        exists: sinon.stub().resolves(),
-        expire: sinon.stub().resolves(),
-        flushdb: sinon.stub().resolves(),
-        info: sinon.stub().resolves(),
-        keys: sinon.stub().resolves(),
-        mget: sinon.stub().resolves(),
-        persist: sinon.stub().resolves(),
-        pexpire: sinon.stub().resolves(),
-        psetex: sinon.stub().resolves(),
-        searchKeys: sinon.stub().resolves(),
-        set: sinon.stub().resolves(),
-        setex: sinon.stub().resolves(),
-        setnx: sinon.stub().resolves(),
-      },
-      public: {
-        flushdb: sinon.stub().resolves(),
-        info: sinon.stub().resolves()
-      }
-    };
-
-    this.internalIndex = new IndexStorageMock(
-      'kuzzle',
-      this.storageEngine.internal);
-
-    this.internalIndex._bootstrap = {
-      startOrWait: sinon.stub().resolves(),
-      createInitialSecurities: sinon.stub().resolves()
-    };
-
-    this.notifier = {
-      init: sinon.spy(),
-      notifyUser: sinon.stub().resolves(),
-      notifyServer: sinon.stub().resolves(),
-      notifyDocument: sinon.stub().resolves(),
-      notifyDocumentCreate: sinon.stub().resolves(),
-      notifyDocumentMDelete: sinon.stub().resolves(),
-      notifyDocumentReplace: sinon.stub().resolves(),
-      notifyDocumentUpdate: sinon.stub().resolves(),
-      publish: sinon.stub().resolves(foo),
-      notifyDocumentMCreate: sinon.stub().resolves(),
-      notifyDocumentMChanges: sinon.stub().resolves()
-    };
+    this.internalIndex = new InternalIndexHandlerMock(this);
 
     this.passport = {
       use: sinon.stub(),
@@ -193,7 +124,8 @@ class KuzzleMock extends Kuzzle {
       unregisterStrategy: sinon.stub(),
       application: {
         info: sinon.stub()
-      }
+      },
+      routes: []
     };
 
     this.rootPath = '/kuzzle';
@@ -266,7 +198,7 @@ class KuzzleMock extends Kuzzle {
       const kuzzleProto = Object.getPrototypeOf(mockProto);
 
       for (const name of Object.getOwnPropertyNames(kuzzleProto)) {
-        if (['constructor', 'adminExists'].includes(name)) {
+        if (['constructor', 'hash', 'starting', 'running', 'shuttingDown'].includes(name)) {
           continue;
         }
 
@@ -277,10 +209,6 @@ class KuzzleMock extends Kuzzle {
         }
       }
     }
-  }
-
-  static hash (input) {
-    return Kuzzle.hash(input);
   }
 
   static instance () {

@@ -1,22 +1,33 @@
 'use strict';
 
-const rewire = require('rewire');
 const should = require('should');
 const sinon = require('sinon');
+const mockRequire = require('mock-require');
 const {
   Request,
-  errors: { PreconditionError, NotFoundError }
+  PreconditionError,
+  NotFoundError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+const MutexMock = require('../../mocks/mutex.mock.js');
 
-const AdminController = rewire('../../../lib/api/controller/admin');
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('AdminController', () => {
+  let AdminController;
   let adminController;
   let kuzzle;
   let request;
+
+  before(() => {
+    mockRequire('../../../lib/util/mutex', MutexMock);
+    AdminController = mockRequire.reRequire('../../../lib/api/controller/admin');
+  });
+
+  after(() => {
+    mockRequire.stopAll();
+  });
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -35,19 +46,24 @@ describe('AdminController', () => {
   });
 
   describe('#resetCache', () => {
-    let flushdbStub = sinon.stub();
-
     beforeEach(() => {
       request.input.action = 'resetCache';
     });
 
-    it('should flush the cache for the specified database', async () => {
-      kuzzle.cacheEngine.public.flushdb = flushdbStub.returns();
+    it('should flush the cache for the public database', async () => {
       request.input.args.database = 'memoryStorage';
 
       await adminController.resetCache(request);
 
-      should(flushdbStub).be.calledOnce();
+      should(kuzzle.ask).be.calledWith('core:cache:public:flushdb');
+    });
+
+    it('should flush the cache for the internal database', async () => {
+      request.input.args.database = 'internalCache';
+
+      await adminController.resetCache(request);
+
+      should(kuzzle.ask).be.calledWith('core:cache:internal:flushdb');
     });
 
     it('should raise an error if database does not exist', () => {
@@ -62,7 +78,7 @@ describe('AdminController', () => {
   describe('#resetSecurity', () => {
     beforeEach(() => {
       request.input.action = 'resetSecurity';
-      kuzzle.internalIndex.bootstrap.createInitialSecurities.resolves({
+      kuzzle.internalIndex.createInitialSecurities.resolves({
         profileIds: ['anonymous', 'default', 'admin'],
         roleIds: ['anonymous', 'default', 'admin']
       });
@@ -74,15 +90,21 @@ describe('AdminController', () => {
       const userSpy = kuzzle.ask.withArgs('core:security:user:truncate');
       const profileSpy = kuzzle.ask.withArgs('core:security:profile:truncate');
       const roleSpy = kuzzle.ask.withArgs('core:security:role:truncate');
-      should(kuzzle.internalIndex.bootstrap.createInitialSecurities)
+      should(kuzzle.internalIndex.createInitialSecurities)
         .be.calledOnce();
 
       sinon.assert.callOrder(
         userSpy,
         profileSpy,
         roleSpy,
-        kuzzle.internalIndex.bootstrap.createInitialSecurities,
-      );
+        kuzzle.internalIndex.createInitialSecurities);
+
+      const mutex = MutexMock.__getLastMutex();
+
+      should(mutex.lockId).eql('resetSecurity');
+      should(mutex.timeout).eql(0);
+      should(mutex.lock).calledOnce();
+      should(mutex.unlock).calledOnce();
     });
 
     it('should unlock the action even if the promise rejects', async () => {
@@ -91,9 +113,37 @@ describe('AdminController', () => {
 
       await should(adminController.resetSecurity(request)).be.rejected();
 
+      const mutex1 = MutexMock.__getLastMutex();
+
+      should(mutex1.lockId).eql('resetSecurity');
+      should(mutex1.timeout).eql(0);
+      should(mutex1.lock).calledOnce();
+      should(mutex1.unlock).calledOnce();
+
       kuzzle.ask.withArgs('core:security:user:truncate').resolves();
 
-      return should(adminController.resetSecurity(request)).fulfilled();
+      await should(adminController.resetSecurity(request)).fulfilled();
+
+      const mutex2 = MutexMock.__getLastMutex();
+
+      should(mutex2.lockId).eql('resetSecurity');
+      should(mutex2.timeout).eql(0);
+      should(mutex2.lock).calledOnce();
+      should(mutex2.unlock).calledOnce();
+      should(mutex2).not.eql(mutex1);
+    });
+
+    it('should reject if a security reset is already underway', async () => {
+      MutexMock.__canLock(false);
+
+      try {
+        await should(adminController.resetSecurity(request))
+          .rejectedWith(PreconditionError, { id: 'api.process.action_locked' });
+        should(MutexMock.__getLastMutex().lockId).eql('resetSecurity');
+      }
+      finally {
+        MutexMock.__canLock(true);
+      }
     });
   });
 
@@ -103,15 +153,38 @@ describe('AdminController', () => {
     });
 
     it('remove all indexes handled by Kuzzle', async () => {
-      adminController.publicStorage.listIndexes.resolves(['a', 'b', 'c']);
+      kuzzle.ask
+        .withArgs('core:storage:public:index:list')
+        .resolves(['a', 'b', 'c']);
 
       const response = await adminController.resetDatabase(request);
 
-      should(adminController.publicStorage.listIndexes).be.calledOnce();
-      should(adminController.publicStorage.deleteIndexes)
-        .be.calledWith(['a', 'b', 'c']);
+      should(kuzzle.ask).be.calledWith('core:storage:public:index:list');
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:index:mDelete',
+        ['a', 'b', 'c']);
 
       should(response).match({ acknowledge: true });
+
+      const mutex = MutexMock.__getLastMutex();
+
+      should(mutex.lockId).eql('resetDatabase');
+      should(mutex.timeout).eql(0);
+      should(mutex.lock).calledOnce();
+      should(mutex.unlock).calledOnce();
+    });
+
+    it('should reject if a database reset is already underway', async () => {
+      MutexMock.__canLock(false);
+
+      try {
+        await should(adminController.resetDatabase(request))
+          .rejectedWith(PreconditionError, { id: 'api.process.action_locked' });
+        should(MutexMock.__getLastMutex().lockId).eql('resetDatabase');
+      }
+      finally {
+        MutexMock.__canLock(true);
+      }
     });
   });
 
@@ -132,13 +205,9 @@ describe('AdminController', () => {
       request.input.action = 'shutdown';
     });
 
-    afterEach(() => {
-      AdminController.__set__('_locks', { shutdown: null });
-    });
-
     it('should throw an error if shutdown is in progress', async () => {
-      AdminController.__set__('_locks', { shutdown: true });
       adminController = new AdminController(kuzzle);
+      adminController.shuttingDown = true;
 
       await should(adminController.shutdown(request))
         .rejectedWith(PreconditionError, { id: 'api.process.action_locked' });
@@ -160,9 +229,9 @@ describe('AdminController', () => {
     it('should call loadMappings from the public storage engine', async () => {
       await adminController.loadMappings(request);
 
-      should(kuzzle.storageEngine.public.loadMappings)
-        .be.calledOnce()
-        .be.calledWith({ city: { seventeen: {} } });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:mappings:import',
+        request.input.body);
     });
   });
 
@@ -175,14 +244,18 @@ describe('AdminController', () => {
     it('should call loadFixtures from the public storage engine', async () => {
       await adminController.loadFixtures(request);
 
-      should(kuzzle.storageEngine.public.loadFixtures)
-        .be.calledOnce()
-        .be.calledWith({ city: { seventeen: [] } });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:import',
+        request.input.body);
     });
 
     it('should handle promise rejections when not waiting for a refresh', async () => {
       const err = new Error('err');
-      kuzzle.storageEngine.public.loadFixtures.rejects(err);
+
+      kuzzle.ask
+        .withArgs('core:storage:public:document:import')
+        .rejects(err);
+
       request.input.args.refresh = false;
 
       await should(adminController.loadFixtures(request)).fulfilled();

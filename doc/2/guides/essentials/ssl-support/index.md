@@ -50,7 +50,9 @@ map $http_upgrade $connection_upgrade {
 }
                    
 server {
-  listen 4443;
+  server_name api.kuzzle.io
+  
+  listen 4443 ssl;
                           
   proxy_read_timeout 3600s;
                                          

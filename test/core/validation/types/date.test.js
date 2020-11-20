@@ -1,7 +1,7 @@
 'use strict';
 
 const
-  { errors: { PreconditionError } } = require('kuzzle-common-objects'),
+  { PreconditionError } = require('kuzzle-common-objects'),
   sinon = require('sinon'),
   mockrequire = require('mock-require'),
   BaseType = require('../../../../lib/core/validation/baseType'),

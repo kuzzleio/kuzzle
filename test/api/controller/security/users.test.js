@@ -4,12 +4,10 @@ const should = require('should');
 const sinon = require('sinon');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    PluginImplementationError,
-    SizeLimitError,
-    PreconditionError
-  }
+  BadRequestError,
+  PluginImplementationError,
+  SizeLimitError,
+  PreconditionError
 } = require('kuzzle-common-objects');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
@@ -59,12 +57,7 @@ describe('Test: security controller - users', () => {
 
       fakeUser = new User();
       createStub = kuzzle.ask
-        .withArgs(
-          createEvent,
-          request.input.resource._id,
-          profileIds,
-          content,
-          sinon.match.object)
+        .withArgs(createEvent, request.input.resource._id, profileIds, content)
         .resolves(fakeUser);
       deleteStub = kuzzle.ask
         .withArgs(deleteEvent, request.input.resource._id, sinon.match.object)
@@ -218,13 +211,15 @@ describe('Test: security controller - users', () => {
 
     it('should update the user mapping', async () => {
       request.input.body = foo;
-      kuzzle.internalIndex.updateMapping.resolves(foo);
+      kuzzle.ask.withArgs('core:storage:private:mappings:update').resolves(foo);
 
       const response = await securityController.updateUserMapping(request);
 
-      should(kuzzle.internalIndex.updateMapping)
-        .be.calledOnce()
-        .be.calledWith('users', request.input.body);
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:mappings:update',
+        kuzzle.internalIndex.index,
+        'users',
+        request.input.body);
 
       should(response).eql(foo);
     });
@@ -232,13 +227,16 @@ describe('Test: security controller - users', () => {
 
   describe('#getUserMapping', () => {
     it('should fulfill with a response object', async () => {
-      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+      kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
+        properties: { foo: 'bar' },
+      });
 
       const response = await securityController.getUserMapping(request);
 
-      should(kuzzle.internalIndex.getMapping)
-        .be.calledOnce()
-        .be.calledWith('users');
+      should(kuzzle.ask).calledWith(
+        'core:storage:private:mappings:get',
+        kuzzle.internalIndex.index,
+        'users');
 
       should(response).match({ mapping: { foo: 'bar' } });
     });
@@ -296,9 +294,7 @@ describe('Test: security controller - users', () => {
       mGetResult[1]._id = 'bar';
       mGetResult[2]._id = 'baz';
 
-      mGetStub = kuzzle.ask
-        .withArgs(mGetEvent, sinon.match.array)
-        .resolves(mGetResult);
+      mGetStub = kuzzle.ask.withArgs(mGetEvent).resolves(mGetResult);
     });
 
     it('should reject if no ids are given', async () => {
@@ -356,7 +352,7 @@ describe('Test: security controller - users', () => {
       request.input.args.scroll = 'foo';
 
       searchStub = kuzzle.ask
-        .withArgs(searchEvent, sinon.match.any, sinon.match.object)
+        .withArgs(searchEvent)
         .resolves({
           hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
           total: 2,
@@ -471,7 +467,7 @@ describe('Test: security controller - users', () => {
     beforeEach(() => {
       request.input.args.scrollId = 'foobar';
       scrollStub = kuzzle.ask
-        .withArgs(scrollEvent, sinon.match.string, sinon.match.any)
+        .withArgs(scrollEvent)
         .resolves({
           hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
           total: 2,
@@ -516,9 +512,7 @@ describe('Test: security controller - users', () => {
     let deleteStub;
 
     beforeEach(() => {
-      deleteStub = kuzzle.ask
-        .withArgs(deleteEvent, sinon.match.string, sinon.match.object)
-        .resolves();
+      deleteStub = kuzzle.ask.withArgs(deleteEvent).resolves();
 
       request.input.resource._id = 'test';
     });
@@ -694,14 +688,8 @@ describe('Test: security controller - users', () => {
       updatedUser._id = request.input.resource._id;
 
       updateStub = kuzzle.ask
-        .withArgs(
-          updateEvent,
-          request.input.resource._id,
-          sinon.match.any,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(updateEvent, request.input.resource._id)
         .resolves(updatedUser);
-
     });
 
     it('should return a valid response and use default options', async () => {
@@ -788,12 +776,7 @@ describe('Test: security controller - users', () => {
       replacedUser = new User();
 
       replaceStub = kuzzle.ask
-        .withArgs(
-          replaceEvent,
-          request.input.resource._id,
-          sinon.match.array,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(replaceEvent, request.input.resource._id)
         .resolves(replacedUser);
     });
 
@@ -1002,7 +985,7 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#createFirstAdmin', () => {
-    const adminExistsEvent = 'core:security:user:adminExists';
+    const adminExistsEvent = 'core:security:user:admin:exist';
     const createOrReplaceRoleEvent = 'core:security:role:createOrReplace';
     const createOrReplaceProfileEvent = 'core:security:profile:createOrReplace';
     let createOrReplaceRoleStub;
@@ -1014,19 +997,10 @@ describe('Test: security controller - users', () => {
 
       request.input.resource._id = 'test';
 
-      createOrReplaceRoleStub = kuzzle.ask
-        .withArgs(
-          createOrReplaceRoleEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.object);
+      createOrReplaceRoleStub = kuzzle.ask.withArgs(createOrReplaceRoleEvent);
 
       createOrReplaceProfileStub = kuzzle.ask
-        .withArgs(
-          createOrReplaceProfileEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.object);
+        .withArgs(createOrReplaceProfileEvent);
 
       adminExistsStub = kuzzle.ask
         .withArgs(adminExistsEvent)

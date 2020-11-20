@@ -10,15 +10,3 @@ npm install --target_arch=arm  --target_platform=linux --silent --unsafe-perm \
   --build-from-source=dumpme \
   --build-from-source=cucumber-expressions
 npm install --only=dev --target_arch=arm --target_platfrom=linux --unsafe-perm --silent
-
-# Install Plugin logger deps using cross build toolchain
-cd plugins/enabled/kuzzle-plugin-logger
-npm install --silent --unsafe-perm --target_arch=arm --target_platform=linux \
-  --build-from-source=unix-dgram \
-  --build-from-source=sinon
-cd -
-
-# Install Plugin auth passport deps using cross build toolchain
-cd plugins/enabled/kuzzle-plugin-auth-passport-local
-npm install --silent --unsafe-perm --target_arch=arm --target_platform=linux
-cd -

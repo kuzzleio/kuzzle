@@ -1,0 +1,53 @@
+{
+  "dump": {
+    "enabled": false
+  },
+  "limits": {
+    "subscriptionMinterms": 1000
+  },
+  "plugins": {
+    "common": {
+      "initTimeout": 20000,
+      "pipeWarnTime": 5000,
+      "pipeTimeout": 10000
+    },
+    "cluster": {
+      "privileged": true,
+      "minimumNodes": 2
+    }
+  },
+  "services": {
+    "storageEngine": {
+      "client": {
+        "node": "http://elasticsearch:9200"
+      }
+    },
+    "internalCache": {
+      "node": {
+        "host": "redis",
+        "port": 6379
+      }
+    },
+    "memoryStorage": {
+      "node": {
+        "host": "redis",
+        "port": 6379
+      }
+    }
+  },
+  "server": {
+    "logs": {
+      "transports": [
+        {
+          "transport": "console",
+          "level": "info",
+          "stderrLevels": [],
+          "format": "simple",
+          "silent": false
+        }
+      ],
+      "accessLogFormat": "combined",
+      "accessLogIpOffset": 0
+    }
+  }
+}

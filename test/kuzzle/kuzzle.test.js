@@ -7,12 +7,12 @@ const rewire = require('rewire');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
+const config = require('../../lib/config').load();
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
   let Kuzzle;
   let application;
-  let coreModuleStub;
 
   const mockedProperties = [
     'entryPoint',
@@ -29,8 +29,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'vault',
     'log',
     'internalIndex',
-    'cacheEngine',
-    'storageEngine',
     'dumpGenerator',
     'shutdown',
     'pipe',
@@ -40,7 +38,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   function _mockKuzzle (KuzzleConstructor) {
     const mock = new KuzzleMock();
-    const k = new KuzzleConstructor();
+    const k = new KuzzleConstructor(config);
 
     mockedProperties.forEach(p => {
       k[p] = mock[p];
@@ -50,11 +48,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
-    coreModuleStub = {
-      init: sinon.stub().resolves(),
+    const coreModuleStub = function () {
+      return { init: sinon.stub().resolves() };
     };
 
-    mockrequire('../../lib/core', coreModuleStub);
+    mockrequire('../../lib/core/cache/cacheEngine', coreModuleStub);
+    mockrequire('../../lib/core/storage/storageEngine', coreModuleStub);
+    mockrequire('../../lib/core/security', coreModuleStub);
+    mockrequire('../../lib/core/realtime', coreModuleStub);
+
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
     Kuzzle.__set__('console', { log: () => {} });
@@ -78,41 +80,39 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      const params = {
+      const options = {
         mappings: {},
         fixtures: {},
         securities: {}
       };
 
-      should(kuzzle.started).be.false();
+      should(kuzzle.state).be.eql(Kuzzle.states.STARTING);
 
-      await kuzzle.start(application, params);
+      await kuzzle.start(application, options);
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
-        kuzzle.cacheEngine.init,
-        kuzzle.storageEngine.init,
         kuzzle.internalIndex.init,
         kuzzle.validation.init,
         kuzzle.tokenManager.init,
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.storageEngine.public.loadMappings,
-        kuzzle.storageEngine.public.loadFixtures,
-        kuzzle.ask.withArgs('core:security:load', sinon.match.object),
-        kuzzle.ask.withArgs('core:security:verify'),
-        kuzzle.pluginsManager.init,
+        kuzzle.ask.withArgs('core:storage:public:mappings:import'),
+        kuzzle.ask.withArgs('core:storage:public:document:import'),
+        kuzzle.ask.withArgs('core:security:load'),
         kuzzle.entryPoint.init,
+        kuzzle.pluginsManager.init,
+        kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
         kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe.withArgs('kuzzle:state:live'),
         kuzzle.entryPoint.startListening,
         kuzzle.pipe.withArgs('kuzzle:state:ready'),
-        kuzzle.emit.withArgs('core:kuzzleStart', sinon.match.any)
+        kuzzle.emit.withArgs('core:kuzzleStart')
       );
 
-      should(kuzzle.started).be.true();
+      should(kuzzle.state).be.eql(Kuzzle.states.RUNNING);
     });
 
     // @deprecated

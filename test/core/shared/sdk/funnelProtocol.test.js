@@ -5,9 +5,7 @@ const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
-  errors: {
-    PluginImplementationError
-  }
+  PluginImplementationError
 } = require('kuzzle-common-objects');
 
 const User = require('../../../../lib/model/security/user');
@@ -67,7 +65,7 @@ describe('Test: sdk/funnelProtocol', () => {
   describe('#query', () => {
     beforeEach(() => {
       kuzzle.ask
-        .withArgs('core:network:internal:connectionId')
+        .withArgs('core:network:internal:connectionId:get')
         .resolves('connection-id');
     });
 
@@ -103,6 +101,47 @@ describe('Test: sdk/funnelProtocol', () => {
         .then(response => {
           should(response.result.context.user).be.eql(user);
         });
+    });
+
+    it('should enhance stacktrace in development', done => {
+      kuzzle.funnel.executePluginRequest = sinon.stub().throws();
+
+      funnelProtocol = new FunnelProtocol(kuzzle);
+
+      funnelProtocol.query(request)
+        .then(() => done(new Error('should throw')))
+        .catch(error => {
+          const stack = error.stack.split('\n');
+
+          should(stack).have.length(17);
+          should(stack[4].startsWith(' 🡆  '));
+
+          done();
+        })
+        .catch(done);
+    });
+
+    it('should enhance stacktrace in production', done => {
+      process.env.NODE_ENV = 'production';
+      kuzzle.funnel.executePluginRequest = sinon.stub().throws();
+
+      funnelProtocol = new FunnelProtocol(kuzzle);
+
+      funnelProtocol.query(request)
+        .then(() => {
+          process.env.NODE_ENV = 'development';
+          done(new Error('should throw'));
+        })
+        .catch(error => {
+          const stack = error.stack.split('\n');
+
+          should(stack).have.length(7);
+          should(stack[5].startsWith(' 🡆  '));
+
+          process.env.NODE_ENV = 'development';
+          done();
+        })
+        .catch(done);
     });
   });
 });

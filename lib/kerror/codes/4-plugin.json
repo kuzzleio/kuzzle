@@ -81,6 +81,12 @@
           "code": 13,
           "message": "Application name \"%s\" is invalid. Application names must be in kebab-case.",
           "class": "PluginImplementationError"
+        },
+        "duplicated_api_definition": {
+          "description": "You cannot use the \"api\" and the \"controllers\" objects at the same time. Use the \"api\" object to define controllers.",
+          "code": 14,
+          "message": "Cannot define new controllers in the \"api\" and the \"controllers\" objects at the same time",
+          "class": "PluginImplementationError"
         }
       }
     },

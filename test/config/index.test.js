@@ -1,96 +1,140 @@
 'use strict';
 
-const
-  rewire = require('rewire'),
-  should = require('should'),
-  Config = rewire('../../lib/config'),
-  defaultConfig = require('../../lib/config/default.config'),
-  {
-    errors: {
-      InternalError: KuzzleInternalError
-    }
-  } = require('kuzzle-common-objects');
+const mockRequire = require('mock-require');
+const should = require('should');
+const sinon = require('sinon');
+const { InternalError: KuzzleInternalError } = require('kuzzle-common-objects');
+
+const defaultConfig = require('../../lib/config/default.config');
 
 describe('lib/config/index.js', () => {
-  describe('#unstringify', () => {
-    const unstringify = Config.__get__('unstringify');
+  let config;
+  let rcMock;
+  let mockedConfigContent;
 
-    it('should keep versions as string', () => {
-      const config = unstringify({
-        version: '0',
-        someVersion: '1'
+  beforeEach(() => {
+    rcMock = sinon.stub().callsFake(function (_, defcfg) {
+      return Object.assign({}, defcfg, mockedConfigContent);
+    });
+
+    mockedConfigContent = null;
+
+    mockRequire('rc', rcMock);
+    config = mockRequire.reRequire('../../lib/config');
+  });
+
+  afterEach(() => {
+    mockRequire.stopAll();
+    mockRequire.reRequire('../../lib/config');
+  });
+
+  describe('#loadConfig', () => {
+    it('should invoke "rc" to load both the default and custom configs', () => {
+      config.load();
+
+      should(rcMock).calledOnce().calledWith('kuzzle', defaultConfig);
+    });
+
+    it('should return an intelligible error when unable to parse the configuration file', () => {
+      const err = new Error('foo');
+      rcMock.throws(err);
+
+      should(() => config.load()).throw(KuzzleInternalError, {
+        id: 'core.configuration.cannot_parse',
+        message: 'Unable to read kuzzlerc configuration file: foo',
       });
+    });
+  });
 
-      should(config.version).be.exactly('0');
-      should(config.someVersion).be.exactly('1');
+  describe('#unstringify', () => {
+    it('should keep versions as string', () => {
+      mockedConfigContent = {
+        someVersion: '1',
+        anotherVersion: 'false',
+      };
+
+      const result = config.load();
+
+      should(result.version).be.exactly(require('../../package.json').version);
+      should(result.someVersion).be.exactly('1');
+      should(result.anotherVersion).be.exactly('false');
     });
 
     it('should convert bools', () => {
-      const config = unstringify({
+      mockedConfigContent = {
+        bar: 'false',
         foo: 'true',
-        bar: 'false'
-      });
+      };
 
-      should(config.foo).be.true();
-      should(config.bar).be.false();
+      const result = config.load();
+
+      should(result.foo).be.true();
+      should(result.bar).be.false();
     });
 
     it('should convert numbers', () => {
-      const config = unstringify({
+      mockedConfigContent = {
+        bar: '0.25',
         foo: '42',
-        bar: '0.25'
-      });
+      };
 
-      should(config.foo).be.exactly(42);
-      should(config.bar).be.exactly(0.25);
+      const result = config.load();
+
+      should(result.foo).be.exactly(42);
+      should(result.bar).be.exactly(0.25);
     });
 
     it('should be recursive', () => {
-      const config = unstringify({
+      mockedConfigContent = {
         foo: '42',
         nested: {
           bar: 'true',
           sub: {
-            baz: 'false'
-          }
-        }
-      });
+            baz: 'false',
+          },
+        },
+      };
 
-      should(config.foo).be.exactly(42);
-      should(config.nested.bar).be.true();
-      should(config.nested.sub.baz).be.false();
+      const result = config.load();
+
+      should(result.foo).be.exactly(42);
+      should(result.nested.bar).be.true();
+      should(result.nested.sub.baz).be.false();
     });
   });
 
   describe('#checkLimits', () => {
-    const
-      checkLimits = Config.__get__('checkLimitsConfig'),
-      // checkLimits normally receives a defaulted version of Kuzzle configuration
-      getcfg = config => {
-        const defaults = JSON.parse(JSON.stringify(defaultConfig.limits));
+    // checkLimits normally receives a defaulted version of Kuzzle configuration
+    const getcfg = cfg => {
+      const defaults = JSON.parse(JSON.stringify(defaultConfig.limits));
 
-        config.limits = Object.assign(defaults, config.limits);
+      cfg.limits = Object.assign(defaults, cfg.limits);
 
-        return config;
-      };
+      return cfg;
+    };
 
     it('should throw if an invalid limits configuration is submitted', () => {
-      should(() => checkLimits({limits: true}))
+      mockedConfigContent = { limits: true };
+
+      should(() => config.load())
         .throw(KuzzleInternalError, { id: 'core.configuration.invalid_type' });
 
-      should(() => checkLimits({limits: ['foo', 'bar']}))
+
+      mockedConfigContent = { limits: ['foo', 'bar'] };
+      should(() => config.load())
         .throw(KuzzleInternalError, { id: 'core.configuration.invalid_type' });
     });
 
     it('should throw on negative limit values', () => {
       for (const limit of Object.keys(defaultConfig.limits).filter(l => l !== 'requestsRate')) {
-        const config = getcfg({
+        mockedConfigContent = getcfg({
           limits: {
             [limit]: -1
           }
         });
 
-        should(() => checkLimits(config))
+        /* eslint-disable-next-line no-loop-func -- false positive */
+        should(() => config.load())
           .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
       }
     });
@@ -103,53 +147,66 @@ describe('lib/config/index.js', () => {
       ];
 
       for (const limit of Object.keys(defaultConfig.limits).filter(l => l !== 'requestsRate')) {
-        const config = getcfg({
+        mockedConfigContent = getcfg({
           limits: {
             [limit]: 0
           }
         });
 
         if (canBeZero.includes(limit)) {
-          should(() => checkLimits(config)).not.throw();
-          should(config.limits[limit]).be.eql(0);
+          /* eslint-disable-next-line no-loop-func -- false positive */
+          const result = config.load();
+          should(result.limits[limit]).be.eql(0);
         }
         else {
-          should(() => checkLimits(config))
+          /* eslint-disable-next-line no-loop-func -- false positive */
+          should(() => config.load())
             .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
         }
       }
     });
 
     it('should throw if the concurrentRequests limit is outside its allowed range', () => {
-      const config = getcfg({
+      mockedConfigContent = getcfg({
         limits: {
           concurrentRequests: 1234,
-          requestsBufferSize: 456
+          requestsBufferSize: 456,
         }
       });
 
-      should(() => checkLimits(config))
+      should(() => config.load())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
 
-      config.limits.concurrentRequests = config.limits.requestsBufferSize;
-      should(() => checkLimits(config))
+      mockedConfigContent = getcfg({
+        limits: {
+          concurrentRequests: 1234,
+          requestsBufferSize: 1234,
+        }
+      });
+      should(() => config.load())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
     });
 
     it('should throw on an invalid buffer limit threshold warning configuration', () => {
-      const config = getcfg({
+      mockedConfigContent = getcfg({
         limits: {
           concurrentRequests: 50,
           requestsBufferSize: 100,
-          requestsBufferWarningThreshold: 1
+          requestsBufferWarningThreshold: 1,
         }
       });
 
-      should(() => checkLimits(config))
+      should(() => config.load())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
 
-      config.limits.requestsBufferWarningThreshold = 101;
-      should(() => checkLimits(config))
+      mockedConfigContent = getcfg({
+        limits: {
+          concurrentRequests: 50,
+          requestsBufferSize: 100,
+          requestsBufferWarningThreshold: 101,
+        }
+      });
+      should(() => config.load())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
     });
   });

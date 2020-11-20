@@ -3,12 +3,13 @@
 const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
+const httpsRoutes = require('../../../../lib/config/httpRoutes');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const Router = require('../../../../lib/core/network/httpRouter');
 const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
 const {
   Request,
-  errors: { InternalError }
+  InternalError
 } = require('kuzzle-common-objects');
 
 describe('core/network/httpRouter', () => {
@@ -153,7 +154,8 @@ describe('core/network/httpRouter', () => {
           should(apiRequest.context.connection.misc.headers).be.eql({
             foo: 'bar',
             Authorization: 'Bearer jwtFoobar',
-            'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'});
+            'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}'
+          });
           should(apiRequest.context.connection.misc.verb).eql('POST');
           should(apiRequest.input.jwt).be.exactly('jwtFoobar');
           should(apiRequest.input.volatile).be.eql({
@@ -228,7 +230,7 @@ describe('core/network/httpRouter', () => {
           const apiRequest = handler.firstCall.args[0];
 
           should(apiRequest.id).match(rq.requestId);
-          should(apiRequest.input.body).match({foo: 'bar'});
+          should(apiRequest.input.body).match({ foo: 'bar' });
           should(apiRequest.input.headers['content-type']).eql('application/json');
           done();
         }
@@ -253,7 +255,7 @@ describe('core/network/httpRouter', () => {
           const apiRequest = handler.firstCall.args[0];
 
           should(apiRequest.id).match(rq.requestId);
-          should(apiRequest.input.body).match({foo: 'bar'});
+          should(apiRequest.input.body).match({ foo: 'bar' });
           should(apiRequest.input.headers['content-type']).eql('application/json');
           should(apiRequest.input.args.bar).eql('hello');
           should(apiRequest.input.args.baz).eql('world');
@@ -280,7 +282,7 @@ describe('core/network/httpRouter', () => {
           const apiRequest = handler.firstCall.args[0];
 
           should(apiRequest.id).match(rq.requestId);
-          should(apiRequest.input.body).match({foo: 'bar'});
+          should(apiRequest.input.body).match({ foo: 'bar' });
           should(apiRequest.input.headers['content-type']).eql('application/json; charset=utf-8');
           should(apiRequest.input.args.bar).eql('hello');
           should(apiRequest.input.args.baz).eql('%world');
@@ -575,7 +577,7 @@ describe('core/network/httpRouter', () => {
 
     it('should return an error if an exception is thrown', done => {
       const routeHandlerStub = class {
-        get request () {
+        get request() {
           throw new InternalError('HTTP internal exception.');
         }
       };
@@ -622,6 +624,16 @@ describe('core/network/httpRouter', () => {
           done(e);
         }
       });
+    });
+
+    it('should ensure that deprecated routes have the correct properties', () => {
+      const deprecatedRoutes = httpsRoutes.filter(route => route.deprecated);
+
+      for (const route of deprecatedRoutes) {
+        const { deprecated } = route;
+        should(deprecated).have.property('since');
+        should(deprecated).have.property('message');
+      }
     });
   });
 });

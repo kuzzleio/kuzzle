@@ -19,38 +19,49 @@
  * limitations under the License.
  */
 
+import util from 'util';
 
-import * as fs from 'fs';
-import * as _ from 'lodash';
+import fs from 'fs';
+import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
+import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
+import PluginLogger from 'kuzzle-plugin-logger';
 
-import * as Kuzzle from '../../kuzzle';
-import * as Plugin from '../plugin/plugin';
-import * as EmbeddedSDK from '../shared/sdk/embeddedSdk';
-import * as Elasticsearch from '../../service/storage/elasticsearch';
+import Kuzzle from '../../kuzzle';
+import Plugin from '../plugin/plugin';
+import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
+import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
-import * as kerror from '../../kerror';
+import kerror from '../../kerror';
+import kuzzleConfig from '../../config';
 
 import {
   JSONObject,
   ControllerDefinition,
-  BasePlugin
+  BasePlugin,
+  Controller
 } from '../../util/interfaces';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
-/* PipeManager class ======================================================== */
+class ApplicationManager {
+  protected _application: any;
 
-class PipeManager {
-  private _application: any;
-
-  constructor (application: any) {
+  constructor (application: Backend) {
     Reflect.defineProperty(this, '_application', {
       value: application
     });
   }
 
+  protected get _kuzzle () {
+    return this._application._kuzzle;
+  }
+}
+
+/* PipeManager class ======================================================== */
+
+class PipeManager extends ApplicationManager {
   /**
    * Registers a new pipe on an event
    *
@@ -77,15 +88,7 @@ class PipeManager {
 
 /* HookManager class ======================================================== */
 
-class HookManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class HookManager extends ApplicationManager {
   /**
    * Registers a new hook on an event
    *
@@ -112,37 +115,30 @@ class HookManager {
 
 /* ConfigManager class ====================================================== */
 
-class ConfigManager {
-  private _application: any;
-
+class ConfigManager extends ApplicationManager {
   /**
    * Configuration content
    */
   public content: JSONObject;
 
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
+  constructor (application: Backend) {
+    super(application);
 
-    Reflect.defineProperty(this, 'content', {
-      enumerable: true,
-      value: this._application._kuzzle.config
-    });
+    this.content = kuzzleConfig.load();
   }
 
   /**
    * Sets a configuration value
    *
    * @param path - Path to the configuration key (lodash style)
-   * @param value - Value for the configuraiton key
+   * @param value - Value for the configuration key
    */
   set (path: string, value: any) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'config');
     }
 
-    _.set(this._application._kuzzle.config, path, value);
+    _.set(this.content, path, value);
   }
 
   /**
@@ -155,32 +151,22 @@ class ConfigManager {
       throw runtimeError.get('already_started', 'config');
     }
 
-    this._application._kuzzle.config = _.merge(
-      this._application._kuzzle.config,
-      config);
+    this.content = _.merge(this.content, config);
   }
 }
 
 /* ControllerManager class ================================================== */
 
-class ControllerManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class ControllerManager extends ApplicationManager {
   /**
    * Registers a new controller.
    *
    * @example
-   * register('greeting', {
+   * app.controller.register('greeting', {
    *   actions: {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
-   *       http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
+   *       http: [{ verb: 'post', path: 'greeting/hello/:name' }]
    *     }
    *   }
    * })
@@ -196,9 +182,73 @@ class ControllerManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
+    this._add(name, definition);
+  }
+
+  /**
+   * Uses a new controller class.
+   *
+   * The controller class must:
+   *  - call the super constructor with the application instance
+   *  - extend the "Controller" class
+   *  - define the "definition" property
+   *  - (optional) define the "name" property
+   *
+   * The controller name will be inferred from the class name.
+   *   e.g. "PaymentSolutionController" will become "payment-solution"
+   *
+   * @example
+   *
+   * class EmailController extends Controller {
+   *   constructor (app) {
+   *     super(app);
+   *
+   *     this.definition = {
+   *       actions: {
+   *         send: {
+   *           handler: this.send
+   *         }
+   *       }
+   *     };
+   *   }
+   *
+   *   async send (request: Request) {
+   *     // ...
+   *   }
+   * }
+   *
+   * app.controller.use(new EmailController(app));
+   *
+   * @param controller Controller class
+   */
+  use (controller: Controller) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'controller');
+    }
+
+    for (const [action, definition] of Object.entries(controller.definition.actions)) {
+      if (typeof definition.handler !== 'function') {
+        throw assertionError.get(
+          'invalid_controller_definition',
+          name,
+          `Handler for action "${action}" is not a function.`);
+      }
+
+      definition.handler = definition.handler.bind(controller);
+    }
+
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
+    }
+
+    this._add(controller.name, controller.definition);
+  }
+
+  private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, definition);
+    Plugin.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -212,11 +262,11 @@ class ControllerManager {
     this._application._controllers[name] = definition;
   }
 
-  private _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
+  private _generateMissingRoutes (controllerName: string, controllerDefinition: ControllerDefinition) {
     for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
       if (! definition.http) {
         // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'GET', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
+        definition.http = [{ verb: 'get', path: `${kebabCase(controllerName)}/${kebabCase(action)}` }];
       }
     }
   }
@@ -224,15 +274,7 @@ class ControllerManager {
 
 /* VaultManager class ======================================================= */
 
-class VaultManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class VaultManager extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -263,35 +305,25 @@ class VaultManager {
       throw runtimeError.get('unavailable_before_start', 'vault.secrets');
     }
 
-    return this._application._kuzzle.vault.secrets;
+    return this._kuzzle.vault.secrets;
   }
 }
 
 /* PluginManager class ====================================================== */
 
-interface UsePluginOptions {
-  /**
-   * Specify plugin name instead of using the class name.
-   */
-  name?: string
-}
-
-class PluginManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class PluginManager extends ApplicationManager {
   /**
    * Uses a plugin in this application
    *
    * @param plugin - Plugin instance
    * @param options - Additionnal options
+   *    - `name`: Specify plugin name instead of using the class name.
+   *    - `manifest`: Manually add a manifest definition (deprecated)
    */
-  use (plugin: BasePlugin, options: UsePluginOptions = {}) : void {
+  use (
+    plugin: BasePlugin,
+    options: { name?: string, manifest?: JSONObject } = {}
+  ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }
@@ -317,21 +349,13 @@ class PluginManager {
       throw assertionError.get('init_not_found', name);
     }
 
-    this._application._plugins[name] = plugin;
+    this._application._plugins[name] = { manifest: options.manifest, plugin };
   }
 }
 
 /* Logger class ============================================================= */
 
-class Logger {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class Logger extends ApplicationManager {
   /**
    * Logs a debug message
    */
@@ -372,12 +396,55 @@ class Logger {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
 
-    this._application._kuzzle.log[level](`[${this._application.name}]: ${message}`);
+    this._kuzzle.log[level](util.inspect(message));
   }
 }
 
-/* Backend class ======================================================== */
+/* StorageManager class ===================================================== */
 
+class StorageManager extends ApplicationManager {
+  private _client: Client = null;
+  private _Client: new (clientConfig?: any) => Client = null;
+
+  constructor (application: Backend) {
+    super(application);
+  }
+
+  /**
+   * Storage client constructor.
+   * (Currently Elasticsearch)
+   *
+   * @param clientConfig Overload configuration for the underlaying storage client
+   */
+  get Client (): new (clientConfig?: any) => Client {
+    if (! this._Client) {
+      const kuzzle = this._kuzzle;
+
+      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
+        return Elasticsearch.buildClient({
+          ...kuzzle.config.services.storageEngine.client,
+          ...clientConfig,
+        });
+      } as any;
+    }
+
+    return this._Client;
+  }
+
+  /**
+   * Access to the underlaying storage engine client.
+   * (Currently Elasticsearch)
+   */
+  get client (): Client {
+    if (! this._client) {
+      this._client = Elasticsearch
+        .buildClient(this._kuzzle.config.services.storageEngine.client);
+    }
+
+    return this._client;
+  }}
+
+/* Backend class ======================================================== */
 
 export class Backend {
   private _kuzzle: any;
@@ -399,15 +466,15 @@ export class Backend {
   public version: string;
 
   /**
+   * Current Git commit (if available)
+   */
+  public commit: string | null;
+
+  /**
    * Errors manager
    * @todo add type
    */
   public kerror: any;
-
-  /**
-   * Elasticsearch client constructor
-   */
-  public ESClient: new () => Client;
 
   /**
    * PipeManager definition manager
@@ -471,6 +538,13 @@ export class Backend {
   public log: Logger;
 
   /**
+   * Storage manager
+   */
+  public storage: StorageManager;
+
+  /**
+   * @deprecated
+   *
    * Support for old features available before Kuzzle as a framework
    * to avoid breaking existing deployments.
    *
@@ -492,7 +566,7 @@ export class Backend {
     this._name = name;
 
     Reflect.defineProperty(this, '_kuzzle', {
-      value: new Kuzzle()
+      writable: true
     });
 
     Reflect.defineProperty(this, '_sdk', {
@@ -505,14 +579,10 @@ export class Backend {
     this.vault = new VaultManager(this);
     this.controller = new ControllerManager(this);
     this.plugin = new PluginManager(this);
+    this.storage = new StorageManager(this);
     this.log = new Logger(this);
 
     this.kerror = kerror;
-
-    const kuzzle = this._kuzzle;
-    this.ESClient = function ESClient () {
-      return Elasticsearch.buildClient(kuzzle.storageEngine.config.client);
-    } as any;
 
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
@@ -521,6 +591,8 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
+
+    this.commit = this._readCommit();
   }
 
   /**
@@ -531,12 +603,21 @@ export class Backend {
       throw runtimeError.get('already_started', 'start');
     }
 
+    this._kuzzle = new Kuzzle(this.config.content);
+
+    // we need to load the default plugins
+    this.plugin.use(
+      new PluginPassportAuthLocal(),
+      { name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
+
     const application = new Plugin(
       this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });
 
     application.version = this.version;
+    application.commit = this.commit;
 
     const options = {
       fixtures: this._support.fixtures,
@@ -557,12 +638,16 @@ export class Backend {
   /**
    * Triggers an event
    *
-   * @param {String} - Event name
-   * @param {any} - Event payload
+   * @param - Event name
+   * @param - Event payload
    *
    * @returns {Promise<any>}
    */
   trigger (event: string, payload: any): Promise<any> {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'trigger');
+    }
+
     return this._kuzzle.pipe(event, payload);
   }
 
@@ -590,6 +675,28 @@ export class Backend {
       init: () => {},
       pipes: this._pipes,
     };
+  }
+
+  /**
+   * Try to read the current commit hash.
+   */
+  private _readCommit (dir = process.cwd(), depth = 3) {
+    if (depth === 0) {
+      return null;
+    }
+
+    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+      return this._readCommit(`${dir}/..`, depth - 1);
+    }
+
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+
+    if (! fs.existsSync(refFile)) {
+      return null;
+    }
+
+    return fs.readFileSync(refFile, 'utf8').replace('\n', '');
   }
 
 }

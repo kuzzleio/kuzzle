@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { Request } from 'kuzzle-common-objects';
+import { Backend } from '../core/application/backend';
 
 /**
  * An interface representing an object with string key and any value
@@ -27,18 +29,116 @@ export interface JSONObject {
   [key: string]: JSONObject | any
 }
 
+/**
+ * API controller definition.
+ *
+ * @example
+ * {
+ *   actions: {
+ *     sayHello: {
+ *       handler: async request => `Hello, ${request.input.args.name}`,
+ *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+ *     }
+ *   }
+ * }
+ */
 export interface ControllerDefinition {
   actions: {
+    /**
+     * Name of the API action
+     */
     [action: string]: {
-      handler: (request: any) => Promise<any>,
+      /**
+       * Function handler for incoming requests.
+       */
+      handler: (request: Request) => Promise<any>,
+      /**
+       * Declare HTTP routes (optional).
+       * Http routes will be auto-generated unless at least one is provided
+       * or an empty array is provided.
+       *
+       */
       http?: Array<{
-        verb: string,
-        url: string
+        /**
+         * HTTP verb.
+         */
+        verb: 'get' | 'post' | 'put' | 'delete' | 'head',
+        /**
+         * Route path.
+         * A route starting with `/` will be prefixed by `/_` otherwise the route
+         * will be prefixed by `/_/<application-name>/`
+         */
+        path: string
       }>
     }
   }
 }
 
+/**
+ * Base class to declare a controller class
+ */
+export abstract class Controller {
+  /**
+   * Current application instance
+   */
+  private app: Backend;
+
+  /**
+   * Controller name
+   */
+  public name: string;
+
+  /**
+   * Controller definition
+   */
+  public definition: ControllerDefinition;
+
+  constructor (app: Backend) {
+    this.app = app;
+  }
+}
+
 export interface BasePlugin {
-  init: (config: JSONObject, context: any) => Promise<void> | void
+  init: (config: JSONObject, context: any) => Promise<any> | any
+}
+
+/**
+ * Kuzzle API request
+ *
+ * @see https://docs.kuzzle.io/core/2/api/essentials/query-syntax/#other-protocols
+ */
+export interface KuzzleRequest extends JSONObject {
+  controller: string;
+  action: string;
+  index?: string;
+  collection?: string;
+  _id?: string;
+  jwt?: string;
+  volatile?: JSONObject;
+  body?: JSONObject;
+  [key: string]: any;
+}
+
+/**
+ * Kuzzle API response
+ *
+ * @see https://docs.kuzzle.io/core/2/api/essentials/kuzzle-response/
+ */
+export interface KuzzleResponse extends JSONObject {
+  controller: string;
+  action: string;
+  index?: string;
+  collection?: string;
+  error?: {
+    id: string;
+    code: number;
+    message: string;
+    status: number;
+    stack?: string;
+  };
+  requestId: string;
+  result: any;
+  status: number;
+  volatile?: JSONObject;
+  room?: string;
 }

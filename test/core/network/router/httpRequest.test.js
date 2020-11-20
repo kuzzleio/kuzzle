@@ -2,6 +2,7 @@
 
 const should = require('should');
 const { Request } = require('kuzzle-common-objects');
+
 const Router = require('../../../../lib/core/network/router');
 const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
@@ -17,7 +18,7 @@ describe('Test: router.httpRequest', () => {
     kuzzle.ask
       .withArgs('core:plugin:routes:get')
       .resolves([
-        {verb: 'get', url: 'foo/bar/baz', controller: 'foo', action: 'bar'}
+        {verb: 'get', path: 'foo/bar/baz', controller: 'foo', action: 'bar'}
       ]);
 
     kuzzle.funnel.execute.callsFake((request, callback) => {
@@ -140,40 +141,6 @@ describe('Test: router.httpRequest', () => {
         should(request.response.requestId).be.eql(httpRequest.requestId);
         should(request.response.headers['content-type']).be.eql('application/json');
         should(request.response.status).be.eql(1234);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-  });
-
-  it('should register the swagger JSON auto-generator route', (done) => {
-    httpRequest.url = '/swagger.json';
-    httpRequest.method = 'GET';
-
-    routeController.http.route(httpRequest, result => {
-      try {
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/json');
-        should(result.response.status).be.eql(200);
-        done();
-      }
-      catch (e) {
-        done(e);
-      }
-    });
-  });
-
-  it('should register the swagger YAML auto-generator route', (done) => {
-    httpRequest.url = '/swagger.yml';
-    httpRequest.method = 'GET';
-
-    routeController.http.route(httpRequest, result => {
-      try {
-        should(result.response.requestId).be.eql(httpRequest.requestId);
-        should(result.response.headers['content-type']).be.eql('application/yaml');
-        should(result.response.status).be.eql(200);
         done();
       }
       catch (e) {

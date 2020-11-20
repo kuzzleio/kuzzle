@@ -36,15 +36,6 @@ ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 ADD ./plugins/available/ /var/app/plugins/available/
 
 RUN  set -x \
-  # Link default plugins
-  && mkdir -p /var/app/plugins/enabled/ \
-  && ln -s /var/app/plugins/available/kuzzle-plugin-auth-passport-local /var/app/plugins/enabled/kuzzle-plugin-auth-passport-local \
-  && ln -s /var/app/plugins/available/kuzzle-plugin-logger /var/app/plugins/enabled/kuzzle-plugin-logger \
-  # Install plugins dependencies
-  && for plugin in plugins/*/*; do npm install --production --prefix "$plugin"; done \
-  # Clean Node.js related useless files
-  && clean-node \
-  && for plugin in plugins/*/*; do cd "$plugin"; echo "$plugin"; clean-node; cd /var/app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries

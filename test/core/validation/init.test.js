@@ -1,16 +1,16 @@
 'use strict';
 
-const
-  should = require('should'),
-  Bluebird = require('bluebird'),
-  sinon = require('sinon'),
-  mockRequire = require('mock-require'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    BadRequestError,
-    PluginImplementationError,
-    PreconditionError
-  } = require('kuzzle-common-objects').errors;
+const should = require('should');
+const Bluebird = require('bluebird');
+const sinon = require('sinon');
+const mockRequire = require('mock-require');
+const {
+  BadRequestError,
+  PluginImplementationError,
+  PreconditionError
+} = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: validation initialization', () => {
   let
@@ -94,14 +94,14 @@ describe('Test: validation initialization', () => {
       };
 
     beforeEach(() => {
-      kuzzle.internalIndex.search.returns(Bluebird.resolve({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [
           {_id: 'anIndex#aCollection', _source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
           {_id: 'anIndex#anotherCollection', _source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
           {_id: 'anIndex#anotherCollection', _source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
         ],
         length: 3
-      }));
+      });
     });
 
     it('should build a specification if everything goes as expected', () => {

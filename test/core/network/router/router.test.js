@@ -2,12 +2,14 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const Router = require('../../../../lib/core/network/router');
 const {
-  models: { RequestContext },
-  errors: { PluginImplementationError }
+  RequestContext,
+  PluginImplementationError
 } = require('kuzzle-common-objects');
+
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+
+const Router = require('../../../../lib/core/network/router');
 
 describe('Test: router', () => {
   const protocol = 'foo';
@@ -61,13 +63,19 @@ describe('Test: router', () => {
   });
 
   describe('#removeConnection', () => {
+    let realtimeDisconnectStub;
+
+    beforeEach(() => {
+      realtimeDisconnectStub = kuzzle.ask
+        .withArgs('core:realtime:user:remove')
+        .resolves();
+    });
+
     it('should remove the context from the context pool', () => {
       router.connections.set(connectionId, requestContext);
       router.removeConnection(requestContext);
 
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms)
-        .calledOnce()
-        .calledWith(requestContext);
+      should(kuzzle.ask).calledWith('core:realtime:user:remove', connectionId);
       should(kuzzle.statistics.dropConnection)
         .calledOnce()
         .calledWith(requestContext);
@@ -77,7 +85,7 @@ describe('Test: router', () => {
     it('should remove the context from the context pool', () => {
       router.removeConnection(requestContext);
 
-      should(kuzzle.hotelClerk.removeCustomerFromAllRooms).not.be.called();
+      should(realtimeDisconnectStub).not.be.called();
       should(kuzzle.statistics.dropConnection).not.be.called();
       should(kuzzle.log.error)
         .calledOnce()

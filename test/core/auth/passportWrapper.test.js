@@ -7,11 +7,9 @@ const
   mockrequire = require('mock-require'),
   passport = require('passport'),
   {
-    errors: {
-      ForbiddenError,
-      PluginImplementationError,
-      UnauthorizedError
-    }
+    ForbiddenError,
+    PluginImplementationError,
+    UnauthorizedError
   } = require('kuzzle-common-objects'),
   PassportResponse = require('../../../lib/core/auth/passportResponse');
 

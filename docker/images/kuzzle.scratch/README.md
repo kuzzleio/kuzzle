@@ -1,4 +1,4 @@
-# kuzzleio/kuzzle:*-scrtach
+# kuzzleio/kuzzle:*-scratch
 
 This image is meant to be used in production environment only.
 

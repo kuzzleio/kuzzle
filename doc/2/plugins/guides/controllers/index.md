@@ -22,7 +22,7 @@ To avoid naming conflicts, Kuzzle prefixes plugin controllers names with the plu
 ### HTTP
 
 ```http
-URL: http://<server>:<port>/_plugin/<plugin name>/<url defined by the plugin>/<resources>
+URL: http://<server>:<port>/_plugin/<plugin name>/<path defined by the plugin>/<resources>
 Method: <verb defined by the plugin>
 ```
 
@@ -173,7 +173,7 @@ module.exports = class ControllerPlugin {
       of objects. Each object is an API action, with the following properties:
 
       - verb: HTTP verb
-      - url: HTTP address. Any parameter starting with a ':'
+      - path (or "url"): HTTP path. Any parameter starting with a ':'
         will be made dynamic by Kuzzle (its value is stored in request.input.args)
       - controller: plugin controller name, as exposed in the "this.controllers" object
       - action: controller action to execute
@@ -194,13 +194,13 @@ module.exports = class ControllerPlugin {
     this.routes = [
       {
         verb: 'get',
-        url: '/foo/:name',
+        path: '/foo/:name',
         controller: 'newController',
         action: 'myAction'
       },
       {
         verb: 'post',
-        url: '/bar',
+        path: '/bar',
         controller: 'newController',
         action: 'myOtherAction'
       }

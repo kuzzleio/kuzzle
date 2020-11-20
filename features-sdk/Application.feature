@@ -40,11 +40,18 @@ Feature: Application
   # ESClient constructor
 
   @mappings
-  Scenario: Instantiate a new embedded ES Client and use it
+  Scenario: Instantiate a new embedded storage Client and use it
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    When I successfully execute the action "tests":"esClient" with args:
+    When I successfully execute the action "tests":"storageClient" with args:
       | _id   | "es-document"                    |
       | body  | { "from": "embedded-es-client" } |
       | index | "&nyc-open-data.yellow-taxi"     |
     Then The document "es-document" content match:
       | from | "embedded-es-client" |
+
+  # Controller class usage
+  Scenario: Check if Kuzzle can use a controller class
+    When I successfully execute the action "functional-tests":"helloWorld" with args:
+    | name | "Martial" |
+    Then I should receive a result matching:
+    | greeting | "Hello, Martial" |
