@@ -6,15 +6,15 @@ Feature: Security Controller
   Scenario: Check if logued user can execute provided API request
     Given I "update" a role "default" with the following API rights:
       | auth     | { "actions": { "login": true, "checkRights": true } } |
-      | document | { "actions": { "create": false, "update": true } }  |
+      | document | { "actions": { "create": false, "update": true } }    |
     When I successfully execute the action "security":"checkRights" with args:
-      | userId | "default-user" |
-      | body | { "request": { "controller": "document", "action": "create" } } |
+      | userId | "default-user"                                                  |
+      | body   | { "request": { "controller": "document", "action": "create" } } |
     Then I should receive a result matching:
       | allowed | false |
     When I successfully execute the action "security":"checkRights" with args:
-      | userId | "default-user" |
-      | body | { "request": { "controller": "document", "action": "update" } } |
+      | userId | "default-user"                                                  |
+      | body   | { "request": { "controller": "document", "action": "update" } } |
     Then I should receive a result matching:
       | allowed | true |
 
@@ -31,9 +31,10 @@ Feature: Security Controller
       | collection | "users" |
     Then I successfully execute the action "security":"searchUsers"
     And I should receive a "hits" array of objects matching:
-      | _id          |
-      | "test-admin" |
-      | "aschen"     |
+      | _id            |
+      | "test-admin"   |
+      | "aschen"       |
+      | "default-user" |
     # Error on unknown collection
     When I execute the action "security":"refresh" with args:
       | collection | "frontend-security" |
@@ -62,7 +63,7 @@ Feature: Security Controller
       | userId | "My" |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"   |
+      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
 
   # security:searchApiKeys =====================================================
 
@@ -92,8 +93,8 @@ Feature: Security Controller
       | body   | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"   |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"   |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"          |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"          |
 
   # security:deleteApiKey =======================================================
 
