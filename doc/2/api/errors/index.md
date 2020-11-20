@@ -2,6 +2,6 @@
 code: false
 type: branch
 order: 200
-title: API Errors
+title: Errors
 description: API errors reference
 ---

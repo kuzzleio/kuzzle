@@ -2,6 +2,6 @@
 code: false
 type: branch
 order: 100
-title: API Objects
+title: Objects
 description: API Objects reference
 ---
