@@ -83,8 +83,6 @@ When the pipe handler function returns a rejected promise or throws an error, Ku
 
 If the error is one of the [available default errors](/core/2/references/some-link) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/references/some-link) error.
 
-<!-- @todo throw an internal kuzzle error and not a default one -->
-
 **Example:** _Limit reading access to documents to their creator_
 ```js
 import { Document, Request, Backend, ForbiddenError } from 'kuzzle'

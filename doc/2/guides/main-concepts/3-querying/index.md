@@ -2,7 +2,7 @@
 code: false
 type: page
 title: Querying
-description: tbd
+description: Learn how to search for your data with Elasticsearch Query Language
 order: 300
 ---
 
