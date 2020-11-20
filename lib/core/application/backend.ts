@@ -700,5 +700,3 @@ export class Backend {
   }
 
 }
-
-module.exports = { Backend };
