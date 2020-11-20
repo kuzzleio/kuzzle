@@ -1,12 +1,12 @@
 ---
 code: false
 type: page
-title: Geofencing
+title: Geo-Space
 description: List of accepted formats for geolocation values
 order: 300
 ---
 
-# Geofencing
+# Geo-Space
 
 Geofencing in Koncorde consists in **defining forms in the geo-space using geopoints and geodistances** within clauses like [geoBoundingBox](/core/2/api/koncorde-filter-syntax/clauses#geoboundingbox), [geoDistance](/core/2/api/koncorde-filter-syntax/clauses#geodistance), [geoDistanceRange](/core/2/api/koncorde-filter-syntax/clauses#geodistancerange) and [geoPolygon](/core/2/api/koncorde-filter-syntax/clauses#geopolygon). 
 

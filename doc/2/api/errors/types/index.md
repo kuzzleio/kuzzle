@@ -110,7 +110,7 @@ A `PartialError` can be triggered, for instance, if one or several queries insid
 
 The detail of each failure can be retrieved in the `errors` property of the error object.
 
-## Additional Properties
+**Additional Properties:**
 
 | property | type             | description                    |
 | -------- | ---------------- | ------------------------------ |
