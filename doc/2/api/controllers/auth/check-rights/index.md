@@ -6,6 +6,8 @@ title: checkRights
 
 # checkRights
 
+<SinceBadge version="change-me"/>
+
 Checks if the provided API request can be executed.
 
 ---
