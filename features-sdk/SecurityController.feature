@@ -1,5 +1,23 @@
 Feature: Security Controller
 
+  # security:checkRights ===========================================================
+
+  @security
+  Scenario: Check if logued user can execute provided API request
+    Given I "update" a role "default" with the following API rights:
+      | auth     | { "actions": { "login": true, "checkRights": true } } |
+      | document | { "actions": { "create": false, "update": true } }  |
+    When I successfully execute the action "security":"checkRights" with args:
+      | userId | "default-user" |
+      | body | { "request": { "controller": "document", "action": "create" } } |
+    Then I should receive a result matching:
+      | allowed | false |
+    When I successfully execute the action "security":"checkRights" with args:
+      | userId | "default-user" |
+      | body | { "request": { "controller": "document", "action": "update" } } |
+    Then I should receive a result matching:
+      | allowed | true |
+
   # security:refresh ===========================================================
 
   @security
