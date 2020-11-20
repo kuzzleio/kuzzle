@@ -129,7 +129,7 @@ There are 3 parameters that can be provided to all requests, independently to th
 
 - `jwt`: user's authentification token, obtained through the [auth:login](/core/2/api/controllers/auth/login) method
 - `requestId`: user-defined request identifier. Kuzzle does not guarantee that responses are sent back in the same order than requests are made; **use that field to link responses to their request of origin**
-- `volatile`: user-defined data, without any impact to the request. Use that object to pass information about the request itself to real-time subscribers. Read more [here](/core/2/api/essentials/volatile-data)
+- `volatile`: user-defined data, without any impact to the request. Use that object to pass information about the request itself to real-time subscribers. Read more [here](/core/2/guides/main-concepts/1-api#volatile-data)
 
 Additionally, a few other parameters are very commonly found in API requests:
 

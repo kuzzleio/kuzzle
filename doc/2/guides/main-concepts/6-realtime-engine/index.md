@@ -135,7 +135,7 @@ Clients subscribing to this channel will receive the following notification:
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/2/api/essentials/notifications#documents-changes-messages)
+More information about the [Document Notification format](/core/2/api/objects/3-notifications#document-notification)
 
 ::: warning
 Messages published with the [realtime:publish](/core/2/api/controllers/realtime/publish) method are not persisted in the database.
@@ -247,7 +247,7 @@ These filters are specified only on the client side and do not require server-si
 They are sent in the body of the request [realtime:subscribe](/core/2/api/controllers/realtime/subscribe)
 :::
 
-A filter is composed of [terms](/core/2/guides/cookbooks/realtime-api/terms) that can be composed with [operands](/core/2/guides/cookbooks/realtime-api/operands).
+A filter is composed of [clauses](/core/2/api/koncorde-filter-syntax/1-clauses) that can be composed with [operators](/core/2/api/koncorde-filter-syntax/2-operators).
 
 For example if I want to receive only drivers with the `B` license:
 ```json
@@ -262,7 +262,7 @@ For example if I want to receive only drivers with the `B` license:
 }
 ```
 
-It is also possible to combine [terms](/core/2/guides/cookbooks/realtime-api/terms) between them with [operands](/core/2/guides/cookbooks/realtime-api/operands) to refine my filter:
+It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/1-clauses) between them with [operators](/core/2/api/koncorde-filter-syntax/2-operators) to refine my filter:
 
 ```json
 {
@@ -280,7 +280,7 @@ It is also possible to combine [terms](/core/2/guides/cookbooks/realtime-api/ter
 ```
 
 ::: info
-More info about [subscription filters terms and operands](/core/2/references/some-link)
+More info about subscription filters [clauses](/core/2/api/koncorde-filter-syntax/1-clauses) and [operators](/core/2/api/koncorde-filter-syntax/2-operators)
 :::
 
 Each subscription filter **defines a scope**. All documents in the collection can be either **inside or outside this scope**.
@@ -418,11 +418,11 @@ If a second client subscribes to the same notifications, then the first client w
 </pre>
 </details>
 
-More information about the [User Notification format](/core/2/api/essentials/notifications#user-notification)
+More information about the [User Notification format](/core/2/api/objects/3-notifications#user-notification)
 
 ### volatile
 
-[Volatile Data](/core/2/api/essentials/volatile-data) are **metadata** that can be added to each request made to the Kuzzle API.
+[Volatile Data](/core/2/guides/main-concepts/1-api#volatile-data) are **metadata** that can be added to each request made to the Kuzzle API.
 
 When a request containing volatile data triggers a realtime notification, these **volatile data are included in the notification that will be sent** to the subscribing clients.
 
