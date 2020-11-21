@@ -354,39 +354,39 @@ class Logger extends ApplicationManager {
   /**
    * Logs a debug message
    */
-  debug (message: string): void {
+  debug (message: any): void {
     this._log('debug', message);
   }
 
   /**
    * Logs an info message
    */
-  info (message: string): void {
+  info (message: any): void {
     this._log('info', message);
   }
 
   /**
    * Logs a warn message
    */
-  warn (message: string): void {
+  warn (message: any): void {
     this._log('warn', message);
   }
 
   /**
    * Logs an error message
    */
-  error (message: string): void {
+  error (message: any): void {
     this._log('error', message);
   }
 
   /**
    * Logs a verbose message
    */
-  verbose (message: string): void {
+  verbose (message: any): void {
     this._log('verbose', message);
   }
 
-  private _log (level: string, message: string) {
+  private _log (level: string, message: any) {
     if (! this._application.started) {
       throw runtimeError.get('unavailable_before_start', 'log');
     }

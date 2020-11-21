@@ -11,3 +11,4 @@ export * from 'koncorde';
 export * from 'kuzzle-common-objects';
 
 export * from 'kuzzle-sdk';
+
