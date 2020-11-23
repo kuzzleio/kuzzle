@@ -2,11 +2,11 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   RequestContext,
   PluginImplementationError
-} = require('kuzzle-common-objects');
-
+} = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const Router = require('../../../../lib/core/network/router');

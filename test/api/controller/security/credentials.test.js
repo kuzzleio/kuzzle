@@ -3,8 +3,8 @@
 const rewire = require('rewire');
 const should = require('should');
 const sinon = require('sinon');
-const { Request } = require('kuzzle-common-objects');
 
+const { Request } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = rewire('../../../../lib/api/controller/security');

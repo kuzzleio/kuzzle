@@ -3,12 +3,13 @@
 const assert = require('assert');
 const should = require('should');
 const sinon = require('sinon');
+
 const PipeRunner = require('../../../lib/kuzzle/event/pipeRunner');
 const {
   BadRequestError,
   PluginImplementationError,
   ServiceUnavailableError
-} = require('kuzzle-common-objects');
+} = require('../../../index');
 
 class RemoteControlledPipe {
   constructor () {

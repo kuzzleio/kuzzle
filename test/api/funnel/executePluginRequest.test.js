@@ -1,15 +1,15 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  { MockNativeController } = require('../../mocks/controller.mock'),
-  FunnelController = require('../../../lib/api/funnel'),
-  {
-    Request,
-    NotFoundError
-  } = require('kuzzle-common-objects');
+const should = require('should');
+const sinon = require('sinon');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const { MockNativeController } = require('../../mocks/controller.mock');
+const FunnelController = require('../../../lib/api/funnel');
+const {
+  Request,
+  NotFoundError
+} = require('../../../index');
 
 describe('funnel.executePluginRequest', () => {
   let

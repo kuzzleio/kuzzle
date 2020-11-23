@@ -23,6 +23,7 @@
 import Bluebird from 'bluebird';
 import Koncorde from 'koncorde';
 import { Client } from '@elastic/elasticsearch';
+import { JSONObject } from 'kuzzle-sdk';
 
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import PluginRepository from './pluginRepository';
@@ -47,10 +48,11 @@ import {
   SizeLimitError,
   TooManyRequestsError,
   UnauthorizedError,
+} from '../../kerror/errors';
+import {
   RequestContext,
   RequestInput,
   Request,
-  JSONObject,
 } from '../../../index';
 
 const contextError = kerror.wrap('plugin', 'context');

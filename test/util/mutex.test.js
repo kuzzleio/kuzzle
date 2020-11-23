@@ -3,8 +3,8 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockRequire = require('mock-require');
-const { InternalError: KuzzleInternalError } = require('kuzzle-common-objects');
 
+const { InternalError: KuzzleInternalError } = require('../../index');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('#mutex', () => {

@@ -19,7 +19,9 @@
  * limitations under the License.
  */
 
-import { Request, JSONObject } from '../../index';
+import { JSONObject } from 'kuzzle-sdk';
+
+import { Request } from '../api/request';
 import { Backend } from '../core/application/backend';
 import { PluginContext } from '../core/plugin/pluginContext';
 
@@ -247,4 +249,19 @@ export abstract class Plugin {
    * @see https://docs.kuzzle.io/core/2/plugins/guides/manual-setup/init-function/
    */
   abstract init (config: JSONObject, context: PluginContext): Promise<any> | any
+}
+
+/**
+ * Deprecation warning about a specific feature.
+ * Only available in developement mode (NODE_ENV=development)
+ */
+export interface Deprecation {
+  /**
+   * Version since the feature is deprecated
+   */
+  version: string;
+  /**
+   * Information about the deprecation, replacement, etc.
+   */
+  message: string;
 }
