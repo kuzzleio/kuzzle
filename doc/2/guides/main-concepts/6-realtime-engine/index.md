@@ -418,7 +418,11 @@ If a second client subscribes to the same notifications, then the first client w
 </pre>
 </details>
 
+<<<<<<< HEAD
 More information about the [User Notification format](/core/2/api/payloads/notifications#user-notification)
+=======
+More information about the [User Notification format](/core/2/api/objects/notifications#user-notification)
+>>>>>>> new-documentation
 
 ### volatile
 
