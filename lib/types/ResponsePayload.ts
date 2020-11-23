@@ -48,6 +48,11 @@ export interface KuzzleResponse extends JSONObject {
   collection?: string;
 
   /**
+   * Document unique identifier
+   */
+  _id?: string;
+
+  /**
    * API error
    */
   error?: {

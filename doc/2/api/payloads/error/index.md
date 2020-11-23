@@ -10,13 +10,13 @@ order: 400
 
 Errors returned by the Kuzzle API in the `error` part of a response are objects with the following properties:
 
-| Property     | Type               | Description                                            |
-| ------------ | ------------------ | ------------------------------------------------------ |
-| `status`     | <pre>number</pre>  | HTTP status code                                       |
-| `message`    | <pre>string</pre>  | Short description of the error                         |
-| `stack`      | <pre>string</pre>  | Error stack trace (Available in development mode only) |
-| `id`         | <pre>string</pre>  | Error unique identifier |
-| `code`       | <pre>number</pre>  | Error unique code |
+| Property  | Type              | Description                                            |
+|-----------|-------------------|--------------------------------------------------------|
+| `status`  | <pre>number</pre> | HTTP status code                                       |
+| `message` | <pre>string</pre> | Short description of the error                         |
+| `stack`   | <pre>string</pre> | Error stack trace (Available in development mode only) |
+| `id`      | <pre>string</pre> | Error unique identifier                                |
+| `code`    | <pre>number</pre> | Error unique code                                      |
 
 
 ### id
