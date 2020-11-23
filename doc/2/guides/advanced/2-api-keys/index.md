@@ -10,7 +10,7 @@ order: 200
 
 Kuzzle allows to create API keys to **authenticate users without using an authentication strategy** and the [auth:login](/core/2/references/controllers/auth/login) action.
 
-An API key is associated with a standard [authentication token](/core/2/guides/main-concepts/5-authentication#authentication-token) that can then be used to [authenticate users] to the Kuzzle API.
+An API key is associated with a standard [authentication token](/core/2/guides/main-concepts/5-authentication#authentication-token) that can then be used to [authenticate users](/core/2/api/controllers/auth/login) to the Kuzzle API.
 
 The **authentication tokens** associated to these API keys **may never expire**. It is also possible to **revoke them** at any time by deleting the associated API key.
 
