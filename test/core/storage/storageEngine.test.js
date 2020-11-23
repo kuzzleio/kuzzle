@@ -2,8 +2,8 @@
 
 const should = require('should');
 const mockRequire = require('mock-require');
-const { PreconditionError } = require('kuzzle-common-objects');
 
+const { PreconditionError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
 

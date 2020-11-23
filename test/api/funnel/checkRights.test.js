@@ -2,12 +2,12 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   Request,
   ForbiddenError,
   UnauthorizedError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const FunnelController = require('../../../lib/api/funnel');

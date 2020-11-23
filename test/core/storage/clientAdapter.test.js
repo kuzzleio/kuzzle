@@ -3,12 +3,12 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockRequire = require('mock-require');
+
 const {
   BadRequestError,
   PartialError,
   PreconditionError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ElasticsearchMock = require('../../mocks/elasticsearch.mock');
 const MutexMock = require('../../mocks/mutex.mock');

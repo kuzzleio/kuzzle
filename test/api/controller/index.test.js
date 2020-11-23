@@ -2,8 +2,9 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const IndexController = require('../../../lib/api/controller/index');
-const { Request } = require('kuzzle-common-objects');
+const { Request } = require('../../../index');
 const { NativeController } = require('../../../lib/api/controller/base');
 const mockAssertions = require('../../mocks/mockAssertions');
 const KuzzleMock = require('../../mocks/kuzzle.mock');

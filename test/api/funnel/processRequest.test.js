@@ -3,14 +3,14 @@
 const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
+
 const {
   Request,
   NotFoundError,
   PluginImplementationError,
   InternalError: KuzzleInternalError,
   BadRequestError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
   MockBaseController,

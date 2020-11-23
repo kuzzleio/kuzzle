@@ -2,4 +2,6 @@ export * from './lib/core/application/backend';
 
 export * from './lib/util/interfaces';
 
-export * from 'kuzzle-common-objects';
+export * from './lib/api/request';
+
+export * from './lib/kerror/errors';

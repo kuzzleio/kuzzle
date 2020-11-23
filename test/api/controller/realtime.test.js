@@ -2,11 +2,11 @@
 
 const should = require('should');
 const RealtimeController = require('../../../lib/api/controller/realtime');
+
 const {
   Request,
   BadRequestError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const { NativeController } = require('../../../lib/api/controller/base');

@@ -4,14 +4,14 @@ const sinon = require('sinon');
 const should = require('should');
 const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
+
 const {
   Request,
   UnauthorizedError,
   BadRequestError,
   InternalError: KuzzleInternalError,
   PluginImplementationError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const AuthController = require('../../../lib/api/controller/auth');

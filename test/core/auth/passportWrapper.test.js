@@ -1,17 +1,17 @@
 'use strict';
 
-const
-  should = require('should'),
-  Kuzzle = require('../../mocks/kuzzle.mock'),
-  sinon = require('sinon'),
-  mockrequire = require('mock-require'),
-  passport = require('passport'),
-  {
-    ForbiddenError,
-    PluginImplementationError,
-    UnauthorizedError
-  } = require('kuzzle-common-objects'),
-  PassportResponse = require('../../../lib/core/auth/passportResponse');
+const should = require('should');
+const sinon = require('sinon');
+const mockrequire = require('mock-require');
+const passport = require('passport');
+
+const {
+  ForbiddenError,
+  PluginImplementationError,
+  UnauthorizedError
+} = require('../../../index');
+const PassportResponse = require('../../../lib/core/auth/passportResponse');
+const Kuzzle = require('../../mocks/kuzzle.mock');
 
 describe('Test the passport Wrapper', () => {
   let
