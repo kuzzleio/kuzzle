@@ -2,10 +2,10 @@
 
 const should = require('should');
 const mockrequire = require('mock-require');
+
 const {
   PluginImplementationError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const AbstractManifest = require('../../../lib/core/shared/abstractManifest');

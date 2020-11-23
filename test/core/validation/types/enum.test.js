@@ -1,10 +1,10 @@
 'use strict';
 
-const
-  { PreconditionError } = require('kuzzle-common-objects'),
-  BaseType = require('../../../../lib/core/validation/baseType'),
-  EnumType = require('../../../../lib/core/validation/types/enum'),
-  should = require('should');
+const should = require('should');
+
+const { PreconditionError } = require('../../../../index');
+const BaseType = require('../../../../lib/core/validation/baseType');
+const EnumType = require('../../../../lib/core/validation/types/enum');
 
 describe('Test: validation/types/enum', () => {
   const enumType = new EnumType();

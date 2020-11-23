@@ -39,7 +39,7 @@ const {
   SizeLimitError,
   TooManyRequestsError,
   UnauthorizedError,
-} = require('kuzzle-common-objects');
+} = require('../lib/kerror/errors');
 
 const errors = {
   BadRequestError,

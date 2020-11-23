@@ -4,12 +4,12 @@ const should = require('should');
 const Bluebird = require('bluebird');
 const sinon = require('sinon');
 const mockRequire = require('mock-require');
+
 const {
   BadRequestError,
   PluginImplementationError,
   PreconditionError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('Test: validation initialization', () => {

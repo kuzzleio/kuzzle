@@ -1,13 +1,13 @@
 'use strict';
 
 const should = require('should');
+
 const {
   Request,
   BadRequestError,
   NotFoundError,
   SizeLimitError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const CollectionController = require('../../../lib/api/controller/collection');

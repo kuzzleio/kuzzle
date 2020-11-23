@@ -1,8 +1,8 @@
 'use strict';
 
 const should = require('should');
-const { PreconditionError } = require('kuzzle-common-objects');
 
+const { PreconditionError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const IndexCache = require('../../../lib/core/storage/indexCache');
