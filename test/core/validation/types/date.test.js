@@ -1,12 +1,12 @@
 'use strict';
 
-const
-  { PreconditionError } = require('kuzzle-common-objects'),
-  sinon = require('sinon'),
-  mockrequire = require('mock-require'),
-  BaseType = require('../../../../lib/core/validation/baseType'),
-  should = require('should'),
-  DateType = require('../../../../lib/core/validation/types/date');
+const sinon = require('sinon');
+const should = require('should');
+const mockrequire = require('mock-require');
+
+const { PreconditionError } = require('../../../../index');
+const BaseType = require('../../../../lib/core/validation/baseType');
+const DateType = require('../../../../lib/core/validation/types/date');
 
 describe('Test: validation/types/date', () => {
   let dateType;

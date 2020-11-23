@@ -3,6 +3,7 @@
 const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
+
 const httpsRoutes = require('../../../../lib/config/httpRoutes');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const Router = require('../../../../lib/core/network/httpRouter');
@@ -10,7 +11,7 @@ const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
 const {
   Request,
   InternalError
-} = require('kuzzle-common-objects');
+} = require('../../../../index');
 
 describe('core/network/httpRouter', () => {
   let

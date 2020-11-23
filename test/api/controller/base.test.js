@@ -1,8 +1,9 @@
 'use strict';
 
-const { BadRequestError } = require('kuzzle-common-objects');
 const should = require('should');
 const sinon = require('sinon');
+
+const { BadRequestError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const { NativeController } = require('../../../lib/api/controller/base');
 
