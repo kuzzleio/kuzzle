@@ -40,7 +40,7 @@ import {
   ControllerDefinition,
   BasePlugin,
   Controller
-} from '../../util/interfaces';
+} from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');

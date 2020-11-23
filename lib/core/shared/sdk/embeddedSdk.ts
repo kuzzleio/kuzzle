@@ -21,7 +21,7 @@
 
 import { Kuzzle } from 'kuzzle-sdk';
 
-import { KuzzleRequest, KuzzleResponse } from '../../../util/interfaces';
+import { KuzzleRequest, KuzzleResponse } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import kerror from '../../../kerror';
@@ -53,7 +53,7 @@ export class EmbeddedSDK extends Kuzzle {
    *
    * @param user - User to impersonate the SDK with
    */
-  as (user: { _id: string }) {
+  as (user: { _id: string }): EmbeddedSDK {
     if (! isPlainObject(user) || typeof user._id !== 'string') {
       throw contextError.get('invalid_user');
     }
