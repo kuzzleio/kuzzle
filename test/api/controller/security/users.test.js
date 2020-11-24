@@ -458,6 +458,26 @@ describe('Test: security controller - users', () => {
       return should(securityController.searchUsers(request))
         .be.rejectedWith(error);
     });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
+
+      return should(securityController.searchUsers(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      securityController.translateKoncorde = sinon.stub().resolves();
+
+      await securityController.searchUsers(request);
+
+      should(securityController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
+    });
   });
 
   describe('#scrollUsers', () => {

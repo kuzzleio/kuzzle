@@ -578,6 +578,24 @@ Feature: Document Controller
       | age | 21 |
 
   @mappings
+  Scenario: deleteByQuery with Koncorde filters
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id | body                               |
+      | -   | { "name": "document1", "age": 42 } |
+      | -   | { "name": "document2", "age": 84 } |
+      | -   | { "name": "document2", "age": 21 } |
+    And I refresh the collection
+    When I successfully execute the action "document":"deleteByQuery" with args:
+      | index      | "nyc-open-data"                                   |
+      | collection | "yellow-taxi"                                     |
+      | body       | { "query": { "range": { "age": { "gt": 21 } } } } |
+      | lang       | "koncorde"                                        |
+    Then I should receive a "documents" array containing 2 elements
+    And I count 1 documents matching:
+      | age | 21 |
+
+  @mappings
   Scenario: updateByQuery
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
@@ -591,6 +609,34 @@ Feature: Document Controller
       | index      | "nyc-open-data"                                                                                   |
       | collection | "yellow-taxi"                                                                                     |
       | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
+    Then I should receive a "successes" array of objects matching:
+      | _id          |
+      | "document-1" |
+      | "document-4" |
+    When I "get" the following document ids:
+      | "document-1" |
+      | "document-4" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                                                     |
+      | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+      | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+
+
+  @mappings
+  Scenario: UpdateByQuery with Koncorde filters
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                              |
+      | "document-1" | { "name": "Sylvanas Windrunner" } |
+      | "document-2" | { "name": "Tirion Fordring" }     |
+      | "document-3" | { "name": "Tirion Fordring" }     |
+      | "document-4" | { "name": "Sylvanas Windrunner" } |
+    And I refresh the collection
+    When I successfully execute the action "document":"updateByQuery" with args:
+      | index      | "nyc-open-data"                                                                                    |
+      | collection | "yellow-taxi"                                                                                      |
+      | body       | { "query": { "equals": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
+      | lang       | "koncorde"                                                                                         |
     Then I should receive a "successes" array of objects matching:
       | _id          |
       | "document-1" |

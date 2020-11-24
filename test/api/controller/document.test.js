@@ -1,6 +1,7 @@
 'use strict';
 
 const should = require('should');
+const sinon = require('sinon');
 
 const {
   Request,
@@ -75,14 +76,6 @@ describe('DocumentController', () => {
       });
     });
 
-    it('should reject if the "lang" is not supported', () => {
-      request.input.args.lang = 'turkish';
-
-      return should(documentController.search(request)).rejectedWith(
-        BadRequestError,
-        { id: 'api.assert.invalid_argument' });
-    });
-
     it('should reject if index contains a comma', () => {
       request.input.resource.index = '%test,anotherIndex';
       request.input.action = 'search';
@@ -119,65 +112,32 @@ describe('DocumentController', () => {
       return should(documentController.search(request)).rejectedWith('foobar');
     });
 
-    describe('lang "koncorde"', () => {
+    it('should reject if the "lang" is not supported', () => {
+      request.input.args.lang = 'turkish';
 
-      beforeEach(() => {
-        request.input.args.lang = 'koncorde';
-        request.input.body = {
-          query: {
-            equals: { name: 'Melis' }
-          }
-        };
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
 
-        kuzzle.ask
-          .withArgs('core:storage:public:translate')
-          .resolves({
-            term: { name: 'Melis' }
-          });
-      });
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
 
-      it('should translate the filter before passing it to the storage engine', async () => {
-        await documentController.search(request);
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
 
-        should(kuzzle.ask).be.calledWith(
-          'core:storage:public:translate',
-          { equals: { name: 'Melis' } });
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
 
-        should(kuzzle.ask).be.calledWith(
-          'core:storage:public:document:search',
-          index,
-          collection,
-          { query: { term: { name: 'Melis' } } },
-          { from: 0, size: 10, scroll: undefined });
-      });
+      await documentController.search(request);
 
-      it('should validate the filter syntax with Koncorde', async () => {
-        await documentController.search(request);
-
-        should(kuzzle.koncorde.validate)
-          .be.calledWith({ equals: { name: 'Melis' } });
-      });
-
-      it('should reject if the query is not an object', () => {
-        request.input.body.query = undefined;
-
-        return should(documentController.search(request)).rejectedWith(
-          BadRequestError,
-          { id: 'api.assert.invalid_type' });
-      });
-
-      it('should reject when translation fail', () => {
-        const error = new Error('message');
-        error.keyword = { type: 'operator', name: 'n0t' };
-
-        kuzzle.ask
-          .withArgs('core:storage:public:translate')
-          .rejects(error);
-
-        return should(documentController.search(request)).rejectedWith(
-          BadRequestError,
-          { id: 'api.assert.koncorde_restricted_keyword' });
-      });
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 
@@ -656,6 +616,7 @@ describe('DocumentController', () => {
 
   describe('#updateByQuery', () => {
     let esResponse;
+
     beforeEach(() => {
       esResponse = {
         successes: [
@@ -778,6 +739,32 @@ describe('DocumentController', () => {
           id: 'api.assert.missing_argument',
           message: /^Missing argument "body.changes"/,
         });
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = {
+        query: { equals: { name: 'Melis' } },
+        changes: {}
+      };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.updateByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = {
+        query: { equals: { name: 'Melis' } },
+        changes: {}
+      };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.updateByQuery(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 
@@ -1029,6 +1016,26 @@ describe('DocumentController', () => {
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }
         ]});
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.deleteByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.deleteByQuery(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 

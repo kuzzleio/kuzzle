@@ -106,7 +106,7 @@ Method: GET
 - `from`: paginates search results by defining the offset from the first result you want to fetch. Usually used with the `size` argument
 - `scroll`: creates a forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` is returned in the results. This cursor can then be moved forward using the [scroll](/core/2/api/controllers/document/scroll) API action
 - `size`: set the maximum number of documents returned per result page
-- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="change-me"/>
 
 ---
 

@@ -44,7 +44,7 @@ Feature: Security Controller
       | userId | "My" |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"   |
+      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
 
   # security:searchApiKeys =====================================================
 
@@ -74,8 +74,15 @@ Feature: Security Controller
       | body   | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"   |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"   |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"          |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"          |
+    When I successfully execute the action "security":"searchApiKeys" with args:
+      | userId | "test-admin"                     |
+      | body   | { "equals": { "userId": "My" } } |
+      | lang   | "koncorde"                       |
+    Then I should receive a "hits" array of objects matching:
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
+      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
 
   # security:deleteApiKey =======================================================
 
@@ -331,5 +338,21 @@ Feature: Security Controller
       | from | 2                                                            |
       | size | 10                                                           |
     Then I should receive a empty "hits" array
+    And I should receive a result matching:
+      | total | 2 |
+
+  @security
+  Scenario: Search users with koncorde filters
+    Given I create a user "test-user" with content:
+      | profileIds | ["default"] |
+    And I create a user "test-user2" with content:
+      | profileIds | ["admin"] |
+    When I successfully execute the action "security":"searchUsers" with args:
+      | body | { "query": { "ids": { "values": ["test-user", "test-user2"] } } } |
+      | lang | "koncorde"                                                        |
+    Then I should receive a "hits" array of objects matching:
+      | _id          |
+      | "test-user"  |
+      | "test-user2" |
     And I should receive a result matching:
       | total | 2 |
