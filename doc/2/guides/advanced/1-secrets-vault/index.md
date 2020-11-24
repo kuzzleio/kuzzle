@@ -2,7 +2,7 @@
 code: false
 type: page
 title: Secrets Vault
-description: Security store your application secrets
+description: Securely store your application secrets
 order: 100
 ---
 

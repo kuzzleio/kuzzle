@@ -14,7 +14,7 @@ An API key is associated with a standard [authentication token](/core/2/guides/m
 
 The **authentication tokens** associated to these API keys **may never expire**. It is also possible to **revoke them** at any time by deleting the associated API key.
 
-## Create API Key
+## Create an API Key
 
 Users can create API keys for their personal use with the [auth:createApiKey](/core/2/references/controllers/auth/create-api-key) action.
 
@@ -58,7 +58,7 @@ Kuzzle returns a response containing the token authentication linked to the API 
 ### API Key properties
 
 ::: warning
-The authentication token `token` will never be returned by Kuzzle again. If you lose it, you'll have to delete the API key and recreate a new one.
+The authentication token provided in the `token` property will never be returned by Kuzzle again. If you lose it, you'll have to delete the API key and recreate a new one.
 :::
 
 | Property      | Description                                                                       |
@@ -70,12 +70,12 @@ The authentication token `token` will never be returned by Kuzzle again. If you 
 | `ttl`         | Original TTL                                                                      |
 | `userId`      | User [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier) |
 
-## Search for API Key
+## Search for API Keys
 
 It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/references/controllers/auth/search-api-keys)) or in those of all users ([securitys:searchApiKeys](/core/2/references/controllers/securitys/search-api-keys)).
 
 
-In order to know to which API key an authentication token corresponds, it is possible to use the `fingerprint` property which corresponds to the SHA256 hash of the token.
+In order to know to which API key an authentication token corresponds, it is possible to use the `fingerprint` property which is a SHA256 hash of the token.
 
 ```bash
 # use sha256sum to compute the fingerprint of the authentication token
@@ -113,7 +113,7 @@ The associated authentication token is not returned by Kuzzle.
 
 ## Delete API Key
 
-It is possible to use [auth:deleteApiKey](/core/2/references/controllers/auth/delete-api-key) and [security:deleteApiKey](/core/2/references/controllers/security/delete-api-key) methods to delete API keys.
+It is possible to use the [auth:deleteApiKey](/core/2/references/controllers/auth/delete-api-key) and the [security:deleteApiKey](/core/2/references/controllers/security/delete-api-key) methods to delete API keys.
 
 Once an API key is deleted, the **associated authentication token will be revoked** and cannot be used anymore.
 
