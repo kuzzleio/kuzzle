@@ -20,7 +20,7 @@
  */
 
 import * as assert from '../../util/assertType';
-import { JSONObject } from '../../util/interfaces';
+import { JSONObject } from 'kuzzle-sdk';
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output

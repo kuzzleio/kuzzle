@@ -58,7 +58,7 @@ export interface ControllerDefinition {
         /**
          * Route path.
          * A route starting with `/` will be prefixed by `/_` otherwise the route
-         * will be prefixed by `/_/<application-name>/`
+         * will be prefixed by `/_/<application-name>/`.
          */
         path: string
       }>

@@ -21,7 +21,7 @@
 
 import * as util from 'util';
 
-import { JSONObject } from '../../util/interfaces';
+import { JSONObject } from 'kuzzle-sdk';
 
 /**
  * API error are instances of this class.
