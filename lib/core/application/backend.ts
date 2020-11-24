@@ -25,7 +25,7 @@ import fs from 'fs';
 import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
-import PluginLogger from 'kuzzle-plugin-logger';
+import PluginBackendLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
 import Plugin from '../plugin/plugin';
@@ -34,9 +34,8 @@ import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
-
+import { JSONObject } from '../../../index';
 import {
-  JSONObject,
   ControllerDefinition,
   BasePlugin,
   Controller
@@ -59,9 +58,9 @@ class ApplicationManager {
   }
 }
 
-/* PipeManager class ======================================================== */
+/* BackendPipe class ======================================================== */
 
-class PipeManager extends ApplicationManager {
+class BackendPipe extends ApplicationManager {
   /**
    * Registers a new pipe on an event
    *
@@ -69,7 +68,7 @@ class PipeManager extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any>) : void {
+  register (event: string, handler: (...args: any) => Promise<any>): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'pipe');
     }
@@ -86,9 +85,9 @@ class PipeManager extends ApplicationManager {
   }
 }
 
-/* HookManager class ======================================================== */
+/* BackendHook class ======================================================== */
 
-class HookManager extends ApplicationManager {
+class BackendHook extends ApplicationManager {
   /**
    * Registers a new hook on an event
    *
@@ -113,9 +112,9 @@ class HookManager extends ApplicationManager {
   }
 }
 
-/* ConfigManager class ====================================================== */
+/* BackendConfig class ====================================================== */
 
-class ConfigManager extends ApplicationManager {
+class BackendConfig extends ApplicationManager {
   /**
    * Configuration content
    */
@@ -155,9 +154,9 @@ class ConfigManager extends ApplicationManager {
   }
 }
 
-/* ControllerManager class ================================================== */
+/* BackendController class ================================================== */
 
-class ControllerManager extends ApplicationManager {
+class BackendController extends ApplicationManager {
   /**
    * Registers a new controller.
    *
@@ -272,9 +271,9 @@ class ControllerManager extends ApplicationManager {
   }
 }
 
-/* VaultManager class ======================================================= */
+/* BackendVault class ======================================================= */
 
-class VaultManager extends ApplicationManager {
+class BackendVault extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -309,9 +308,9 @@ class VaultManager extends ApplicationManager {
   }
 }
 
-/* PluginManager class ====================================================== */
+/* BackendPlugin class ====================================================== */
 
-class PluginManager extends ApplicationManager {
+class BackendPlugin extends ApplicationManager {
   /**
    * Uses a plugin in this application
    *
@@ -353,9 +352,9 @@ class PluginManager extends ApplicationManager {
   }
 }
 
-/* Logger class ============================================================= */
+/* BackendLogger class ====================================================== */
 
-class Logger extends ApplicationManager {
+class BackendLogger extends ApplicationManager {
   /**
    * Logs a debug message
    */
@@ -400,9 +399,9 @@ class Logger extends ApplicationManager {
   }
 }
 
-/* StorageManager class ===================================================== */
+/* BackendStorage class ===================================================== */
 
-class StorageManager extends ApplicationManager {
+class BackendStorage extends ApplicationManager {
   private _client: Client = null;
   private _Client: new (clientConfig?: any) => Client = null;
 
@@ -477,21 +476,21 @@ export class Backend {
   public kerror: any;
 
   /**
-   * PipeManager definition manager
+   * Pipe definition manager
    *
    * @method register - Registers a new pipe on an event
    */
-  public pipe: PipeManager;
+  public pipe: BackendPipe;
 
   /**
-   * HookManager definition manager
+   * Hook definition manager
    *
    * @method register - Registers a new hook on an event
    */
-  public hook: HookManager;
+  public hook: BackendHook;
 
   /**
-   * VaultManager
+   * BackendVault
    *
    * By default Kuzzle will try to load the following locations:
    *  - local path: ./config/secrets.enc.json
@@ -501,7 +500,7 @@ export class Backend {
    * environment variable:
    *  - KUZZLE_VAULT_KEY
    */
-  public vault: VaultManager;
+  public vault: BackendVault;
 
   /**
    * Configuration definition manager
@@ -509,7 +508,7 @@ export class Backend {
    * @method set - Sets a configuration value
    * @method merge - Merges a configuration object into the current configuration
    */
-  public config: ConfigManager;
+  public config: BackendConfig;
 
   /**
    * Controller manager
@@ -517,17 +516,17 @@ export class Backend {
    * @method add - Adds a new controller definition
    * @method use - Uses a controller instance
    */
-  public controller: ControllerManager;
+  public controller: BackendController;
 
   /**
    * Plugin manager
    *
    * @method use - Uses a plugin instance
    */
-  public plugin: PluginManager;
+  public plugin: BackendPlugin;
 
   /**
-   * Logger
+   * BackendLogger
    *
    * @method debug
    * @method info
@@ -535,12 +534,12 @@ export class Backend {
    * @method error
    * @method verbose
    */
-  public log: Logger;
+  public log: BackendLogger;
 
   /**
    * Storage manager
    */
-  public storage: StorageManager;
+  public storage: BackendStorage;
 
   /**
    * @deprecated
@@ -573,14 +572,14 @@ export class Backend {
       writable: true
     });
 
-    this.pipe = new PipeManager(this);
-    this.hook = new HookManager(this);
-    this.config = new ConfigManager(this);
-    this.vault = new VaultManager(this);
-    this.controller = new ControllerManager(this);
-    this.plugin = new PluginManager(this);
-    this.storage = new StorageManager(this);
-    this.log = new Logger(this);
+    this.pipe = new BackendPipe(this);
+    this.hook = new BackendHook(this);
+    this.config = new BackendConfig(this);
+    this.vault = new BackendVault(this);
+    this.controller = new BackendController(this);
+    this.plugin = new BackendPlugin(this);
+    this.storage = new BackendStorage(this);
+    this.log = new BackendLogger(this);
 
     this.kerror = kerror;
 
@@ -609,7 +608,7 @@ export class Backend {
     this.plugin.use(
       new PluginPassportAuthLocal(),
       { name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
+    this.plugin.use(new PluginBackendLogger(), { name: 'kuzzle-plugin-logger' });
 
     const application = new Plugin(
       this._kuzzle,
