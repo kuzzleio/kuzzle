@@ -67,7 +67,7 @@ Body:
 
 ## Body properties
 
-- `request`: API request to check the rights with
+- `request`: API request to check
 
 ---
 

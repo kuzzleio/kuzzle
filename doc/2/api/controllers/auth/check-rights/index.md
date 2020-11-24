@@ -8,7 +8,7 @@ title: checkRights
 
 <SinceBadge version="change-me"/>
 
-Checks if the provided API request can be executed.
+Checks if the provided API request can be executed by this network connection, using the current authentication information.
 
 ---
 
@@ -60,7 +60,7 @@ Body:
 
 ## Body properties
 
-- `request`: API request to check the rights with
+- `request`: API request to check
 
 ---
 
