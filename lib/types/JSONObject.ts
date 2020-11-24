@@ -1,3 +1,5 @@
+import { Kuzzle } from "kuzzle-sdk";
+
 /*
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps

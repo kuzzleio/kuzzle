@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import { Request } from 'kuzzle-common-objects'
+
 /**
  * API controller definition.
  *
