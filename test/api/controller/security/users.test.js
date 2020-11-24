@@ -48,10 +48,8 @@ describe('Test: security controller - users', () => {
       request.input.args.userId = 'melis';
 
       request.input.body = {
-        request: {
-          controller: 'document',
-          action: 'create'
-        }
+        controller: 'document',
+        action: 'create'
       };
     });
 

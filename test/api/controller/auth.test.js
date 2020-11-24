@@ -71,10 +71,8 @@ describe('Test the auth controller', () => {
       request.context.user = userObject;
 
       request.input.body = {
-        request: {
-          controller: 'document',
-          action: 'create'
-        }
+        controller: 'document',
+        action: 'create'
       };
     });
 
