@@ -7,6 +7,7 @@ const should = require('should');
 const sinon = require('sinon');
 const _ = require('lodash');
 const { Client: ESClient } = require('@elastic/elasticsearch');
+
 const {
   Request,
   KuzzleError,
@@ -23,9 +24,8 @@ const {
   ForbiddenError,
   ExternalServiceError,
   BadRequestError,
-} = require('kuzzle-common-objects');
-
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+} = require('../../../../index');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
@@ -332,14 +332,14 @@ describe('Plugin Context', () => {
           {
             connectionId: 'superid',
           });
-  
+
         await context.accessors.subscription.register(
           customRequest.context.connection.id,
           customRequest.input.index,
           customRequest.input.collection,
           customRequest.input.body
         );
-  
+
         should(kuzzle.ask).be.calledWith('core:realtime:subscribe', sinon.match(
           {
             context: {

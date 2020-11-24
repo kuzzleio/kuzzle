@@ -12,7 +12,7 @@ const {
   BadRequestError,
   PartialError,
   SizeLimitError
-} = require('kuzzle-common-objects');
+} = require('../../../../index');
 const kerror = require('../../../../lib/kerror');
 
 describe('/api/controller/security', () => {

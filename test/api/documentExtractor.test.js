@@ -1,8 +1,8 @@
 'use strict';
 
 const should = require('should');
-const { Request, InternalError, BadRequestError } = require('kuzzle-common-objects');
 
+const { Request, InternalError, BadRequestError } = require('../../index');
 const DocumentExtractor = require('../../lib/api/documentExtractor');
 
 describe('DocumentExtractor', () => {

@@ -6,12 +6,12 @@ const Bluebird = require('bluebird');
 const should = require('should');
 const sinon = require('sinon');
 const mockrequire = require('mock-require');
+
 const {
   BadRequestError,
   InternalError: KuzzleInternalError,
   UnauthorizedError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const Token = require('../../../lib/model/security/token');

@@ -3,12 +3,12 @@
 const should = require('should');
 const mockrequire = require('mock-require');
 const sinon = require('sinon');
+
 const {
   KuzzleError,
   NotFoundError,
   PluginImplementationError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const Plugin = require('../../../lib/core/plugin/plugin');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const { BaseController } = require('../../../lib/api/controller/base');

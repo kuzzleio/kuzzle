@@ -1,13 +1,14 @@
 'use strict';
 
+const sinon = require('sinon');
+
 const {
   BaseController,
   NativeController
 } = require('../../lib/api/controller/base');
 const {
   InternalError: KuzzleInternalError
-} = require('kuzzle-common-objects');
-const sinon = require('sinon');
+} = require('../../index');
 
 function injectStubs (controller) {
   controller.failResult = new KuzzleInternalError('rejected action');
