@@ -22,7 +22,7 @@ register(event: string, handler: (...args: any) => Promise<any>): void
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
 | `event` | <pre>string</pre> | Event name |
-| `config` | <pre>(...args: any) => Promise<any></pre> | Function to execute when the event is triggered |
+| `handler` | <pre>(...args: any) => Promise&lt;any&gt;</pre> | Function to execute when the event is triggered |
 
 **Usage:**
 
