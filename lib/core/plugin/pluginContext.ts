@@ -57,7 +57,7 @@ import {
 
 const contextError = kerror.wrap('plugin', 'context');
 
-export interface Repository {
+export type Repository = {
  create(document: JSONObject, options: any): Promise<any>;
 
  createOrReplace(document: JSONObject, options: any): Promise<any>;

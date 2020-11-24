@@ -26,7 +26,7 @@ import { JSONObject} from '../../index';
  *
  * @see https://docs.kuzzle.io/core/2/api/payloads/request
  */
-export interface RequestPayload extends JSONObject {
+export type RequestPayload = {
   /**
    * API controller name
    */

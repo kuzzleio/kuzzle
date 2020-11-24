@@ -14,7 +14,7 @@ This method can only be used before application startup.
 :::
 
 ```ts
-register(event: string, handler: (...args: any) => Promise<any>): void
+register(event: string, handler: EventHandler): void
 ```
 
 <br/>
@@ -22,7 +22,7 @@ register(event: string, handler: (...args: any) => Promise<any>): void
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
 | `event` | <pre>string</pre> | Event name |
-| `handler` | <pre>(...args: any) => Promise&lt;any&gt;</pre> | Function to execute when the event is triggered |
+| `handler` | <pre>[EventHandler](/core/2/framework/types/event-handler)</pre> | Function to execute when the event is triggered |
 
 **Usage:**
 

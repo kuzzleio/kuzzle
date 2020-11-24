@@ -25,4 +25,4 @@ The Response Payload is a standardized response sent by Kuzzle in JSON format.
 | `volatile`   | object       | Request [volatile data](/core/2/guides/main-concepts/1-api#volatile-data) |
 | `room`       | string       | Room unique identifier                                                    |
 
-See also the [ResponsePayload](/core/2/framework/interfaces/response-payload) framework interface.
+See also the [ResponsePayload](/core/2/framework/types/response-payload) framework interface.

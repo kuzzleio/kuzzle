@@ -34,7 +34,7 @@ import { Request } from '../api/request';
  *   }
  * }
  */
-export interface ControllerDefinition {
+export type ControllerDefinition = {
   actions: {
     /**
      * Name of the API action

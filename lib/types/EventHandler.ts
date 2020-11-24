@@ -19,8 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject} from '../../index';
-
-export interface BasePlugin {
-  init: (config: JSONObject, context: any) => Promise<any> | any
-}
+/**
+ * Type for handler attached to Kuzzle events. Either hooks or pipes.
+ */
+export type EventHandler = (...payload: any) => Promise<any>

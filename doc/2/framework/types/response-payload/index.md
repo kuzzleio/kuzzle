@@ -2,12 +2,12 @@
 code: false
 type: page
 title: ResponsePayload
-description: ResponsePayload interface definition
+description: ResponsePayload type definition
 ---
 
 # ResponsePayload
 
-The `ResponsePayload` interface represents an API response sent by Kuzzle in JSON format.
+The `ResponsePayload` type represents an API response sent by Kuzzle in JSON format.
 
 This type is returned by the [EmbeddedSDK.query](/core/2/framework/embedded-sdk/query) method.
 

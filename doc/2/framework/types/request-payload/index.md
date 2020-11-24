@@ -2,12 +2,12 @@
 code: false
 type: page
 title: RequestPayload
-description: RequestPayload interface definition
+description: RequestPayload type definition
 ---
 
 # RequestPayload
 
-The `RequestPayload` interface represents an API request sent to Kuzzle in JSON format.
+The `RequestPayload` type represents an API request sent to Kuzzle in JSON format.
 
 This type is meant to be used with the [EmbeddedSDK.query](/core/2/framework/embedded-sdk/query) method.
 

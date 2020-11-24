@@ -25,7 +25,7 @@ import fs from 'fs';
 import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
-import PluginBackendLogger from 'kuzzle-plugin-logger';
+import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
 import PluginObject from '../plugin/plugin';
@@ -37,8 +37,9 @@ import kuzzleConfig from '../../config';
 import { JSONObject } from '../../../index';
 import {
   ControllerDefinition,
-  Plugin, // merge fail
-  Controller
+  Plugin,
+  Controller,
+  EventHandler
 } from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');
@@ -68,7 +69,7 @@ class BackendPipe extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any>): void {
+  register (event: string, handler: EventHandler): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'pipe');
     }
@@ -95,7 +96,7 @@ class BackendHook extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any> | void) : void {
+  register (event: string, handler: EventHandler) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'hook');
     }
@@ -601,15 +602,10 @@ export class Backend {
     // we need to load the default plugins
     this.plugin.use(
       new PluginPassportAuthLocal(),
-<<<<<<< HEAD
-      { name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(new PluginBackendLogger(), { name: 'kuzzle-plugin-logger' });
-=======
       { deprecationWarning: false, name: 'kuzzle-plugin-auth-passport-local' });
     this.plugin.use(
       new PluginLogger(),
       { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
->>>>>>> 2-dev
 
     const application = new PluginObject(
       this._kuzzle,

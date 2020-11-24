@@ -19,10 +19,17 @@
  * limitations under the License.
  */
 
-export * from './Plugin';
-export * from './Controller';
-export * from './ControllerDefinition';
-export * from './RequestPayload';
-export * from './ResponsePayload';
-export * from './Deprecation';
-export * from './EventHandler';
+/**
+ * Deprecation warning about a specific feature.
+ * Only available in developement mode (NODE_ENV=development)
+ */
+export type Deprecation = {
+  /**
+   * Version since the feature is deprecated
+   */
+  version: string;
+  /**
+   * Information about the deprecation, replacement, etc.
+   */
+  message: string;
+}
