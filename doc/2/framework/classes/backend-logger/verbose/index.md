@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: use
+title: verbose
 description: BackendLogger.verbose method
 ---
 

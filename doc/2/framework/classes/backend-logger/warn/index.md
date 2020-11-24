@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: use
+title: warn
 description: BackendLogger.warn method
 ---
 

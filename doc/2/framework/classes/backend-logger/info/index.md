@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: use
+title: info
 description: BackendLogger.info method
 ---
 
