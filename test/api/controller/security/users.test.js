@@ -68,13 +68,13 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if the provided request is not valid', async () => {
-      request.input.body.request.controller = null;
+      request.input.body.controller = null;
 
       await should(securityController.checkRights(request))
         .be.rejectedWith({ id: 'api.assert.missing_argument' });
 
-      request.input.body.request.controller = 'document';
-      request.input.body.request.action = null;
+      request.input.body.controller = 'document';
+      request.input.body.action = null;
 
       await should(securityController.checkRights(request))
         .be.rejectedWith({ id: 'api.assert.missing_argument' });
