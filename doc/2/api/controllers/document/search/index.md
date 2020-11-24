@@ -26,7 +26,7 @@ You can restrict the scroll session maximum duration under the `services.storage
 
 <SinceBadge version="change-me"/>
 
-This method also support [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) to match documents by passing the `lang` argument with the value `koncorde`.  
+This method also supports the [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) to match documents by passing the `lang` argument with the value `koncorde`.  
 Koncorde filters will be translated into an Elasticsearch query.  
 
 ::: warning
