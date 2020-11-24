@@ -29,7 +29,7 @@ const {
     BadRequestError,
     NotFoundError,
   }
-} = require('kuzzle-common-objects');
+} = require('../../../../../index');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const NodeMock = require('../mocks/node.mock');

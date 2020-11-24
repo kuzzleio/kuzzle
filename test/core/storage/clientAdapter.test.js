@@ -3,12 +3,12 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockRequire = require('mock-require');
+
 const {
   BadRequestError,
   PartialError,
   PreconditionError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ElasticsearchMock = require('../../mocks/elasticsearch.mock');
 const MutexMock = require('../../mocks/mutex.mock');
@@ -184,12 +184,17 @@ describe('#core/storage/ClientAdapter', () => {
         const indexes = ['foo', 'bar', 'baz'];
 
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:storage:${adapter.scope}:index:mDelete`, indexes);
+          adapter.client.deleteIndexes.resolves(indexes);
+
+          const deleted = await kuzzle.ask(
+            `core:storage:${adapter.scope}:index:mDelete`,
+            indexes);
 
           should(publicAdapter.client.deleteIndexes).calledWith(indexes);
           should(publicAdapter.cache.removeIndex).calledWith('foo');
           should(publicAdapter.cache.removeIndex).calledWith('bar');
           should(publicAdapter.cache.removeIndex).calledWith('baz');
+          should(deleted).eql(indexes);
         }
       });
 

@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Request } from 'kuzzle-common-objects'
+import { Request } from '../api/request';
 
 /**
  * API controller definition.

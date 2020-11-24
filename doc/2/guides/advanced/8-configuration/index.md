@@ -22,7 +22,7 @@ You can write your custom config parameters in a `.kuzzlerc` and store it in `$H
 ```json
 {
   "services": {
-    "sotrageEngine": {
+    "storageEngine": {
       "client": {
         "host": "http://localhost:9200"
       }

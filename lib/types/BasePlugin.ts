@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject} from './JSONObject';
+import { JSONObject} from '../../index';
 
 export interface BasePlugin {
   init: (config: JSONObject, context: any) => Promise<any> | any

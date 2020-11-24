@@ -1,12 +1,13 @@
 'use strict';
 
 const should = require('should');
+
 const Kuzzle = require('../../mocks/kuzzle.mock');
 const Role = require('../../../lib/model/security/role');
 const {
   Request,
   BadRequestError
-} = require('kuzzle-common-objects');
+} = require('../../../index');
 
 const
   _kuzzle = Symbol.for('_kuzzle');

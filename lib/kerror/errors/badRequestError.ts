@@ -1,5 +1,3 @@
-import { Kuzzle } from "kuzzle-sdk";
-
 /*
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
@@ -21,9 +19,10 @@ import { Kuzzle } from "kuzzle-sdk";
  * limitations under the License.
  */
 
-/**
- * An interface representing an object with string key and any value
- */
-export interface JSONObject {
-  [key: string]: JSONObject | any
+import { KuzzleError } from './kuzzleError';
+
+export class BadRequestError extends KuzzleError {
+  constructor(message, id?, code?) {
+    super(message, 400, id, code);
+  }
 }

@@ -1,10 +1,10 @@
 'use strict';
 
-const
-  should = require('should'),
-  { Request } = require('kuzzle-common-objects'),
-  Funnel = require('../../../lib/api/funnel'),
-  KuzzleMock = require('../../mocks/kuzzle.mock');
+const should = require('should');
+
+const { Request } = require('../../../index');
+const Funnel = require('../../../lib/api/funnel');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('funnel.processRequest', () => {
   let

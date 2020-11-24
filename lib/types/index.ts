@@ -22,7 +22,6 @@
 export * from './BasePlugin';
 export * from './Controller';
 export * from './ControllerDefinition';
-export * from './JSONObject';
 export * from './RequestPayload';
 export * from './ResponsePayload';
 
