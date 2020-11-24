@@ -77,7 +77,7 @@
           "class": "BadRequestError"
         },
         "koncorde_restricted_keyword": {
-          "description": "An restricted keyword has been provided in filters",
+          "description": "A restricted keyword has been provided in filters",
           "code": 13,
           "message": "The %s \"%s\" of Koncorde DSL is not supported for search queries.",
           "class": "BadRequestError"
