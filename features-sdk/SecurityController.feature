@@ -8,13 +8,13 @@ Feature: Security Controller
       | auth     | { "actions": { "login": true, "checkRights": true } } |
       | document | { "actions": { "create": false, "update": true } }    |
     When I successfully execute the action "security":"checkRights" with args:
-      | userId | "default-user"                                                  |
-      | body   | { "request": { "controller": "document", "action": "create" } } |
+      | userId | "default-user"                                   |
+      | body   | { "controller": "document", "action": "create" } |
     Then I should receive a result matching:
       | allowed | false |
     When I successfully execute the action "security":"checkRights" with args:
-      | userId | "default-user"                                                  |
-      | body   | { "request": { "controller": "document", "action": "update" } } |
+      | userId | "default-user"                                   |
+      | body   | { "controller": "document", "action": "update" } |
     Then I should receive a result matching:
       | allowed | true |
 

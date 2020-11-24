@@ -6,14 +6,14 @@ Feature: Auth Controller
   Scenario: Check if logued user can execute provided API request
     Given I "update" a role "default" with the following API rights:
       | auth     | { "actions": { "login": true, "checkRights": true } } |
-      | document | { "actions": { "create": false, "update": true } }  |
+      | document | { "actions": { "create": false, "update": true } }    |
     And I'm logged in Kuzzle as user "default-user" with password "password"
     When I successfully execute the action "auth":"checkRights" with args:
-      | body | { "request": { "controller": "document", "action": "create" } } |
+      | body | { "controller": "document", "action": "create" } |
     Then I should receive a result matching:
       | allowed | false |
     When I successfully execute the action "auth":"checkRights" with args:
-      | body | { "request": { "controller": "document", "action": "update" } } |
+      | body | { "controller": "document", "action": "update" } |
     Then I should receive a result matching:
       | allowed | true |
 
