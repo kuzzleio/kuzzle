@@ -1,6 +1,6 @@
 ---
 type: branch
-title: BackendConfig
-description: BackendConfig class definition
+title: BackendVault
+description: BackendVault class definition
 code: true
 ---
