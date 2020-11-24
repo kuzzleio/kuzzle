@@ -8,7 +8,7 @@ title: checkRights
 
 <SinceBadge version="change-me"/>
 
-Checks if the provided API request can be executed by an user.
+Checks if the provided API request can be executed by a user.
 
 ---
 
