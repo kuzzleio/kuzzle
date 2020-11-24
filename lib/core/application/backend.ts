@@ -312,7 +312,7 @@ class BackendPlugin extends ApplicationManager {
    * @param plugin - Plugin instance
    * @param options - Additionnal options
    *    - `name`: Specify plugin name instead of using the class name.
-   *    - `manifest`: Manually add a manifest definition (deprecated)
+   *    - `manifest`: Manually add a manifest definition
    *    - `deprecationWarning`: If false, does not display deprecation warnings
    */
   use (
