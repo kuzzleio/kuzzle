@@ -60,6 +60,48 @@ describe('Test the auth controller', () => {
     });
   });
 
+  describe('#checkRights', () => {
+    let userObject;
+
+    beforeEach(() => {
+      userObject = {
+        isActionAllowed: sinon.stub().resolves(true)
+      };
+
+      request.context.user = userObject;
+
+      request.input.body = {
+        controller: 'document',
+        action: 'create'
+      };
+    });
+
+    it('should check if the action is allowed for the user', async () => {
+      const response = await authController.checkRights(request);
+
+      should(userObject.isActionAllowed).be.calledWithMatch({
+        input: {
+          controller: 'document',
+          action: 'create',
+        }
+      });
+      should(response).be.eql({ allowed: true });
+    });
+
+    it('should reject if the provided request is not valid', async () => {
+      request.input.body.controller = null;
+
+      await should(authController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+
+      request.input.body.controller = 'document';
+      request.input.body.action = null;
+
+      await should(authController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+    });
+  });
+
   describe('#login', () => {
     let createTokenStub;
 

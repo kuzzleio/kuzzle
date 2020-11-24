@@ -1,5 +1,23 @@
 Feature: Security Controller
 
+  # security:checkRights ===========================================================
+
+  @security
+  Scenario: Check if logued user can execute provided API request
+    Given I "update" a role "default" with the following API rights:
+      | auth     | { "actions": { "login": true, "checkRights": true } } |
+      | document | { "actions": { "create": false, "update": true } }    |
+    When I successfully execute the action "security":"checkRights" with args:
+      | userId | "default-user"                                   |
+      | body   | { "controller": "document", "action": "create" } |
+    Then I should receive a result matching:
+      | allowed | false |
+    When I successfully execute the action "security":"checkRights" with args:
+      | userId | "default-user"                                   |
+      | body   | { "controller": "document", "action": "update" } |
+    Then I should receive a result matching:
+      | allowed | true |
+
   # security:refresh ===========================================================
 
   @security
@@ -11,11 +29,13 @@ Feature: Security Controller
     # Refresh success on known collection
     When I successfully execute the action "security":"refresh" with args:
       | collection | "users" |
-    Then I successfully execute the action "security":"searchUsers"
+    Then I successfully execute the action "security":"searchUsers" with args:
+      | body | { "sort": "_id" } |
     And I should receive a "hits" array of objects matching:
-      | _id          |
-      | "test-admin" |
-      | "aschen"     |
+      | _id            |
+      | "aschen"       |
+      | "default-user" |
+      | "test-admin"   |
     # Error on unknown collection
     When I execute the action "security":"refresh" with args:
       | collection | "frontend-security" |

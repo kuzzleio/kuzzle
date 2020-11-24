@@ -33,6 +33,54 @@ describe('Test: security controller - users', () => {
     request.context.user._id = '4';
   });
 
+  describe('#checkRights', () => {
+    let user;
+
+    beforeEach(() => {
+      user = {
+        isActionAllowed: sinon.stub().resolves(true)
+      };
+
+      kuzzle.ask
+        .withArgs('core:security:user:get')
+        .resolves(user);
+
+      request.input.args.userId = 'melis';
+
+      request.input.body = {
+        controller: 'document',
+        action: 'create'
+      };
+    });
+
+    it('should check if the action is allowed for the provided userId', async () => {
+      const response = await securityController.checkRights(request);
+
+      should(kuzzle.ask).be.calledWith('core:security:user:get', 'melis');
+
+      should(user.isActionAllowed).be.calledWithMatch({
+        input: {
+          controller: 'document',
+          action: 'create',
+        }
+      });
+      should(response).be.eql({ allowed: true });
+    });
+
+    it('should reject if the provided request is not valid', async () => {
+      request.input.body.controller = null;
+
+      await should(securityController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+
+      request.input.body.controller = 'document';
+      request.input.body.action = null;
+
+      await should(securityController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+    });
+  });
+
   // aka "The Big One"
   describe('#persistUser', () => {
     const createEvent = 'core:security:user:create';
