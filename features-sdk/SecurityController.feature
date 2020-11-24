@@ -77,7 +77,7 @@ Feature: Security Controller
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"          |
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"          |
     When I successfully execute the action "security":"searchApiKeys" with args:
-      | userId | "test-admin"                     |
+      | userId | "My"                     |
       | body   | { "equals": { "userId": "My" } } |
       | lang   | "koncorde"                       |
     Then I should receive a "hits" array of objects matching:
