@@ -212,10 +212,17 @@ describe('Plugin', () => {
       should(emailController.receive).be.a.Function();
     });
 
-    it('should add http routes', async () => {
+    it('should add http routes and generate default routes', async () => {
       await pluginsManager._initApi(plugin);
 
       should(pluginsManager.routes).match([
+        {
+          // generated route
+          action: 'send',
+          controller: 'email',
+          path: '/_/email/send',
+          verb: 'get'
+        },
         {
           action: 'receive',
           controller: 'email',
