@@ -66,6 +66,7 @@
     "kuzzle-sdk": "^7.4.1",
     "kuzzle-vault": "^2.0.0",
     "lodash": "4.17.20",
+    "long": "^4.0.0",
     "moment": "^2.29.1",
     "ms": "^2.1.2",
     "murmurhash-native": "^3.5.0",
