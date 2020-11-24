@@ -2,30 +2,28 @@
 code: false
 type: page
 title: Secrets Vault
-description: Security store your application secrets
+description: Securely store your application secrets
 order: 100
 ---
 
 # Secrets Vault
 
-<!-- need rewrite -->
-
 <SinceBadge version="1.8.0" />
 
-When you develop an application with Kuzzle, you may need to use secrets such as API keys or authentication information.  
+When you develop an application with Kuzzle, you may **need to use secrets** such as API keys or authentication information.  
 
 Of course, it is unacceptable to version these secrets in cleartext with the rest of your source code.  
 
 However, it is still practical to be able to share these secrets with the rest of your team, or to add them to the repository for automated production. 
 
-Kuzzle offers a secure storage system for these secrets, the operation is as follows:
+Kuzzle **offers a secure storage system for these secrets**, the operation is as follows:
   - writing secrets to a JSON file,
   - manual encryption of this file with a password,
   - adding the encrypted file to the repository,
   - automatic decryption of the file when Kuzzle starts,
   - exposing the secrets in the context of plugins.
 
-Thus, the only secret that it is necessary to communicate to the rest of a team is the encryption password for this file.
+Thus, the **only secret that it is necessary to communicate** to the rest of a team is **the encryption password** for this file.
 
 See this project on [Github](https://github.com/kuzzleio/kuzzle-vault).
 
@@ -57,7 +55,7 @@ Once encrypted, the file looks like the following:
 
 ## Encrypt and decrypt with the CLI
 
-The encryption of a secret file is done using [Kourou](/core/2/guides/essentials/kourou-cli), the Kuzzle CLI with the following command:
+The encryption of a secret file is done using [Kourou](/core/2/guides/advanced/7-ecosystem#kourou), the Kuzzle CLI with the following command:
 
 ```bash
 kourou vault:encrypt config/secrets.json --vault-key strongpassword
@@ -84,12 +82,12 @@ You can see the complete list of Kuzzle Vault related commands in Kourou on [Git
 ## Load encrypted secrets at startup
 
 Kuzzle will try to decrypt the provided file using the following locations, in that order of priority:
-  - in the command line: `bin/start-kuzzle-server --secrets-file /var/secrets.enc.json`
+  - in the [app.vault.file](/core/2/references/some-link) property: `app.vault.file = './secrets.env.json';`
   - in an environment variable `export KUZZLE_SECRETS_FILE=/var/secrets.enc.json`
   - the default one present at the location `<kuzzle dir>/config/secrets.enc.json`
 
 The decryption key must be provided in one of the following ways, in order of priority as well:
-  - in the command line: `bin/start-kuzzle-server --vault-key verystrongpassword`
+  - in the [app.vault.key](/core/2/references/some-link) property: `app.vault.key = 'verystrongpassword';`
   - in an environment variable `export KUZZLE_VAULT_KEY=verystrongpassword`
 
 ::: warning
@@ -99,8 +97,14 @@ Kuzzle start sequence ends in failure if:
   - a file is provided but Kuzzle cannot read it
 :::
 
-## Accessing secrets in plugin
+## Accessing secrets in your application
+
+Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to your application.  
+
+Secrets are accessible in the [app.vault.secrets](/core/2/references/some-link) property after startup.  
+
+## Accessing secrets in your plugin
 
 Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to all plugins.  
 
-Secrets are accessible in the [secrets](/core/2/plugins/plugin-context/secrets) property of the plugin context.  
+Secrets are accessible in the [secrets](/core/2/references/some-link) property of the plugin context.  

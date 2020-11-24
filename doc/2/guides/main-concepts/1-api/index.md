@@ -15,9 +15,9 @@ This API uses the **JSON format** to communicate with a **standardized request a
 ## Multi Protocol
 
 The Kuzzle API is accessible by default through 3 protocols:
- - [HTTP](/core/2/api/api-protocols/1-http)
- - [WebSocket](/core/2/api/api-protocols/2-websocket)
- - [MQTT](/core/2/api/api-protocols/3-mqtt)
+ - [HTTP](/core/2/api/api-protocols/http)
+ - [WebSocket](/core/2/api/api-protocols/websocket)
+ - [MQTT](/core/2/api/api-protocols/mqtt)
 
 Each protocol has advantages and disadvantages. The choice of a protocol must therefore be adapted to a situation and a use.
 
@@ -89,7 +89,7 @@ This endpoint does not allow to benefit from the advantages of the cache system 
 ### Other Protocols
 
 ::: info
-Kuzzle's extensible protocol system allows communication in virtually any format. This documentation section describes the format that must be used to pass requests to Kuzzle itself, either directly by users (for instance, using the embedded [WebSocket](/core/2/api/api-protocols/2-websocket) or [MQTT](/core/2/api/api-protocols/3-mqtt) protocols), or indirectly, translated by the custom protocol layer.
+Kuzzle's extensible protocol system allows communication in virtually any format. This documentation section describes the format that must be used to pass requests to Kuzzle itself, either directly by users (for instance, using the embedded [WebSocket](/core/2/api/api-protocols/websocket) or [MQTT](/core/2/api/api-protocols/mqtt) protocols), or indirectly, translated by the custom protocol layer.
 :::
 
 Requests made to Kuzzle must be encoded using JSON, and have the following format:
@@ -129,7 +129,7 @@ There are 3 parameters that can be provided to all requests, independently to th
 
 - `jwt`: user's authentification token, obtained through the [auth:login](/core/2/api/controllers/auth/login) method
 - `requestId`: user-defined request identifier. Kuzzle does not guarantee that responses are sent back in the same order than requests are made; **use that field to link responses to their request of origin**
-- `volatile`: user-defined data, without any impact to the request. Use that object to pass information about the request itself to real-time subscribers. Read more [here](/core/2/api/essentials/volatile-data)
+- `volatile`: user-defined data, without any impact to the request. Use that object to pass information about the request itself to real-time subscribers. Read more [here](/core/2/guides/main-concepts/1-api#volatile-data)
 
 Additionally, a few other parameters are very commonly found in API requests:
 
