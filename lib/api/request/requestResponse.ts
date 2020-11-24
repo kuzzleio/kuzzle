@@ -19,8 +19,9 @@
  * limitations under the License.
  */
 
+import { JSONObject } from 'kuzzle-sdk';
 import * as assert from '../../util/assertType';
-import { JSONObject, Deprecation } from '../../util/interfaces';
+import { Deprecation } from '../../util/interfaces';
 import { KuzzleError } from '../../kerror/errors/kuzzleError';
 
 // private properties

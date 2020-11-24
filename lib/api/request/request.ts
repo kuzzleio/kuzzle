@@ -20,12 +20,13 @@
  */
 
 import * as uuid from 'uuid';
+import { JSONObject } from 'kuzzle-sdk';
 
 import { RequestInput } from './requestInput';
 import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
-import { JSONObject, Deprecation } from '../../util/interfaces';
+import { Deprecation } from '../../util/interfaces';
 import * as assert from '../../util/assertType';
 
 // private properties

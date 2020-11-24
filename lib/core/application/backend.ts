@@ -28,7 +28,7 @@ import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
 import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
-import Plugin from '../plugin/plugin';
+import PluginObject from '../plugin/plugin';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
@@ -36,11 +36,11 @@ import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
 
 import {
-  JSONObject,
   ControllerDefinition,
-  BasePlugin,
+  Plugin,
   Controller
 } from '../../util/interfaces';
+import { JSONObject } from '../../../index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -226,20 +226,25 @@ class ControllerManager extends ApplicationManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
+    }
+
     for (const [action, definition] of Object.entries(controller.definition.actions)) {
       if (typeof definition.handler !== 'function') {
         throw assertionError.get(
           'invalid_controller_definition',
-          name,
+          controller.name,
           `Handler for action "${action}" is not a function.`);
       }
 
-      definition.handler = definition.handler.bind(controller);
-    }
-
-    if (! controller.name) {
-      controller.name = kebabCase(controller.constructor.name)
-        .replace('-controller', '');
+      // if the function handler is an instance method,
+      // bind the context to the controller instance
+      const handlerName = definition.handler.name;
+      if (handlerName && typeof controller[handlerName] === 'function') {
+        definition.handler = definition.handler.bind(controller);
+      }
     }
 
     this._add(controller.name, controller.definition);
@@ -248,7 +253,7 @@ class ControllerManager extends ApplicationManager {
   private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, definition, { application: true });
+    PluginObject.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -257,18 +262,7 @@ class ControllerManager extends ApplicationManager {
         'A controller with this name already exists');
     }
 
-    this._generateMissingRoutes(name, definition);
-
     this._application._controllers[name] = definition;
-  }
-
-  private _generateMissingRoutes (controllerName: string, controllerDefinition: ControllerDefinition) {
-    for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
-      if (! definition.http) {
-        // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'get', path: `${kebabCase(controllerName)}/${kebabCase(action)}` }];
-      }
-    }
   }
 }
 
@@ -319,10 +313,11 @@ class PluginManager extends ApplicationManager {
    * @param options - Additionnal options
    *    - `name`: Specify plugin name instead of using the class name.
    *    - `manifest`: Manually add a manifest definition (deprecated)
+   *    - `deprecationWarning`: If false, does not display deprecation warnings
    */
   use (
-    plugin: BasePlugin,
-    options: { name?: string, manifest?: JSONObject } = {}
+    plugin: Plugin,
+    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
   ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
@@ -337,7 +332,7 @@ class PluginManager extends ApplicationManager {
     }
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_plugin_name', name);
     }
 
@@ -349,7 +344,7 @@ class PluginManager extends ApplicationManager {
       throw assertionError.get('init_not_found', name);
     }
 
-    this._application._plugins[name] = { manifest: options.manifest, plugin };
+    this._application._plugins[name] = { options, plugin };
   }
 }
 
@@ -359,39 +354,39 @@ class Logger extends ApplicationManager {
   /**
    * Logs a debug message
    */
-  debug (message: string): void {
+  debug (message: any): void {
     this._log('debug', message);
   }
 
   /**
    * Logs an info message
    */
-  info (message: string): void {
+  info (message: any): void {
     this._log('info', message);
   }
 
   /**
    * Logs a warn message
    */
-  warn (message: string): void {
+  warn (message: any): void {
     this._log('warn', message);
   }
 
   /**
    * Logs an error message
    */
-  error (message: string): void {
+  error (message: any): void {
     this._log('error', message);
   }
 
   /**
    * Logs a verbose message
    */
-  verbose (message: string): void {
+  verbose (message: any): void {
     this._log('verbose', message);
   }
 
-  private _log (level: string, message: string) {
+  private _log (level: string, message: any) {
     if (! this._application.started) {
       throw runtimeError.get('unavailable_before_start', 'log');
     }
@@ -416,11 +411,11 @@ class StorageManager extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get Client (): new (clientConfig?: any) => Client {
+  get ESClient (): new (clientConfig?: any) => Client {
     if (! this._Client) {
       const kuzzle = this._kuzzle;
 
-      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
+      this._Client = function ESClient (clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
           ...kuzzle.config.services.storageEngine.client,
           ...clientConfig,
@@ -435,7 +430,7 @@ class StorageManager extends ApplicationManager {
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
    */
-  get client (): Client {
+  get esClient (): Client {
     if (! this._client) {
       this._client = Elasticsearch
         .buildClient(this._kuzzle.config.services.storageEngine.client);
@@ -472,7 +467,6 @@ export class Backend {
 
   /**
    * Errors manager
-   * @todo add type
    */
   public kerror: any;
 
@@ -559,7 +553,7 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
 
@@ -608,10 +602,12 @@ export class Backend {
     // we need to load the default plugins
     this.plugin.use(
       new PluginPassportAuthLocal(),
-      { name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
+      { deprecationWarning: false, name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(
+      new PluginLogger(),
+      { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
 
-    const application = new Plugin(
+    const application = new PluginObject(
       this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });
