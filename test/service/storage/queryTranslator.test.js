@@ -20,6 +20,18 @@ describe('QueryTranslator', () => {
       });
     });
 
+    it('can translate the clause "in"', () => {
+      const clause = {
+        in: { city: ['Istanbul', 'Tirana'] }
+      };
+
+      const esClause = translator._translateClause(...Object.entries(clause)[0]);
+
+      should(esClause).be.eql({
+        term: { city: ['Istanbul', 'Tirana'] }
+      });
+    });
+
     it('can translate the clause "exists"', () => {
       const clause = {
         exists: 'city'
