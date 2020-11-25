@@ -27,7 +27,7 @@ const {
   errors: {
     InternalError: KuzzleInternalError
   }
-} = require('kuzzle-common-objects');
+} = require('../../../../../index');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const RedisMock = require('../mocks/redis.mock');

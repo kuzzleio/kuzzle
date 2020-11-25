@@ -14,6 +14,17 @@ module.exports = {
           password: 'password'
         }
       }
+    },
+    'default-user': {
+      content: {
+        profileIds: ['default']
+      },
+      credentials: {
+        local: {
+          username: 'default-user',
+          password: 'password'
+        }
+      }
     }
   }
 };

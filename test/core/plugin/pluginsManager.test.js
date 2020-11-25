@@ -3,12 +3,12 @@
 const should = require('should');
 const mockrequire = require('mock-require');
 const sinon = require('sinon');
+
 const {
   KuzzleError,
   NotFoundError,
   PluginImplementationError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const Plugin = require('../../../lib/core/plugin/plugin');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const { BaseController } = require('../../../lib/api/controller/base');
@@ -99,7 +99,7 @@ describe('Plugin', () => {
   describe('#init', () => {
     beforeEach(() => {
       pluginsManager._initControllers = sinon.stub();
-      pluginsManager._initApi = sinon.stub();
+      pluginsManager._initApi = sinon.stub().resolves();
       pluginsManager._initAuthenticators = sinon.stub();
       pluginsManager._initStrategies = sinon.stub();
       pluginsManager._initHooks = sinon.stub();
@@ -202,8 +202,8 @@ describe('Plugin', () => {
       };
     });
 
-    it('should create a BaseController and add corresponding actions', () => {
-      pluginsManager._initApi(plugin);
+    it('should create a BaseController and add corresponding actions', async () => {
+      await pluginsManager._initApi(plugin);
 
       const emailController = pluginsManager.controllers.get('email');
       should(emailController).be.instanceOf(BaseController);
@@ -212,10 +212,17 @@ describe('Plugin', () => {
       should(emailController.receive).be.a.Function();
     });
 
-    it('should add http routes', () => {
-      pluginsManager._initApi(plugin);
+    it('should add http routes and generate default routes', async () => {
+      await pluginsManager._initApi(plugin);
 
       should(pluginsManager.routes).match([
+        {
+          // generated route
+          action: 'send',
+          controller: 'email',
+          path: '/_/email/send',
+          verb: 'get'
+        },
         {
           action: 'receive',
           controller: 'email',
@@ -240,8 +247,21 @@ describe('Plugin', () => {
         }
       };
 
-      should(() => pluginsManager._initApi(plugin))
-        .throwError({ id: 'plugin.assert.invalid_controller_definition' });
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
+    });
+
+    it('should throw an error when trying to override a native controller', () => {
+      plugin.instance.api = {
+        document: {
+          actions: {
+            handler: sinon.stub().resolves()
+          }
+        }
+      };
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
     });
   });
 

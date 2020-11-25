@@ -500,7 +500,7 @@ class HttpApi {
 
   deleteIndexes () {
     const options = {
-      url: this.apiPath('_mdelete'),
+      url: this.apiPath('_mDelete'),
       method: 'DELETE'
     };
 

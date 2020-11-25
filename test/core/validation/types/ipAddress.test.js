@@ -1,10 +1,10 @@
 'use strict';
 
-const
-  { PreconditionError } = require('kuzzle-common-objects'),
-  BaseType = require('../../../../lib/core/validation/baseType'),
-  IpAddressType = require('../../../../lib/core/validation/types/ipAddress'),
-  should = require('should');
+const should = require('should');
+
+const BaseType = require('../../../../lib/core/validation/baseType');
+const IpAddressType = require('../../../../lib/core/validation/types/ipAddress');
+const { PreconditionError } = require('../../../../index');
 
 describe('Test: validation/types/ipAddress', () => {
   const ipAddressType = new IpAddressType();

@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const Emitter = require('../../../lib/kuzzle/event/kuzzleEventEmitter');
 const {
   InternalError: KuzzleInternalError
-} = require('kuzzle-common-objects');
+} = require('../../../index');
 
 describe('#KuzzleEventEmitter', () => {
   let emitter;

@@ -28,19 +28,19 @@ import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
 import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
-import Plugin from '../plugin/plugin';
+import PluginObject from '../plugin/plugin';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
-
+import { JSONObject } from '../../../index';
 import {
-  JSONObject,
   ControllerDefinition,
-  BasePlugin,
-  Controller
-} from '../../util/interfaces';
+  Plugin,
+  Controller,
+  EventHandler
+} from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -59,9 +59,9 @@ class ApplicationManager {
   }
 }
 
-/* PipeManager class ======================================================== */
+/* BackendPipe class ======================================================== */
 
-class PipeManager extends ApplicationManager {
+class BackendPipe extends ApplicationManager {
   /**
    * Registers a new pipe on an event
    *
@@ -69,7 +69,7 @@ class PipeManager extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any>) : void {
+  register (event: string, handler: EventHandler): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'pipe');
     }
@@ -86,9 +86,9 @@ class PipeManager extends ApplicationManager {
   }
 }
 
-/* HookManager class ======================================================== */
+/* BackendHook class ======================================================== */
 
-class HookManager extends ApplicationManager {
+class BackendHook extends ApplicationManager {
   /**
    * Registers a new hook on an event
    *
@@ -96,7 +96,7 @@ class HookManager extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any> | void) : void {
+  register (event: string, handler: EventHandler) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'hook');
     }
@@ -113,9 +113,9 @@ class HookManager extends ApplicationManager {
   }
 }
 
-/* ConfigManager class ====================================================== */
+/* BackendConfig class ====================================================== */
 
-class ConfigManager extends ApplicationManager {
+class BackendConfig extends ApplicationManager {
   /**
    * Configuration content
    */
@@ -155,9 +155,9 @@ class ConfigManager extends ApplicationManager {
   }
 }
 
-/* ControllerManager class ================================================== */
+/* BackendController class ================================================== */
 
-class ControllerManager extends ApplicationManager {
+class BackendController extends ApplicationManager {
   /**
    * Registers a new controller.
    *
@@ -226,20 +226,25 @@ class ControllerManager extends ApplicationManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
+    }
+
     for (const [action, definition] of Object.entries(controller.definition.actions)) {
       if (typeof definition.handler !== 'function') {
         throw assertionError.get(
           'invalid_controller_definition',
-          name,
+          controller.name,
           `Handler for action "${action}" is not a function.`);
       }
 
-      definition.handler = definition.handler.bind(controller);
-    }
-
-    if (! controller.name) {
-      controller.name = kebabCase(controller.constructor.name)
-        .replace('-controller', '');
+      // if the function handler is an instance method,
+      // bind the context to the controller instance
+      const handlerName = definition.handler.name;
+      if (handlerName && typeof controller[handlerName] === 'function') {
+        definition.handler = definition.handler.bind(controller);
+      }
     }
 
     this._add(controller.name, controller.definition);
@@ -248,7 +253,7 @@ class ControllerManager extends ApplicationManager {
   private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, definition, { application: true });
+    PluginObject.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -257,24 +262,13 @@ class ControllerManager extends ApplicationManager {
         'A controller with this name already exists');
     }
 
-    this._generateMissingRoutes(name, definition);
-
     this._application._controllers[name] = definition;
-  }
-
-  private _generateMissingRoutes (controllerName: string, controllerDefinition: ControllerDefinition) {
-    for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
-      if (! definition.http) {
-        // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'get', path: `${kebabCase(controllerName)}/${kebabCase(action)}` }];
-      }
-    }
   }
 }
 
-/* VaultManager class ======================================================= */
+/* BackendVault class ======================================================= */
 
-class VaultManager extends ApplicationManager {
+class BackendVault extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -309,20 +303,21 @@ class VaultManager extends ApplicationManager {
   }
 }
 
-/* PluginManager class ====================================================== */
+/* BackendPlugin class ====================================================== */
 
-class PluginManager extends ApplicationManager {
+class BackendPlugin extends ApplicationManager {
   /**
    * Uses a plugin in this application
    *
    * @param plugin - Plugin instance
    * @param options - Additionnal options
    *    - `name`: Specify plugin name instead of using the class name.
-   *    - `manifest`: Manually add a manifest definition (deprecated)
+   *    - `manifest`: Manually add a manifest definition
+   *    - `deprecationWarning`: If false, does not display deprecation warnings
    */
   use (
-    plugin: BasePlugin,
-    options: { name?: string, manifest?: JSONObject } = {}
+    plugin: Plugin,
+    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
   ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
@@ -337,7 +332,7 @@ class PluginManager extends ApplicationManager {
     }
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_plugin_name', name);
     }
 
@@ -349,13 +344,13 @@ class PluginManager extends ApplicationManager {
       throw assertionError.get('init_not_found', name);
     }
 
-    this._application._plugins[name] = { manifest: options.manifest, plugin };
+    this._application._plugins[name] = { options, plugin };
   }
 }
 
-/* Logger class ============================================================= */
+/* BackendLogger class ====================================================== */
 
-class Logger extends ApplicationManager {
+class BackendLogger extends ApplicationManager {
   /**
    * Logs a debug message
    */
@@ -400,9 +395,9 @@ class Logger extends ApplicationManager {
   }
 }
 
-/* StorageManager class ===================================================== */
+/* BackendStorage class ===================================================== */
 
-class StorageManager extends ApplicationManager {
+class BackendStorage extends ApplicationManager {
   private _client: Client = null;
   private _Client: new (clientConfig?: any) => Client = null;
 
@@ -416,11 +411,11 @@ class StorageManager extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get Client (): new (clientConfig?: any) => Client {
+  get ESClient (): new (clientConfig?: any) => Client {
     if (! this._Client) {
       const kuzzle = this._kuzzle;
 
-      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
+      this._Client = function ESClient (clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
           ...kuzzle.config.services.storageEngine.client,
           ...clientConfig,
@@ -435,7 +430,7 @@ class StorageManager extends ApplicationManager {
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
    */
-  get client (): Client {
+  get esClient (): Client {
     if (! this._client) {
       this._client = Elasticsearch
         .buildClient(this._kuzzle.config.services.storageEngine.client);
@@ -472,26 +467,25 @@ export class Backend {
 
   /**
    * Errors manager
-   * @todo add type
    */
   public kerror: any;
 
   /**
-   * PipeManager definition manager
+   * Pipe definition manager
    *
    * @method register - Registers a new pipe on an event
    */
-  public pipe: PipeManager;
+  public pipe: BackendPipe;
 
   /**
-   * HookManager definition manager
+   * Hook definition manager
    *
    * @method register - Registers a new hook on an event
    */
-  public hook: HookManager;
+  public hook: BackendHook;
 
   /**
-   * VaultManager
+   * BackendVault
    *
    * By default Kuzzle will try to load the following locations:
    *  - local path: ./config/secrets.enc.json
@@ -501,7 +495,7 @@ export class Backend {
    * environment variable:
    *  - KUZZLE_VAULT_KEY
    */
-  public vault: VaultManager;
+  public vault: BackendVault;
 
   /**
    * Configuration definition manager
@@ -509,7 +503,7 @@ export class Backend {
    * @method set - Sets a configuration value
    * @method merge - Merges a configuration object into the current configuration
    */
-  public config: ConfigManager;
+  public config: BackendConfig;
 
   /**
    * Controller manager
@@ -517,17 +511,17 @@ export class Backend {
    * @method add - Adds a new controller definition
    * @method use - Uses a controller instance
    */
-  public controller: ControllerManager;
+  public controller: BackendController;
 
   /**
    * Plugin manager
    *
    * @method use - Uses a plugin instance
    */
-  public plugin: PluginManager;
+  public plugin: BackendPlugin;
 
   /**
-   * Logger
+   * BackendLogger
    *
    * @method debug
    * @method info
@@ -535,12 +529,12 @@ export class Backend {
    * @method error
    * @method verbose
    */
-  public log: Logger;
+  public log: BackendLogger;
 
   /**
    * Storage manager
    */
-  public storage: StorageManager;
+  public storage: BackendStorage;
 
   /**
    * @deprecated
@@ -559,7 +553,7 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
 
@@ -573,14 +567,14 @@ export class Backend {
       writable: true
     });
 
-    this.pipe = new PipeManager(this);
-    this.hook = new HookManager(this);
-    this.config = new ConfigManager(this);
-    this.vault = new VaultManager(this);
-    this.controller = new ControllerManager(this);
-    this.plugin = new PluginManager(this);
-    this.storage = new StorageManager(this);
-    this.log = new Logger(this);
+    this.pipe = new BackendPipe(this);
+    this.hook = new BackendHook(this);
+    this.config = new BackendConfig(this);
+    this.vault = new BackendVault(this);
+    this.controller = new BackendController(this);
+    this.plugin = new BackendPlugin(this);
+    this.storage = new BackendStorage(this);
+    this.log = new BackendLogger(this);
 
     this.kerror = kerror;
 
@@ -608,10 +602,12 @@ export class Backend {
     // we need to load the default plugins
     this.plugin.use(
       new PluginPassportAuthLocal(),
-      { name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(new PluginLogger(), { name: 'kuzzle-plugin-logger' });
+      { deprecationWarning: false, name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(
+      new PluginLogger(),
+      { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
 
-    const application = new Plugin(
+    const application = new PluginObject(
       this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });

@@ -135,7 +135,7 @@ Clients subscribing to this channel will receive the following notification:
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/2/api/objects/notifications#document-notification)
+More information about the [Document Notification format](/core/2/api/payloads/notifications#document-notification)
 
 ::: warning
 Messages published with the [realtime:publish](/core/2/api/controllers/realtime/publish) method are not persisted in the database.
@@ -418,7 +418,7 @@ If a second client subscribes to the same notifications, then the first client w
 </pre>
 </details>
 
-More information about the [User Notification format](/core/2/api/objects/notifications#user-notification)
+More information about the [User Notification format](/core/2/api/payloads/notifications#user-notification)
 
 ### volatile
 

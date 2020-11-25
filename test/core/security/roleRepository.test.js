@@ -2,12 +2,12 @@
 
 const sinon = require('sinon');
 const should = require('should');
+
 const {
   BadRequestError,
   NotFoundError,
   PreconditionError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const Role = require('../../../lib/model/security/role');

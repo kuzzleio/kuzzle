@@ -9,15 +9,15 @@ const should = require('should');
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 const mockrequire = require('mock-require');
+
 const {
   Request,
   RequestContext,
   InternalError: KuzzleInternalError,
   ServiceUnavailableError,
   PluginImplementationError
-} = require('kuzzle-common-objects');
-
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+} = require('../../../index');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 const EventEmitter = require('eventemitter3');
 
 class FakeProtocol {

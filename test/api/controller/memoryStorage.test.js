@@ -2,11 +2,11 @@
 
 const should = require('should');
 const rewire = require('rewire');
+
 const {
   Request,
   BadRequestError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const { NativeController } = require('../../../lib/api/controller/base');

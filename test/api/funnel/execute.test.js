@@ -3,13 +3,13 @@
 const should = require('should');
 const sinon = require('sinon');
 const rewire = require('rewire');
+
 const {
   Request,
   BadRequestError,
   ServiceUnavailableError,
   TooManyRequestsError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const FunnelController = rewire('../../../lib/api/funnel');
