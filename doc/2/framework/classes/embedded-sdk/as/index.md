@@ -7,7 +7,7 @@ description: EmbeddedSDK class as() method
 
 # as
 
-Returns a new EmbeddedSDK impersonated with the provided user.
+Returns a new EmbeddedSDK instance impersonating the provided user.
 
 ## Arguments
 
