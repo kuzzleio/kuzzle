@@ -31,6 +31,11 @@ message NewRealtimeRoom {
   string filters = 5;
 }
 
+message RemoveRealtimeRoom {
+  uint64 messageId = 1;
+  string roomId = 2;
+}
+
 message Subscription {
   uint64 messageId = 1;
   string roomId = 2;
