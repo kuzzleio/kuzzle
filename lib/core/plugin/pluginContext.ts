@@ -53,7 +53,7 @@ import {
   RequestInput,
   Request,
 } from '../../api/request';
-import { InternalLogger } from 'lib/types';
+import { InternalLogger } from '../../types';
 
 const contextError = kerror.wrap('plugin', 'context');
 
@@ -324,7 +324,6 @@ export class PluginContext {
         debug: msg => kuzzle.log.debug(`[${pluginName}] ${msg}`),
         error: msg => kuzzle.log.error(`[${pluginName}] ${msg}`),
         info: msg => kuzzle.log.info(`[${pluginName}] ${msg}`),
-        silly: msg => kuzzle.log.silly(`[${pluginName}] ${msg}`),
         verbose: msg => kuzzle.log.verbose(`[${pluginName}] ${msg}`),
         warn: msg => kuzzle.log.warn(`[${pluginName}] ${msg}`)
       };

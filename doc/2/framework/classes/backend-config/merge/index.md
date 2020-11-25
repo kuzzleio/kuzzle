@@ -10,7 +10,7 @@ description: BackendConfig.merge method
 Sets a configuration value.
 
 ::: info
-This method can only be used before application startup.
+This method can only be used before the application is started.
 :::
 
 ```ts

@@ -1,6 +1,6 @@
 ---
 code: true
-type: page
+type: error
 title: use
 description: BackendLogger.error method
 ---
@@ -10,7 +10,7 @@ description: BackendLogger.error method
 Logs an error message.
 
 ::: info
-This method can only be used after application startup.
+This method can only be used after the application started up.
 :::
 
 ```ts

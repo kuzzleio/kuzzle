@@ -454,6 +454,41 @@ The following filter will match the second document only:
 }
 ```
 
+## `in`
+
+Like equals, but accepts an array of possible scalar values to be tested.
+
+### Syntax
+
+`in: { <field name>: <array of values> }`
+
+### Example
+
+Given the following documents:
+
+```js
+{
+  firstName: 'Grace',
+  lastName: 'Hopper'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace'
+},
+{
+  firstName: 'Marie',
+  lastName: 'Curie'
+}
+```
+
+The following filter validates the first two documents:
+
+```js
+{
+  in: { firstName: ['Grace', 'Ada'] }
+}
+```
+
 ## `ids`
 
 This filter returns only documents having their unique document ID listed in the provided list.
