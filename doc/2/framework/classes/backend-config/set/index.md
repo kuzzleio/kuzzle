@@ -14,15 +14,15 @@ This method can only be used before the application is started.
 :::
 
 ```ts
-set(event: string, handler: (...args: any) => Promise<any>): void
+set(path: string, value: any): void
 ```
 
 <br/>
 
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
-| `event` | <pre>string</pre> | Path to the configuration key (lodash style) |
-| `config` | <pre>any</pre> | Value for the configuration key |
+| `path` | <pre>string</pre> | Path to the configuration key (lodash style) |
+| `value` | <pre>any</pre> | Value for the configuration key |
 
 **Usage:**
 
