@@ -7,7 +7,7 @@ description: Controller abstract class constructor
 
 # Controller Constructor
 
-Constructor method of the `Controller` abstract class. It must be called with the application instanciated [Backend](/core/2/framework/some-link) class.
+Constructor method of the `Controller` abstract class. It must be called with the [Backend](/core/2/framework/some-link) class instantiated by the application.
 
 ## Arguments
 
@@ -19,7 +19,7 @@ constructor (app: Backend);
 
 | Argument  | Type   | Description            |
 | -------------- | --------- | ------------- |
-| `app` | <pre>Backend}</pre> | Application instanciated [Backend](/core/2/framework/some-link) class |
+| `app` | <pre>Backend}</pre> | Application instantiated [Backend](/core/2/framework/some-link) class |
 
 ## Usage
 

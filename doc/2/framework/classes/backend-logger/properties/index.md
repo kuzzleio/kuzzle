@@ -7,7 +7,7 @@ description: BackendLogger class properties
 
 # BackendLogger
 
-The `BackendLogger` class allows developer use Kuzzle internal logger.  
+The `BackendLogger` class allows developers to use Kuzzle's internal logger.  
 
 It is accessible from the [Backend.log](/core/2/framework/classes/backend/properties#log) property.
 

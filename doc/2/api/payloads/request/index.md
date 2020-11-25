@@ -12,7 +12,7 @@ The Request Payload is a standardized request sent to Kuzzle in JSON format.
 
 That's the standard format expected for protocols other than HTTP.  
 
-With the HTTP protocol, users can send Request Payload to the [JSON Query Endpoint](/core/2/guides/main-concepts/1-api#json-query-endpoint).
+With the HTTP protocol, users can send a Request Payload to the [JSON Query Endpoint](/core/2/guides/main-concepts/1-api#json-query-endpoint).
 
 The following properties are the most common but any property can be added to a Request
 | Property     | Type   | Description                                                               |

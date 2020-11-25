@@ -10,7 +10,7 @@ description: BackendLogger.info method
 Logs an info message.
 
 ::: info
-This method can only be used after application startup.
+This method can only be used after the application started up.
 :::
 
 ```ts

@@ -7,10 +7,10 @@ description: BackendPlugin.use method
 
 # `use()`
 
-Uses a plugin in this application
+Adds a plugin to this application.
 
 ::: info
-This method can only be used before application startup.
+This method can only be used before the application is started.
 :::
 
 ```ts
@@ -35,7 +35,7 @@ use (
 
 | Property | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
-| `name` | <pre>string</pre> | Specify plugin name instead of using the class name |
+| `name` | <pre>string</pre> | Specify the plugin name instead of using the class name |
 | `manifest` | <pre>object</pre> | Manually add a manifest definition |
 | `deprecationWarning` | <pre>boolean</pre> | If false, does not display deprecation warnings |
 

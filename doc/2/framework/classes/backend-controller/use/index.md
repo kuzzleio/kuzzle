@@ -7,10 +7,10 @@ description: BackendController.use method
 
 # `use()`
 
-Uses a new controller class.
+Loads an API controller class into the application.
 
 ::: info
-This method can only be used before application startup.
+This method can only be used before the application is started.
 :::
 
 The controller class must:
@@ -51,7 +51,6 @@ class EmailController extends Controller {
       }
     }
   }
-   *
   async send (request: Request) {
     // ...
   }

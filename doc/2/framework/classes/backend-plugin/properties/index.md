@@ -7,7 +7,7 @@ description: BackendPlugin class properties
 
 # BackendPlugin
 
-The `BackendPlugin` class handle an application plugins.  
+The `BackendPlugin` class handles the application plugins.  
 
 It is accessible from the [Backend.plugin](/core/2/framework/classes/backend/properties#plugin) property.
 

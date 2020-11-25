@@ -7,7 +7,7 @@ description: BackendVault class properties
 
 # BackendVault
 
-The `BackendVault` class handle the secrets vault.  
+The `BackendVault` class handles the secrets vault.  
 
 It is accessible from the [Backend.config](/core/2/framework/classes/backend/properties#config) property.
 
@@ -17,10 +17,10 @@ See the [Secrets Vault](/core/2/guides/advanced/1-secrets-vault) guide.
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>string</pre> | Secret key to decrypt encrypted secrets | set |
+| <pre>string</pre> | Secret key to decrypt encrypted values | set |
 
 ::: info
-This property is only available before application startup.
+This property is only available before the application is started.
 :::
 
 ## `file`
@@ -30,7 +30,7 @@ This property is only available before application startup.
 | <pre>string</pre> | Path to the file containing encrypted secrets | set |
 
 ::: info
-This property is only available before application startup.
+This property is only available before the application is started.
 :::
 
 ## `secrets`
@@ -40,5 +40,5 @@ This property is only available before application startup.
 | <pre>JSONObject</pre> | Decrypted secrets | get       |
 
 ::: info
-This property is only available after application startup.
+This property is only available after the application started up.
 :::
