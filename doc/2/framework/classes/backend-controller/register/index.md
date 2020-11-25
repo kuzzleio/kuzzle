@@ -7,10 +7,10 @@ description: BackendController.register method
 
 # `register()`
 
-Registers a new controller.
+Registers a new API controller on the fly.
 
 ::: info
-This method can only be used before application startup.
+This method can only be used before the application is started.
 :::
 
 ```ts

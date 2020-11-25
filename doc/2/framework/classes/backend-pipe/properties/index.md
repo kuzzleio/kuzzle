@@ -7,7 +7,7 @@ description: BackendPipe class properties
 
 # BackendPipe
 
-The `BackendPipe` class handle an application pipes.  
+The `BackendPipe` class handles the application pipes.  
 
 It is accessible from the [Backend.pipe](/core/2/framework/classes/backend/properties#pipe) property.
 

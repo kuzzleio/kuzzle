@@ -2,7 +2,7 @@
 code: true
 type: page
 title: register
-description: BackendHook class properties
+description: BackendHook.register method
 ---
 
 # `register()`
@@ -10,7 +10,7 @@ description: BackendHook class properties
 Registers a new hook on an event.
 
 ::: info
-This method can only be used before application startup.
+This method can only be used before the application is started.
 :::
 
 ```ts

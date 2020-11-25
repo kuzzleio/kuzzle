@@ -7,7 +7,7 @@ description: BackendController class properties
 
 # BackendController
 
-The `BackendController` class handle an application controllers.  
+The `BackendController` class handles an API controller.  
 
 It is accessible from the [Backend.controller](/core/2/framework/classes/backend/properties#controller) property.
 
