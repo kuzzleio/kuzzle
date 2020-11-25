@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-
 import Bluebird from 'bluebird';
 import Koncorde from 'koncorde';
 import { Client } from '@elastic/elasticsearch';
@@ -53,7 +52,8 @@ import {
   RequestContext,
   RequestInput,
   Request,
-} from '../../../index';
+} from '../../api/request';
+import { InternalLogger } from 'lib/types';
 
 const contextError = kerror.wrap('plugin', 'context');
 
@@ -75,117 +75,135 @@ export type Repository = {
  update(document: JSONObject, options: any): Promise<any>;
 }
 
+export type PluginStrategy = {
+  /**
+   * Adds a new authentication strategy
+   */
+  add: (name: string, properties: any) => Promise<void>,
+
+  /**
+   * Removes an authentication strategy, preventing new authentications from using it.
+   */
+  remove: (name: string) => Promise<void>
+};
+
+export type PluginStorage = {
+  /**
+   * Initializes the plugin storage
+   */
+  bootstrap: (collections: JSONObject) => Promise<void>,
+
+  /**
+   * Creates a collection in the plugin storage
+   */
+  createCollection: (collection: string, mappings: JSONObject) => Promise<void>
+};
+
+export type Subscription = {
+  /**
+   * Registers a new realtime subscription on behalf of a client.
+   */
+  register: (connectionId: string, index: string, collection: string, filters: JSONObject) => Promise<{ roomId: string }>,
+
+  /**
+   * Removes a realtime subscription on an existing `roomId` and `connectionId`
+   */
+  unregister: (connectionId: string, roomId: string, notify: boolean) => Promise<void>
+};
+
+export type DataValidation = {
+  addType: (ValidationType: BaseValidationType) => Promise<any>,
+  validate: (request: Request, verbose: boolean) => Promise<any>
+};
+
+export type PluginContextAccessors = {
+  /**
+   * Embedded SDK
+   */
+  sdk: EmbeddedSDK,
+
+  /**
+   * Triggers a custom plugin event
+   */
+  trigger: (eventName: string, ...any) => Promise<any>,
+
+  /**
+   * Add or remove strategies dynamically
+   */
+  strategies: PluginStrategy,
+
+  /**
+   * Accessor to the Data Validation API
+   */
+  validation: DataValidation,
+
+  /**
+   * Execute an API action.
+   *
+   * @deprecated use "accessors.sdk" instead (unless you need the original context)
+   */
+  execute: (request: Request, callback?: any) => Promise<Request>,
+
+  /**
+   * Adds or removes realtime subscriptions from the backend.
+   */
+  subscription: Subscription,
+
+  /**
+   * Initializes the plugin's private data storage.
+   */
+  storage: PluginStorage
+};
+
+
+/**
+ * @todo need documentation
+ */
+export type BaseValidationType = any;
+
+export type PluginContextConstructors = {
+  /**
+   * @todo need documentation
+   */
+  BaseValidationType: new (...any) => BaseValidationType;
+  /**
+   * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
+   */
+  Koncorde: Koncorde;
+  /**
+   * Plugin private storage space
+   */
+  Repository: new (collection: string, objectConstructor: any) => Repository;
+  /**
+   * Instantiate a new Request from the original one.
+   */
+  Request: Request;
+  /**
+   * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
+   */
+  RequestContext: RequestContext;
+  /**
+   * @deprecated import directly: `import { RequestInput } from 'kuzzle'`
+   */
+  RequestInput: RequestInput;
+
+  /**
+   * Constructor for Elasticsearch SDK Client
+   */
+  ESClient: new () => Client
+};
+
 export class PluginContext {
-  public accessors: {
-    /**
-     * Embedded SDK
-     */
-    sdk: EmbeddedSDK,
-
-    /**
-     * Trigger a custom plugin event
-     */
-    trigger: (eventName: string, payload: any) => Promise<any>,
-
-    /**
-     * Add or remove strategies dynamically
-     */
-    strategies: {
-      /**
-       * Adds a new authentication strategy
-       */
-      add: (name: string, properties: any) => Promise<void>,
-
-      /**
-       * Removes an authentication strategy, preventing new authentications from using it.
-       */
-      remove: (name: string) => Promise<void>
-    },
-
-    /**
-     * Accessor to the Data Validation API
-     */
-    validation: {
-      addType: any,
-      validate: any
-    },
-
-    /**
-     * Execute an API action.
-     *
-     * @deprecated use "accessors.sdk" instead (unless you need the original context)
-     */
-    execute: (request: Request, callback?: any) => Promise<Request>,
-
-    /**
-     * Adds or removes realtime subscriptions from the backend.
-     */
-    subscription: {
-      /**
-       * Registers a new realtime subscription on behalf of a client.
-       */
-      register: (connectionId: string, index: string, collection: string, filters: JSONObject) => Promise<{ roomId: string }>,
-
-      /**
-       * Removes a realtime subscription on an existing `roomId` and `connectionId`
-       */
-      unregister: (connectionId: string, roomId: string, notify: boolean) => Promise<void>
-    },
-
-    /**
-     * Initializes the plugin's private data storage.
-     */
-    storage: {
-      /**
-       * Initializes the plugin storage
-       */
-      bootstrap: (collections: any) => Promise<void>,
-
-      /**
-       * Creates a collection in the plugin storage
-       */
-      createCollection: (collection: string, mappings: any) => Promise<void>
-    }
-  };
+  public accessors: PluginContextAccessors;
 
   public config: JSONObject;
 
-  public constructors: {
-    /**
-     * @todo need documentation
-     */
-    BaseValidationType: any;
-    /**
-     * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
-     */
-    Koncorde: Koncorde;
-    /**
-     * Plugin private storage space
-     */
-    Repository: new (collection: string, objectConstructor: any) => Repository;
-    /**
-     * Instantiate a new Request from the original one.
-     */
-    Request: Request;
-    /**
-     * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
-     */
-    RequestContext: RequestContext;
-    /**
-     * @deprecated import directly: `import { RequestInput } from 'kuzzle'`
-     */
-    RequestInput: RequestInput;
-
-    /**
-     * Constructor for Elasticsearch SDK Client
-     */
-    ESClient: new () => Client
-  };
+  public constructors: PluginContextConstructors;
 
   /**
    * @deprecated import directly: `import { BadRequestError, ... } from 'kuzzle'`
    */
-  public errors: any;
+  private errors: any;
 
   /**
    * Errors manager
@@ -195,7 +213,7 @@ export class PluginContext {
   /**
    * @deprecated use `PluginContext.kerror` instead
    */
-  public errorsManager: any;
+  private errorsManager: any;
 
   /**
    * Decrypted secrets from Kuzzle Vault
@@ -205,14 +223,7 @@ export class PluginContext {
   /**
    * Internal Logger
    */
-  public log: {
-    debug: (message: any) => void
-    error: (message: any) => void
-    info: (message: any) => void
-    silly: (message: any) => void
-    verbose: (message: any) => void
-    warn: (message: any) => void
-  };
+  public log: InternalLogger;
 
   constructor (kuzzle, pluginName) {
     // we have a circular dependency between Kuzzle and the plugins.
@@ -266,8 +277,8 @@ export class PluginContext {
       // eslint-disable-next-line no-inner-declarations
       function PluginContextRepository (
         collection: string,
-        ObjectConstructor: any = null)
-      {
+        ObjectConstructor: any = null
+      ) {
         if (! collection) {
           throw contextError.get('missing_collection');
         }
@@ -361,8 +372,8 @@ export class PluginContext {
               connectionId, roomId, notify
             )
         },
-        trigger: (eventName, payload) => (
-          kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
+        trigger: (eventName, ...payload) => (
+          kuzzle.pipe(`plugin-${pluginName}:${eventName}`, ...payload)
         ),
         validation: {
           addType: kuzzle.validation.addType.bind(kuzzle.validation),

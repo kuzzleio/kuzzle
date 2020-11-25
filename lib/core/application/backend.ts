@@ -39,7 +39,8 @@ import {
   ControllerDefinition,
   Plugin,
   Controller,
-  EventHandler
+  EventHandler,
+  InternalLogger,
 } from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');
@@ -350,38 +351,23 @@ class BackendPlugin extends ApplicationManager {
 
 /* BackendLogger class ====================================================== */
 
-class BackendLogger extends ApplicationManager {
-  /**
-   * Logs a debug message
-   */
+class BackendLogger extends ApplicationManager implements InternalLogger {
   debug (message: any): void {
     this._log('debug', message);
   }
 
-  /**
-   * Logs an info message
-   */
   info (message: any): void {
     this._log('info', message);
   }
 
-  /**
-   * Logs a warn message
-   */
   warn (message: any): void {
     this._log('warn', message);
   }
 
-  /**
-   * Logs an error message
-   */
   error (message: any): void {
     this._log('error', message);
   }
 
-  /**
-   * Logs a verbose message
-   */
   verbose (message: any): void {
     this._log('verbose', message);
   }
