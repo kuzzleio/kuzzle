@@ -23,7 +23,7 @@ as (user: { _id: string }): EmbeddedSDK;
 
 ## Returns
 
-Returns a new instance of the EmbeddedSDK.
+Returns a new EmbeddedSDK instance.
 
 ## Usage
 
