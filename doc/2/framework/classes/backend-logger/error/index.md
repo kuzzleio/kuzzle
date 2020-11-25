@@ -1,6 +1,6 @@
 ---
 code: true
-type: error
+type: page
 title: use
 description: BackendLogger.error method
 ---
