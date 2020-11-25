@@ -15,7 +15,6 @@ It is **directly connected to the Kuzzle API** and requests **do not go through 
 
 It is accessible within an application through the [Backend.sdk](/core/2/framework/some-link) property.
 
-It is accessible within a plugin through the [PluginContext.accessors.sdk](/core/2/framework/some-link) property.
 
 See also the [EmbeddedSDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) guide.
 
