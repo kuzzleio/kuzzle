@@ -27,9 +27,5 @@ set(event: string, handler: (...args: any) => Promise<any>): void
 **Usage:**
 
 ```js
-app.pipe.register('server:afterNow', async (request: Request) => {
-  request.result.now = (new Date()).toUTCString()
-
-  return request
-})
+app.config.set('limits.documentsWriteCount', 1000)
 ```
