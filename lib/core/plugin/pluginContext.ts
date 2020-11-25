@@ -139,8 +139,6 @@ export type PluginContextAccessors = {
 
   /**
    * Execute an API action.
-   *
-   * @deprecated use "accessors.sdk" instead (unless you need the original context)
    */
   execute: (request: Request, callback?: any) => Promise<Request>,
 

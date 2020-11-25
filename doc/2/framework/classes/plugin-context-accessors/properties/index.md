@@ -11,20 +11,6 @@ The `PluginContextAccessors` instance is available through the [PluginContext.ac
 
 It contains various instantiated classes and methods thats allows to interact with Kuzzle.
 
-## `errors`
-
-<DeprecatedBadge version="change-me"/>
-
-This property contains constructors that represent [Kuzzle Errors Types](/core/2/api/errors/types).  
-
-::: info
-The usage of this property is deprecated and Kuzzle Errors should be required from the `kuzzle` package instead.
-:::
-
-::: warning
-This property is not available in Typescript.
-:::
-
 ## `sdk`
 
 This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk).  
