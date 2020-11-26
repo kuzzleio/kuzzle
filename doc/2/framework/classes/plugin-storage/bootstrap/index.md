@@ -22,7 +22,7 @@ bootstrap(collections: JSONObject) => Promise<void>;
 
 | Arguments     | Type              | Description                                                                                                                        |
 | ------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `collections` | <pre>JSONObject</pre> | List of collection to create, with their corresponding [mappings](/core/2/guides/maint-concepts/2-data-storage#collection-mappings) |
+| `collections` | <pre>JSONObject</pre> | List of collections to create, with their corresponding [mappings](/core/2/guides/maint-concepts/2-data-storage#collection-mappings) |
 
 ### Return
 

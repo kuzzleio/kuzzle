@@ -30,11 +30,11 @@ trigger(eventName: string, ...any): Promise<any>;
 | `event`   | <pre>string</pre> | Custom event name |
 | `payload` | <pre>object</pre> | Event payload     |
 
-**Note:** the triggered event is renamed using the following format:<br/>`plugin-<plugin name>:<event>`.
+**Note:** the triggered event is renamed by the following format:<br/>`plugin-<plugin name>:<event>`.
 
 ## Returns
 
-Returns a a promise resolving to the pipe chain result.
+Returns a promise resolving to the pipe chain result.
 
 ## Usage
 

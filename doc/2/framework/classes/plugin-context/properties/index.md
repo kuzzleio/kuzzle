@@ -92,7 +92,7 @@ This property is an instance of the [InternalLogger](/core/2/framework/classes/i
 |----------------------------------------------------------------------|------------------------|
 | <pre>[InternalLogger](/core/2/framework/classes/internal-logger)</pre> | PluginContextConstructors instance |
 
-See also [Internal Logger](/core/2/guides/advanced/10-internal-logger) guide.
+See also the [Internal Logger](/core/2/guides/advanced/10-internal-logger) guide.
 
 ## `secrets`
 
