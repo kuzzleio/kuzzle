@@ -63,7 +63,8 @@ class KuzzleMock extends Kuzzle {
       store: sinon.stub().returns({id: 'foobar'}),
       getCollections: sinon.stub().returns([]),
       getIndexes: sinon.stub().returns([]),
-      getFilterIds: sinon.stub().returns([])
+      getFilterIds: sinon.stub().returns([]),
+      validate: sinon.stub().resolves(),
     };
 
     this.entryPoint = {
