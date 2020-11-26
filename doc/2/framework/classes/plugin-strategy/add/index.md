@@ -9,7 +9,7 @@ description: PluginStrategy class add() method
 
 Adds a new authentication strategy.
 
-Users can be authenticated using that new strategy as soon as this method resolves.
+Users can be authenticated using this new strategy as soon as this method resolves.
 
 If the strategy to be added already exists, the old one will be removed first, unless it has been registered by another plugin.
 

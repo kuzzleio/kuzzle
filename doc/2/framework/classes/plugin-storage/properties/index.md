@@ -10,5 +10,5 @@ description: PluginStorage class properties
 The `PluginStorage` class allows to interact with the [Plugin Private Storage](/core/2/guides/some-link).  
 
 ::: info
-This class does not have any properties.
+This class does not have any property.
 :::

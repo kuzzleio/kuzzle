@@ -9,7 +9,7 @@ description: PluginContextAccessors class trigger() method
 
 Triggers a custom event.
 
-This allows interactions with other plugins using [hooks](/core/2/plugins/guides/hooks) or [pipes](/core/2/plugins/guides/pipes).
+This allows interactions with others plugins using [hooks](/core/2/plugins/guides/hooks) or [pipes](/core/2/plugins/guides/pipes).
 
 ::: info
 If the event is listened by pipes, the result of the pipe chain will be returned in a promise.

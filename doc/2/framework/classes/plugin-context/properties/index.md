@@ -9,7 +9,7 @@ description: PluginContext class properties
 
 The `PluginContext` class is passed to the plugins as an argument of the [init](/core/2/some-link) method.  
 
-It contains various accessors, constructors and helpers thats allows to interact with Kuzzle.
+It contains various accessors, constructors and helpers that allow to interact with Kuzzle.
 
 ## `accessors`
 
