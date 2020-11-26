@@ -49,6 +49,18 @@ _doc-deploy: &doc-deploy
     - rm -rf doc/framework
     - npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront
 
+_doc_sdk_snippet: &doc_sdk_snippet
+  stage: SDKs snippets tests
+  language: node_js
+  node_js: 12
+  services: docker
+  before_script:
+    - sudo sysctl -w vm.max_map_count=262144
+    - npm ci
+    - git clone -b $SDK_BRANCH https://github.com/kuzzleio/$SDK_NAME /tmp/$SDK_NAME
+    - cd /tmp/$SDK_NAME
+    - npm ci
+
 # ------------------------
 # Jobs configuration
 # ------------------------
@@ -361,98 +373,68 @@ jobs:
     # ----------------------------
     # SDK JS v7
     # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
-      name: SDK JS v7
+    - name: SDK JS v7
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-javascript"
+        - "SDK_BRANCH=7-dev"
       script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 7-dev https://github.com/kuzzleio/sdk-javascript /tmp/sdk-javascript
-        - cd /tmp/sdk-javascript
-        - npm ci
         - npm run build
         - travis_retry npm run doc-testing
       
     # ----------------------------
     # SDK C# v2
     # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
       name: SDK C# v2
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-csharp"
+        - "SDK_BRANCH=2-dev"
       script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 2-dev https://github.com/kuzzleio/sdk-csharp /tmp/sdk-csharp
-        - cd /tmp/sdk-csharp
-        - npm ci
         - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
     # ----------------------------
     # SDK Java v3
     # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
       name: SDK Java v3
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-java"
+        - "SDK_BRANCH=3-dev"
       script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 3-dev https://github.com/kuzzleio/sdk-java /tmp/sdk-java
-        - cd /tmp/sdk-java
-        - npm ci
         - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
     # ----------------------------
     # SDK JVM v1
     # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
       name: SDK JVM v1
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-jvm"
+        - "SDK_BRANCH=1-dev"
       script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 1-dev https://github.com/kuzzleio/sdk-jvm /tmp/sdk-jvm
-        - cd /tmp/sdk-jvm
-        - npm ci
         - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
     # ----------------------------
     # SDK Go v2
     # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
       name: SDK Go v2
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-go"
+        - "SDK_BRANCH=2-dev"
       script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 2-dev https://github.com/kuzzleio/sdk-go /tmp/sdk-go
-        - cd /tmp/sdk-go
-        - npm ci
         - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
     # ----------------------------
     # SDK Dart v2
     # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
       name: SDK Dart v2
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-dart"
+        - "SDK_BRANCH=2-dev"
       script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 2-dev https://github.com/kuzzleio/sdk-dart /tmp/sdk-dart
-        - cd /tmp/sdk-dart
-        - npm ci
         - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
 
