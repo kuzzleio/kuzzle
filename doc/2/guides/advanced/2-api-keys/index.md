@@ -18,7 +18,7 @@ The **authentication tokens** associated to these API keys **may never expire**.
 
 Users can create API keys for their personal use with the [auth:createApiKey](/core/2/references/controllers/auth/create-api-key) action.
 
-Administrators can create API keys for users using the [security:createApiKey](/core/2/references/controllers/security/create-api-key) action.
+Administrators can create API keys for other users using the [security:createApiKey](/core/2/references/controllers/security/create-api-key) action.
 
 By default, **API keys do not expire**. But it is possible to specify the duration of an API key using the argument `expiresIn`.
 
