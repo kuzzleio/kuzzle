@@ -54,13 +54,18 @@ _doc_sdk_snippet: &doc_sdk_snippet
   language: node_js
   node_js: 12
   services: docker
+  install: |
+    if [ $TRAVIS_BRANCH = "master" ];
+    then
+      export SDK_BRANCH=master
+    fi
   before_script:
     - sudo sysctl -w vm.max_map_count=262144
     - npm ci
     - git clone -b $SDK_BRANCH https://github.com/kuzzleio/$SDK_NAME /tmp/$SDK_NAME
     - cd /tmp/$SDK_NAME
     - npm ci
-
+  
 # ------------------------
 # Jobs configuration
 # ------------------------
