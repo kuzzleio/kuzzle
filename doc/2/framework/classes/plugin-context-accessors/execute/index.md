@@ -52,7 +52,7 @@ const request = new Request({
   _id: 'documentID'
 })
 
-// Mutates the provided Request object by updating the response part of
-// it (accessible through the "request.response" property).
+// Mutates the provided Request object by updating its response part
+// (accessible through the "request.response" property).
 await context.accessors.execute(request)
 ```

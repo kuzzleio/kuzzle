@@ -9,7 +9,7 @@ description: PluginContext class properties
 
 The `PluginContext` class is passed to the plugins as an argument of the [init](/core/2/some-link) method.  
 
-It contains various accessors, constructors and helpers thats allows to interact with Kuzzle.
+It contains various accessors, constructors and helpers that allow to interact with Kuzzle.
 
 ## `accessors`
 
@@ -92,7 +92,7 @@ This property is an instance of the [InternalLogger](/core/2/framework/classes/i
 |----------------------------------------------------------------------|------------------------|
 | <pre>[InternalLogger](/core/2/framework/classes/internal-logger)</pre> | PluginContextConstructors instance |
 
-See also [Internal Logger](/core/2/guides/advanced/10-internal-logger) guide.
+See also the [Internal Logger](/core/2/guides/advanced/10-internal-logger) guide.
 
 ## `secrets`
 

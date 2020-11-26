@@ -7,7 +7,7 @@ description: DataValidation class properties
 
 # DataValidation
 
-The `DataValidation` class allows to access the [Data Validation](/core/2/guides/some-link) features.
+The `DataValidation` class allows the access to [Data Validation](/core/2/guides/some-link) features.
 
 ::: info
 This class does not have any properties.
