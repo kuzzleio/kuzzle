@@ -35,7 +35,7 @@ Deprecation warnings are in the [RequestResponse](/core/2/framework/classes/requ
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>KuzzleError|null</pre> | One of the [API Error](/core/2/api/errors/types) or `null` | get |
+| <pre>KuzzleError</pre> | One of the [API Error](/core/2/api/errors/types) or `null` | get |
 
 ## `id`
 

@@ -20,7 +20,7 @@ setError(error: Error): void;
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-| `error` | <pre>KuzzleError|Error</pre> | Error object to set |
+| `error` | <pre>Error</pre> | Error object to set |
 
 If a `KuzzleError` is provided, the request's status attribute is set to the error one.
 
