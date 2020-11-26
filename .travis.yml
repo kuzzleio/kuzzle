@@ -54,309 +54,309 @@ _doc-deploy: &doc-deploy
 # ------------------------
 jobs:
   include:
-    # ---------------------------------------
-    # Unit Tests & Linters
-    # ---------------------------------------
-    - stage: Unit Tests & Linters
-      name: Node 12.16.3 - Unit Tests
-      os: linux
-      language: node_js
-      cache: npm
-      node_js: 12.16.3
-      install:
-        - npm ci --silent
-      script:
-        - npm run test:unit:coverage
-      after_script:
-        - npm run codecov
+    # # ---------------------------------------
+    # # Unit Tests & Linters
+    # # ---------------------------------------
+    # - stage: Unit Tests & Linters
+    #   name: Node 12.16.3 - Unit Tests
+    #   os: linux
+    #   language: node_js
+    #   cache: npm
+    #   node_js: 12.16.3
+    #   install:
+    #     - npm ci --silent
+    #   script:
+    #     - npm run test:unit:coverage
+    #   after_script:
+    #     - npm run codecov
 
-    - stage: Unit Tests & Linters
-      name: Node 12.18.1 - Unit Tests
-      os: linux
-      language: node_js
-      cache: npm
-      node_js: 12.18.1
-      install:
-        - npm ci --silent
-      script:
-        - npm run test:unit:coverage
-      after_script:
-        - npm run codecov
+    # - stage: Unit Tests & Linters
+    #   name: Node 12.18.1 - Unit Tests
+    #   os: linux
+    #   language: node_js
+    #   cache: npm
+    #   node_js: 12.18.1
+    #   install:
+    #     - npm ci --silent
+    #   script:
+    #     - npm run test:unit:coverage
+    #   after_script:
+    #     - npm run codecov
 
-    - stage: Unit Tests & Linters
-      name: Node 12.18.1 - ESLint
-      os: linux
-      language: node_js
-      cache: npm
-      node_js: 12.18.1
-      install:
-        - npm ci --silent
-      script:
-        - npm run --silent test:lint
+    # - stage: Unit Tests & Linters
+    #   name: Node 12.18.1 - ESLint
+    #   os: linux
+    #   language: node_js
+    #   cache: npm
+    #   node_js: 12.18.1
+    #   install:
+    #     - npm ci --silent
+    #   script:
+    #     - npm run --silent test:lint
 
-    - stage: Unit Tests & Linters
-      name: SonarCloud
-      if: fork != true
-      os: linux
-      dist: trusty
-      language: node_js
-      node_js: 12.18.1
-      script:
-        - .ci/sonar.sh
+    # - stage: Unit Tests & Linters
+    #   name: SonarCloud
+    #   if: fork != true
+    #   os: linux
+    #   dist: trusty
+    #   language: node_js
+    #   node_js: 12.18.1
+    #   script:
+    #     - .ci/sonar.sh
 
-    - stage: Unit Tests & Linters
-      name: Documentation dead links
-      language: node_js
-      node_js: 12
-      cache:
-        directories:
-          - $HOME/.gem/specs
-      install:
-        - gem install typhoeus
-        - npm ci --silent
-      before_script:
-        - npm run doc-prepare
-        - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
-        - $(npm bin)/kuzdoc framework:link -d /core/2/ -v 2
-      script:
-        - cd doc/framework/
-        - HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/
+    # - stage: Unit Tests & Linters
+    #   name: Documentation dead links
+    #   language: node_js
+    #   node_js: 12
+    #   cache:
+    #     directories:
+    #       - $HOME/.gem/specs
+    #   install:
+    #     - gem install typhoeus
+    #     - npm ci --silent
+    #   before_script:
+    #     - npm run doc-prepare
+    #     - $(npm bin)/kuzdoc iterate-repos:install --repos_path doc/framework/.repos/
+    #     - $(npm bin)/kuzdoc framework:link -d /core/2/ -v 2
+    #   script:
+    #     - cd doc/framework/
+    #     - HYDRA_MAX_CONCURRENCY=20 ruby .ci/dead-links.rb -p src/core/2/
 
-    - stage: Unit Tests & Linters
-      name: Error codes check
-      language: node_js
-      node_js: 12
-      install:
-        - npm ci --silent
-      script:
-        - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
+    # - stage: Unit Tests & Linters
+    #   name: Error codes check
+    #   language: node_js
+    #   node_js: 12
+    #   install:
+    #     - npm ci --silent
+    #   script:
+    #     - $TRAVIS_BUILD_DIR/.ci/scripts/check-error-codes-documentation.sh
 
-    # ---------------------------------------
-    # Integration tests Node.js 12.16.3
-    # ---------------------------------------
+    # # ---------------------------------------
+    # # Integration tests Node.js 12.16.3
+    # # ---------------------------------------
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests legacy - Http
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
-        - NODE_VERSION=12.16.3
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12.16.3 - Functional tests legacy - Http
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
+    #     - NODE_VERSION=12.16.3
+    #     - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests legacy - WebSocket
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
-        - NODE_VERSION=12.16.3
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12.16.3 - Functional tests legacy - WebSocket
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
+    #     - NODE_VERSION=12.16.3
+    #     - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests legacy - Mqtt
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
-        - NODE_VERSION=12.16.3
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12.16.3 - Functional tests legacy - Mqtt
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+    #     - NODE_VERSION=12.16.3
+    #     - *integration-tests-env
 
-    - stage: Integration tests
-      # /!\ cluster functional tests must NOT be executed from inside a
-      # running kuzzle container, otherwise all tests will target one node,
-      # instead of being sent to each node w/ round-robin, killing the
-      # purpose of testing cluster syncs
-      name: Node.js 12.16.3 - Functional tests legacy - Cluster
-      os: linux
-      language: node_js
-      node_js: 12
-      services: docker
-      cache:
-        directories: node_modules
-      env:
-        - NODE_VERSION=12.16.3
-      install:
-        - sudo sysctl -w vm.max_map_count=262144
-      script:
-        # avoid write /dev/stdout: resource temporarily unavailable
-        # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
-        - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-        - ./.ci/scripts/run-test-cluster.sh
+    # - stage: Integration tests
+    #   # /!\ cluster functional tests must NOT be executed from inside a
+    #   # running kuzzle container, otherwise all tests will target one node,
+    #   # instead of being sent to each node w/ round-robin, killing the
+    #   # purpose of testing cluster syncs
+    #   name: Node.js 12.16.3 - Functional tests legacy - Cluster
+    #   os: linux
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   cache:
+    #     directories: node_modules
+    #   env:
+    #     - NODE_VERSION=12.16.3
+    #   install:
+    #     - sudo sysctl -w vm.max_map_count=262144
+    #   script:
+    #     # avoid write /dev/stdout: resource temporarily unavailable
+    #     # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
+    #     - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+    #     - ./.ci/scripts/run-test-cluster.sh
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests sdk - Http
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
-        - NODE_VERSION=12.16.3
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12.16.3 - Functional tests sdk - Http
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
+    #     - NODE_VERSION=12.16.3
+    #     - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12.16.3 - Functional tests sdk - WebSocket
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
-        - NODE_VERSION=12.16.3
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12.16.3 - Functional tests sdk - WebSocket
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
+    #     - NODE_VERSION=12.16.3
+    #     - *integration-tests-env
 
-    # ---------------------------------------
-    # Integration tests Node.js 12
-    # ---------------------------------------
+    # # ---------------------------------------
+    # # Integration tests Node.js 12
+    # # ---------------------------------------
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12 - Functional tests legacy - Http
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12 - Functional tests legacy - Http
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:http
+    #     - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12 - Functional tests legacy - WebSocket
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12 - Functional tests legacy - WebSocket
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:websocket
+    #     - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12 - Functional tests legacy - Mqtt
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12 - Functional tests legacy - Mqtt
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:legacy:mqtt
+    #     - *integration-tests-env
 
-    - stage: Integration tests
-      # /!\ cluster functional tests must NOT be executed from inside a
-      # running kuzzle container, otherwise all tests will target one node,
-      # instead of being sent to each node w/ round-robin, killing the
-      # purpose of testing cluster syncs
-      name: Node.js 12 - Functional tests legacy - Cluster
-      os: linux
-      language: node_js
-      node_js: 12
-      services: docker
-      cache:
-        directories: node_modules
-      install:
-        - sudo sysctl -w vm.max_map_count=262144
-      script:
-        # avoid write /dev/stdout: resource temporarily unavailable
-        # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
-        - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-        - ./.ci/scripts/run-test-cluster.sh
+    # - stage: Integration tests
+    #   # /!\ cluster functional tests must NOT be executed from inside a
+    #   # running kuzzle container, otherwise all tests will target one node,
+    #   # instead of being sent to each node w/ round-robin, killing the
+    #   # purpose of testing cluster syncs
+    #   name: Node.js 12 - Functional tests legacy - Cluster
+    #   os: linux
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   cache:
+    #     directories: node_modules
+    #   install:
+    #     - sudo sysctl -w vm.max_map_count=262144
+    #   script:
+    #     # avoid write /dev/stdout: resource temporarily unavailable
+    #     # https://blog.m157q.tw/posts/2018/03/30/travis-ci-stdout-write-error-and-resource-temporarily-unavailable-workaround/
+    #     - python2 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+    #     - ./.ci/scripts/run-test-cluster.sh
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12 - Functional tests sdk - Http
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12 - Functional tests sdk - Http
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:http
+    #     - *integration-tests-env
 
-    - <<: *integration-tests
-      stage: Integration tests
-      name: Node.js 12 - Functional tests sdk - WebSocket
-      env:
-        - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
-        - *integration-tests-env
+    # - <<: *integration-tests
+    #   stage: Integration tests
+    #   name: Node.js 12 - Functional tests sdk - WebSocket
+    #   env:
+    #     - KUZZLE_FUNCTIONAL_TESTS=test:functional:sdk:websocket
+    #     - *integration-tests-env
 
-    # ---------------------------------------
-    # Cross-platform tests
-    # ---------------------------------------
-    - <<: *integration-tests
-      name: Linux ARMHF
-      stage: Cross-platform tests
-      env:
-        - *integration-tests-env
-        - ARM=armhf
-        - DOCKER_COMPOSE_TEST=test-$ARM
-      before_script:
-        - docker run --rm --privileged multiarch/qemu-user-static:register
-        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
+    # # ---------------------------------------
+    # # Cross-platform tests
+    # # ---------------------------------------
+    # - <<: *integration-tests
+    #   name: Linux ARMHF
+    #   stage: Cross-platform tests
+    #   env:
+    #     - *integration-tests-env
+    #     - ARM=armhf
+    #     - DOCKER_COMPOSE_TEST=test-$ARM
+    #   before_script:
+    #     - docker run --rm --privileged multiarch/qemu-user-static:register
+    #     - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
 
-    - <<: *integration-tests
-      name: Linux ARM64
-      stage: Cross-platform tests
-      env:
-        - *integration-tests-env
-        - ARM=aarch64
-        - DOCKER_COMPOSE_TEST=test-$ARM
-      before_script:
-        - docker run --rm --privileged multiarch/qemu-user-static:register
-        - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
+    # - <<: *integration-tests
+    #   name: Linux ARM64
+    #   stage: Cross-platform tests
+    #   env:
+    #     - *integration-tests-env
+    #     - ARM=aarch64
+    #     - DOCKER_COMPOSE_TEST=test-$ARM
+    #   before_script:
+    #     - docker run --rm --privileged multiarch/qemu-user-static:register
+    #     - docker run --rm -it -v "$(pwd)":/mnt kuzzleio/sdk-cross:node8-$ARM ./.ci/scripts/install-$ARM-deps.sh
 
-    # ---------------------------------------
-    # Deployments
-    # ---------------------------------------
-    - stage: Deployments
-      name: NPM.js
-      if: branch = master
-      os: linux
-      language: node_js
-      node_js: 12
-      script: echo "Deploying Kuzzle to NPM.js"
-      deploy:
-        provider: npm
-        email: support@kuzzle.io
-        api_key:
-          secure: gqLBt1Scnr8wAR0zauW3jI7M576Jr7d+d2C5gvCA+iI1Y6gBWMM04A3w1MHHcPUBNA+xbwNimyoxbrBozq7otiMEDbP5ConS+T3KRWyHYwjdSfmL5KmEoNqwjmo128qJq2uWFxEecBmBk63q9A3gbnhdw3/D+05NKL4B44PpyNDpT6fApsVyDNXQmeib6cYfjwB1rCv8Mcf2sbVE1eqcJuGTwDtxx/860405PqBSg7H8iGGJJr7cymaU8cK4RLre+u8GHRiSDoKeU1UiWIoIoLG0y8TisFllSstZu9kguA6ShPJJA28NLiNyJ7j0KxKW6muvY03AFxa4XQ0sMaxotjQxN3IRUnLdN1mnQydWqMRP2+HWK1uRXCiDoL9ZnSClS1BixSAv15tvhggqE76Rq4uGCcl7hYfagpUzQpsUIV40Wc7CHez/O4ZvvicWIOdo2jmh/6fRYWOFY2+ihzwszaZwAQT1cdTm75JMIqrATyNWEZvwvczQzC85HmJajhf1azyEY08kdIJxwmwh30AMl2Is0vlq9ujCp8XRsanbdj74CcDNf9RSgesiD83McLd/ZJZHSDIe//wNypcTcW4fQbSfGb1oDHWVLQ6L/jr+W3OJUgVBG31mMciGo2jSROOos8n4iHHqs3QbxTwh0B+t+1amvZlpelFUEoicprPCcN8=
-        on:
-          repo: kuzzleio/kuzzle
-          branch: master
-          tags: true
+    # # ---------------------------------------
+    # # Deployments
+    # # ---------------------------------------
+    # - stage: Deployments
+    #   name: NPM.js
+    #   if: branch = master
+    #   os: linux
+    #   language: node_js
+    #   node_js: 12
+    #   script: echo "Deploying Kuzzle to NPM.js"
+    #   deploy:
+    #     provider: npm
+    #     email: support@kuzzle.io
+    #     api_key:
+    #       secure: gqLBt1Scnr8wAR0zauW3jI7M576Jr7d+d2C5gvCA+iI1Y6gBWMM04A3w1MHHcPUBNA+xbwNimyoxbrBozq7otiMEDbP5ConS+T3KRWyHYwjdSfmL5KmEoNqwjmo128qJq2uWFxEecBmBk63q9A3gbnhdw3/D+05NKL4B44PpyNDpT6fApsVyDNXQmeib6cYfjwB1rCv8Mcf2sbVE1eqcJuGTwDtxx/860405PqBSg7H8iGGJJr7cymaU8cK4RLre+u8GHRiSDoKeU1UiWIoIoLG0y8TisFllSstZu9kguA6ShPJJA28NLiNyJ7j0KxKW6muvY03AFxa4XQ0sMaxotjQxN3IRUnLdN1mnQydWqMRP2+HWK1uRXCiDoL9ZnSClS1BixSAv15tvhggqE76Rq4uGCcl7hYfagpUzQpsUIV40Wc7CHez/O4ZvvicWIOdo2jmh/6fRYWOFY2+ihzwszaZwAQT1cdTm75JMIqrATyNWEZvwvczQzC85HmJajhf1azyEY08kdIJxwmwh30AMl2Is0vlq9ujCp8XRsanbdj74CcDNf9RSgesiD83McLd/ZJZHSDIe//wNypcTcW4fQbSfGb1oDHWVLQ6L/jr+W3OJUgVBG31mMciGo2jSROOos8n4iHHqs3QbxTwh0B+t+1amvZlpelFUEoicprPCcN8=
+    #     on:
+    #       repo: kuzzleio/kuzzle
+    #       branch: master
+    #       tags: true
 
-    - stage: Deployments
-      name: Dockerhub
-      os: linux
-      language: node_js
-      node_js: 12
-      services: docker
-      install:
-        - npm ci --silent
-        - npm run build-ts
-      script:
-        - MODE=production bash docker/build-docker-images.sh
+    # - stage: Deployments
+    #   name: Dockerhub
+    #   os: linux
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   install:
+    #     - npm ci --silent
+    #     - npm run build-ts
+    #   script:
+    #     - MODE=production bash docker/build-docker-images.sh
 
-    - <<: *doc-deploy
-      name: Documentation to next-docs.kuzzle.io
-      if: branch =~ /^[0-9]+-dev$/
-      env:
-        - *doc-deploy-env
-        - BRANCH=dev
-        - S3_BUCKET=docs-next.kuzzle.io
-        - CLOUDFRONT_DISTRIBUTION_ID=E2ZCCEK9GRB49U
+    # - <<: *doc-deploy
+    #   name: Documentation to next-docs.kuzzle.io
+    #   if: branch =~ /^[0-9]+-dev$/
+    #   env:
+    #     - *doc-deploy-env
+    #     - BRANCH=dev
+    #     - S3_BUCKET=docs-next.kuzzle.io
+    #     - CLOUDFRONT_DISTRIBUTION_ID=E2ZCCEK9GRB49U
 
-    - <<: *doc-deploy
-      name: Deploy docs.kuzzle.io
-      if: branch =~ /^master|[0-9]+-(stable|beta)$/
-      env:
-        - *doc-deploy-env
-        - S3_BUCKET=docs.kuzzle.io
-        - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
+    # - <<: *doc-deploy
+    #   name: Deploy docs.kuzzle.io
+    #   if: branch =~ /^master|[0-9]+-(stable|beta)$/
+    #   env:
+    #     - *doc-deploy-env
+    #     - S3_BUCKET=docs.kuzzle.io
+    #     - CLOUDFRONT_DISTRIBUTION_ID=E3D6RP0POLCJMM
 
-    - stage: Deploy latest release on NPM
-      if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/
-      language: node_js
-      node_js: 12
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-4.9
-            - g++-4.9
-      before_install:
-        - export CC="gcc-4.9" CXX="g++-4.9"
-      install:
-        - npm install
-      script:
-        - npm run build
-      deploy:
-        provider: npm
-        skip_cleanup: true
-        email: support@kuzzle.io
-        tag: latest
-        api_key:
-          secure: WE+3vUgOvZ2pEKYStsz/9t+VKV7fCYG4ZwC0Xppr4t8M/4EGWa8Pr+cWG4+JuljBYmQry4I4tptfjROR2zNSzGQ0RwwEfvjt/Qbc705qxX2jtF6Dq+sqaha18TfPhjuSSKABSb7NDhzjUdmaJ7ki8DmRsmM/5aqQBHw6TUtHMGejT++jymY3W74SZAHCFw+opsxCrey01UtSTHLussiTP9YntVSwBtNXZ1DQwggZXiPCtPqJcqOOTia8MQt6GA7TLc94drpORKAN7kIShrE7Mg9lpMXT5gDv1cf+9VRyhjZSlPUbBfMN30ZrvPJNboIh31rFLdGLu3WfDG/LHHVzw0aYU9w+RJ63zBlP5DChKWKRgJqqOdW4Z5XT6lImiEQaIICVEN3nCH1uavQICl+O3Z81uEtk4wynRJlbZlfYG0r3vCffiHCeZjj5xy9+XwzpiJysxm+XvIewFiP0jcPjRRl9/un2jQMgeTm6uOMXVnQUgxR3bB5ZAYwKJ3y1rt6pPhKVLXCq1MM6HvaWjBGbLuQbl46OWjG2HNfxTVOqpfovCETrWKKpUUCS3Z+Ho4WUILZs9Jx4HOU02rOcM+gwXN4+WRMKLc1sq6V1gI8D7b/XIDaiDmrdNKSBtlxyfq8wZPcunhSQESHrqbAxquQxD6J8DW4ugjsXXWU89PwT4TY=
-        on:
-          repo: kuzzleio/kuzzle
-          all_branches: true
+    # - stage: Deploy latest release on NPM
+    #   if: type = push AND branch =~ /^master|[0-9]+-(stable|beta)$/
+    #   language: node_js
+    #   node_js: 12
+    #   addons:
+    #     apt:
+    #       sources:
+    #         - ubuntu-toolchain-r-test
+    #       packages:
+    #         - gcc-4.9
+    #         - g++-4.9
+    #   before_install:
+    #     - export CC="gcc-4.9" CXX="g++-4.9"
+    #   install:
+    #     - npm install
+    #   script:
+    #     - npm run build
+    #   deploy:
+    #     provider: npm
+    #     skip_cleanup: true
+    #     email: support@kuzzle.io
+    #     tag: latest
+    #     api_key:
+    #       secure: WE+3vUgOvZ2pEKYStsz/9t+VKV7fCYG4ZwC0Xppr4t8M/4EGWa8Pr+cWG4+JuljBYmQry4I4tptfjROR2zNSzGQ0RwwEfvjt/Qbc705qxX2jtF6Dq+sqaha18TfPhjuSSKABSb7NDhzjUdmaJ7ki8DmRsmM/5aqQBHw6TUtHMGejT++jymY3W74SZAHCFw+opsxCrey01UtSTHLussiTP9YntVSwBtNXZ1DQwggZXiPCtPqJcqOOTia8MQt6GA7TLc94drpORKAN7kIShrE7Mg9lpMXT5gDv1cf+9VRyhjZSlPUbBfMN30ZrvPJNboIh31rFLdGLu3WfDG/LHHVzw0aYU9w+RJ63zBlP5DChKWKRgJqqOdW4Z5XT6lImiEQaIICVEN3nCH1uavQICl+O3Z81uEtk4wynRJlbZlfYG0r3vCffiHCeZjj5xy9+XwzpiJysxm+XvIewFiP0jcPjRRl9/un2jQMgeTm6uOMXVnQUgxR3bB5ZAYwKJ3y1rt6pPhKVLXCq1MM6HvaWjBGbLuQbl46OWjG2HNfxTVOqpfovCETrWKKpUUCS3Z+Ho4WUILZs9Jx4HOU02rOcM+gwXN4+WRMKLc1sq6V1gI8D7b/XIDaiDmrdNKSBtlxyfq8wZPcunhSQESHrqbAxquQxD6J8DW4ugjsXXWU89PwT4TY=
+    #     on:
+    #       repo: kuzzleio/kuzzle
+    #       all_branches: true
 
     # ----------------------------
     # SDK JS v7
@@ -368,91 +368,91 @@ jobs:
       name: SDK JS v7
       script:
         - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
+        - npm install
         - git clone -b 7-dev https://github.com/kuzzleio/sdk-javascript /tmp/sdk-javascript
         - cd /tmp/sdk-javascript
-        - npm ci
+        - npm install
         - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
       
-    # ----------------------------
-    # SDK C# v2
-    # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
-      name: SDK C# v2
-      script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 2-dev https://github.com/kuzzleio/sdk-csharp /tmp/sdk-csharp
-        - cd /tmp/sdk-csharp
-        - npm ci
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+    # # ----------------------------
+    # # SDK C# v2
+    # # ----------------------------
+    # - stage: SDKs snippets tests
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   name: SDK C# v2
+    #   script:
+    #     - sudo sysctl -w vm.max_map_count=262144
+    #     - npm ci
+    #     - git clone -b 2-dev https://github.com/kuzzleio/sdk-csharp /tmp/sdk-csharp
+    #     - cd /tmp/sdk-csharp
+    #     - npm ci
+    #     - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
-    # ----------------------------
-    # SDK Java v3
-    # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
-      name: SDK Java v3
-      script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 3-dev https://github.com/kuzzleio/sdk-java /tmp/sdk-java
-        - cd /tmp/sdk-java
-        - npm ci
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+    # # ----------------------------
+    # # SDK Java v3
+    # # ----------------------------
+    # - stage: SDKs snippets tests
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   name: SDK Java v3
+    #   script:
+    #     - sudo sysctl -w vm.max_map_count=262144
+    #     - npm ci
+    #     - git clone -b 3-dev https://github.com/kuzzleio/sdk-java /tmp/sdk-java
+    #     - cd /tmp/sdk-java
+    #     - npm ci
+    #     - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
-    # ----------------------------
-    # SDK JVM v1
-    # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
-      name: SDK JVM v1
-      script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 1-dev https://github.com/kuzzleio/sdk-jvm /tmp/sdk-jvm
-        - cd /tmp/sdk-jvm
-        - npm ci
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+    # # ----------------------------
+    # # SDK JVM v1
+    # # ----------------------------
+    # - stage: SDKs snippets tests
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   name: SDK JVM v1
+    #   script:
+    #     - sudo sysctl -w vm.max_map_count=262144
+    #     - npm ci
+    #     - git clone -b 1-dev https://github.com/kuzzleio/sdk-jvm /tmp/sdk-jvm
+    #     - cd /tmp/sdk-jvm
+    #     - npm ci
+    #     - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
-    # ----------------------------
-    # SDK Go v2
-    # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
-      name: SDK Go v2
-      script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 2-dev https://github.com/kuzzleio/sdk-go /tmp/sdk-go
-        - cd /tmp/sdk-go
-        - npm ci
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+    # # ----------------------------
+    # # SDK Go v2
+    # # ----------------------------
+    # - stage: SDKs snippets tests
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   name: SDK Go v2
+    #   script:
+    #     - sudo sysctl -w vm.max_map_count=262144
+    #     - npm ci
+    #     - git clone -b 2-dev https://github.com/kuzzleio/sdk-go /tmp/sdk-go
+    #     - cd /tmp/sdk-go
+    #     - npm ci
+    #     - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
-    # ----------------------------
-    # SDK Dart v2
-    # ----------------------------
-    - stage: SDKs snippets tests
-      language: node_js
-      node_js: 12
-      services: docker
-      name: SDK Dart v2
-      script:
-        - sudo sysctl -w vm.max_map_count=262144
-        - npm ci
-        - git clone -b 2-dev https://github.com/kuzzleio/sdk-dart /tmp/sdk-dart
-        - cd /tmp/sdk-dart
-        - npm ci
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+    # # ----------------------------
+    # # SDK Dart v2
+    # # ----------------------------
+    # - stage: SDKs snippets tests
+    #   language: node_js
+    #   node_js: 12
+    #   services: docker
+    #   name: SDK Dart v2
+    #   script:
+    #     - sudo sysctl -w vm.max_map_count=262144
+    #     - npm ci
+    #     - git clone -b 2-dev https://github.com/kuzzleio/sdk-dart /tmp/sdk-dart
+    #     - cd /tmp/sdk-dart
+    #     - npm ci
+    #     - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
 
 # ------------------------
