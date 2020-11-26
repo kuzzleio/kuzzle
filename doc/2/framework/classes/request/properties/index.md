@@ -21,12 +21,6 @@ This object is received by controller's [actions handler function](/core/2/guide
 
 ## `deprecations`
 
-<DeprecatedBadge version="change-me" />
-
-::: info
-Deprecation warnings are in the [RequestResponse](/core/2/framework/classes/request-response) class.
-:::
-
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
 | <pre>[Deprecation[]](/core/2/framework/types/deprecation)</pre> | Array of deprecation warnings associated to the request | get |
