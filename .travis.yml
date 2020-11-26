@@ -358,8 +358,6 @@ jobs:
           repo: kuzzleio/kuzzle
           all_branches: true
 
-jobs:
-  include:
     # ----------------------------
     # SDK JS v7
     # ----------------------------
