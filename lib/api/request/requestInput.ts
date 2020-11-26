@@ -48,7 +48,7 @@ const resourceProperties = new Set([
   '_id'
 ]);
 
-export class Resource {
+export class RequestResource {
   constructor() {
     this[__id] = null;
     this[_index] = null;
@@ -141,7 +141,7 @@ export class RequestInput {
    *   body
    *  }
    */
-  public resource: Resource;
+  public resource: RequestResource;
 
   /**
    * Builds a Kuzzle normalized request input object
@@ -151,7 +151,7 @@ export class RequestInput {
    *
    * Any undefined option is set to null
    */
-  constructor(data) {
+  constructor (data) {
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       throw new InternalError('Input request data must be a non-null object');
     }
@@ -163,7 +163,7 @@ export class RequestInput {
     this[_action] = null;
 
     this.args = {};
-    this.resource = new Resource();
+    this.resource = new RequestResource();
 
     // copy into this.args only unrecognized properties
     for (const k of Object.keys(data)) {

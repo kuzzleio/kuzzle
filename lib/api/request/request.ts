@@ -72,7 +72,7 @@ export class Request {
    */
   public id: string;
 
-  constructor (data: any, options: any) {
+  constructor(data: any, options: any) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
@@ -138,72 +138,67 @@ export class Request {
   /**
    * Request internal ID
    */
-  get internalId (): string {
+  get internalId(): string {
     return this[_internalId];
   }
 
   /**
-   * Request internal identifier getter
+   * Deprecation warnings for the API action
    */
-  get deprecations (): Array<Deprecation> | void {
+  get deprecations(): Array<Deprecation> | void {
     return this[_deprecations];
   }
-
-  set deprecations (deprecations: Array<Deprecation> | void) {
-    this[_deprecations] = assert.assertArray('deprecations', deprecations, 'object');
-  }
-
 
   /**
    * Request timestamp (in Epoch-micro)
    */
-  get timestamp (): number {
+  get timestamp(): number {
     return this[_timestamp];
   }
 
   /**
    * Request HTTP status
    */
-  get status (): number {
+  get status(): number {
     return this[_status];
   }
 
-  set status (i: number) {
+  set status(i: number) {
     this[_status] = assert.assertInteger('status', i);
   }
 
   /**
    * Request input
    */
-  get input (): RequestInput {
+  get input(): RequestInput {
     return this[_input];
   }
 
   /**
    * Request context
    */
-  get context (): RequestContext {
+  get context(): RequestContext {
     return this[_context];
   }
 
   /**
    * Request error
    */
-  get error (): KuzzleError | null {
+  get error(): KuzzleError | null {
     return this[_error];
   }
 
   /**
    * Request result
    */
-  get result (): any | null {
+  get result(): any | null {
     return this[_result];
   }
 
   /**
    * Request response
    */
-  get response (): RequestResponse {
+  get response(): RequestResponse {
     if (this[_response] === null) {
       this[_response] = new RequestResponse(this);
     }
@@ -212,9 +207,9 @@ export class Request {
   }
 
   /**
-   * Sets the request status to the error one, and fills the error member
+   * Adds an error to the request, and sets the request's status to the error one.
    */
-  setError (error: Error) {
+  setError(error: Error) {
     if (!error || !(error instanceof Error)) {
       throw new InternalError('Cannot set non-error object as a request\'s error');
     }
@@ -240,7 +235,7 @@ export class Request {
    *    - `headers` (JSONObject): additional response protocol headers (default: null)
    *    - `raw` (boolean): instead of a Kuzzle response, forward the result directly (default: false)
    */
-  setResult (
+  setResult(
     result: any,
     options: {
       /**
@@ -280,7 +275,7 @@ export class Request {
    * @param version version where the used component has been deprecated
    * @param message message displayed in the warning
    */
-  addDeprecation (version: string, message: string) {
+  addDeprecation(version: string, message: string) {
     if (process.env.NODE_ENV !== 'development') {
       return;
     }
@@ -291,7 +286,7 @@ export class Request {
     };
 
     if (!this.deprecations) {
-      this.deprecations = [deprecation];
+      this[_deprecations] = [deprecation];
     }
     else {
       this.deprecations.push(deprecation);
@@ -303,7 +298,7 @@ export class Request {
    * across the network and then used to instantiate a new Request
    * object
    */
-  serialize (): JSONObject {
+  serialize (): { data: JSONObject, options: JSONObject } {
     const serialized = {
       data: {
         _id: this[_input].resource._id,

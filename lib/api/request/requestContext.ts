@@ -19,132 +19,28 @@
  * limitations under the License.
  */
 
-import * as assert from '../../util/assertType';
 import { JSONObject } from 'kuzzle-sdk';
+
+import * as assert from '../../util/assertType';
+import { User, Token } from '../../types';
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
 const _token = 'token\u200b';
 const _user = 'user\u200b';
 const _connection = 'connection\u200b';
+
 // Connection class properties
 const _c_id = 'id\u200b';
 const _c_protocol = 'protocol\u200b';
 const _c_ips = 'ips\u200b';
 const _c_misc = 'misc\u200b';
 
-// Token model class from Kuzzle
-export interface IKuzzleToken {
-  /**
-   * Unique ID
-   */
-  _id: string;
-  /**
-   * Expiration date in Epoch-micro
-   */
-  expiresAt: number;
-  /**
-   * Time-to-live
-   */
-  ttl: number;
-  /**
-   * Associated user ID
-   */
-  userId: string;
-  /**
-   * Associated connection ID
-   */
-  connectionId: string | null;
-  /**
-   * JWT token
-   */
-  jwt: string;
-  /**
-   * True if the token has been refreshed with the current request
-   */
-  refreshed: boolean;
-}
-
-// User model class from Kuzzle
-export interface IKuzzleUser extends JSONObject {
-  /**
-   * Unique ID
-   */
-  _id: string;
-  /**
-   * User profiles
-   */
-  profileIds: Array<string>;
-}
-
-// ClientConnection class from Kuzzle
-export interface IKuzzleConnection extends JSONObject {
-  /**
-   * Unique identifier of the user connection
-   */
-  id: string;
-  /**
-   * Network protocol name
-   */
-  protocol: string;
-  /**
-   * Chain of IP addresses, starting from the client
-   */
-  ips: Array<string>;
-  /**
-   * Contains protocol specific information (e.g. HTTP queries URL or headers)
-   */
-  misc: {
-    /**
-     * HTTP url
-     * @deprecated use "path" instead
-     */
-    url?: string;
-    /**
-     * HTTP path
-     */
-    path?: string;
-    /**
-     * HTTP headers
-     */
-    verb?: string;
-    /**
-     * HTTP headers
-     */
-    headers?: JSONObject;
-
-    [key: string]: any
-  };
-}
-
-export interface IRequestContextOptions {
-  /**
-   * Connection object
-   */
-  connection?: IKuzzleConnection;
-  /**
-   * Authenticated user object
-   */
-  user?: IKuzzleUser;
-  /**
-   * Kuzzle authentication token object
-   */
-  token?: IKuzzleToken;
-  /**
-   * Protocol at the origin of the connection
-   */
-  protocol?: string;
-  /**
-   * @deprecated
-   */
-  connectionId?: string;
-}
-
 /**
  * Information about the connection at the origin of the request.
  */
-export class Connection implements IKuzzleConnection {
-  constructor (connection: IKuzzleConnection) {
+export class Connection {
+  constructor (connection: any) {
     this[_c_id] = null;
     this[_c_protocol] = null;
     this[_c_ips] = [];
@@ -166,6 +62,9 @@ export class Connection implements IKuzzleConnection {
     }
   }
 
+  /**
+   * Unique identifier of the user connection
+   */
   set id (str: string) {
     this[_c_id] = assert.assertString('connection.id', str);
   }
@@ -174,6 +73,9 @@ export class Connection implements IKuzzleConnection {
     return this[_c_id];
   }
 
+  /**
+   * Network protocol name
+   */
   set protocol (str: string) {
     this[_c_protocol] = assert.assertString('connection.protocol', str);
   }
@@ -182,15 +84,41 @@ export class Connection implements IKuzzleConnection {
     return this[_c_protocol];
   }
 
-  set ips (arr: Array<string>) {
+  /**
+   * Chain of IP addresses, starting from the client
+   */
+  set ips (arr: string[]) {
     this[_c_ips] = assert.assertArray('connection.ips', arr, 'string');
   }
 
-  get ips(): Array<string> {
+  get ips(): string[] {
     return this[_c_ips];
   }
 
-  get misc (): JSONObject {
+  /**
+   * Additional informations about the connection
+   */
+  get misc (): {
+    /**
+     * HTTP url
+     * @deprecated use "path" instead
+     */
+    url?: string;
+    /**
+     * HTTP path
+     */
+    path?: string;
+    /**
+     * HTTP headers
+     */
+    verb?: string;
+    /**
+     * HTTP headers
+     */
+    headers?: JSONObject;
+
+    [key: string]: any
+  } {
     return this[_c_misc];
   }
 
@@ -214,7 +142,7 @@ export class Connection implements IKuzzleConnection {
  * and origin (connection, protocol).
  */
 export class RequestContext {
-  constructor(options: IRequestContextOptions = {}) {
+  constructor(options: any = {}) {
 
     this[_token] = null;
     this[_user] = null;
@@ -279,22 +207,22 @@ export class RequestContext {
   /**
    * Authentication token
    */
-  get token (): IKuzzleToken | null {
+  get token (): Token | null {
     return this[_token];
   }
 
-  set token (obj: IKuzzleToken | null) {
+  set token (obj: Token | null) {
     this[_token] = assert.assertObject('token', obj);
   }
 
   /**
    * Associated user
    */
-  get user (): IKuzzleUser | null {
+  get user (): User | null {
     return this[_user];
   }
 
-  set user (obj: IKuzzleUser) {
+  set user (obj: User) {
     this[_user] = assert.assertObject('user', obj);
   }
 }
