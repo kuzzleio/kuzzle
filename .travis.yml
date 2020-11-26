@@ -358,6 +358,104 @@ jobs:
           repo: kuzzleio/kuzzle
           all_branches: true
 
+jobs:
+  include:
+    # ----------------------------
+    # SDK JS v7
+    # ----------------------------
+    - stage: SDKs snippets tests
+      language: node_js
+      node_js: 12
+      services: docker
+      name: SDK JS v7
+      script:
+        - sudo sysctl -w vm.max_map_count=262144
+        - npm ci
+        - git clone -b 7-dev https://github.com/kuzzleio/sdk-javascript /tmp/sdk-javascript
+        - cd /tmp/sdk-javascript
+        - npm ci
+        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+      
+    # ----------------------------
+    # SDK C# v2
+    # ----------------------------
+    - stage: SDKs snippets tests
+      language: node_js
+      node_js: 12
+      services: docker
+      name: SDK C# v2
+      script:
+        - sudo sysctl -w vm.max_map_count=262144
+        - npm ci
+        - git clone -b 2-dev https://github.com/kuzzleio/sdk-csharp /tmp/sdk-csharp
+        - cd /tmp/sdk-csharp
+        - npm ci
+        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+
+    # ----------------------------
+    # SDK Java v3
+    # ----------------------------
+    - stage: SDKs snippets tests
+      language: node_js
+      node_js: 12
+      services: docker
+      name: SDK Java v3
+      script:
+        - sudo sysctl -w vm.max_map_count=262144
+        - npm ci
+        - git clone -b 3-dev https://github.com/kuzzleio/sdk-java /tmp/sdk-java
+        - cd /tmp/sdk-java
+        - npm ci
+        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+
+    # ----------------------------
+    # SDK JVM v1
+    # ----------------------------
+    - stage: SDKs snippets tests
+      language: node_js
+      node_js: 12
+      services: docker
+      name: SDK JVM v1
+      script:
+        - sudo sysctl -w vm.max_map_count=262144
+        - npm ci
+        - git clone -b 1-dev https://github.com/kuzzleio/sdk-jvm /tmp/sdk-jvm
+        - cd /tmp/sdk-jvm
+        - npm ci
+        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+
+    # ----------------------------
+    # SDK Go v2
+    # ----------------------------
+    - stage: SDKs snippets tests
+      language: node_js
+      node_js: 12
+      services: docker
+      name: SDK Go v2
+      script:
+        - sudo sysctl -w vm.max_map_count=262144
+        - npm ci
+        - git clone -b 2-dev https://github.com/kuzzleio/sdk-go /tmp/sdk-go
+        - cd /tmp/sdk-go
+        - npm ci
+        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+
+    # ----------------------------
+    # SDK Dart v2
+    # ----------------------------
+    - stage: SDKs snippets tests
+      language: node_js
+      node_js: 12
+      services: docker
+      name: SDK Dart v2
+      script:
+        - sudo sysctl -w vm.max_map_count=262144
+        - npm ci
+        - git clone -b 2-dev https://github.com/kuzzleio/sdk-dart /tmp/sdk-dart
+        - cd /tmp/sdk-dart
+        - npm ci
+        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+
 
 # ------------------------
 # Stages configuration
@@ -372,6 +470,8 @@ stages:
     if: type = cron
   - name: Deployments
     if: type = push AND branch =~ /^master|[0-9]+-(dev|stable|beta)|1-dev|$/
+  - name: SDKs snippets tests
+    if : type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
 
 # ---------------------------------------
 # Notifications
