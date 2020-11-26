@@ -76,6 +76,15 @@ let result = await sdk.document.search('iot', 'sensors', {
 })
 ```
 
+In the same way, the writing of documents is also done directly from the frontend into the database collections:
+
+```js
+let result = await sdk.document.create('iot', 'sensors', {
+  type: 'temperature',
+  temperature: 42
+})
+```
+
 ## Embrace Typescript
 
 Kuzzle exposes interfaces written in Typescript for a faster learning curve and a better maintainability of the applications.
