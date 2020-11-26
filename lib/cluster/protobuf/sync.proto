@@ -48,43 +48,16 @@ message Unsubscription {
 
 message DocumentNotification {
   uint64 messageId = 1;
-  repeated string channels = 2;
-  uint32 status = 3;
-  string requestId = 4;
-  uint64 timestamp = 5;
-  string index = 6;
-  string collection = 7;
-  string controller = 8;
-  string action = 9;
-  string protocol = 10;
-  string scope = 11;
+  repeated string rooms = 2;
 
-  // serialized JSON
-  string volatile = 12;
-  string result = 13;
+  // serialized notification, obtained with DocumentNotification.serialize()
+  string notification = 3;
 }
 
 message UserNotification {
   uint64 messageId = 1;
-  repeated string channels = 2;
-  uint32 status = 3;
-  uint64 timestamp = 4;
-  string index = 5;
-  string collection = 6;
-  string controller = 7;
-  string action = 8;
-  string protocol = 9;
-  string user = 10;
+  string room = 2;
 
-  // serialized JSON
-  string volatile = 11;
-}
-
-message ServerNotification {
-  uint64 messageId = 1;
-  repeated string channels = 2;
-  uint32 status = 3;
-  string info = 4;
-  string message = 5;
-  string type = 6;
+  // serialized notification, obtained with UserNotification.serialize()
+  string notification = 3;
 }
