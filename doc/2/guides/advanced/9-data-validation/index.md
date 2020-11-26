@@ -97,7 +97,7 @@ For more information regarding Type Options, please refer to [this](/core/2/guid
 
 ## Advanced Validation
 
-If the basic validation functionality doesn't meet your requirements, you can take advantage of [Koncorde](/core/2/guides/cookbooks/realtime-api) to create complex validation specifications.
+If the basic validation functionality doesn't meet your requirements, you can take advantage of [Koncorde](/core/2/api/koncorde-filters-syntax) to create complex validation specifications.
 
 :::info
 Koncorde is the same component used to create real-time subscriptions.

@@ -58,21 +58,23 @@ import {
 const contextError = kerror.wrap('plugin', 'context');
 
 export type Repository = {
- create(document: JSONObject, options: any): Promise<any>;
+ create(document: JSONObject, options: JSONObject): Promise<JSONObject>;
 
- createOrReplace(document: JSONObject, options: any): Promise<any>;
+ createOrReplace(document: JSONObject, options: JSONObject): Promise<JSONObject>;
 
- delete(documentId: string, options: any): Promise<any>;
+ delete(documentId: string, options: JSONObject): Promise<JSONObject>;
 
  get(documentId: string): Promise<any>;
 
  mGet(ids: string[]): Promise<any>;
 
- replace(document: JSONObject, options: any): Promise<any>;
+ replace(document: JSONObject, options: JSONObject): Promise<JSONObject>;
 
- search(query: JSONObject, options: any): Promise<any>;
+ search(query: JSONObject, options: JSONObject): Promise<any>;
 
- update(document: JSONObject, options: any): Promise<any>;
+ scroll(query: JSONObject, options: JSONObject): Promise<any>;
+
+ update(document: JSONObject, options: JSONObject): Promise<JSONObject>;
 }
 
 export class PluginContext {
@@ -287,6 +289,7 @@ export class PluginContext {
           mGet: (...args) => pluginRepository.loadMultiFromDatabase(...args),
           replace: (...args) => pluginRepository.replace(...args),
           search: (...args) => pluginRepository.search(...args),
+          scroll: (...args) => pluginRepository.scroll(...args),
           update: (...args) => pluginRepository.update(...args)
         } as Repository;
       }
@@ -427,15 +430,15 @@ function execute (kuzzle, request, callback) {
  * to set the context informations
  *
  * @throws
- * @param {Request} request
- * @param {Object} data
+ * @param {Request} originalRequest
+ * @param {Object} requestPayload
  * @param {Object} [options]
  * @returns {Request}
  */
-function instantiateRequest(request, data, options = {}) {
+function instantiateRequest(originalRequest, requestPayload, options = {}) {
   let
-    _request = request,
-    _data = data,
+    _request = originalRequest,
+    _data = requestPayload,
     _options = options;
 
   if (!_request) {
