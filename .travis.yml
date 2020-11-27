@@ -397,8 +397,6 @@ jobs:
       env:
         - "SDK_NAME=sdk-csharp"
         - "SDK_BRANCH=2-dev"
-      script:
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
     # ----------------------------
     # SDK Java v3
