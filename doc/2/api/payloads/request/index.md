@@ -27,4 +27,4 @@ The following properties are the most common but any property can be added to a 
 | `requestId`  | string | Request unique identifier                                                 |
 | `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/1-api#volatile-data) |
 
-See also the [RequestPayload](/core/2/framework/types/request-payload) framework interface.
+See also the [RequestPayload](/core/2/framework/types/request-payload) framework type.

@@ -529,6 +529,41 @@ The following filter validates first document:
 }
 ```
 
+## `in`
+
+Like [equals](#equals), but accepts an array of possible scalar values to be tested.
+
+#### Syntax
+
+`in: { <field name>: <array of values> }`
+
+#### Example
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace'
+},
+{
+  firstName: 'Marie',
+  lastName: 'Curie'
+}
+```
+
+The following filter validates the first two documents:
+
+```javascript
+{
+  in: { firstName: ['Grace', 'Ada'] }
+}
+```
+
 ## `missing`
 
 A filter matching documents either with a missing field in an object, or with a missing value in an array.
