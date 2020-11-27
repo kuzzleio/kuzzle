@@ -433,8 +433,6 @@ jobs:
       env:
         - "SDK_NAME=sdk-dart"
         - "SDK_BRANCH=2-dev"
-      script:
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
 
 # ------------------------
