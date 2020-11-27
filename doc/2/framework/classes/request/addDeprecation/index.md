@@ -7,7 +7,7 @@ description: Request class addDeprecation() method
 
 # addDeprecation
 
-Add a deprecation for a used component, this can be action/controller/parameters...
+Adds a deprecation notice for a used component, this can be action/controller/parameters...
 
 ### Arguments
 
