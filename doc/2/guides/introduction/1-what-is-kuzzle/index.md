@@ -135,7 +135,7 @@ The community is also able to develop and distribute its own plugins to enrich t
 
 ### Expert Professional Support
 
-The Kuzzle backend and all our projects are developed by a team of French engineers based in Montpellier.  
+The Kuzzle backend and all our projects are developed by a team of engineers based in Montpellier, France.  
 
 Our multidisciplinary team of experts is capable of addressing any type of issue and assisting projects of all sizes.
 
