@@ -19,13 +19,19 @@
  * limitations under the License.
  */
 
-export * from './Plugin';
-export * from './Controller';
-export * from './ControllerDefinition';
-export * from './RequestPayload';
-export * from './ResponsePayload';
-export * from './Deprecation';
-export * from './EventHandler';
-export * from './User';
-export * from './Token';
-export * from './InternalLogger';
+import { JSONObject } from "kuzzle-sdk";
+
+/**
+ * Kuzzle user.
+ */
+export interface User extends JSONObject {
+  /**
+   * Unique ID
+   */
+  _id: string;
+
+  /**
+   * User profiles
+   */
+  profileIds: Array<string>;
+}

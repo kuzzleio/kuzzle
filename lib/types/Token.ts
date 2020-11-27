@@ -19,13 +19,45 @@
  * limitations under the License.
  */
 
-export * from './Plugin';
-export * from './Controller';
-export * from './ControllerDefinition';
-export * from './RequestPayload';
-export * from './ResponsePayload';
-export * from './Deprecation';
-export * from './EventHandler';
-export * from './User';
-export * from './Token';
-export * from './InternalLogger';
+import { JSONObject } from "kuzzle-sdk";
+
+/**
+ * Kuzzle authentication token.
+ */
+export interface Token extends JSONObject {
+  /**
+   * Unique ID
+   */
+  _id: string;
+
+  /**
+   * Expiration date in Epoch-micro
+   */
+  expiresAt: number;
+
+  /**
+   * Time-to-live
+   */
+  ttl: number;
+
+  /**
+   * Associated user ID
+   */
+  userId: string;
+
+  /**
+   * Associated connection ID
+   */
+  connectionId: string | null;
+
+  /**
+   * JWT token
+   */
+  jwt: string;
+
+  /**
+   * True if the token has been refreshed with the current request
+   */
+  refreshed: boolean;
+}
+
