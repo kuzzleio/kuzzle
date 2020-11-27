@@ -415,8 +415,6 @@ jobs:
       env:
         - "SDK_NAME=sdk-jvm"
         - "SDK_BRANCH=1-dev"
-      script:
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
     # ----------------------------
     # SDK Go v2
