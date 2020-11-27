@@ -386,6 +386,8 @@ jobs:
         - "SDK_NAME=sdk-javascript"
         - "SDK_BRANCH=7-dev"
       script:
+        - sudo apt-get install libgconf-2-4
+        - npm install
         - npm run build
         - travis_retry npm run doc-testing
       
