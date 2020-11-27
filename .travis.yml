@@ -406,8 +406,6 @@ jobs:
       env:
         - "SDK_NAME=sdk-java"
         - "SDK_BRANCH=3-dev"
-      script:
-        - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
 
     # ----------------------------
     # SDK JVM v1
