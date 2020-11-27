@@ -21,11 +21,42 @@
 
 import { PluginContext } from '../core/plugin/pluginContext';
 import { ControllerDefinition } from './ControllerDefinition';
+import { StrategyDefinition } from './StrategyDefinition';
 import { EventHandler } from './EventHandler';
 import { JSONObject} from '../../index';
 
 /**
- * Plugins must implements this interface.
+ * Allows to define plugins controllers and actions
+ */
+export type PluginApiDefinition = {
+  /**
+   * Name of the API controller.
+   */
+  [controller: string]: ControllerDefinition
+}
+
+/**
+ * Allows to define hooks on events
+ */
+export type PluginHookDefinition = {
+  /**
+   * Event name or wildcard event.
+   */
+  [event: string]: EventHandler | EventHandler[]
+}
+
+/**
+ * Allows to define pipes on events
+ */
+export type PluginPipeDefinition = {
+  /**
+   * Event name or wildcard event.
+   */
+  [event: string]: EventHandler | EventHandler[]
+}
+
+/**
+ * Plugins must implements this abstract class.
  */
 export abstract class Plugin {
   /**
@@ -58,12 +89,7 @@ export abstract class Plugin {
    *   }
    * }
    */
-  public api?: {
-    /**
-     * Name of the API controller.
-     */
-    [controller: string]: ControllerDefinition
-  }
+  public api?: PluginApiDefinition
 
   /**
    * Define hooks on Kuzzle events.
@@ -76,12 +102,7 @@ export abstract class Plugin {
    *   'security:afterCreateUser': async (request: Request) => ...
    * }
    */
-  public hooks?: {
-    /**
-     * Event name or wildcard event.
-     */
-    [event: string]: Array<EventHandler> | EventHandler
-  }
+  public hooks?: PluginHookDefinition
 
   /**
    * Define pipes on Kuzzle events.
@@ -94,12 +115,7 @@ export abstract class Plugin {
    *   'document:afterCreate': async (request: Request) => ...
    * }
    */
-  public pipes?: {
-    /**
-     * Event name or wildcard event.
-     */
-    [event: string]: Array<EventHandler> | EventHandler
-  }
+  public pipes?: PluginPipeDefinition
 
   /**
    * Define authenticator classes used by strategies.
@@ -118,40 +134,7 @@ export abstract class Plugin {
    *
    * @see https://docs.kuzzle.io/core/2/plugins/guides/strategies/overview
    */
-  public strategies?: {
-    /**
-     * Strategy name and definition.
-     */
-    [name: string]: {
-      /**
-       * Strategy configuration.
-       */
-      config: {
-        /**
-         * Name of a registered authenticator to use with this strategy.
-         */
-        authenticator: string,
-        [key: string]: any
-      },
-      /**
-       * Strategy methods.
-       *
-       * Each method must be exposed by the plugin
-       * under the same name as specified.
-       */
-      methods: {
-        afterRegister?: string,
-        create: string,
-        delete: string,
-        exists: string,
-        getById?: string,
-        getInfo?: string,
-        update: string,
-        validate: string,
-        verify: string,
-      }
-    }
-  }
+  public strategies?: StrategyDefinition
 
   /**
    * Plugin initialization method.
