@@ -8,13 +8,13 @@ order: 200
 
 # General Purpose Backend
 
-Kuzzle is a generic backend offering **features common to every application**.
+Kuzzle is a generic backend offering **the basic building blocks common to every application**.
 
-Rather than redeveloping functionalities that don't bring any added value, Kuzzle proposes to use them as is to **build high-level business functionalities**.
+Rather than redeveloping functionalities that **do not bring value for your users**, Kuzzle proposes to use its basic building blocs in order to **build high-level business features**.
 
 ## API First
 
-The majority of Kuzzle's functionalities are available via its [API](/core/2/guides/main-concepts/1-api) for various external clients.
+The majority of Kuzzle's features are available via its [API](/core/2/guides/main-concepts/1-api) for various external clients.
 
 This **multi-protocol API** allows clients to communicate with Kuzzle and use the backend features through the **protocol that best suits their needs**.
 
@@ -30,7 +30,7 @@ Kuzzle use Elasticsearch as a [NoSQL document store](/core/2/guides/main-concept
 
 With Kuzzle, customers **can directly access all the data stored in the database** as long as their have the rights to do so.
 
-No more need to create a new controller every time new data needs to be displayed, no more need to add parameters to controller actions to refine searches: **everything is done directly on the client side**.
+No more need to create a new controller every time new data needs to be displayed, no more need to add parameters to controller actions to refine searches: **queries are expressed directly on the client side**.
 
 Kuzzle exposes the [Elasticsearch Query Language](/core/2/guides/main-concepts/3-querying) in a secure way. It is therefore possible to **take full advantage of the possibilities of Elasticsearch** with boolean queries, aggregations, special fields, etc.
 
@@ -129,7 +129,7 @@ Kuzzle offers different mechanisms to **develop the business functionalities** o
  - [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
  - [External Plugin](/core/2/guides/develop-on-kuzzle/4-external-plugins)
 
-All the developed functionalities will **benefit from the advantages of Kuzzle API** such as multi-authentication, rights management, standard request and response format, cluster scalability, anti-dos protection, etc.
+Everything you will build upon your application will **benefit from the advantages of Kuzzle API** such as multi-authentication, rights management, standard request and response format, cluster scalability, anti-dos protection, etc.
 
 ## Embrace Typescript
 
