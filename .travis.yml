@@ -65,6 +65,8 @@ _doc_sdk_snippet: &doc_sdk_snippet
     - git clone -b $SDK_BRANCH https://github.com/kuzzleio/$SDK_NAME /tmp/$SDK_NAME
     - cd /tmp/$SDK_NAME
     - npm ci
+  script:
+    - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
   
 # ------------------------
 # Jobs configuration
