@@ -10,7 +10,7 @@ order: 200
 
 Kuzzle is a generic backend offering **the basic building blocks common to every application**.
 
-Rather than redeveloping functionalities that **do not bring value for your users**, Kuzzle proposes to use its basic building blocs in order to **build high-level business features**.
+Rather than developing the same standard features over and over again each time you create a new application, Kuzzle proposes them off the shelf, allowing you to focus on building **high-level, high-value business functionalities**.
 
 ## API First
 
