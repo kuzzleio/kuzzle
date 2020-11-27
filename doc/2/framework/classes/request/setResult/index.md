@@ -36,10 +36,6 @@ The `options` argument may contain the following properties:
 | `headers` | <pre>JSONObject</pre> | Additional response protocol headers | `null` |
 | `raw` | <pre>boolean</pre> | Instead of a Kuzzle response, forward the result directly | `false` |
 
-If a `KuzzleError` is provided, the request's status attribute is set to the error one.
-
-Otherwise, the provided error is encapsulated into an `InternalError` object, and the request's status is set to 500.
-
 ### Example
 
 ```ts
