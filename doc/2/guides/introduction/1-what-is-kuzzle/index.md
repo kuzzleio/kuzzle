@@ -133,6 +133,16 @@ These plugins allow you to use the functionalities of other services such as [Am
 
 The community is also able to develop and distribute its own plugins to enrich the ecosystem.
 
+### Expert Professional Support
+
+The Kuzzle backend and all our projects are developed by a team of engineers based in Montpellier, France.  
+
+Our multidisciplinary team of experts is capable of addressing any type of issue and assisting projects of all sizes.
+
+You can thus pass the development and production phases with a relaxed spirit, knowing that you can rely on quality professional support.
+
+[Get a quote](https://info.kuzzle.io/contact-us)
+
 ### Meet the community
 
 We federate a community of developers using Kuzzle around the world.
