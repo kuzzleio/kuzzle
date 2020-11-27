@@ -19,7 +19,7 @@ constructor (app: Backend);
 
 | Argument  | Type   | Description            |
 | -------------- | --------- | ------------- |
-| `app` | <pre>Backend}</pre> | Application instantiated [Backend](/core/2/framework/some-link) class |
+| `app` | <pre>Backend</pre> | Instantiated application [Backend](/core/2/framework/some-link) class |
 
 ## Usage
 

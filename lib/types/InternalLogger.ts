@@ -19,13 +19,32 @@
  * limitations under the License.
  */
 
-export * from './Plugin';
-export * from './Controller';
-export * from './ControllerDefinition';
-export * from './RequestPayload';
-export * from './ResponsePayload';
-export * from './Deprecation';
-export * from './EventHandler';
-export * from './User';
-export * from './Token';
-export * from './InternalLogger';
+/**
+ * Internal logger.
+ */
+export type InternalLogger = {
+  /**
+   * Logs a debug message
+   */
+  debug: (message: any) => void
+
+  /**
+   * Logs an error message
+   */
+  error: (message: any) => void
+
+  /**
+   * Logs an info message
+   */
+  info: (message: any) => void
+
+  /**
+   * Logs a verbose message
+   */
+  verbose: (message: any) => void
+
+  /**
+   * Logs a warn message
+   */
+  warn: (message: any) => void
+};
