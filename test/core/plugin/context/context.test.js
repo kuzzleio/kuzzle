@@ -230,7 +230,6 @@ describe('Plugin Context', () => {
 
     it('should expose the right accessors', () => {
       [
-        'silly',
         'verbose',
         'info',
         'debug',
