@@ -70,7 +70,7 @@ export type RequestPayload = {
   /**
    * Request unique identifier
    */
-  requestId: string;
+  requestId?: string;
 
   [key: string]: any;
 }
