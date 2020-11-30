@@ -639,7 +639,7 @@ export class Backend {
   get name (): string { return this._name; }
 
   /**
-   * Internal SDK
+   * EmbeddedSDK instance
    */
   get sdk (): EmbeddedSDK {
     if (! this.started) {
