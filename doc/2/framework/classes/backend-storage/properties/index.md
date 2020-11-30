@@ -13,7 +13,7 @@ It is accessible from the [Backend.storage](/core/2/framework/classes/backend/pr
 
 See the [Data Storage](/core/2/guides/main-concepts/2-data-storage#integrated-elasticsearch-client) guide.
 
-## `esClient`
+## `storageClient`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
@@ -34,7 +34,7 @@ const esRequest =  {
 await app.storage.client.index(esRequest)
 ```
 
-## `ESClient`
+## `StorageClient`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
@@ -58,6 +58,6 @@ const esRequest =  {
 }
 
 // Instantiate and use a new client
-const esClient = new app.storage.Client()
-await esClient.index(esRequest)
+const storageClient = new app.storage.Client()
+await storageClient.index(esRequest)
 ```

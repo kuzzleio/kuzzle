@@ -6,7 +6,7 @@ const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
 const _ = require('lodash');
-const { Client: ESClient } = require('@elastic/elasticsearch');
+const { Client: StorageClient } = require('@elastic/elasticsearch');
 
 const {
   Request,
@@ -89,17 +89,17 @@ describe('Plugin Context', () => {
         });
     });
 
-    describe('#ESClient', () => {
-      it('should expose the ESClient constructor', () => {
-        const esClient = new context.constructors.ESClient();
+    describe('#StorageClient', () => {
+      it('should expose the StorageClient constructor', () => {
+        const storageClient = new context.constructors.StorageClient();
 
-        should(esClient).be.instanceOf(ESClient);
+        should(storageClient).be.instanceOf(StorageClient);
       });
 
-      it('should allow to instantiate an ESClient connected to the ES cluster', () => {
-        const esClient = new context.constructors.ESClient();
+      it('should allow to instantiate an StorageClient connected to the ES cluster', () => {
+        const storageClient = new context.constructors.StorageClient();
 
-        should(esClient.connectionPool.connections[0].url.origin)
+        should(storageClient.connectionPool.connections[0].url.origin)
           .be.eql(kuzzle.config.services.storageEngine.client.node);
       });
     });

@@ -652,8 +652,8 @@ const esRequest =  {
 await app.storage.client.index(esRequest)
 
 // Instantiate and use a new client
-const esClient = new app.storage.Client()
-await esClient.index(esRequest)
+const storageClient = new app.storage.Client()
+await storageClient.index(esRequest)
 ```
 
 ::: warning

@@ -15,7 +15,7 @@ It contains various classes thats allows to interact with Kuzzle.
 
 Abstract class that allows to define a new custom type for the [Data Validation](/core/2/guides/some-link) module.
 
-## `ESClient`
+## `StorageClient`
 
 This constructor instantiates an embedded [Elasticsearch client](https://github.com/elastic/elasticsearch-js) with the same configuration as the one provided in Kuzzle configuration.  
 
@@ -40,8 +40,8 @@ const esRequest =  {
 }
 
 // Instantiate and use a new client
-const esClient = new app.storage.Client()
-await esClient.index(esRequest)
+const storageClient = new app.storage.Client()
+await storageClient.index(esRequest)
 ```
 
 ## `Koncorde`
@@ -94,7 +94,7 @@ const req = new context.constructors.Request(request, {
 const user = await context.accessors.execute(req) 
 ```
 
-## `ESClient`
+## `StorageClient`
 
 Constructor for [Elasticsearch SDK Client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html).
 
@@ -111,6 +111,6 @@ const esRequest =  {
 }
 
 // Instantiate and use a new client
-const esClient = new app.storage.Client()
-await esClient.index(esRequest)
+const storageClient = new app.storage.Client()
+await storageClient.index(esRequest)
 ```

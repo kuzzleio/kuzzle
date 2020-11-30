@@ -397,11 +397,11 @@ class BackendStorage extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get ESClient (): new (clientConfig?: any) => Client {
+  get StorageClient (): new (clientConfig?: any) => Client {
     if (! this._Client) {
       const kuzzle = this._kuzzle;
 
-      this._Client = function ESClient (clientConfig: JSONObject = {}) {
+      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
           ...kuzzle.config.services.storageEngine.client,
           ...clientConfig,
@@ -416,7 +416,7 @@ class BackendStorage extends ApplicationManager {
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
    */
-  get esClient (): Client {
+  get storageClient (): Client {
     if (! this._client) {
       this._client = Elasticsearch
         .buildClient(this._kuzzle.config.services.storageEngine.client);

@@ -1,11 +1,11 @@
 Feature: Plugin context
 
-  # constructors.ESClient ======================================================
+  # constructors.StorageClient ======================================================
 
   @mappings
   Scenario: Instantiate a new embedded ES Client and use it
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    When I successfully execute the action "functional-test-plugin/constructors":"ESClient" with args:
+    When I successfully execute the action "functional-test-plugin/constructors":"StorageClient" with args:
       | _id   | "es-document"                    |
       | body  | { "from": "embedded-es-client" } |
       | index | "&nyc-open-data.yellow-taxi"     |

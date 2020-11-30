@@ -462,29 +462,29 @@ describe('Backend', () => {
     });
   });
 
-  describe('StorageManager#ESClient', () => {
-    it('should allows to construct an ES ESClient', async () => {
+  describe('StorageManager#StorageClient', () => {
+    it('should allows to construct an ES StorageClient', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
       application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
-      should(application.storage.ESClient).be.a.Function();
+      should(application.storage.StorageClient).be.a.Function();
 
-      const client = new application.storage.ESClient({ maxRetries: 42 });
+      const client = new application.storage.StorageClient({ maxRetries: 42 });
       should(client).be.instanceOf(ElasticsearchClient);
       should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
       should(client.helpers.maxRetries).be.eql(42);
     });
   });
 
-  describe('StorageManager#esClient', () => {
+  describe('StorageManager#storageClient', () => {
     it('should allows lazily access an ES Client', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
 
       should(application.storage._client).be.null();
 
-      should(application.storage.esClient).be.instanceOf(ElasticsearchClient);
-      should(application.storage.esClient.connectionPool.connections[0].url.toString())
+      should(application.storage.storageClient).be.instanceOf(ElasticsearchClient);
+      should(application.storage.storageClient.connectionPool.connections[0].url.toString())
         .be.eql('http://es:9200/');
     });
   });
