@@ -36,6 +36,28 @@ const _c_protocol = 'protocol\u200b';
 const _c_ips = 'ips\u200b';
 const _c_misc = 'misc\u200b';
 
+export type ContextMisc = {
+  /**
+   * HTTP url
+   * @deprecated use "path" instead
+   */
+  url?: string;
+  /**
+   * HTTP path
+   */
+  path?: string;
+  /**
+   * HTTP headers
+   */
+  verb?: string;
+  /**
+   * HTTP headers
+   */
+  headers?: JSONObject;
+
+  [key: string]: any
+};
+
 /**
  * Information about the connection at the origin of the request.
  */
@@ -98,27 +120,7 @@ export class Connection {
   /**
    * Additional informations about the connection
    */
-  get misc (): {
-    /**
-     * HTTP url
-     * @deprecated use "path" instead
-     */
-    url?: string;
-    /**
-     * HTTP path
-     */
-    path?: string;
-    /**
-     * HTTP headers
-     */
-    verb?: string;
-    /**
-     * HTTP headers
-     */
-    headers?: JSONObject;
-
-    [key: string]: any
-  } {
+  get misc (): ContextMisc {
     return this[_c_misc];
   }
 

@@ -292,8 +292,8 @@ export class PluginContext {
         get: (...args) => pluginRepository.load(...args),
         mGet: (...args) => pluginRepository.loadMultiFromDatabase(...args),
         replace: (...args) => pluginRepository.replace(...args),
-        search: (...args) => pluginRepository.search(...args),
         scroll: (...args) => pluginRepository.scroll(...args),
+        search: (...args) => pluginRepository.search(...args),
         update: (...args) => pluginRepository.update(...args)
       } as Repository;
     }

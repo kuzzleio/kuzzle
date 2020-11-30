@@ -24,9 +24,9 @@ Contains informations about identity (`token`, `user`) and origin (`connection`)
 | `id`       | <pre>string</pre>     | Unique identifier of the user connection        | get       |
 | `protocol` | <pre>string</pre>     | Network protocol name                           | get       |
 | `ips`      | <pre>string[]</pre>   | Chain of IP addresses, starting from the client | get       |
-| `misc`     | <pre>JSONObject</pre> | Additional informations about the connection    | get       |
+| `misc`     | <pre>ContextMisc</pre> | Additional informations about the connection    | get       |
 
-### HTTP misc informations
+### ContextMisc HTTP informations
 
 | Name      | Type              | Description  | get / set |
 |-----------|-------------------|--------------|-----------|
