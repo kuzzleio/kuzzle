@@ -79,3 +79,84 @@ message UserNotification {
   // serialized JSON
   string volatile = 11;
 }
+
+message NewAuthStrategy {
+  message AuthStrategyConfig {
+    string authenticator = 1;
+    repeated string fields = 2;
+
+    // serialized JSON
+    string authenticateOptions = 3;
+    string strategyOptions = 4;
+  }
+
+  message AuthStrategyMethods {
+    string create = 1;
+    string delete = 2;
+    string exists = 3;
+    string update = 4;
+    string validate = 5;
+    string verify = 6;
+    optional string getById = 7;
+    optional string getInfo = 8;
+    optional string afterRegister = 9;
+  }
+
+  message AuthStrategy {
+    AuthStrategyMethods methods = 1;
+    AuthStrategyConfig config = 2;
+  }
+
+  uint64 messageId = 1;
+  string strategyName = 2;
+  string pluginName = 3;
+  AuthStrategy strategy = 4;
+}
+
+message RemoveAuthStrategy {
+  uint64 messageId = 1;
+  string strategyName = 2;
+  string pluginName = 3;
+}
+
+message DumpRequest {
+  uint64 messageId = 1;
+  string suffix = 2;
+}
+
+message ResetSecurity {
+  uint64 messageId = 1;
+}
+
+message Shutdown {
+  uint64 messageId = 1;
+}
+
+message RefreshValidators {
+  uint64 messageId = 1;
+}
+
+message InvalidateProfile {
+  uint64 messageId = 1;
+  string profileId = 2;
+}
+
+message InvalidateRole {
+  uint64 messageId = 1;
+  string roleId = 2;
+}
+
+message IndexCacheAdd {
+  uint64 messageId = 1;
+  string scope = 2;
+  string index = 3;
+  optional string collection = 4;
+}
+
+message IndexCacheRemove {
+  uint64 messageId = 1;
+  string scope = 2;
+  string index = 3;
+  optional string collection = 4;
+}
+

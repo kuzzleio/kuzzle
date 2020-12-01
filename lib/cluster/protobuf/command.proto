@@ -4,13 +4,15 @@ package command;
 
 syntax="proto3";
 
+import "sync.proto";
+
 // Full state response
 message FullStateResponse {
   // Describes the nodes that have subscribed to a given realtime room
   message NodeSubscribers {
     string nodeId = 1;
     uint32 subscribers = 2;
-    uint64 lastMessageId = 3;
+    uint64 messageId = 3;
   }
 
   // Describes a realtime room
@@ -27,6 +29,7 @@ message FullStateResponse {
   }
 
   repeated RealtimeRoom rooms = 1;
+  repeated sync.NewAuthStrategy authStrategies = 2;
 }
 
 // Handshake Request
