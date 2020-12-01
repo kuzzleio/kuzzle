@@ -1,6 +1,6 @@
 'use strict';
 
-const should = require('should');
+const should = require('should/as-function');
 const _ = require('lodash');
 
 class FunctionalTestPlugin {

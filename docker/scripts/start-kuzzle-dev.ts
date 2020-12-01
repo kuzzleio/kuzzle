@@ -3,7 +3,7 @@
 // Starts a Kuzzle Backend application tailored for development
 // This loads a special plugin dedicated to functional tests
 
-import should from 'should'
+import should from 'should/as-function'
 import { omit } from 'lodash'
 
 import { Backend, Request } from '../../index';
