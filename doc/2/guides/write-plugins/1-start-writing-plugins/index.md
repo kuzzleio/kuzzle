@@ -11,7 +11,7 @@ order: 100
 A plugin is a class inheriting from the [Plugin](/core/2/framework/abstract-classes/plugin) class.
 
 This class must:
- - call the parent constructor with its manifest
+ - call the parent constructor with its [PluginManifest](/core/2/framework/types/plugin-manifest)
  - implements the [init](/core/2/framework/abstract-classes/plugin/init) method
 
 You can use Kourou to initialize your development environment: `kourou app:scaffold`.
