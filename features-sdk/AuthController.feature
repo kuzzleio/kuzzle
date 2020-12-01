@@ -11,8 +11,13 @@ Feature: Auth Controller
       | body | { "token": this.props.result.jwt } |
     Then I should receive a result matching:
       | valid     | true         |
-      | kuid    | "test-admin" |
+      | kuid      | "test-admin" |
       | expiresAt | "_NUMBER_"   |
+    When I successfully execute the action "auth":"checkToken" with args:
+      | body | { "token": "invalid token" } |
+    Then I should receive a result matching:
+      | valid   | false      |
+      | message | "_STRING_" |
 
   # auth:checkRights ===========================================================
 
