@@ -23,7 +23,7 @@ init(entryPoint, context);
 | Arguments    | Type                                                           | Description                                                                              |
 | ------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `entryPoint` | [`EntryPoint`](/core/2/protocols/api/entrypoint) | Provides an interface to protocol related methods                                        |
-| `context`    | [`context`](/core/2/protocols/api/context)       | Generic interface exposing objects and methods not directly related to the network layer |
+| `context`    | [`context`](/core/2/guides/write-protocols/2-context)       | Generic interface exposing objects and methods not directly related to the network layer |
 
 ---
 

@@ -18,7 +18,7 @@ Protocols can even decide to propose a dedicated message format and/or query syn
 Protocols are provided with objects to interact with Kuzzle:
 
 - [EntryPoint](/core/2/protocols/api/entrypoint): base communication layer (declare user connections, forward API requests, ...)
-- [context](/core/2/protocols/api/context): utilities and object constructors not directly related to network communications
+- [context](/core/2/guides/write-protocols/2-context): utilities and object constructors not directly related to network communications
 
 ---
 

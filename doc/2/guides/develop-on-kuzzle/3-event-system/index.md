@@ -161,7 +161,7 @@ To prevent infinite loops, if a hook attached to the `hook:onError` event fails,
 You can only trigger custom events during the `runtime` phase, after the application has started.
 ::: 
 
-**Internal or custom events can be triggered** with the [Backend.trigger](/core/2/references/some-link) method.
+**Internal or custom events can be triggered** with the [Backend.trigger](/core/2/framework/classes/backend/trigger) method.
 
 Pipes and hooks can be plugged on custom events as well as on internal events.
 

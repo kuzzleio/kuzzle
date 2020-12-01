@@ -119,7 +119,7 @@ When this action is successfully called, the following answer will be returned b
 
 ## Query normalization
 
-Kuzzle normalizes [queries](/core/2/api/essentials/query-syntax) into [Request](/core/2/plugins/plugin-context/constructors/request) objects.
+Kuzzle normalizes [queries](/core/2/api/essentials/query-syntax) into [Request](/core/2/framework/classes/request) objects.
 
 Quick summary of how queries are normalized:
 

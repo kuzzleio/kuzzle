@@ -17,7 +17,7 @@ This object is received by the controller's [actions handler function](/core/2/g
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>[RequestContext](/core/2/framework/classes/request)</pre> | Request context (e.g. user, connection, jwt) | get |
+| <pre>[RequestContext](/core/2/framework/classes/request-context)</pre> | Request context (e.g. user, connection, jwt) | get |
 
 ## `deprecations`
 

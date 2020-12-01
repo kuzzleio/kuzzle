@@ -33,7 +33,7 @@ The provided `subscription` object has the following properties:
 | Properties     | Type                 | Description                                                                                                       |
 | -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `roomId`       | <pre>string</pre>    | Room unique identifier                                                                                    |
-| `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/2/protocols/api/context/clientconnection) unique identifier                          |
+| `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/2/guides/write-protocols/2-context/clientconnection) unique identifier                          |
 | `index`        | <pre>string</pre>    | Index                                                                                                             |
 | `collection`   | <pre>string</pre>    | Collection                                                                                                        |
 | `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier)  |
@@ -52,7 +52,7 @@ Use `core:realtime:user:unsubscribe:after` instead.
 
 | Arguments        | Type              | Description                                                                                  |
 | -----------------| ----------------- | -------------------------------------------------------------------------------------------- |
-| `RequestContest` | <pre>object</pre> | [requestContext](/core/2/protocols/api/context/requestcontext/) object |
+| `RequestContest` | <pre>object</pre> | [requestContext](/core/2/guides/write-protocols/2-context/requestcontext/) object |
 | `room`           | <pre>object</pre> | Joined room information in Koncorde format                                                   |
 
 Triggered whenever a user is removed from a room. 
@@ -132,7 +132,7 @@ The provided `subscription` object has the following properties:
 | Properties     | Type                 | Description                                                                                                       |
 | -------------- | -------------------- | --------------------------------------------------------------------------------------------------------- |
 | `roomId`       | <pre>string</pre>    | Room unique identifier                                                                                    |
-| `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/2/protocols/api/context/clientconnection) unique identifier                      |
+| `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/2/guides/write-protocols/2-context/clientconnection) unique identifier                      |
 | `index`        | <pre>string</pre>    | Index                                                                                                     |
 | `collection`   | <pre>string</pre>    | Collection                                                                                                |
 | `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier)|
@@ -147,7 +147,7 @@ Triggered whenever a user leaves a room.
 
 | Arguments        | Type              | Description                                                                                  |
 | -----------------| ----------------- | -------------------------------------------------------------------------------------------- |
-| `RequestContest` | <pre>object</pre> | [requestContext](/core/2/protocols/api/context/requestcontext/) object |
+| `RequestContest` | <pre>object</pre> | [requestContext](/core/2/guides/write-protocols/2-context/requestcontext/) object |
 | `room`           | <pre>object</pre> | Joined room information in Koncorde format                                                   |
 
 ### room

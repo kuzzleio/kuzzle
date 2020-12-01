@@ -12,7 +12,7 @@ order: 100
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request passes authorization checks and is ready to be processed.
 
@@ -22,7 +22,7 @@ This event occurs before [before events](/core/2/plugins/guides/events/api-event
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request execution fails.
 
@@ -32,7 +32,7 @@ This event occurs after [error events](/core/2/plugins/guides/events/api-events#
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request execution succeeds.
 
@@ -42,6 +42,6 @@ This event occurs after [after events](/core/2/plugins/guides/events/api-events#
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request fails authorization checks, and is about to be rejected with a `401` error code.

@@ -24,7 +24,7 @@ execute(request, [callback]);
 
 | Arguments  | Type                                                             | Description                                                                                              |
 | ---------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `request`  | <pre>[Request](/core/2/protocols/api/context/request)</pre> | Standardized API request |
+| `request`  | <pre>[Request](/core/2/guides/write-protocols/2-context/request)</pre> | Standardized API request |
 | `callback(result)` | <pre>function</pre> | Callback receiving the response |
 
 ---

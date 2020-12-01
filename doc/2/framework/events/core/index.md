@@ -70,7 +70,7 @@ The provided `strategy` object has the following properties:
 <DeprecatedBadge version="2.2.0" />
 
 This event is deprecated, and may be removed in a future version of Kuzzle.
-Use [kuzzle:state:ready](/core/2/plugins/guides/events/kuzzle-state) instead.
+Use [kuzzle:state:ready](/core/2/framework/events/kuzzle) instead.
 
 Triggered when Kuzzle has finished booting and is ready to process user requests.
 
