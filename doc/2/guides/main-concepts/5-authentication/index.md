@@ -150,7 +150,7 @@ It's also possible to revoke every authentication tokens of a user with the [sec
 **Authentication tokens expire after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.  
 
 ::: info
-If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server event](/core/2/references/some-link).
+If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server notification](/core/2/api/payloads/notification#server-notification).
 :::
 
 While an authentication token is still valid, it is possible to provide it to the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to request a new, fresher authentication token, without having to ask for credentials. 

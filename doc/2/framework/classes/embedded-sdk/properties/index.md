@@ -13,7 +13,7 @@ It inherits from the [Kuzzle](/sdk/js/7/core-classes/Kuzzle) class of the Javasc
 
 It is **directly connected to the Kuzzle API** and requests **do not go through the network**.
 
-It is accessible within an application through the [Backend.sdk](/core/2/framework/some-link) property.
+It is accessible within an application through the [Backend.sdk](/core/2/framework/classes/backend/properties#sdk) property.
 
 See also the [EmbeddedSDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) guide.
 

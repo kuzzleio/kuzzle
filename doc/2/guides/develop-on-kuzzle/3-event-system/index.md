@@ -12,7 +12,7 @@ Most of the **internal tasks performed by Kuzzle trigger events**.
 
 Kuzzle enables to attach business-logic to these events by defining **hooks** (which allow to perform additional actions when the event triggers) and **pipes** (which change the behavior of the standard logic when the event triggers).
 
-The complete list of events is available here: [Internal Events List](/core/2/references/some-link)
+The complete list of events is available here: [Internal Events List](/core/2/framework/events)
 
 ::: info
 You can display events triggered by Kuzzle by setting the `DEBUG` environment variable to `kuzzle:events:*`.
@@ -52,13 +52,13 @@ Examples of pipes usage:
 
 <!-- Duplicate with guides/getting-started/8-customize-api-behavior -->
 
-We need to use the [Backend.pipe.register](/core/2/references/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
+We need to use the [Backend.pipe.register](/core/2/framework/classes/backend-pipe/register) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
 
 Each event has a different payload.  
 The pipe handler function **must return a promise resolving to the received payload**.  
 
 ::: info
-When an event has more than one payload then only the first argument of the handler function must be returned. (e.g. [Generic Document Events](/core/2/references/some-link))
+When an event has more than one payload then only the first argument of the handler function must be returned. (e.g. [Generic Document Events](/core/2/framework/events/generic-document))
 :::
 
 **Example:** _Changing the result of the [server:now](/core/2/api/controllers/server/now) API action_
@@ -81,7 +81,7 @@ This warning can be configured under the [plugins.pipeWarnTime](/core/2/main-con
 
 When the pipe handler function returns a rejected promise or throws an error, Kuzzle aborts the current task.
 
-If the error is one of the [available default errors](/core/2/references/some-link) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/references/some-link) error.
+If the error is one of the [available default errors](/core/2/api/errors/types) then the response returned to the client will contain the error as is, otherwise the error will be wrapped in a [PluginImplementationError](/core/2/api/errors/types#plugin-implementation-error) error.
 
 **Example:** _Limit reading access to documents to their creator_
 ```js
@@ -101,7 +101,7 @@ app.pipe.register(
 ```
 
 ::: info
-[Generic Document Events](/core/2/core/2/references/some-link) have a payload consisting of two arguments: an array of documents and the original [Request object](/core/2/references/some-link)
+[Generic Document Events](/core/2/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [Request](/core/2/framework/classes/request) object
 :::
 
 ## Hooks
@@ -122,7 +122,7 @@ Examples of hooks usage:
 
 ### Registering a hook
 
-We need to use the [Backend.hook.register](/core/2/references/some-link) method to register new hooks.   This method takes an event name as its first parameter, followed by the hook handler function.
+We need to use the [Backend.hook.register](/core/2/framework/classes/backend-hook/register) method to register new hooks.   This method takes an event name as its first parameter, followed by the hook handler function.
 
 **Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to log user registration_
 
@@ -134,7 +134,7 @@ app.hook.register('security:afterCreateRestrictedUser', async (request: Request)
 
 ### Handling errors
 
-When a hook handler function returns a rejected promise or throw an error then the [hook:onError](/core/2/references/some-link) is triggered.  
+When a hook handler function returns a rejected promise or throw an error then the [hook:onError](/core/2/framework/events/hook) is triggered.  
 
 Handler function attached to this event will receive the following arguments:
 | Arguments    | Type     | Description                                   |

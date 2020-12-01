@@ -18,7 +18,7 @@ This system makes it possible to **modify the execution flow of requests** proce
 
 Every time a request is executed, **Kuzzle emits several events** to allow changing the life cycle of the processing request.
 
-There are many different events available, you can see the complete list here: [Kuzzle events](/core/2/references/some-link).
+There are many different events available, you can see the complete list here: [Kuzzle Events](/core/2/framework/events).
 
 ### API events
 
@@ -74,7 +74,7 @@ Each event carries a different payload. **This payload must be returned by the p
 
 <!-- Duplicate with guides/develop-on-kuzzle/3-event-system -->
 
-We need to use the [Backend.pipe.register](/core/2/references/some-link) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
+We need to use the [Backend.pipe.register](/core/2/framework/classes/backend-pipe/register) method to register new pipes. This method takes an event name as its first parameter, followed by the pipe handler function.
 
 In this example, we are going to change the return value of the `server:now` action to make it return a formatted date string instead of a UNIX timestamp:
 

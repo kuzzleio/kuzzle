@@ -18,7 +18,7 @@ In order to use the API actions, Kuzzle exposes the **Embedded SDK**.
 
 The Embedded SDK is a **modified version of the [Javascript SDK](/sdk/js/7)** which is directly connected to the API and **does not send requests through the network**.  
 
-You can access it through the [Backend.sdk](/core/2/references/some-link) property. 
+You can access it through the [Backend.sdk](/core/2/framework/classes/embedded-sdk) property. 
 
 ## Controllers
 
@@ -78,7 +78,7 @@ By default, when using the Embedded SDK, requests **don't have the same context 
 
 Typically, the `request.context.user` property is not set and thus **[Kuzzle metadata](/core/2/guides/main-concepts/2-data-storage#kuzzle-metadata) will not be set when creating or updating documents**.
 
-It is possible to use the same user context as the original request with the Embedded SDK, for this purpose it is necessary to use the [EmbeddedSDK.as](/core/2/references/some-link) method.
+It is possible to use the same user context as the original request with the Embedded SDK, for this purpose it is necessary to use the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) method.
 
 **Example:** _Creating a document as the original API user to preserve Kuzzle metadata_
 ```js
@@ -100,7 +100,7 @@ app.controller.register('drivers', {
 
 ::: warning
 User permissions are applied only once, when a request is received by Kuzzle through the exposed API.  
-If a request is authorized, then all subsequent calls to the API performed with [EmbeddedSDK.as](/core/2/references/some-link) are always authorized, even if they are made to execute API actions that a user is normally forbidden from.
+If a request is authorized, then all subsequent calls to the API performed with [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) are always authorized, even if they are made to execute API actions that a user is normally forbidden from.
 :::
 
 ## Backend Realtime Subscriptions

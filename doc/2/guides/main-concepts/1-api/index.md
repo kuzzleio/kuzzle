@@ -340,7 +340,7 @@ Errors returned by the Kuzzle API in the `error` part of a response are objects 
 | `id`      | <pre>string</pre> | Error unique identifier                                |
 | `code`    | <pre>number</pre> | Error unique code                                      |
 
-List of [Standard Kuzzle Error](/core/2/references/some-link)
+List of [Standard Kuzzle Error](/core/2/api/errors/types)
 
 **Example:** _Receving a `network.http.url_not_found`_
 
@@ -438,7 +438,7 @@ Once this number of requests is reached, new requests are stored in a queue befo
 **Associated configuration keys:**
  - `limits.concurrentRequests` (`50`): number of requests Kuzzle processes simultaneously
  - `limits.requestsBufferSize` (`50000`): maximum number of requests that can be buffered
- - `limits.requestsBufferWarningThreshold` (`5000`):number of buffered requests after which Kuzzle will throw [core:overload](/core/2/references/some-link) events
+ - `limits.requestsBufferWarningThreshold` (`5000`):number of buffered requests after which Kuzzle will throw [core:overload](/core/2/framework/events/core) events
 
 ### Documents Limits
 

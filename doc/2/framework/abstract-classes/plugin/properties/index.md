@@ -7,9 +7,9 @@ description: Plugin abstract class properties
 
 # Plugin
 
-Base class for [External Plugins](/core/2/guides/some-link).  
+Base class for [External Plugins](/core/2/guides/write-plugins).  
 
-Plugins registered with the [BackendPlugin.use](/core/2/framework/backend-plugin/use) method must extends this abstract class.
+Plugins registered with the [BackendPlugin.use](/core/2/framework/classes/backend-plugin/use) method must extends this abstract class.
 
 Some properties of the `Plugin` class allows to define a set of features that will be integrated to the plugin. 
 

@@ -625,12 +625,12 @@ It is considered harmful to let end users execute those actions.
 
 Kuzzle uses and exposes the [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
 
-It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/references/some-link) property.
+It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/framework/classes/backend-storage) property.
 
 This property offers the possibility to **instantiate a new client** or to **use a lazy-instantiated client**. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
 
 ::: info
-It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.Client](/core/2/references/some-link).
+It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.ESClient](/core/2/framework/classes/backend-storage#properties).
 :::
 
 

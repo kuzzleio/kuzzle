@@ -8,42 +8,6 @@ order: 100
 
 # Plugin Events
 
-# Error Events
-
-## hook error
-
-When a plugin's hook function returns a rejected promise or throws an error, the event `hook:onError` is emitted.  
-
-Handlers attached to this event will receive the following arguments:
-
-| Arguments    | Type     | Description                                   |
-|--------------|----------|-----------------------------------------------|
-| `pluginName` | `String` | Plugin name                                   |
-| `event`      | `String` | Original event to which the hook was attached |
-| `error`      | `Error`  | Error object                                  |
-
-::: info
-To prevent infinite loops, if a hook attached to the `hook:onError` event fails, it won't trigger any other events.
-:::
-
-### Example
-
-Consider a plugin with the following hooks:
-
-```js
-this.hooks = {
-  // Each errored hook will trigger this method
-  'hook:onError': (pluginName, event, error) => {
-    this.context.accessors.error(`${pluginName} hook on ${event} failed: ${error.message}`)
-  },
-
-  // Each call to document:create will trigger this method, throwing an error
-  'document:beforeCreate': async request => {
-    throw new Error('The cake is a lie');
-  }   
-};
-```
-
 # API Events
 
 Plugins can [add new controllers](/core/2/plugins/guides/controllers) to the Kuzzle API.

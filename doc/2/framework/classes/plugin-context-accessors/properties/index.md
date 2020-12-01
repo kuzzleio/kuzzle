@@ -23,17 +23,15 @@ See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) gui
 
 ## `storage`
 
-This property is an instance of the [PluginStorage](/core/2/framework/classes/plugin-storage) class that allows to interact with the [Plugin Private Storage](/core/2/guides/some-link).  
+This property is an instance of the [PluginStorage](/core/2/framework/classes/plugin-storage) class that allows to interact with the Plugin Private Storage.  
 
 | Type     | Description            |
 |----------|------------------------|
-| <pre>[PluginStorage](/core/2/framework/classes/plugin-storage)</pre> | EmbeddedSDK instance |
-
-See also the [Plugin Private Storage](/core/2/guides/some-link) guide.
+| <pre>[PluginStorage](/core/2/framework/classes/plugin-storage)</pre> | PluginStorage instance |
 
 ## `strategies`
 
-This property is an instance of the [PluginStrategy](/core/2/framework/classes/plugin-strategies) class that allows to dynamically add and remove [Authentication Strategies](/core/2/guides/some-link).  
+This property is an instance of the [PluginStrategy](/core/2/framework/classes/plugin-strategies) class that allows to dynamically add and remove [Authentication Strategies](/core/2/guides/write-plugins/3-integrate-authentication-strategy).  
 
 | Type     | Description            |
 |----------|------------------------|
