@@ -357,7 +357,7 @@ describe('Test the auth controller', () => {
           body: {token: 'foobar'}
         },
         {});
-      testToken = new Token({expiresAt: 42});
+      testToken = new Token({ expiresAt: 42, userId: 'durres' });
     });
 
     it('should reject an error if no token is provided', () => {
@@ -377,6 +377,7 @@ describe('Test the auth controller', () => {
 
       should(verifyStub).calledOnce();
       should(response).be.instanceof(Object);
+      should(response.userId).be.eql('durres');
       should(response.valid).be.true();
       should(response.state).be.undefined();
       should(response.expiresAt).be.eql(testToken.expiresAt);
