@@ -52,7 +52,7 @@ The returned result contains the following properties:
 
 - `expiresAt`: token expiration timestamp. Present only if `valid` is true
 - `state`: the reason why a token is invalid. Present only if `valid` is false
-- `userId`: a string representing the `kuid` of the user linked to this token
+- `kuid`: identifier of the user linked to this token <SinceBadge version="change-me" />
 - `valid`: a boolean telling whether the provided token is valid
 
 Example:
@@ -67,7 +67,7 @@ Example:
   "result": {
     "valid": true,
     "expiresAt": 1538557452248,
-    "userId": "5c6a775f-495c-472e-b29b-f6a4fa9f6a3e"
+    "kuid": "5c6a775f-495c-472e-b29b-f6a4fa9f6a3e"
   }
 }
 ```

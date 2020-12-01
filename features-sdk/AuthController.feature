@@ -11,7 +11,7 @@ Feature: Auth Controller
       | body | { "token": this.props.result.jwt } |
     Then I should receive a result matching:
       | valid     | true         |
-      | userId    | "test-admin" |
+      | kuid    | "test-admin" |
       | expiresAt | "_NUMBER_"   |
 
   # auth:checkRights ===========================================================

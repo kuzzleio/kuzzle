@@ -377,7 +377,7 @@ describe('Test the auth controller', () => {
 
       should(verifyStub).calledOnce();
       should(response).be.instanceof(Object);
-      should(response.userId).be.eql('durres');
+      should(response.kuid).be.eql('durres');
       should(response.valid).be.true();
       should(response.state).be.undefined();
       should(response.expiresAt).be.eql(testToken.expiresAt);
