@@ -21,26 +21,27 @@
 
 import { PluginContext } from '../core/plugin/pluginContext';
 import { ControllerDefinition } from './ControllerDefinition';
+import { PluginManifest } from './PluginManifest';
 import { EventHandler } from './EventHandler';
 import { JSONObject} from '../../index';
+import kerror from '../kerror';
+import { has } from '../util/safeObject';
 
 /**
  * Plugins must implements this interface.
  */
 export abstract class Plugin {
+  public _manifest: PluginManifest;
+
   /**
    * Plugin context.
-   *
-   * Must be set in the plugin init() method before use.
    */
-  public context?: PluginContext;
+  public context: PluginContext;
 
   /**
    * Plugin config.
-   *
-   * Must be set in the plugin init() method before use.
    */
-  public config?: JSONObject;
+  public config: JSONObject;
 
   /**
    * Define new API controllers.
@@ -162,4 +163,12 @@ export abstract class Plugin {
    * @see https://docs.kuzzle.io/core/2/plugins/guides/manual-setup/init-function/
    */
   abstract init (config: JSONObject, context: PluginContext): Promise<any> | any
+
+  constructor (manifest: PluginManifest) {
+    if (! has(manifest, 'kuzzleVersion')) {
+      throw new kerror.get('plugin', 'manifest', 'missing_version');
+    }
+
+    this._manifest = manifest;
+  }
 }
