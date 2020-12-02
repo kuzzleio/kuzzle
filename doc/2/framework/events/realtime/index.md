@@ -166,7 +166,7 @@ The provided `room` object has the following properties:
 
 | Arguments | Type                                                                     | Description                           |
 | --------- | ------------------------------------------------------------------------ | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/essentials/notifications) | The normalized real-time notification |
+| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
 
 Triggered whenever a real-time notification is about to be sent.
 
@@ -176,7 +176,7 @@ Triggered whenever a real-time notification is about to be sent.
 
 | Arguments | Type                                                                      | Description                           |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/essentials/notifications) | The normalized real-time notification |
+| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
 
 Triggered whenever a real-time document notification is about to be sent.
 
@@ -186,7 +186,7 @@ Triggered whenever a real-time document notification is about to be sent.
 
 | Arguments | Type                                                                      | Description                           |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/essentials/notifications) | The normalized real-time notification |
+| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
 
 Triggered whenever a real-time server notification is about to be sent.
 
@@ -196,7 +196,7 @@ Triggered whenever a real-time server notification is about to be sent.
 
 | Arguments | Type                                                                      | Description                           |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/essentials/notifications) | The normalized real-time notification |
+| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
 
 Triggered whenever a real-time user notification is about to be sent.
 

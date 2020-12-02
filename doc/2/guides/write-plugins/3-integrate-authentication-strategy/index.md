@@ -131,7 +131,7 @@ The `create` function adds credentials to a user.
 
 For security reasons, plugins are entirely responsible of how credentials are managed, storage included: Kuzzle does not read, modify, or store credentials.
 
-If needed, Kuzzle exposes a secure and isolated storage space for each plugin. It can be accessed using the [Repository](/core/2/plugins/plugin-context/constructors/repository) constructor.
+If needed, Kuzzle exposes a secure and isolated storage space for each plugin. It can be accessed using the [Repository](/core/2/framework/classes/repository/constructor) constructor.
 
 ### Arguments
 

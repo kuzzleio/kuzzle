@@ -23,7 +23,7 @@ Each protocol has advantages and disadvantages. The choice of a protocol must th
 
 ::: info
 Kuzzle is able to integrate to its API any protocol operating on [IP](https://en.wikipedia.org/wiki/Internet_Protocol).  
-More info on [Writing Protocol Plugin](/core/2/guides/write-plugins/4-network-protocol).  
+More info on [Writing Protocol Plugin](/core/2/guides/write-protocols/1-start-writing-protocols).  
 :::
 
 ## Request Format
@@ -377,7 +377,7 @@ For instance:
 * `api.assert.missing_argument` is an assertion error triggered by the API because of a missing argument
 * `network.http.url_not_found` is a HTTP error triggered by the network layer, because a requested URL couldn't be found
 
-The complete list of API errors is available [here](/core/2/api/essentials/error-codes/).
+The complete list of API errors is available [here](/core/2/api/errors/error-codes/).
 
 ### code
 
@@ -390,7 +390,7 @@ Code format:
 - Subdomain: ranges from `00` to `FF` (1 byte)
 - Error: ranges from `0000` to `FFFF` (2 bytes)
 
-The complete list of API errors is available [here](/core/2/api/essentials/error-codes/).
+The complete list of API errors is available [here](/core/2/api/errors/error-codes/).
 
 ## Volatile Data
 

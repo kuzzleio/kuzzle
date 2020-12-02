@@ -21,7 +21,7 @@ Pipes can:
 - Change the received information. Kuzzle will use the updated information upon resuming the task
 
 <DeprecatedBadge version="2.2.0"/>
-Before Kuzzle 2.2.0, if a pipe takes too long to respond, Kuzzle will eventually abort the user request with a [GatewayTimeout](/core/2/plugins/plugin-context/errors/gatewaytimeouterror) error. 
+Before Kuzzle 2.2.0, if a pipe takes too long to respond, Kuzzle will eventually abort the user request with a [GatewayTimeout](/core/2/api/errors/types) error. 
 
 Note that while Kuzzle respond early with a Timeout error to users, the pipe task is still continuing.
 
@@ -46,10 +46,10 @@ If multiple pipes are plugged to the same event (either from the same plugin or 
 Pipes must notify Kuzzle about their completion by one of these two means:
 
 - by calling the `callback(error, request)` function received as their last argument (leave the `error` null if the pipe executed successfully)
-- by returning a promise, resolved (or rejected) with a valid [Request](/core/2/guides/essentials/request-and-response-format) upon the completion of the pipe
+- by returning a promise, resolved (or rejected) with a valid [Request](/core/2/guides/main-concepts/api) upon the completion of the pipe
 
 :::warning
-You must either call the callback with a valid [Request](/core/2/guides/essentials/request-and-response-format) or return a promise resolving to one.
+You must either call the callback with a valid [Request](/core/2/guides/main-concepts/api) or return a promise resolving to one.
 :::
 
 If a pipe throws an error, it is advised to throw one of the available [KuzzleError](/core/2/api/errors/types) object. Otherwise, Kuzzle will reject the task with a `PluginImplementationError` error.

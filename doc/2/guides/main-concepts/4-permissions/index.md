@@ -351,7 +351,7 @@ As any other collection, the `users` collection has an associated mapping that c
  - [security:getUserRights](/core/2/api/controllers/security/get-user-rights/)
  - [security:mDeleteUsers](/core/2/api/controllers/security/m-delete-users/)
  - [security:mGetUsers](/core/2/api/controllers/security/m-get-users/)
- - [security:replaceUsers](/core/2/api/controllers/security/replace-users/)
+ - [security:replaceUsers](/core/2/api/controllers/security/replace-user/)
  - [security:scrollUsers](/core/2/api/controllers/security/scroll-users/)
  - [security:searchUsers](/core/2/api/controllers/security/search-users/)
  - [security:updateUser](/core/2/api/controllers/security/update-user/)

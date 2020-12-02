@@ -14,7 +14,7 @@ This guide should be considered as obsolete and features presented here could be
 
 # Controllers
 
-Kuzzle's API is divided into controllers, each exposing executable actions (see [API reference](/core/2/api/essentials/query-syntax)).
+Kuzzle's API is divided into controllers, each exposing executable actions (see [API reference](/core/2/api/payloads/request)).
 
 Plugins can extend Kuzzle's API by adding new controllers to it.
 

@@ -155,4 +155,4 @@ The idea is simple: use Koncorde to specify a filter that can be used to validat
 }
 ```
 
-In the example above, we used both the `exists` operator and the `or` operator to build our validation rule. For more information take a look at our [Koncorde Reference](/core/2/guides/cookbooks/realtime-api/terms#exists).
+In the example above, we used both the `exists` operator and the `or` operator to build our validation rule. For more information take a look at our [Koncorde Reference](/core/2/api/koncorde-filters-syntax/clauses#exists).

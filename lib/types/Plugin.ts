@@ -108,7 +108,7 @@ export abstract class Plugin {
   /**
    * Define pipes on Kuzzle events.
    *
-   * @see https://docs.kuzzle.io/core/2/plugins/guides/pipes/
+   * @see https://docs.kuzzle.io/core/2/guides/write-plugins/4-old-guides/pipes
    *
    * @example
    *

@@ -590,7 +590,7 @@ Searches can be made to retrieve only the documents you want.
 
 These searches are done by **writing Elasticsearch queries**.
 
-You can consult the dedicated guide: [Querying](/core/2/guides/advanced/3-querying)
+You can consult the dedicated guide: [Querying](/core/2/guides/main-concepts/3-querying)
 
 ### Read Limit
 

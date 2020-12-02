@@ -66,7 +66,7 @@ You should now have a Kuzzle cluster stack running with 3 Kuzzle nodes.
 <SinceBadge version="1.10.0" />
 
 Kuzzle Docker images are shipped with the cluster plugin.
-The cluster is disabled by default but you can use the [`$KUZZLE_PLUGINS`](/core/2/guides/essentials/plugins#installing-a-plugin) environment variable to enable it.
+The cluster is disabled by default but you can use the [`$KUZZLE_PLUGINS`](/core/2/guides/develop-on-kuzzle/4-external-plugins) environment variable to enable it.
 :::
 
 ### ENOSPC error

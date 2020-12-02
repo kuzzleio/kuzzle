@@ -235,7 +235,7 @@ Clients subscribing to changes in this collection will receive the following not
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/2/api/essentials/notifications#documents-changes-messages)
+More information about the [Document Notification format](/core/2/api/payloads/notifications#documents-changes-messages)
 
 ## Subscription Filters
 

@@ -551,7 +551,7 @@ To use this pagination method, you need to pass a `scroll` parameter with a dura
 
 ::: info
 The value of the `scroll` option should be the time needed to process one page of results.  
-This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/advanced/8-configuration) key.
+This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/8-configuration) key.
 :::
 
 The search action will return a `scrollId` that you have to use with the [document:scroll](/core/2/api/controllers/document/scroll) to get the next page of results.

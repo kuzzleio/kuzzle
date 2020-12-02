@@ -178,7 +178,7 @@ So it is possible to start your application by deploying it on a single server a
 
 ## Get Started !
 
-Follow our Getting Started to develop your first server application: [Kuzzle application journey](/core/2/guides/getting-started-1-run-kuzzle)
+Follow our Getting Started to develop your first server application: [Kuzzle application journey](/core/2/guides/getting-started/1-run-kuzzle)
 
 Or start to develop a client application by using one of our [SDKs](/sdk):
 

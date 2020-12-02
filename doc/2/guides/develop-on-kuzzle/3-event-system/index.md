@@ -74,7 +74,7 @@ app.pipe.register('server:afterNow', async (request: Request) => {
 ::: warning
 As pipes are executed synchronously by Kuzzle, they can increase the execution time of a request.  
 A pipe that takes a long time to execute will generate an alert message in the logs.
-This warning can be configured under the [plugins.pipeWarnTime](/core/2/main-concepts/configuration) configuration key.
+This warning can be configured under the [plugins.pipeWarnTime](/core/2/guides/advanced/8-configuration) configuration key.
 :::
 
 ### Aborting a task
@@ -101,7 +101,7 @@ app.pipe.register(
 ```
 
 ::: info
-[Generic Document Events](/core/2/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [Request](/core/2/framework/classes/request) object
+[Generic Document Events](/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [Request](/core/2/framework/classes/request) object
 :::
 
 ## Hooks

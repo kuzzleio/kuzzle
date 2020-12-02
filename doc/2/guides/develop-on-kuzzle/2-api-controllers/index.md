@@ -285,7 +285,7 @@ app.controller.register('greeting', {
 ```
 
 ::: info
-See the [Request Payload](/core/2/api/essentials/query-syntax#http) page for more information about using the API with HTTP.
+See the [Request Payload](/core/2/api/payloads/request) page for more information about using the API with HTTP.
 ::: 
 
 ### Other protocols
@@ -331,7 +331,7 @@ app.controller.register('greeting', {
 :::
 
 ::: info
-See the [Request Payload](/core/2/api/essentials/query-syntax#other-protocols) page for more information about using the API with other protocols.
+See the [Request Payload](/core/2/api/payloads/request) page for more information about using the API with other protocols.
 ::: 
 
 
