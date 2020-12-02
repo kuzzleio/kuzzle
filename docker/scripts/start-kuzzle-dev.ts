@@ -40,11 +40,11 @@ async function loadAdditionalPlugins () {
 
 if (! process.env.TRAVIS) {
   // Easier debug
-  app.hook.register('request:onError', (request: Request) => {
-    console.log(request.error);
+  app.hook.register('request:onError', async (request: Request) => {
+    app.log.error(request.error);
   });
-  app.hook.register('hook:onError', (request: Request) => {
-    console.log(request.error);
+  app.hook.register('hook:onError', async (request: Request) => {
+    app.log.error(request.error);
   });
 }
 
