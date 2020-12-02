@@ -7,4 +7,3 @@ order: 400
 ---
 
 # Installing and Running Kuzzle
-
