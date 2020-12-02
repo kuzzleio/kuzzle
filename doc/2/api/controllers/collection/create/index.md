@@ -8,7 +8,7 @@ title: create
 
 <SinceBadge version="1.0.0"/>
 
-Creates a new [collection](/core/2/guides/essentials/store-access-data), in the provided `index`.
+Creates a new [collection](/core/2/guides/main-concepts/2-data-storage), in the provided `index`.
 
 Collection names must meet the following criteria:
 
@@ -16,13 +16,13 @@ Collection names must meet the following criteria:
 * Cannot include one of the following characters: `\\`, `/`, `*`, `?`, `"`, `<`, `>`, `|`, ` ` (space character), `,`, `#`, `:`, `%`, `&`, `.`
 * Cannot be longer than 126 bytes (note it is bytes, so multi-byte characters will count towards the 126 limit faster)
 
-You can also provide an optional body with a [collection mapping](/core/2/guides/essentials/database-mappings) allowing you to exploit the full capabilities of our persistent data storage layer.
+You can also provide an optional body with a [collection mapping](/core/2/guides/main-concepts/2-data-storage#collection-mappings) allowing you to exploit the full capabilities of our persistent data storage layer.
 
 This method will only update the mapping when the collection already exists.
 
-You can define the collection [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
+You can define the collection [dynamic mapping policy](/core/2/guides/main-concepts/2-data-storage#mappings-dynamic-policy) by setting the `dynamic` field to the desired value.
 
-You can define [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
+You can define [collection additional metadata](/core/2/guides/main-concepts/2-data-storage#mappings-metadata) within the `_meta` root field.
 
 <SinceBadge version="2.1.0"/>
 
@@ -191,9 +191,9 @@ Body:
 
 <DeprecatedBadge version="2.1.0"/>
 
-* `dynamic`: [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed string values: `true` (default), `false`, `strict` or a boolean
-* `_meta`: [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) stored next to the collection
-* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/2/guides/essentials/database-mappings#properties-types-definition)
+* `dynamic`: [dynamic mapping policy](/core/2/guides/main-concepts/2-data-storage#mappings-dynamic-policy) for new fields. Allowed string values: `true` (default), `false`, `strict` or a boolean
+* `_meta`: [collection additional metadata](/core/2/guides/main-concepts/2-data-storage#mappings-metadata) stored next to the collection
+* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/2/guides/main-concepts/2-data-storage#mappings-properties)
 
 ---
 
@@ -220,6 +220,6 @@ Returns a confirmation that the collection is being created:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [PreconditionError](/core/2/api/essentials/error-handling#preconditionerror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [PreconditionError](/core/2/api/errors/types#preconditionerror)
 

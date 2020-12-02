@@ -64,7 +64,7 @@ Check the [**First steps for database and realtime actions on docs.kuzzle.io**](
 ### Useful links
 
 * [Basic usage examples](https://docs.kuzzle.io/core/2/guides/getting-started/first-steps/)
-* [Store and access data](https://docs.kuzzle.io/core/2/guides/essentials/store-access-data/)
+* [Store and access data](https://docs.kuzzle.io/core/2/guides/main-concepts/2-data-storage/)
 * [Define database mappings](https://docs.kuzzle.io/core/2/guides/essentials/database-mappings/)
 * [Configure roles and profiles](https://docs.kuzzle.io/core/2/guides/essentials/security/)
 * [Users and authentication](https://docs.kuzzle.io/core/2/guides/essentials/user-authentication/)

@@ -6,7 +6,7 @@ title: delete
 
 # delete
 
-Deletes a [collection](/core/2/guides/essentials/store-access-data).
+Deletes a [collection](/core/2/guides/main-concepts/2-data-storage).
 
 ---
 
@@ -60,5 +60,5 @@ Returns a confirmation that the collection is deleted:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [PreconditionError](/core/2/api/essentials/error-handling#preconditionerror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [PreconditionError](/core/2/api/errors/types#preconditionerror)

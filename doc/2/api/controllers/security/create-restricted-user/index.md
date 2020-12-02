@@ -8,7 +8,7 @@ title: createRestrictedUser
 
 Creates a new user in Kuzzle, with a preset list of security profiles.
 
-The list of security profiles attributed to restricted users is fixed, and must be configured in the [Kuzzle configuration file](/core/2/guides/essentials/configuration).
+The list of security profiles attributed to restricted users is fixed, and must be configured in the [Kuzzle configuration file](/core/2/guides/advanced/8-configuration).
 
 This method allows users with limited rights to create other accounts, but blocks them from creating accounts with unwanted privileges (e.g. an anonymous user creating his own account).
 

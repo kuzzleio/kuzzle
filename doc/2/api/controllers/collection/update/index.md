@@ -10,7 +10,7 @@ Updates a collection configuration.
 
 <SinceBadge version="2.1.0" />
 
-You can update the collection [mappings](/core/2/guides/essentials/database-mappings) and [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings).
+You can update the collection [mappings](/core/2/guides/main-concepts/2-data-storage#collection-mappings) and [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings).
 
 ::: warning
 While updating the collection [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings), the collection will be [closed](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/indices-close.html) until the new configuration has been applied.
@@ -141,6 +141,6 @@ Body:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [NotFoundError](/core/2/api/essentials/error-handling#notfounderror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror)
 

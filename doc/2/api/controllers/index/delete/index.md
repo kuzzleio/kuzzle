@@ -8,7 +8,7 @@ title: delete
 
 
 
-Deletes an [index](/core/2/guides/essentials/store-access-data).
+Deletes an [index](/core/2/guides/main-concepts/2-data-storage).
 
 ---
 
@@ -61,6 +61,6 @@ Returns a confirmation that the index is being deleted:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [NotFoundError](/core/2/api/essentials/error-handling#notfounderror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror)
 
