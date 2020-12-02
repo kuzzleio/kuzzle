@@ -31,11 +31,11 @@ This property is an instance of the [PluginStorage](/core/2/framework/classes/pl
 
 ## `strategies`
 
-This property is an instance of the [PluginStrategy](/core/2/framework/classes/plugin-strategies) class that allows to dynamically add and remove [Authentication Strategies](/core/2/guides/write-plugins/3-integrate-authentication-strategy).  
+This property is an instance of the [PluginStrategy](/core/2/framework/classes/plugin-strategy) class that allows to dynamically add and remove [Authentication Strategies](/core/2/guides/write-plugins/3-integrate-authentication-strategy).  
 
 | Type     | Description            |
 |----------|------------------------|
-| <pre>[PluginStrategy](/core/2/framework/classes/plugin-strategies)</pre> | PluginStrategy instance |
+| <pre>[PluginStrategy](/core/2/framework/classes/plugin-strategy)</pre> | PluginStrategy instance |
 
 ## `subscription`
 

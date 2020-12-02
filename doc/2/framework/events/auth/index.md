@@ -17,7 +17,7 @@ order: 100
 
 This event is triggered after a successful user authentication, but before a token is generated.
 
-It is also triggered before the [auth:afterLogin](/core/2/plugins/guides/events/api-events#after) event.
+It is also triggered before the [auth:afterLogin](/core/2/framework/events/api#after) event.
 
 ---
 

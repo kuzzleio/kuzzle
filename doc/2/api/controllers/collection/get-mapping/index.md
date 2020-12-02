@@ -10,7 +10,7 @@ Returns a collection mapping.
 
 <SinceBadge version="1.7.1" />
 
-Also returns the collection [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) and [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata).
+Also returns the collection [dynamic mapping policy](/core/2/guides/main-concepts/2-data-storage#mappings-dynamic-policy) and [collection additional metadata](/core/2/guides/main-concepts/2-data-storage#mappings-metadata).
 
 ---
 
@@ -41,7 +41,7 @@ Method: GET
 
 - `collection`: collection name
 - `index`: index name
-- `includeKuzzleMeta`: include [Kuzzle metadata](/core/2/guides/essentials/database-mappings#collection-metadata) mappings in the response
+- `includeKuzzleMeta`: include [Kuzzle metadata](/core/2/guides/main-concepts/2-data-storage#mappings-metadata) mappings in the response
 
 ---
 
@@ -94,5 +94,5 @@ Returns a mapping object with the following structure:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [NotFoundError](/core/2/api/essentials/error-handling#notfounderror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror)

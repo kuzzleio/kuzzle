@@ -1,20 +1,20 @@
 ---
 code: true
 type: page
-title: use
-description: BackendLogger.error method
+title: warn
+description: InternalLogger.warn method
 ---
 
-# `error()`
+# `warn()`
 
-Logs an error message.
+Logs a info message.
 
 ::: info
 This method can only be used after the application started up.
 :::
 
 ```ts
-error(message: any): void
+warn(message: any): void
 ```
 
 <br/>
@@ -26,5 +26,5 @@ error(message: any): void
 **Usage:**
 
 ```js
-app.log.error('Something is happening')
+app.log.warn('Something is happening')
 ```

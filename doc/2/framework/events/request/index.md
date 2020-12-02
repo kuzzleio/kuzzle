@@ -16,7 +16,7 @@ order: 100
 
 Triggered whenever a request passes authorization checks and is ready to be processed.
 
-This event occurs before [before events](/core/2/plugins/guides/events/api-events#before).
+This event occurs before [before events](/core/2/framework/events/api#before).
 
 ## request:onError
 
@@ -26,7 +26,7 @@ This event occurs before [before events](/core/2/plugins/guides/events/api-event
 
 Triggered whenever a request execution fails.
 
-This event occurs after [error events](/core/2/plugins/guides/events/api-events#error).
+This event occurs after [error events](/core/2/framework/events/api#error).
 
 ## request:onSuccess
 
@@ -36,7 +36,7 @@ This event occurs after [error events](/core/2/plugins/guides/events/api-events#
 
 Triggered whenever a request execution succeeds.
 
-This event occurs after [after events](/core/2/plugins/guides/events/api-events#after).
+This event occurs after [after events](/core/2/framework/events/api#after).
 
 ## request:onUnauthorized
 

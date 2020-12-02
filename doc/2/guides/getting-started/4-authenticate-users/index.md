@@ -84,6 +84,7 @@ Now that we have a token, we must pass it to API requests, either in the **HTTP 
 When using Kourou with `--username` and `--password` flags, the [auth:login](/core/2/api/controllers/auth/login) action is called and the received token is automatically used along with subsequent requests.
 :::
 
+
 :::: tabs
 ::: tab Kourou
 

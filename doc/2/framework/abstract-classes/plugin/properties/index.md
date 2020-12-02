@@ -103,6 +103,8 @@ This property allows to define plugin features.
 
 <DeprecatedBadge version="change-me"/>
 
+<CustomBadge type="warning" text="Not available in Typescript"/>
+
 ::: info
 Controllers should be defined in the [api](#api) property.
 
@@ -136,6 +138,8 @@ class MyPlugin {
 ## `routes`
 
 <DeprecatedBadge version="change-me"/>
+
+<CustomBadge type="warning" text="Not available in Typescript"/>
 
 ::: info
 Routes should be defined in the [api](#api) property.

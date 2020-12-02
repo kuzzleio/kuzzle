@@ -48,11 +48,11 @@ Body:
 
 ## Arguments
 
-- `strategy`: the name of the authentication [strategy](/core/2/guides/kuzzle-depth/authentication#authentication) used to log the user in.
+- `strategy`: the name of the authentication [strategy](/core/2/guides/main-concepts/5-authentication) used to log the user in.
 
 ### Optional:
 
-- `expiresIn`: set the expiration duration (default: depends on [Kuzzle configuration file](/core/2/guides/advanced/8-configuration/))
+- `expiresIn`: set the expiration duration (default: depends on [Kuzzle configuration file](/core/2/guides/advanced/8-configuration))
   - if a raw number is provided (not enclosed between quotes), then the expiration delay is in milliseconds. Example: `86400000`
   - if this value is a string, then its content is parsed by the [ms](https://www.npmjs.com/package/ms) library. Examples: `"6d"`, `"10h"`
 
@@ -60,11 +60,11 @@ Body:
 
 ## Body properties
 
-Depending on the chosen authentication strategy, additional [credential arguments](/core/2/guides/kuzzle-depth/authentication#authentication) may be required.
+Depending on the chosen authentication strategy, additional [credential arguments](/core/2/guides/main-concepts/5-authentication#credentials) may be required.
 
 The API request example in this page provides the necessary arguments for the [`local` authentication plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local).
 
-Check the appropriate [authentication plugin](/core/2/plugins/guides/strategies) documentation to get the list of additional arguments to provide.
+Check the appropriate [authentication plugin](/core/2/write-plugins/3-integrate-authentication-strategy) documentation to get the list of additional arguments to provide.
 
 ---
 
@@ -72,10 +72,8 @@ Check the appropriate [authentication plugin](/core/2/plugins/guides/strategies)
 
 The result contains the following properties:
 
-- `_id`: user's [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
-- `jwt`: encrypted JSON Web Token. It must then be provided:
-  - (HTTP) in the [Authorization header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) (type: `Bearer`) 
-  - (Other native protocols) in the `jwt` property of the [request payload](/core/2/api/payloads/request)
+- `_id`: user's [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
+- `jwt`: encrypted JSON Web Token, that must then be sent in the [requests headers](/core/2/guides/main-concepts/5-authentication#authentication-token) or in the [query](/core/2/guides/main-concepts/3-querying)
 - `expiresAt`: token expiration date, in Epoch-millis (UTC)
 - `ttl`: token time to live, in milliseconds
 

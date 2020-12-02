@@ -112,6 +112,7 @@ The default validity period is configurable under the key `security.jwt.expiresI
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
 :::
 
+
 :::: tabs
 
 ::: tab HTTP
@@ -128,10 +129,11 @@ The authentication token must be provided in the payload with the `jwt` property
 {
   controller: "<controller>",
   action: "<action>",
-
   jwt: "<token>",
 }
 ```
+
+:::
 
 ::::
 

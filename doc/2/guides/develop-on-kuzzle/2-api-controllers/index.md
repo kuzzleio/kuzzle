@@ -379,7 +379,7 @@ A Kuzzle Response is a **JSON object** with the following format:
 | `action`     | API action                                                                          |
 | `collection` | Collection name, or `null` if no collection was involved                                       |
 | `controller` | API controller                                                                             |
-| `error`      | [KuzzleError](/core/2/api/essentials/error-handling) object, or `null` if there was no error                |
+| `error`      | [KuzzleError](/core/2/api/errors/types) object, or `null` if there was no error                |
 | `index`      | Index name, or `null` if no index was involved                                                 |
 | `requestId`  | Request unique identifier                                                                           |
 | `result`     | Action result, or `null` if an error occured                                                         |

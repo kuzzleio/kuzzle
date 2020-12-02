@@ -51,7 +51,7 @@ This property is an instance of the [BackendHook](/core/2/framework/classes/back
 |------------------------------------------------------------------|----------------------|
 | <pre>[BackendHook](/core/2/framework/classes/backend-hook)</pre> | BackendHook instance |
 
-See also the [Event System](/core/2/guides/main-concepts/3-event-system#hook) guide.
+See also the [Event System](/core/2/guides/develop-on-kuzzle/3-event-system#hook) guide.
 
 
 <!-- 
@@ -87,7 +87,7 @@ This property is an instance of the [BackendPipe](/core/2/framework/classes/back
 |------------------------------------------------------------------|----------------------|
 | <pre>[BackendPipe](/core/2/framework/classes/backend-pipe)</pre> | BackendPipe instance |
 
-See also the [Event System](/core/2/guides/main-concepts/3-event-system#pipe) guide.
+See also the [Event System](/core/2/guides/develop-on-kuzzle/3-event-system#pipe) guide.
 
 ## `plugin`
 

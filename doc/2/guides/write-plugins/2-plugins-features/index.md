@@ -55,7 +55,7 @@ See also the [API Controllers](/core/2/guides/develop-on-kuzzle/2-api-controller
 Plugins can register hooks and pipes on the [Event System](/core/2/guides/develop-on-kuzzle/3-event-system).
 
 ::: info
-Hooks and pipes registration must be done in the constructor or in the plugin [init](doc/2/guides/write-plugins/1-start-writing-plugins#init-method) method.
+Hooks and pipes registration must be done in the constructor or in the plugin [init](/core/2/guides/write-plugins/1-start-writing-plugins#init-method) method.
 :::
 
 ```ts

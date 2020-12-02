@@ -1,20 +1,20 @@
 ---
 code: true
 type: page
-title: debug
-description: BackendLogger.debug method
+title: verbose
+description: InternalLogger.verbose method
 ---
 
-# `debug()`
+# `verbose()`
 
-Logs a debug message.
+Logs a verbose message.
 
 ::: info
 This method can only be used after the application started up.
 :::
 
 ```ts
-debug(message: any): void
+verbose(message: any): void
 ```
 
 <br/>
@@ -26,5 +26,5 @@ debug(message: any): void
 **Usage:**
 
 ```js
-app.log.debug('Something is happening')
+app.log.verbose('Something is happening')
 ```

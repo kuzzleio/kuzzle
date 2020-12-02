@@ -2,12 +2,12 @@
 code: false
 type: page
 title: Properties
-description: BackendLogger class properties
+description: InternalLogger class properties
 ---
 
-# BackendLogger
+# InternalLogger
 
-The `BackendLogger` class allows developers to use Kuzzle's internal logger.  
+The `InternalLogger` class allows developers to use Kuzzle's internal logger.  
 
 It is accessible from the [Backend.log](/core/2/framework/classes/backend/properties#log) property.
 
