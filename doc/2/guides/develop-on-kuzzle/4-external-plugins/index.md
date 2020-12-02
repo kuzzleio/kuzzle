@@ -19,7 +19,7 @@ Plugins allow you to achieve two main goals:
 These feature categories are not exclusive and although it is not recommended, a plugin can embed features belonging to the 2 categories.
 
 ::: info
-New network protocols can also be integrated to Kuzzle API by writting a [Protocol](/core/2/guides/writing-protocols).
+New network protocols can also be integrated to Kuzzle API by writting a [Protocol](/core/2/guides/write-protocols).
 ::: 
 
 ## Inside a plugin
