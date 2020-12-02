@@ -1,20 +1,20 @@
 ---
 code: true
 type: page
-title: verbose
-description: BackendLogger.verbose method
+title: use
+description: InternalLogger.error method
 ---
 
-# `verbose()`
+# `error()`
 
-Logs a verbose message.
+Logs an error message.
 
 ::: info
 This method can only be used after the application started up.
 :::
 
 ```ts
-verbose(message: any): void
+error(message: any): void
 ```
 
 <br/>
@@ -26,5 +26,5 @@ verbose(message: any): void
 **Usage:**
 
 ```js
-app.log.verbose('Something is happening')
+app.log.error('Something is happening')
 ```

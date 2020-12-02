@@ -2,7 +2,7 @@
 code: true
 type: page
 title: info
-description: BackendLogger.info method
+description: InternalLogger.info method
 ---
 
 # `info()`

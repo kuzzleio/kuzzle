@@ -113,7 +113,7 @@ ln -s ../available/kuzzle-plugin-cluster
 ### Cluster plugin configuration
 
 * The cluster plugin requires a privileged context from Kuzzle. This context is granted by Kuzzle via the global configuration.
-* The cluster plugin registers a few [pipes](/core/2/plugins/guides/pipes). 
+* The cluster plugin registers a few [pipes](/core/2/plugins/write-plugins/2-plugins-features#pipes-and-hooks). 
 
 Add the following to your kuzzlerc configuration file (see our [Kuzzle configuration guide](/core/2/guides/advanced/8-configuration)):
 
@@ -134,7 +134,7 @@ Once the plugin installed and configured, you can start as many Kuzzle instances
 
 ## Extended API
 
-The cluster plugin adds an [API controller](/core/2/plugins/guides/controllers) named `cluster`, with the following actions defined:
+The cluster plugin adds an [API controller](/core/2/guides/write-plugins/2-plugins-features#api) named `cluster`, with the following actions defined:
 
 ### health
 

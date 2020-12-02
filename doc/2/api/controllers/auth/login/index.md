@@ -64,7 +64,7 @@ Depending on the chosen authentication strategy, additional [credential argument
 
 The API request example in this page provides the necessary arguments for the [`local` authentication plugin](https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local).
 
-Check the appropriate [authentication plugin](/core/2/plugins/guides/strategies) documentation to get the list of additional arguments to provide.
+Check the appropriate [authentication plugin](/core/2/write-plugins/3-integrate-authentication-strategy) documentation to get the list of additional arguments to provide.
 
 ---
 
@@ -72,7 +72,7 @@ Check the appropriate [authentication plugin](/core/2/plugins/guides/strategies)
 
 The result contains the following properties:
 
-- `_id`: user's [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier)
+- `_id`: user's [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
 - `jwt`: encrypted JSON Web Token, that must then be sent in the [requests headers](/core/2/guides/main-concepts/5-authentication#authentication-token) or in the [query](/core/2/guides/main-concepts/3-querying)
 - `expiresAt`: token expiration date, in Epoch-millis (UTC)
 - `ttl`: token time to live, in milliseconds

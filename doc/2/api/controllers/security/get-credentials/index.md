@@ -38,7 +38,7 @@ Method: GET
 
 ## Arguments
 
-- `_id`: user [kuid](/core/2/guides/main-concepts/5-authentication)
+- `_id`: user [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
 - `strategy`: authentication strategy name
 
 ---
