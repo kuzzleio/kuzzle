@@ -24,7 +24,7 @@ set(path: string, value: any): void
 | `path` | <pre>string</pre> | Path to the configuration key (lodash style) |
 | `value` | <pre>any</pre> | Value for the configuration key |
 
-**Usage:**
+## Usage
 
 ```js
 app.config.set('limits.documentsWriteCount', 1000)

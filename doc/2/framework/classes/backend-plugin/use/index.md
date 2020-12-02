@@ -39,7 +39,7 @@ use (
 | `manifest` | <pre>object</pre> | Manually add a manifest definition |
 | `deprecationWarning` | <pre>boolean</pre> | If false, does not display deprecation warnings |
 
-**Usage:**
+## Usage
 
 ```js
 import { Plugin, PluginContext, JSONObject } from 'kuzzle'

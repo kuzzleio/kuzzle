@@ -23,7 +23,7 @@ merge(config: JSONObject): void
 |----------|-----------------------|-------------------------------|
 | `config` | <pre>JSONObject</pre> | Configuration object to merge |
 
-**Usage:**
+## Usage
 
 ```js
 app.config.merge({

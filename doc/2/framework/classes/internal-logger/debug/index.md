@@ -23,7 +23,7 @@ debug(message: any): void
 |-----------|----------------|----------------|
 | `message` | <pre>any</pre> | Message to log |
 
-**Usage:**
+## Usage
 
 ```js
 app.log.debug('Something is happening')

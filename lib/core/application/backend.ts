@@ -624,12 +624,12 @@ export class Backend {
    *
    * @returns {Promise<any>}
    */
-  trigger (event: string, payload: any): Promise<any> {
+  trigger (event: string, ...payload): Promise<any> {
     if (! this.started) {
       throw runtimeError.get('unavailable_before_start', 'trigger');
     }
 
-    return this._kuzzle.pipe(event, payload);
+    return this._kuzzle.pipe(event, ...payload);
   }
 
   /**
