@@ -17,6 +17,16 @@ See also the [API Controllers](/core/2/guides/develop-on-kuzzle/2-api-controller
 |------------------------------------------------------------------------|-------------------------|
 | <pre>[Backend](/core/2/framework/classes/backend)</pre> | Reference to the instantiated [Backend](/core/2/framework/classes/backend) class |
 
+## `sdk`
+
+This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk) class that allows to interact with the Kuzzle API.  
+
+| Type                                                             | Description          |
+|------------------------------------------------------------------|----------------------|
+| <pre>[EmbeddedSDK](/core/2/framework/classes/embedded-sdk)</pre> | EmbeddedSDK instance |
+
+See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) guide.
+
 ## `name`
 
 | Type                                                                   | Description             |

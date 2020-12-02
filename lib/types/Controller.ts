@@ -21,6 +21,7 @@
 
 import { Backend } from '../core/application/backend';
 import { ControllerDefinition } from './ControllerDefinition';
+import { EmbeddedSDK } from '../core/shared/sdk/embeddedSdk';
 
 /**
  * Base class to declare a controller class
@@ -40,6 +41,13 @@ export abstract class Controller {
    * Controller definition
    */
   public definition: ControllerDefinition;
+
+  /**
+   * EmbeddedSDK instance
+   */
+  get sdk (): EmbeddedSDK {
+    return this.app.sdk;
+  }
 
   constructor (app: Backend) {
     this.app = app;
