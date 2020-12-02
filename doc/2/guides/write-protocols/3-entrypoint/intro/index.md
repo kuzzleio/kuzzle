@@ -7,7 +7,7 @@ order: 0
 
 # Properties
 
-An instance of the `EntryPoint` class is provided as an argument to the protocol's required [init](/core/2/protocols/api/methods/init) function.
+An instance of the `EntryPoint` class is provided as an argument to the protocol's required [init](/core/2/guides/write-protocols/4-methods/init) function.
 
 That instance contains the necessary methods to make Kuzzle aware of user connections, and to pass API requests to Kuzzle.
 

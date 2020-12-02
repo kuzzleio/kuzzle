@@ -6,7 +6,7 @@ title: notify
 
 # notify
 
-Asks the protocol to send data to a specific connection, on some of its [channels](/core/2/protocols/essentials/getting-started#channels).
+Asks the protocol to send data to a specific connection, on some of its [channels](/core/2/guides/write-protocols/1-start-writing-protocols#channels).
 
 ---
 

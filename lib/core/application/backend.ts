@@ -40,7 +40,6 @@ import {
   Plugin,
   Controller,
   EventHandler,
-  InternalLogger,
 } from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');

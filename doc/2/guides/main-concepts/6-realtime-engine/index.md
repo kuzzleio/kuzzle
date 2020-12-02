@@ -247,7 +247,7 @@ These filters are specified only on the client side and do not require server-si
 They are sent in the body of the request [realtime:subscribe](/core/2/api/controllers/realtime/subscribe)
 :::
 
-A filter is composed of [clauses](/core/2/api/koncorde-filter-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filter-syntax/operators).
+A filter is composed of [clauses](core/2/api/koncorde-filters-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filters-syntax/operators).
 
 For example if I want to receive only drivers with the `B` license:
 ```json
@@ -280,7 +280,7 @@ It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/clau
 ```
 
 ::: info
-More info about subscription filters [clauses](/core/2/api/koncorde-filter-syntax/clauses) and [operators](/core/2/api/koncorde-filter-syntax/operators)
+More info about subscription filters [clauses](/core/2/api/koncorde-filters-syntax/clauses) and [operators](/core/2/api/koncorde-filters-syntax/operators)
 :::
 
 Each subscription filter **defines a scope**. All documents in the collection can be either **inside or outside this scope**.

@@ -57,7 +57,7 @@ In order to create a new controller, the plugin must expose the following proper
 
 ## Return a response
 
-By default, Kuzzle wraps a controller action's result in a [Kuzzle Response](/core/2/api/essentials/kuzzle-response) object.  
+By default, Kuzzle wraps a controller action's result in a [Kuzzle Response](/core/2/api/payloads/response) object.  
 
 Consider the following action:
 ```js
@@ -119,7 +119,7 @@ When this action is successfully called, the following answer will be returned b
 
 ## Query normalization
 
-Kuzzle normalizes [queries](/core/2/api/essentials/query-syntax) into [Request](/core/2/framework/classes/request) objects.
+Kuzzle normalizes [request payloads](/core/2/api/payloads/request) into [Request](/core/2/framework/classes/request) objects.
 
 Quick summary of how queries are normalized:
 

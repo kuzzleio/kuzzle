@@ -188,7 +188,7 @@ kourou sdk:request server:now --display ""
 
 ## Notification Format
 
-Kuzzle offers the possibility to **receive real-time notifications** through its [Realtime Engine](/core/2/guides/main-concepts/6-realtime-engine).
+Kuzzle offers the possibility to **receive real-time notifications** through its [Realtime Engine](/core/2/guides/main-concepts/6-realtime-engine-engine).
 
 There are 3 types and formats of notifications:
  - document
@@ -197,7 +197,7 @@ There are 3 types and formats of notifications:
 
 ### Document Notification
 
-Thoses notifications are either volatile [Pub/Sub](/core/2/guides/main-concepts/6-realtime-engine#pub-sub) messages or [Database Notifications](/core/2/guides/main-concepts/6-realtime-engine#database-notifications) occuring when documents change.
+Thoses notifications are either volatile [Pub/Sub](/core/2/guides/main-concepts/6-realtime-engine-engine#pub-sub) messages or [Database Notifications](/core/2/guides/main-concepts/6-realtime-engine-engine#database-notifications) occuring when documents change.
 
 A document notification contains the following fields:
 
@@ -255,7 +255,7 @@ User notifications are triggered by the following events:
 - A user subscribes to the same room
 - A user leaves that room
 
-These notifications are sent only if the [users](/core/2/guides/main-concepts/6-realtime-engine#users) argument is set to any other value than the default `none` one.
+These notifications are sent only if the [users](/core/2/guides/main-concepts/6-realtime-engine-engine#users) argument is set to any other value than the default `none` one.
 
 A user notification contains the following fields:
 

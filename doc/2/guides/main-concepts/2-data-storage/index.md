@@ -606,7 +606,7 @@ To perform lower level actions, it is possible to use the [bulk](/core/2/api/con
 
 The actions of this controller may not follow some of the API principles such as:
  - adding [Kuzzle Metadata](/core/2/guides/main-concepts/2-data-storage#kuzzle-metadata)
- - triggering [Database Notifications](/core/2/guides/main-concepts/6-realtime-engine#database-notifications) 
+ - triggering [Database Notifications](/core/2/guides/main-concepts/6-realtime-engine-engine#database-notifications) 
  - application of [Data Validation](/core/2/guides/advanced/9-data-validation) rules
  - respect of [write limit](/core/2/guides/main-concepts/2-data-storage#some-anchor)
 

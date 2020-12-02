@@ -343,6 +343,7 @@ See the available [Pagination](/core/2/guides/main-concepts/3-querying#paginatio
 Those **methods are explained in the next sections and they are already implemented in our SDKs** in the `SearchResult` class. This class allows to navigate through your paginated results with ease by calling the `SearchResult.next` method (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK).
 
 **Example:** _Paginate search results using the scroll method_
+
 :::: tabs
 
 ::: tab Javascript

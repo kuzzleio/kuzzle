@@ -84,6 +84,7 @@ Now that we have a token, we must pass it to API requests, either in the **HTTP 
 When using Kourou with `--username` and `--password` flags, the [auth:login](/core/2/api/controllers/auth/login) action is called and the received token is automatically used along with subsequent requests.
 :::
 
+
 :::: tabs
 ::: tab Kourou
 
@@ -122,7 +123,7 @@ kourou sdk:execute '
 ```
 
 ::: info
-Kourou is able to [execute](/core/2/api/kourou/commands/sdk/execute) Javascript code snippets.  
+Kourou is able to [execute](https://github.com/kuzzleio/kourou/blob/master/README.md#kourou-sdkexecute-code) Javascript code snippets.  
 A `sdk` variable is exposed and refers to an instance of the [Javascript SDK](/sdk/js/7), connected to Kuzzle and authenticated if credentials are provided.
 ::: 
 

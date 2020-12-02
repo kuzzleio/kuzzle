@@ -8,7 +8,7 @@ order: 300
 
 # Geo-Space
 
-Geofencing in Koncorde consists in **defining forms in the geo-space using geopoints and geodistances** within clauses like [geoBoundingBox](/core/2/api/koncorde-filter-syntax/clauses#geoboundingbox), [geoDistance](/core/2/api/koncorde-filter-syntax/clauses#geodistance), [geoDistanceRange](/core/2/api/koncorde-filter-syntax/clauses#geodistancerange) and [geoPolygon](/core/2/api/koncorde-filter-syntax/clauses#geopolygon). 
+Geofencing in Koncorde consists in **defining forms in the geo-space using geopoints and geodistances** within clauses like [geoBoundingBox](/core/2/api/koncorde-filters-syntax/clauses#geoboundingbox), [geoDistance](/core/2/api/koncorde-filters-syntax/clauses#geodistance), [geoDistanceRange](/core/2/api/koncorde-filters-syntax/clauses#geodistancerange) and [geoPolygon](/core/2/api/koncorde-filters-syntax/clauses#geopolygon). 
 
 In this section, you will find a detailed explanation about how to specify geopoints and geodistances.
 
@@ -39,7 +39,7 @@ Alternative 2:
 
 ## Geodistances
 
-Distances used in geofencing filters such as [geoDistance](/core/2/api/koncorde-filter-syntax/clauses#geodistance) or [geoDistanceRange](/core/2/api/koncorde-filter-syntax/clauses#geodistance-range) can be expressed in various ways.
+Distances used in geofencing filters such as [geoDistance](/core/2/api/koncorde-filters-syntax/clauses#geodistance) or [geoDistanceRange](/core/2/api/koncorde-filters-syntax/clauses#geodistancerange) can be expressed in various ways.
 
 Accepted units:
 

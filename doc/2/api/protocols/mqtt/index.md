@@ -55,7 +55,7 @@ The protocol can be configured via the [kuzzlerc configuration file](/core/2/gui
 
 ### Sending an API request and getting the response
 
-By default, the MQTT protocol listens to the `Kuzzle/request` MQTT topic (see [configuration](#configuration)) for requests to the [Kuzzle API](/core/2/api/essentials/connecting-to-kuzzle).
+By default, the MQTT protocol listens to the `Kuzzle/request` MQTT topic (see [configuration](#configuration)) for requests to the Kuzzle API.
 
 It then forwards Kuzzle responses to the `Kuzzle/response` MQTT topic, **and only to the client who made the initial request**.
 

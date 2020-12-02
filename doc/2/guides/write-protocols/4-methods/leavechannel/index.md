@@ -6,7 +6,7 @@ title: leaveChannel
 
 # leaveChannel
 
-Informs the protocol that one of its connected users left a [channel](/core/2/protocols/essentials/getting-started#channels).
+Informs the protocol that one of its connected users left a [channel](/core/2/guides/write-protocols/1-start-writing-protocols#channels).
 
 ---
 

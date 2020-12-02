@@ -9,13 +9,13 @@ order: 100
 
 As for any product, releasing a new major version means many exciting changes, but also a lot of breaking changes forcing users to adapt.
 
-The exhaustive list of breaking changes is available here: [link](/core/2/guides/upgrade-kuzzle/changes).
+The exhaustive list of breaking changes is available here: [link](/core/2/guides/migrate-from-v1/changes).
 
 Kuzzle can either be made in place, or by importing data from a Kuzzle v1 instance into a fresh v2 infrastucture.
 
 ## New Kuzzle stack 
 
-Simply follow our [standard install procedure](/core/2/guides/essentials/installing-kuzzle), and run our upgrade script (see below).
+Simply follow our [standard install procedure](/core/2/guides/advanced/4-installing-and-running), and run our upgrade script (see below).
 
 The choice will be proposed to import data from a different Elasticsearch instance than the one detected.
 

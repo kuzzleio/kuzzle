@@ -69,7 +69,7 @@ An `InternalError` error is thrown if Kuzzle encountered an unexpected error.
 
 **status**: 500
 
-A `PluginImplementationError` error is a generic error thrown by Kuzzle on a [plugin](/core/2/plugins) failure.
+A `PluginImplementationError` error is a generic error thrown by Kuzzle on a plugin failure.
 
 ---
 

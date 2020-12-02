@@ -12,7 +12,7 @@ order: 100
 
 | Arguments  | Type              | Description                                                                                                            |
 | ---------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `strategy` | <pre>string</pre> | Authentication strategy name |
+| `strategy` | <pre>string</pre> | [Authentication strategy](/core/2/guides/main-concepts/5-authentication#authentication-strategies) name |
 | `user`     | <pre>object</pre> | Authenticated user properties                                                                                          |
 
 This event is triggered after a successful user authentication, but before a token is generated.
