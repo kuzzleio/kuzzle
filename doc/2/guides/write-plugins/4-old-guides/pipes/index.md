@@ -13,7 +13,7 @@ This guide should be considered as obsolete and features presented here could be
 
 # Pipes
 
-Pipes are functions plugged to [events](/core/2/plugins/guides/events), called synchronously by Kuzzle, and receiving information regarding that event.
+Pipes are functions plugged to [events](/core/2/guides/develop-on-kuzzle/3-event-system), called synchronously by Kuzzle, and receiving information regarding that event.
 
 Pipes can:
 
@@ -32,7 +32,7 @@ The timeout value can be changed in the [configuration files](/core/2/guides/adv
 
 ## Usage
 
-Plugins can register pipes by exposing a `pipes` object: keys are listened [events](/core/2/plugins/guides/events), and values are either a function to execute whenever that event is triggered, or an array of functions.
+Plugins can register pipes by exposing a `pipes` object: keys are listened [events](/core/2/guides/develop-on-kuzzle/3-event-system), and values are either a function to execute whenever that event is triggered, or an array of functions.
 
 ```js
 this.pipes = {
