@@ -262,7 +262,7 @@ For example if I want to receive only drivers with the `B` license:
 }
 ```
 
-It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/clauses) between them with [operators](/core/2/api/koncorde-filter-syntax/operators) to refine my filter:
+It is also possible to combine [clauses](/core/2/api/koncorde-filters-syntax/clauses) between them with [operators](/core/2/api/koncorde-filters-syntax/operators) to refine my filter:
 
 ```json
 {
