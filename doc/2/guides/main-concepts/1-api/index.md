@@ -15,9 +15,9 @@ This API uses the **JSON format** to communicate with a **standardized request a
 ## Multi Protocol
 
 The Kuzzle API is accessible by default through 3 protocols:
- - [HTTP](/core/2/api/api-protocols/http)
- - [WebSocket](/core/2/api/api-protocols/websocket)
- - [MQTT](/core/2/api/api-protocols/mqtt)
+ - [HTTP](/core/2/api/protocols/http)
+ - [WebSocket](/core/2/api/protocols/websocket)
+ - [MQTT](/core/2/api/protocols/mqtt)
 
 Each protocol has advantages and disadvantages. The choice of a protocol must therefore be adapted to a situation and a use.
 
@@ -89,7 +89,7 @@ This endpoint does not allow to benefit from the advantages of the cache system 
 ### Other Protocols
 
 ::: info
-Kuzzle's extensible protocol system allows communication in virtually any format. This documentation section describes the format that must be used to pass requests to Kuzzle itself, either directly by users (for instance, using the embedded [WebSocket](/core/2/api/api-protocols/websocket) or [MQTT](/core/2/api/api-protocols/mqtt) protocols), or indirectly, translated by the custom protocol layer.
+Kuzzle's extensible protocol system allows communication in virtually any format. This documentation section describes the format that must be used to pass requests to Kuzzle itself, either directly by users (for instance, using the embedded [WebSocket](/core/2/api/protocols/websocket) or [MQTT](/core/2/api/protocols/mqtt) protocols), or indirectly, translated by the custom protocol layer.
 :::
 
 Requests made to Kuzzle must be encoded using JSON, and have the following format:
