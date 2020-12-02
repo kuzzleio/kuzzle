@@ -52,7 +52,7 @@ Pipes must notify Kuzzle about their completion by one of these two means:
 You must either call the callback with a valid [Request](/core/2/guides/essentials/request-and-response-format) or return a promise resolving to one.
 :::
 
-If a pipe throws an error, it is advised to throw one of the available [KuzzleError](/core/2/plugins/plugin-context/errors/kuzzleerror) object. Otherwise, Kuzzle will reject the task with a `PluginImplementationError` error.
+If a pipe throws an error, it is advised to throw one of the available [KuzzleError](/core/2/api/errors/types) object. Otherwise, Kuzzle will reject the task with a `PluginImplementationError` error.
 
 ---
 

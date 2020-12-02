@@ -51,7 +51,7 @@ In order to create a new controller, the plugin must expose the following proper
 
 - A `controllers` object, describing the controller(s) to add. It will automatically be made available to any network protocol, except for HTTP
 - A `routes` objects, describing how the controller(s) should be exposed to the HTTP protocol
-- The controller's actions, which are functions taking a `Request` object as an argument. These functions must return a promise, resolved with the action's result, or rejected with a [KuzzleError](/core/2/plugins/plugin-context/errors/kuzzleerror) object.
+- The controller's actions, which are functions taking a `Request` object as an argument. These functions must return a promise, resolved with the action's result, or rejected with a [KuzzleError](/core/2/api/errors/types) object.
 
 ---
 
