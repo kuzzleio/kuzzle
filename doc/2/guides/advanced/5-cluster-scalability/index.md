@@ -115,7 +115,7 @@ ln -s ../available/kuzzle-plugin-cluster
 * The cluster plugin requires a privileged context from Kuzzle. This context is granted by Kuzzle via the global configuration.
 * The cluster plugin registers a few [pipes](/core/2/plugins/guides/pipes). 
 
-Add the following to your kuzzlerc configuration file (see our [Kuzzle configuration guide](/core/2/guides/essentials/configuration)):
+Add the following to your kuzzlerc configuration file (see our [Kuzzle configuration guide](/core/2/guides/advanced/8-configuration)):
 
 ```js
 "plugins": {
@@ -259,7 +259,7 @@ Kuzzle nodes are synchronized by maintaining their state in a [Redis](https://re
 What this means is that, to scale horizontally, all a Kuzzle node needs is a reachable Redis instance, and to be able to connect to other nodes.  
 When these conditions are met, a Kuzzle node with the cluster plugin installed only needs to be started to automatically synchronize its state and to work together with the other nodes.
 
-Check our [Kuzzle configuration guide](/core/2/guides/essentials/configuration) to know how to make Kuzzle connect to specific Redis instances.
+Check our [Kuzzle configuration guide](/core/2/guides/advanced/8-configuration) to know how to make Kuzzle connect to specific Redis instances.
 
 ### Load Balancing
 

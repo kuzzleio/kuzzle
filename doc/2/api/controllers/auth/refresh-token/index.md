@@ -41,7 +41,7 @@ Method: POST
 
 ### Optional:
 
-* `expiresIn`: set the expiration duration (default: depends on [Kuzzle configuration file](/core/2/guides/essentials/configuration))
+* `expiresIn`: set the expiration duration (default: depends on [Kuzzle configuration file](/core/2/guides/advanced/8-configuration))
 * if a raw number is provided (not enclosed between quotes), then the expiration delay is in milliseconds. Example: `86400000`
 * if this value is a string, then its content is parsed by the [ms](https://www.npmjs.com/package/ms) library. Examples: `"6d"`, `"10h"`
 

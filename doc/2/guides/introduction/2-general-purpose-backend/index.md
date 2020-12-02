@@ -143,9 +143,9 @@ The Javascript SDK is of course used by frontend applications but also in the ba
 
 ## Realtime Notifications
 
-Kuzzle has its own [high-performance realtime engine](/core/2/guides/main-concepts/6-realtime-engine).  
+Kuzzle has its own [high-performance realtime engine](/core/2/guides/main-concepts/6-realtime-engine-engine).  
 
-This engine allows you to use pub/sub communications in a conventional way, but it's also capable of triggering [realtime database notification](/core/2/guides/main-concepts/6-realtime-engine#database-notifications).  
+This engine allows you to use pub/sub communications in a conventional way, but it's also capable of triggering [realtime database notification](/core/2/guides/main-concepts/6-realtime-engine-engine#database-notifications).  
 
 Every **change occuring on the database can generate realtime notifications**. Clients can listen to database changes and **synchronize frontends or other backend applications** accordingly.
 

@@ -223,7 +223,7 @@ Kuzzle will accept either string or boolean values for the dynamic property but 
 
 Refer to Elasticsearch documentation for more informations: [Elasticsearch dynamic mapping](https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html)
 
-The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/essentials/configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
+The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/advanced/8-configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
 
 ::: warning
 We advise not to let Elasticsearch dynamically infer the type of new fields in production.  
@@ -606,7 +606,7 @@ To perform lower level actions, it is possible to use the [bulk](/core/2/api/con
 
 The actions of this controller may not follow some of the API principles such as:
  - adding [Kuzzle Metadata](/core/2/guides/main-concepts/2-data-storage#kuzzle-metadata)
- - triggering [Database Notifications](/core/2/guides/main-concepts/6-realtime-engine#database-notifications) 
+ - triggering [Database Notifications](/core/2/guides/main-concepts/6-realtime-engine-engine#database-notifications) 
  - application of [Data Validation](/core/2/guides/advanced/9-data-validation) rules
  - respect of [write limit](/core/2/guides/main-concepts/2-data-storage#some-anchor)
 
