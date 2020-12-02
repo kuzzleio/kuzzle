@@ -422,7 +422,7 @@ while (result) {
 
 ::: tab Csharp
 
-[SearchResult.next](/sdk/csharp/2/core-classes/search-result/next-async)
+[SearchResult.next](/sdk/csharp/2/core-classes/search-result/next)
 
 ```csharp
 SearchOptions options = new SearchOptions {
