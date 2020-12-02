@@ -184,7 +184,7 @@ Or start to develop a client application by using one of our [SDKs](/sdk):
 
 ### Backend
  - [Node.js](/sdk/js/7/getting-started/node-js)
- - [Java SDK](/sdk/jvm/1/getting-started/java)
+ - [Java](/sdk/jvm/1/getting-started/java)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
  - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)
  
@@ -199,5 +199,5 @@ Or start to develop a client application by using one of our [SDKs](/sdk):
  - [React Native](/sdk/js/7/getting-started/react-native/)
  - [Flutter](/sdk/dart/2/getting-started/flutter/)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
- - [Java SDK](/sdk/jvm/1/getting-started/java)
+ - [Java](/sdk/jvm/1/getting-started/java)
  - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)
