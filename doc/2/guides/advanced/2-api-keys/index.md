@@ -8,7 +8,7 @@ order: 200
 
 # API Keys
 
-Kuzzle allows to create API keys to **authenticate users without using an authentication strategy** and the [auth:login](/core/2/references/controllers/auth/login) action.
+Kuzzle allows to create API keys to **authenticate users without using an authentication strategy** and the [auth:login](/core/2/api/controllers/auth/login) action.
 
 An API key is associated with a standard [authentication token](/core/2/guides/main-concepts/5-authentication#authentication-token) that can then be used to [authenticate users](/core/2/api/controllers/auth/login) to the Kuzzle API.
 
@@ -16,9 +16,9 @@ The **authentication tokens** associated to these API keys **may never expire**.
 
 ## Create an API Key
 
-Users can create API keys for their personal use with the [auth:createApiKey](/core/2/references/controllers/auth/create-api-key) action.
+Users can create API keys for their personal use with the [auth:createApiKey](/core/2/api/controllers/auth/create-api-key) action.
 
-Administrators can create API keys for other users using the [security:createApiKey](/core/2/references/controllers/security/create-api-key) action.
+Administrators can create API keys for other users using the [security:createApiKey](/core/2/api/controllers/security/create-api-key) action.
 
 By default, **API keys do not expire**. But it is possible to specify the duration of an API key using the argument `expiresIn`.
 
@@ -72,7 +72,7 @@ The authentication token provided in the `token` property will never be returned
 
 ## Search for API Keys
 
-It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/references/controllers/auth/search-api-keys)) or in those of all users ([securitys:searchApiKeys](/core/2/references/controllers/securitys/search-api-keys)).
+It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/api/controllers/auth/search-api-keys)) or in those of all users ([securitys:searchApiKeys](/core/2/api/controllers/securitys/search-api-keys)).
 
 
 In order to know to which API key an authentication token corresponds, it is possible to use the `fingerprint` property which is a SHA256 hash of the token.
@@ -113,7 +113,7 @@ The associated authentication token is not returned by Kuzzle.
 
 ## Delete API Key
 
-It is possible to use the [auth:deleteApiKey](/core/2/references/controllers/auth/delete-api-key) and the [security:deleteApiKey](/core/2/references/controllers/security/delete-api-key) methods to delete API keys.
+It is possible to use the [auth:deleteApiKey](/core/2/api/controllers/auth/delete-api-key) and the [security:deleteApiKey](/core/2/api/controllers/security/delete-api-key) methods to delete API keys.
 
 Once an API key is deleted, the **associated authentication token will be revoked** and cannot be used anymore.
 
