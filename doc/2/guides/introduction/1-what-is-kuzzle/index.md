@@ -91,7 +91,7 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
 </div>
 
 
-Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/2-api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/3-kuzzle-event-system#pipe).
+Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/2-api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/3-event-system#pipe).
 
 ## Complete ecosystem
 
