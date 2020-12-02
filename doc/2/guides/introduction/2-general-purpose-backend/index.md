@@ -191,7 +191,7 @@ Or start to develop a client application by using one of our [SDKs](/sdk):
 ### Frontend Web
  - [React.js](/sdk/js/7/getting-started/react/standalone/)
  - [Vue.js](/sdk/js/7/getting-started/vuejs/standalone/)
- - [Webpack](/sdk/dart/2/getting-started/webpack/)
+ - [Webpack](/sdk/js/7/getting-started/webpack/)
  - [Vanilla JS](/sdk/js/7/getting-started/raw-web/)
 
 ### Frontend Mobile
