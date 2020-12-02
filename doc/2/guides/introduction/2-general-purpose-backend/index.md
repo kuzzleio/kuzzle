@@ -30,7 +30,7 @@ Kuzzle uses Elasticsearch as a [NoSQL document store](/core/2/guides/main-concep
 
 With Kuzzle, customers **can directly access data stored in the database** as long as they have the rights to do so.
 
-It's no longer needed to create a new controller every time new data need to be displayed, and it's no longer needed to add parameters to controller actions to refine searches either: **queries are expressed directly on the client's side**.
+It's **no longer needed to create a new controller every time new data need to be displayed**, and it's no longer needed to add parameters to controller actions to refine searches either: **queries are expressed directly on the client's side**.
 
 Kuzzle exposes the [Elasticsearch Query Language](/core/2/guides/main-concepts/3-querying) in a secure way. It is therefore possible to **take full advantage of the possibilities of Elasticsearch** with boolean queries, aggregations, special fields, etc.
 
@@ -115,7 +115,7 @@ const app = new Backend('iot-tracker')
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: (request: request) => `Hello, ${request.input.args.name}`
+      handler: (request: Request) => `Hello, ${request.input.args.name}`
     }
   }
 })
@@ -124,7 +124,7 @@ app.start()
   .then(() => app.log.info('Application started'))
 ```
 
-Kuzzle offers different mechanisms to **develop the business functionalities** of its application:
+Kuzzle offers different mechanisms to **develop the business functionalities** of your application:
  - [API Controller](/core/2/guides/develop-on-kuzzle/2-api-controllers)
  - [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
  - [External Plugin](/core/2/guides/develop-on-kuzzle/4-external-plugins)
@@ -152,7 +152,7 @@ Every **change occuring on the database can generate realtime notifications**. C
 The realtime engine also offers the possibility to subscribe with **filters in order to receive only the desired notifications**.
 
 ```ts
-// Receive database notification only if a document "temperature" property 
+// Receive database notification only if a document "temperature" field 
 // is greather than 42
 await sdk.realtime.subscribe('iot', 'sensors', {
   range: {

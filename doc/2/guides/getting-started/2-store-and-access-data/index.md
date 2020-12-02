@@ -131,7 +131,7 @@ Then we are going to use the [document:search](/core/2/api/controllers/document/
  - `age` is greater than `30`
  - `city` is equal to `Antalya`
 
-For this, we need to write a [boolean query](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl-bool-query.html):
+For this, we need to write a [Boolean Query](/core/2/guides/main-concepts/3-querying#boolean-query):
 
 ```js
 {

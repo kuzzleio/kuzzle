@@ -65,7 +65,7 @@ The controller name will be inferred from the class name (unless the `name` prop
 :::
 
 ```js
-import { Controller } from 'kuzzle'
+import { Controller, Request } from 'kuzzle'
 
 class GreetingController extends Controller {
   constructor (app: Backend) {
