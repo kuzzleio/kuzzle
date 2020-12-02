@@ -73,7 +73,7 @@ Check the appropriate [authentication plugin](/core/2/write-plugins/3-integrate-
 The result contains the following properties:
 
 - `_id`: user's [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
-- `jwt`: encrypted JSON Web Token, that must then be sent in the [requests headers](/core/2/api/essentials/query-syntax#http) or in the [query](/core/2/api/essentials/query-syntax#other-protocols)
+- `jwt`: encrypted JSON Web Token, that must then be sent in the [requests headers](/core/2/guides/main-concepts/5-authentication#authentication-token) or in the [query](/core/2/guides/main-concepts/3-querying)
 - `expiresAt`: token expiration date, in Epoch-millis (UTC)
 - `ttl`: token time to live, in milliseconds
 
