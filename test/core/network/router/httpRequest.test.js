@@ -1,8 +1,8 @@
 'use strict';
 
 const should = require('should');
-const { Request } = require('kuzzle-common-objects');
 
+const { Request } = require('../../../../index');
 const Router = require('../../../../lib/core/network/router');
 const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');

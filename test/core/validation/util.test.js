@@ -2,9 +2,10 @@
 
 const should = require('should');
 const rewire = require('rewire');
+
 const Validation = rewire('../../../lib/core/validation/validation');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const { BadRequestError } = require('kuzzle-common-objects');
+const { BadRequestError } = require('../../../index');
 
 describe('Test: validation utilities', () => {
   const genericMock = { foo: 'bar' };

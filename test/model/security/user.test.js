@@ -2,11 +2,11 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   InternalError,
   Request,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const Kuzzle = require('../../mocks/kuzzle.mock');
 const Profile = require('../../../lib/model/security/profile');
 const User = require('../../../lib/model/security/user');

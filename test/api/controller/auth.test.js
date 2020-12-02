@@ -4,14 +4,14 @@ const sinon = require('sinon');
 const should = require('should');
 const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
+
 const {
   Request,
   UnauthorizedError,
   BadRequestError,
   InternalError: KuzzleInternalError,
   PluginImplementationError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const AuthController = require('../../../lib/api/controller/auth');
@@ -57,6 +57,48 @@ describe('Test the auth controller', () => {
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
       should(authController).instanceOf(NativeController);
+    });
+  });
+
+  describe('#checkRights', () => {
+    let userObject;
+
+    beforeEach(() => {
+      userObject = {
+        isActionAllowed: sinon.stub().resolves(true)
+      };
+
+      request.context.user = userObject;
+
+      request.input.body = {
+        controller: 'document',
+        action: 'create'
+      };
+    });
+
+    it('should check if the action is allowed for the user', async () => {
+      const response = await authController.checkRights(request);
+
+      should(userObject.isActionAllowed).be.calledWithMatch({
+        input: {
+          controller: 'document',
+          action: 'create',
+        }
+      });
+      should(response).be.eql({ allowed: true });
+    });
+
+    it('should reject if the provided request is not valid', async () => {
+      request.input.body.controller = null;
+
+      await should(authController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+
+      request.input.body.controller = 'document';
+      request.input.body.action = null;
+
+      await should(authController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
     });
   });
 

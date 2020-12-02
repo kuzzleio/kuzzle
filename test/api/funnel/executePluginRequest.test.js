@@ -2,13 +2,14 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const { MockNativeController } = require('../../mocks/controller.mock');
 const FunnelController = require('../../../lib/api/funnel');
 const {
   Request,
-  errors: { NotFoundError }
-} = require('kuzzle-common-objects');
+  NotFoundError
+} = require('../../../index');
 
 describe('funnel.executePluginRequest', () => {
   let kuzzle;

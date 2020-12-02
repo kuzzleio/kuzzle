@@ -3,12 +3,12 @@
 const should = require('should');
 const sinon = require('sinon');
 const ms = require('ms');
+
 const {
   BadRequestError,
   PreconditionError,
   SizeLimitError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
 

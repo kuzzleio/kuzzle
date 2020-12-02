@@ -29,7 +29,7 @@ class FunctionalTestPlugin {
       registerSubscription: 'registerSubscription',
       unregisterSubscription: 'unregisterSubscription',
     };
-    
+
     this.routes.push({
       action: 'registerSubscription',
       controller: 'accessors',
@@ -67,18 +67,19 @@ class FunctionalTestPlugin {
     this.routes.push({
       action: 'manage',
       controller: 'pipes',
-      path: '/pipes/:event/:state', // should work with "path" or "url"
+      path: '/pipes/:event/:state',
       verb: 'post',
     });
     this.routes.push({
       action: 'deactivateAll',
       controller: 'pipes',
-      url: '/pipes',
+      path: '/pipes',
       verb: 'delete',
     });
     this.routes.push({
       action: 'testReturn',
       controller: 'pipes',
+      // keep a route definition with "url" even if it's deprecated
       url: '/pipes/test-return/:name',
       verb: 'post',
     });
@@ -104,7 +105,7 @@ class FunctionalTestPlugin {
       async name => `Hello, ${name}`;
 
     // Pipe declared with a function name
-    this.pipes['server:afterNow'] = 'afterNowPipe';
+    this.pipes['server:afterNow'] = this.afterNowPipe;
 
     // Embedded SDK realtime
     this.hooks['kuzzle:state:live'] = async () => {
@@ -151,7 +152,7 @@ class FunctionalTestPlugin {
         }
       },
     );
-  
+
     return {
       acknowledged: 'OK',
       connectionId: request.context.connection.id,
@@ -160,7 +161,7 @@ class FunctionalTestPlugin {
   }
 
   async unregisterSubscription(request) {
-    const connectionId = request.input.body.connectionId || 
+    const connectionId = request.input.body.connectionId ||
             request.context.connection.id,
       roomId = request.input.body.roomId;
 

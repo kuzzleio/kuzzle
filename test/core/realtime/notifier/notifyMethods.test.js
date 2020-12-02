@@ -2,8 +2,8 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const { Request } = require('kuzzle-common-objects');
 
+const { Request } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');

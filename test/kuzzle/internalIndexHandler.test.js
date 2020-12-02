@@ -4,8 +4,8 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const { TimeoutError } = require('bluebird');
-const { InternalError: KuzzleInternalError } = require('kuzzle-common-objects');
 
+const { InternalError: KuzzleInternalError } = require('../../index');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const MutexMock = require('../mocks/mutex.mock');
 

@@ -69,6 +69,18 @@
           "code": 11,
           "message": "The argument \"%s\" is not allowed by this API action.",
           "class": "BadRequestError"
+        },
+        "koncorde_unknown_keyword": {
+          "description": "An unknown keyword has been provided in filters",
+          "code": 12,
+          "message": "The keyword \"%s\" is not one of the Koncorde filters DSL keywords.",
+          "class": "BadRequestError"
+        },
+        "koncorde_restricted_keyword": {
+          "description": "A restricted keyword has been provided in filters",
+          "code": 13,
+          "message": "The %s \"%s\" of Koncorde DSL is not supported for search queries.",
+          "class": "BadRequestError"
         }
       }
     },

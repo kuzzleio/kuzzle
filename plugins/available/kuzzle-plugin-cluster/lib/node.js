@@ -29,7 +29,7 @@ const zeromq = require('zeromq');
 const {
   Request,
   InternalError: KuzzleInternalError,
-} = require('kuzzle-common-objects');
+} = require('../../../../index');
 
 const RedisStateManager = require('./redis/manager');
 

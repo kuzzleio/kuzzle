@@ -3,11 +3,11 @@
 const should = require('should');
 const sinon = require('sinon');
 const yaml = require('js-yaml');
+
 const {
   Request,
   ExternalServiceError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const ServerController = require('../../../lib/api/controller/server');
