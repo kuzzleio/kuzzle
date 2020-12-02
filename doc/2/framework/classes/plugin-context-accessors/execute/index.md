@@ -10,7 +10,7 @@ description: PluginContextAccessors class execute() method
 Executes a Kuzzle's [API action](/core/2/api).
 
 ::: info
-This methods does not trigger [API events](/core/2/plugins/guides/events/api-events) or [request:on* events](/core/2/plugins/guides/events/request-on-authorized).
+This methods does not trigger [API events](/core/2/framework/events/api) or [request:on* events](/core/2/plugins/guides/events/request-on-authorized).
 :::
 
 ## Arguments

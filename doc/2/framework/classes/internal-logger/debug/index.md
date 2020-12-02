@@ -1,20 +1,20 @@
 ---
 code: true
 type: page
-title: warn
-description: BackendLogger.warn method
+title: debug
+description: InternalLogger.debug method
 ---
 
-# `warn()`
+# `debug()`
 
-Logs a info message.
+Logs a debug message.
 
 ::: info
 This method can only be used after the application started up.
 :::
 
 ```ts
-warn(message: any): void
+debug(message: any): void
 ```
 
 <br/>
@@ -26,5 +26,5 @@ warn(message: any): void
 **Usage:**
 
 ```js
-app.log.warn('Something is happening')
+app.log.debug('Something is happening')
 ```

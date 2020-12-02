@@ -24,7 +24,7 @@ The HTTP protocol is not meant to maintain persistent connections. It is therefo
 
 ### Configuration
 
-The protocol can be configured under the `server.protocols.http` section of the [configuration file](/core/2/guides/essentials/configuration).
+The protocol can be configured under the `server.protocols.http` section of the [configuration file](/core/2/guides/advanced/8-configuration).
 
 The listening port can be modified under the `server.port` section of the [configuration file](/core/2/guides/advanced/8-configuration).
 

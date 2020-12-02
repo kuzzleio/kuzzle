@@ -22,7 +22,7 @@ createCollection(collection: string, mappings: JSONObject): Promise<void>;
 | Arguments    | Type              | Description                                                                       |
 | ------------ | ----------------- | --------------------------------------------------------------------------------- |
 | `collection` | <pre>string</pre> | Collection name                                                                   |
-| `mappings`    | <pre>JSONObject</pre> | Collection [mappings](/core/2/guides/maint-concepts/2-data-storage#collection-mappings) |
+| `mappings`    | <pre>JSONObject</pre> | Collection [mappings](/core/2/guides/main-concepts/2-data-storage#collection-mappings) |
 
 ### Return
 

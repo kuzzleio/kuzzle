@@ -25,7 +25,7 @@ Before Kuzzle 2.2.0, if a pipe takes too long to respond, Kuzzle will eventually
 
 Note that while Kuzzle respond early with a Timeout error to users, the pipe task is still continuing.
 
-The timeout value can be changed in the [configuration files](/core/2/guides/essentials/configuration).
+The timeout value can be changed in the [configuration files](/core/2/guides/advanced/8-configuration).
 </DeprecatedBadge>
 
 ---

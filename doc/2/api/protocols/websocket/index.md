@@ -21,7 +21,7 @@ This protocol should be used by default for web applications, machine-to-machine
 
 ### Configuration
 
-The protocol can be configured under the `server.protocols.websocket` section of the [configuration file](/core/2/guides/essentials/configuration).
+The protocol can be configured under the `server.protocols.websocket` section of the [configuration file](/core/2/guides/advanced/8-configuration).
 
 The listening port can be modified under the `server.port` section of the [configuration file](/core/2/guides/advanced/8-configuration).
 

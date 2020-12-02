@@ -109,7 +109,7 @@ If the body is left empty, the result will return all available users.
 Returns an object with the following properties:
 
 - `hits`: array of object. Each object describes a found user:
-  - `_id`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
+  - `_id`: user [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
   - `_source`: user definition
 - `total`: total number of users found. Depending on pagination options, this can be greater than the actual number of users in a single result page
 

@@ -18,7 +18,7 @@ Kuzzle's API is divided into controllers, each exposing executable actions (see 
 
 Plugins can extend Kuzzle's API by adding new controllers to it.
 
-[Security access](/core/2/guides/essentials/security) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
+[Security access](/core/2/guides/main-concepts/4-permissions) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
 
 ---
 

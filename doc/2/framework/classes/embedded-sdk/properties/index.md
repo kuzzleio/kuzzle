@@ -9,7 +9,7 @@ description: EmbeddedSDK class properties
 
 The `EmbeddedSDK` is a modified version of the Javascript SDK.
 
-It inherits from the [Kuzzle](/sdk/js/7/core-classes/Kuzzle) class of the Javascript SDK.
+It inherits from the [Kuzzle](/sdk/js/7/core-classes/kuzzle) class of the Javascript SDK.
 
 It is **directly connected to the Kuzzle API** and requests **do not go through the network**.
 
@@ -19,4 +19,4 @@ See also the [EmbeddedSDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) guid
 
 ## Properties
 
-See the [Kuzzle](/sdk/js/7/core-classes/Kuzzle/properties) class of the Javascript SDK.
+See the [Kuzzle](/sdk/js/7/core-classes/kuzzle/properties) class of the Javascript SDK.
