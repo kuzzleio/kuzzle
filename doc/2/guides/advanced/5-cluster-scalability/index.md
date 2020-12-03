@@ -89,7 +89,7 @@ fs.inotify.max_user_watches=524288
 
 ## Manual install on an existing Kuzzle installation
 
-To add cluster capabilities to an existing Kuzzle installation, the cluster plugin must be installed by following the [Plugin Install Guide](/core/2/guides/essentials/plugins#installing-a-plugin).
+To add cluster capabilities to an existing Kuzzle installation, the cluster plugin must be installed by following the Plugin Install Guide.
 
 ::: info
 If you are running Kuzzle in a Docker container, you will need to access the running container's shell and then the Kuzzle installation folder inside the container.
