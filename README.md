@@ -20,7 +20,7 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 * **Extensible**: develop advanced business feature directly with the integrated framework.
 * **Client SDKS**: use our SDKs to accelerate the frontend development.
 
-Learn how Kuzzle will accelerate your developments :point_right: https://docs.kuzzle.io/core/2/guides/introduction/1-what-is-kuzzle/
+Learn how Kuzzle will accelerate your developments :point_right: https://docs.kuzzle.io/core/2/guides/introduction/what-is-kuzzle/
 
 ## Get trained by the creators of Kuzzle :zap:
 
