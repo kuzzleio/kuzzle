@@ -113,4 +113,20 @@ describe('CacheEngine', () => {
       should(cacheEngine.public.store).calledWith('key', 'value', 'ttl');
     });
   });
+
+  describe('#internal events', () => {
+    beforeEach(() => {
+      kuzzle.ask.restore();
+      return cacheEngine.init();
+    });
+
+    describe('#mget', () => {
+      it('should not invoke ioredis if an empty keys list is provided', async () => {
+        const result = await kuzzle.ask('core:cache:internal:mget', []);
+
+        should(cacheEngine.internal.commands.mget).not.called();
+        should(result).be.an.Array().and.be.empty();
+      });
+    });
+  });
 });
