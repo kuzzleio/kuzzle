@@ -22,4 +22,4 @@ removeConnection(connectionId);
 
 | Arguments      | Type              | Description                                                                                    |
 | -------------- | ----------------- | ---------------------------------------------------------------------------------------------- |
-| `connectionId` | <pre>string</pre> | The [ClientConnection](/core/2/protocols/api/context/clientconnection) unique identifier to remove |
+| `connectionId` | <pre>string</pre> | The [ClientConnection](/core/2/guides/write-protocols/2-context/clientconnection) unique identifier to remove |

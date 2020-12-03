@@ -2,7 +2,7 @@
 code: true
 type: page
 title: debug
-description: BackendLogger.debug method
+description: InternalLogger.debug method
 ---
 
 # `debug()`
@@ -23,7 +23,7 @@ debug(message: any): void
 |-----------|----------------|----------------|
 | `message` | <pre>any</pre> | Message to log |
 
-**Usage:**
+## Usage
 
 ```js
 app.log.debug('Something is happening')

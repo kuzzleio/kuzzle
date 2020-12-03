@@ -9,4 +9,4 @@ order: 0
 
 The `context` object contains general functions and objects used to interact with Kuzzle.
 
-This object is passed to the protocol [init](/core/2/protocols/api/methods/init) method.
+This object is passed to the protocol [init](/core/2/guides/write-protocols/4-methods/init) method.

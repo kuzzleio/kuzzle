@@ -14,7 +14,7 @@ order: 100
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request has been submitted through HTTP DELETE methods.
 
@@ -24,7 +24,7 @@ Triggered whenever a request has been submitted through HTTP DELETE methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request has been submitted through HTTP GET methods.
 
@@ -34,7 +34,7 @@ Triggered whenever a request has been submitted through HTTP GET methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request has been submitted through HTTP HEAD methods.
 
@@ -44,7 +44,7 @@ Triggered whenever a request has been submitted through HTTP HEAD methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request has been submitted through HTTP OPTIONS methods.
 
@@ -54,7 +54,7 @@ Triggered whenever a request has been submitted through HTTP OPTIONS methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request has been submitted through HTTP PATCH methods.
 
@@ -64,7 +64,7 @@ Triggered whenever a request has been submitted through HTTP PATCH methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request has been submitted through HTTP POST methods.
 
@@ -74,6 +74,6 @@ Triggered whenever a request has been submitted through HTTP POST methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 Triggered whenever a request has been submitted through HTTP PUT methods.

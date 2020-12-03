@@ -55,7 +55,7 @@ Once encrypted, the file looks like the following:
 
 ## Encrypt and decrypt with the CLI
 
-The encryption of a secret file is done using [Kourou](/core/2/guides/advanced/7-ecosystem#kourou), the Kuzzle CLI with the following command:
+The encryption of a secret file is done using [Kourou](/core/2/guides/advanced/11-kourou), the Kuzzle CLI with the following command:
 
 ```bash
 kourou vault:encrypt config/secrets.json --vault-key strongpassword
@@ -82,12 +82,12 @@ You can see the complete list of Kuzzle Vault related commands in Kourou on [Git
 ## Load encrypted secrets at startup
 
 Kuzzle will try to decrypt the provided file using the following locations, in that order of priority:
-  - in the [app.vault.file](/core/2/references/some-link) property: `app.vault.file = './secrets.env.json';`
+  - in the [app.vault.file](/core/2/framework/classes/backend-vault/properties) property: `app.vault.file = './secrets.env.json';`
   - in an environment variable `export KUZZLE_SECRETS_FILE=/var/secrets.enc.json`
   - the default one present at the location `<kuzzle dir>/config/secrets.enc.json`
 
 The decryption key must be provided in one of the following ways, in order of priority as well:
-  - in the [app.vault.key](/core/2/references/some-link) property: `app.vault.key = 'verystrongpassword';`
+  - in the [app.vault.key](/core/2/framework/classes/backend-vault/properties) property: `app.vault.key = 'verystrongpassword';`
   - in an environment variable `export KUZZLE_VAULT_KEY=verystrongpassword`
 
 ::: warning
@@ -101,10 +101,10 @@ Kuzzle start sequence ends in failure if:
 
 Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to your application.  
 
-Secrets are accessible in the [app.vault.secrets](/core/2/references/some-link) property after startup.  
+Secrets are accessible in the [app.vault.secrets](/core/2/framework/classes/backend-vault/properties) property after startup.  
 
 ## Accessing secrets in your plugin
 
 Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to all plugins.  
 
-Secrets are accessible in the [secrets](/core/2/references/some-link) property of the plugin context.  
+Secrets are accessible in the [secrets](/core/2/framework/classes/plugin-context/properties) property of the plugin context.  

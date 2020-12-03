@@ -1,20 +1,20 @@
 ---
 code: true
 type: page
-title: warn
-description: BackendLogger.warn method
+title: verbose
+description: InternalLogger.verbose method
 ---
 
-# `warn()`
+# `verbose()`
 
-Logs a info message.
+Logs a verbose message.
 
 ::: info
 This method can only be used after the application started up.
 :::
 
 ```ts
-warn(message: any): void
+verbose(message: any): void
 ```
 
 <br/>
@@ -23,8 +23,8 @@ warn(message: any): void
 |-----------|----------------|----------------|
 | `message` | <pre>any</pre> | Message to log |
 
-**Usage:**
+## Usage
 
 ```js
-app.log.warn('Something is happening')
+app.log.verbose('Something is happening')
 ```

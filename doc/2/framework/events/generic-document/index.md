@@ -37,7 +37,7 @@ All generic events share the same payload signature, and pipes plugged to them m
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 Triggered after documents have been deleted.
 
@@ -81,7 +81,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing documents `_id` and `_source`) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 Triggered after documents are fetched.
 
@@ -125,7 +125,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 Triggered after partial updates are applied to documents.
 
@@ -169,7 +169,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 Triggered after documents have been created or replaced.
 
@@ -216,7 +216,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 Triggered before documents are deleted.
 
@@ -264,7 +264,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing document `_id`) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 Triggered before documents are fetched.
 
@@ -310,7 +310,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 Triggered before partial updates are applied to documents.
 
@@ -353,7 +353,7 @@ class PipePlugin {
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | documents | `Array` | Array of documents (containing a document's `_id` and `_source` fields) |
-| request | `Request` | [Kuzzle API Request](/core/2/plugins/plugin-context/constructors/request#request) |
+| request | `Request` | [Kuzzle API Request](/core/2/framework/classes/request#request) |
 
 
 Triggered before documents are created or replaced.

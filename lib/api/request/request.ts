@@ -22,11 +22,11 @@
 import * as uuid from 'uuid';
 import { JSONObject } from 'kuzzle-sdk';
 
+import { Deprecation } from '../../util/deprecate';
 import { RequestInput } from './requestInput';
 import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
-import { Deprecation } from '../../util/interfaces';
 import * as assert from '../../util/assertType';
 
 // private properties

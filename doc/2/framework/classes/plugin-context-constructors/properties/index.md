@@ -13,7 +13,7 @@ It contains various classes thats allows to interact with Kuzzle.
 
 ## `BaseValidationType`
 
-Abstract class that allows to define a new custom type for the [Data Validation](/core/2/guides/some-link) module.
+Abstract class that allows to define a new custom type for the [Data Validation](/core/2/guides/advanced/9-data-validation) module.
 
 ## `StorageClient`
 
@@ -27,7 +27,7 @@ See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elast
 
 This class constructor takes no argument.
 
-**Usage:**
+## Usage
 
 ```js
 const esRequest =  {
@@ -62,8 +62,6 @@ import { Koncorde } from 'kuzzle';
 
 Instantiates a new [Repository](/core/2/framework/classes/repository).
 
-See the [Plugin Private Storage](/core/2/guides/some-link) guide.
-
 ## `Request`
 
 Modified [Request](/core/2/framework/classes/request) constructor that allows to instantiate a new `Request` with the context (user, jwt, connection) of another one.
@@ -83,7 +81,7 @@ Request(originalRequest: Request, requestPayload: RequestPayload, options: JSONO
 | `options` | <pre>JSONObject</pre> | Additional options passed to the [RequestContext](/core/2/framework/classes/request-context) constructor |
 
 
-**Usage:**
+## Usage
 
 ```js
 const req = new context.constructors.Request(request, {
@@ -98,7 +96,7 @@ const user = await context.accessors.execute(req)
 
 Constructor for [Elasticsearch SDK Client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html).
 
-**Usage:**
+## Usage
 
 ```js
 const esRequest =  {

@@ -15,7 +15,7 @@ These strategies are responsible for **managing user credentials** and **verifyi
 ::: info
 Plugins have a secure storage space accessible only from the plugin code.  
 This space is used to store sensitive information such as user credentials.    
-Learn more about [Writing Plugins](/core/2/guides/write-plugins/some/link).  
+Learn more about [Writing Plugins](/core/2/guides/write-plugins/1-start-writing-plugins).  
 :::
 
 Each user can then use one of the available strategies to authenticate himself.
@@ -112,6 +112,7 @@ The default validity period is configurable under the key `security.jwt.expiresI
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
 :::
 
+
 :::: tabs
 
 ::: tab HTTP
@@ -128,10 +129,11 @@ The authentication token must be provided in the payload with the `jwt` property
 {
   controller: "<controller>",
   action: "<action>",
-
   jwt: "<token>",
 }
 ```
+
+:::
 
 ::::
 
@@ -150,7 +152,7 @@ It's also possible to revoke every authentication tokens of a user with the [sec
 **Authentication tokens expire after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.  
 
 ::: info
-If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server event](/core/2/references/some-link).
+If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server notification](/core/2/api/payloads/notifications#server-notification).
 :::
 
 While an authentication token is still valid, it is possible to provide it to the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to request a new, fresher authentication token, without having to ask for credentials. 

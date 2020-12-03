@@ -20,7 +20,7 @@ All API actions, without exception, trigger two of these three events:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 A `before` event is triggered before an API request starts.
 
@@ -46,7 +46,7 @@ The `before` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 An `after` event is triggered after an API request succeeds.
 
@@ -72,7 +72,7 @@ The `after` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `Request` | The normalized API [request](/core/2/plugins/plugin-context/constructors/request) |
+| `request` | `Request` | The normalized API [request](/core/2/framework/classes/request) |
 
 An `error` event is triggered after an API request fails.
 

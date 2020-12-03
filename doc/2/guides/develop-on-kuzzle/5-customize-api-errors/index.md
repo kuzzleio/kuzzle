@@ -17,19 +17,19 @@ Kuzzle offers a set of standard errors corresponding to specific situations with
 Kuzzle exposes **standard API errors** classes.
 
 The following constructors are available directly in the `kuzzle` package:
-  - [UnauthorizedError](/core/2/references/some-link#some-anchor)
-  - [TooManyRequestsError](/core/2/references/some-link#some-anchor)
-  - [SizeLimitError](/core/2/references/some-link#some-anchor)
-  - [ServiceUnavailableError](/core/2/references/some-link#some-anchor)
-  - [PreconditionError](/core/2/references/some-link#some-anchor)
-  - [PluginImplementationError](/core/2/references/some-link#some-anchor)
-  - [PartialError](/core/2/references/some-link#some-anchor)
-  - [NotFoundError](/core/2/references/some-link#some-anchor)
-  - [InternalError](/core/2/references/some-link#some-anchor)
-  - [GatewayTimeoutError](/core/2/references/some-link#some-anchor)
-  - [ForbiddenError](/core/2/references/some-link#some-anchor)
-  - [ExternalServiceError](/core/2/references/some-link#some-anchor)
-  - [BadRequestError](/core/2/references/some-link#some-anchor)
+  - [UnauthorizedError](/core/2/api/errors/types)
+  - [TooManyRequestsError](/core/2/api/errors/types)
+  - [SizeLimitError](/core/2/api/errors/types)
+  - [ServiceUnavailableError](/core/2/api/errors/types)
+  - [PreconditionError](/core/2/api/errors/types)
+  - [PluginImplementationError](/core/2/api/errors/types)
+  - [PartialError](/core/2/api/errors/types)
+  - [NotFoundError](/core/2/api/errors/types)
+  - [InternalError](/core/2/api/errors/types)
+  - [GatewayTimeoutError](/core/2/api/errors/types)
+  - [ForbiddenError](/core/2/api/errors/types)
+  - [ExternalServiceError](/core/2/api/errors/types)
+  - [BadRequestError](/core/2/api/errors/types)
 
 ::: info
 If a non-standard error is thrown, Kuzzle will instead return a standard `PluginImplementationError` error, embedding the thrown error.

@@ -40,7 +40,6 @@ import {
   Plugin,
   Controller,
   EventHandler,
-  InternalLogger,
 } from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');
@@ -349,9 +348,9 @@ class BackendPlugin extends ApplicationManager {
   }
 }
 
-/* BackendLogger class ====================================================== */
+/* InternalLogger class ====================================================== */
 
-class BackendLogger extends ApplicationManager implements InternalLogger {
+class InternalLogger extends ApplicationManager implements InternalLogger {
   debug (message: any): void {
     this._log('debug', message);
   }
@@ -507,7 +506,7 @@ export class Backend {
   public plugin: BackendPlugin;
 
   /**
-   * BackendLogger
+   * InternalLogger
    *
    * @method debug
    * @method info
@@ -515,7 +514,7 @@ export class Backend {
    * @method error
    * @method verbose
    */
-  public log: BackendLogger;
+  public log: InternalLogger;
 
   /**
    * Storage manager
@@ -560,7 +559,7 @@ export class Backend {
     this.controller = new BackendController(this);
     this.plugin = new BackendPlugin(this);
     this.storage = new BackendStorage(this);
-    this.log = new BackendLogger(this);
+    this.log = new InternalLogger(this);
 
     this.kerror = kerror;
 
@@ -625,12 +624,12 @@ export class Backend {
    *
    * @returns {Promise<any>}
    */
-  trigger (event: string, payload: any): Promise<any> {
+  trigger (event: string, ...payload): Promise<any> {
     if (! this.started) {
       throw runtimeError.get('unavailable_before_start', 'trigger');
     }
 
-    return this._kuzzle.pipe(event, payload);
+    return this._kuzzle.pipe(event, ...payload);
   }
 
   /**

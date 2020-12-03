@@ -343,11 +343,12 @@ See the available [Pagination](/core/2/guides/main-concepts/3-querying#paginatio
 Those **methods are explained in the next sections and they are already implemented in our SDKs** in the `SearchResult` class. This class allows to navigate through your paginated results with ease by calling the `SearchResult.next` method (e.g. [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method in the Javascript SDK).
 
 **Example:** _Paginate search results using the scroll method_
+
 :::: tabs
 
 ::: tab Javascript
 
-[SearchResult.next](/sdk/js/7/core-classes/search-result/next)
+Using the Javascript SDK [SearchResult.next](/sdk/js/7/core-classes/search-result/next) method:
 
 ```js
 let result = await sdk.document.search('ktm-open-data', 'thamel-taxi', {
@@ -366,7 +367,7 @@ while (result) {
 :::
 ::: tab Dart
 
-[SearchResult.next](/sdk/dart/2/core-classes/search-result/next)
+Using the Dart SDK [SearchResult.next](/sdk/dart/2/core-classes/search-result/next) method:
 
 ```dart
 final result = await kuzzle
@@ -390,7 +391,7 @@ while (result != null) {
 
 ::: tab Kotlin
 
-[SearchResult.next](/sdk/jvm/1/core-classes/search-result/next)
+Using the Javascript SDK [SearchResult.next](/sdk/jvm/1/core-classes/search-result/next) method:
 
 ```kotlin
 val term: ConcurrentHashMap<String, Any?> =
@@ -421,7 +422,7 @@ while (result) {
 
 ::: tab Csharp
 
-[SearchResult.next](/sdk/csharp/2/core-classes/search-result/next-async)
+Using the Csharp SDK [SearchResults.NextAsync](/sdk/csharp/2/core-classes/search-results/next/) method:
 
 ```csharp
 SearchOptions options = new SearchOptions {
@@ -550,7 +551,7 @@ To use this pagination method, you need to pass a `scroll` parameter with a dura
 
 ::: info
 The value of the `scroll` option should be the time needed to process one page of results.  
-This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/advanced/8-configuration) key.
+This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/8-configuration) key.
 :::
 
 The search action will return a `scrollId` that you have to use with the [document:scroll](/core/2/api/controllers/document/scroll) to get the next page of results.

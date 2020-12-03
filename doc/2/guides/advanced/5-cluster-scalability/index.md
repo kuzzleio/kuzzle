@@ -66,7 +66,7 @@ You should now have a Kuzzle cluster stack running with 3 Kuzzle nodes.
 <SinceBadge version="1.10.0" />
 
 Kuzzle Docker images are shipped with the cluster plugin.
-The cluster is disabled by default but you can use the [`$KUZZLE_PLUGINS`](/core/2/guides/essentials/plugins#installing-a-plugin) environment variable to enable it.
+The cluster is disabled by default but you can use the [`$KUZZLE_PLUGINS`](/core/2/guides/develop-on-kuzzle/4-external-plugins) environment variable to enable it.
 :::
 
 ### ENOSPC error
@@ -89,7 +89,7 @@ fs.inotify.max_user_watches=524288
 
 ## Manual install on an existing Kuzzle installation
 
-To add cluster capabilities to an existing Kuzzle installation, the cluster plugin must be installed by following the [Plugin Install Guide](/core/2/guides/essentials/plugins#installing-a-plugin).
+To add cluster capabilities to an existing Kuzzle installation, the cluster plugin must be installed by following the Plugin Install Guide.
 
 ::: info
 If you are running Kuzzle in a Docker container, you will need to access the running container's shell and then the Kuzzle installation folder inside the container.
@@ -113,9 +113,9 @@ ln -s ../available/kuzzle-plugin-cluster
 ### Cluster plugin configuration
 
 * The cluster plugin requires a privileged context from Kuzzle. This context is granted by Kuzzle via the global configuration.
-* The cluster plugin registers a few [pipes](/core/2/plugins/guides/pipes). 
+* The cluster plugin registers a few [pipes](/core/2/guides/write-plugins/2-plugins-features#pipes-and-hooks). 
 
-Add the following to your kuzzlerc configuration file (see our [Kuzzle configuration guide](/core/2/guides/essentials/configuration)):
+Add the following to your kuzzlerc configuration file (see our [Kuzzle configuration guide](/core/2/guides/advanced/8-configuration)):
 
 ```js
 "plugins": {
@@ -134,7 +134,7 @@ Once the plugin installed and configured, you can start as many Kuzzle instances
 
 ## Extended API
 
-The cluster plugin adds an [API controller](/core/2/plugins/guides/controllers) named `cluster`, with the following actions defined:
+The cluster plugin adds an [API controller](/core/2/guides/write-plugins/2-plugins-features#api) named `cluster`, with the following actions defined:
 
 ### health
 
@@ -259,7 +259,7 @@ Kuzzle nodes are synchronized by maintaining their state in a [Redis](https://re
 What this means is that, to scale horizontally, all a Kuzzle node needs is a reachable Redis instance, and to be able to connect to other nodes.  
 When these conditions are met, a Kuzzle node with the cluster plugin installed only needs to be started to automatically synchronize its state and to work together with the other nodes.
 
-Check our [Kuzzle configuration guide](/core/2/guides/essentials/configuration) to know how to make Kuzzle connect to specific Redis instances.
+Check our [Kuzzle configuration guide](/core/2/guides/advanced/8-configuration) to know how to make Kuzzle connect to specific Redis instances.
 
 ### Load Balancing
 

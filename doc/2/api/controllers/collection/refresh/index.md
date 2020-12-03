@@ -73,5 +73,5 @@ Returns a response with `status` 200 if the refresh succeeds.
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [NotFoundError](/core/2/api/essentials/error-handling#notfounderror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror)

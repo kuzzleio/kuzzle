@@ -30,7 +30,7 @@ Kuzzle uses Elasticsearch as a [NoSQL document store](/core/2/guides/main-concep
 
 With Kuzzle, customers **can directly access data stored in the database** as long as they have the rights to do so.
 
-It's no longer needed to create a new controller every time new data need to be displayed, and it's no longer needed to add parameters to controller actions to refine searches either: **queries are expressed directly on the client's side**.
+It's **no longer needed to create a new controller every time new data need to be displayed**, and it's no longer needed to add parameters to controller actions to refine searches either: **queries are expressed directly on the client's side**.
 
 Kuzzle exposes the [Elasticsearch Query Language](/core/2/guides/main-concepts/3-querying) in a secure way. It is therefore possible to **take full advantage of the possibilities of Elasticsearch** with boolean queries, aggregations, special fields, etc.
 
@@ -115,7 +115,7 @@ const app = new Backend('iot-tracker')
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: (request: request) => `Hello, ${request.input.args.name}`
+      handler: (request: Request) => `Hello, ${request.input.args.name}`
     }
   }
 })
@@ -124,7 +124,7 @@ app.start()
   .then(() => app.log.info('Application started'))
 ```
 
-Kuzzle offers different mechanisms to **develop the business functionalities** of its application:
+Kuzzle offers different mechanisms to **develop the business functionalities** of your application:
  - [API Controller](/core/2/guides/develop-on-kuzzle/2-api-controllers)
  - [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
  - [External Plugin](/core/2/guides/develop-on-kuzzle/4-external-plugins)
@@ -152,7 +152,7 @@ Every **change occuring on the database can generate realtime notifications**. C
 The realtime engine also offers the possibility to subscribe with **filters in order to receive only the desired notifications**.
 
 ```ts
-// Receive database notification only if a document "temperature" property 
+// Receive database notification only if a document "temperature" field 
 // is greather than 42
 await sdk.realtime.subscribe('iot', 'sensors', {
   range: {
@@ -178,20 +178,20 @@ So it is possible to start your application by deploying it on a single server a
 
 ## Get Started !
 
-Follow our Getting Started to develop your first server application: [Kuzzle application journey](/core/2/guides/getting-started-1-run-kuzzle)
+Follow our Getting Started to develop your first server application: [Kuzzle application journey](/core/2/guides/getting-started/1-run-kuzzle)
 
 Or start to develop a client application by using one of our [SDKs](/sdk):
 
 ### Backend
  - [Node.js](/sdk/js/7/getting-started/node-js)
- - [Java SDK](/sdk/jvm/1/getting-started/java)
+ - [Java](/sdk/jvm/1/getting-started/java)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
  - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)
  
 ### Frontend Web
  - [React.js](/sdk/js/7/getting-started/react/standalone/)
  - [Vue.js](/sdk/js/7/getting-started/vuejs/standalone/)
- - [Webpack](/sdk/dart/2/getting-started/webpack/)
+ - [Webpack](/sdk/js/7/getting-started/webpack/)
  - [Vanilla JS](/sdk/js/7/getting-started/raw-web/)
 
 ### Frontend Mobile
@@ -199,5 +199,5 @@ Or start to develop a client application by using one of our [SDKs](/sdk):
  - [React Native](/sdk/js/7/getting-started/react-native/)
  - [Flutter](/sdk/dart/2/getting-started/flutter/)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
- - [Java SDK](/sdk/jvm/1/getting-started/java)
+ - [Java](/sdk/jvm/1/getting-started/java)
  - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)

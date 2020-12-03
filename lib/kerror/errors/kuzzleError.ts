@@ -25,7 +25,7 @@ import { JSONObject } from 'kuzzle-sdk';
 
 /**
  * API error are instances of this class.
- * See https://docs.kuzzle.io/core/2/api/essentials/error-handling/
+ * See https://docs.kuzzle.io/core/2/api/errors/types/
  */
 export class KuzzleError extends Error {
   /**

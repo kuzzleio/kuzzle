@@ -41,7 +41,7 @@ Only Kuzzle will be exposed to the internet on the port 7512.
 
 ::: warning
 This deployment does not use any SSL encryption (HTTPS).  
-A production deployment must include a reverse proxy like Nginx to [securize the connection with SSL](/core/2/guides/ssl).  
+A production deployment must include a reverse proxy to securize the connection with SSL.
 :::
 
 ## Prepare our Docker Compose deployment

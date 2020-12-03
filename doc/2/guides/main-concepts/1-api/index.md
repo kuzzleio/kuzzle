@@ -15,15 +15,15 @@ This API uses the **JSON format** to communicate with a **standardized request a
 ## Multi Protocol
 
 The Kuzzle API is accessible by default through 3 protocols:
- - [HTTP](/core/2/api/api-protocols/http)
- - [WebSocket](/core/2/api/api-protocols/websocket)
- - [MQTT](/core/2/api/api-protocols/mqtt)
+ - [HTTP](/core/2/api/protocols/http)
+ - [WebSocket](/core/2/api/protocols/websocket)
+ - [MQTT](/core/2/api/protocols/mqtt)
 
 Each protocol has advantages and disadvantages. The choice of a protocol must therefore be adapted to a situation and a use.
 
 ::: info
 Kuzzle is able to integrate to its API any protocol operating on [IP](https://en.wikipedia.org/wiki/Internet_Protocol).  
-More info on [Writing Protocol Plugin](/core/2/guides/write-plugins/4-network-protocol).  
+More info on [Writing Protocol Plugin](/core/2/guides/write-protocols/1-start-writing-protocols).  
 :::
 
 ## Request Format
@@ -89,7 +89,7 @@ This endpoint does not allow to benefit from the advantages of the cache system 
 ### Other Protocols
 
 ::: info
-Kuzzle's extensible protocol system allows communication in virtually any format. This documentation section describes the format that must be used to pass requests to Kuzzle itself, either directly by users (for instance, using the embedded [WebSocket](/core/2/api/api-protocols/websocket) or [MQTT](/core/2/api/api-protocols/mqtt) protocols), or indirectly, translated by the custom protocol layer.
+Kuzzle's extensible protocol system allows communication in virtually any format. This documentation section describes the format that must be used to pass requests to Kuzzle itself, either directly by users (for instance, using the embedded [WebSocket](/core/2/api/protocols/websocket) or [MQTT](/core/2/api/protocols/mqtt) protocols), or indirectly, translated by the custom protocol layer.
 :::
 
 Requests made to Kuzzle must be encoded using JSON, and have the following format:
@@ -340,7 +340,7 @@ Errors returned by the Kuzzle API in the `error` part of a response are objects 
 | `id`      | <pre>string</pre> | Error unique identifier                                |
 | `code`    | <pre>number</pre> | Error unique code                                      |
 
-List of [Standard Kuzzle Error](/core/2/references/some-link)
+List of [Standard Kuzzle Error](/core/2/api/errors/types)
 
 **Example:** _Receving a `network.http.url_not_found`_
 
@@ -377,7 +377,7 @@ For instance:
 * `api.assert.missing_argument` is an assertion error triggered by the API because of a missing argument
 * `network.http.url_not_found` is a HTTP error triggered by the network layer, because a requested URL couldn't be found
 
-The complete list of API errors is available [here](/core/2/api/essentials/error-codes/).
+The complete list of API errors is available [here](/core/2/api/errors/error-codes/).
 
 ### code
 
@@ -390,7 +390,7 @@ Code format:
 - Subdomain: ranges from `00` to `FF` (1 byte)
 - Error: ranges from `0000` to `FFFF` (2 bytes)
 
-The complete list of API errors is available [here](/core/2/api/essentials/error-codes/).
+The complete list of API errors is available [here](/core/2/api/errors/error-codes/).
 
 ## Volatile Data
 
@@ -438,7 +438,7 @@ Once this number of requests is reached, new requests are stored in a queue befo
 **Associated configuration keys:**
  - `limits.concurrentRequests` (`50`): number of requests Kuzzle processes simultaneously
  - `limits.requestsBufferSize` (`50000`): maximum number of requests that can be buffered
- - `limits.requestsBufferWarningThreshold` (`5000`):number of buffered requests after which Kuzzle will throw [core:overload](/core/2/references/some-link) events
+ - `limits.requestsBufferWarningThreshold` (`5000`):number of buffered requests after which Kuzzle will throw [core:overload](/core/2/framework/events/core) events
 
 ### Documents Limits
 

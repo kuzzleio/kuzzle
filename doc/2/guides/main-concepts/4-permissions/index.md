@@ -351,7 +351,7 @@ As any other collection, the `users` collection has an associated mapping that c
  - [security:getUserRights](/core/2/api/controllers/security/get-user-rights/)
  - [security:mDeleteUsers](/core/2/api/controllers/security/m-delete-users/)
  - [security:mGetUsers](/core/2/api/controllers/security/m-get-users/)
- - [security:replaceUsers](/core/2/api/controllers/security/replace-users/)
+ - [security:replaceUsers](/core/2/api/controllers/security/replace-user/)
  - [security:scrollUsers](/core/2/api/controllers/security/scroll-users/)
  - [security:searchUsers](/core/2/api/controllers/security/search-users/)
  - [security:updateUser](/core/2/api/controllers/security/update-user/)
@@ -374,7 +374,7 @@ For instance, suppose you have a chat application and you want the users to only
 
 There are multiple ways of adding a business logic layer on top of the standard Kuzzle security one:
 
-* With a [Pipe](/core/2/guides/develop-on-kuzzle/3-event-system#pipes), you can listen to one or multiple [API events](/core/2/references/some-link), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
+* With a [Pipe](/core/2/guides/develop-on-kuzzle/3-event-system#pipes), you can listen to one or multiple [API events](/core/2/framework/events/api), and decide whether you accept a query or document according to your business rules (you can see an example on [Github](https://github.com/kuzzleio/kuzzle-plugin-sample-custom-policies))
 * If all you need is to make sure that submitted documents follow a strict set of formatting rules, you can add [document validators](/core/2/guides/advanced/9-data-validation)
 
 ::: info

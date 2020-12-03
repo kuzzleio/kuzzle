@@ -1,20 +1,20 @@
 ---
 code: true
 type: page
-title: use
-description: BackendLogger.error method
+title: info
+description: InternalLogger.info method
 ---
 
-# `error()`
+# `info()`
 
-Logs an error message.
+Logs an info message.
 
 ::: info
 This method can only be used after the application started up.
 :::
 
 ```ts
-error(message: any): void
+info(message: any): void
 ```
 
 <br/>
@@ -23,8 +23,8 @@ error(message: any): void
 |-----------|----------------|----------------|
 | `message` | <pre>any</pre> | Message to log |
 
-**Usage:**
+## Usage
 
 ```js
-app.log.error('Something is happening')
+app.log.info('Something is happening')
 ```

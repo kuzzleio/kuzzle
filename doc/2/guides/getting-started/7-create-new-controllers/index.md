@@ -11,19 +11,19 @@ order: 700
 The Kuzzle API is composed of **actions grouped in controllers**.  
 A controller is a **logical container** that groups several actions together.
 
-Each action receives a [Request object](/core/2/references/some-link) argument, and is in charge of returning a result which will be transmitted in the response.  
+Each action receives a [Request](/core/2/framework/classes/request) object argument, and is in charge of returning a result which will be transmitted in the response.  
 
 ## Register a new Controller
 
 We are going to modify the `app.ts` file to register a controller to expose new API actions.
 
-For this, we need to use the [Backend.controller.register](/core/2/references/some-link) method.
+For this, we need to use the [Backend.controller.register](/core/2/framework/classes/backend-controller/register) method.
 
 ::: info
 You can also declare [Controller class](/core/2/guides/develop-on-kuzzle/2-api-controllers#use-a-controller-class) for a better code organization.  
 :::
 
-This method takes the controller name and a [ControllerDefinition](/core/2/references/some-link) which defines the controller actions:
+This method takes the controller name and a [ControllerDefinition](/core/2/framework/types/controller-definition) which defines the controller actions:
 
 ```js
 app.controller.register('greeting', {

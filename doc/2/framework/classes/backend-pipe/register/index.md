@@ -24,7 +24,7 @@ register(event: string, handler: EventHandler): void
 | `event` | <pre>string</pre> | Event name |
 | `handler` | <pre>[EventHandler](/core/2/framework/types/event-handler)</pre> | Function to execute when the event is triggered |
 
-**Usage:**
+## Usage
 
 ```js
 app.pipe.register('server:afterNow', async (request: Request) => {

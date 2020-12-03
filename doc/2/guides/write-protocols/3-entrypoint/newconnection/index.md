@@ -22,7 +22,7 @@ newConnection(connection);
 
 | Arguments    | Type                                                                               | Description         |
 | ------------ | ---------------------------------------------------------------------------------- | ------------------- |
-| `connection` | [`ClientConnection`](/core/2/protocols/api/context/clientconnection) | New user connection |
+| `connection` | [`ClientConnection`](/core/2/guides/write-protocols/2-context/clientconnection) | New user connection |
 
 ---
 

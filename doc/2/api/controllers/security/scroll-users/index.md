@@ -51,7 +51,7 @@ Method: GET
 Returns a paginated search result set, with the following properties:
 
 - `hits`: array of found profiles. Each document has the following properties:
-  - `_id`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
+  - `_id`: user [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
   - `_source`: user definition
 - `scrollId`: identifier to the next page of result. Can be different than the previous one(s)
 - `total`: total number of found users. Usually greater than the number of users in a result page

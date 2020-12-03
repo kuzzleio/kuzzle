@@ -32,7 +32,7 @@ For instance:
 * `network.http.url_not_found` is a HTTP error triggered by the network layer, because a requested URL couldn't be found
 
 
-The complete list of API errors is available [here](/core/2/api/errors/2-error-codes/).
+The complete list of API errors is available [here](/core/2/api/errors/error-codes/core).
 
 ---
 
@@ -48,4 +48,4 @@ Code format:
 - Error: ranges from `0000` to `FFFF` (2 bytes)
 
 
-The complete list of API errors is available [here](/core/2/api/errors/2-error-codes/).
+The complete list of API errors is available [here](/core/2/api/errors/error-codes/core).

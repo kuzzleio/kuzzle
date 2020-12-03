@@ -13,8 +13,8 @@ Kuzzle is shipped with its own **high-performance Realtime Engine** for sending 
 Realtime capabilities require the use of a **persistent communication protocol** such as WebSocket or MQTT.
 
 Kuzzle offers 2 different ways of doing realtime:
- - Volatile Pub/Sub System (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-realtime-applications))
- - Realtime Database Notifications (see example on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-realtime-engine))
+ - Volatile Pub/Sub System (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-real-time-applications))
+ - Realtime Database Notifications (see example on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-real-time-engine))
 
 ## Pub/Sub
 
@@ -235,7 +235,7 @@ Clients subscribing to changes in this collection will receive the following not
 </pre>
 </details>
 
-More information about the [Document Notification format](/core/2/api/essentials/notifications#documents-changes-messages)
+More information about the [Document Notification format](/core/2/api/payloads/notifications#documents-changes-messages)
 
 ## Subscription Filters
 
@@ -247,7 +247,7 @@ These filters are specified only on the client side and do not require server-si
 They are sent in the body of the request [realtime:subscribe](/core/2/api/controllers/realtime/subscribe)
 :::
 
-A filter is composed of [clauses](/core/2/api/koncorde-filter-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filter-syntax/operators).
+A filter is composed of [clauses](core/2/api/koncorde-filters-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filters-syntax/operators).
 
 For example if I want to receive only drivers with the `B` license:
 ```json
@@ -262,7 +262,7 @@ For example if I want to receive only drivers with the `B` license:
 }
 ```
 
-It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/clauses) between them with [operators](/core/2/api/koncorde-filter-syntax/operators) to refine my filter:
+It is also possible to combine [clauses](/core/2/api/koncorde-filters-syntax/clauses) between them with [operators](/core/2/api/koncorde-filters-syntax/operators) to refine my filter:
 
 ```json
 {
@@ -280,7 +280,7 @@ It is also possible to combine [clauses](/core/2/api/koncorde-filter-syntax/clau
 ```
 
 ::: info
-More info about subscription filters [clauses](/core/2/api/koncorde-filter-syntax/clauses) and [operators](/core/2/api/koncorde-filter-syntax/operators)
+More info about subscription filters [clauses](/core/2/api/koncorde-filters-syntax/clauses) and [operators](/core/2/api/koncorde-filters-syntax/operators)
 :::
 
 Each subscription filter **defines a scope**. All documents in the collection can be either **inside or outside this scope**.

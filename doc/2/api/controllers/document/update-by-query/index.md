@@ -12,7 +12,7 @@ Documents updated that way trigger real-time notifications.
 
 ## Limitations
 
-The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
+The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/8-configuration) guide).
 
 To update a greater number of documents, either change the server configuration, or split the search query.
 

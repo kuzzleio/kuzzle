@@ -26,7 +26,7 @@ add(name: string, properties: any): Promise<void>
 | Arguments    | Type              | Description                                                                                                           |
 | ------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `name`       | <pre>string</pre> | Name of the new authentication strategy                                                                               |
-| `properties` | <pre>any</pre> | Strategy properties ([Authentication Strategy](/core/2/guides/some-link)) |
+| `properties` | <pre>any</pre> | Strategy properties ([Authentication Strategy](/core/2/guides/write-plugins/3-integrate-authentication-strategy)) |
 
 ### Return
 

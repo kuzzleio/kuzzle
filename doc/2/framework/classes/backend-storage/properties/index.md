@@ -19,7 +19,7 @@ See the [Data Storage](/core/2/guides/main-concepts/2-data-storage#integrated-el
 |-----------------------|-------------------|-----------|
 | <pre>[Client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html)</pre> | Lazily instantiated Elasticsearch Node.js client | get |
 
-**Usage:**
+## Usage
 
 ```js
 const esRequest =  {
@@ -45,7 +45,7 @@ By default, the instantiated client uses the same configuration than the one use
 It's possible to overload the client configuration by passing the `clientConfig` argument to the constructor.
 :::
 
-**Usage:**
+## Usage
 
 ```js
 const esRequest =  {

@@ -19,12 +19,12 @@ Plugins allow you to achieve two main goals:
 These feature categories are not exclusive and although it is not recommended, a plugin can embed features belonging to the 2 categories.
 
 ::: info
-New network protocols can also be integrated to Kuzzle API by writting a [Protocol](/core/2/some-link).
+New network protocols can also be integrated to Kuzzle API by writting a [Protocol](/core/2/guides/write-protocols).
 ::: 
 
 ## Inside a plugin
 
-Plugins are classes that must implement the [Plugin](/core/2/references/some-link) interface.  
+Plugins are classes that must implement the [Plugin](/core/2/framework/abstract-classes/plugin) abstract class.  
 
 They can create new controllers or register pipes and hooks like applications.
 
@@ -38,7 +38,7 @@ More information about features available to plugins: [Write Plugins](/core/2/gu
 
 Generally, plugins are distributed as NPM packages.  
 
-It is possible to use the [Backend.plugin.use](/core/2/references/some-link) method to use a plugin in your application.  
+It is possible to use the [Backend.plugin.use](/core/2/framework/classes/backend-plugin/use) method to use a plugin in your application.  
 
 ::: info
 Plugins must be used before starting the application.

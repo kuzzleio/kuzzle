@@ -27,4 +27,4 @@ validateFieldSpecification(opts: JSONObject): JSONObject;
 
 The `validateFieldSpecification` returns a copy of the `opts` object, updated with interpreted values.
 
-If the provided options are not valid, this function is expected to throw a [KuzzleError](/core/2/framework/errors) error.
+If the provided options are not valid, this function is expected to throw a [KuzzleError](/core/2/api/errors/types) error.

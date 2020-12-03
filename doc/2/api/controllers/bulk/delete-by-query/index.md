@@ -10,7 +10,7 @@ Deletes documents matching the provided search query.
 
 This is a low level route intended to bypass Kuzzle actions on document deletion, notably:
   - check document write limit
-  - trigger [realtime notifications](/core/2/guides/essentials/real-time)
+  - trigger [realtime notifications](/core/2/guides/main-concepts/6-realtime-engine)
 
 ---
 

@@ -223,7 +223,7 @@ Kuzzle will accept either string or boolean values for the dynamic property but 
 
 Refer to Elasticsearch documentation for more informations: [Elasticsearch dynamic mapping](https://www.elastic.co/guide/en/elasticsearch/guide/current/dynamic-mapping.html)
 
-The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/essentials/configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
+The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/advanced/8-configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
 
 ::: warning
 We advise not to let Elasticsearch dynamically infer the type of new fields in production.  
@@ -590,7 +590,7 @@ Searches can be made to retrieve only the documents you want.
 
 These searches are done by **writing Elasticsearch queries**.
 
-You can consult the dedicated guide: [Querying](/core/2/guides/advanced/3-querying)
+You can consult the dedicated guide: [Querying](/core/2/guides/main-concepts/3-querying)
 
 ### Read Limit
 
@@ -625,12 +625,12 @@ It is considered harmful to let end users execute those actions.
 
 Kuzzle uses and exposes the [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
 
-It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/references/some-link) property.
+It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/framework/classes/backend-storage) property.
 
 This property offers the possibility to **instantiate a new client** or to **use a lazy-instantiated client**. In both cases, the clients are configured to use the same Elasticsearch cluster as Kuzzle.
 
 ::: info
-It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.Client](/core/2/references/some-link).
+It is possible to overload the configuration used by default by instantiating a new Elasticsearch client with the constructor [Backend.storage.ESClient](/core/2/framework/classes/backend-storage#properties).
 :::
 
 

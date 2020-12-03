@@ -12,9 +12,9 @@ One common requirement when you are managing data is to perform **data validatio
 
 A common example is **email validation**. Let's say you have developed a registration page where you request a user's name and email and you want to ensure that the email they provide is valid.
 
-With Kuzzle, instead of programming the validation logic yourself, you can pick from a set of predefined [validation patterns](/core/2/guides/cookbooks/datavalidation). Validations are defined in a validation schema which determines what pattern is linked to what field, every time Kuzzle receives input data, it checks this validation schema and returns an error if a validation pattern fails. The validation schema can be configured in the `validation` field of the [configuration file](/core/2/guides/essentials/configuration).
+With Kuzzle, instead of programming the validation logic yourself, you can pick from a set of predefined [validation patterns](/core/2/guides/advanced/9-data-validation). Validations are defined in a validation schema which determines what pattern is linked to what field, every time Kuzzle receives input data, it checks this validation schema and returns an error if a validation pattern fails. The validation schema can be configured in the `validation` field of the [configuration file](/core/2/guides/advanced/8-configuration).
 
-For a detailed look at data validation, please refer to our [Data Validation Reference](/core/2/guides/cookbooks/datavalidation).
+For a detailed look at data validation, please refer to our [Data Validation Reference](/core/2/guides/advanced/9-data-validation).
 
 ::: info
 You can bypass data validation by using [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions.
@@ -24,7 +24,7 @@ You can bypass data validation by using [bulk:write](/core/2/api/controllers/bul
 
 ## Basic Validation
 
-A validation schema is defined using a [hierarchical](/core/2/guides/cookbooks/datavalidation) structure that contains a set of rules within an index, collection, and document field.
+A validation schema is defined using a [hierarchical](/core/2/guides/advanced/9-data-validation) structure that contains a set of rules within an index, collection, and document field.
 
 For example, below is a validation schema for the `onlineshop` index and `products` collection that defines the validation pattern for field `price` and field `productDescription`:
 
@@ -55,7 +55,7 @@ Let's take a look at what this validation schema does:
 - It ensures that `price` exists and is a `Number`.
 - It ensures that `productDescription` is a `String` and has a value when none is provided.
 
-For a complete list of validation patterns please refer to our [Validation Patterns Reference](/core/2/guides/cookbooks/datavalidation).
+For a complete list of validation patterns please refer to our [Validation Patterns Reference](/core/2/guides/advanced/9-data-validation).
 
 ---
 
@@ -91,7 +91,7 @@ Below is an example of how the `range` type option is used to ensure that the fi
 }
 ```
 
-For more information regarding Type Options, please refer to [this](/core/2/guides/cookbooks/datavalidation#field-typeoptions) section of the Data Validation Reference.
+For more information regarding Type Options, please refer to [this](/core/2/guides/advanced/9-data-validation) section of the Data Validation Reference.
 
 ---
 
@@ -155,4 +155,4 @@ The idea is simple: use Koncorde to specify a filter that can be used to validat
 }
 ```
 
-In the example above, we used both the `exists` operator and the `or` operator to build our validation rule. For more information take a look at our [Koncorde Reference](/core/2/guides/cookbooks/realtime-api/terms#exists).
+In the example above, we used both the `exists` operator and the `or` operator to build our validation rule. For more information take a look at our [Koncorde Reference](/core/2/api/koncorde-filters-syntax/clauses#exists).

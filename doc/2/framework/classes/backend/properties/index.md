@@ -51,7 +51,7 @@ This property is an instance of the [BackendHook](/core/2/framework/classes/back
 |------------------------------------------------------------------|----------------------|
 | <pre>[BackendHook](/core/2/framework/classes/backend-hook)</pre> | BackendHook instance |
 
-See also the [Event System](/core/2/guides/main-concepts/3-event-system#hook) guide.
+See also the [Event System](/core/2/guides/develop-on-kuzzle/3-event-system#hook) guide.
 
 
 <!-- 
@@ -63,11 +63,11 @@ See also the [Event System](/core/2/guides/main-concepts/3-event-system#hook) gu
 
 ## `log`
 
-This property is an instance of the [BackendLog](/core/2/framework/classes/backend-logger) class that allows to log messages using Kuzzle's internal logger.  
+This property is an instance of the [BackendLog](/core/2/framework/classes/internal-logger) class that allows to log messages using Kuzzle's internal logger.  
 
 | Type                                                              | Description         |
 |-------------------------------------------------------------------|---------------------|
-| <pre>[BackendLog](/core/2/framework/classes/backend-logger)</pre> | BackendLog instance |
+| <pre>[BackendLog](/core/2/framework/classes/internal-logger)</pre> | BackendLog instance |
 
 See also the [Internal Logger](/core/2/guides/advanced/10-internal-logger) guide.
 
@@ -87,7 +87,7 @@ This property is an instance of the [BackendPipe](/core/2/framework/classes/back
 |------------------------------------------------------------------|----------------------|
 | <pre>[BackendPipe](/core/2/framework/classes/backend-pipe)</pre> | BackendPipe instance |
 
-See also the [Event System](/core/2/guides/main-concepts/3-event-system#pipe) guide.
+See also the [Event System](/core/2/guides/develop-on-kuzzle/3-event-system#pipe) guide.
 
 ## `plugin`
 

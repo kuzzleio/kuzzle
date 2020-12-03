@@ -7,7 +7,7 @@ description: Repository class properties
 
 # Repository
 
-The `Repository` class allows to interact with the [Plugin Private Storage](/core/2/guides/some-links).  
+The `Repository` class allows to interact with the Plugin Private Storage.  
 
 
 An instance of this class provides access to a collection inside the plugin's dedicated and secure storage.

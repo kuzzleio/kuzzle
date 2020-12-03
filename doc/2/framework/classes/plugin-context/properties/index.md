@@ -7,7 +7,7 @@ description: PluginContext class properties
 
 # PluginContext
 
-The `PluginContext` class is passed to the plugins as an argument of the [init](/core/2/some-link) method.  
+The `PluginContext` class is passed to the plugins as an argument of the [init](/core/2/framework/abstract-classes/plugin/init) method.  
 
 It contains various accessors, constructors and helpers that allow to interact with Kuzzle.
 
@@ -59,30 +59,6 @@ SizeLimitError
 TooManyRequestsError
 UnauthorizedError
 ```
-
-## `errorsManager`
-
-<DeprecatedBadge version="change-me"/>
-
-This property is an instance of the [Errors Manager](/core/2/some-link).  
-
-::: info
-The usage of this property is deprecated and the [PluginContext.kerror](/core/2/framework/classes/plugin-context#kerror) property should be used instead.
-:::
-
-::: warning
-This property is not available in Typescript.
-:::
-
-## `kerror`
-
-This property is an instance of the [ErrorsManager](/core/2/framework/classes/errors-manager).  
-
-It allows to instantiate [Custom API Errors](/core/2/guides/some-link) complying with the [Error Payload](/core/2/api/payloads/error).
-
-| Type                                                                 | Description            |
-|----------------------------------------------------------------------|------------------------|
-| <pre>[ErrorsManager](/core/2/framework/classes/errors-manager)</pre> | PluginContextConstructors instance |
 
 ## `log`
 

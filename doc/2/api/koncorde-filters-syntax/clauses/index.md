@@ -14,7 +14,7 @@ In this section, you will find an exhaustive listing of all the available clause
 
 Clauses allow you to **express a predicate to apply on a data stream**.  
 
-One clause can **constitute a filter on its own** or be **combined with other clauses** in the same filters using the [operators](/core/2/api/koncorde-filter-syntax/operators).
+One clause can **constitute a filter on its own** or be **combined with other clauses** in the same filters using the [operators](/core/2/api/koncorde-filters-syntax/operators).
 
 ## Testing Nested Fields
 
@@ -47,7 +47,7 @@ Here is a filter, testing for equality on the field `last` in the `name` object:
 
 ## Matching array values
 
-A few keywords, like [exists](/core/2/api/koncorde-filter-syntax/clauses#exists) or [missing](/core/2/api/koncorde-filter-syntax/clauses#missing), allow searching for array values.
+A few keywords, like [exists](/core/2/api/koncorde-filters-syntax/clauses#exists) or [missing](/core/2/api/koncorde-filters-syntax/clauses#missing), allow searching for array values.
 
 These values can be accessed with the following syntax: `<array path>[<value>]`  
 Only one array value per `exists`/`missing` keyword can be searched in this manner.
@@ -59,7 +59,7 @@ The array value must be provided using the JSON format:
 - Strings: the value must be enclosed in double quotes. Example: `foo["string value"]`
 - Numbers, booleans and `null` must be used as is. Examples: `foo[3.14]`, `foo[false]`, `foo[null]`
 
-Array values can be combined with [nested properties](/core/2/api/koncorde-filter-syntax/clauses#testing-nested-fields): `nested.array["value"]`
+Array values can be combined with [nested properties](/core/2/api/koncorde-filters-syntax/clauses#testing-nested-fields): `nested.array["value"]`
 
 ### Example
 
@@ -131,10 +131,10 @@ Test for the existence of a key in an object, or of a scalar in an array.
 Since Koncorde 1.2, the `exists` syntax is as follows:
 
 `exists: 'nested.field.path'`
-(see [nested field syntax](/core/2/guides/cookbooks/realtime-api/advanced#testing-nested-fields))
+(see [nested field syntax](/core/2/api/koncorde-filters-syntax/clauses#testing-nested-fields))
 
 `exists: 'nested.array[value]'`
-(see [array value syntax](/core/2/guides/cookbooks/realtime-api/advanced#matching-array-values))
+(see [array value syntax](/core/2/api/koncorde-filters-syntax/clauses#matching-array-values))
 
 The following syntax is deprecated since Koncorde 1.2, and supported for backward compatibility only:
 
@@ -184,7 +184,7 @@ Filter documents containing a geographical point confined within a bounding box:
 
 A bounding box is a 2D box that can be defined using either of the following formats:
 
-- 2 [geopoints](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints), defining the top left (`topLeft` or `top_left`) and bottom right (`bottomRight` or `bottom_right`) corners of the box
+- 2 [geopoints](/core/2/api/koncorde-filters-syntax/geo-space#geopoints), defining the top left (`topLeft` or `top_left`) and bottom right (`bottomRight` or `bottom_right`) corners of the box
 - 4 distinct values defining the 4 box corners: `top` and `bottom` are latitudes, `left` and `right` are longitudes
 
 The bounding box description must be stored in an attribute, named after the geographical point to be tested in future documents.
@@ -281,9 +281,9 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistanceRange` filter contains the following properties:
 
-- a [geopoint](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
-- a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](/core/2/guides/cookbooks/realtime-api/geofencing#geodistances)
-- a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](/core/2/guides/cookbooks/realtime-api/geofencing#geodistances)
+- a [geopoint](/core/2/api/koncorde-filters-syntax/geo-space) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
+- a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](/core/2/api/koncorde-filters-syntax/geo-space#geodistances)
+- a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](/core/2/api/koncorde-filters-syntax/geo-space#geodistances)
 
 ### Syntax
 
@@ -340,8 +340,8 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistance` filter contains the following properties:
 
-- a [geopoint](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
-- a `distance` parameter in [geodistance format](/core/2/guides/cookbooks/realtime-api/geofencing#geodistances)
+- a [geopoint](/core/2/api/koncorde-filters-syntax/geo-space#geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
+- a `distance` parameter in [geodistance format](/core/2/api/koncorde-filters-syntax/geo-space#geodistances)
 
 ### Syntax
 
@@ -397,7 +397,7 @@ Filter documents containing a geographical point, confined within a polygon that
 
 ![Illustration of geoPolygon](/geolocation/geoPolygon.png)
 
-A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of [geopoints](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints) (at least 3).
+A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of [geopoints](/core/2/api/koncorde-filters-syntax/geo-space#geopoints) (at least 3).
 
 Koncorde automatically closes geopolygons.
 
@@ -578,10 +578,10 @@ A `missing` filter used to match arrays without a specific value will also match
 Since Koncorde 1.2, the `missing` syntax is as follows:
 
 `missing: 'nested.field.path'`
-(see [nested field syntax](/core/2/guides/cookbooks/realtime-api/advanced#testing-nested-fields))
+(see [nested field syntax](/core/2/api/koncorde-filters-syntax/clauses#testing-nested-fields))
 
 `missing: 'nested.array[value]'`
-(see [array value syntax](/core/2/guides/cookbooks/realtime-api/advanced#matching-array-values)
+(see [array value syntax](/core/2/api/koncorde-filters-syntax/clauses#matching-array-values)
 
 The following syntax is deprecated since Koncorde 1.2, and supported for backward compatibility only:
 

@@ -1,20 +1,20 @@
 ---
 code: true
 type: page
-title: info
-description: BackendLogger.info method
+title: warn
+description: InternalLogger.warn method
 ---
 
-# `info()`
+# `warn()`
 
-Logs an info message.
+Logs a info message.
 
 ::: info
 This method can only be used after the application started up.
 :::
 
 ```ts
-info(message: any): void
+warn(message: any): void
 ```
 
 <br/>
@@ -23,8 +23,8 @@ info(message: any): void
 |-----------|----------------|----------------|
 | `message` | <pre>any</pre> | Message to log |
 
-**Usage:**
+## Usage
 
 ```js
-app.log.info('Something is happening')
+app.log.warn('Something is happening')
 ```

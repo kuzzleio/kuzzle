@@ -34,7 +34,7 @@ use(controller: Controller): void
 |----------|-----------------------|-------------------------------|
 | `controller` | <pre>[Controller](/core/2/framework/abstract-classes/controller)</pre> | Controller class extending the [Controller](/core/2/framework/abstract-classes/controller) abstract class |
 
-**Usage:**
+## Usage
 
 ```js
 import { Request, Controller } from 'kuzzle'

@@ -8,7 +8,7 @@ order: 100
 
 # Start Writing a Protocol
 
-Kuzzle has native support for the following network protocols: [HTTP](/core/2/protocols/native-protocols/http), [MQTT](/core/2/protocols/native-protocols/mqtt) (disabled by default), and [Websocket](/core/2/protocols/native-protocols/websocket).
+Kuzzle has native support for the following network protocols: [HTTP](/core/2/api/protocols/http), [MQTT](/core/2/api/protocols/mqtt) (disabled by default), and [Websocket](/core/2/api/protocols/websocket).
 
 However, any number of protocols can be implemented, adding new network capabilities.
 
@@ -17,8 +17,8 @@ Protocols can even decide to propose a dedicated message format and/or query syn
 
 Protocols are provided with objects to interact with Kuzzle:
 
-- [EntryPoint](/core/2/protocols/api/entrypoint): base communication layer (declare user connections, forward API requests, ...)
-- [context](/core/2/protocols/api/context): utilities and object constructors not directly related to network communications
+- [EntryPoint](/core/2/guides/write-protocols/3-entrypoint/intro): base communication layer (declare user connections, forward API requests, ...)
+- [context](/core/2/guides/write-protocols/2-context): utilities and object constructors not directly related to network communications
 
 ---
 
@@ -57,12 +57,12 @@ The following properties can be defined in this `manifest.json` file:
 
 To add new network capabilities, a protocol must implement a set of functions, to be called by Kuzzle:
 
-- [broadcast](/core/2/protocols/api/methods/broadcast)
-- [disconnect](/core/2/protocols/api/methods/disconnect)
-- [init](/core/2/protocols/api/methods/init)
-- [joinChannel](/core/2/protocols/api/methods/joinchannel)
-- [leaveChannel](/core/2/protocols/api/methods/leavechannel)
-- [notify](/core/2/protocols/api/methods/notify)
+- [broadcast](/core/2/guides/write-protocols/4-methods/broadcast)
+- [disconnect](/core/2/guides/write-protocols/4-methods/disconnect)
+- [init](/core/2/guides/write-protocols/4-methods/init)
+- [joinChannel](/core/2/guides/write-protocols/4-methods/joinchannel)
+- [leaveChannel](/core/2/guides/write-protocols/4-methods/leavechannel)
+- [notify](/core/2/guides/write-protocols/4-methods/notify)
 
 If one or multiple of these functions are missing, Kuzzle fails to load the protocol, and refuses to start.
 
@@ -74,15 +74,15 @@ If one or multiple of these functions are missing, Kuzzle fails to load the prot
 
 Simply put: it is the same `channel` identifier returned to a user after a [real-time subscription](/core/2/api/controllers/realtime/subscribe). Many users can share the same channel, as it is calculated from the provided subscription filters, after they are normalized (i.e. equivalent yet differently written filters still share the same identifier).
 
-Kuzzle notifies protocols when one of their managed connection [joins](/core/2/protocols/api/methods/joinchannel) or [leaves](/core/2/protocols/api/methods/leavechannel) a channel.
+Kuzzle notifies protocols when one of their managed connection [joins](/core/2/guides/write-protocols/4-methods/joinchannel) or [leaves](/core/2/guides/write-protocols/4-methods/leavechannel) a channel.
 
-Kuzzle has no opinion on how a protocol handles channels and their associated users. It simply asks protocols to [broadcast](/core/2/protocols/api/methods/broadcast), or to [notify](/core/2/protocols/api/methods/notify) messages to listening users.
+Kuzzle has no opinion on how a protocol handles channels and their associated users. It simply asks protocols to [broadcast](/core/2/guides/write-protocols/4-methods/broadcast), or to [notify](/core/2/guides/write-protocols/4-methods/notify) messages to listening users.
 
 ---
 
 ## Configuration
 
-Protocols can be configured in the Kuzzle [configuration](/core/2/guides/essentials/configuration) file, under the `server/protocols/<protocol name>` section.
+Protocols can be configured in the Kuzzle [configuration](/core/2/guides/advanced/8-configuration) file, under the `server/protocols/<protocol name>` section.
 
 ### Example
 
@@ -249,7 +249,7 @@ The recommended way to install a plugin is to put it in `plugins/available`, and
 
 ### Node.js modules
 
-Kuzzle loads plugins as [Node.js modules](https://nodejs.org/dist/latest-v8.x/docs/api/modules.html).
+Kuzzle loads plugins as [Node.js modules](https://nodejs.org/docs/latest-v12.x/api/modules.html).
 
 This means that a plugin directory must contain either:
 

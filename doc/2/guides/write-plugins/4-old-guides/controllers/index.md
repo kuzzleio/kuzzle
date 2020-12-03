@@ -14,11 +14,11 @@ This guide should be considered as obsolete and features presented here could be
 
 # Controllers
 
-Kuzzle's API is divided into controllers, each exposing executable actions (see [API reference](/core/2/api/essentials/query-syntax)).
+Kuzzle's API is divided into controllers, each exposing executable actions (see [API reference](/core/2/api/payloads/request)).
 
 Plugins can extend Kuzzle's API by adding new controllers to it.
 
-[Security access](/core/2/guides/essentials/security) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
+[Security access](/core/2/guides/main-concepts/4-permissions) to plugin controllers must be given (or denied), using the exact same way as with native API controllers.
 
 ---
 
@@ -51,13 +51,13 @@ In order to create a new controller, the plugin must expose the following proper
 
 - A `controllers` object, describing the controller(s) to add. It will automatically be made available to any network protocol, except for HTTP
 - A `routes` objects, describing how the controller(s) should be exposed to the HTTP protocol
-- The controller's actions, which are functions taking a `Request` object as an argument. These functions must return a promise, resolved with the action's result, or rejected with a [KuzzleError](/core/2/plugins/plugin-context/errors/kuzzleerror) object.
+- The controller's actions, which are functions taking a `Request` object as an argument. These functions must return a promise, resolved with the action's result, or rejected with a [KuzzleError](/core/2/api/errors/types) object.
 
 ---
 
 ## Return a response
 
-By default, Kuzzle wraps a controller action's result in a [Kuzzle Response](/core/2/api/essentials/kuzzle-response) object.  
+By default, Kuzzle wraps a controller action's result in a [Kuzzle Response](/core/2/api/payloads/response) object.  
 
 Consider the following action:
 ```js
@@ -119,7 +119,7 @@ When this action is successfully called, the following answer will be returned b
 
 ## Query normalization
 
-Kuzzle normalizes [queries](/core/2/api/essentials/query-syntax) into [Request](/core/2/plugins/plugin-context/constructors/request) objects.
+Kuzzle normalizes [request payloads](/core/2/api/payloads/request) into [Request](/core/2/framework/classes/request) objects.
 
 Quick summary of how queries are normalized:
 
@@ -141,7 +141,7 @@ Quick summary of how queries are normalized:
 
 Kuzzle triggers events on all controller routes, including those added by plugins.
 
-Read more about these automatic controller events [here](/core/2/plugins/guides/events).
+Read more about these automatic controller events [here](/core/2/guides/develop-on-kuzzle/3-event-system).
 
 ---
 

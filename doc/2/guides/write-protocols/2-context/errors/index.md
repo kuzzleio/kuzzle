@@ -140,7 +140,7 @@ const err = new context.errors.NotFoundError('error message');
 
  / <DeprecatedBadge version="1.4.1" />
 
-Parse error. Use [BadRequestError](/core/2/protocols/api/context/errors#badrequesterror) instead.
+Parse error. Use [BadRequestError](/core/2/guides/write-protocols/2-context/errors#badrequesterror) instead.
 
 ### Status Code
 

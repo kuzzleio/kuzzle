@@ -24,7 +24,7 @@ register(name: string, definition: ControllerDefinition): void
 | `name` | <pre>string</pre> | Controller name |
 | `handler` | <pre>[ControllerDefinition](/core/2/framework/types/controller-definition)</pre> | Controller actions definition |
 
-**Usage:**
+## Usage
 
 ```js
 import { Request } from 'kuzzle'

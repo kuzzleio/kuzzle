@@ -91,7 +91,7 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
 </div>
 
 
-Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/2-api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/3-kuzzle-event-system#pipe).
+Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/2-api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/3-event-system#pipe).
 
 ## Complete ecosystem
 
@@ -101,7 +101,7 @@ All these projects are also available under the Apache-2 license on [Github](htt
 
 ### Admin Console
 
-The [Admin Console](/core/2/guides/advanced/7-ecosystem#admin-console) is a Single Page Application (SPA) written in Vue.js.  
+The [Admin Console](https://next-console.kuzzle.io) is a Single Page Application (SPA) written in Vue.js.  
 
 It is used to manage its data and the user permissions system.
 
@@ -123,7 +123,7 @@ Kourou is a command line interface that facilitates development with Kuzzle.
 
 It can be used in particular to execute any API action or even code snippets directly.
 
-[See the dedicated guide](/some/link/kourou)
+[See the dedicated guide](/core/2/guides/advanced/11-kourou)
 
 ### Business plugins
 
