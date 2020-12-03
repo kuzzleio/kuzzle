@@ -7,7 +7,7 @@
 
 ## Why Kuzzle ?
 
-Kuzzle is a [generic backend](https://docs.kuzzle.io/core/2/guides/introduction/2-general-purpose-backend/) offering **the basic building blocks common to every application**.
+Kuzzle is a [generic backend](https://docs.kuzzle.io/core/2/guides/introduction/general-purpose-backend/) offering **the basic building blocks common to every application**.
 
 Rather than developing the same standard features over and over again each time you create a new application, Kuzzle proposes them off the shelf, allowing you to focus on building **high-level, high-value business functionalities**.
 
