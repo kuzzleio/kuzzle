@@ -1,5 +1,24 @@
 Feature: Auth Controller
 
+  # auth:checkToken ===========================================================
+
+  @security @login
+  Scenario: Check if a token is valid
+    Given I successfully execute the action "auth":"login" with args:
+      | strategy | "local"                                              |
+      | body     | { "username": "test-admin", "password": "password" } |
+    When I successfully execute the action "auth":"checkToken" with args:
+      | body | { "token": this.props.result.jwt } |
+    Then I should receive a result matching:
+      | valid     | true         |
+      | kuid      | "test-admin" |
+      | expiresAt | "_NUMBER_"   |
+    When I successfully execute the action "auth":"checkToken" with args:
+      | body | { "token": "invalid token" } |
+    Then I should receive a result matching:
+      | valid | false      |
+      | state | "_STRING_" |
+
   # auth:checkRights ===========================================================
 
   @security @login
