@@ -32,7 +32,6 @@ Restarts your application with the following command to display events: `DEBUG=k
 
 ::: info
 Kuzzle uses the [debug](https://www.npmjs.com/package/debug) package to display messages.  
-Learn more about debug messages in the [Debugging Kuzzle](/core/2/guides/advanced/3-debugging) guide.
 :::
 
 Then execute the `server:now` action with Kourou: `kourou server:now`

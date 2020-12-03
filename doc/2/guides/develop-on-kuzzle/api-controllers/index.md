@@ -536,7 +536,7 @@ npx wscat -c ws://localhost:7512 --execute '{
 
 ### Kourou
 
-From a terminal, [Kourou](/core/2/guides/advanced/11-kourou), the Kuzzle CLI, can be used to execute an action:
+From a terminal, [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI, can be used to execute an action:
 
 ```bash
 kourou greeting:sayHello --arg name=Yagmur
@@ -545,7 +545,7 @@ kourou greeting:sayHello --arg name=Yagmur
 It is possible to pass multiple arguments by repeating the `--arg <arg>=<value>` flag or specify a body with the `--body '{}'` flag.  
 
 ::: info
-More info about [Kourou](/core/2/guides/advanced/11-kourou).
+More info about [Kourou](https://github.com/kuzzleio/kourou).
 :::
 
 ### SDK
