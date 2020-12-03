@@ -16,8 +16,8 @@ description: Error codes definitions
 
 | id / code | class / status | message | description |
 | --------- | -------------- | --------| ----------- |
-| protocol.runtime.invalid_connection<br/><pre>0x06010001</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Invalid connection: %s (missing id or protocol) | Connection objects must have both their id and protocol set |
-| protocol.runtime.unknown_connection<br/><pre>0x06010002</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | Unable to remove connection - unknown connection identifier: %s | The provided connection identifier is unknown |
-| protocol.runtime.already_exists<br/><pre>0x06010003</pre>  | [PluginImplementationError](/core/2/api/essentials/error-handling#pluginimplementationerror) <pre>(500)</pre> | A protocol of the same name already exists: %s | A protocol of the same name already exists |
+| protocol.runtime.invalid_connection<br/><pre>0x06010001</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Invalid connection: %s (missing id or protocol) | Connection objects must have both their id and protocol set |
+| protocol.runtime.unknown_connection<br/><pre>0x06010002</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unable to remove connection - unknown connection identifier: %s | The provided connection identifier is unknown |
+| protocol.runtime.already_exists<br/><pre>0x06010003</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | A protocol of the same name already exists: %s | A protocol of the same name already exists |
 
 ---
