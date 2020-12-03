@@ -90,7 +90,7 @@ Now visit [http://localhost:7512](http://localhost:7512) with your browser. You 
 
 ### Admin Console
 
-We can also use the [Admin Console](/core/2/guides/advanced/7-ecosystem#admin-console) which allows to manage your data, your users and your rights.
+We can also use the [Admin Console](https://next-console.kuzzle.io) which allows to manage your data, your users and your rights.
 
 ::: info
 The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application) written in Vue.js and using the [Javascript SDK](/sdk/js/7).  

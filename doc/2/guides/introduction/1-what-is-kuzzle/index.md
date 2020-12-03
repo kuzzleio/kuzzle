@@ -101,7 +101,7 @@ All these projects are also available under the Apache-2 license on [Github](htt
 
 ### Admin Console
 
-The [Admin Console](/core/2/guides/advanced/7-ecosystem#admin-console) is a Single Page Application (SPA) written in Vue.js.  
+The [Admin Console](https://next-console.kuzzle.io) is a Single Page Application (SPA) written in Vue.js.  
 
 It is used to manage its data and the user permissions system.
 
