@@ -438,6 +438,25 @@ describe('DocumentController', () => {
           SizeLimitError,
           { id: 'services.storage.write_limit_exceeded' });
     });
+
+    it('should return immediately if the provided payload is empty', async () => {
+      request.input.body.documents = [];
+
+      const response = await documentController._mChanges(
+        request,
+        'mCreate',
+        actionEnum.CREATE);
+
+      should(response).match({
+        errors: [],
+        successes: [],
+      });
+
+      should(kuzzle.ask.withArgs('core:storage:public:document:mCreate'))
+        .not.called();
+      should(kuzzle.ask.withArgs('core:realtime:document:mNotify'))
+        .not.called();
+    });
   });
 
   describe('#createOrReplace', () => {
