@@ -38,7 +38,7 @@ The provided `strategy` object has the following properties:
 | ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/2/guides/write-plugins/1-start-writing-plugins#manifest-json) |
 | `name`       | <pre>string</pre> | Authentication strategy name                                                                                        |
-| `strategy`   | <pre>object</pre> | Authentication [strategy properties](/core/2/write-plugins/3-integrate-authentication-strategy#managing-credentials)           |
+| `strategy`   | <pre>object</pre> | Authentication [strategy properties](/core/2/guides/write-plugins/3-integrate-authentication-strategy#managing-credentials)           |
 
 ## core:auth:strategyRemoved
 

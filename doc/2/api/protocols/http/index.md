@@ -19,7 +19,7 @@ The use of the HTTP protocol is recommended when the client is in an environment
 However it can be **quite slow** because each request usually requires to establish a new connection to the server. Some clients, such as browsers, keep connections open to speed things up, but you shouldn't count on that.  
 
 ::: warning
-The HTTP protocol is not meant to maintain persistent connections. It is therefore not possible to use Kuzzle's [Realtime Engine](/core/2/guides/main-concepts/6-realtime-engine-engine) 
+The HTTP protocol is not meant to maintain persistent connections. It is therefore not possible to use Kuzzle's [Realtime Engine](/core/2/guides/main-concepts/6-realtime-engine) 
 ::: 
 
 ### Configuration

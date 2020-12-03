@@ -184,7 +184,7 @@ Filter documents containing a geographical point confined within a bounding box:
 
 A bounding box is a 2D box that can be defined using either of the following formats:
 
-- 2 [geopoints](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints), defining the top left (`topLeft` or `top_left`) and bottom right (`bottomRight` or `bottom_right`) corners of the box
+- 2 [geopoints](/core/2/api/koncorde-filters-syntax/geo-space#geopoints), defining the top left (`topLeft` or `top_left`) and bottom right (`bottomRight` or `bottom_right`) corners of the box
 - 4 distinct values defining the 4 box corners: `top` and `bottom` are latitudes, `left` and `right` are longitudes
 
 The bounding box description must be stored in an attribute, named after the geographical point to be tested in future documents.
@@ -281,9 +281,9 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistanceRange` filter contains the following properties:
 
-- a [geopoint](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
-- a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](/core/2/guides/cookbooks/realtime-api/geofencing#geodistances)
-- a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](/core/2/guides/cookbooks/realtime-api/geofencing#geodistances)
+- a [geopoint](/core/2/api/koncorde-filters-syntax/geo-space) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
+- a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](/core/2/api/koncorde-filters-syntax/geo-space#geodistances)
+- a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](/core/2/api/koncorde-filters-syntax/geo-space#geodistances)
 
 ### Syntax
 
@@ -340,8 +340,8 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistance` filter contains the following properties:
 
-- a [geopoint](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
-- a `distance` parameter in [geodistance format](/core/2/guides/cookbooks/realtime-api/geofencing#geodistances)
+- a [geopoint](/core/2/api/koncorde-filters-syntax/geo-space#geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
+- a `distance` parameter in [geodistance format](/core/2/api/koncorde-filters-syntax/geo-space#geodistances)
 
 ### Syntax
 
@@ -397,7 +397,7 @@ Filter documents containing a geographical point, confined within a polygon that
 
 ![Illustration of geoPolygon](/geolocation/geoPolygon.png)
 
-A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of [geopoints](/core/2/guides/cookbooks/realtime-api/geofencing#geopoints) (at least 3).
+A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of [geopoints](/core/2/api/koncorde-filters-syntax/geo-space#geopoints) (at least 3).
 
 Koncorde automatically closes geopolygons.
 

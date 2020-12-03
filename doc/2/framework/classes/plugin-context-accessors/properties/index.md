@@ -39,7 +39,7 @@ This property is an instance of the [PluginStrategy](/core/2/framework/classes/p
 
 ## `subscription`
 
-This property is an instance of the [Subscription](/core/2/framework/classes/subscription) class that allows to add and remove [realtime subscriptions](/core/2/guides/main-concepts/6-realtime-engine-engine) from the backend.  
+This property is an instance of the [Subscription](/core/2/framework/classes/subscription) class that allows to add and remove [realtime subscriptions](/core/2/guides/main-concepts/6-realtime-engine) from the backend.  
 
 | Type     | Description            |
 |----------|------------------------|

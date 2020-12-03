@@ -19,7 +19,7 @@ search(query: JSONObject, options?: JSONObject): Promise<any>;
 
 | Arguments | Type              | Description                                                                                            |
 | --------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
-| `query`   | <pre>JSONObject</pre> | Search query, using Elasticsearch [query format](/core/2/guides/main-concepts/querying#basic-querying) |
+| `query`   | <pre>JSONObject</pre> | Search query, using Elasticsearch [query format](/core/2/guides/main-concepts/3-querying#basic-querying) |
 | `options` | <pre>JSONObject</pre> | Optional arguments                                                                                     |
 
 #### options

@@ -123,7 +123,7 @@ Kourou is a command line interface that facilitates development with Kuzzle.
 
 It can be used in particular to execute any API action or even code snippets directly.
 
-[See the dedicated guide](/core/2/guides/advanced/kourou)
+[See the dedicated guide](/core/2/guides/advanced/11-kourou)
 
 ### Business plugins
 

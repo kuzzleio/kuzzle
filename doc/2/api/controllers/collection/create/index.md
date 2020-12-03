@@ -187,7 +187,7 @@ Body:
 <SinceBadge version="2.1.0"/>
 
 * `settings`: Elasticsearch index [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)
-* `mappings`: [collection mappings](/core/2/guides/essentials/database-mappings)
+* `mappings`: [collection mappings](/core/2/guides/main-concepts/2-data-storage#mappings-properties)
 
 <DeprecatedBadge version="2.1.0"/>
 

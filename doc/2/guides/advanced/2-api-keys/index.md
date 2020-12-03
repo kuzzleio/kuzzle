@@ -72,7 +72,7 @@ The authentication token provided in the `token` property will never be returned
 
 ## Search for API Keys
 
-It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/api/controllers/auth/search-api-keys)) or in those of all users ([securitys:searchApiKeys](/core/2/api/controllers/securitys/search-api-keys)).
+It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/api/controllers/auth/search-api-keys)) or in those of all users ([security:searchApiKeys](/core/2/api/controllers/security/search-api-keys)).
 
 
 In order to know to which API key an authentication token corresponds, it is possible to use the `fingerprint` property which is a SHA256 hash of the token.

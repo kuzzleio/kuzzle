@@ -13,8 +13,8 @@ Kuzzle is shipped with its own **high-performance Realtime Engine** for sending 
 Realtime capabilities require the use of a **persistent communication protocol** such as WebSocket or MQTT.
 
 Kuzzle offers 2 different ways of doing realtime:
- - Volatile Pub/Sub System (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-realtime-applications))
- - Realtime Database Notifications (see example on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-realtime-engine))
+ - Volatile Pub/Sub System (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-real-time-applications))
+ - Realtime Database Notifications (see example on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-real-time-engine))
 
 ## Pub/Sub
 

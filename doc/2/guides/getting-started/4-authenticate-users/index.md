@@ -13,7 +13,7 @@ Kuzzle's authentication system is **multi-strategy based**. This means that the 
 For example, the same user can authenticate with the [local](/core/2/guides/main-concepts/5-authentication#local-strategy) strategy with an username and a password pair but also with the [oauth](/core/2/guides/main-concepts/5-authentication#oauth-strategy) strategy using an external provider such as Facebook or Google.
 
 ::: info
-Kuzzle uses [Passport.js](http://www.passportjs.org/packages/) under the hood, and therefore there are 300+ strategies readily available. (LDAP, OpenID, Active Directory, x509, etc.)  
+Kuzzle uses [Passport.js](http://www.passportjs.org/) under the hood, and therefore there are 300+ strategies readily available. (LDAP, OpenID, Active Directory, x509, etc.)  
 :::
 
 We saw that in the [Set Up Permission](/core/2/guides/getting-started/3-set-up-permissions) guide, when creating a user, we had to provide credentials for the [local](/core/2/guides/main-concepts/5-authentication#local-strategy) strategy, but we could have provided more strategies (provided the right strategy plugins are used):

@@ -13,7 +13,7 @@ Create or replace multiple documents directly into the storage engine.
 This is a low level route intended to bypass Kuzzle actions on document creation, notably:
   - check document write limit <SinceBadge version="2.3.3" />
   - check [document validity](/core/2/guides/advanced/9-data-validation),
-  - add [kuzzle metadata](/core/2/guides/essentials/document-metadata),
+  - add [kuzzle metadata](/core/2/guides/main-concepts/2-data-storage#kuzzle-metadata),
   - trigger [realtime notifications](/core/2/guides/main-concepts/6-realtime-engine) (unless asked otherwise)
 
 ---

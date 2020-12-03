@@ -46,10 +46,10 @@ If multiple pipes are plugged to the same event (either from the same plugin or 
 Pipes must notify Kuzzle about their completion by one of these two means:
 
 - by calling the `callback(error, request)` function received as their last argument (leave the `error` null if the pipe executed successfully)
-- by returning a promise, resolved (or rejected) with a valid [Request](/core/2/guides/main-concepts/api) upon the completion of the pipe
+- by returning a promise, resolved (or rejected) with a valid [Request](/core/2/api/payloads/request) upon the completion of the pipe
 
 :::warning
-You must either call the callback with a valid [Request](/core/2/guides/main-concepts/api) or return a promise resolving to one.
+You must either call the callback with a valid [Request](/core/2/api/payloads/request) or return a promise resolving to one.
 :::
 
 If a pipe throws an error, it is advised to throw one of the available [KuzzleError](/core/2/api/errors/types) object. Otherwise, Kuzzle will reject the task with a `PluginImplementationError` error.

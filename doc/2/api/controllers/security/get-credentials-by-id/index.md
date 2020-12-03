@@ -8,7 +8,7 @@ title: getCredentialsById
 
 Gets credential information for the user identified by the strategy's unique user identifier `userId`.
 
-The returned `result` object will vary depending on the strategy (see the [getById() plugin function](/core/2/write-plugins/3-integrate-authentication-strategy#optional-getbyid)), and it can be empty.
+The returned `result` object will vary depending on the strategy (see the [getById() plugin function](/core/2/guides/write-plugins/3-integrate-authentication-strategy#optional-getbyid)), and it can be empty.
 
 ::: info
 The user identifier to use depends on the specified strategy. 
