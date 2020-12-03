@@ -299,6 +299,30 @@ kourou document:search ktm-open-data thamel-taxi '{
 }'
 ```
 
+## Koncorde Query
+
+<SinceBadge version="change-me"/>
+
+It is also possible to use [Koncorde Filters Syntax](/core/2/api/koncorde-filters-syntax) to search documents.  
+
+To use a Koncorde filter instead of an Elasticsearch query, you have to pass the argument `lang` with the value `koncorde` to the API action.
+
+::: info
+These filters will be translated into Elasticsearch queries.
+:::
+
+All [clauses](/core/2/api/koncorde-filters-syntax/clauses) and [operators](/core/2/api/koncorde-filters-syntax/operators) are available except the [regex](/core/2/api/koncorde-filters-syntax/clauses#regex) clause and the [bool](/core/2/api/koncorde-filters-syntax/operators#bool) operator.
+
+**Example:** _Combining clauses to create an "AND"-like search query_
+```bash
+kourou document:search ktm-open-data thamel-taxi '{
+  and: [
+    { equals: { city: "Tirana" } },
+    { range: { age: { gte: 32 } } }
+  ]
+}' --arg lang=koncorde
+```
+
 ## Sorting
 
 Elasticsearch enables to **[sort the results](https://www.elastic.co/guide/en/elasticsearch/reference/current/sort-search-results.html) by one or more fields**.
