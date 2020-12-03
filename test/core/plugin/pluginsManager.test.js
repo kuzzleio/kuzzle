@@ -102,8 +102,8 @@ describe('Plugin', () => {
     it('should register handlers on hook events', async () => {
       await pluginsManager.init(application);
 
-      should(kuzzle.on).be.calledTwice();
-      should(kuzzle.on.getCall(0).args[0]).be.eql('plugin:hook:loop-error');
+      should(kuzzle.on).be.calledWith('plugin:hook:loop-error');
+      should(kuzzle.on).be.calledWith('hook:onError');
       should(kuzzle.on.getCall(1).args[0]).be.eql('hook:onError');
     });
 
