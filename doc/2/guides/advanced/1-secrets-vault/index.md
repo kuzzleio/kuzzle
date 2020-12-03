@@ -55,7 +55,7 @@ Once encrypted, the file looks like the following:
 
 ## Encrypt and decrypt with the CLI
 
-The encryption of a secret file is done using [Kourou](/core/2/guides/advanced/7-ecosystem#kourou), the Kuzzle CLI with the following command:
+The encryption of a secret file is done using [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI with the following command:
 
 ```bash
 kourou vault:encrypt config/secrets.json --vault-key strongpassword
