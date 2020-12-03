@@ -104,7 +104,6 @@ describe('Plugin', () => {
 
       should(kuzzle.on).be.calledWith('plugin:hook:loop-error');
       should(kuzzle.on).be.calledWith('hook:onError');
-      should(kuzzle.on.getCall(1).args[0]).be.eql('hook:onError');
     });
 
     it('should register handlers on ask events', async () => {
