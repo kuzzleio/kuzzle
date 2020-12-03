@@ -15,7 +15,7 @@ It is **directly connected to the Kuzzle API** and requests **do not go through 
 
 It is accessible within an application through the [Backend.sdk](/core/2/framework/classes/backend/properties#sdk) property.
 
-See also the [EmbeddedSDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) guide.
+See also the [EmbeddedSDK](/core/2/guides/develop-on-kuzzle/embedded-sdk) guide.
 
 ## Properties
 

@@ -11,7 +11,7 @@ The `Request` class represents a request processed by Kuzzle.
 
 It contains every information used internally by Kuzzle to process the request like the client inputs, but also the response that will be sent back to the client.
 
-This object is received by the controller's [actions handler function](/core/2/guides/develop-on-kuzzle/2-api-controllers#handler-function) and it's also the payload of many internal events (e.g [API Events](/core/2/framework/events/api))
+This object is received by the controller's [actions handler function](/core/2/guides/develop-on-kuzzle/api-controllers#handler-function) and it's also the payload of many internal events (e.g [API Events](/core/2/framework/events/api))
 
 ## `context`
 

@@ -68,11 +68,11 @@ This property is an instance of the [InternalLogger](/core/2/framework/classes/i
 |----------------------------------------------------------------------|------------------------|
 | <pre>[InternalLogger](/core/2/framework/classes/internal-logger)</pre> | PluginContextConstructors instance |
 
-See also the [Internal Logger](/core/2/guides/advanced/10-internal-logger) guide.
+See also the [Internal Logger](/core/2/guides/advanced/internal-logger) guide.
 
 ## `secrets`
 
-This property contains the application secrets that have been made available with the [Secrets Vault](/core/2/guides/advanced/1-secrets-vault).
+This property contains the application secrets that have been made available with the [Secrets Vault](/core/2/guides/advanced/secrets-vault).
 
 | Type                  | Description            |
 |-----------------------|------------------------|

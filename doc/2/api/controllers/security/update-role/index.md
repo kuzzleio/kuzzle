@@ -73,7 +73,7 @@ Body:
 
 ## Body properties
 
-- `controllers`: [role definition](/core/2/guides/main-concepts/4-permissions#roles)
+- `controllers`: [role definition](/core/2/guides/main-concepts/permissions#roles)
 
 ---
 

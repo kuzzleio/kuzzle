@@ -9,7 +9,7 @@ description: Controller abstract class properties
 
 The `Controller` abstract class is the base class used to declare new controllers. Those controllers instances are meant to be used with the [BackendController.use](/core/2/framework/classes/backend-controller) method.
 
-See also the [API Controllers](/core/2/guides/develop-on-kuzzle/2-api-controllers) guide.
+See also the [API Controllers](/core/2/guides/develop-on-kuzzle/api-controllers) guide.
 
 ## `app`
 
@@ -25,7 +25,7 @@ This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embe
 |------------------------------------------------------------------|----------------------|
 | <pre>[EmbeddedSDK](/core/2/framework/classes/embedded-sdk)</pre> | EmbeddedSDK instance |
 
-See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) guide.
+See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/embedded-sdk) guide.
 
 ## `name`
 

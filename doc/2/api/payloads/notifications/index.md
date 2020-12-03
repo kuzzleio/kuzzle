@@ -37,7 +37,7 @@ A document notification contains the following fields:
 | `scope`      | string | `in`: document enters (or stays) in the scope<br/>`out`: document leaves the scope                                       |
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                                           |
 | `type`       | string | `document`: the notification type                                                                                        |
-| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/1-api#volatile-data)                                                           |
+| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                                           |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -98,7 +98,7 @@ These notifications are sent only if the `users` argument is set to any other va
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `user`: the notification type                                                                         |
 | `user`       | string | `in`: a new user has subscribed to the same filters<br/>`out`: a user cancelled a shared subscription |
-| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/1-api#volatile-data)                                        |
+| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                        |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -134,7 +134,7 @@ The `result` object is the notification content, and it has the following struct
 
 Server notifications are triggered by global events, and they are sent to all of a client's subscriptions at the same time.
 
-Currently, the only event generating a server notification is when an [authentication token](/core/2/guides/main-concepts/5-authentication#authentication-token) has expired, closing the subscription.
+Currently, the only event generating a server notification is when an [authentication token](/core/2/guides/main-concepts/authentication#authentication-token) has expired, closing the subscription.
 
 Other events may be added in the future.
 

@@ -31,7 +31,7 @@ This property is an instance of the [BackendConfig](/core/2/framework/classes/ba
 |----------------------------------------------------------------------|------------------------|
 | <pre>[BackendConfig](/core/2/framework/classes/backend-config)</pre> | BackendConfig instance |
 
-See also the [Configuration](/core/2/guides/advanced/8-configuration) guide.
+See also the [Configuration](/core/2/guides/advanced/configuration) guide.
 
 ## `controller`
 
@@ -41,7 +41,7 @@ This property is an instance of the [BackendController](/core/2/framework/classe
 |------------------------------------------------------------------------------|----------------------------|
 | <pre>[BackendController](/core/2/framework/classes/backend-controller)</pre> | BackendController instance |
 
-See also the [API Controllers](/core/2/guides/develop-on-kuzzle/2-api-controllers) guide.
+See also the [API Controllers](/core/2/guides/develop-on-kuzzle/api-controllers) guide.
 
 ## `hook`
 
@@ -51,7 +51,7 @@ This property is an instance of the [BackendHook](/core/2/framework/classes/back
 |------------------------------------------------------------------|----------------------|
 | <pre>[BackendHook](/core/2/framework/classes/backend-hook)</pre> | BackendHook instance |
 
-See also the [Event System](/core/2/guides/develop-on-kuzzle/3-event-system#hook) guide.
+See also the [Event System](/core/2/guides/develop-on-kuzzle/event-system#hook) guide.
 
 
 <!-- 
@@ -69,7 +69,7 @@ This property is an instance of the [BackendLog](/core/2/framework/classes/inter
 |-------------------------------------------------------------------|---------------------|
 | <pre>[BackendLog](/core/2/framework/classes/internal-logger)</pre> | BackendLog instance |
 
-See also the [Internal Logger](/core/2/guides/advanced/10-internal-logger) guide.
+See also the [Internal Logger](/core/2/guides/advanced/internal-logger) guide.
 
 ## `name`
 
@@ -87,7 +87,7 @@ This property is an instance of the [BackendPipe](/core/2/framework/classes/back
 |------------------------------------------------------------------|----------------------|
 | <pre>[BackendPipe](/core/2/framework/classes/backend-pipe)</pre> | BackendPipe instance |
 
-See also the [Event System](/core/2/guides/develop-on-kuzzle/3-event-system#pipe) guide.
+See also the [Event System](/core/2/guides/develop-on-kuzzle/event-system#pipe) guide.
 
 ## `plugin`
 
@@ -97,7 +97,7 @@ This property is an instance of the [BackendPlugin](/core/2/framework/classes/ba
 |----------------------------------------------------------------------|------------------------|
 | <pre>[BackendPlugin](/core/2/framework/classes/backend-plugin)</pre> | BackendPlugin instance |
 
-See also the [Plugins](/core/2/guides/develop-on-kuzzle/4-external-plugins) guide.
+See also the [Plugins](/core/2/guides/develop-on-kuzzle/external-plugins) guide.
 
 ## `sdk`
 
@@ -107,7 +107,7 @@ This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embe
 |------------------------------------------------------------------|----------------------|
 | <pre>[EmbeddedSDK](/core/2/framework/classes/embedded-sdk)</pre> | EmbeddedSDK instance |
 
-See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/1-embedded-sdk) guide.
+See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/embedded-sdk) guide.
 
 ## `storage`
 
@@ -117,7 +117,7 @@ This property is an instance of the [BackendStorage](/core/2/framework/classes/b
 |------------------------------------------------------------------------|-------------------------|
 | <pre>[BackendStorage](/core/2/framework/classes/backend-storage)</pre> | BackendStorage instance |
 
-See also the [Data Storage](/core/2/guides/main-concepts/2-data-storage#integrated-elasticsearch-client) guide.
+See also the [Data Storage](/core/2/guides/main-concepts/data-storage#integrated-elasticsearch-client) guide.
 
 ## `vault`
 
@@ -127,7 +127,7 @@ This property is an instance of the [BackendVault](/core/2/framework/classes/bac
 |--------------------------------------------------------------------|-----------------------|
 | <pre>[BackendVault](/core/2/framework/classes/backend-vault)</pre> | BackendVault instance |
 
-See also the [Secrets Vault](/core/2/guides/advanced/1-secrets-vault) guide.
+See also the [Secrets Vault](/core/2/guides/advanced/secrets-vault) guide.
 
 ## `version`
 

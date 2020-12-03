@@ -13,7 +13,7 @@ It contains various classes thats allows to interact with Kuzzle.
 
 ## `BaseValidationType`
 
-Abstract class that allows to define a new custom type for the [Data Validation](/core/2/guides/advanced/9-data-validation) module.
+Abstract class that allows to define a new custom type for the [Data Validation](/core/2/guides/advanced/data-validation) module.
 
 ## `StorageClient`
 

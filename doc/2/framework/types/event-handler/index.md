@@ -9,7 +9,7 @@ description: EventHandler type definition
 
 The `EventHandler` type represents a handler function used with a pipe or a hook to listen to events.
 
-See [Event System](/core/2/guides/develop-on-kuzzle/3-event-system)
+See [Event System](/core/2/guides/develop-on-kuzzle/event-system)
 
 <<< ./../../../../../lib/types/EventHandler.ts
 

@@ -8,7 +8,7 @@ title: delete
 
 
 
-Deletes an [index](/core/2/guides/main-concepts/2-data-storage).
+Deletes an [index](/core/2/guides/main-concepts/data-storage).
 
 ---
 

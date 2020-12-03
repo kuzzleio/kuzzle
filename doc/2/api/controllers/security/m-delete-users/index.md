@@ -52,7 +52,7 @@ Body:
 
 ## Body properties
 
-- `ids`: an array of user [kuids](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid) to delete (default: `"wait_for"`)
+- `ids`: an array of user [kuids](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid) to delete (default: `"wait_for"`)
 
 ---
 

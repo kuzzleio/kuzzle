@@ -11,7 +11,7 @@ The `BackendStorage` class allows to interact directly with Elasticsearch.
 
 It is accessible from the [Backend.storage](/core/2/framework/classes/backend/properties#storage) property.
 
-See the [Data Storage](/core/2/guides/main-concepts/2-data-storage#integrated-elasticsearch-client) guide.
+See the [Data Storage](/core/2/guides/main-concepts/data-storage#integrated-elasticsearch-client) guide.
 
 ## `storageClient`
 

@@ -18,7 +18,7 @@ The MQTT protocol is disabled by default.
 
 ## Configuration
 
-The protocol can be configured via the [kuzzlerc configuration file](/core/2/guides/advanced/8-configuration), under the `server > protocols > mqtt` section.
+The protocol can be configured via the [kuzzlerc configuration file](/core/2/guides/advanced/configuration), under the `server > protocols > mqtt` section.
 
 ```js
   "server": {

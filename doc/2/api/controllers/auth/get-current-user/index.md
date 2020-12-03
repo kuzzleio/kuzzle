@@ -53,9 +53,9 @@ Headers: Authorization: "Bearer <authentication token>"
 
 The result contains the following properties:
 
-- `_id`: current user's [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
+- `_id`: current user's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 - `_source`: user information
-  - `profileIds`: list of [profile](/core/2/guides/main-concepts/4-permissions#profiles-list) names associated to the user
+  - `profileIds`: list of [profile](/core/2/guides/main-concepts/permissions#profiles-list) names associated to the user
   - any other properties: additional (and optional) user information
 - `strategies`: available authentication strategies for that user
 

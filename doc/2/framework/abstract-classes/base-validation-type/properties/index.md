@@ -9,7 +9,7 @@ description: BaseValidationType abstract class properties
 
 This class allows to define custom types meant to be used to validate documents fields.
 
-See the [Data Validation](/core/2/guides/advanced/9-data-validation) guide.
+See the [Data Validation](/core/2/guides/advanced/data-validation) guide.
 
 ## Properties
 

@@ -6,7 +6,7 @@ title: delete
 
 # delete
 
-Deletes a [collection](/core/2/guides/main-concepts/2-data-storage).
+Deletes a [collection](/core/2/guides/main-concepts/data-storage).
 
 ---
 

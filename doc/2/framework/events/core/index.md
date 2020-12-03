@@ -22,7 +22,7 @@ Use non-documented events at you own risk, we may remove them or change the payl
 | ---------- | ----------------- | ----------------------------------- |
 | `strategy` | <pre>object</pre> | Authentication strategy information |
 
-Triggered whenever a plugin [dynamically registers](/core/2/guides/write-plugins/3-integrate-authentication-strategy) an authentication strategy.
+Triggered whenever a plugin [dynamically registers](/core/2/guides/write-plugins/integrate-authentication-strategy) an authentication strategy.
 
 :::info
 Pipes cannot listen to that event, only hooks can.
@@ -36,9 +36,9 @@ The provided `strategy` object has the following properties:
 
 | Properties   | Type              | Description                                                                                                         |
 | ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/2/guides/write-plugins/1-start-writing-plugins#manifest-json) |
+| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/2/guides/write-plugins/start-writing-plugins#manifest-json) |
 | `name`       | <pre>string</pre> | Authentication strategy name                                                                                        |
-| `strategy`   | <pre>object</pre> | Authentication [strategy properties](/core/2/guides/write-plugins/3-integrate-authentication-strategy#managing-credentials)           |
+| `strategy`   | <pre>object</pre> | Authentication [strategy properties](/core/2/guides/write-plugins/integrate-authentication-strategy#managing-credentials)           |
 
 ## core:auth:strategyRemoved
 
@@ -48,7 +48,7 @@ The provided `strategy` object has the following properties:
 | ---------- | ----------------- | ----------------------------------- |
 | `strategy` | <pre>object</pre> | Authentication strategy information |
 
-Triggered whenever a plugin [dynamically removes](/core/2/guides/write-plugins/3-integrate-authentication-strategy) an authentication strategy.
+Triggered whenever a plugin [dynamically removes](/core/2/guides/write-plugins/integrate-authentication-strategy) an authentication strategy.
 
 :::info
 Pipes cannot listen to that event, only hooks can.
@@ -62,7 +62,7 @@ The provided `strategy` object has the following properties:
 
 | Properties   | Type              | Description                                                                                                         |
 | ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/2/guides/write-plugins/1-start-writing-plugins#manifest-json) |
+| `pluginName` | <pre>string</pre> | The plugin's name defined in the [manifest file](/core/2/guides/write-plugins/start-writing-plugins#manifest-json) |
 | `name`       | <pre>string</pre> | Authentication strategy name                                                                                        |
 
 ## core:kuzzleStart
@@ -88,7 +88,7 @@ Pipes cannot listen to that event, only hooks can.
 
 Triggered when the requests buffer fills up more quickly than requests can be processed.
 
-The requests buffer is configurable through the `limits` parameters in the [Kuzzle configuration](/core/2/guides/advanced/8-configuration).
+The requests buffer is configurable through the `limits` parameters in the [Kuzzle configuration](/core/2/guides/advanced/configuration).
 
 Requests submitted while the request buffer is completely filled (i.e. the payload is equal to `100`) are rejected with a [ServiceUnavailableError](/core/2/api/errors/types#common-errors) (code `503`)
 

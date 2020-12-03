@@ -46,7 +46,7 @@ Body:
 
 ## Arguments
 
-- `_id`: user [kuid](/core/2/guides/main-concepts/5-authentication#kuzzle-user-identifier-kuid)
+- `_id`: user [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 
 ### Optional arguments
 

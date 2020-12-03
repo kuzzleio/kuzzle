@@ -7,7 +7,7 @@ title: create
 # create
 
 
-Creates a new [index](/core/2/guides/main-concepts/2-data-storage) in Kuzzle.
+Creates a new [index](/core/2/guides/main-concepts/data-storage) in Kuzzle.
 
 Index names must meet the following criteria:
 

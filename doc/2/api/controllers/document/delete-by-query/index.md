@@ -12,7 +12,7 @@ Documents removed that way trigger real-time notifications.
 
 ## Limitations
 
-The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/8-configuration) guide).
+The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
 
 This behavior aims at limiting the pressure on memory and on real-time notifications.
 
