@@ -7,6 +7,7 @@ description: Subscription class register() method
 
 # register
 
+<SinceBadge version="2.7.2" />
 
 Registers a new realtime subscription on behalf of a client. The subscription works exactly like the one created by the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe/) action. The notifications will be sent to the connection identified by the connection identifier passed to the method.
 

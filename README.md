@@ -105,7 +105,7 @@ Learn how to [Write an Application](https://docs.kuzzle.io/core/2/guides/getting
 * [Permissions](https://docs.kuzzle.io/core/2/guides/main-concepts/permissions/)
 * [Authentication](https://docs.kuzzle.io/core/2/guides/main-concepts/authentication/)
 * [Realtime Engine](https://docs.kuzzle.io/core/2/guides/main-concepts/realtime-engine/)
-* [Discover our SDKs](https://docs.kuzzle.io/core/2/sdks/)
+* [Discover our SDKs](https://docs.kuzzle.io/core/2/sdk/)
 * [Release Notes](https://github.com/kuzzleio/kuzzle/releases)
 
 ## Contributing to Kuzzle

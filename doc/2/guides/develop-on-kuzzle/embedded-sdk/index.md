@@ -8,6 +8,9 @@ order: 200
 
 # Embedded SDK
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 ::: info
 The Embedded SDK is available only during the `runtime` phase, after the application has started.
 ::: 

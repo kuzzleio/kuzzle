@@ -99,6 +99,9 @@ Kuzzle start sequence ends in failure if:
 
 ## Accessing secrets in your application
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to your application.  
 
 Secrets are accessible in the [app.vault.secrets](/core/2/framework/classes/backend-vault/properties) property after startup.  

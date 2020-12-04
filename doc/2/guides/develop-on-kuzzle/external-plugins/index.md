@@ -8,6 +8,9 @@ order: 500
 
 # External Plugins
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 You can **extend Kuzzle's features** via plugins.
 
 Plugins are **intended to be reused** between several applications by proposing generic features.

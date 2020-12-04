@@ -7,6 +7,7 @@ description: Subscription class unregister() method
 
 # unregister
 
+<SinceBadge version="2.7.2" />
 
 Removes a realtime subscription on an existing `roomId` and `connectionId`. The client listening on the given connection for the given room will stop receiving notifications.
 

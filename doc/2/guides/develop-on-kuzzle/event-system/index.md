@@ -8,6 +8,9 @@ order: 300
 
 # Event System
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 Most of the **internal tasks performed by Kuzzle trigger events**.
 
 Kuzzle enables to attach business-logic to these events by defining **hooks** (which allow to perform additional actions when the event triggers) and **pipes** (which change the behavior of the standard logic when the event triggers).

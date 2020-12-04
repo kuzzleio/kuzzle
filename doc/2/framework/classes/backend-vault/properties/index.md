@@ -7,6 +7,9 @@ description: BackendVault class properties
 
 # BackendVault
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 The `BackendVault` class handles the secrets vault.  
 
 It is accessible from the [Backend.config](/core/2/framework/classes/backend/properties#config) property.

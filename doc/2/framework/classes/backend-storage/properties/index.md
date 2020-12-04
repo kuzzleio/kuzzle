@@ -7,6 +7,9 @@ description: BackendStorage class properties
 
 # BackendStorage
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 The `BackendStorage` class allows to interact directly with Elasticsearch.  
 
 It is accessible from the [Backend.storage](/core/2/framework/classes/backend/properties#storage) property.

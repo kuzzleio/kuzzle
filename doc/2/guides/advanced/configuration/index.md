@@ -80,6 +80,9 @@ For an exhaustive list of configuration parameters, please refer to the [kuzzler
 
 ## Use Backend.config property
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 ::: info
 You can change the configuration only in the `setup` phase, before starting the application.
 ::: 

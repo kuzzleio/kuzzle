@@ -7,6 +7,9 @@ description: Controller abstract class properties
 
 # Controller
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 The `Controller` abstract class is the base class used to declare new controllers. Those controllers instances are meant to be used with the [BackendController.use](/core/2/framework/classes/backend-controller) method.
 
 See also the [API Controllers](/core/2/guides/develop-on-kuzzle/api-controllers) guide.

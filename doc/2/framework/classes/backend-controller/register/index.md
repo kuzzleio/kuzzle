@@ -7,6 +7,9 @@ description: BackendController.register method
 
 # `register()`
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 Registers a new API controller on the fly.
 
 ::: info

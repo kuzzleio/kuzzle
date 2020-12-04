@@ -7,6 +7,9 @@ description: Backend class start() method
 
 # start
 
+<SinceBadge version="change-me" />
+<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
+
 This method starts the application.
 
 Once the promise returned by this method resolved, the application is in the `running` phase.
