@@ -368,7 +368,7 @@ And your OAuth provider will send you the following `_json` payload:
   "last_name": "freeman",
   "picture": {
     "data": {
-      "url": "http://avatar.url"
+      "url": "http://..."
     }
   }
 }
@@ -384,7 +384,7 @@ The created user content will be:
     "facebook": {
       "email": "gfreeman@black-mesa.xen",
       "first_name": "gordon",
-      "avatar_url": "http://avatar.url"
+      "avatar_url": "http://..."
     }
   }
 }

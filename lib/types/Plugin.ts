@@ -149,6 +149,7 @@ export abstract class Plugin {
 
   constructor (manifest: PluginManifest) {
     if (! has(manifest, 'kuzzleVersion')) {
+      // eslint-disable-next-line new-cap
       throw new kerror.get('plugin', 'manifest', 'missing_version');
     }
 
