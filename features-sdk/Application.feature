@@ -37,7 +37,7 @@ Feature: Application
     Then I should receive a result matching:
       | awsAccessKey | "I am the access key" |
 
-  # ESClient constructor
+  # StorageClient constructor
 
   @mappings
   Scenario: Instantiate a new embedded storage Client and use it

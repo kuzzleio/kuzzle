@@ -91,15 +91,15 @@ describe('Plugin Context', () => {
 
     describe('#ESClient', () => {
       it('should expose the ESClient constructor', () => {
-        const esClient = new context.constructors.ESClient();
+        const storageClient = new context.constructors.ESClient();
 
-        should(esClient).be.instanceOf(ESClient);
+        should(storageClient).be.instanceOf(ESClient);
       });
 
       it('should allow to instantiate an ESClient connected to the ES cluster', () => {
-        const esClient = new context.constructors.ESClient();
+        const storageClient = new context.constructors.ESClient();
 
-        should(esClient.connectionPool.connections[0].url.origin)
+        should(storageClient.connectionPool.connections[0].url.origin)
           .be.eql(kuzzle.config.services.storageEngine.client.node);
       });
     });
@@ -230,7 +230,6 @@ describe('Plugin Context', () => {
 
     it('should expose the right accessors', () => {
       [
-        'silly',
         'verbose',
         'info',
         'debug',

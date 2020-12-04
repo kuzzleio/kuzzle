@@ -121,7 +121,7 @@
         "already_started": {
           "description": "Features definition cannot be changed after startup.",
           "code": 5,
-          "message": "Cannot use Backend.%s when application is already running",
+          "message": "Cannot use property \"%s\" when application is already running",
           "class": "PluginImplementationError"
         },
         "unavailable_before_start": {
@@ -374,7 +374,7 @@
           "class": "PluginImplementationError"
         },
         "missing_version": {
-          "description": "Plugin manifest files must provide a kuzzleVersion parameter, with the range of compatible Kuzzle versions",
+          "description": "Plugin manifest must provide a kuzzleVersion parameter, with the range of compatible Kuzzle versions",
           "code": 10,
           "message": "[%s] A \"kuzzleVersion\" property is required",
           "class": "PluginImplementationError"

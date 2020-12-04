@@ -35,7 +35,7 @@ Method: DELETE
 ## Arguments
 
 - `_id`: API key ID
-- `userId`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
+- `userId`: user [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 
 ### Optional:
 

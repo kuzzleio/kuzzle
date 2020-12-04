@@ -61,7 +61,7 @@ Body:
 
 ## Arguments
 
-- `_id`: user unique [kuid](/core/2/guides/essentials/user-authentication#kuzzle-user-identifier-kuid)
+- `_id`: user unique [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 
 ---
 

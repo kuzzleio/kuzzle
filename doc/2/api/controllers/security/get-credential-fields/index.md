@@ -8,7 +8,7 @@ title: getCredentialFields
 
 
 
-Retrieves the list of accepted field names by the specified authenticaiton strategy.
+Retrieves the list of accepted field names by the specified authentication strategy.
 
 ---
 

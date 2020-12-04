@@ -10,8 +10,8 @@ Creates, updates or deletes large amounts of documents as fast as possible.
 
 This is a low level route intended to bypass Kuzzle actions on document, notably:
   - check document write limit <SinceBadge version="2.3.3" />
-  - check [document validity](/core/2/guides/essentials/data-validation),
-  - trigger [realtime notifications](/core/2/guides/essentials/real-time)
+  - check [document validity](/core/2/guides/advanced/data-validation),
+  - trigger [realtime notifications](/core/2/guides/main-concepts/realtime-engine)
 
 ---
 
