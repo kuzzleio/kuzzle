@@ -1,12 +1,12 @@
 ---
 code: true
 type: page
-title: update
+title: upsert
 ---
 
-# update
+# upsert
 
-Applies partial changes to a document. The document must exist in the storage layer.
+Applies partial changes to a document. If the document doesn't already exist, a new document is created.
 
 ---
 
@@ -15,14 +15,20 @@ Applies partial changes to a document. The document must exist in the storage la
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<_id>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source]
+URL: http://kuzzle:7512/<index>/<collection>/<_id>/_upsert[?refresh=wait_for][&retryOnConflict=<int>][&source]
 Method: PUT
 Body:
 ```
 
 ```js
 {
-  // document changes
+  changes: {
+    // document partial changes
+  },
+  default: {
+    // optional: document fields to add to the "update" part if the document
+    // is created
+  }
 }
 ```
 
@@ -36,7 +42,13 @@ Body:
   "action": "update",
   "_id": "<documentId>",
   "body": {
-    // document changes
+    "changes": {
+      // document partial changes
+    },
+    "default": {
+      // optional: document fields to add to the changes if the document
+      // is created
+    }
   }
 }
 ```
@@ -51,7 +63,7 @@ Body:
 
 ### Optional
 
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the document is indexed
 - `retryOnConflict`: conflicts may occur if the same document gets updated multiple times within a short timespan, in a database cluster. You can set the `retryOnConflict` optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error.
 - `source`: if set to `true` Kuzzle will return the entire updated document body in the response.
 
@@ -59,7 +71,8 @@ Body:
 
 ## Body properties
 
-Partial changes to apply to the document.
+- `changes`: partial changes to apply to the document
+- `default`: (optional) fields to add to the document if it gets created
 
 ---
 
@@ -67,9 +80,10 @@ Partial changes to apply to the document.
 
 Returns information about the updated document:
 
+- `_created`: if `true`, a new document was created, otherwise the document existed and was updated
 - `_id`: document unique identifier
+- `_source`: (only if the `source` option is set) actualized document content
 - `_version`: updated document version
-- `_source`: contains only changes or the full document if `source` is set to `true`
 
 ```js
 {
@@ -78,12 +92,16 @@ Returns information about the updated document:
   "index": "<index>",
   "collection": "<collection>",
   "controller": "document",
-  "action": "update",
+  "action": "upsert",
   "requestId": "<unique request identifier>",
   "result": {
+    "_created": false,
     "_id": "<documentId>",
-    "_version": 2,
-    "_source": "<partial or entire document>"
+    "_source": {
+      // (optional) actualized document content. This property appears only if
+      // the "source" option is set to true
+    },
+    "_version": 2
   }
 }
 ```
