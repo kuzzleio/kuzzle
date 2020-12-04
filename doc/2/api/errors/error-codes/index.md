@@ -6,3 +6,4 @@ description: API error codes exhaustive list
 order: 200
 ---
 
+<RedirectToFirstChild />

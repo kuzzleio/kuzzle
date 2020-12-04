@@ -6,4 +6,6 @@ description: Write custom backend code for Kuzzle
 order: 400
 ---
 
+<Redirect to="embedded-sdk" />
+
 

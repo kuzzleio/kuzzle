@@ -5,3 +5,5 @@ order: 300
 title: Types
 description: Framework types reference
 ---
+
+<RedirectToFirstChild />
