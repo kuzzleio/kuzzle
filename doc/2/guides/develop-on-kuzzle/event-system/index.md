@@ -60,6 +60,8 @@ We need to use the [Backend.pipe.register](/core/2/framework/classes/backend-pip
 Each event has a different payload.  
 The pipe handler function **must return a promise resolving to the received payload**.  
 
+It is possible to register several pipes on the same event by calling several times the [Backend.pipe.register](/core/2/framework/classes/backend-pipe/register) method.
+
 ::: info
 When an event has more than one payload then only the first argument of the handler function must be returned. (e.g. [Generic Document Events](/core/2/framework/events/generic-document))
 :::
@@ -126,6 +128,8 @@ Examples of hooks usage:
 ### Registering a hook
 
 We need to use the [Backend.hook.register](/core/2/framework/classes/backend-hook/register) method to register new hooks.   This method takes an event name as its first parameter, followed by the hook handler function.
+
+It is possible to register several hooks on the same event by calling several times the [Backend.hook.register](/core/2/framework/classes/backend-hook/register) method.
 
 **Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to log user registration_
 
