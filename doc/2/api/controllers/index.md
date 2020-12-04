@@ -1,7 +1,7 @@
 ---
 code: false
 type: branch
-order: 10
-title: API reference
-description: API reference
+order: 300
+title: Controllers
+description: API controllers exhaustive list
 ---

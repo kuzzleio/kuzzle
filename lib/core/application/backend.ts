@@ -34,13 +34,13 @@ import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
-
+import { JSONObject } from '../../../index';
 import {
   ControllerDefinition,
   Plugin,
-  Controller
-} from '../../util/interfaces';
-import { JSONObject } from '../../../index';
+  Controller,
+  EventHandler,
+} from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -59,9 +59,9 @@ class ApplicationManager {
   }
 }
 
-/* PipeManager class ======================================================== */
+/* BackendPipe class ======================================================== */
 
-class PipeManager extends ApplicationManager {
+class BackendPipe extends ApplicationManager {
   /**
    * Registers a new pipe on an event
    *
@@ -69,7 +69,7 @@ class PipeManager extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any>) : void {
+  register (event: string, handler: EventHandler): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'pipe');
     }
@@ -86,9 +86,9 @@ class PipeManager extends ApplicationManager {
   }
 }
 
-/* HookManager class ======================================================== */
+/* BackendHook class ======================================================== */
 
-class HookManager extends ApplicationManager {
+class BackendHook extends ApplicationManager {
   /**
    * Registers a new hook on an event
    *
@@ -96,7 +96,7 @@ class HookManager extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any> | void) : void {
+  register (event: string, handler: EventHandler) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'hook');
     }
@@ -113,9 +113,9 @@ class HookManager extends ApplicationManager {
   }
 }
 
-/* ConfigManager class ====================================================== */
+/* BackendConfig class ====================================================== */
 
-class ConfigManager extends ApplicationManager {
+class BackendConfig extends ApplicationManager {
   /**
    * Configuration content
    */
@@ -155,9 +155,9 @@ class ConfigManager extends ApplicationManager {
   }
 }
 
-/* ControllerManager class ================================================== */
+/* BackendController class ================================================== */
 
-class ControllerManager extends ApplicationManager {
+class BackendController extends ApplicationManager {
   /**
    * Registers a new controller.
    *
@@ -266,9 +266,9 @@ class ControllerManager extends ApplicationManager {
   }
 }
 
-/* VaultManager class ======================================================= */
+/* BackendVault class ======================================================= */
 
-class VaultManager extends ApplicationManager {
+class BackendVault extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -303,16 +303,16 @@ class VaultManager extends ApplicationManager {
   }
 }
 
-/* PluginManager class ====================================================== */
+/* BackendPlugin class ====================================================== */
 
-class PluginManager extends ApplicationManager {
+class BackendPlugin extends ApplicationManager {
   /**
    * Uses a plugin in this application
    *
    * @param plugin - Plugin instance
    * @param options - Additionnal options
    *    - `name`: Specify plugin name instead of using the class name.
-   *    - `manifest`: Manually add a manifest definition (deprecated)
+   *    - `manifest`: Manually add a manifest definition
    *    - `deprecationWarning`: If false, does not display deprecation warnings
    */
   use (
@@ -348,12 +348,9 @@ class PluginManager extends ApplicationManager {
   }
 }
 
-/* Logger class ============================================================= */
+/* InternalLogger class ====================================================== */
 
-class Logger extends ApplicationManager {
-  /**
-   * Logs a debug message
-   */
+class InternalLogger extends ApplicationManager implements InternalLogger {
   debug (message: any): void {
     this._log('debug', message);
   }
@@ -395,9 +392,9 @@ class Logger extends ApplicationManager {
   }
 }
 
-/* StorageManager class ===================================================== */
+/* BackendStorage class ===================================================== */
 
-class StorageManager extends ApplicationManager {
+class BackendStorage extends ApplicationManager {
   private _client: Client = null;
   private _Client: new (clientConfig?: any) => Client = null;
 
@@ -411,7 +408,7 @@ class StorageManager extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get ESClient (): new (clientConfig?: any) => Client {
+  get StorageClient (): new (clientConfig?: any) => Client {
     if (! this._Client) {
       const kuzzle = this._kuzzle;
 
@@ -430,7 +427,7 @@ class StorageManager extends ApplicationManager {
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
    */
-  get esClient (): Client {
+  get storageClient (): Client {
     if (! this._client) {
       this._client = Elasticsearch
         .buildClient(this._kuzzle.config.services.storageEngine.client);
@@ -471,21 +468,21 @@ export class Backend {
   public kerror: any;
 
   /**
-   * PipeManager definition manager
+   * Pipe definition manager
    *
    * @method register - Registers a new pipe on an event
    */
-  public pipe: PipeManager;
+  public pipe: BackendPipe;
 
   /**
-   * HookManager definition manager
+   * Hook definition manager
    *
    * @method register - Registers a new hook on an event
    */
-  public hook: HookManager;
+  public hook: BackendHook;
 
   /**
-   * VaultManager
+   * BackendVault
    *
    * By default Kuzzle will try to load the following locations:
    *  - local path: ./config/secrets.enc.json
@@ -495,7 +492,7 @@ export class Backend {
    * environment variable:
    *  - KUZZLE_VAULT_KEY
    */
-  public vault: VaultManager;
+  public vault: BackendVault;
 
   /**
    * Configuration definition manager
@@ -503,7 +500,7 @@ export class Backend {
    * @method set - Sets a configuration value
    * @method merge - Merges a configuration object into the current configuration
    */
-  public config: ConfigManager;
+  public config: BackendConfig;
 
   /**
    * Controller manager
@@ -511,17 +508,17 @@ export class Backend {
    * @method add - Adds a new controller definition
    * @method use - Uses a controller instance
    */
-  public controller: ControllerManager;
+  public controller: BackendController;
 
   /**
    * Plugin manager
    *
    * @method use - Uses a plugin instance
    */
-  public plugin: PluginManager;
+  public plugin: BackendPlugin;
 
   /**
-   * Logger
+   * InternalLogger
    *
    * @method debug
    * @method info
@@ -529,12 +526,12 @@ export class Backend {
    * @method error
    * @method verbose
    */
-  public log: Logger;
+  public log: InternalLogger;
 
   /**
    * Storage manager
    */
-  public storage: StorageManager;
+  public storage: BackendStorage;
 
   /**
    * @deprecated
@@ -567,14 +564,14 @@ export class Backend {
       writable: true
     });
 
-    this.pipe = new PipeManager(this);
-    this.hook = new HookManager(this);
-    this.config = new ConfigManager(this);
-    this.vault = new VaultManager(this);
-    this.controller = new ControllerManager(this);
-    this.plugin = new PluginManager(this);
-    this.storage = new StorageManager(this);
-    this.log = new Logger(this);
+    this.pipe = new BackendPipe(this);
+    this.hook = new BackendHook(this);
+    this.config = new BackendConfig(this);
+    this.vault = new BackendVault(this);
+    this.controller = new BackendController(this);
+    this.plugin = new BackendPlugin(this);
+    this.storage = new BackendStorage(this);
+    this.log = new InternalLogger(this);
 
     this.kerror = kerror;
 
@@ -639,12 +636,12 @@ export class Backend {
    *
    * @returns {Promise<any>}
    */
-  trigger (event: string, payload: any): Promise<any> {
+  trigger (event: string, ...payload): Promise<any> {
     if (! this.started) {
       throw runtimeError.get('unavailable_before_start', 'trigger');
     }
 
-    return this._kuzzle.pipe(event, payload);
+    return this._kuzzle.pipe(event, ...payload);
   }
 
   /**
@@ -653,7 +650,7 @@ export class Backend {
   get name (): string { return this._name; }
 
   /**
-   * Internal SDK
+   * EmbeddedSDK instance
    */
   get sdk (): EmbeddedSDK {
     if (! this.started) {
@@ -696,5 +693,3 @@ export class Backend {
   }
 
 }
-
-module.exports = { Backend };

@@ -7,7 +7,7 @@ title: create
 # create
 
 
-Creates a new [index](/core/2/guides/essentials/store-access-data) in Kuzzle.
+Creates a new [index](/core/2/guides/main-concepts/data-storage) in Kuzzle.
 
 Index names must meet the following criteria:
 
@@ -63,5 +63,5 @@ Returns a confirmation that the index is being created:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
+- [Common errors](/core/2/api/errors/types#common-errors)
 

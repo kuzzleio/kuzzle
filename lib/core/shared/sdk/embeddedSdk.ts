@@ -20,8 +20,6 @@
  */
 
 import {
-  KuzzleRequest,
-  KuzzleResponse,
   RealtimeController,
   Notification,
   JSONObject,
@@ -30,6 +28,7 @@ import {
   Kuzzle,
 } from 'kuzzle-sdk';
 
+import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import kerror from '../../../kerror';
@@ -114,7 +113,7 @@ export class EmbeddedSDK extends Kuzzle {
    *
    * @param user - User to impersonate the SDK with
    */
-  as (user: { _id: string }) {
+  as (user: { _id: string }): EmbeddedSDK {
     if (! isPlainObject(user) || typeof user._id !== 'string') {
       throw contextError.get('invalid_user');
     }
@@ -128,13 +127,13 @@ export class EmbeddedSDK extends Kuzzle {
    * This is a low-level method, exposed to allow advanced SDK users to bypass
    * high-level methods.
    *
-   * @param request - API request (https://docs.kuzzle.io/core/2/api/essentials/query-syntax/#other-protocols)
+   * @param request - API request (https://docs.kuzzle.io/core/2/guides/main-concepts/1-api#other-protocols)
    * @param options - Optional arguments
    */
   query (
-    request: KuzzleRequest,
+    request: RequestPayload,
     options: { propagate?: boolean } = {}
-  ): Promise<KuzzleResponse> {
+  ): Promise<ResponsePayload> {
     // By default, do not propagate realtime notification accross cluster nodes
     if ( isPlainObject(request)
       && request.controller === 'realtime'

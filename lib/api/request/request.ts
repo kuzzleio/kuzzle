@@ -26,7 +26,7 @@ import { RequestInput } from './requestInput';
 import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
-import { Deprecation } from '../../util/interfaces';
+import { Deprecation } from '../../types';
 import * as assert from '../../util/assertType';
 
 // private properties
@@ -143,32 +143,27 @@ export class Request {
   }
 
   /**
-   * Request internal identifier getter
+   * Deprecation warnings for the API action
    */
-  get deprecations (): Array<Deprecation> | void {
+  get deprecations(): Deprecation[] | void {
     return this[_deprecations];
   }
-
-  set deprecations (deprecations: Array<Deprecation> | void) {
-    this[_deprecations] = assert.assertArray('deprecations', deprecations, 'object');
-  }
-
 
   /**
    * Request timestamp (in Epoch-micro)
    */
-  get timestamp (): number {
+  get timestamp(): number {
     return this[_timestamp];
   }
 
   /**
    * Request HTTP status
    */
-  get status (): number {
+  get status(): number {
     return this[_status];
   }
 
-  set status (i: number) {
+  set status(i: number) {
     this[_status] = assert.assertInteger('status', i);
   }
 
@@ -212,10 +207,10 @@ export class Request {
   }
 
   /**
-   * Sets the request status to the error one, and fills the error member
+   * Adds an error to the request, and sets the request's status to the error one.
    */
   setError (error: Error) {
-    if (!error || !(error instanceof Error)) {
+    if (! error || !(error instanceof Error)) {
       throw new InternalError('Cannot set non-error object as a request\'s error');
     }
 
@@ -290,8 +285,8 @@ export class Request {
       version,
     };
 
-    if (!this.deprecations) {
-      this.deprecations = [deprecation];
+    if (! this.deprecations) {
+      this[_deprecations] = [deprecation];
     }
     else {
       this.deprecations.push(deprecation);
@@ -303,7 +298,7 @@ export class Request {
    * across the network and then used to instantiate a new Request
    * object
    */
-  serialize (): JSONObject {
+  serialize (): { data: JSONObject, options: JSONObject } {
     const serialized = {
       data: {
         _id: this[_input].resource._id,

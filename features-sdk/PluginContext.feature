@@ -1,6 +1,6 @@
 Feature: Plugin context
 
-  # constructors.ESClient ======================================================
+  # constructors.StorageClient ======================================================
 
   @mappings
   Scenario: Instantiate a new embedded ES Client and use it

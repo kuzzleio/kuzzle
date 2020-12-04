@@ -40,11 +40,11 @@ async function loadAdditionalPlugins () {
 
 if (! process.env.TRAVIS) {
   // Easier debug
-  app.hook.register('request:onError', (request: Request) => {
-    console.log(request.error);
+  app.hook.register('request:onError', async (request: Request) => {
+    app.log.error(request.error);
   });
-  app.hook.register('hook:onError', (request: Request) => {
-    console.log(request.error);
+  app.hook.register('hook:onError', async (request: Request) => {
+    app.log.error(request.error);
   });
 }
 
@@ -132,7 +132,7 @@ app.controller.register('tests', {
     // access storage client
     storageClient: {
       handler: async (request: Request) => {
-        const client = new app.storage.ESClient();
+        const client = new app.storage.StorageClient();
         const esRequest = {
           body: request.input.body,
           id: request.input.resource._id,
@@ -140,7 +140,7 @@ app.controller.register('tests', {
         };
 
         const response = await client.index(esRequest);
-        const response2 = await app.storage.esClient.index(esRequest);
+        const response2 = await app.storage.storageClient.index(esRequest);
 
         should(omit(response.body, ['_version', 'result', '_seq_no']))
           .match(omit(response2.body, ['_version', 'result', '_seq_no']));
