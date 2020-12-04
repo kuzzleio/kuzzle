@@ -6,4 +6,4 @@ title: API
 description: Kuzzle v2.x API reference
 ---
 
-<RedirectToFirstChild />
+<Redirect to="payloads/request" />
