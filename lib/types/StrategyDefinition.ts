@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
- /**
-  * Allows to define an authentication strategy
-  */
+/**
+ * Allows to define an authentication strategy
+ */
 export type StrategyDefinition = {
   /**
    * Strategy name and definition.

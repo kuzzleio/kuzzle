@@ -30,7 +30,7 @@ export abstract class Controller {
   /**
    * Current application instance
    */
-  private app: Backend;
+  protected app: Backend;
 
   /**
    * Controller name

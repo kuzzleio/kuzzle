@@ -106,7 +106,7 @@ description: Error codes definitions
 | plugin.manifest.invalid_privileged<br/><pre>0x04050007</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Invalid "privileged" property: expected a boolean, got a %s. | The "privileged" property is invalid |
 | plugin.manifest.missing_package<br/><pre>0x04050008</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] No package.json file found. | The plugin is missing a 'package.json' file (run 'npm init' to create one) |
 | plugin.manifest.missing_package_name<br/><pre>0x04050009</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] No "name" property provided in package.json. | A 'name' property in the 'package.json' file is required by Kuzzle, as it is used as the plugin's unique name |
-| plugin.manifest.missing_version<br/><pre>0x0405000a</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] A "kuzzleVersion" property is required | Plugin manifest files must provide a kuzzleVersion parameter, with the range of compatible Kuzzle versions |
+| plugin.manifest.missing_version<br/><pre>0x0405000a</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] A "kuzzleVersion" property is required | Plugin manifest must provide a kuzzleVersion parameter, with the range of compatible Kuzzle versions |
 
 ---
 

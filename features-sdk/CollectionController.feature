@@ -176,7 +176,7 @@ Feature: Collection Controller
     And a collection "nyc-open-data":"yellow-taxi"
     And a collection "nyc-open-data":"green-taxi"
     And a collection "nyc-open-data":"green-taxi"
-    And I list collections in index "nyc-open-data"
+    And I list "stored" collections in index "nyc-open-data"
     Then I should receive a "collections" array of objects matching:
       | name          | type     |
       | "green-taxi"  | "stored" |
