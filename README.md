@@ -18,7 +18,7 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 * **Realtime Notifications**: use the pub/sub system or subscribe to database notifications.
 * **User Management**: login, logout and security rules are no more a burden.
 * **Extensible**: develop advanced business feature directly with the integrated framework.
-* **Client SDKS**: use our SDKs to accelerate the frontend development.
+* **Client SDKs**: use our SDKs to accelerate the frontend development.
 
 Learn how Kuzzle will accelerate your developments :point_right: https://docs.kuzzle.io/core/2/guides/introduction/what-is-kuzzle/
 
