@@ -649,7 +649,8 @@ Feature: Document Controller
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
 
-# document:upsert ===========================================================
+  # document:upsert ============================================================
+  
   @mappings
   Scenario: Upsert document with and without returning updated document
     Given an existing collection "nyc-open-data":"yellow-taxi"
