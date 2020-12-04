@@ -22,17 +22,6 @@ Kuzzle enables you to build modern web applications and complex IoT networks in 
 
 Learn how Kuzzle will accelerate your developments :point_right: https://docs.kuzzle.io/core/2/guides/introduction/what-is-kuzzle/
 
-## Get trained by the creators of Kuzzle :zap:
-
-Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.  
-Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.  
-:point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
-
-## Public Roadmap
-
-You can consult the public roadmap on Trello. Come and vote for the features you need!  
-:point_right: [Kuzzle Public Roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap)
-
 ## Kuzzle in production
 
 Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/products/by-features/on-premises/). 
@@ -107,6 +96,17 @@ Learn how to [Write an Application](https://docs.kuzzle.io/core/2/guides/getting
 * [Realtime Engine](https://docs.kuzzle.io/core/2/guides/main-concepts/realtime-engine/)
 * [Discover our SDKs](https://docs.kuzzle.io/core/2/sdk/)
 * [Release Notes](https://github.com/kuzzleio/kuzzle/releases)
+
+## Get trained by the creators of Kuzzle :zap:
+
+Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.  
+Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.  
+:point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
+
+## Public Roadmap
+
+You can consult the public roadmap on Trello. Come and vote for the features you need!  
+:point_right: [Kuzzle Public Roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap)
 
 ## Contributing to Kuzzle
 
