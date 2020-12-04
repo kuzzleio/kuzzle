@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+
 import Bluebird from 'bluebird';
 import Koncorde from 'koncorde';
 import { Client } from '@elastic/elasticsearch';
@@ -52,158 +53,139 @@ import {
   RequestContext,
   RequestInput,
   Request,
-} from '../../api/request';
-import { InternalLogger } from '../../types';
+} from '../../../index';
 
 const contextError = kerror.wrap('plugin', 'context');
 
-export type Repository = {
- create(document: JSONObject, options: JSONObject): Promise<JSONObject>;
+export interface Repository {
+ create(document: JSONObject, options: any): Promise<any>;
 
- createOrReplace(document: JSONObject, options: JSONObject): Promise<JSONObject>;
+ createOrReplace(document: JSONObject, options: any): Promise<any>;
 
- delete(documentId: string, options: JSONObject): Promise<JSONObject>;
+ delete(documentId: string, options: any): Promise<any>;
 
  get(documentId: string): Promise<any>;
 
  mGet(ids: string[]): Promise<any>;
 
- replace(document: JSONObject, options: JSONObject): Promise<JSONObject>;
+ replace(document: JSONObject, options: any): Promise<any>;
 
- search(query: JSONObject, options: JSONObject): Promise<any>;
+ search(query: JSONObject, options: any): Promise<any>;
 
- scroll(query: JSONObject, options: JSONObject): Promise<any>;
-
- update(document: JSONObject, options: JSONObject): Promise<JSONObject>;
+ update(document: JSONObject, options: any): Promise<any>;
 }
 
-export type PluginStrategy = {
-  /**
-   * Adds a new authentication strategy
-   */
-  add: (name: string, properties: any) => Promise<void>,
-
-  /**
-   * Removes an authentication strategy, preventing new authentications from using it.
-   */
-  remove: (name: string) => Promise<void>
-};
-
-export type PluginStorage = {
-  /**
-   * Initializes the plugin storage
-   */
-  bootstrap: (collections: JSONObject) => Promise<void>,
-
-  /**
-   * Creates a collection in the plugin storage
-   */
-  createCollection: (collection: string, mappings: JSONObject) => Promise<void>
-};
-
-export type Subscription = {
-  /**
-   * Registers a new realtime subscription on behalf of a client.
-   */
-  register: (connectionId: string, index: string, collection: string, filters: JSONObject) => Promise<{ roomId: string }>,
-
-  /**
-   * Removes a realtime subscription on an existing `roomId` and `connectionId`
-   */
-  unregister: (connectionId: string, roomId: string, notify: boolean) => Promise<void>
-};
-
-export type DataValidation = {
-  addType: (ValidationType: BaseValidationType) => Promise<any>,
-  validate: (request: Request, verbose: boolean) => Promise<any>
-};
-
-export type PluginContextAccessors = {
-  /**
-   * Embedded SDK
-   */
-  sdk: EmbeddedSDK,
-
-  /**
-   * Triggers a custom plugin event
-   */
-  trigger: (eventName: string, ...any) => Promise<any>,
-
-  /**
-   * Add or remove strategies dynamically
-   */
-  strategies: PluginStrategy,
-
-  /**
-   * Accessor to the Data Validation API
-   */
-  validation: DataValidation,
-
-  /**
-   * Execute an API action.
-   */
-  execute: (request: Request, callback?: any) => Promise<Request>,
-
-  /**
-   * Adds or removes realtime subscriptions from the backend.
-   */
-  subscription: Subscription,
-
-  /**
-   * Initializes the plugin's private data storage.
-   */
-  storage: PluginStorage
-};
-
-
-/**
- * @todo need documentation
- */
-export type BaseValidationType = any;
-
-export type PluginContextConstructors = {
-  /**
-   * @todo need documentation
-   */
-  BaseValidationType: new (...any) => BaseValidationType;
-  /**
-   * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
-   */
-  Koncorde: Koncorde;
-  /**
-   * Plugin private storage space
-   */
-  Repository: new (collection: string, objectConstructor: any) => Repository;
-  /**
-   * Instantiate a new Request from the original one.
-   */
-  Request: Request;
-  /**
-   * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
-   */
-  RequestContext: RequestContext;
-  /**
-   * @deprecated import directly: `import { RequestInput } from 'kuzzle'`
-   */
-  RequestInput: RequestInput;
-
-  /**
-   * Constructor for Elasticsearch SDK Client
-   */
-  ESClient: new () => Client
-};
-
 export class PluginContext {
-  public accessors: PluginContextAccessors;
+  public accessors: {
+    /**
+     * Embedded SDK
+     */
+    sdk: EmbeddedSDK,
+
+    /**
+     * Trigger a custom plugin event
+     */
+    trigger: (eventName: string, payload: any) => Promise<any>,
+
+    /**
+     * Add or remove strategies dynamically
+     */
+    strategies: {
+      /**
+       * Adds a new authentication strategy
+       */
+      add: (name: string, properties: any) => Promise<void>,
+
+      /**
+       * Removes an authentication strategy, preventing new authentications from using it.
+       */
+      remove: (name: string) => Promise<void>
+    },
+
+    /**
+     * Accessor to the Data Validation API
+     */
+    validation: {
+      addType: any,
+      validate: any
+    },
+
+    /**
+     * Execute an API action.
+     *
+     * @deprecated use "accessors.sdk" instead (unless you need the original context)
+     */
+    execute: (request: Request, callback?: any) => Promise<Request>,
+
+    /**
+     * Adds or removes realtime subscriptions from the backend.
+     */
+    subscription: {
+      /**
+       * Registers a new realtime subscription on behalf of a client.
+       */
+      register: (connectionId: string, index: string, collection: string, filters: JSONObject) => Promise<{ roomId: string }>,
+
+      /**
+       * Removes a realtime subscription on an existing `roomId` and `connectionId`
+       */
+      unregister: (connectionId: string, roomId: string, notify: boolean) => Promise<void>
+    },
+
+    /**
+     * Initializes the plugin's private data storage.
+     */
+    storage: {
+      /**
+       * Initializes the plugin storage
+       */
+      bootstrap: (collections: any) => Promise<void>,
+
+      /**
+       * Creates a collection in the plugin storage
+       */
+      createCollection: (collection: string, mappings: any) => Promise<void>
+    }
+  };
 
   public config: JSONObject;
 
-  public constructors: PluginContextConstructors;
+  public constructors: {
+    /**
+     * @todo need documentation
+     */
+    BaseValidationType: any;
+    /**
+     * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
+     */
+    Koncorde: Koncorde;
+    /**
+     * Plugin private storage space
+     */
+    Repository: new (collection: string, objectConstructor: any) => Repository;
+    /**
+     * Instantiate a new Request from the original one.
+     */
+    Request: Request;
+    /**
+     * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
+     */
+    RequestContext: RequestContext;
+    /**
+     * @deprecated import directly: `import { RequestInput } from 'kuzzle'`
+     */
+    RequestInput: RequestInput;
+
+    /**
+     * Constructor for Elasticsearch SDK Client
+     */
+    ESClient: new () => Client
+  };
 
   /**
    * @deprecated import directly: `import { BadRequestError, ... } from 'kuzzle'`
    */
-  private errors: any;
+  public errors: any;
 
   /**
    * Errors manager
@@ -213,7 +195,7 @@ export class PluginContext {
   /**
    * @deprecated use `PluginContext.kerror` instead
    */
-  private errorsManager: any;
+  public errorsManager: any;
 
   /**
    * Decrypted secrets from Kuzzle Vault
@@ -223,9 +205,21 @@ export class PluginContext {
   /**
    * Internal Logger
    */
-  public log: InternalLogger;
+  public log: {
+    debug: (message: any) => void
+    error: (message: any) => void
+    info: (message: any) => void
+    silly: (message: any) => void
+    verbose: (message: any) => void
+    warn: (message: any) => void
+  };
 
   constructor (kuzzle, pluginName) {
+    // we have a circular dependency between Kuzzle and the plugins.
+    // We cannot get Kuzzle constructor from the global scope
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Kuzzle = require('../../kuzzle');
+
     this.config = JSON.parse(JSON.stringify(kuzzle.config));
 
     Object.freeze(this.config);
@@ -258,126 +252,127 @@ export class PluginContext {
 
     Object.freeze(this.secrets);
 
+    if (kuzzle instanceof Kuzzle) {
+      // uppercase are forbidden by ES
+      const pluginIndex = `plugin-${pluginName}`.toLowerCase();
 
-    // uppercase are forbidden by ES
-    const pluginIndex = `plugin-${pluginName}`.toLowerCase();
+      /* context.constructors =============================================== */
 
-    /* context.constructors =============================================== */
+      const pluginStore = new Store(
+        kuzzle,
+        pluginIndex,
+        storeScopeEnum.PRIVATE);
 
-    const pluginStore = new Store(
-      kuzzle,
-      pluginIndex,
-      storeScopeEnum.PRIVATE);
+      // eslint-disable-next-line no-inner-declarations
+      function PluginContextRepository (
+        collection: string,
+        ObjectConstructor: any = null)
+      {
+        if (! collection) {
+          throw contextError.get('missing_collection');
+        }
 
-    // eslint-disable-next-line no-inner-declarations
-    function PluginContextRepository (
-      collection: string,
-      ObjectConstructor: any = null
-    ) {
-      if (! collection) {
-        throw contextError.get('missing_collection');
+        const pluginRepository = new PluginRepository(
+          kuzzle,
+          pluginStore,
+          collection);
+
+        pluginRepository.init({ ObjectConstructor });
+
+        return {
+          create: (...args) => pluginRepository.create(...args),
+          createOrReplace: (...args) => pluginRepository.createOrReplace(...args),
+          delete: (...args) => pluginRepository.delete(...args),
+          get: (...args) => pluginRepository.load(...args),
+          mGet: (...args) => pluginRepository.loadMultiFromDatabase(...args),
+          replace: (...args) => pluginRepository.replace(...args),
+          search: (...args) => pluginRepository.search(...args),
+          update: (...args) => pluginRepository.update(...args)
+        } as Repository;
       }
 
-      const pluginRepository = new PluginRepository(
-        kuzzle,
-        pluginStore,
-        collection);
+      // eslint-disable-next-line no-inner-declarations
+      function PluginContextESClient () {
+        return Elasticsearch
+          .buildClient(kuzzle.config.services.storageEngine.client);
+      }
 
-      pluginRepository.init({ ObjectConstructor });
+      this.constructors = {
+        BaseValidationType: require('../validation/baseType'),
+        ESClient: PluginContextESClient as unknown as new () => Client,
+        Koncorde: Koncorde as any,
+        Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
+        Request: instantiateRequest as any,
+        RequestContext: RequestContext as any,
+        RequestInput: RequestInput as any,
+      };
 
-      return {
-        create: (...args) => pluginRepository.create(...args),
-        createOrReplace: (...args) => pluginRepository.createOrReplace(...args),
-        delete: (...args) => pluginRepository.delete(...args),
-        get: (...args) => pluginRepository.load(...args),
-        mGet: (...args) => pluginRepository.loadMultiFromDatabase(...args),
-        replace: (...args) => pluginRepository.replace(...args),
-        scroll: (...args) => pluginRepository.scroll(...args),
-        search: (...args) => pluginRepository.search(...args),
-        update: (...args) => pluginRepository.update(...args)
-      } as Repository;
-    }
+      Object.freeze(this.constructors);
 
-    // eslint-disable-next-line no-inner-declarations
-    function PluginContextESClient () {
-      return Elasticsearch
-        .buildClient(kuzzle.config.services.storageEngine.client);
-    }
+      /* context.log ======================================================== */
 
-    this.constructors = {
-      BaseValidationType: require('../validation/baseType'),
-      ESClient: PluginContextESClient as unknown as new () => Client,
-      Koncorde: Koncorde as any,
-      Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
-      Request: instantiateRequest as any,
-      RequestContext: RequestContext as any,
-      RequestInput: RequestInput as any,
-    };
+      this.log = {
+        debug: msg => kuzzle.log.debug(`[${pluginName}] ${msg}`),
+        error: msg => kuzzle.log.error(`[${pluginName}] ${msg}`),
+        info: msg => kuzzle.log.info(`[${pluginName}] ${msg}`),
+        silly: msg => kuzzle.log.silly(`[${pluginName}] ${msg}`),
+        verbose: msg => kuzzle.log.verbose(`[${pluginName}] ${msg}`),
+        warn: msg => kuzzle.log.warn(`[${pluginName}] ${msg}`)
+      };
 
-    Object.freeze(this.constructors);
+      Object.freeze(this.log);
 
-    /* context.log ======================================================== */
+      /* context.accessors ================================================== */
 
-    this.log = {
-      debug: msg => kuzzle.log.debug(`[${pluginName}] ${msg}`),
-      error: msg => kuzzle.log.error(`[${pluginName}] ${msg}`),
-      info: msg => kuzzle.log.info(`[${pluginName}] ${msg}`),
-      verbose: msg => kuzzle.log.verbose(`[${pluginName}] ${msg}`),
-      warn: msg => kuzzle.log.warn(`[${pluginName}] ${msg}`)
-    };
-
-    Object.freeze(this.log);
-
-    /* context.accessors ================================================== */
-
-    this.accessors = {
-      execute: (request, callback) => execute(kuzzle, request, callback),
-      sdk: new EmbeddedSDK(kuzzle),
-      storage: {
-        bootstrap: collections => pluginStore.init(collections),
-        createCollection: (collection, mappings) => (
-          pluginStore.createCollection(collection, { mappings })
-        )
-      },
-      strategies: {
-        add: curryAddStrategy(kuzzle, pluginName),
-        remove: curryRemoveStrategy(kuzzle, pluginName)
-      },
-      subscription: {
-        register: (connectionId, index, collection, filters) => {
-          const request = new Request(
-            {
-              action: 'subscribe',
-              body: filters,
-              collection,
-              controller: 'realtime',
-              index,
-            },
-            {
-              connectionId: connectionId,
-            });
-          return kuzzle.ask(
-            'core:realtime:subscribe',
-            request
-          );
-        },
-        unregister: (connectionId, roomId, notify) =>
-          kuzzle.ask(
-            'core:realtime:unsubscribe',
-            connectionId, roomId, notify
+      this.accessors = {
+        execute: (request, callback) => execute(kuzzle, request, callback),
+        sdk: new EmbeddedSDK(kuzzle),
+        storage: {
+          bootstrap: collections => pluginStore.init(collections),
+          createCollection: (collection, mappings) => (
+            pluginStore.createCollection(collection, { mappings })
           )
-      },
-      trigger: (eventName, ...payload) => (
-        kuzzle.pipe(`plugin-${pluginName}:${eventName}`, ...payload)
-      ),
-      validation: {
-        addType: kuzzle.validation.addType.bind(kuzzle.validation),
-        validate: kuzzle.validation.validate.bind(kuzzle.validation)
-      },
-    };
+        },
+        strategies: {
+          add: curryAddStrategy(kuzzle, pluginName),
+          remove: curryRemoveStrategy(kuzzle, pluginName)
+        },
+        subscription: {
+          register: (connectionId, index, collection, filters) => {
+            const request = new Request(
+              {
+                action: 'subscribe',
+                body: filters,
+                collection,
+                controller: 'realtime',
+                index,
+              },
+              {
+                connectionId: connectionId,
+              });
+            return kuzzle.ask(
+              'core:realtime:subscribe',
+              request
+            );
+          },
+          unregister: (connectionId, roomId, notify) =>
+            kuzzle.ask(
+              'core:realtime:unsubscribe',
+              connectionId, roomId, notify
+            )
+        },
+        trigger: (eventName, payload) => (
+          kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
+        ),
+        validation: {
+          addType: kuzzle.validation.addType.bind(kuzzle.validation),
+          validate: kuzzle.validation.validate.bind(kuzzle.validation)
+        },
+      };
 
-    // @todo freeze the "accessors" object once we don't have
-    // the PriviledgedContext anymore
+      // @todo freeze the "accessors" object once we don't have
+      // the PriviledgedContext anymore
+    }
   }
 }
 
@@ -432,15 +427,15 @@ function execute (kuzzle, request, callback) {
  * to set the context informations
  *
  * @throws
- * @param {Request} originalRequest
- * @param {Object} requestPayload
+ * @param {Request} request
+ * @param {Object} data
  * @param {Object} [options]
  * @returns {Request}
  */
-function instantiateRequest(originalRequest, requestPayload, options = {}) {
+function instantiateRequest(request, data, options = {}) {
   let
-    _request = originalRequest,
-    _data = requestPayload,
+    _request = request,
+    _data = data,
     _options = options;
 
   if (!_request) {

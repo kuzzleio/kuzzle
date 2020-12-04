@@ -10,6 +10,15 @@ Updates documents matching the provided search query.
 
 Documents updated that way trigger real-time notifications.
 
+<SinceBadge version="change-me"/>
+
+This method also supports the [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) to match documents by passing the `lang` argument with the value `koncorde`.  
+Koncorde filters will be translated into an Elasticsearch query.  
+
+::: warning
+Koncorde `bool` operator and `regexp` clause are not supported for search queries.
+:::
+
 ## Limitations
 
 The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
@@ -23,7 +32,7 @@ To update a greater number of documents, either change the server configuration,
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_query
+URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for][&source][&lang=<query language>]
 Method: PUT
 Body:
 ```
@@ -71,11 +80,11 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `source`: if set to `true` Kuzzle will return the updated documents body in the response.
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="change-me"/>
 
 ## Body properties
 
-- `query`: documents matching this search query will be updated. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
-
+- `query`: the search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) syntax.
 - `changes`: partial changes to apply to the documents
 
 ---

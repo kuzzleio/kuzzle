@@ -22,11 +22,11 @@
 import * as uuid from 'uuid';
 import { JSONObject } from 'kuzzle-sdk';
 
-import { Deprecation } from '../../util/deprecate';
 import { RequestInput } from './requestInput';
 import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
+import { Deprecation } from '../../types';
 import * as assert from '../../util/assertType';
 
 // private properties
@@ -72,7 +72,7 @@ export class Request {
    */
   public id: string;
 
-  constructor(data: any, options: any) {
+  constructor (data: any, options: any) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
@@ -138,14 +138,14 @@ export class Request {
   /**
    * Request internal ID
    */
-  get internalId(): string {
+  get internalId (): string {
     return this[_internalId];
   }
 
   /**
    * Deprecation warnings for the API action
    */
-  get deprecations(): Array<Deprecation> | void {
+  get deprecations(): Deprecation[] | void {
     return this[_deprecations];
   }
 
@@ -170,35 +170,35 @@ export class Request {
   /**
    * Request input
    */
-  get input(): RequestInput {
+  get input (): RequestInput {
     return this[_input];
   }
 
   /**
    * Request context
    */
-  get context(): RequestContext {
+  get context (): RequestContext {
     return this[_context];
   }
 
   /**
    * Request error
    */
-  get error(): KuzzleError | null {
+  get error (): KuzzleError | null {
     return this[_error];
   }
 
   /**
    * Request result
    */
-  get result(): any | null {
+  get result (): any | null {
     return this[_result];
   }
 
   /**
    * Request response
    */
-  get response(): RequestResponse {
+  get response (): RequestResponse {
     if (this[_response] === null) {
       this[_response] = new RequestResponse(this);
     }
@@ -209,8 +209,8 @@ export class Request {
   /**
    * Adds an error to the request, and sets the request's status to the error one.
    */
-  setError(error: Error) {
-    if (!error || !(error instanceof Error)) {
+  setError (error: Error) {
+    if (! error || !(error instanceof Error)) {
       throw new InternalError('Cannot set non-error object as a request\'s error');
     }
 
@@ -235,7 +235,7 @@ export class Request {
    *    - `headers` (JSONObject): additional response protocol headers (default: null)
    *    - `raw` (boolean): instead of a Kuzzle response, forward the result directly (default: false)
    */
-  setResult(
+  setResult (
     result: any,
     options: {
       /**
@@ -275,7 +275,7 @@ export class Request {
    * @param version version where the used component has been deprecated
    * @param message message displayed in the warning
    */
-  addDeprecation(version: string, message: string) {
+  addDeprecation (version: string, message: string) {
     if (process.env.NODE_ENV !== 'development') {
       return;
     }
@@ -285,7 +285,7 @@ export class Request {
       version,
     };
 
-    if (!this.deprecations) {
+    if (! this.deprecations) {
       this[_deprecations] = [deprecation];
     }
     else {

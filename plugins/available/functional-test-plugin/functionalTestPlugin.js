@@ -12,12 +12,12 @@ class FunctionalTestPlugin {
     this.pipes = {};
     this.hooks = {};
 
-    // context.constructor.StorageClient related declarations =======================
+    // context.constructor.ESClient related declarations =======================
 
-    this.controllers.constructors = { StorageClient: 'testConstructorsESClient' };
+    this.controllers.constructors = { ESClient: 'testConstructorsESClient' };
 
     this.routes.push({
-      action: 'StorageClient',
+      action: 'ESClient',
       controller: 'constructors',
       url: '/constructors/esclient/:index',
       verb: 'post',
@@ -172,11 +172,11 @@ class FunctionalTestPlugin {
     };
   }
 
-  // context.constructor.StorageClient related methods ==============================
+  // context.constructor.ESClient related methods ==============================
 
   async testConstructorsESClient (request) {
     const
-      client = new this.context.constructors.StorageClient(),
+      client = new this.context.constructors.ESClient(),
       esRequest = {
         body: request.input.body,
         id: request.input.resource._id,

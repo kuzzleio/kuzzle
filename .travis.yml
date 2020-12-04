@@ -49,6 +49,25 @@ _doc-deploy: &doc-deploy
     - rm -rf doc/framework
     - npm run doc-prepare && npm run doc-build && npm run doc-upload && npm run doc-cloudfront
 
+_doc_sdk_snippet: &doc_sdk_snippet
+  stage: SDKs snippets tests
+  language: node_js
+  node_js: 12
+  services: docker
+  install: |
+    if [ $TRAVIS_BRANCH = "master" ];
+    then
+      export SDK_BRANCH=master
+    fi
+  before_script:
+    - sudo sysctl -w vm.max_map_count=262144
+    - npm ci
+    - git clone -b $SDK_BRANCH https://github.com/kuzzleio/$SDK_NAME /tmp/$SDK_NAME
+    - cd /tmp/$SDK_NAME
+    - npm ci
+  script:
+    - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
+  
 # ------------------------
 # Jobs configuration
 # ------------------------
@@ -358,6 +377,65 @@ jobs:
           repo: kuzzleio/kuzzle
           all_branches: true
 
+    # ----------------------------
+    # SDK JS v7
+    # ----------------------------
+    - name: SDK JS v7
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-javascript"
+        - "SDK_BRANCH=7-dev"
+      script:
+        - sudo apt-get install libgconf-2-4
+        - npm install
+        - npm run build
+        - travis_retry npm run doc-testing
+      
+    # ----------------------------
+    # SDK C# v2
+    # ----------------------------
+    - name: SDK C# v2
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-csharp"
+        - "SDK_BRANCH=2-dev"
+
+    # ----------------------------
+    # SDK Java v3
+    # ----------------------------
+    - name: SDK Java v3
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-java"
+        - "SDK_BRANCH=3-dev"
+
+    # ----------------------------
+    # SDK JVM v1
+    # ----------------------------
+    - name: SDK JVM v1
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-jvm"
+        - "SDK_BRANCH=1-dev"
+
+    # ----------------------------
+    # SDK Go v2
+    # ----------------------------
+    - name: SDK Go v2
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-go"
+        - "SDK_BRANCH=2-dev"
+
+    # ----------------------------
+    # SDK Dart v2
+    # ----------------------------
+    - name: SDK Dart v2
+      <<: *doc_sdk_snippet
+      env:
+        - "SDK_NAME=sdk-dart"
+        - "SDK_BRANCH=2-dev"
+
 
 # ------------------------
 # Stages configuration
@@ -372,6 +450,8 @@ stages:
     if: type = cron
   - name: Deployments
     if: type = push AND branch =~ /^master|[0-9]+-(dev|stable|beta)|1-dev|$/
+  - name: SDKs snippets tests
+    if : type =~ /(cron|pull_request)/ OR (type = push AND branch =~ /^master|[0-9]+-(dev|stable)$/)
 
 # ---------------------------------------
 # Notifications

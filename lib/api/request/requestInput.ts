@@ -152,7 +152,7 @@ export class RequestInput {
    * Any undefined option is set to null
    */
   constructor (data) {
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    if (! data || typeof data !== 'object' || Array.isArray(data)) {
       throw new InternalError('Input request data must be a non-null object');
     }
 

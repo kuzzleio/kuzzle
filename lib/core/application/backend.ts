@@ -355,18 +355,30 @@ class InternalLogger extends ApplicationManager implements InternalLogger {
     this._log('debug', message);
   }
 
+  /**
+   * Logs an info message
+   */
   info (message: any): void {
     this._log('info', message);
   }
 
+  /**
+   * Logs a warn message
+   */
   warn (message: any): void {
     this._log('warn', message);
   }
 
+  /**
+   * Logs an error message
+   */
   error (message: any): void {
     this._log('error', message);
   }
 
+  /**
+   * Logs a verbose message
+   */
   verbose (message: any): void {
     this._log('verbose', message);
   }
@@ -400,7 +412,7 @@ class BackendStorage extends ApplicationManager {
     if (! this._Client) {
       const kuzzle = this._kuzzle;
 
-      this._Client = function StorageClient (clientConfig: JSONObject = {}) {
+      this._Client = function ESClient (clientConfig: JSONObject = {}) {
         return Elasticsearch.buildClient({
           ...kuzzle.config.services.storageEngine.client,
           ...clientConfig,

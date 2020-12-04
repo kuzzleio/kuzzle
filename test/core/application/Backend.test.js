@@ -479,8 +479,10 @@ describe('Backend', () => {
   describe('StorageManager#storageClient', () => {
     it('should allows lazily access an ES Client', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
+
       await application.start();
 
+      application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
       should(application.storage._client).be.null();
 
       should(application.storage.storageClient).be.instanceOf(ElasticsearchClient);

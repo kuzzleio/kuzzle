@@ -29,7 +29,6 @@ import { User, Token } from '../../types';
 const _token = 'token\u200b';
 const _user = 'user\u200b';
 const _connection = 'connection\u200b';
-
 // Connection class properties
 const _c_id = 'id\u200b';
 const _c_protocol = 'protocol\u200b';
@@ -224,7 +223,7 @@ export class RequestContext {
     return this[_user];
   }
 
-  set user (obj: User) {
+  set user (obj: User | null) {
     this[_user] = assert.assertObject('user', obj);
   }
 }

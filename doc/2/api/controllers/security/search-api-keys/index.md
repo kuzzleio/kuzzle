@@ -12,6 +12,15 @@ Searches for a user API keys.
 To search for an API key corresponding to a token you can search on the `fingerprint` property which is a SHA256 hash of the token.
 :::
 
+<SinceBadge version="change-me"/>
+
+This method also supports the [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) to match documents by passing the `lang` argument with the value `koncorde`.  
+Koncorde filters will be translated into an Elasticsearch query.  
+
+::: warning
+Koncorde `bool` operator and `regexp` clause are not supported for search queries.
+:::
+
 ---
 
 ## Query Syntax
@@ -19,7 +28,7 @@ To search for an API key corresponding to a token you can search on the `fingerp
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/users/<userId>/api-keys/_search[?from=0][&size=42]
+URL: http://kuzzle:7512/users/<userId>/api-keys/_search[?from=0][&size=42][&lang=<query language>]
 Method: POST
 Body:
 ```
@@ -47,7 +56,8 @@ Body:
 
   // optional arguments
   "from": 0,
-  "size": 10
+  "size": 10,
+  "lang": "<query language>"
 }
 ```
 
@@ -61,6 +71,7 @@ Body:
 
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `size`: the maximum number of API keys returned in one response page
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="change-me"/>
 
 ---
 
@@ -68,7 +79,7 @@ Body:
 
 ### Optional:
 
-The search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
+The search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) syntax.
 
 If the body is left empty, the result will return all available api keys for the user.
 

@@ -28,5 +28,4 @@ lib/kerror/errors/serviceUnavailableError.js
 lib/kerror/errors/sizeLimitError.js
 lib/kerror/errors/tooManyRequestsError.js
 lib/kerror/errors/unauthorizedError.js
-lib/util/interfaces.js
 features-sdk/support/application/functional-tests-app.js
