@@ -215,7 +215,9 @@ export class PluginContext {
   };
 
   constructor (kuzzle, pluginName) {
-    this['kuzzle'] = kuzzle;
+    Object.defineProperty(this, 'kuzzle', {
+      value: kuzzle
+    });
 
     this.config = JSON.parse(JSON.stringify(kuzzle.config));
 
