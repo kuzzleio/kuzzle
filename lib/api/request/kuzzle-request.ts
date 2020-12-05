@@ -309,5 +309,3 @@ export class KuzzleRequest {
     return serialized;
   }
 }
-
-export type Request = KuzzleRequest
