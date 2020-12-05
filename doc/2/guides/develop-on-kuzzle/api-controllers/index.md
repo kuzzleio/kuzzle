@@ -68,7 +68,7 @@ The controller name will be inferred from the class name (unless the `name` prop
 :::
 
 ```js
-import { Controller, Request } from 'kuzzle'
+import { Controller, KuzzleRequest } from 'kuzzle'
 
 class GreetingController extends Controller {
   constructor (app: Backend) {
@@ -87,9 +87,9 @@ class GreetingController extends Controller {
     }
   }
 
-  async sayHello (request: Request) { /* ... */ }
+  async sayHello (request: KuzzleRequest) { /* ... */ }
 
-  async sayGoodbye (request: Request) { /* ... */ }
+  async sayGoodbye (request: KuzzleRequest) { /* ... */ }
 }
 ```
 
@@ -111,16 +111,16 @@ This way of doing things takes longer to develop but it allows you to have a bet
 
 The handler is the function that will **be called each time our API action is executed**.
 
-This function **takes a [Request](/core/2/framework/classes/request) object** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
+This function **takes a [KuzzleRequest](/core/2/framework/classes/kuzzle-request object** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
 
-This function is defined in the `handler` property of an action. Its signature is: `(request: Request) => Promise<any>`.
+This function is defined in the `handler` property of an action. Its signature is: `(request: KuzzleRequest) => Promise<any>`.
 
 ```js
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       // Handler function for the "greeting:sayHello" action
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         return `Hello, ${request.input.args.name}`
       }
     }
@@ -174,7 +174,7 @@ When the `path` property starts with a `/` then the route is added as is, otherw
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         return `Hello, ${request.input.args.name}`
       },
       http: [
@@ -192,13 +192,13 @@ app.controller.register('greeting', {
 It is recommended to let Kuzzle prefix the routes with `/_/` in order to avoid conflict with the existing routes of the standard API.
 :::
 
-It is possible to define paths with url parameters. These parameters will be captured and then integrated into the [Request Input](/core/2/guides/develop-on-kuzzle/api-controllers#request-input).
+It is possible to define paths with url parameters. These parameters will be captured and then integrated into the [KuzzleRequest Input](/core/2/guides/develop-on-kuzzle/api-controllers#request-input).
 
 ```js
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         // "name" comes from the url parameter
         return `Hello, ${request.input.args.name}`
       },
@@ -224,11 +224,11 @@ It is possible to prevent the generation of a default HTTP route by providing an
 By doing this, the action will only be available through the HTTP protocol with the [JSON Query Endpoint](/core/2/guides/main-concepts/api#json-query-endpoint).
 :::
 
-## Request Input
+## KuzzleRequest Input
 
-The `handler` of an API action receives an instance of [Request](/core/2/framework/classes/request) object. This object represents an API request and **contains both the client input and client contextual information**.
+The `handler` of an API action receives an instance of [KuzzleRequest](/core/2/framework/classes/kuzzle-request object. This object represents an API request and **contains both the client input and client contextual information**.
 
-The arguments of requests sent to the Kuzzle API are available in the [Request.input](/core/2/framework/classes/request-input) property.
+The arguments of requests sent to the Kuzzle API are available in the [KuzzleRequest.input](/core/2/framework/classes/request-input) property.
 
 The main available properties are the following:
  - `controller`: API controller name
@@ -242,7 +242,7 @@ The main available properties are the following:
 With HTTP, there are 3 types of input parameters:
  - URL parameters (__e.g. `/greeting/hello/:name`__)
  - Query arguments (__e.g. `/greeting/hello?name=aschen`__)
- - Request body
+ - KuzzleRequest body
 
 URL parameters and query arguments can be found in the `request.input.args` property **unless it is a Kuzzle specific argument** (`_id`, `index` and `collection`), in that case they can be found in the `request.input.resource` property.
 
@@ -265,7 +265,7 @@ curl \
   }'
 ```
 
-We can retrieve them in the [Request](/core/2/framework/classes/request) object passed to the `handler`:
+We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request object passed to the `handler`:
 
 ```js
 import assert from 'assert'
@@ -273,7 +273,7 @@ import assert from 'assert'
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         assert(request.input.resource._id === 'JkkZN62jLSA')
         assert(request.input.args.name === 'aschen')
         assert(request.input.args.age === '27')
@@ -288,7 +288,7 @@ app.controller.register('greeting', {
 ```
 
 ::: info
-See the [Request Payload](/core/2/api/payloads/request) page for more information about using the API with HTTP.
+See the [KuzzleRequest Payload](/core/2/api/payloads/request) page for more information about using the API with HTTP.
 ::: 
 
 ### Other protocols
@@ -310,7 +310,7 @@ npx wscat -c ws://localhost:7512 --execute '{
 }'
 ```
 
-We can retrieve them in the [Request](/core/2/framework/classes/request) object passed to the `handler`:
+We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request object passed to the `handler`:
 
 ```js
 import assert from 'assert'
@@ -318,7 +318,7 @@ import assert from 'assert'
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         assert(request.input.resource._id === 'JkkZN62jLSA')
         assert(request.input.args.name === 'aschen')
         assert(request.input.args.age === '27')
@@ -334,13 +334,13 @@ app.controller.register('greeting', {
 :::
 
 ::: info
-See the [Request Payload](/core/2/api/payloads/request) page for more information about using the API with other protocols.
+See the [KuzzleRequest Payload](/core/2/api/payloads/request) page for more information about using the API with other protocols.
 ::: 
 
 
-## Request Context
+## KuzzleRequest Context
 
-Information about **the client that executes an API action** are available in the [Request.context](/core/2/framework/classes/request-context) property.
+Information about **the client that executes an API action** are available in the [KuzzleRequest.context](/core/2/framework/classes/request-context) property.
 
 The available properties are as follows:
  - [connection](/core/2/framework/classes/request-context/properties#connection): information about the connection
@@ -354,7 +354,7 @@ import assert from 'assert'
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         // Unauthenticated users are anonymous 
         // and the anonymous user ID is "-1"
         assert(request.context.user._id === '-1')
@@ -375,7 +375,7 @@ More informations about the [RequestContext](/core/2/framework/classes/request-c
 
 Kuzzle Response are **standardized**. This format is shared by all API actions, including custom controller actions.
 
-A Kuzzle Response is a **JSON object** with the following format:
+A [ResponsePayload](/core/2/api/payloads/response) is a **JSON object** with the following format:
 
 | Property     | Description                                                                                         |
 | ------------ | --------------------------------------------------------------------------------------------------- |
@@ -384,18 +384,19 @@ A Kuzzle Response is a **JSON object** with the following format:
 | `controller` | API controller                                                                             |
 | `error`      | [KuzzleError](/core/2/api/errors/types) object, or `null` if there was no error                |
 | `index`      | Index name, or `null` if no index was involved                                                 |
-| `requestId`  | Request unique identifier                                                                           |
+| `requestId`  | KuzzleRequest unique identifier                                                                           |
 | `result`     | Action result, or `null` if an error occured                                                         |
 | `status`     | Response status, using [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) |
 | `volatile`   | Arbitrary data repeated from the initial request                                                    |
 The `result` property will contain the return of the action `handler` function.
+
 
 For example, when calling this controller action:
 ```js
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         return `Hello, ${request.input.args.name}`
       }
     }
@@ -432,7 +433,7 @@ In some cases it may be necessary to **return a response that differs** from the
 
 This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another MIME type** such as CSV, an image, a PDF document, etc.
 
-For this it is possible to use the method [Request.setResult](/core/2/framework/classes/request/set-result) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
+For this it is possible to use the method [KuzzleRequest.setResult](/core/2/framework/classes/request/set-result) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
 
 **Example:** _Return a CSV file_
 
@@ -504,7 +505,7 @@ We will explore the various possibilities available to execute API actions.
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         return `Hello, ${request.input.args.name}`
       }
     }
@@ -553,7 +554,7 @@ More info about [Kourou](https://github.com/kuzzleio/kourou).
 
 ### SDK
 
-From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [Request Payload](/core/2/guides/main-concepts/api#others-protocol) as a parameter.
+From one of our [SDKs](/sdk), it is possible to use the `query` method which takes a [KuzzleRequest Payload](/core/2/guides/main-concepts/api#others-protocol) as a parameter.
 
 :::: tabs
 ::: tab Javascript

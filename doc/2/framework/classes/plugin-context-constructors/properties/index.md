@@ -62,21 +62,21 @@ import { Koncorde } from 'kuzzle';
 
 Instantiates a new [Repository](/core/2/framework/classes/repository).
 
-## `Request`
+## `KuzzleRequest`
 
-Modified [Request](/core/2/framework/classes/request) constructor that allows to instantiate a new `Request` with the context (user, jwt, connection) of another one.
+Modified [KuzzleRequest](/core/2/framework/classes/kuzzle-request constructor that allows to instantiate a new `KuzzleRequest` with the context (user, jwt, connection) of another one.
 
 ### Arguments
 
 ```ts
-Request(originalRequest: Request, requestPayload: RequestPayload, options: JSONObject): Request
+KuzzleRequest(originalRequest: KuzzleRequest, requestPayload: RequestPayload, options: JSONObject): KuzzleRequest
 ```
 
 <br/>
 
 | Arguments | Type              | Description                                     |
 | --------- | ----------------- | ----------------------------------------------- |
-| `originalRequest` | <pre>Request</pre> | Original request of which we will use the context |
+| `originalRequest` | <pre>KuzzleRequest</pre> | Original request of which we will use the context |
 | `requestPayload` | <pre>[RequestPayload](/core/2/framework/types/request-payload)</pre> | New request payload |
 | `options` | <pre>JSONObject</pre> | Additional options passed to the [RequestContext](/core/2/framework/classes/request-context) constructor |
 
@@ -84,7 +84,7 @@ Request(originalRequest: Request, requestPayload: RequestPayload, options: JSONO
 ## Usage
 
 ```js
-const req = new context.constructors.Request(request, {
+const req = new context.constructors.KuzzleRequest(request, {
   controller: 'auth',
   action: 'getCurrentUser'
 })

@@ -26,7 +26,7 @@ Kuzzle is able to integrate to its API any protocol operating on [IP](https://en
 More info on [Writing Protocol Plugin](/core/2/guides/write-protocols/start-writing-protocols).  
 :::
 
-## Request Format
+## KuzzleRequest Format
 
 Except for HTTP, Kuzzle expects the exact same request format for all communication protocols.
 
@@ -158,7 +158,7 @@ A Kuzzle Response is a **JSON object** with the following format:
 | `controller` | API controller                                                                                      |
 | `error`      | [KuzzleError](/core/2/guides/main-concepts#handling-errors) object, or `null` if there was no error |
 | `index`      | Index name, or `null` if no index was involved                                                      |
-| `requestId`  | Request unique identifier                                                                           |
+| `requestId`  | KuzzleRequest unique identifier                                                                           |
 | `result`     | Action result, or `null` if an error occured                                                        |
 | `status`     | Response status, using [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) |
 | `volatile`   | Arbitrary data repeated from the initial request                                                    |
@@ -213,7 +213,7 @@ A document notification contains the following fields:
 | `scope`      | string | `in`: document enters (or stays) in the scope<br/>`out`: document leaves the scope                    |
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `document`: the notification type                                                                     |
-| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data)                             |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                             |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -271,7 +271,7 @@ A user notification contains the following fields:
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `user`: the notification type                                                                         |
 | `user`       | string | `in`: a new user has subscribed to the same filters<br/>`out`: a user cancelled a shared subscription |
-| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data)                             |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                             |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -400,7 +400,7 @@ The content of this object is not meant to be used directly: it has no impact on
 
 Still, volatile data are not completely ignored by Kuzzle, and they have a few uses.
 
-### Request Context
+### KuzzleRequest Context
 
 Volatile data can be used to **provide additional context about a request**; this allows **extended logs**, **application metadata**, and so on. Many use cases benefit from being able to pass context data, without any direct impact to requests themselves.
 

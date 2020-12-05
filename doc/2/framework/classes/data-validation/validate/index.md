@@ -12,14 +12,14 @@ Validates the content of a request body (mutates the request).
 ### Arguments
 
 ```js
-validate(request: Request, verbose: boolean): Promise<any>;
+validate(request: KuzzleRequest, verbose: boolean): Promise<any>;
 ```
 
 <br/>
 
 | Arguments | Type                                                           | Description                                                                                         |
 | --------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `request` | [Request](/core/2/framework/classes/request) | Request object with a non-empty body content                                                        |
+| `request` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | KuzzleRequest object with a non-empty body content                                                        |
 | `verbose` | <pre>boolean</pre>                                             | If true, returns an exhaustive validation report, instead of failing at the first encountered error |
 
 ### Return

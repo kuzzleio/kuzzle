@@ -30,12 +30,12 @@ register(name: string, definition: ControllerDefinition): void
 ## Usage
 
 ```js
-import { Request } from 'kuzzle'
+import { KuzzleRequest } from 'kuzzle'
 
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async (request: Request) => `Hello, ${request.input.args.name}`,
+      handler: async (request: KuzzleRequest) => `Hello, ${request.input.args.name}`,
       http: [{ verb: 'post', path: 'greeting/hello/:name' }]
     }
   }

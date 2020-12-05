@@ -1,4 +1,4 @@
-export * from './request';
+export * from './kuzzle-request';
 
 export * from './requestContext';
 

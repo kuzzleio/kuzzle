@@ -29,13 +29,13 @@ _`refresh`, `onExistingUser`, `foobar`, etc._
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>JSONObject</pre> | Request arguments (except `body`, `_id`, `index` and `collection`) | get |
+| <pre>JSONObject</pre> | KuzzleRequest arguments (except `body`, `_id`, `index` and `collection`) | get |
 
 ## `body`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>JSONObject</pre> | Request body | get |
+| <pre>JSONObject</pre> | KuzzleRequest body | get |
 
 ## `controller`
 
@@ -47,7 +47,7 @@ _`refresh`, `onExistingUser`, `foobar`, etc._
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>JSONObject</pre> | Request headers (Http only) | get |
+| <pre>JSONObject</pre> | KuzzleRequest headers (Http only) | get |
 
 ## `jwt`
 

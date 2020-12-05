@@ -37,7 +37,7 @@ A document notification contains the following fields:
 | `scope`      | string | `in`: document enters (or stays) in the scope<br/>`out`: document leaves the scope                                       |
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                                           |
 | `type`       | string | `document`: the notification type                                                                                        |
-| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                                           |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                                           |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -98,7 +98,7 @@ These notifications are sent only if the `users` argument is set to any other va
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `user`: the notification type                                                                         |
 | `user`       | string | `in`: a new user has subscribed to the same filters<br/>`out`: a user cancelled a shared subscription |
-| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                        |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                        |
 
 The `result` object is the notification content, and it has the following structure:
 

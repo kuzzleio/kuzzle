@@ -19,12 +19,12 @@ This type can be found as the second argument of the [Backend.controller.use](/c
 **Example:**
 
 ```js
-import { ControllerDefinition, Request } from 'kuzzle';
+import { ControllerDefinition, KuzzleRequest } from 'kuzzle';
 
 const definition: ControllerDefinition = {
   actions: {
     sayHello: {
-      handler: async (request: Request) => 'Hello',
+      handler: async (request: KuzzleRequest) => 'Hello',
       http: [
         { verb: 'post', path: 'greeting/sayHello' }
       ]

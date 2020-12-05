@@ -30,7 +30,7 @@ register(event: string, handler: EventHandler): void
 ## Usage
 
 ```js
-app.pipe.register('server:afterNow', async (request: Request) => {
+app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
   request.result.now = (new Date()).toUTCString()
 
   return request

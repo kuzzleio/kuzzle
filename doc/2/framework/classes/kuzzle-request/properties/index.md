@@ -2,12 +2,12 @@
 code: false
 type: page
 title: Properties
-description: Request class properties
+description: KuzzleRequest class properties
 ---
 
-# Request
+# KuzzleRequest
 
-The `Request` class represents a request processed by Kuzzle.  
+The `KuzzleRequest` class represents a request processed by Kuzzle.  
 
 It contains every information used internally by Kuzzle to process the request like the client inputs, but also the response that will be sent back to the client.
 
@@ -17,7 +17,7 @@ This object is received by the controller's [actions handler function](/core/2/g
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>[RequestContext](/core/2/framework/classes/request-context)</pre> | Request context (e.g. user, connection, jwt) | get |
+| <pre>[RequestContext](/core/2/framework/classes/request-context)</pre> | KuzzleRequest context (e.g. user, connection, jwt) | get |
 
 ## `deprecations`
 
@@ -35,7 +35,7 @@ This object is received by the controller's [actions handler function](/core/2/g
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>string</pre> | Request external unique identifier | get / set |
+| <pre>string</pre> | KuzzleRequest external unique identifier | get / set |
 
 ::: info
 Correspond to the `requestId` property passed in the [RequestPayload](/core/2/api/payloads/request).
@@ -45,34 +45,34 @@ Correspond to the `requestId` property passed in the [RequestPayload](/core/2/ap
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>[RequestInput](/core/2/framework/classes/request-input)</pre> | Request arguments and body | get |
+| <pre>[RequestInput](/core/2/framework/classes/request-input)</pre> | KuzzleRequest arguments and body | get |
 
 ## `internalId`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>string</pre> | Request internal unique identifier | get |
+| <pre>string</pre> | KuzzleRequest internal unique identifier | get |
 
 ## `response`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>[RequestResponse](/core/2/framework/classes/request-response)</pre> | Request response object | get |
+| <pre>[RequestResponse](/core/2/framework/classes/request-response)</pre> | KuzzleRequest response object | get |
 
 ## `result`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>any</pre> | Request result | get / set |
+| <pre>any</pre> | KuzzleRequest result | get / set |
 
 ## `status`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>number</pre> | Request HTTP status | get / set |
+| <pre>number</pre> | KuzzleRequest HTTP status | get / set |
 
 ## `timestamp`
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>number</pre> | Request timestamp (in Epoch-micro) | get |
+| <pre>number</pre> | KuzzleRequest timestamp (in Epoch-micro) | get |

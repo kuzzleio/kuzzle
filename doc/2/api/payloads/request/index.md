@@ -1,20 +1,20 @@
 ---
 code: false
 type: page
-title: Request
-description: Request payload reference  
+title: KuzzleRequest
+description: KuzzleRequest payload reference  
 order: 100
 ---
 
-# Request
+# KuzzleRequest
 
-The Request Payload is a standardized request sent to Kuzzle in JSON format.
+The KuzzleRequest Payload is a standardized request sent to Kuzzle in JSON format.
 
 That's the standard format expected for protocols other than HTTP.  
 
-With the HTTP protocol, users can send a Request Payload to the [JSON Query Endpoint](/core/2/guides/main-concepts/api#json-query-endpoint).
+With the HTTP protocol, users can send a KuzzleRequest Payload to the [JSON Query Endpoint](/core/2/guides/main-concepts/api#json-query-endpoint).
 
-The following properties are the most common but any property can be added to a Request
+The following properties are the most common but any property can be added to a KuzzleRequest
 | Property     | Type   | Description                                                               |
 |--------------|--------|---------------------------------------------------------------------------|
 | `controller` | string | API controller name                                                       |
@@ -23,8 +23,8 @@ The following properties are the most common but any property can be added to a 
 | `collection` | string | Collection name                                                           |
 | `_id`        | string | Document unique identifier                                                |
 | `jwt`        | string | Authentication token                                                      |
-| `body`       | object | Request body                                                              |
-| `requestId`  | string | Request unique identifier                                                 |
-| `volatile`   | object | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data) |
+| `body`       | object | KuzzleRequest body                                                              |
+| `requestId`  | string | KuzzleRequest unique identifier                                                 |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data) |
 
 See also the [RequestPayload](/core/2/framework/types/request-payload) framework type.

@@ -57,7 +57,7 @@ Returns credentials information (depend on the authentication strategy).
 
 ### Example with the "local" authentication strategy:
 
-**Request:**
+**KuzzleRequest:**
 ```js
 {
   "controller": "security",

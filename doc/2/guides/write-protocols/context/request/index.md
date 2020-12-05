@@ -1,10 +1,10 @@
 ---
 code: true
 type: page
-title: Request
+title: KuzzleRequest
 ---
 
-# Request
+# KuzzleRequest
 
 
 
@@ -27,7 +27,7 @@ To customize the response content, read the [RequestResponse](https://github.com
 ## Constructor
 
 ```js
-new Request(data, [options]);
+new KuzzleRequest(data, [options]);
 ```
 
 <br/>
@@ -48,7 +48,7 @@ The `options` object can contain the following properties:
 | `error`        | `KuzzleError`,<br/>Error | Sets the request response with the provided [error](/core/2/guides/write-protocols/context/errors)                                                                                                                                                                          |
 | `requestId`    | `string`                                                              | User-defined request identifier                                                                                                                                                                                            |
 | `result`       | `*`                                                                  | Sets the request response with the provided result, and the request status is set to `200`                                                                                                                                 |
-| `status`       | `integer`                                                             | Request status, following the [HTTP error code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) standard                                                                                                          |
+| `status`       | `integer`                                                             | KuzzleRequest status, following the [HTTP error code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) standard                                                                                                          |
 
 ---
 
@@ -59,18 +59,18 @@ Read-only:
 | Properties  | Type                                                                                                                      | Description                                                           |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | `context`   | [RequestContext](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestcontext) | General request information (logged user, network information, ...)   |
-| `error`     | `KuzzleError` | Request [error](/core/2/guides/write-protocols/context/errors)                                                 |
+| `error`     | `KuzzleError` | KuzzleRequest [error](/core/2/guides/write-protocols/context/errors)                                                 |
 | `input`     | [RequestInput](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#modelsrequestinput)     | Input request representation                                          |
 | `response`  | [RequestResponse](https://github.com/kuzzleio/kuzzle-common-objects#requestresponse)                           | Serialized [request response](/core/2/api/payloads/response) |
-| `result`    | `*`                                                                                                                      | Request result                                                        |
-| `timestamp` | `integer`                                                                                                                 | Request creation timestamp, in Epoch-millis format                    |
+| `result`    | `*`                                                                                                                      | KuzzleRequest result                                                        |
+| `timestamp` | `integer`                                                                                                                 | KuzzleRequest creation timestamp, in Epoch-millis format                    |
 
 Writable:
 
 | Properties | Type      | Description                            |
 | ---------- | --------- | -------------------------------------- |
 | `id`       | `string`  | User-defined request unique identifier |
-| `status`   | `integer` | Request status code                    |
+| `status`   | `integer` | KuzzleRequest status code                    |
 
 ---
 
@@ -92,7 +92,7 @@ Serializes the request into into a pair of objects that can be sent across the n
 
 ```js
 const foo = request.serialize();
-const bar = new context.Request(foo.data, foo.options);
+const bar = new context.KuzzleRequest(foo.data, foo.options);
 ```
 
 ---
@@ -115,7 +115,7 @@ setError(error);
 
 | Arguments | Type                                                              | Description   |
 | --------- | ----------------------------------------------------------------- | ------------- |
-| `error`   | `KuzzleError`, Error | Request [error](/core/2/guides/write-protocols/context/errors) |
+| `error`   | `KuzzleError`, Error | KuzzleRequest [error](/core/2/guides/write-protocols/context/errors) |
 
 If a `KuzzleError` object is provided, the request's status attribute is set to the error one.
 
@@ -139,7 +139,7 @@ setResult(result, [options]);
 
 | Arguments | Type               | Description                   |
 | --------- | ------------------ | ----------------------------- |
-| `result`  | `*`               | Request result                |
+| `result`  | `*`               | KuzzleRequest result                |
 | `options` | `optional, object` | Optional result configuration |
 
 #### options
@@ -150,4 +150,4 @@ The `options` object can contain the following properties:
 | ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `headers`  | `object`          | Network specific headers. Shortcut to the [response](https://github.com/kuzzleio/kuzzle-common-objects#requestresponse) header functions                      |
 | `raw`      | `boolean (false)` | If `true`, instead of a standard [kuzzle response](/core/2/api/payloads/response), the result is sent as is to the client, without being interpreted |
-| `status`   | `integer (200)`   | Request status                                                                                                                                                |
+| `status`   | `integer (200)`   | KuzzleRequest status                                                                                                                                                |

@@ -38,7 +38,7 @@ description: Error codes definitions
 | id / code | class / status | message | description |
 | --------- | -------------- | --------| ----------- |
 | api.process.action_locked<br/><pre>0x02020001</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | Cannot execute action "%s": already executing. | Cannot execute the requested action because it's already executing |
-| api.process.overloaded<br/><pre>0x02020002</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Request discarded: Kuzzle Server is temporarily overloaded. | The request has been discarded because the server is overloaded |
+| api.process.overloaded<br/><pre>0x02020002</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | KuzzleRequest discarded: Kuzzle Server is temporarily overloaded. | The request has been discarded because the server is overloaded |
 | api.process.connection_dropped<br/><pre>0x02020003</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Client connection dropped | The request has been discarded because its linked client connection has dropped |
 | api.process.controller_not_found<br/><pre>0x02020004</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | API controller "%s" not found. | API controller not found |
 | api.process.action_not_found<br/><pre>0x02020005</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Controller action "%s" not found. | API controller action not found |

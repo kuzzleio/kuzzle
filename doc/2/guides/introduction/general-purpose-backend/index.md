@@ -89,7 +89,7 @@ This system allows to manage the majority of access control rights situations. F
 
 ```ts
 // Restrict document reading to their creator only
-app.pipe.register('generic:document:afterGet', async (documents: Document[], request: Request) => {
+app.pipe.register('generic:document:afterGet', async (documents: Document[], request: KuzzleRequest) => {
   for (const document of documents) {
     if (request.context.user._id !== document._source._kuzzle_info.creator) {
       throw new ForbiddenError(`Not allowed to access document ${document._id}`)
@@ -107,7 +107,7 @@ Like any framework, Kuzzle allows you to **develop new features by extending and
 To do so, just install the [NPM kuzzle package](https://www.npmjs.com/package/kuzzle) and start developing your application.
 
 ```js
-import { Backend, Request } from 'kuzzle'
+import { Backend, KuzzleRequest } from 'kuzzle'
 
 const app = new Backend('iot-tracker')
 
@@ -115,7 +115,7 @@ const app = new Backend('iot-tracker')
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: (request: Request) => `Hello, ${request.input.args.name}`
+      handler: (request: KuzzleRequest) => `Hello, ${request.input.args.name}`
     }
   }
 })

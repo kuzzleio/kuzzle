@@ -69,7 +69,7 @@ When an event has more than one payload then only the first argument of the hand
 **Example:** _Changing the result of the [server:now](/core/2/api/controllers/server/now) API action_
 
 ```js
-app.pipe.register('server:afterNow', async (request: Request) => {
+app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
   request.result.now = (new Date()).toUTCString()
 
   return request
@@ -90,11 +90,11 @@ If the error is one of the [available default errors](/core/2/api/errors/types) 
 
 **Example:** _Limit reading access to documents to their creator_
 ```js
-import { Document, Request, Backend, ForbiddenError } from 'kuzzle'
+import { Document, KuzzleRequest, Backend, ForbiddenError } from 'kuzzle'
 
 app.pipe.register(
     'generic:document:afterGet', 
-    async (documents: Document[], request: Request) => {
+    async (documents: Document[], request: KuzzleRequest) => {
       for (const document of documents) {
         if (request.context.user._id !== document._source._kuzzle_info.creator) {
           throw new ForbiddenError('Unauthorized access')
@@ -106,7 +106,7 @@ app.pipe.register(
 ```
 
 ::: info
-[Generic Document Events](/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [Request](/core/2/framework/classes/request) object
+[Generic Document Events](/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [KuzzleRequest](/core/2/framework/classes/kuzzle-request object
 :::
 
 ## Hooks
@@ -134,7 +134,7 @@ It is possible to register several hooks on the same event by calling several ti
 **Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to log user registration_
 
 ```js
-app.hook.register('security:afterCreateRestrictedUser', async (request: Request) => {
+app.hook.register('security:afterCreateRestrictedUser', async (request: KuzzleRequest) => {
   app.log.info(`New user registered: ${JSON.stringify(request.context.user)}`)
 })
 ```
