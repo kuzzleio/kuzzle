@@ -52,7 +52,7 @@ import {
 import {
   RequestContext,
   RequestInput,
-  Request,
+  KuzzleRequest,
 } from '../../../index';
 
 const contextError = kerror.wrap('plugin', 'context');
@@ -115,7 +115,7 @@ export class PluginContext {
      *
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
-    execute: (request: Request, callback?: any) => Promise<Request>,
+    execute: (request: KuzzleRequest, callback?: any) => Promise<KuzzleRequest>,
 
     /**
      * Adds or removes realtime subscriptions from the backend.
@@ -166,7 +166,7 @@ export class PluginContext {
     /**
      * Instantiate a new Request from the original one.
      */
-    Request: Request;
+    Request: KuzzleRequest;
     /**
      * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
      */
@@ -337,7 +337,7 @@ export class PluginContext {
       },
       subscription: {
         register: (connectionId, index, collection, filters) => {
-          const request = new Request(
+          const request = new KuzzleRequest(
             {
               action: 'subscribe',
               body: filters,
@@ -375,7 +375,7 @@ export class PluginContext {
 
 /**
  * @param {Kuzzle} kuzzle
- * @param {Request} request
+ * @param {KuzzleRequest} request
  * @param {Function} [callback]
  */
 function execute (kuzzle, request, callback) {
@@ -387,7 +387,7 @@ function execute (kuzzle, request, callback) {
 
   const promback = new Promback(callback);
 
-  if (!request || !(request instanceof Request)) {
+  if (!request || !(request instanceof KuzzleRequest)) {
     return promback.reject(contextError.get('missing_request'));
   }
 
@@ -439,7 +439,7 @@ function instantiateRequest(request, data, options = {}) {
     throw contextError.get('missing_request_data');
   }
 
-  if (!(_request instanceof Request)) {
+  if (!(_request instanceof KuzzleRequest)) {
     if (_data) {
       _options = _data;
     }
@@ -450,7 +450,7 @@ function instantiateRequest(request, data, options = {}) {
     Object.assign(_options, _request.context.toJSON());
   }
 
-  const target = new Request(_data, _options);
+  const target = new KuzzleRequest(_data, _options);
 
   // forward informations if a request object was supplied
   if (_request) {

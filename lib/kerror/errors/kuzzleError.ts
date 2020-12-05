@@ -78,5 +78,3 @@ export class KuzzleError extends Error {
     };
   }
 }
-
-module.exports = { KuzzleError };

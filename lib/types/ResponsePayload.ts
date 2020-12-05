@@ -21,6 +21,33 @@
 
 import { JSONObject} from '../../index';
 
+export type ResponseErrorPayload = {
+  /**
+   * Error human readable identifier
+   */
+  id: string;
+
+  /**
+   * Error identifier
+   */
+  code: number;
+
+  /**
+   * Error message
+   */
+  message: string;
+
+  /**
+   * HTTP status error code
+   */
+  status: number;
+
+  /**
+   * Error stacktrace (only if NODE_ENV=development)
+   */
+  stack?: string;
+};
+
 /**
  * Kuzzle API response payload
  *
@@ -55,32 +82,7 @@ export type ResponsePayload = {
   /**
    * API error
    */
-  error?: {
-    /**
-     * Error human readable identifier
-     */
-    id: string;
-
-    /**
-     * Error identifier
-     */
-    code: number;
-
-    /**
-     * Error message
-     */
-    message: string;
-
-    /**
-     * HTTP status error code
-     */
-    status: number;
-
-    /**
-     * Error stacktrace (only if NODE_ENV=development)
-     */
-    stack?: string;
-  };
+  error?: ResponseErrorPayload;
 
   /**
    * Request unique identifier
