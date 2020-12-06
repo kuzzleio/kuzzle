@@ -1,6 +1,19 @@
 Feature: Security Controller
 
-  # security:checkRights ===========================================================
+  # security:updateRole ========================================================
+
+  @security
+  Scenario: Role update should behave like a replace
+    Given I "update" a role "default" with the following API rights:
+      | auth | { "actions": { "login": true } } |
+    Given I "update" a role "default" with the following API rights:
+      | document | { "actions": { "create": true } } |
+    When I successfully execute the action "security":"getRole" with args:
+      | _id | "default" |
+    Then I should receive a result matching:
+      | _source.controllers.auth | "_UNDEFINED_" |
+
+  # security:checkRights =======================================================
 
   @security
   Scenario: Check if logued user can execute provided API request
@@ -97,7 +110,7 @@ Feature: Security Controller
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"          |
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"          |
     When I successfully execute the action "security":"searchApiKeys" with args:
-      | userId | "My"                     |
+      | userId | "My"                             |
       | body   | { "equals": { "userId": "My" } } |
       | lang   | "koncorde"                       |
     Then I should receive a "hits" array of objects matching:
