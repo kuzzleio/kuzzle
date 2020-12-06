@@ -310,4 +310,4 @@ export class KuzzleRequest {
   }
 }
 
-export type Request = KuzzleRequest;
+export class Request extends KuzzleRequest {};
