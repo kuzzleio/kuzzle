@@ -53,6 +53,7 @@ import {
   RequestContext,
   RequestInput,
   KuzzleRequest,
+  Request,
 } from '../../../index';
 
 const contextError = kerror.wrap('plugin', 'context');
@@ -387,7 +388,7 @@ function execute (kuzzle, request, callback) {
 
   const promback = new Promback(callback);
 
-  if (!request || !(request instanceof KuzzleRequest)) {
+  if (!request || (!(request instanceof KuzzleRequest) && !(request instanceof Request))) {
     return promback.reject(contextError.get('missing_request'));
   }
 

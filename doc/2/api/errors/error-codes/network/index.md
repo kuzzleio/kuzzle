@@ -57,6 +57,6 @@ description: Error codes definitions
 | --------- | -------------- | --------| ----------- |
 | network.entrypoint.unexpected_event<br/><pre>0x03040001</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Unexpected event received: %s. | Received an erroneous network event |
 | network.entrypoint.invalid_port<br/><pre>0x03040002</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Invalid network port number: %s. | Invalid network port |
-| network.entrypoint.shutting_down<br/><pre>0x03040003</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: instance is shutting down | KuzzleRequest rejected because this instance is shutting down |
+| network.entrypoint.shutting_down<br/><pre>0x03040003</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: instance is shutting down | Request rejected because this instance is shutting down |
 
 ---

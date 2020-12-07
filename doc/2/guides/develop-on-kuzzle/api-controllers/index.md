@@ -433,7 +433,7 @@ In some cases it may be necessary to **return a response that differs** from the
 
 This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another MIME type** such as CSV, an image, a PDF document, etc.
 
-For this it is possible to use the method [KuzzleRequest.setResult](/core/2/framework/classes/request/set-result) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
+For this it is possible to use the method [KuzzleRequest.setResult](/core/2/framework/classes/kuzzle-request/set-result) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
 
 **Example:** _Return a CSV file_
 

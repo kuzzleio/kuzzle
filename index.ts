@@ -12,4 +12,4 @@ export * from './lib/kerror/errors';
 
 export * from 'koncorde';
 
-export * from '../sdk-javascript';
+export * from 'kuzzle-sdk';
