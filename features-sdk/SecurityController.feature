@@ -142,9 +142,9 @@ Feature: Security Controller
   @firstAdmin
   Scenario: Create first admin
     Given I update the role "anonymous" with:
-      | document | { "create": true, "update": true } |
+      | controllers | { "document": { "create": true, "update": true } } |
     And I update the role "default" with:
-      | document | { "delete": true, "get": true } |
+      | controllers | { "document": { "delete": true, "get": true } } |
     When I successfully execute the action "security":"createFirstAdmin" with args:
       | _id  | "first-admin"                                                                                        |
       | body | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
@@ -160,9 +160,9 @@ Feature: Security Controller
   @firstAdmin
   Scenario: Create first admin then reset anonymous and default roles
     Given I update the role "anonymous" with:
-      | document | { "create": true, "update": true } |
+      | controllers | { "document": { "create": true, "update": true } } |
     And I update the role "default" with:
-      | document | { "delete": true, "get": true } |
+      | controllers | { "document": { "delete": true, "get": true } } |
     When I successfully execute the action "security":"createFirstAdmin" with args:
       | _id   | "first-admin"                                                                                        |
       | body  | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
