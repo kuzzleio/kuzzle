@@ -39,7 +39,7 @@ Body:
   "index": "<index>",
   "collection": "<collection>",
   "controller": "document",
-  "action": "update",
+  "action": "upsert",
   "_id": "<documentId>",
   "body": {
     "changes": {
