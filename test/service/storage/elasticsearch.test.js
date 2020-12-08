@@ -844,12 +844,12 @@ describe('Test: ElasticSearch service', () => {
       });
 
       should(result).match({
-        _created: false,
         _id: 'liia',
         _version: 2,
         _source: {
           city: 'Panipokari'
-        }
+        },
+        created: false,
       });
     });
 
@@ -887,12 +887,12 @@ describe('Test: ElasticSearch service', () => {
       });
 
       should(result).match({
-        _created: false,
         _id: 'liia',
         _version: 2,
         _source: {
           city: 'Panipokari'
-        }
+        },
+        created: false,
       });
     });
 
@@ -941,12 +941,12 @@ describe('Test: ElasticSearch service', () => {
       });
 
       should(result).match({
-        _created: true,
         _id: 'liia',
         _version: 1,
         _source: {
           city: 'Panipokari'
-        }
+        },
+        created: true,
       });
     });
 
@@ -982,12 +982,12 @@ describe('Test: ElasticSearch service', () => {
       });
 
       should(result).match({
-        _created: false,
         _id: 'liia',
         _version: 2,
         _source: {
           city: 'Panipokari'
-        }
+        },
+        created: false,
       });
     });
 
