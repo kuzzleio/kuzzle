@@ -123,3 +123,11 @@ jobs:
       - name: Cluster legacy tests
         run: ./.ci/scripts/run-test-cluster.sh
           
+  documentation-dead-link:
+    name: Documentation - Dead link checker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          folder-path: 'doc'
