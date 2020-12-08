@@ -21,6 +21,8 @@ jobs:
       with:
         # Disabling shallow clone is recommended for improving relevancy of reporting
         fetch-depth: 0
+    - uses: martinbeentjes/npm-get-version-action@master
+      id: package-version
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
       env:
@@ -28,12 +30,12 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.organization=my-organization
-          -Dsonar.projectKey=my-projectkey
-          -Dsonar.python.coverage.reportPaths=coverage.xml
+          -Dsonar.organization=kuzzleio
+          -Dsonar.projectKey=kuzzleio_kuzzle
+          -Dsonar.projectVersion=${{ steps.package-version.outputs.current-version}}
+          -Dsonar.language=js
           -Dsonar.sources=lib/
-          -Dsonar.test.exclusions=tests/**
-          -Dsonar.tests=tests/
+          -Dsonar.cfamily.build-wrapper-output=bw-output 
           -Dsonar.verbose=true
 
   unit-tests:
