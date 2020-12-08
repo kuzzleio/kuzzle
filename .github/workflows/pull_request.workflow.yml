@@ -25,7 +25,10 @@ jobs:
       - uses: ./.github/actions/es-lint
 
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests - Node.js v${{ matrix.node-version }}
+    strategy:
+      matrix:
+        node-version: ['12.16', '12.18']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -42,14 +45,15 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: "12"
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
   integration-tests-legacy:
-    name: Integration Tests Legacy - ${{ matrix.test_set }}
+    name: Integration Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     strategy:
       matrix:
         test_set: ['http', 'websocket', 'mqtt']
+        node-version: ['12.16', '12.18']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -66,7 +70,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: "12"
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/integration-tests
         env:
           KUZZLE_FUNCTIONAL_TESTS: test:functional:legacy:${{ matrix.test_set }}
@@ -74,10 +78,11 @@ jobs:
           docker-compose-test-file: ./.ci/test.yml
 
   integration-tests-sdk:
-    name: Integration Tests SDK - ${{ matrix.test_set }}
+    name: Integration Tests SDK - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     strategy:
       matrix:
         test_set: ['http', 'websocket']
+        node-version: ['12.16', '12.18']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -94,7 +99,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: "12"
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/integration-tests
         env:
           KUZZLE_FUNCTIONAL_TESTS: test:functional:sdk:${{ matrix.test_set }}
@@ -102,8 +107,11 @@ jobs:
           docker-compose-test-file: ./.ci/test.yml
 
   integration-tests-cluster:
-    name: Integration Tests - Cluster
+    name: Integration Tests - Cluster - Node.js v${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['12.16', '12.18']
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -119,7 +127,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: "12"
+          node-version: ${{ matrix.node-version }}
       - name: Cluster legacy tests
         run: ./.ci/scripts/run-test-cluster.sh
           
