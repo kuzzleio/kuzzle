@@ -1,12 +1,12 @@
 'use strict';
 
-const
-  { PreconditionError } = require('kuzzle-common-objects'),
-  rewire = require('rewire'),
-  mockrequire = require('mock-require'),
-  BaseType = require('../../../../lib/core/validation/baseType'),
-  should = require('should'),
-  sinon = require('sinon');
+const rewire = require('rewire');
+const mockrequire = require('mock-require');
+const should = require('should');
+const sinon = require('sinon');
+
+const { PreconditionError } = require('../../../../index');
+const BaseType = require('../../../../lib/core/validation/baseType');
 
 describe('Test: validation/types/geoShape', () => {
   let

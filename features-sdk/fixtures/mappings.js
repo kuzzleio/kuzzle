@@ -7,7 +7,8 @@ module.exports = {
       properties: {
         job: { type: 'keyword' },
         name: { type: 'keyword' },
-        age: { type: 'integer' }
+        age: { type: 'integer' },
+        city: { type: 'keyword' },
       }
     }
   }

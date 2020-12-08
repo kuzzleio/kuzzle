@@ -7,8 +7,10 @@ const should = require('should');
 const sinon = require('sinon');
 const _ = require('lodash');
 const { Client: ESClient } = require('@elastic/elasticsearch');
+
 const {
   Request,
+  KuzzleRequest,
   KuzzleError,
   UnauthorizedError,
   TooManyRequestsError,
@@ -23,9 +25,8 @@ const {
   ForbiddenError,
   ExternalServiceError,
   BadRequestError,
-} = require('kuzzle-common-objects');
-
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+} = require('../../../../index');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
@@ -35,7 +36,8 @@ describe('Plugin Context', () => {
   let PluginContext;
 
   beforeEach(() => {
-    PluginContext = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
+    const modul = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
+    PluginContext = modul.PluginContext;
 
     kuzzle = new KuzzleMock();
     context = new PluginContext(kuzzle, 'pluginName');
@@ -63,7 +65,7 @@ describe('Plugin Context', () => {
       should(context.constructors.Repository).be.a.Function();
 
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
-      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
+      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(KuzzleRequest);
 
       repository = new context.constructors.Repository(someCollection);
 
@@ -90,15 +92,15 @@ describe('Plugin Context', () => {
 
     describe('#ESClient', () => {
       it('should expose the ESClient constructor', () => {
-        const esClient = new context.constructors.ESClient();
+        const storageClient = new context.constructors.ESClient();
 
-        should(esClient).be.instanceOf(ESClient);
+        should(storageClient).be.instanceOf(ESClient);
       });
 
       it('should allow to instantiate an ESClient connected to the ES cluster', () => {
-        const esClient = new context.constructors.ESClient();
+        const storageClient = new context.constructors.ESClient();
 
-        should(esClient.connectionPool.connections[0].url.origin)
+        should(storageClient.connectionPool.connections[0].url.origin)
           .be.eql(kuzzle.config.services.storageEngine.client.node);
       });
     });
@@ -195,7 +197,7 @@ describe('Plugin Context', () => {
       it('should allow building a request without providing another one', () => {
         const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
 
-        should(rq).be.instanceOf(Request);
+        should(rq).be.instanceOf(KuzzleRequest);
         should(rq.input.action).be.eql('bar');
         should(rq.input.controller).be.eql('foo');
       });
@@ -229,7 +231,6 @@ describe('Plugin Context', () => {
 
     it('should expose the right accessors', () => {
       [
-        'silly',
         'verbose',
         'info',
         'debug',
@@ -332,14 +333,14 @@ describe('Plugin Context', () => {
           {
             connectionId: 'superid',
           });
-  
+
         await context.accessors.subscription.register(
           customRequest.context.connection.id,
           customRequest.input.index,
           customRequest.input.collection,
           customRequest.input.body
         );
-  
+
         should(kuzzle.ask).be.calledWith('core:realtime:subscribe', sinon.match(
           {
             context: {

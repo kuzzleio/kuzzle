@@ -244,15 +244,59 @@ describe('Backend', () => {
         application.controller.register('greeting', definition);
       }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
     });
+  });
 
-    it('should generate default http routes if they are not provided', () => {
-      application.controller.register('greeting', definition);
+  describe('ControllerManager#use', () => {
+    class GreetingController {
+      constructor () {
+        this.definition = {
+          actions: {
+            sayHello: {
+              handler: this.sayHello
+            },
+          }
+        };
+      }
+
+      async sayHello () {}
+    }
+
+    let controller;
+
+    beforeEach(() => {
+      controller = new GreetingController();
+    });
+
+    it('should uses a new controller instance', () => {
+      application.controller.use(controller);
 
       should(application._controllers.greeting).not.be.undefined();
-      should(application._controllers.greeting.actions.sayBye.http)
-        .be.eql([
-          { verb: 'get', path: 'greeting/say-bye' }
-        ]);
+      should(application._controllers.greeting.actions.sayHello.handler.name)
+        .be.eql('bound sayHello');
+    });
+
+    it('should uses the name property for controller name', () => {
+      controller.name = 'bonjour';
+      application.controller.use(controller);
+
+      should(application._controllers.bonjour).not.be.undefined();
+    });
+
+    it('should rejects if the controller instance is invalid', () => {
+      controller.definition.actions.sayHello.handler = {};
+
+      should(() => {
+        application.controller.use(controller);
+      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
+    });
+
+    it('should rejects if the name is already taken', () => {
+      application.controller.use(controller);
+      const controller2 = new GreetingController();
+
+      should(() => {
+        application.controller.use(controller2);
+      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
     });
   });
 
@@ -319,16 +363,18 @@ describe('Backend', () => {
       application.plugin.use(plugin);
 
       should(application._plugins['dummy-plugin'])
-        .be.eql({ plugin, manifest: undefined });
+        .be.eql({ plugin, options: {} });
     });
 
-    it('should allows to specify the plugin name and manifest', () => {
+    it('should allows to specify the plugin name and options', () => {
       const plugin = new DummyPlugin();
 
-      application.plugin.use(plugin, { name: 'not-dummy', manifest: 'manifest' });
+      application.plugin.use(
+        plugin,
+        { name: 'not-dummy', manifest: 'manifest' });
 
       should(application._plugins['not-dummy'])
-        .be.eql({ plugin, manifest: 'manifest'});
+        .be.eql({ plugin, options: { name: 'not-dummy', manifest: 'manifest' } });
     });
 
     it('should throws an error if the plugin is invalid', () => {
@@ -416,29 +462,31 @@ describe('Backend', () => {
     });
   });
 
-  describe('StorageManager#Client', () => {
-    it('should allows to construct an ES Client', async () => {
+  describe('StorageManager#StorageClient', () => {
+    it('should allows to construct an ES StorageClient', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
       application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
-      should(application.storage.Client).be.a.Function();
+      should(application.storage.StorageClient).be.a.Function();
 
-      const client = new application.storage.Client({ maxRetries: 42 });
+      const client = new application.storage.StorageClient({ maxRetries: 42 });
       should(client).be.instanceOf(ElasticsearchClient);
       should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
       should(client.helpers.maxRetries).be.eql(42);
     });
   });
 
-  describe('StorageManager#client', () => {
+  describe('StorageManager#storageClient', () => {
     it('should allows lazily access an ES Client', async () => {
       sinon.stub(Kuzzle.prototype, 'start');
+
       await application.start();
 
+      application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
       should(application.storage._client).be.null();
 
-      should(application.storage.client).be.instanceOf(ElasticsearchClient);
-      should(application.storage.client.connectionPool.connections[0].url.toString())
+      should(application.storage.storageClient).be.instanceOf(ElasticsearchClient);
+      should(application.storage.storageClient.connectionPool.connections[0].url.toString())
         .be.eql('http://es:9200/');
     });
   });

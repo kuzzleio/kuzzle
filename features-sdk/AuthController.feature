@@ -1,6 +1,42 @@
 Feature: Auth Controller
 
-  # auth:createApiKey =======================================================
+  # auth:checkToken ===========================================================
+
+  @security @login
+  Scenario: Check if a token is valid
+    Given I successfully execute the action "auth":"login" with args:
+      | strategy | "local"                                              |
+      | body     | { "username": "test-admin", "password": "password" } |
+    When I successfully execute the action "auth":"checkToken" with args:
+      | body | { "token": this.props.result.jwt } |
+    Then I should receive a result matching:
+      | valid     | true         |
+      | kuid      | "test-admin" |
+      | expiresAt | "_NUMBER_"   |
+    When I successfully execute the action "auth":"checkToken" with args:
+      | body | { "token": "invalid token" } |
+    Then I should receive a result matching:
+      | valid | false      |
+      | state | "_STRING_" |
+
+  # auth:checkRights ===========================================================
+
+  @security @login
+  Scenario: Check if logued user can execute provided API request
+    Given I "update" a role "default" with the following API rights:
+      | auth     | { "actions": { "login": true, "checkRights": true } } |
+      | document | { "actions": { "create": false, "update": true } }    |
+    And I'm logged in Kuzzle as user "default-user" with password "password"
+    When I successfully execute the action "auth":"checkRights" with args:
+      | body | { "controller": "document", "action": "create" } |
+    Then I should receive a result matching:
+      | allowed | false |
+    When I successfully execute the action "auth":"checkRights" with args:
+      | body | { "controller": "document", "action": "update" } |
+    Then I should receive a result matching:
+      | allowed | true |
+
+  # auth:createApiKey ==========================================================
 
   @security @login
   Scenario: Create an API key
@@ -18,9 +54,9 @@ Feature: Auth Controller
     And I successfully execute the action "auth":"searchApiKeys"
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Sigfox API key"    | "_STRING_"   |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Sigfox API key"    | "_STRING_"          |
 
-  # auth:searchApiKeys =====================================================
+  # auth:searchApiKeys =========================================================
 
   @security
   Scenario: Search for API keys
@@ -37,17 +73,23 @@ Feature: Auth Controller
       | expiresIn | -1                                |
       | body      | { "description": "Lora API key" } |
     And I successfully execute the action "auth":"createApiKey" with args:
-      | expiresIn | -1                                  |
+      | expiresIn | 42                                  |
       | refresh   | "wait_for"                          |
       | body      | { "description": "Lora API key 2" } |
     When I successfully execute the action "auth":"searchApiKeys" with args:
       | body | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"   |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"   |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"          |
+      | "_STRING_" | "test-admin"   | 42          | "_NUMBER_"        | "Lora API key 2"    | "_STRING_"          |
+    When I successfully execute the action "auth":"searchApiKeys" with args:
+      | body | { "equals": { "ttl": "42" } } |
+      | lang | "koncorde"                    |
+    Then I should receive a "hits" array of objects matching:
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
+      | "_STRING_" | "test-admin"   | 42          | "_NUMBER_"        | "Lora API key 2"    | "_STRING_"          |
 
-  # auth:deleteApiKey =======================================================
+  # auth:deleteApiKey ==========================================================
 
   @security
   Scenario: Delete an API key

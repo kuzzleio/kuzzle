@@ -1,8 +1,9 @@
 'use strict';
 
-const kerror = require('../../lib/kerror');
 const stableStringify = require('json-stable-stringify');
-const { Request } = require('kuzzle-common-objects');
+
+const kerror = require('../../lib/kerror');
+const { Request } = require('../../index');
 
 /**
  * Returns a sinon matcher tailored-made to match error API responses depending

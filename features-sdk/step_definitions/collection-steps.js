@@ -62,8 +62,12 @@ Then('I {string} the collection {string}:{string} with:', async function (action
   }
 });
 
-Then('I list collections in index {string}', async function (index) {
-  this.props.result = await this.sdk.collection.list(index);
+Then('I list {string} collections in index {string}', async function (expectedType, index) {
+  const { collections } = await this.sdk.collection.list(index);
+
+  this.props.result = {
+    collections: collections.filter(({ type }) => type === expectedType)
+  };
 });
 
 Then(/I should( not)? see the collection "(.*?)":"(.*?)"/, async function (not, index, collection) {

@@ -1,12 +1,12 @@
 'use strict';
 
 const should = require('should');
+
 const {
   Request,
   RequestContext,
   BadRequestError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const Kuzzle = require('../../mocks/kuzzle.mock');
 
 const Statistics = require('../../../lib/core/statistics/statistics');

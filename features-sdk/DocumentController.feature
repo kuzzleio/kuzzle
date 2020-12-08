@@ -129,6 +129,49 @@ Feature: Document Controller
       | total     | 3 |
     And I should receive a "hits" array containing 1 elements
 
+  @mappings
+  Scenario: Search with Koncorde filters
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                                                |
+      | "document-1" | { "name": "Melis", "age": 25, "city": "Istanbul" }  |
+      | -            | { "age": 25, "city": "Istanbul" }                   |
+      | -            | { "name": "Aschen", "age": 27, "city": "Istanbul" } |
+    And I refresh the collection
+    When I search documents with the following query:
+      """
+      {
+        "and": [
+          {
+            "equals": {
+              "city": "Istanbul"
+            }
+          },
+          {
+            "exists": "name"
+          },
+          {
+            "not": {
+              "range": {
+                "age": {
+                  "gt": 25
+                }
+              }
+            }
+          }
+        ]
+      }
+      """
+    And with the following search options:
+      """
+      {
+        "lang": "koncorde"
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching:
+      | _id          |
+      | "document-1" |
 
   # document:exists ============================================================
 
@@ -487,10 +530,10 @@ Feature: Document Controller
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
     When I successfully execute the action "document":"delete" with args:
-      | index      | "nyc-open-data"        |
-      | collection | "yellow-taxi"          |
-      | _id        | "document-1"           |
-      | source     | true                   |
+      | index      | "nyc-open-data" |
+      | collection | "yellow-taxi"   |
+      | _id        | "document-1"    |
+      | source     | true            |
     Then I should receive a result matching:
       | _id     | "document-1"            |
       | _source | { "name": "document1" } |
@@ -535,6 +578,24 @@ Feature: Document Controller
       | age | 21 |
 
   @mappings
+  Scenario: deleteByQuery with Koncorde filters
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id | body                               |
+      | -   | { "name": "document1", "age": 42 } |
+      | -   | { "name": "document2", "age": 84 } |
+      | -   | { "name": "document2", "age": 21 } |
+    And I refresh the collection
+    When I successfully execute the action "document":"deleteByQuery" with args:
+      | index      | "nyc-open-data"                                   |
+      | collection | "yellow-taxi"                                     |
+      | body       | { "query": { "range": { "age": { "gt": 21 } } } } |
+      | lang       | "koncorde"                                        |
+    Then I should receive a "documents" array containing 2 elements
+    And I count 1 documents matching:
+      | age | 21 |
+
+  @mappings
   Scenario: updateByQuery
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
@@ -559,3 +620,77 @@ Feature: Document Controller
       | _id          | _source                                                     |
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+
+
+  @mappings
+  Scenario: UpdateByQuery with Koncorde filters
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                              |
+      | "document-1" | { "name": "Sylvanas Windrunner" } |
+      | "document-2" | { "name": "Tirion Fordring" }     |
+      | "document-3" | { "name": "Tirion Fordring" }     |
+      | "document-4" | { "name": "Sylvanas Windrunner" } |
+    And I refresh the collection
+    When I successfully execute the action "document":"updateByQuery" with args:
+      | index      | "nyc-open-data"                                                                                    |
+      | collection | "yellow-taxi"                                                                                      |
+      | body       | { "query": { "equals": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
+      | lang       | "koncorde"                                                                                         |
+    Then I should receive a "successes" array of objects matching:
+      | _id          |
+      | "document-1" |
+      | "document-4" |
+    When I "get" the following document ids:
+      | "document-1" |
+      | "document-4" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                                                     |
+      | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+      | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+
+  # document:upsert ============================================================
+
+  @mappings
+  Scenario: Upsert document with and without returning updated document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "document-1"           |
+      | body       | { "changes": { "name": "document-1", "age": 42 }, "default": { "foo": "bar" } } |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id      | "document-1"                      |
+      | _source  | { "name": "document-1", "age": 42, "foo": "bar" } |
+      | _version | 1                                                 |
+      | created  | true                                              |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "document-1"           |
+      | body       | { "changes": { "name": "updated1" }, "default": { "foo": "oh noes" } } |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id      | "document-1"                                    |
+      | _source  | { "name": "updated1", "age": 42, "foo": "bar" } |
+      | _version | 2                                               |
+      | created  | false                                           |
+    And The document "document-1" content match:
+      | name | "updated1" |
+      | age  | 42         |
+      | foo  | "bar"      |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"                       |
+      | collection | "yellow-taxi"                         |
+      | _id        | "document-1"                          |
+      | body       | { "changes": { "name": "updated2" } } |
+      | source     | false                                 |
+    Then I should receive a result matching:
+      | _id      | "document-1" |
+      | _version | 3            |
+      | created  | false        |
+    And The document "document-1" content match:
+      | name | "updated2" |
+      | age  | 42         |
+      | foo  | "bar"      |

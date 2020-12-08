@@ -6,4 +6,4 @@ title: Core v2.x
 description: Kuzzle Core v2.x Documentation
 ---
 
-<RedirectToFirstChild />
+<Redirect to="guides/introduction/what-is-kuzzle" />

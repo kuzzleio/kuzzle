@@ -2,8 +2,8 @@
 
 const should = require('should');
 const rewire = require('rewire');
-const { PluginImplementationError } = require('kuzzle-common-objects');
 
+const { PluginImplementationError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('AbstractManifest class', () => {

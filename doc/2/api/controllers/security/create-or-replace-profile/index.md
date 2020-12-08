@@ -97,7 +97,7 @@ Body:
 
 ## Body properties
 
-See the [profile definition guide](/core/2/guides/essentials/security#defining-profiles).
+See the [profile definition guide](/core/2/guides/main-concepts/permissions#profiles).
 
 ---
 

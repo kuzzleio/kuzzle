@@ -2,12 +2,12 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   Request,
   BadRequestError,
   SizeLimitError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');

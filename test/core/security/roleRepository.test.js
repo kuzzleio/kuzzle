@@ -2,12 +2,12 @@
 
 const sinon = require('sinon');
 const should = require('should');
+
 const {
   BadRequestError,
   NotFoundError,
   PreconditionError,
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const Role = require('../../../lib/model/security/role');
@@ -881,7 +881,6 @@ describe('Test: security/roleRepository', () => {
   describe('#update', () => {
     beforeEach(() => {
       sinon.stub(roleRepository, 'validateAndSaveRole');
-      sinon.stub(roleRepository, 'load').resolves(fakeRole);
     });
 
     it('should register a "update" event', async () => {
@@ -891,14 +890,6 @@ describe('Test: security/roleRepository', () => {
       await kuzzle.ask('core:security:role:update', 'foo', 'bar', 'baz');
 
       should(roleRepository.update).calledWith('foo', 'bar', 'baz');
-    });
-
-    it('should reject if the role does not exist', () => {
-      const error = new Error('foo');
-      roleRepository.load.rejects(new Error('foo'));
-
-      return should(roleRepository.update('foo', {}, {}))
-        .rejectedWith(error);
     });
 
     it('should pass the right configuration to validateAndSaveRole', async () => {
@@ -916,7 +907,7 @@ describe('Test: security/roleRepository', () => {
 
       should(roleRepository.validateAndSaveRole)
         .calledWithMatch(sinon.match.object, {
-          method: 'update',
+          method: 'replace',
           refresh: 'refresh'
         });
 

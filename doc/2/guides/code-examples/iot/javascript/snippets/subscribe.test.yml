@@ -1,9 +1,0 @@
-name: guideiot#subscribe
-description: subscribe
-hooks:
-  before:
-  after:
-template: mqtt-end
-expected: Success
-sdk: js
-version: 6

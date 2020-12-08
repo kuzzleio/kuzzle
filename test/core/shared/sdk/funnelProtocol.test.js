@@ -2,12 +2,12 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
   PluginImplementationError
-} = require('kuzzle-common-objects');
-
+} = require('../../../../index');
 const User = require('../../../../lib/model/security/user');
 const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
 

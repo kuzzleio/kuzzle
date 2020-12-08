@@ -2,14 +2,14 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   Request,
   BadRequestError,
   PluginImplementationError,
   SizeLimitError,
   PreconditionError
-} = require('kuzzle-common-objects');
-
+} = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = require('../../../../lib/api/controller/security');
@@ -31,6 +31,54 @@ describe('Test: security controller - users', () => {
     // Random number chosen by fair dice roll. Guaranteed to be random.
     // (xkcd #221)
     request.context.user._id = '4';
+  });
+
+  describe('#checkRights', () => {
+    let user;
+
+    beforeEach(() => {
+      user = {
+        isActionAllowed: sinon.stub().resolves(true)
+      };
+
+      kuzzle.ask
+        .withArgs('core:security:user:get')
+        .resolves(user);
+
+      request.input.args.userId = 'melis';
+
+      request.input.body = {
+        controller: 'document',
+        action: 'create'
+      };
+    });
+
+    it('should check if the action is allowed for the provided userId', async () => {
+      const response = await securityController.checkRights(request);
+
+      should(kuzzle.ask).be.calledWith('core:security:user:get', 'melis');
+
+      should(user.isActionAllowed).be.calledWithMatch({
+        input: {
+          controller: 'document',
+          action: 'create',
+        }
+      });
+      should(response).be.eql({ allowed: true });
+    });
+
+    it('should reject if the provided request is not valid', async () => {
+      request.input.body.controller = null;
+
+      await should(securityController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+
+      request.input.body.controller = 'document';
+      request.input.body.action = null;
+
+      await should(securityController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+    });
   });
 
   // aka "The Big One"
@@ -457,6 +505,26 @@ describe('Test: security controller - users', () => {
 
       return should(securityController.searchUsers(request))
         .be.rejectedWith(error);
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
+
+      return should(securityController.searchUsers(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      securityController.translateKoncorde = sinon.stub().resolves();
+
+      await securityController.searchUsers(request);
+
+      should(securityController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 

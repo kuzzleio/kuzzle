@@ -3,12 +3,13 @@
 const should = require('should');
 const sinon = require('sinon');
 const rewire = require('rewire');
+
 const Validation = rewire('../../../lib/core/validation/validation');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
   Request,
   BadRequestError
-} = require('kuzzle-common-objects');
+} = require('../../../index');
 
 describe('Test: validation.validate', () => {
   let validation;

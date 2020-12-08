@@ -6,7 +6,6 @@ FROM node:12.18.1-stretch-slim as builder
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
-       python \
        make \
        g++ \
        python \

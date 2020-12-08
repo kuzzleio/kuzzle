@@ -1,12 +1,13 @@
 'use strict';
 
 const should = require('should');
+const sinon = require('sinon');
+
 const {
   Request,
   BadRequestError,
   SizeLimitError
-} = require('kuzzle-common-objects');
-
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const DocumentController = require('../../../lib/api/controller/document');
@@ -38,7 +39,7 @@ describe('DocumentController', () => {
   });
 
   describe('#search', () => {
-    it('should forward to the store module', async () => {
+    beforeEach(() => {
       kuzzle.ask
         .withArgs('core:storage:public:document:search')
         .resolves({
@@ -49,6 +50,9 @@ describe('DocumentController', () => {
           scrollId: 'scrollId',
           total: 'total',
         });
+    });
+
+    it('should forward to the store module', async () => {
       request.input.body = { query: { bar: 'bar '} };
       request.input.args.from = 1;
       request.input.args.size = 3;
@@ -105,7 +109,35 @@ describe('DocumentController', () => {
         .withArgs('core:storage:public:document:search')
         .rejects(new Error('foobar'));
 
-      return should(documentController.search(request)).be.rejectedWith('foobar');
+      return should(documentController.search(request)).rejectedWith('foobar');
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.search(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 
@@ -601,8 +633,138 @@ describe('DocumentController', () => {
     });
   });
 
+  describe('#upsert', () => {
+    let changes;
+    let defaultValues;
+
+    beforeEach(() => {
+      changes = { foo: 'bar' };
+      defaultValues = { def: 'val' };
+
+      request.input.body = { changes, default: defaultValues };
+      request.input.resource._id = 'foobar';
+
+      kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...changes, name: 'gordon' },
+        created: false,
+      });
+    });
+
+    it('should forward to the storage module and notify on update', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.retryOnConflict = 42;
+
+      const response = await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues,
+          refresh: 'wait_for',
+          retryOnConflict: 42,
+          userId: 'aschen',
+        });
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.UPDATE,
+        {
+          _id: '_id',
+          _source: { ...changes, name: 'gordon' },
+          _updatedFields: Object.keys(changes),
+        });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        created: false,
+      });
+    });
+
+    it('should forward to the storage module and notify on create', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.retryOnConflict = 42;
+
+      kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...defaultValues, ...changes, name: 'gordon' },
+        created: true,
+      });
+
+      const response = await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues,
+          refresh: 'wait_for',
+          retryOnConflict: 42,
+          userId: 'aschen',
+        });
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { ...defaultValues, ...changes, name: 'gordon' });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        created: true,
+      });
+    });
+
+    it('should have default value for refresh, userId and retryOnConflict', async () => {
+      request.input.body.default = undefined;
+
+      await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues: {},
+          refresh: 'false',
+          retryOnConflict: undefined,
+          userId: null,
+        });
+    });
+
+    it('should return the entire document with source: true', async () => {
+      request.input.args.source = true;
+
+      const response = await documentController.upsert(request);
+
+      should(response).be.eql({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...changes, name: 'gordon' },
+        created: false,
+      });
+    });
+  });
+
   describe('#updateByQuery', () => {
     let esResponse;
+
     beforeEach(() => {
       esResponse = {
         successes: [
@@ -725,6 +887,32 @@ describe('DocumentController', () => {
           id: 'api.assert.missing_argument',
           message: /^Missing argument "body.changes"/,
         });
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = {
+        query: { equals: { name: 'Melis' } },
+        changes: {}
+      };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.updateByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = {
+        query: { equals: { name: 'Melis' } },
+        changes: {}
+      };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.updateByQuery(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 
@@ -976,6 +1164,26 @@ describe('DocumentController', () => {
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }
         ]});
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.deleteByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.deleteByQuery(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 

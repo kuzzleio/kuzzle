@@ -1,6 +1,7 @@
 'use strict';
 
 const should = require('should');
+
 const kerror = require('../../lib/kerror');
 const {
   InternalError,
@@ -9,7 +10,7 @@ const {
   PreconditionError,
   PartialError,
   UnauthorizedError
-} = require('kuzzle-common-objects');
+} = require('../../index');
 
 describe('#kerror', () => {
   it('should return an ExternalServiceError with right name, msg and code', () => {

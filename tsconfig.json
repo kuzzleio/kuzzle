@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
     "declaration": true,
     "listEmittedFiles": true,
     "module": "commonjs",
@@ -13,7 +14,8 @@
         "src/types/*"
       ]
     },
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   },
   "rootDir": "lib/",
   "include": [

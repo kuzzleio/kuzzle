@@ -7,7 +7,7 @@ const {
   Request,
   PreconditionError,
   NotFoundError
-} = require('kuzzle-common-objects');
+} = require('../../../index');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const MutexMock = require('../../mocks/mutex.mock.js');

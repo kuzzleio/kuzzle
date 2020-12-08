@@ -1,9 +1,0 @@
-name: guidedbsearch#connect
-description: Connects SDK
-hooks:
-  before:
-  after:
-template: blank
-expected: Everything is ok
-sdk: js
-version: 6
