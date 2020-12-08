@@ -245,9 +245,9 @@ Feature: Plugin Events
       | _id        | "confidential"         |
       | body       | { "changes": { "destination": "Ninh Binh", "duration": "12h" }, "default": { "company": "Cau Me" } } |
       | source     | true                   |
-    Then The property "_source" of the result should match:
-      | _id            | _source                                                                  |
-      | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus", "company": "Cau Me" } |
+    Then I should receive a result matching:
+      | _id      | "confidential"                                                                  |
+      | _source  | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus", "company": "Cau Me" } |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
       | _source.type | "'localBus'" |
