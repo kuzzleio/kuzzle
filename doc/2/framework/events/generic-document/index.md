@@ -159,6 +159,7 @@ class PipePlugin {
 ### Triggered by
 
 - [document:update](/core/2/api/controllers/document/update)
+- [document:upsert](/core/2/api/controllers/document/upsert)
 - [document:mUpdate](/core/2/api/controllers/document/m-update)
 - [document:updateByQuery](/core/2/api/controllers/document/update-by-query)
 
@@ -344,6 +345,7 @@ class PipePlugin {
 ### Triggered by
 
 - [document:update](/core/2/api/controllers/document/update)
+- [document:upsert](/core/2/api/controllers/document/upsert)
 - [document:mUpdate](/core/2/api/controllers/document/m-update)
 
 ---

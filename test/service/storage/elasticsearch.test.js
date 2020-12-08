@@ -800,6 +800,240 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#upsert', () => {
+    beforeEach(() => {
+      elasticsearch._client.update.resolves({
+        body: {
+          _id: 'liia',
+          _version: 2,
+          result: 'updated',
+          get: {
+            _source: {city: 'Panipokari'}
+          }
+        }
+      });
+    });
+
+    it('should allow to upsert a document', async () => {
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: null
+            }
+          },
+          upsert: {
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: undefined,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+
+      should(result).match({
+        _created: false,
+        _id: 'liia',
+        _version: 2,
+        _source: {
+          city: 'Panipokari'
+        }
+      });
+    });
+
+    it('should handle default values for upserted documents', async () => {
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        {
+          defaultValues: { oh: 'noes' },
+        });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: null
+            }
+          },
+          upsert: {
+            oh: 'noes',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: undefined,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+
+      should(result).match({
+        _created: false,
+        _id: 'liia',
+        _version: 2,
+        _source: {
+          city: 'Panipokari'
+        }
+      });
+    });
+
+    it('should return the right "_created" result on a document creation', async () => {
+      elasticsearch._client.update.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1,
+          result: 'created',
+          get: {
+            _source: {city: 'Panipokari'}
+          }
+        }
+      });
+
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        {
+          defaultValues: { oh: 'noes' },
+        });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: null
+            }
+          },
+          upsert: {
+            oh: 'noes',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: undefined,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+
+      should(result).match({
+        _created: true,
+        _id: 'liia',
+        _version: 1,
+        _source: {
+          city: 'Panipokari'
+        }
+      });
+    });
+
+    it('should handle optional configurations', async () => {
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        { refresh: 'wait_for', userId: 'aschen', retryOnConflict: 42 });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: 'aschen',
+            }
+          },
+          upsert: {
+            _kuzzle_info: {
+              author: 'aschen',
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: 'wait_for',
+        _source: true,
+        retryOnConflict: 42
+      });
+
+      should(result).match({
+        _created: false,
+        _id: 'liia',
+        _version: 2,
+        _source: {
+          city: 'Panipokari'
+        }
+      });
+    });
+
+    it('should return a rejected promise if client.upsert fails', async () => {
+      elasticsearch._client.update.rejects(esClientError);
+
+      await should(elasticsearch.upsert(index, collection, 'liia', {
+        city: 'Kathmandu'
+      })).rejected();
+
+      should(elasticsearch._esWrapper.formatESError).calledWith(esClientError);
+    });
+
+    it('should default an explicitly null retryOnConflict', async () => {
+      await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        { refresh: 'wait_for', userId: 'oh noes', retryOnConflict: null });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: 'oh noes'
+            }
+          },
+          upsert: {
+            _kuzzle_info: {
+              author: 'oh noes',
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: 'wait_for',
+        _source: true,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+    });
+  });
+
   describe('#replace', () => {
     beforeEach(() => {
       elasticsearch._client.index.resolves({

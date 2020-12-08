@@ -1280,6 +1280,45 @@ describe('#core/storage/ClientAdapter', () => {
         should(publicAdapter.client.updateByQuery).not.called();
       });
     });
+
+    describe('#document:upsert', () => {
+      it('should register a "document:upsert" event', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:document:upsert`,
+            'index',
+            'collection',
+            'id',
+            'changes',
+            'options');
+
+          should(adapter.cache.assertCollectionExists)
+            .calledWith('index', 'collection');
+
+          should(adapter.client.upsert)
+            .calledWith('index', 'collection', 'id', 'changes', 'options');
+        }
+      });
+
+      it('should reject if the collection does not exist', async () => {
+        const err = new Error();
+
+        publicAdapter.cache.assertCollectionExists.throws(err);
+
+        const result = kuzzle.ask(
+          'core:storage:public:document:upsert',
+          'index',
+          'collection',
+          'id',
+          'changes',
+          'options');
+
+        await should(result).rejectedWith(err);
+
+        should(publicAdapter.client.update).not.called();
+      });
+    });
+
   });
 
   describe('#cache handling events', () => {

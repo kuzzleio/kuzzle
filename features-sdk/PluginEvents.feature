@@ -202,6 +202,67 @@ Feature: Plugin Events
       | _source | { "type": "localBus" } |
 
   @mappings @events
+  Scenario: Upsert and modify documents with document:generic:beforeUpdate
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
+      | _source.leaveAt | "'10:30'"              |
+      | _id             | "'bus-vn'" |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "foobar"               |
+      | body       | { "changes": { "destination": "Ninh Binh" }, "default": { "company": "Cau Me" } } |
+      | source     | true                   |
+    Then The document "bus-vn" content match:
+      | destination | "Ninh Binh" |
+      | company     | "Cau Me"   |
+      | leaveAt     | "10:30"    |
+    # Change pipe modifications
+    And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
+      | _source.leaveAt | "'12:30'"              |
+      | _id             | "'bus-vn'" |
+    # update
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "foobar"               |
+      | body       | { "changes": { "destination": "Hà Giang" }, "default": { "company": "Oh Noes" } } |
+      | source     | true                   |
+    Then The document "bus-vn" content match:
+      | destination | "Hà Giang" |
+      | company     | "Cau Me"   |
+      | leaveAt     | "12:30"    |
+
+  @mappings @events
+  Scenario: Upsert and modify documents with document:generic:afterUpdate
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
+      | _source.type | "'sleepingBus'"  |
+      | _id          | "'confidential'" |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "confidential"         |
+      | body       | { "changes": { "destination": "Ninh Binh", "duration": "12h" }, "default": { "company": "Cau Me" } } |
+      | source     | true                   |
+    Then The property "_source" of the result should match:
+      | _id            | _source                                                                  |
+      | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus", "company": "Cau Me" } |
+    # Change pipe modifications
+    And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
+      | _source.type | "'localBus'" |
+      | _id          | "'redacted'" |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "bus-travel"           |
+      | body       | { "changes": { "destination": "Ninh Binh", "duration": "12h" }, "default": { "company": "Cau Me" } } |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id     | "redacted"             |
+      | _source | { "type": "localBus" } |
+
+  @mappings @events
   Scenario: Modify document with document:generic:beforeGet
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
