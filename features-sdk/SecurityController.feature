@@ -1,6 +1,19 @@
 Feature: Security Controller
 
-  # security:checkRights ===========================================================
+  # security:updateRole ========================================================
+
+  @security
+  Scenario: Role update should behave like a replace
+    Given I "update" a role "default" with the following API rights:
+      | auth | { "actions": { "login": true } } |
+    Given I "update" a role "default" with the following API rights:
+      | document | { "actions": { "create": true } } |
+    When I successfully execute the action "security":"getRole" with args:
+      | _id | "default" |
+    Then I should receive a result matching:
+      | _source.controllers.auth | "_UNDEFINED_" |
+
+  # security:checkRights =======================================================
 
   @security
   Scenario: Check if logued user can execute provided API request
@@ -97,7 +110,7 @@ Feature: Security Controller
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"          |
       | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"          |
     When I successfully execute the action "security":"searchApiKeys" with args:
-      | userId | "My"                     |
+      | userId | "My"                             |
       | body   | { "equals": { "userId": "My" } } |
       | lang   | "koncorde"                       |
     Then I should receive a "hits" array of objects matching:
@@ -128,28 +141,21 @@ Feature: Security Controller
 
   @firstAdmin
   Scenario: Create first admin
-    Given I update the role "anonymous" with:
-      | document | { "create": true, "update": true } |
-    And I update the role "default" with:
+    Given I update the role "default" with:
       | document | { "delete": true, "get": true } |
+      | auth     | { "login": true }               |
     When I successfully execute the action "security":"createFirstAdmin" with args:
       | _id  | "first-admin"                                                                                        |
       | body | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
     Then I should receive a result matching:
       | _source | { "profileIds": ["admin"] } |
     And I'm logged in Kuzzle as user "first-admin" with password "password"
-    # Test of roles reset
-    And The role "anonymous" should match:
-      | * | { "*": true } |
-    And The role "default" should match:
-      | * | { "*": true } |
 
   @firstAdmin
   Scenario: Create first admin then reset anonymous and default roles
-    Given I update the role "anonymous" with:
-      | document | { "create": true, "update": true } |
-    And I update the role "default" with:
+    Given I update the role "default" with:
       | document | { "delete": true, "get": true } |
+      | auth     | { "login": true }               |
     When I successfully execute the action "security":"createFirstAdmin" with args:
       | _id   | "first-admin"                                                                                        |
       | body  | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
@@ -158,7 +164,6 @@ Feature: Security Controller
       | _source | { "profileIds": ["admin"] } |
     And I'm logged in Kuzzle as user "first-admin" with password "password"
     # Test of roles reset
-    And The role "anonymous" should match the default one
     And The role "default" should match the default one
 
   @security

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
     "declaration": true,
     "listEmittedFiles": true,
     "module": "commonjs",
