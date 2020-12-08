@@ -80,10 +80,10 @@ Body:
 
 Returns information about the updated document:
 
-- `_created`: if `true`, a new document was created, otherwise the document existed and was updated
 - `_id`: document unique identifier
 - `_source`: (only if the `source` option is set) actualized document content
 - `_version`: updated document version
+- `created`: if `true`, a new document was created, otherwise the document existed and was updated
 
 ```js
 {
@@ -95,13 +95,13 @@ Returns information about the updated document:
   "action": "upsert",
   "requestId": "<unique request identifier>",
   "result": {
-    "_created": false,
     "_id": "<documentId>",
     "_source": {
       // (optional) actualized document content. This property appears only if
       // the "source" option is set to true
     },
-    "_version": 2
+    "_version": 2,
+    "created": false,
   }
 }
 ```

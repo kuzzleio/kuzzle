@@ -645,10 +645,10 @@ describe('DocumentController', () => {
       request.input.resource._id = 'foobar';
 
       kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
-        _created: false,
         _id: '_id',
         _version: '_version',
-        _source: { ...changes, name: 'gordon' }
+        _source: { ...changes, name: 'gordon' },
+        created: false,
       });
     });
 
@@ -683,9 +683,9 @@ describe('DocumentController', () => {
         });
 
       should(response).match({
-        _created: false,
         _id: '_id',
         _version: '_version',
+        created: false,
       });
     });
 
@@ -695,10 +695,10 @@ describe('DocumentController', () => {
       request.input.args.retryOnConflict = 42;
 
       kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
-        _created: true,
         _id: '_id',
         _version: '_version',
-        _source: { ...defaultValues, ...changes, name: 'gordon' }
+        _source: { ...defaultValues, ...changes, name: 'gordon' },
+        created: true,
       });
 
       const response = await documentController.upsert(request);
@@ -723,9 +723,9 @@ describe('DocumentController', () => {
         { ...defaultValues, ...changes, name: 'gordon' });
 
       should(response).match({
-        _created: true,
         _id: '_id',
         _version: '_version',
+        created: true,
       });
     });
 
@@ -754,10 +754,10 @@ describe('DocumentController', () => {
       const response = await documentController.upsert(request);
 
       should(response).be.eql({
-        _created: false,
         _id: '_id',
         _version: '_version',
-        _source: { ...changes, name: 'gordon' }
+        _source: { ...changes, name: 'gordon' },
+        created: false,
       });
     });
   });
