@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: "12"
-      - uses: ./github/actions/es-lint
+      - uses: ./.github/actions/es-lint
 
   sonarcloud:
     name: Sonarcloud
@@ -44,4 +44,4 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: "12"
-      - uses: ./github/actions/unit-tests
+      - uses: ./.github/actions/unit-tests
