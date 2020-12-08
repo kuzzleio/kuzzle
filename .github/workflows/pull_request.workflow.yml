@@ -127,7 +127,11 @@ jobs:
     name: Documentation - Dead link checker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      - name: Check for broken links
+        id: link-report
+        uses: celinekurpershoek/link-checker@v1.0.1
         with:
-          folder-path: 'doc'
+          url: 'https://docs.kuzzle.io'
+          honorRobotExclusions: false
+      - name: Get the result
+        run: echo "${{steps.link-report.outputs.result}}"
