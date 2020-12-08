@@ -14,7 +14,7 @@ order: 700
 The Kuzzle API is composed of **actions grouped in controllers**.  
 A controller is a **logical container** that groups several actions together.
 
-Each action receives a [Request](/core/2/framework/classes/request) object argument, and is in charge of returning a result which will be transmitted in the response.  
+Each action receives a [KuzzleRequest](/core/2/framework/classes/kuzzle-request object argument, and is in charge of returning a result which will be transmitted in the response.  
 
 ## Register a new Controller
 

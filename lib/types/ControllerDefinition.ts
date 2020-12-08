@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Request } from '../api/request';
+import { KuzzleRequest } from '../api/request';
 
 /**
  * API controller definition.
@@ -43,7 +43,7 @@ export type ControllerDefinition = {
       /**
        * Function handler for incoming requests.
        */
-      handler: (request: Request) => Promise<any>,
+      handler: (request: KuzzleRequest) => Promise<any>,
       /**
        * Declare HTTP routes (optional).
        * Http routes will be auto-generated unless at least one is provided

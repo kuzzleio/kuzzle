@@ -155,10 +155,10 @@ module.exports = class MyProtocol {
 
     // when a client sends a request
     this.on('onClientRequest', (client, data) => {
-      // Instantiates a Request object to be passed to Kuzzle
+      // Instantiates a KuzzleRequest object to be passed to Kuzzle
       const
         connection = this.connections[client.id],
-        request = new this.context.Request(data, { connection });
+        request = new this.context.KuzzleRequest(data, { connection });
 
       this.entryPoint.execute(request, response => {
         // forward the response to the client

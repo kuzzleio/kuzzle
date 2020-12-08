@@ -2,7 +2,7 @@
 code: true
 type: page
 title: clearError
-description: Request class clearError() method
+description: KuzzleRequest class clearError() method
 ---
 
 # clearError

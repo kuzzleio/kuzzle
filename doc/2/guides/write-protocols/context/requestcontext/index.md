@@ -8,7 +8,7 @@ title: RequestContext
 
 Connection context.
 
-This is the class used to build the `context` property of any [Request](/core/2/guides/write-protocols/context/request) object.
+This is the class used to build the `context` property of any [KuzzleRequest](/core/2/guides/write-protocols/context/request) object.
 
 Technical information: [github repository](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestcontext)
 

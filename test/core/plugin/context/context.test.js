@@ -10,6 +10,7 @@ const { Client: ESClient } = require('@elastic/elasticsearch');
 
 const {
   Request,
+  KuzzleRequest,
   KuzzleError,
   UnauthorizedError,
   TooManyRequestsError,
@@ -64,7 +65,7 @@ describe('Plugin Context', () => {
       should(context.constructors.Repository).be.a.Function();
 
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
-      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
+      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(KuzzleRequest);
 
       repository = new context.constructors.Repository(someCollection);
 
@@ -196,7 +197,7 @@ describe('Plugin Context', () => {
       it('should allow building a request without providing another one', () => {
         const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
 
-        should(rq).be.instanceOf(Request);
+        should(rq).be.instanceOf(KuzzleRequest);
         should(rq.input.action).be.eql('bar');
         should(rq.input.controller).be.eql('foo');
       });

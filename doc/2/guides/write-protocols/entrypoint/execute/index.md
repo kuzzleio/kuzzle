@@ -24,7 +24,7 @@ execute(request, [callback]);
 
 | Arguments  | Type                                                             | Description                                                                                              |
 | ---------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `request`  | <pre>[Request](/core/2/guides/write-protocols/context/request)</pre> | Standardized API request |
+| `request`  | <pre>[KuzzleRequest](/core/2/guides/write-protocols/context/request)</pre> | Standardized API request |
 | `callback(result)` | <pre>function</pre> | Callback receiving the response |
 
 ---
@@ -46,7 +46,7 @@ This resulting object contains the following properties:
 ## Example
 
 ```js
-const request = new context.Request({
+const request = new context.KuzzleRequest({
   controller: 'server',
   action: 'now'
 });

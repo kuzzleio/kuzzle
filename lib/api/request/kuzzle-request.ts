@@ -42,31 +42,13 @@ const _response = 'response\u200b';
 const _deprecations = 'deprecations\u200b';
 
 /**
- * Builds a Kuzzle normalized request object
+ * The `KuzzleRequest` class represents a request being processed by Kuzzle.
  *
- * The 'data' object accepts a request content using the same
- * format as the one used, for instance, for the Websocket protocol
- *
- * Any undefined option is set to null
- *
- * Differences between request.id and request.internalId:
- *
- * - the internal ID is meant to be unique, immutable, and the real
- *   identifier of a request object instance. It has a getter but
- *   no setter, and is generated once and for all during a Request
- *   object instantiation
- * - the id (aka requestId) is an identifier that can be provided
- *   to the constructor, allowing a client to set it in order to
- *   listen for the related response afterwards. This property
- *   is mutable and clients/plugins are free to use any value
- *   for it
- *
- * In order to prevent any manipulation of Kuzzle's core components,
- * the internalId is used to identify a request by Kuzzle, and
- * the requestId should only be used by clients or plugins.
+ * It contains every information used internally by Kuzzle to process the request
+ * like the client inputs, but also the response that will be sent back to the client.
  *
  */
-export class Request {
+export class KuzzleRequest {
   /**
    * Request external ID (specified by "requestId" or random uuid)
    */
@@ -327,3 +309,5 @@ export class Request {
     return serialized;
   }
 }
+
+export class Request extends KuzzleRequest {}

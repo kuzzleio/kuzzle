@@ -51,7 +51,7 @@ In order to create a new controller, the plugin must expose the following proper
 
 - A `controllers` object, describing the controller(s) to add. It will automatically be made available to any network protocol, except for HTTP
 - A `routes` objects, describing how the controller(s) should be exposed to the HTTP protocol
-- The controller's actions, which are functions taking a `Request` object as an argument. These functions must return a promise, resolved with the action's result, or rejected with a [KuzzleError](/core/2/api/errors/types) object.
+- The controller's actions, which are functions taking a `KuzzleRequest` object as an argument. These functions must return a promise, resolved with the action's result, or rejected with a [KuzzleError](/core/2/api/errors/types) object.
 
 ---
 
@@ -119,7 +119,7 @@ When this action is successfully called, the following answer will be returned b
 
 ## Query normalization
 
-Kuzzle normalizes [request payloads](/core/2/api/payloads/request) into [Request](/core/2/framework/classes/request) objects.
+Kuzzle normalizes [request payloads](/core/2/api/payloads/request) into [KuzzleRequest](/core/2/framework/classes/kuzzle-request objects.
 
 Quick summary of how queries are normalized:
 
@@ -188,13 +188,13 @@ module.exports = class ControllerPlugin {
       The first route exposes the following GET URL:
         http://<kuzzle server>:<port>/_plugin/<plugin name>/foo/<dynamic value>
 
-      Kuzzle will call the function 'actionFunction' with a Request object,
+      Kuzzle will call the function 'actionFunction' with a KuzzleRequest object,
       containing the "name" property: request.input.args.name = '<dynamic value>'
 
       The second route exposes the following POST URL:
         http://<kuzzle server>:<port>/_plugin/<plugin name>/bar
 
-      Kuzzle will provide the content body of the request in the Request object
+      Kuzzle will provide the content body of the request in the KuzzleRequest object
       passed to the function 'otherActionFunction', in the request.input.body
       property
      */
@@ -224,7 +224,7 @@ module.exports = class ControllerPlugin {
 
   /*
     Implements the action newController/myAction
-    Takes a Request object as an argument, and MUST return
+    Takes a KuzzleRequest object as an argument, and MUST return
     a promise resolved (or rejected) with the action's result
     This result can be of any JS type (scalar, object, array), and
     will be used to build a response to send to the requesting client
@@ -247,7 +247,7 @@ module.exports = class ControllerPlugin {
 
   /*
     Implements the action newController/myOtherAction
-    Takes a Request object as an argument, and MUST return
+    Takes a KuzzleRequest object as an argument, and MUST return
     a promise resolved (or rejected) with the action's result
     This result can be of any JS type (scalar, object, array), and
     will be used to build a response to send to the requesting client
