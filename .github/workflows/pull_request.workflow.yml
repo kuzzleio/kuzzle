@@ -45,8 +45,11 @@ jobs:
           node-version: "12"
       - uses: ./.github/actions/unit-tests
 
-  integration-tests-http:
-    name: Integration Tests - HTTP
+  integration-tests-legacy:
+    name: Integration Tests Legacy - ${{ matrix.test_set }}
+    strategy:
+      matrix:
+        test_set: ['http', 'websocket', 'mqtt']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -66,56 +69,6 @@ jobs:
           node-version: "12"
       - uses: ./.github/actions/integration-tests
         env:
-          KUZZLE_FUNCTIONAL_TESTS: test:functional:sdk:http
-        with:
-          docker-compose-test-file: ./.ci/test.yml
-
-  integration-tests-websocket:
-    name: Integration Tests - WebSocket
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: "12"
-      - uses: ./.github/actions/integration-tests
-        env:
-          KUZZLE_FUNCTIONAL_TESTS: test:functional:sdk:websocket
-        with:
-          docker-compose-test-file: ./.ci/test.yml
-
-  integration-tests-mqtt:
-    name: Integration Tests - MQTT
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: "12"
-      - uses: ./.github/actions/integration-tests
-        env:
-          KUZZLE_FUNCTIONAL_TESTS: test:functional:sdk:mqtt
+          KUZZLE_FUNCTIONAL_TESTS: test:functional:sdk:${{ matrix.test_set }}
         with:
           docker-compose-test-file: ./.ci/test.yml
