@@ -123,10 +123,3 @@ jobs:
       - name: Cluster legacy tests
         run: ./.ci/scripts/run-test-cluster.sh
           
-  error-codes-check:
-    name: Documentation - Error codes check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Test error codes
-        run: ./.ci/scripts/check-error-codes-documentation.sh
