@@ -1,0 +1,11 @@
+name: Integration Tests
+description: Run Cucumber tests on a Kuzzle Stack
+inputs:
+  docker-compose-test-file:
+    description: Path to a Docker Compose file used to run tests
+    required: true
+runs:
+  using: "composite"
+  steps: 
+    - run: docker-compose -f ${{ inputs.docker-compose-test-file }} run kuzzle
+      shell: bash
