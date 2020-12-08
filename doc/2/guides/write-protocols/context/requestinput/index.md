@@ -6,9 +6,9 @@ title: RequestInput
 
 # RequestInput
 
-Request input, normalizing a [Kuzzle API call](/core/2/api/payloads/request) in JSON format.
+KuzzleRequest input, normalizing a [Kuzzle API call](/core/2/api/payloads/request) in JSON format.
 
-This is the class used to build the `input` property of any [Request](/core/2/guides/write-protocols/context/request) object.
+This is the class used to build the `input` property of any [KuzzleRequest](/core/2/guides/write-protocols/context/request) object.
 
 Technical information: [github repository](https://github.com/kuzzleio/kuzzle-common-objects/blob/master/README.md#requestinput)
 
@@ -34,12 +34,12 @@ The `data` object can contain the following properties:
 | ------------ | ----------------- | ------------------------------------------------------------------------------------------------- |
 | `_id`        | <pre>string</pre> | Resource unique identifier                                                                        |
 | `action`     | <pre>string</pre> | Invoked API controller's action                                                                   |
-| `body`       | <pre>object</pre> | Request specific data (document content, search queries, ...)                                     |
+| `body`       | <pre>object</pre> | KuzzleRequest specific data (document content, search queries, ...)                                     |
 | `collection` | <pre>string</pre> | Collection                                                                                        |
 | `controller` | <pre>string</pre> | Invoked API controller                                                                            |
 | `index`      | <pre>string</pre> | Index                                                                                             |
 | `jwt`        | <pre>string</pre> | Authentication token                                                                              |
-| `volatile`   | <pre>object</pre> | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                    |
+| `volatile`   | <pre>object</pre> | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                    |
 | `...`        | <pre>\*</pre>     | Unrecognized properties are considered request specific, and stored in the `args` object property |
 
 ---
@@ -49,12 +49,12 @@ The `data` object can contain the following properties:
 | Properties   | Type              | Description                                                    |
 | ------------ | ----------------- | -------------------------------------------------------------- |
 | `action`     | <pre>string</pre> | Invoked API controller's action                                |
-| `args`       | <pre>object</pre> | Request specific arguments                                     |
-| `body`       | <pre>object</pre> | Request specific data                                          |
+| `args`       | <pre>object</pre> | KuzzleRequest specific arguments                                     |
+| `body`       | <pre>object</pre> | KuzzleRequest specific data                                          |
 | `controller` | <pre>string</pre> | Invoked API controller                                         |
 | `jwt`        | <pre>string</pre> | Authentication token                                           |
 | `resource`   | <pre>object</pre> | Stored resource target                                         |
-| `volatile`   | <pre>object</pre> | Request [volatile data](/core/2/guides/main-concepts/api#volatile-data) |
+| `volatile`   | <pre>object</pre> | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data) |
 
 ### resource
 

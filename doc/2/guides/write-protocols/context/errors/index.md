@@ -246,7 +246,7 @@ const err = new context.errors.ServiceUnavailableError('error message');
 
 
 
-Request exceeds the maximum limits.
+KuzzleRequest exceeds the maximum limits.
 
 ### Status Code
 

@@ -30,7 +30,7 @@ register(event: string, handler: EventHandler): void
 ## Usage
 
 ```js
-app.pipe.register('request:onError', async (request: Request) => {
+app.pipe.register('request:onError', async (request: KuzzleRequest) => {
   app.log.error(error)
 })
 ```

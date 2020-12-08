@@ -16,21 +16,21 @@ This methods does not trigger [API events](/core/2/framework/events/api) or [req
 ## Arguments
 
 ```ts
-execute(request: Request, callback?: any): Promise<Request>;
+execute(request: KuzzleRequest, callback?: any): Promise<KuzzleRequest>;
 ```
 
 <br/>
 
 | Arguments  | Type                                                           | Description                                    |
 | ---------- | -------------------------------------------------------------- | ---------------------------------------------- |
-| `request`  | [Request](/core/2/framework/classes/request) | The API action to execute                       |
+| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | The API action to execute                       |
 | `callback` | <pre>function</pre>                                            | Callback to call with the API execution result <DeprecatedBadge version="change-me"/> |
 
 ---
 
 ## Return
 
-The `execute` function resolves to an updated Request object, with its [response part](/core/2/framework/classes/request-response) set.
+The `execute` function resolves to an updated KuzzleRequest object, with its [response part](/core/2/framework/classes/request-response) set.
 
 How the response is returned depends whether a callback argument is provided:
 
@@ -42,9 +42,9 @@ How the response is returned depends whether a callback argument is provided:
 ## Example
 
 ```ts
-import { Request } from 'kuzzle'
+import { KuzzleRequest } from 'kuzzle'
 
-const request = new Request({
+const request = new KuzzleRequest({
   index: 'index',
   collection: 'collection',
   controller: 'document',
@@ -52,7 +52,7 @@ const request = new Request({
   _id: 'documentID'
 })
 
-// Mutates the provided Request object by updating its response part
+// Mutates the provided KuzzleRequest object by updating its response part
 // (accessible through the "request.response" property).
 await context.accessors.execute(request)
 ```

@@ -16,7 +16,7 @@ See [Event System](/core/2/guides/develop-on-kuzzle/event-system)
 **Example:**
 
 ```js
-import { EventHandler, Request } from 'kuzzle';
+import { EventHandler, KuzzleRequest } from 'kuzzle';
 
-const pipeHandler: EventHandler = async (request: Request) => request
+const pipeHandler: EventHandler = async (request: KuzzleRequest) => request
 ```

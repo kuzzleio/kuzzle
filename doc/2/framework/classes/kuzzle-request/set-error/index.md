@@ -2,7 +2,7 @@
 code: true
 type: page
 title: setError
-description: Request class setError() method
+description: KuzzleRequest class setError() method
 ---
 
 # setError

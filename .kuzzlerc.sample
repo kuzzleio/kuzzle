@@ -89,8 +89,14 @@
     "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
   },
 
+  // The application section lets you configure your application
+  // (see https://docs.kuzzle.io/core/2/guides/advanced/configuration)
+  "application": {
+    // any key/value..
+  },
+
   // The plugins section lets you define plugins behaviors
-  // (see https://docs.kuzzle.io/guide/1/essentials/plugins/)
+  // (see https://docs.kuzzle.io/core/2/guides/write-plugins)
   "plugins": {
     // [Common]
     //  * bootstrapLockTimeout
@@ -152,7 +158,7 @@
     //      or if the change is performed via the security controller
     //   * resetPasswordExpiresIn
     //      a positive time representation of the delay after which a
-    //      reset password token expires (see the "ms" NPM package for possible 
+    //      reset password token expires (see the "ms" NPM package for possible
     //      formats: https://www.npmjs.com/package/ms).
     //      Users with expired passwords are given a resetPasswordToken when
     //      logging in and must change their password to be allowed to log in again

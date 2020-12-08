@@ -2,7 +2,7 @@
 code: true
 type: page
 title: addDeprecation
-description: Request class addDeprecation() method
+description: KuzzleRequest class addDeprecation() method
 ---
 
 # addDeprecation

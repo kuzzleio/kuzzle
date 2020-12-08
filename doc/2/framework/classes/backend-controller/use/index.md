@@ -40,7 +40,7 @@ use(controller: Controller): void
 ## Usage
 
 ```js
-import { Request, Controller } from 'kuzzle'
+import { KuzzleRequest, Controller } from 'kuzzle'
 
 class EmailController extends Controller {
   constructor (app) {
@@ -54,7 +54,7 @@ class EmailController extends Controller {
       }
     }
   }
-  async send (request: Request) {
+  async send (request: KuzzleRequest) {
     // ...
   }
 }

@@ -49,7 +49,7 @@ this.pipes =
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre><a href=/plugins/1/constructors/request>Request</a></pre> | The normalized API request |
+| `request` | <pre><a href=/plugins/1/constructors/request>KuzzleRequest</a></pre> | The normalized API request |
 
 Wildcards permit listening templated events.
 
