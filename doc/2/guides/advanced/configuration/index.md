@@ -80,7 +80,7 @@ For an exhaustive list of configuration parameters, please refer to the [kuzzler
 
 ## Use Backend.config property
 
-<SinceBadge version="change-me" />
+<SinceBadge version="2.8.0" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 ::: info

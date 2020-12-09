@@ -5,7 +5,7 @@ title: Pipes
 order: 300
 ---
 
-<DeprecatedBadge version="change-me" />
+<DeprecatedBadge version="2.8.0" />
 
 ::: warning
 This guide should be considered as obsolete and features presented here could be deprecated.

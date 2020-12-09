@@ -24,7 +24,7 @@ execute(request: KuzzleRequest, callback?: any): Promise<KuzzleRequest>;
 | Arguments  | Type                                                           | Description                                    |
 | ---------- | -------------------------------------------------------------- | ---------------------------------------------- |
 | `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | The API action to execute                       |
-| `callback` | <pre>function</pre>                                            | Callback to call with the API execution result <DeprecatedBadge version="change-me"/> |
+| `callback` | <pre>function</pre>                                            | Callback to call with the API execution result <DeprecatedBadge version="2.8.0"/> |
 
 ---
 

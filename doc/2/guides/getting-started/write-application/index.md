@@ -8,7 +8,7 @@ order: 600
 
 # Write an Application
 
-<SinceBadge version="change-me" />
+<SinceBadge version="2.8.0" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Kuzzle is **fully extensible** like any framework. This extensibility is available through the development of an application.

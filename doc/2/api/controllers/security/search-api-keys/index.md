@@ -12,7 +12,7 @@ Searches for a user API keys.
 To search for an API key corresponding to a token you can search on the `fingerprint` property which is a SHA256 hash of the token.
 :::
 
-<SinceBadge version="change-me"/>
+<SinceBadge version="2.8.0"/>
 
 This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
 Koncorde filters will be translated into an Elasticsearch query.  
@@ -71,7 +71,7 @@ Body:
 
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `size`: the maximum number of API keys returned in one response page
-- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="change-me"/>
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
 
 ---
 

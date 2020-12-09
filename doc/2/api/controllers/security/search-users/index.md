@@ -8,7 +8,7 @@ title: searchUsers
 
 Searches users.
 
-<SinceBadge version="change-me"/>
+<SinceBadge version="2.8.0"/>
 
 This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
 Koncorde filters will be translated into an Elasticsearch query.  
@@ -99,7 +99,7 @@ Body:
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollUsers](/core/2/api/controllers/security/scroll-users) API action
 - `size`: the maximum number of users returned in one response page
-- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="change-me"/>
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
 
 ---
 

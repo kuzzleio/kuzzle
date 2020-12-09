@@ -8,7 +8,7 @@ order: 800
 
 # Customize the API Behavior
 
-<SinceBadge version="change-me" />
+<SinceBadge version="2.8.0" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 <!-- Duplicate with guides/develop-on-kuzzle/event-system -->

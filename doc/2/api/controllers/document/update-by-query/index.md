@@ -10,7 +10,7 @@ Updates documents matching the provided search query.
 
 Documents updated that way trigger real-time notifications.
 
-<SinceBadge version="change-me"/>
+<SinceBadge version="2.8.0"/>
 
 This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
 Koncorde filters will be translated into an Elasticsearch query.  
@@ -80,7 +80,7 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `source`: if set to `true` Kuzzle will return the updated documents body in the response.
-- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="change-me"/>
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
 
 ## Body properties
 

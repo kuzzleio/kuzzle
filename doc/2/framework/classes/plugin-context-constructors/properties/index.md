@@ -46,7 +46,7 @@ await storageClient.index(esRequest)
 
 ## `Koncorde`
 
-<DeprecatedBadge version="change-me" />
+<DeprecatedBadge version="2.8.0" />
 
 Instantiates a new [Koncorde](/core/2/framework/classes/koncorde) engine.
 

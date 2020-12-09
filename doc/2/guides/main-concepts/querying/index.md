@@ -301,7 +301,7 @@ kourou document:search ktm-open-data thamel-taxi '{
 
 ## Koncorde Query
 
-<SinceBadge version="change-me"/>
+<SinceBadge version="2.8.0"/>
 
 It is also possible to use [Koncorde Filters Syntax](/core/2/api/koncorde-filters-syntax) to search documents.  
 

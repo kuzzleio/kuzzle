@@ -241,7 +241,7 @@ For example:
 
 ## Plugin loaded from the filesystem
 
-<DeprecatedBadge version="change-me">
+<DeprecatedBadge version="2.8.0">
 
 Plugins are subdirectories that must be put at the following location: `<kuzzle_install_dir>/plugins/enabled`.
 

@@ -29,7 +29,7 @@ This property is an instance of the [PluginContextConstructors](/core/2/framewor
 
 ## `errors`
 
-<DeprecatedBadge version="change-me"/>
+<DeprecatedBadge version="2.8.0"/>
 
 This property contains constructors that represent [Kuzzle Errors Types](/core/2/api/errors/types).  
 

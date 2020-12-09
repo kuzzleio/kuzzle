@@ -101,7 +101,7 @@ This property allows to define plugin features.
 
 ## `controllers`
 
-<DeprecatedBadge version="change-me"/>
+<DeprecatedBadge version="2.8.0"/>
 
 <CustomBadge type="warning" text="Not available in Typescript"/>
 
@@ -137,7 +137,7 @@ class MyPlugin {
 
 ## `routes`
 
-<DeprecatedBadge version="change-me"/>
+<DeprecatedBadge version="2.8.0"/>
 
 <CustomBadge type="warning" text="Not available in Typescript"/>
 
