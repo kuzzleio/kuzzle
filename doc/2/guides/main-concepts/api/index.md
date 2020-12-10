@@ -26,7 +26,7 @@ Kuzzle is able to integrate to its API any protocol operating on [IP](https://en
 More info on [Writing Protocol Plugin](/core/2/guides/write-protocols/start-writing-protocols).  
 :::
 
-## Request Format
+## KuzzleRequest Format
 
 Except for HTTP, Kuzzle expects the exact same request format for all communication protocols.
 
