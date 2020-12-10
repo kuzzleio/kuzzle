@@ -26,10 +26,11 @@ jobs:
 
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
+    needs: ['lint']
     strategy:
       matrix:
         node-version: ['12.16', '12.18']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -50,11 +51,12 @@ jobs:
 
   integration-tests-legacy:
     name: Integration Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    needs: ['unit-tests']
     strategy:
       matrix:
         test_set: ['http', 'websocket', 'mqtt']
         node-version: ['12.16', '12.18']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -79,11 +81,12 @@ jobs:
 
   integration-tests-sdk:
     name: Integration Tests SDK - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    needs: ['unit-tests']
     strategy:
       matrix:
         test_set: ['http', 'websocket']
         node-version: ['12.16', '12.18']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -108,7 +111,8 @@ jobs:
 
   integration-tests-cluster:
     name: Integration Tests - Cluster - Node.js v${{ matrix.node-version }}
-    runs-on: ubuntu-latest
+    needs: ['unit-tests']
+    runs-on: ubuntu-18.04
     strategy:
       matrix:
         node-version: ['12.16', '12.18']
