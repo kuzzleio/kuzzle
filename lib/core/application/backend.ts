@@ -385,6 +385,7 @@ class InternalLogger extends ApplicationManager implements InternalLogger {
 
   private _log (level: string, message: any) {
     if (! this._application.started) {
+      // eslint-disable-next-line no-console
       console.log(util.inspect(message));
     }
     else {

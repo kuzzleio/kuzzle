@@ -10,7 +10,7 @@ description: InternalLogger.warn method
 Logs a info message.
 
 ::: info
-This method can only be used after the application started up.
+Before application startup this method will use `console.log` instead of the configured logger.
 :::
 
 ```ts
