@@ -1,0 +1,59 @@
+name: Deploy Documentation
+description: Build doc, upload it to S3 and invalidate Cloudfront cache
+
+inputs:
+  ACCESS_KEY:
+    description: AWS Access key ID
+    required: true
+  SECRET_KEY:
+    description: AWS secret key
+    required: true
+  S3_BUCKET:
+    description: S3 bucket name
+    required: true
+  CLOUDFRONT_ID:
+    description: Cloudfront distribution ID
+    required: true
+  REGION:
+    description: AWS default region
+    required: true
+    default: 'us-west-2'
+  FRAMEWORK_BRANCH:
+    description: Documentation framework branch to use
+    required: true
+    default: 'master'
+  
+runs:
+  using: "composite"
+  steps:
+    - name: Install AWS CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install python python-pip
+        pip install awscli --upgrade --user
+      shell: bash
+    - name: Set up AWS CLI 
+      run: |
+        export AWS_DEFAULT_REGION="${{ inputs.REGION }}"
+        export AWS_ACCESS_KEY_ID="${{ inputs.ACCESS_KEY }}"
+        export AWS_SECRET_ACCESS_KEY="${{ inputs.SECRET_KEY }}"
+        export S3_BUCKET="${{ inputs.S3_BUCKET }}"
+        export CLOUDFRONT_DISTRIBUTION_ID="${{ inputs.CLOUDFRONT_ID }}"
+      shell: bash
+    - name: Set up build environment variables 
+      run: |
+        export NODE_ENV=production
+        export BRANCH="${{ inputs.FRAMEWORK_BRANCH }}"
+      shell: bash
+    - name: Build documentation
+      run: |
+        rm -fr doc/framework
+        npm install --production=false
+        npm run doc-prepare
+        npm run doc-build
+      shell: bash
+    - name: Deploy documentation
+      run: |
+        npm run doc-upload
+        npm run doc-cloudfront
+      shell: bash
