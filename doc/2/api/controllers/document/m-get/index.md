@@ -90,7 +90,7 @@ The `errors` array contain the IDs of not found documents.
   "controller": "document",
   "requestId": "<unique request identifier>",
   "result": {
-    "hits": [
+    "successes": [
       {
         "_id": "<documentId>",
         "_source": {
