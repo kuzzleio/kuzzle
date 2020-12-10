@@ -115,8 +115,9 @@ describe('funnelController.execute', () => {
       setTimeout(() => funnel.execute(request, () => {}), 499);
       clock.tick(510);
 
-      should(kuzzle.emit)
-        .have.callCount(0);
+      should(kuzzle.emit).have.callCount(0);
+
+      clock.restore();
     });
   });
 
