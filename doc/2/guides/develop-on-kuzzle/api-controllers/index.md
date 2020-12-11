@@ -8,9 +8,6 @@ order: 300
 
 # API Controllers
 
-<SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
-
 Kuzzle allows to extend its existing API using Controllers. Controllers are **logical containers of actions**.  
 
 These actions are then **processed like any other API action** and can be executed through the different mechanisms to secure and normalize requests.
