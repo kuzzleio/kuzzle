@@ -6,6 +6,8 @@ title: upsert
 
 # upsert
 
+<SinceBadge version="2.8.0"/>
+
 Applies partial changes to a document. If the document doesn't already exist, a new document is created.
 
 ---
