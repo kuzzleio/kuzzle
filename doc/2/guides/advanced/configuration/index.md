@@ -84,7 +84,7 @@ For an exhaustive list of configuration parameters, please refer to the [kuzzler
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 ::: info
-You can change the configuration only in the `setup` phase, before starting the application.
+You can change the configuration only during the `setup` phase, before starting the application.
 ::: 
 
 The configuration of Kuzzle is also accessible through the [Backend.config](/core/2/framework/classes/backend-config) property.

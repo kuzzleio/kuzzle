@@ -8,9 +8,6 @@ order: 800
 
 # Customize the API Behavior
 
-<SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
-
 <!-- Duplicate with guides/develop-on-kuzzle/event-system -->
 
 Kuzzle allows to modify API actions behavior with a **very precise middleware-like system**.  

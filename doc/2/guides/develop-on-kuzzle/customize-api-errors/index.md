@@ -8,9 +8,6 @@ order: 600
 
 # Customize API Errors
 
-<SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
-
 It is possible to customize the errors that we want to return in case of failure of an API request.
 
 Kuzzle offers a set of standard errors corresponding to specific situations with customizable messages (e.g. `NotFoundError`,` ForbiddenError`, etc.)

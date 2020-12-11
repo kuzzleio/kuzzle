@@ -8,9 +8,6 @@ order: 700
 
 # Create new Controllers
 
-<SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
-
 The Kuzzle API is composed of **actions grouped in controllers**.  
 A controller is a **logical container** that groups several actions together.
 
