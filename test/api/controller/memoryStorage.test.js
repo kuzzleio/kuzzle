@@ -99,7 +99,7 @@ describe('MemoryStorageController', () => {
       extractArgumentsFromRequestForZRangeByScore: false
     };
 
-    msController = new MemoryStorageController(kuzzle);
+    msController = new MemoryStorageController();
     origMapping = MemoryStorageController.__get__('mapping');
     MemoryStorageController.__set__({mapping: testMapping});
   });

@@ -37,7 +37,7 @@ describe('Test: security/profileRepository', () => {
       update: sinon.stub(),
     };
 
-    profileRepository = new ProfileRepository(kuzzle, {
+    profileRepository = new ProfileRepository({
       role: roleRepositoryMock,
       user: userRepositoryMock,
     });

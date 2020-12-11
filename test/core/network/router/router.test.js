@@ -26,7 +26,7 @@ describe('Test: router', () => {
       }
     });
     kuzzle = new KuzzleMock();
-    router = new Router(kuzzle);
+    router = new Router();
   });
 
   describe('#newConnection', () => {

@@ -12,15 +12,14 @@ const {
 } = require('../../../index');
 
 describe('funnel.executePluginRequest', () => {
-  let
-    kuzzle,
-    originalHandleErrorDump,
-    funnel;
+  let kuzzle;
+  let originalHandleErrorDump;
+  let funnel;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnel = new FunnelController(kuzzle);
-    funnel.controllers.set('testme', new MockNativeController(kuzzle));
+    funnel = new FunnelController();
+    funnel.controllers.set('testme', new MockNativeController());
     originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
   });

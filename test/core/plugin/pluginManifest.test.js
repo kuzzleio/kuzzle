@@ -16,15 +16,14 @@ class AbstractManifestStub extends AbstractManifest {
 
 describe('Plugins manifest class', () => {
   const pluginPath = 'foo/bar';
-  let kuzzle;
   let Manifest;
   let manifest;
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
+    new KuzzleMock();
     mockrequire('../../../lib/core/shared/abstractManifest', AbstractManifestStub);
     Manifest = mockrequire.reRequire('../../../lib/core/plugin/pluginManifest');
-    manifest = new Manifest(kuzzle, pluginPath);
+    manifest = new Manifest(pluginPath);
   });
 
   afterEach(() => {

@@ -50,14 +50,14 @@ describe('Plugin', () => {
 
     instance = {};
 
-    plugin = new Plugin(kuzzle, instance);
+    plugin = new Plugin(instance);
   });
 
   describe('#constructor', () => {
     it('should instantiates the plugin and set the name if given', () => {
       const options = { name: 'lambda-core', application: true };
 
-      plugin = new Plugin(kuzzle, instance, options);
+      plugin = new Plugin(instance, options);
 
       should(plugin._kuzzle).be.eql(kuzzle);
       should(plugin.name).be.eql('lambda-core');
@@ -103,7 +103,7 @@ describe('Plugin', () => {
         hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler'},
         pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler'},
       };
-      plugin = new Plugin(kuzzle, instance, options);
+      plugin = new Plugin(instance, options);
       plugin.version = 'version';
 
       const info = plugin.info();
@@ -128,7 +128,7 @@ describe('Plugin', () => {
         hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler'},
         pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler'},
       };
-      plugin = new Plugin(kuzzle, instance, options);
+      plugin = new Plugin(instance, options);
       plugin.version = 'version';
       plugin.manifest = 'manifest';
 

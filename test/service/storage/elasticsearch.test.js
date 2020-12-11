@@ -36,7 +36,7 @@ describe('Test: ElasticSearch service', () => {
     esClientError = new Error('es client fail');
 
     ES.buildClient = () => new ESClientMock();
-    elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
+    elasticsearch = new ES(kuzzle.config.services.storageEngine);
 
     await elasticsearch.init();
 
@@ -54,9 +54,8 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#constructor', () => {
     it('should initialize properties', () => {
-      const esPublic = new ES(kuzzle, kuzzle.config.services.storageEngine);
+      const esPublic = new ES(kuzzle.config.services.storageEngine);
       const esInternal = new ES(
-        kuzzle,
         kuzzle.config.services.storageEngine,
         scopeEnum.PRIVATE);
 
@@ -69,7 +68,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#init', () => {
     it('should initialize properly', () => {
-      elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
+      elasticsearch = new ES(kuzzle.config.services.storageEngine);
       elasticsearch._buildClient = () => new ESClientMock();
 
       const promise = elasticsearch.init();
@@ -3974,7 +3973,7 @@ describe('Test: ElasticSearch service', () => {
       publicES;
 
     beforeEach(() => {
-      publicES = new ES(kuzzle, kuzzle.config.services.storageEngine);
+      publicES = new ES(kuzzle.config.services.storageEngine);
       internalES = new ES(
         kuzzle,
         kuzzle.config.services.storageEngine,

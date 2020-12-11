@@ -9,7 +9,7 @@ const mockrequire = require('mock-require');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { EmbeddedSDK } = require('../../../lib/core/shared/sdk/embeddedSdk');
-const Kuzzle = require('../../../lib/kuzzle/kuzzle');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 const FsMock = require('../../mocks/fs.mock');
 
 describe('Backend', () => {
@@ -46,8 +46,6 @@ describe('Backend', () => {
 
   describe('#sdk', () => {
     it('should returns the embedded sdk', async () => {
-      sinon.stub(Kuzzle.prototype, 'start');
-
       await application.start();
 
       should(application.sdk).be.instanceOf(EmbeddedSDK);
@@ -63,7 +61,6 @@ describe('Backend', () => {
 
   describe('#start', () => {
     it('should calls kuzzle.start with an instantiated plugin and options', async () => {
-      sinon.stub(Kuzzle.prototype, 'start');
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
@@ -408,7 +405,6 @@ describe('Backend', () => {
   describe('Logger', () => {
     describe('#_log', () => {
       it('should exposes log methods and call kuzzle ones', async () => {
-        sinon.stub(Kuzzle.prototype, 'start');
         await application.start();
 
         application._kuzzle.log = {
@@ -443,10 +439,9 @@ describe('Backend', () => {
 
   describe('#trigger', () => {
     it('should exposes the trigger method', async () => {
-      sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
 
-      sinon.stub(Kuzzle.prototype, 'pipe').resolves('resonance cascade');
+      KuzzleMock.getInstance().pipe.resolves('resonance cascade');
 
       const result = await application.trigger('xen:crystal', 'payload');
 
@@ -464,7 +459,6 @@ describe('Backend', () => {
 
   describe('StorageManager#StorageClient', () => {
     it('should allows to construct an ES StorageClient', async () => {
-      sinon.stub(Kuzzle.prototype, 'start');
       await application.start();
       application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
       should(application.storage.StorageClient).be.a.Function();
@@ -478,8 +472,6 @@ describe('Backend', () => {
 
   describe('StorageManager#storageClient', () => {
     it('should allows lazily access an ES Client', async () => {
-      sinon.stub(Kuzzle.prototype, 'start');
-
       await application.start();
 
       application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';

@@ -28,6 +28,7 @@ import {
   Kuzzle,
 } from 'kuzzle-sdk';
 
+import KuzzleObject from '../../../kuzzle/kuzzle';
 import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
@@ -93,14 +94,13 @@ export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
   /**
-   * @param kuzzle - Kuzzle object
    * @param user - User to impersonate the SDK with
    */
-  constructor (kuzzle, user?) {
-    super(new FunnelProtocol(kuzzle, user), { autoResubscribe: false });
+  constructor (user?) {
+    super(new FunnelProtocol(user), { autoResubscribe: false });
 
     Reflect.defineProperty(this, '_kuzzle', {
-      value: kuzzle
+      value: KuzzleObject.getInstance(),
     });
   }
 
@@ -118,7 +118,7 @@ export class EmbeddedSDK extends Kuzzle {
       throw contextError.get('invalid_user');
     }
 
-    return new EmbeddedSDK(this._kuzzle, user);
+    return new EmbeddedSDK(user);
   }
 
   /**

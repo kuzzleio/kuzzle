@@ -14,7 +14,7 @@ describe('/lib/core/network/protocols/internal', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    entrypoint = new EntryPoint(kuzzle);
+    entrypoint = new EntryPoint();
 
     sinon.stub(entrypoint, 'newConnection');
     sinon.stub(entrypoint, 'removeConnection');

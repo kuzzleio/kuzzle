@@ -12,7 +12,6 @@ const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
 describe('#core/storage/StorageEngine', () => {
   let StorageEngine;
   let storageEngine;
-  let kuzzle;
 
   before(() => {
     mockRequire('../../../lib/core/storage/clientAdapter', ClientAdapterMock);
@@ -24,9 +23,9 @@ describe('#core/storage/StorageEngine', () => {
   });
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
+    new KuzzleMock();
 
-    storageEngine = new StorageEngine(kuzzle);
+    storageEngine = new StorageEngine();
   });
 
   describe('#constructor', () => {

@@ -21,7 +21,7 @@ describe('ApiKey', () => {
     mockrequire('../../../lib/core/storage/clientAdapter', ClientAdapterMock);
 
     StorageEngine = mockrequire.reRequire('../../../lib/core/storage/storageEngine');
-    storageEngine = new StorageEngine(kuzzle);
+    storageEngine = new StorageEngine();
 
     return storageEngine.init();
   });

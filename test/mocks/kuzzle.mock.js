@@ -3,22 +3,22 @@
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
-const Kuzzle = require('../../lib/kuzzle');
+const KuzzleEventEmitter = require('../../lib/kuzzle/event/kuzzleEventEmitter');
 const configLoader = require('../../lib/config');
-
-const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
 
 const foo = { foo: 'bar' };
 
-let _instance;
+let instance = null;
 
-class KuzzleMock extends Kuzzle {
+class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
     const config = configLoader.load();
 
-    super(config);
+    super(
+      config.plugins.common.maxConcurrentPipes,
+      config.plugins.common.pipesBufferSize);
 
-    _instance = this;
+    instance = this;
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
@@ -96,7 +96,8 @@ class KuzzleMock extends Kuzzle {
 
     this.shutdown = sinon.stub();
 
-    this.internalIndex = new InternalIndexHandlerMock(this);
+    const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
+    this.internalIndex = new InternalIndexHandlerMock();
 
     this.passport = {
       use: sinon.stub(),
@@ -194,6 +195,8 @@ class KuzzleMock extends Kuzzle {
       set: sinon.stub()
     };
 
+    this.start = sinon.stub().resolves();
+
     {
       const mockProto = Object.getPrototypeOf(this);
       const kuzzleProto = Object.getPrototypeOf(mockProto);
@@ -212,8 +215,8 @@ class KuzzleMock extends Kuzzle {
     }
   }
 
-  static instance () {
-    return _instance;
+  static getInstance () {
+    return instance;
   }
 }
 

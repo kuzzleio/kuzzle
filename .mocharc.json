@@ -4,5 +4,5 @@
   "slow": 2000,
   "timeout": 10000,
   "require": ["should-sinon", "ts-node/register"],
-  "file": ["./test/restore-sinon.js"]
+  "file": ["./test/restore-sinon.js", "./test/mock-kuzzle.js"]
 }

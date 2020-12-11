@@ -15,7 +15,7 @@ describe('#core/storage/indexCache', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    indexCache = new IndexCache(kuzzle, scopeEnum.PUBLIC);
+    indexCache = new IndexCache(scopeEnum.PUBLIC);
   });
 
   describe('#addIndex', () => {

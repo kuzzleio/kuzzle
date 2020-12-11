@@ -605,7 +605,6 @@ export class Backend {
       { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
 
     const application = new PluginObject(
-      this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });
 
@@ -623,7 +622,7 @@ export class Backend {
 
     await this._kuzzle.start(application, options);
 
-    this._sdk = new EmbeddedSDK(this._kuzzle);
+    this._sdk = new EmbeddedSDK();
 
     this.started = true;
   }
