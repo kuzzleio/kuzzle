@@ -24,6 +24,31 @@ jobs:
           node-version: "12"
       - uses: ./.github/actions/es-lint
 
+  sonarcloud:
+    name: Sonarcloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - uses: martinbeentjes/npm-get-version-action@master
+        id: package-version
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=kuzzleio
+            -Dsonar.projectKey=kuzzleio_kuzzle
+            -Dsonar.projectVersion=${{ steps.package-version.outputs.current-version}}
+            -Dsonar.language=js
+            -Dsonar.sources=lib/
+            -Dsonar.cfamily.build-wrapper-output=bw-output 
+            -Dsonar.verbose=true
+
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
     needs: ['lint']
